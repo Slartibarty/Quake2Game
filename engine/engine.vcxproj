@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{6a30a85e-a37b-423c-b1b2-be4868990f99}</ProjectGuid>
+    <RootNamespace>engine</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\common.props" />
+    <Import Project="..\debug.props" />
+    <Import Project="engine.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\common.props" />
+    <Import Project="..\debug.props" />
+    <Import Project="engine.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\common.props" />
+    <Import Project="..\release.props" />
+    <Import Project="engine.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\common.props" />
+    <Import Project="..\release.props" />
+    <Import Project="engine.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemGroup>
+    <ClInclude Include="..\common\q_defs.h" />
+    <ClInclude Include="..\common\q_math.h" />
+    <ClInclude Include="..\common\q_shared.h" />
+    <ClInclude Include="..\common\q_types.h" />
+    <ClInclude Include="..\game_shared\game_public.h" />
+    <ClInclude Include="client\cdaudio.h" />
+    <ClInclude Include="client\client.h" />
+    <ClInclude Include="client\console.h" />
+    <ClInclude Include="client\input.h" />
+    <ClInclude Include="client\keys.h" />
+    <ClInclude Include="client\qmenu.h" />
+    <ClInclude Include="client\screen.h" />
+    <ClInclude Include="client\snd_loc.h" />
+    <ClInclude Include="client\sound.h" />
+    <ClInclude Include="client\vid.h" />
+    <ClInclude Include="client\winquake.h" />
+    <ClInclude Include="ref_shared\ref_public.h" />
+    <ClInclude Include="res\resource.h" />
+    <ClInclude Include="server\server.h" />
+    <ClInclude Include="shared\common.h" />
+    <ClInclude Include="shared\conproc.h" />
+    <ClInclude Include="shared\crc.h" />
+    <ClInclude Include="shared\qfiles.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\common\q_math.cpp" />
+    <ClCompile Include="..\common\q_shared.cpp" />
+    <ClCompile Include="..\game_shared\m_flash.cpp" />
+    <ClCompile Include="client\cd_null.cpp" />
+    <ClCompile Include="client\cl_cin.cpp" />
+    <ClCompile Include="client\cl_ents.cpp" />
+    <ClCompile Include="client\cl_fx.cpp" />
+    <ClCompile Include="client\cl_input.cpp" />
+    <ClCompile Include="client\cl_inv.cpp" />
+    <ClCompile Include="client\cl_main.cpp" />
+    <ClCompile Include="client\cl_newfx.cpp" />
+    <ClCompile Include="client\cl_parse.cpp" />
+    <ClCompile Include="client\cl_pred.cpp" />
+    <ClCompile Include="client\cl_scrn.cpp" />
+    <ClCompile Include="client\cl_tent.cpp" />
+    <ClCompile Include="client\cl_view.cpp" />
+    <ClCompile Include="client\console.cpp" />
+    <ClCompile Include="client\input_win.cpp" />
+    <ClCompile Include="client\keys.cpp" />
+    <ClCompile Include="client\menu.cpp" />
+    <ClCompile Include="client\qmenu.cpp" />
+    <ClCompile Include="client\snd_dma.cpp" />
+    <ClCompile Include="client\snd_mem.cpp" />
+    <ClCompile Include="client\snd_mix.cpp" />
+    <ClCompile Include="client\snd_win.cpp" />
+    <ClCompile Include="client\vid_menu_win.cpp" />
+    <ClCompile Include="client\vid_win.cpp" />
+    <ClCompile Include="server\sv_ccmds.cpp" />
+    <ClCompile Include="server\sv_ents.cpp" />
+    <ClCompile Include="server\sv_game.cpp" />
+    <ClCompile Include="server\sv_init.cpp" />
+    <ClCompile Include="server\sv_main.cpp" />
+    <ClCompile Include="server\sv_send.cpp" />
+    <ClCompile Include="server\sv_user.cpp" />
+    <ClCompile Include="server\sv_world.cpp" />
+    <ClCompile Include="shared\cmd.cpp" />
+    <ClCompile Include="shared\cmodel.cpp" />
+    <ClCompile Include="shared\common.cpp" />
+    <ClCompile Include="shared\conproc.cpp" />
+    <ClCompile Include="shared\crc.cpp" />
+    <ClCompile Include="shared\cvar.cpp" />
+    <ClCompile Include="shared\files.cpp" />
+    <ClCompile Include="shared\md4.cpp" />
+    <ClCompile Include="shared\net_chan.cpp" />
+    <ClCompile Include="shared\net_wins.cpp" />
+    <ClCompile Include="shared\misc_win.cpp" />
+    <ClCompile Include="shared\pmove_hl1.cpp" />
+    <ClCompile Include="shared\sys_win.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\quake2.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="res\quake2.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="..\common\windows_default.manifest" />
+    <Manifest Include="..\common\windows_dpiaware.manifest" />
+    <Manifest Include="..\common\windows_visualstyles.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ref_shared\anorms.inl" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
