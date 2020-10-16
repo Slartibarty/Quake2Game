@@ -4,6 +4,6 @@
 
 #pragma once
 
-typedef unsigned char 			byte;
-typedef unsigned int			uint;
-typedef int						qboolean;
+using byte = unsigned char;
+using uint = unsigned int;
+using qboolean = int;

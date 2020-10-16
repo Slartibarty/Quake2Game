@@ -949,6 +949,15 @@ qboolean R_SetMode (void)
 	return true;
 }
 
+static void GL_CheckErrors(void)
+{
+	GLenum err;
+	while ((err = glGetError()) != GL_NO_ERROR)
+	{
+		ri.Con_Printf(PRINT_ALL, "glGetError() = 0x%x\n", err);
+	}
+}
+
 /*
 ===============
 R_Init
@@ -1001,11 +1010,7 @@ int R_Init( void *hinstance, void *hWnd )
 	Draw_InitLocal ();
 
 	// Check for errors
-	GLenum err;
-	while ((err = glGetError()) != GL_NO_ERROR)
-	{
-		ri.Con_Printf(PRINT_ALL, "glGetError() = 0x%x\n", err);
-	}
+	GL_CheckErrors();
 
 	return 1;
 }
@@ -1031,7 +1036,6 @@ void R_Shutdown (void)
 	*/
 	GLimp_Shutdown();
 }
-
 
 
 /*
@@ -1089,8 +1093,7 @@ R_EndFrame
 */
 void R_EndFrame(void)
 {
-	GLenum err = glGetError();
-	assert(err == GL_NO_ERROR);
+	GL_CheckErrors();
 
 	GLimp_EndFrame();
 }
@@ -1257,7 +1260,7 @@ refexport_t GetRefAPI (refimport_t rimp )
 
 	re.AppActivate = GLimp_AppActivate;
 
-	Swap_Init ();
+	//Swap_Init ();
 
 	return re;
 }

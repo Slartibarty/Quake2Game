@@ -2,42 +2,42 @@
 
 #include "common.h"
 
-typedef struct
+struct cnode_t
 {
 	cplane_t	*plane;
 	int			children[2];		// negative numbers are leafs
-} cnode_t;
+};
 
-typedef struct
+struct cbrushside_t
 {
 	cplane_t	*plane;
 	mapsurface_t	*surface;
-} cbrushside_t;
+};
 
-typedef struct
+struct cleaf_t
 {
 	int			contents;
 	int			cluster;
 	int			area;
 	unsigned short	firstleafbrush;
 	unsigned short	numleafbrushes;
-} cleaf_t;
+};
 
-typedef struct
+struct cbrush_t
 {
 	int			contents;
 	int			numsides;
 	int			firstbrushside;
 	int			checkcount;		// to avoid repeated testings
-} cbrush_t;
+};
 
-typedef struct
+struct carea_t
 {
 	int		numareaportals;
 	int		firstareaportal;
 	int		floodnum;			// if two areas have equal floodnums, they are connected
 	int		floodvalid;
-} carea_t;
+};
 
 int			checkcount;
 
@@ -87,7 +87,7 @@ mapsurface_t	nullsurface;
 
 int			floodvalid;
 
-qboolean	portalopen[MAX_MAP_AREAPORTALS];
+bool		portalopen[MAX_MAP_AREAPORTALS];
 
 
 cvar_t		*map_noareas;
@@ -526,7 +526,7 @@ CM_LoadMap
 Loads in the map and all submodels
 ==================
 */
-cmodel_t *CM_LoadMap (const char *name, qboolean clientload, unsigned *checksum)
+cmodel_t *CM_LoadMap (const char *name, bool clientload, unsigned *checksum)
 {
 	unsigned		*buf;
 	int				i;
@@ -960,7 +960,7 @@ vec3_t	trace_extents;
 
 trace_t	trace_trace;
 int		trace_contents;
-qboolean	trace_ispoint;		// optimized case
+bool	trace_ispoint;		// optimized case
 
 /*
 ================
@@ -976,7 +976,7 @@ void CM_ClipBoxToBrush (vec3_t mins, vec3_t maxs, vec3_t p1, vec3_t p2,
 	float		enterfrac, leavefrac;
 	vec3_t		ofs;
 	float		d1, d2;
-	qboolean	getout, startout;
+	bool		getout, startout;
 	float		f;
 	cbrushside_t	*side, *leadside;
 
@@ -1434,7 +1434,7 @@ trace_t		CM_TransformedBoxTrace (vec3_t start, vec3_t end,
 	vec3_t		a;
 	vec3_t		forward, right, up;
 	vec3_t		temp;
-	qboolean	rotated;
+	bool		rotated;
 
 	// subtract origin offset
 	VectorSubtract (start, origin, start_l);
@@ -1716,7 +1716,7 @@ Returns true if any leaf under headnode has a cluster that
 is potentially visible
 =============
 */
-qboolean CM_HeadnodeVisible (int nodenum, byte *visbits)
+bool CM_HeadnodeVisible (int nodenum, byte *visbits)
 {
 	int		leafnum;
 	int		cluster;

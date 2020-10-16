@@ -926,11 +926,13 @@ void CL_AddPacketEntities (frame_t *frame)
 							renderfx |= RF_SHELL_BLUE;
 						// if we have a blue shell (and not a red shell), turn it to cyan by adding green
 						else if (renderfx & RF_SHELL_BLUE)
+						{
 							// go to green if it's on already, otherwise do cyan (flash green)
 							if (renderfx & RF_SHELL_GREEN)
 								renderfx &= ~RF_SHELL_BLUE;
 							else
 								renderfx |= RF_SHELL_GREEN;
+						}
 					}
 				}
 //			}

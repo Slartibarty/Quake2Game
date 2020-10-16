@@ -40,7 +40,6 @@ static void VID_Printf (int print_level, const char *fmt, ...)
 {
 	va_list		argptr;
 	char		msg[MAX_PRINT_MSG];
-	static qboolean	inupdate;
 	
 	va_start (argptr,fmt);
 	Com_sprintf (msg,fmt,argptr);
@@ -65,7 +64,6 @@ static void VID_Error (int err_level, const char *fmt, ...)
 {
 	va_list		argptr;
 	char		msg[MAX_PRINT_MSG];
-	static qboolean	inupdate;
 	
 	va_start (argptr,fmt);
 	Com_sprintf (msg,fmt,argptr);
@@ -202,8 +200,6 @@ LRESULT CALLBACK MainWndProc (
     WPARAM  wParam,
     LPARAM  lParam)
 {
-	LRESULT			lRet = 0;
-
 	if ( uMsg == MSH_MOUSEWHEEL )
 	{
 		if ( ( ( int ) wParam ) > 0 )

@@ -162,7 +162,7 @@ static qboolean CompareAttributes( unsigned found, unsigned musthave, unsigned c
 	return true;
 }
 
-char *Sys_FindFirst (char *path, unsigned musthave, unsigned canthave )
+char *Sys_FindFirst (const char *path, unsigned musthave, unsigned canthave )
 {
 	struct _finddata_t findinfo;
 
@@ -180,7 +180,7 @@ char *Sys_FindFirst (char *path, unsigned musthave, unsigned canthave )
 	return findpath;
 }
 
-char *Sys_FindNext ( unsigned musthave, unsigned canthave )
+char *Sys_FindNext (unsigned musthave, unsigned canthave)
 {
 	struct _finddata_t findinfo;
 

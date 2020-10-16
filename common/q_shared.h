@@ -1,4 +1,6 @@
-// q_shared.h -- included first by ALL program modules
+//-------------------------------------------------------------------------------------------------
+// q_shared.h - included first by ALL program modules
+//-------------------------------------------------------------------------------------------------
 
 #pragma once
 
@@ -11,9 +13,7 @@
 #include <ctime>
 
 #include "q_defs.h"
-
 #include "q_types.h"
-
 #include "q_math.h"
 
 //
@@ -28,14 +28,11 @@
 #define	MAX_ITEMS			256
 #define MAX_GENERAL			(MAX_CLIENTS*2)	// general config strings
 
-
 // game print flags
 #define	PRINT_LOW			0		// pickup messages
 #define	PRINT_MEDIUM		1		// death messages
 #define	PRINT_HIGH			2		// critical messages
 #define	PRINT_CHAT			3		// chat messages
-
-
 
 #define	ERR_FATAL			0		// exit the entire game with a popup window
 #define	ERR_DROP			1		// print to console and disconnect from game
@@ -44,7 +41,6 @@
 #define	PRINT_ALL			0
 #define PRINT_DEVELOPER		1		// only print when "developer 1"
 #define PRINT_ALERT			2		
-
 
 // destination class for gi.multicast()
 enum multicast_t
@@ -57,26 +53,49 @@ enum multicast_t
 	MULTICAST_PVS_R
 };
 
-//=============================================
+//-------------------------------------------------------------------------------------------------
+// Utilities - Slartibarty additions
+//-------------------------------------------------------------------------------------------------
+
+// Makes a 4-byte "packed ID" int32 out of 4 characters
+//
+inline consteval int MakeID(int d, int c, int b, int a) {
+	return ((a << 24) | (b << 16) | (c << 8) | (d));
+}
+
+//-------------------------------------------------------------------------------------------------
+// Misc - q_shared.cpp
+//-------------------------------------------------------------------------------------------------
 
 extern char null_string[1];
 
-char *COM_SkipPath (char *pathname);
-void COM_StripExtension (const char *in, char *out);
-void COM_FileBase (char *in, char *out);
-void COM_FilePath (char *in, char *out);
-void COM_DefaultExtension (char *path, char *extension);
+inline void COM_StripExtension(const char *in, char *out)
+{
+	while (*in && *in != '.')
+		*out++ = *in++;
+	*out = 0;
+}
 
-char *COM_Parse (char **data_p);
+// Returns the path up to, but not including the last /
+void COM_FilePath (const char *in, char *out);
+
+// Parse a token out of a string
 // data is an in/out parm, returns a parsed out token
+char *COM_Parse (char **data_p);
 
 void Com_PageInMemory (byte *buffer, int size);
 
-//=============================================
+char *va(const char *format, ...);
+
+//-------------------------------------------------------------------------------------------------
+// Library replacement functions - q_shared.cpp
+//-------------------------------------------------------------------------------------------------
 
 // size_t is wack
 using strlen_t = int;
 
+// Safe strcpy that ensures null termination
+// Returns bytes written
 void Q_strcpy(char *pDest, strlen_t nDestSize, const char *pSrc);
 
 template< strlen_t nDestSize >
@@ -86,9 +105,9 @@ inline void Q_strcpy(char (&pDest)[nDestSize], const char *pSrc)
 }
 
 // portable case insensitive compare
-int Q_stricmp (const char *s1, const char *s2);
 int Q_strcasecmp (const char *s1, const char *s2);
-int Q_strncasecmp (const char *s1, const char *s2, int n);
+int Q_strncasecmp (const char *s1, const char *s2, strlen_t n);
+int Q_stricmp(const char *s1, const char *s2);
 
 void Com_vsprintf(char *pDest, strlen_t nDestSize, const char *pFmt, va_list args);
 
@@ -115,39 +134,62 @@ inline void Com_sprintf(char(&pDest)[nDestSize], const char *pFmt, ...)
 	va_end(args);
 }
 
-//=============================================
+//-------------------------------------------------------------------------------------------------
+// Byteswap functions - q_shared.cpp
+//-------------------------------------------------------------------------------------------------
 
-short	BigShort(short l);
-short	LittleShort(short l);
-int		BigLong (int l);
-int		LittleLong (int l);
-float	BigFloat (float l);
-float	LittleFloat (float l);
+#define BIG_ENDIAN 0
 
-void	Swap_Init (void);
-char	*va(const char *format, ...);
+short	ShortSwap(short s);
+int		LongSwap(int l);
+float	FloatSwap(float f);
 
-//=============================================
+#if BIG_ENDIAN
 
-//
-// key / value info strings
-//
+FORCEINLINE short BigShort(short s) { return s; }
+FORCEINLINE short LittleShort(short s) { return ShortSwap(s); }
+
+FORCEINLINE int BigLong(int l) { return l; }
+FORCEINLINE int LittleLong(int l) { return LongSwap(l); }
+
+FORCEINLINE float BigFloat(float f) { return f; }
+FORCEINLINE float LittleFloat(float f) { return FloatSwap(f); }
+
+#else // Little endian
+
+FORCEINLINE short BigShort(short s) { return ShortSwap(s); }
+FORCEINLINE short LittleShort(short s) { return s; }
+
+FORCEINLINE int BigLong(int l) { return LongSwap(l); }
+FORCEINLINE int LittleLong(int l) { return l; }
+
+FORCEINLINE float BigFloat(float f) { return FloatSwap(f); }
+FORCEINLINE float LittleFloat(float f) { return f; }
+
+#endif
+
+//-------------------------------------------------------------------------------------------------
+// key / value info strings - q_shared.cpp
+//-------------------------------------------------------------------------------------------------
+
 #define	MAX_INFO_KEY		64
 #define	MAX_INFO_VALUE		64
 #define	MAX_INFO_STRING		512
 
-char *Info_ValueForKey (const char *s, const char *key);
-void Info_RemoveKey (char *s, const char *key);
-void Info_SetValueForKey (char *s, const char *key, const char *value);
-qboolean Info_Validate (const char *s);
+// Searches the string for the given
+// key and returns the associated value, or an empty string.
+char		*Info_ValueForKey (const char *s, const char *key);
 
-/*
-==============================================================
+void		Info_RemoveKey (char *s, const char *key);
+void		Info_SetValueForKey (char *s, const char *key, const char *value);
 
-SYSTEM SPECIFIC
+// Some characters are illegal in info strings because they
+// can mess up the server's parsing
+qboolean	Info_Validate (const char *s);
 
-==============================================================
-*/
+//-------------------------------------------------------------------------------------------------
+// System specific - sys_win.cpp
+//-------------------------------------------------------------------------------------------------
 
 extern	int	curtime;		// time returned by last Sys_Milliseconds
 
@@ -171,8 +213,8 @@ int		Hunk_End (void);
 /*
 ** pass in an attribute mask of things you wish to REJECT
 */
-char	*Sys_FindFirst (char *path, unsigned musthave, unsigned canthave );
-char	*Sys_FindNext ( unsigned musthave, unsigned canthave );
+char	*Sys_FindFirst (const char *path, unsigned musthave, unsigned canthave);
+char	*Sys_FindNext (unsigned musthave, unsigned canthave);
 void	Sys_FindClose (void);
 
 
@@ -181,17 +223,9 @@ void	Sys_FindClose (void);
 void Sys_Error (const char *error, ...);
 void Com_Printf (const char *msg, ...);
 
-
-/*
-==========================================================
-
-CVARS (console variables)
-
-==========================================================
-*/
-
-#ifndef CVAR
-#define	CVAR
+//-------------------------------------------------------------------------------------------------
+// CVARS - cvars.cpp
+//-------------------------------------------------------------------------------------------------
 
 #define	CVAR_ARCHIVE	1	// set to cause it to be saved to vars.rc
 #define	CVAR_USERINFO	2	// added to userinfo  when changed
@@ -212,15 +246,13 @@ struct cvar_t
 	cvar_t		*next;
 };
 
-#endif		// CVAR
+//-------------------------------------------------------------------------------------------------
+// Collision detection
+//-------------------------------------------------------------------------------------------------
 
-/*
-==============================================================
-
-COLLISION DETECTION
-
-==============================================================
-*/
+//
+// Per-brush flags
+//
 
 // lower bits are stronger, and will eat weaker brushes completely
 #define	CONTENTS_SOLID			1		// an eye is never valid in a solid
@@ -230,7 +262,7 @@ COLLISION DETECTION
 #define	CONTENTS_SLIME			16
 #define	CONTENTS_WATER			32
 #define	CONTENTS_MIST			64
-#define	LAST_VISIBLE_CONTENTS	64
+#define	LAST_VISIBLE_CONTENTS	CONTENTS_MIST
 
 // remaining contents are non-visible, and don't eat brushes
 
@@ -255,7 +287,9 @@ COLLISION DETECTION
 #define	CONTENTS_TRANSLUCENT	0x10000000	// auto set if any surface has trans
 #define	CONTENTS_LADDER			0x20000000
 
-
+//
+// Surface flags
+//
 
 #define	SURF_LIGHT		0x1		// value will hold the light strength
 
@@ -268,9 +302,10 @@ COLLISION DETECTION
 #define	SURF_FLOWING	0x40	// scroll towards angle
 #define	SURF_NODRAW		0x80	// don't bother referencing the texture
 
+//
+// Content masks
+//
 
-
-// content masks
 #define	MASK_ALL				(-1)
 #define	MASK_SOLID				(CONTENTS_SOLID|CONTENTS_WINDOW)
 #define	MASK_PLAYERSOLID		(CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_WINDOW|CONTENTS_MONSTER)
@@ -344,7 +379,9 @@ struct trace_t
 	edict_t		*ent;	// not set by CM_*() functions
 };
 
-
+//-------------------------------------------------------------------------------------------------
+// Player movement
+//-------------------------------------------------------------------------------------------------
 
 // pmove_state_t is the information necessary for client side movement
 // prediction
@@ -386,14 +423,12 @@ struct pmove_state_t
 									// changed by spawns, rotating objects, and teleporters
 };
 
-
 //
 // button bits
 //
 #define	BUTTON_ATTACK		1
 #define	BUTTON_USE			2
 #define	BUTTON_ANY			128			// any key whatsoever
-
 
 // usercmd_t is sent to the server each client frame
 struct usercmd_t
@@ -405,7 +440,6 @@ struct usercmd_t
 	byte	impulse;		// remove?
 	byte	lightlevel;		// light level the player is standing on
 };
-
 
 #define	MAXTOUCH	32
 struct pmove_t
@@ -435,12 +469,14 @@ struct pmove_t
 	int			(*pointcontents) (vec3_t point);
 };
 
-
+//-------------------------------------------------------------------------------------------------
 // entity_state_t->effects
 // Effects are things handled on the client side (lights, particles, frame animations)
 // that happen constantly on the given entity.
 // An entity that has effects will be sent to the client
 // even if it has a zero index model.
+//-------------------------------------------------------------------------------------------------
+
 #define	EF_ROTATE			0x00000001		// rotate (bonus items)
 #define	EF_GIB				0x00000002		// leave a trail
 #define	EF_BLASTER			0x00000008		// redlight + trail
@@ -508,9 +544,10 @@ struct pmove_t
 #define RDF_UVGOGGLES		8
 //ROGUE
 
-//
+//-------------------------------------------------------------------------------------------------
 // muzzle flashes / player effects
-//
+//-------------------------------------------------------------------------------------------------
+
 #define	MZ_BLASTER			0
 #define MZ_MACHINEGUN		1
 #define	MZ_SHOTGUN			2
@@ -781,13 +818,15 @@ struct pmove_t
 
 extern	vec3_t monster_flash_offset [];
 
-
+//-------------------------------------------------------------------------------------------------
 // temp entity events
 //
 // Temp entity events are for things that happen
 // at a location seperate from any existing entity.
 // Temporary entity messages are explicitly constructed
 // and broadcast.
+//-------------------------------------------------------------------------------------------------
+
 enum temp_event_t
 {
 	TE_GUNSHOT,
@@ -850,6 +889,10 @@ enum temp_event_t
 //ROGUE
 };
 
+//-------------------------------------------------------------------------------------------------
+// Bullet impacts
+//-------------------------------------------------------------------------------------------------
+
 #define SPLASH_UNKNOWN		0
 #define SPLASH_SPARKS		1
 #define SPLASH_BLUE_WATER	2
@@ -858,10 +901,12 @@ enum temp_event_t
 #define	SPLASH_LAVA			5
 #define SPLASH_BLOOD		6
 
-
+//-------------------------------------------------------------------------------------------------
 // sound channels
 // channel 0 never willingly overrides
 // other channels (1-7) allways override a playing sound on that channel
+//-------------------------------------------------------------------------------------------------
+
 #define	CHAN_AUTO               0
 #define	CHAN_WEAPON             1
 #define	CHAN_VOICE              2
@@ -871,15 +916,16 @@ enum temp_event_t
 #define	CHAN_NO_PHS_ADD			8	// send to all clients, not just ones in PHS (ATTN 0 will also do this)
 #define	CHAN_RELIABLE			16	// send by reliable message, not datagram
 
-
 // sound attenuation values
 #define	ATTN_NONE               0	// full volume the entire level
 #define	ATTN_NORM               1
 #define	ATTN_IDLE               2
 #define	ATTN_STATIC             3	// diminish very rapidly with distance
 
-
+//-------------------------------------------------------------------------------------------------
 // player_state->stats[] indexes
+//-------------------------------------------------------------------------------------------------
+
 #define STAT_HEALTH_ICON		0
 #define	STAT_HEALTH				1
 #define	STAT_AMMO_ICON			2
@@ -901,8 +947,10 @@ enum temp_event_t
 
 #define	MAX_STATS				32
 
-
+//-------------------------------------------------------------------------------------------------
 // dmflags->value flags
+//-------------------------------------------------------------------------------------------------
+
 #define	DF_NO_HEALTH		0x00000001	// 1
 #define	DF_NO_ITEMS			0x00000002	// 2
 #define	DF_WEAPONS_STAY		0x00000004	// 4
@@ -958,28 +1006,24 @@ ROGUE - VERSIONS
 
 9999	08/20/1998		Internal Use
 */
+
 #define ROGUE_VERSION_ID		1278
 
 #define ROGUE_VERSION_STRING	"08/21/1998 Beta 2 for Ensemble"
 
-// ROGUE
-/*
-==========================================================
-
-  ELEMENTS COMMUNICATED ACROSS THE NET
-
-==========================================================
-*/
+//-------------------------------------------------------------------------------------------------
+// ELEMENTS COMMUNICATED ACROSS THE NET
+//-------------------------------------------------------------------------------------------------
 
 #define	ANGLE2SHORT(x)	((int)((x)*65536/360) & 65535)
 #define	SHORT2ANGLE(x)	((x)*(360.0f/65536))
 
-
-//
+//-------------------------------------------------------------------------------------------------
 // config strings are a general means of communication from
 // the server to all connected clients.
 // Each config string can be at most MAX_QPATH characters.
-//
+//-------------------------------------------------------------------------------------------------
+
 #define	CS_NAME				0
 #define	CS_CDTRACK			1
 #define	CS_SKY				2
@@ -1000,14 +1044,13 @@ ROGUE - VERSIONS
 #define CS_GENERAL			(CS_PLAYERSKINS+MAX_CLIENTS)
 #define	MAX_CONFIGSTRINGS	(CS_GENERAL+MAX_GENERAL)
 
-
-//==============================================
-
-
+//-------------------------------------------------------------------------------------------------
 // entity_state_t->event values
 // ertity events are for effects that take place reletive
 // to an existing entities origin.  Very network efficient.
 // All muzzle flashes really should be converted to events...
+//-------------------------------------------------------------------------------------------------
+
 enum entity_event_t
 {
 	EV_NONE,
@@ -1020,10 +1063,12 @@ enum entity_event_t
 	EV_OTHER_TELEPORT
 };
 
-
+//-------------------------------------------------------------------------------------------------
 // entity_state_t is the information conveyed from the server
 // in an update message about entities that the client will
 // need to render in some way
+//-------------------------------------------------------------------------------------------------
+
 struct entity_state_t
 {
 	int		number;			// edict index
@@ -1046,13 +1091,13 @@ struct entity_state_t
 							// are automatically cleared each frame
 };
 
-//==============================================
-
-
+//-------------------------------------------------------------------------------------------------
 // player_state_t is the information needed in addition to pmove_state_t
 // to rendered a view.  There will only be 10 player_state_t sent each second,
 // but the number of pmove_state_t changes will be reletive to client
 // frame rates
+//-------------------------------------------------------------------------------------------------
+
 struct player_state_t
 {
 	pmove_state_t	pmove;		// for prediction
@@ -1080,7 +1125,7 @@ struct player_state_t
 
 
 // ==================
-// PGM 
+// PGM
 #define VIDREF_GL		1
 #define VIDREF_SOFT		2
 #define VIDREF_OTHER	3

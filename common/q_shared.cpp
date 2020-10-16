@@ -1,101 +1,26 @@
-// q_shared.c
+//-------------------------------------------------------------------------------------------------
+// Shared stuff available to all program modules
+//-------------------------------------------------------------------------------------------------
 
 #include "q_shared.h"
 
 #define STB_SPRINTF_IMPLEMENTATION
 #include "../external/stb/stb_sprintf.h"
 
+//-------------------------------------------------------------------------------------------------
+//
+// Misc
+//
+//-------------------------------------------------------------------------------------------------
+
 char null_string[1] = "";
 
-/*
-============
-COM_SkipPath
-============
-*/
-char *COM_SkipPath (char *pathname)
+//-------------------------------------------------------------------------------------------------
+// Returns the path up to, but not including the last /
+//-------------------------------------------------------------------------------------------------
+void COM_FilePath (const char *in, char *out)
 {
-	char	*last;
-	
-	last = pathname;
-	while (*pathname)
-	{
-		if (*pathname=='/')
-			last = pathname+1;
-		pathname++;
-	}
-	return last;
-}
-
-/*
-============
-COM_StripExtension
-============
-*/
-void COM_StripExtension (const char *in, char *out)
-{
-	while (*in && *in != '.')
-		*out++ = *in++;
-	*out = 0;
-}
-
-/*
-============
-COM_FileExtension
-============
-*/
-char *COM_FileExtension (char *in)
-{
-	static char exten[8];
-	int		i;
-
-	while (*in && *in != '.')
-		in++;
-	if (!*in)
-		return null_string;
-	in++;
-	for (i=0 ; i<7 && *in ; i++,in++)
-		exten[i] = *in;
-	exten[i] = 0;
-	return exten;
-}
-
-/*
-============
-COM_FileBase
-============
-*/
-void COM_FileBase (char *in, char *out)
-{
-	char *s, *s2;
-	
-	s = in + strlen(in) - 1;
-	
-	while (s != in && *s != '.')
-		s--;
-	
-	for (s2 = s ; s2 != in && *s2 != '/' ; s2--)
-	;
-	
-	if (s-s2 < 2)
-		out[0] = 0;
-	else
-	{
-		s--;
-		strncpy (out,s2+1, s-s2);
-		out[s-s2] = 0;
-	}
-}
-
-/*
-============
-COM_FilePath
-
-Returns the path up to, but not including the last /
-============
-*/
-void COM_FilePath (char *in, char *out)
-{
-	char *s;
+	const char *s;
 	
 	s = in + strlen(in) - 1;
 	
@@ -106,178 +31,12 @@ void COM_FilePath (char *in, char *out)
 	out[s-in] = 0;
 }
 
-
-/*
-==================
-COM_DefaultExtension
-==================
-*/
-void COM_DefaultExtension (char *path, char *extension)
-{
-	char    *src;
-//
-// if path doesn't have a .EXT, append extension
-// (extension should include the .)
-//
-	src = path + strlen(path) - 1;
-
-	while (*src != '/' && src != path)
-	{
-		if (*src == '.')
-			return;                 // it has an extension
-		src--;
-	}
-
-	strcat (path, extension);
-}
-
-/*
-============================================================================
-
-					BYTE ORDER FUNCTIONS
-
-============================================================================
-*/
-
-qboolean	bigendien;
-
-// can't just use function pointers, or dll linkage can
-// mess up when qcommon is included in multiple places
-short	(*_BigShort) (short l);
-short	(*_LittleShort) (short l);
-int		(*_BigLong) (int l);
-int		(*_LittleLong) (int l);
-float	(*_BigFloat) (float l);
-float	(*_LittleFloat) (float l);
-
-short	BigShort(short l){return _BigShort(l);}
-short	LittleShort(short l) {return _LittleShort(l);}
-int		BigLong (int l) {return _BigLong(l);}
-int		LittleLong (int l) {return _LittleLong(l);}
-float	BigFloat (float l) {return _BigFloat(l);}
-float	LittleFloat (float l) {return _LittleFloat(l);}
-
-short   ShortSwap (short l)
-{
-	byte    b1,b2;
-
-	b1 = l&255;
-	b2 = (l>>8)&255;
-
-	return (b1<<8) + b2;
-}
-
-short	ShortNoSwap (short l)
-{
-	return l;
-}
-
-int    LongSwap (int l)
-{
-	byte    b1,b2,b3,b4;
-
-	b1 = l&255;
-	b2 = (l>>8)&255;
-	b3 = (l>>16)&255;
-	b4 = (l>>24)&255;
-
-	return ((int)b1<<24) + ((int)b2<<16) + ((int)b3<<8) + b4;
-}
-
-int	LongNoSwap (int l)
-{
-	return l;
-}
-
-float FloatSwap (float f)
-{
-	union
-	{
-		float	f;
-		byte	b[4];
-	} dat1, dat2;
-	
-	
-	dat1.f = f;
-	dat2.b[0] = dat1.b[3];
-	dat2.b[1] = dat1.b[2];
-	dat2.b[2] = dat1.b[1];
-	dat2.b[3] = dat1.b[0];
-	return dat2.f;
-}
-
-float FloatNoSwap (float f)
-{
-	return f;
-}
-
-/*
-================
-Swap_Init
-================
-*/
-void Swap_Init (void)
-{
-	byte	swaptest[2] = {1,0};
-
-// set the byte swapping variables in a portable manner	
-	if ( *(short *)swaptest == 1)
-	{
-		bigendien = false;
-		_BigShort = ShortSwap;
-		_LittleShort = ShortNoSwap;
-		_BigLong = LongSwap;
-		_LittleLong = LongNoSwap;
-		_BigFloat = FloatSwap;
-		_LittleFloat = FloatNoSwap;
-	}
-	else
-	{
-		bigendien = true;
-		_BigShort = ShortNoSwap;
-		_LittleShort = ShortSwap;
-		_BigLong = LongNoSwap;
-		_LittleLong = LongSwap;
-		_BigFloat = FloatNoSwap;
-		_LittleFloat = FloatSwap;
-	}
-
-}
-
-
-
-/*
-============
-va
-
-does a varargs printf into a temp buffer, so I don't need to have
-varargs versions of all text functions.
-============
-*/
-char *va(const char *format, ...)
-{
-	static char		string[MAX_PRINT_MSG];
-	va_list			argptr;
-	
-	va_start (argptr, format);
-	Com_vsprintf (string, format,argptr);
-	va_end (argptr);
-
-	return string;	
-}
-
-
-char	com_token[MAX_TOKEN_CHARS];
-
-/*
-==============
-COM_Parse
-
-Parse a token out of a string
-==============
-*/
+//-------------------------------------------------------------------------------------------------
+// Parse a token out of a string
+//-------------------------------------------------------------------------------------------------
 char *COM_Parse (char **data_p)
 {
+	static char	com_token[MAX_TOKEN_CHARS];
 	int		c;
 	int		len;
 	char	*data;
@@ -356,37 +115,43 @@ skipwhite:
 	return com_token;
 }
 
-
-/*
-===============
-Com_PageInMemory
-
-===============
-*/
-int	paged_total;
-
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
 void Com_PageInMemory (byte *buffer, int size)
 {
-	int		i;
+	static int paged_total;
+	int i;
 
 	for (i=size-1 ; i>0 ; i-=4096)
 		paged_total += buffer[i];
 }
 
+//-------------------------------------------------------------------------------------------------
+// does a varargs printf into a temp buffer, so I don't need to have
+// varargs versions of all text functions.
+//-------------------------------------------------------------------------------------------------
+char *va(const char *format, ...)
+{
+	static char		string[MAX_PRINT_MSG];
+	va_list			argptr;
 
+	va_start(argptr, format);
+	Com_vsprintf(string, format, argptr);
+	va_end(argptr);
 
-/*
-============================================================================
+	return string;
+}
 
-					LIBRARY REPLACEMENT FUNCTIONS
-
-============================================================================
-*/
+//-------------------------------------------------------------------------------------------------
+//
+// Library replacement functions
+//
+//-------------------------------------------------------------------------------------------------
 
 #define AssertString(str) assert( str && str[0] )
 
-// Safe strcpy that ensures null termination
-// Returns bytes written
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
 void Q_strcpy(char *pDest, strlen_t nDestSize, const char *pSrc)
 {
 	AssertString(pSrc);
@@ -397,54 +162,41 @@ void Q_strcpy(char *pDest, strlen_t nDestSize, const char *pSrc)
 		*pDest = *pSrc;
 		++pDest; ++pSrc;
 	}
-	*pDest = '\0';
+	*pDest = 0;
 }
 
-// FIXME: replace all Q_stricmp with Q_strcasecmp
-int Q_stricmp (const char *s1, const char *s2)
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+int Q_strcasecmp(const char *s1, const char *s2)
 {
 #ifdef _WIN32
-	return _stricmp (s1, s2);
+	return _stricmp(s1, s2);
 #else
-	return strcasecmp (s1, s2);
+	return strcasecmp(s1, s2);
 #endif
 }
 
-int Q_strncasecmp (const char *s1, const char *s2, strlen_t n)
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+int Q_strncasecmp(const char *s1, const char *s2, strlen_t n)
 {
 #ifdef _WIN32
 	return _strnicmp(s1, s2, n);
 #else
-	int		c1, c2;
-	
-	do
-	{
-		c1 = *s1++;
-		c2 = *s2++;
-
-		if (!n--)
-			return 0;		// strings are equal until end point
-		
-		if (c1 != c2)
-		{
-			if (c1 >= 'a' && c1 <= 'z')
-				c1 -= ('a' - 'A');
-			if (c2 >= 'a' && c2 <= 'z')
-				c2 -= ('a' - 'A');
-			if (c1 != c2)
-				return -1;		// strings not equal
-		}
-	} while (c1);
-	
-	return 0;		// strings are equal
+	return strcasecmp(s1, s2);
 #endif
 }
 
-int Q_strcasecmp (const char *s1, const char *s2)
+//-------------------------------------------------------------------------------------------------
+// FIXME: replace all Q_stricmp with Q_strcasecmp
+//-------------------------------------------------------------------------------------------------
+int Q_stricmp(const char *s1, const char *s2)
 {
-	return Q_stricmp(s1, s2);
+	return Q_strcasecmp(s1, s2);
 }
 
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
 void Com_vsprintf(char *pDest, strlen_t nDestSize, const char *pFmt, va_list args)
 {
 #if 0
@@ -458,22 +210,61 @@ void Com_vsprintf(char *pDest, strlen_t nDestSize, const char *pFmt, va_list arg
 #endif
 }
 
-/*
-=====================================================================
+//-------------------------------------------------------------------------------------------------
+//
+// Byte order functions
+//
+//-------------------------------------------------------------------------------------------------
 
-  INFO STRINGS
+short ShortSwap (short s)
+{
+	byte    b1,b2;
 
-=====================================================================
-*/
+	b1 = s&255;
+	b2 = (s>>8)&255;
 
-/*
-===============
-Info_ValueForKey
+	return (b1<<8) + b2;
+}
 
-Searches the string for the given
-key and returns the associated value, or an empty string.
-===============
-*/
+int LongSwap (int l)
+{
+	byte    b1,b2,b3,b4;
+
+	b1 = l&255;
+	b2 = (l>>8)&255;
+	b3 = (l>>16)&255;
+	b4 = (l>>24)&255;
+
+	return ((int)b1<<24) + ((int)b2<<16) + ((int)b3<<8) + b4;
+}
+
+float FloatSwap (float f)
+{
+	union
+	{
+		float	f;
+		byte	b[4];
+	} dat1, dat2;
+	
+	
+	dat1.f = f;
+	dat2.b[0] = dat1.b[3];
+	dat2.b[1] = dat1.b[2];
+	dat2.b[2] = dat1.b[1];
+	dat2.b[3] = dat1.b[0];
+	return dat2.f;
+}
+
+//-------------------------------------------------------------------------------------------------
+//
+// Info strings
+//
+//-------------------------------------------------------------------------------------------------
+
+//-------------------------------------------------------------------------------------------------
+// Searches the string for the given
+// key and returns the associated value, or an empty string.
+//-------------------------------------------------------------------------------------------------
 char *Info_ValueForKey (const char *s, const char *key)
 {
 	char	pkey[512];
@@ -565,15 +356,10 @@ void Info_RemoveKey (char *s, const char *key)
 
 }
 
-
-/*
-==================
-Info_Validate
-
-Some characters are illegal in info strings because they
-can mess up the server's parsing
-==================
-*/
+//-------------------------------------------------------------------------------------------------
+// Some characters are illegal in info strings because they
+// can mess up the server's parsing
+//-------------------------------------------------------------------------------------------------
 qboolean Info_Validate (const char *s)
 {
 	if (strstr (s, "\""))
@@ -587,7 +373,6 @@ void Info_SetValueForKey (char *s, const char *key, const char *value)
 {
 	char	newi[MAX_INFO_STRING], *v;
 	int		c;
-	int		maxsize = MAX_INFO_STRING;
 
 	if (strstr (key, "\\") || strstr (value, "\\") )
 	{
@@ -618,7 +403,7 @@ void Info_SetValueForKey (char *s, const char *key, const char *value)
 
 	Com_sprintf (newi, "\\%s\\%s", key, value);
 
-	if (strlen(newi) + strlen(s) > maxsize)
+	if (strlen(newi) + strlen(s) > MAX_INFO_STRING)
 	{
 		Com_Printf ("Info string length exceeded\n");
 		return;
@@ -636,7 +421,3 @@ void Info_SetValueForKey (char *s, const char *key, const char *value)
 	}
 	*s = 0;
 }
-
-//====================================================================
-
-

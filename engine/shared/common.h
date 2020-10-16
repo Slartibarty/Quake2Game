@@ -57,8 +57,8 @@ void SZ_Print (sizebuf_t *buf, const char *data);	// strcats onto the sizebuf
 
 //=============================================================================
 
-struct usercmd_s;
-struct entity_state_s;
+struct usercmd_t;
+struct entity_state_t;
 
 void MSG_WriteChar (sizebuf_t *sb, int c);
 void MSG_WriteByte (sizebuf_t *sb, int c);
@@ -96,18 +96,6 @@ void	MSG_ReadDir (sizebuf_t *sb, vec3_t vector);
 void	MSG_ReadData (sizebuf_t *sb, void *buffer, int size);
 
 //=============================================================================
-
-extern	qboolean		bigendien;
-
-extern	short	BigShort (short l);
-extern	short	LittleShort (short l);
-extern	int		BigLong (int l);
-extern	int		LittleLong (int l);
-extern	float	BigFloat (float l);
-extern	float	LittleFloat (float l);
-
-//=============================================================================
-
 
 int	COM_Argc (void);
 char *COM_Argv (int arg);	// range and null checked
@@ -525,8 +513,6 @@ void		NET_Sleep(int msec);
 
 //=============================================================================
 
-#define	OLD_AVG		0.99		// total = oldtotal*OLD_AVG + new*(1-OLD_AVG)
-
 #define	MAX_LATENT	32
 
 struct netchan_t
@@ -589,7 +575,7 @@ CMODEL
 */
 
 
-cmodel_t	*CM_LoadMap (const char *name, qboolean clientload, unsigned *checksum);
+cmodel_t	*CM_LoadMap (const char *name, bool clientload, unsigned *checksum);
 cmodel_t	*CM_InlineModel (const char *name);	// *1, *2, etc
 
 int			CM_NumClusters (void);
@@ -630,7 +616,7 @@ void		CM_SetAreaPortalState (int portalnum, qboolean open);
 qboolean	CM_AreasConnected (int area1, int area2);
 
 int			CM_WriteAreaBits (byte *buffer, int area);
-qboolean	CM_HeadnodeVisible (int headnode, byte *visbits);
+bool		CM_HeadnodeVisible (int headnode, byte *visbits);
 
 void		CM_WritePortalState (FILE *f);
 void		CM_ReadPortalState (FILE *f);

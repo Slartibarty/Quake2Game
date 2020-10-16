@@ -1,44 +1,37 @@
-
-//
+//-------------------------------------------------------------------------------------------------
 // qfiles.h: quake file formats
 // This file must be identical in the quake and utils directories
-//
+//-------------------------------------------------------------------------------------------------
 
-/*
-========================================================================
+#include "../../common/q_shared.h"
 
-The .pak files are just a linear collapse of a directory tree
+//-------------------------------------------------------------------------------------------------
+// PAK files
+// The .pak files are just a linear collapse of a directory tree
+//-------------------------------------------------------------------------------------------------
 
-========================================================================
-*/
+static constexpr int IDPAKHEADER = MakeID('P', 'A', 'C', 'K');
 
-#define IDPAKHEADER		(('K'<<24)+('C'<<16)+('A'<<8)+'P')
-
-typedef struct
+struct dpackfile_t
 {
 	char	name[56];
 	int		filepos, filelen;
-} dpackfile_t;
+};
 
-typedef struct
+struct dpackheader_t
 {
-	int		ident;		// == IDPAKHEADER
+	int		ident;		// IDPAKHEADER
 	int		dirofs;
 	int		dirlen;
-} dpackheader_t;
+};
 
-#define	MAX_FILES_IN_PACK	4096
+#define MAX_FILES_IN_PACK	4096
 
+//-------------------------------------------------------------------------------------------------
+// Legacy PCX files
+//-------------------------------------------------------------------------------------------------
 
-/*
-========================================================================
-
-PCX files are used for as many images as possible
-
-========================================================================
-*/
-
-typedef struct
+struct pcx_t
 {
     char	manufacturer;
     char	version;
@@ -53,18 +46,14 @@ typedef struct
     unsigned short	palette_type;
     char	filler[58];
     unsigned char	data;			// unbounded
-} pcx_t;
+};
 
+//-------------------------------------------------------------------------------------------------
+// .MD2 triangle model file format
+//-------------------------------------------------------------------------------------------------
 
-/*
-========================================================================
+static constexpr int IDALIASHEADER = MakeID('I', 'D', 'P', '2');
 
-.MD2 triangle model file format
-
-========================================================================
-*/
-
-#define IDALIASHEADER		(('2'<<24)+('P'<<16)+('D'<<8)+'I')
 #define ALIAS_VERSION	8
 
 #define	MAX_TRIANGLES	4096
@@ -73,23 +62,23 @@ typedef struct
 #define MAX_MD2SKINS	32
 #define	MAX_SKINNAME	64
 
-typedef struct
+struct dstvert_t
 {
 	short	s;
 	short	t;
-} dstvert_t;
+};
 
-typedef struct 
+struct dtriangle_t
 {
 	short	index_xyz[3];
 	short	index_st[3];
-} dtriangle_t;
+};
 
-typedef struct
+struct dtrivertx_t
 {
 	byte	v[3];			// scaled byte to fit in frame mins/maxs
 	byte	lightnormalindex;
-} dtrivertx_t;
+};
 
 #define DTRIVERTX_V0   0
 #define DTRIVERTX_V1   1
@@ -97,25 +86,17 @@ typedef struct
 #define DTRIVERTX_LNI  3
 #define DTRIVERTX_SIZE 4
 
-typedef struct
+struct daliasframe_t
 {
-	float		scale[3];	// multiply byte verts by this
+	float		scale[3];		// multiply byte verts by this
 	float		translate[3];	// then add this
-	char		name[16];	// frame name from grabbing
-	dtrivertx_t	verts[1];	// variable sized
-} daliasframe_t;
+	char		name[16];		// frame name from grabbing
+	dtrivertx_t	verts[1];		// variable sized
+};
 
 
-// the glcmd format:
-// a positive integer starts a tristrip command, followed by that many
-// vertex structures.
-// a negative integer starts a trifan command, followed by -x vertexes
-// a zero indicates the end of the command list.
-// a vertex consists of a floating point s, a floating point t,
-// and an integer vertex index.
-
-
-typedef struct
+// Header
+struct dmdl_t
 {
 	int			ident;
 	int			version;
@@ -137,46 +118,45 @@ typedef struct
 	int			ofs_frames;		// offset for first frame
 	int			ofs_glcmds;	
 	int			ofs_end;		// end of file
+};
 
-} dmdl_t;
+// the glcmd format:
+// a positive integer starts a tristrip command, followed by that many
+// vertex structures.
+// a negative integer starts a trifan command, followed by -x vertexes
+// a zero indicates the end of the command list.
+// a vertex consists of a floating point s, a floating point t,
+// and an integer vertex index.
 
-/*
-========================================================================
+//-------------------------------------------------------------------------------------------------
+// .SP2 sprite file format
+//-------------------------------------------------------------------------------------------------
 
-.SP2 sprite file format
+static constexpr int IDSPRITEHEADER = MakeID('I', 'D', 'S', '2');
 
-========================================================================
-*/
-
-#define IDSPRITEHEADER	(('2'<<24)+('S'<<16)+('D'<<8)+'I')
-		// little-endian "IDS2"
 #define SPRITE_VERSION	2
 
-typedef struct
+struct dsprframe_t
 {
 	int		width, height;
 	int		origin_x, origin_y;		// raster coordinates inside pic
 	char	name[MAX_SKINNAME];		// name of pcx file
-} dsprframe_t;
+};
 
-typedef struct {
+struct dsprite_t
+{
 	int			ident;
 	int			version;
 	int			numframes;
 	dsprframe_t	frames[1];			// variable sized
-} dsprite_t;
+};
 
-/*
-==============================================================================
-
-  .WAL texture file format
-
-==============================================================================
-*/
-
+//-------------------------------------------------------------------------------------------------
+// .WAL texture file format
+//-------------------------------------------------------------------------------------------------
 
 #define	MIPLEVELS	4
-typedef struct miptex_s
+struct miptex_t
 {
 	char		name[32];
 	unsigned	width, height;
@@ -185,23 +165,15 @@ typedef struct miptex_s
 	int			flags;
 	int			contents;
 	int			value;
-} miptex_t;
+};
 
+//-------------------------------------------------------------------------------------------------
+// .BSP file format
+//-------------------------------------------------------------------------------------------------
 
-
-/*
-==============================================================================
-
-  .BSP file format
-
-==============================================================================
-*/
-
-#define IDBSPHEADER	(('P'<<24)+('S'<<16)+('B'<<8)+'I')
-		// little-endian "IBSP"
+static constexpr int IDBSPHEADER = MakeID('I', 'B', 'S', 'P');
 
 #define BSPVERSION	38
-
 
 // upper design bounds
 // leaffaces, leafbrushes, planes, and verts are still bounded by
@@ -235,10 +207,10 @@ typedef struct miptex_s
 
 //=============================================================================
 
-typedef struct
+struct lump_t
 {
 	int		fileofs, filelen;
-} lump_t;
+};
 
 #define	LUMP_ENTITIES		0
 #define	LUMP_PLANES			1
@@ -261,27 +233,27 @@ typedef struct
 #define	LUMP_AREAPORTALS	18
 #define	HEADER_LUMPS		19
 
-typedef struct
+struct dheader_t
 {
 	int			ident;
 	int			version;	
 	lump_t		lumps[HEADER_LUMPS];
-} dheader_t;
+};
 
-typedef struct
+struct dmodel_t
 {
 	float		mins[3], maxs[3];
-	float		origin[3];		// for sounds or lights
+	float		origin[3];				// for sounds or lights
 	int			headnode;
 	int			firstface, numfaces;	// submodels just draw faces
 										// without walking the bsp tree
-} dmodel_t;
+};
 
 
-typedef struct
+struct dvertex_t
 {
 	float	point[3];
-} dvertex_t;
+};
 
 
 // 0-2 are axial planes
@@ -296,12 +268,12 @@ typedef struct
 
 // planes (x&~1) and (x&~1)+1 are always opposites
 
-typedef struct
+struct dplane_t
 {
 	float	normal[3];
 	float	dist;
 	int		type;		// PLANE_X - PLANE_ANYZ ?remove? trivial to regenerate
-} dplane_t;
+};
 
 
 // contents flags are seperate bits
@@ -318,7 +290,7 @@ typedef struct
 #define	CONTENTS_SLIME			16
 #define	CONTENTS_WATER			32
 #define	CONTENTS_MIST			64
-#define	LAST_VISIBLE_CONTENTS	64
+#define	LAST_VISIBLE_CONTENTS	CONTENTS_MIST
 
 // remaining contents are non-visible, and don't eat brushes
 
@@ -359,7 +331,7 @@ typedef struct
 
 
 
-typedef struct
+struct dnode_t
 {
 	int			planenum;
 	int			children[2];	// negative numbers are -(leafs+1), not nodes
@@ -367,28 +339,28 @@ typedef struct
 	short		maxs[3];
 	unsigned short	firstface;
 	unsigned short	numfaces;	// counting both sides
-} dnode_t;
+};
 
 
-typedef struct texinfo_s
+struct texinfo_t
 {
 	float		vecs[2][4];		// [s/t][xyz offset]
 	int			flags;			// miptex flags + overrides
 	int			value;			// light emission, etc
 	char		texture[32];	// texture name (textures/*.wal)
 	int			nexttexinfo;	// for animations, -1 = end of chain
-} texinfo_t;
+};
 
 
 // note that edge 0 is never used, because negative edge nums are used for
 // counterclockwise use of the edge in a face
-typedef struct
+struct dedge_t
 {
 	unsigned short	v[2];		// vertex numbers
-} dedge_t;
+};
 
 #define	MAXLIGHTMAPS	4
-typedef struct
+struct dface_t
 {
 	unsigned short	planenum;
 	short		side;
@@ -400,9 +372,9 @@ typedef struct
 // lighting info
 	byte		styles[MAXLIGHTMAPS];
 	int			lightofs;		// start of [numstyles*surfsize] samples
-} dface_t;
+};
 
-typedef struct
+struct dleaf_t
 {
 	int				contents;			// OR of all brushes (not needed?)
 
@@ -417,20 +389,20 @@ typedef struct
 
 	unsigned short	firstleafbrush;
 	unsigned short	numleafbrushes;
-} dleaf_t;
+};
 
-typedef struct
+struct dbrushside_t
 {
 	unsigned short	planenum;		// facing out of the leaf
 	short	texinfo;
-} dbrushside_t;
+};
 
-typedef struct
+struct dbrush_t
 {
 	int			firstside;
 	int			numsides;
 	int			contents;
-} dbrush_t;
+};
 
 #define	ANGLE_UP	-1
 #define	ANGLE_DOWN	-2
@@ -441,23 +413,23 @@ typedef struct
 // compressed bit vectors
 #define	DVIS_PVS	0
 #define	DVIS_PHS	1
-typedef struct
+struct dvis_t
 {
 	int			numclusters;
 	int			bitofs[8][2];	// bitofs[numclusters][2]
-} dvis_t;
+};
 
 // each area has a list of portals that lead into other areas
 // when portals are closed, other areas may not be visible or
 // hearable even if the vis info says that it should be
-typedef struct
+struct dareaportal_t
 {
 	int		portalnum;
 	int		otherarea;
-} dareaportal_t;
+};
 
-typedef struct
+struct darea_t
 {
 	int		numareaportals;
 	int		firstareaportal;
-} darea_t;
+};

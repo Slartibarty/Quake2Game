@@ -9,6 +9,7 @@
 #define STBI_NO_LINEAR
 #define STBI_NO_HDR
 #define STBI_ONLY_TGA
+#define STBI_NO_FAILURE_STRINGS
 #include "stb_image.h"
 
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
@@ -491,33 +492,32 @@ static byte *GL_LoadImage(const char *pName, int &width, int &height)
 
 	byte *pPic;
 
-	// Try STBI first
-	pPic = stbi_load_from_memory(pBuffer, nBufLen, &width, &height, nullptr, 4);
+	const char *pExt = strrchr(pName, '.') + 1;
 
-	// Legacy loaders
+	if (Q_stricmp(pExt, "tga") == 0)
+	{
+		// We use STB for TGA
+		pPic = stbi_load_from_memory(pBuffer, nBufLen, &width, &height, nullptr, 4);
+	}
+	else if (Q_stricmp(pExt, "pcx") == 0)
+	{
+		// Fixme
+		ImageLoaders::R_LoadPCX32(pBuffer, nBufLen, &pPic, width, height);
+	}
+	else if (Q_stricmp(pExt, "wal") == 0)
+	{
+		pPic = ImageLoaders::LoadWAL(pBuffer, nBufLen, width, height);
+	}
+	else
+	{
+		ri.FS_FreeFile(pBuffer);
+		ri.Con_Printf(PRINT_ALL, "GL_LoadImage - %s is an unsupported image format!", pName);
+		return nullptr;
+	}
+
 	if (!pPic)
 	{
-		const char *pExt = strrchr(pName, '.') + 1;
-
-		if (Q_stricmp(pExt, "pcx") == 0)
-		{
-			ImageLoaders::R_LoadPCX32(pBuffer, nBufLen, &pPic, width, height);
-		}
-		else if (Q_stricmp(pExt, "wal") == 0)
-		{
-			pPic = ImageLoaders::LoadWAL(pBuffer, nBufLen, width, height);
-		}
-		else
-		{
-			ri.FS_FreeFile(pBuffer);
-			ri.Con_Printf(PRINT_ALL, "GL_LoadImage - %s is an unsupported image format!", pName);
-			return nullptr;
-		}
-
-		if (!pPic)
-		{
-			return nullptr;
-		}
+		return nullptr;
 	}
 
 	ri.FS_FreeFile(pBuffer);
