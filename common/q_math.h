@@ -7,19 +7,23 @@
 #include "q_defs.h"
 #include "q_types.h"
 
+//-------------------------------------------------------------------------------------------------
+//
+// New Maths
+//
+//-------------------------------------------------------------------------------------------------
+
 namespace math
 {
-	using vec_t = float;
-
-	struct vec3_t
+	struct vec3
 	{
-		vec_t x, y, z;
+		float x, y, z;
 
-		vec3_t()
+		vec3()
 		{
 		}
 
-		vec3_t(vec_t X, vec_t Y, vec_t Z)
+		vec3(float X, float Y, float Z)
 			: x(X), y(Y), z(Z)
 		{
 		}
@@ -31,19 +35,19 @@ namespace math
 			z = 0;
 		}
 
-		void Set(vec_t X, vec_t Y, vec_t Z)
+		void Set(float X, float Y, float Z)
 		{
 			x = X;
 			y = Y;
 			z = Z;
 		}
 
-		vec_t Length()
+		float Length()
 		{
 			return sqrt(x*x + y*y + z*z);
 		}
 
-		void Scale(vec_t scale)
+		void Scale(float scale)
 		{
 			x *= scale;
 			y *= scale;
@@ -57,28 +61,28 @@ namespace math
 			z = -z;
 		}
 
-		void AddBy(const vec3_t &v)
+		void AddBy(const vec3 &v)
 		{
 			x += v.x;
 			y += v.y;
 			z += v.z;
 		}
 
-		void SubtractBy(const vec3_t &v)
+		void SubtractBy(const vec3 &v)
 		{
 			x -= v.x;
 			y -= v.y;
 			z -= v.z;
 		}
 
-		void MultiplyBy(const vec3_t &v)
+		void MultiplyBy(const vec3 &v)
 		{
 			x *= v.x;
 			y *= v.y;
 			z *= v.z;
 		}
 
-		void DivideBy(const vec3_t &v)
+		void DivideBy(const vec3 &v)
 		{
 			x /= v.x;
 			y /= v.y;
@@ -87,65 +91,71 @@ namespace math
 
 	};
 
-	inline vec_t DotProduct(const vec3_t& v1, const vec3_t& v2)
+	inline float DotProduct(const vec3 & v1, const vec3& v2)
 	{
 		return (v1.x*v2.x + v1.y*v2.y + v1.z*v2.z);
 	}
 
-	inline void CrossProduct(const vec3_t& v1, const vec3_t& v2, vec3_t& cross)
+	inline void CrossProduct(const vec3& v1, const vec3& v2, vec3& cross)
 	{
 		cross.x = v1.y*v2.z - v1.z*v2.y;
 		cross.y = v1.z*v2.x - v1.x*v2.z;
 		cross.z = v1.x*v2.y - v1.y*v2.x;
 	}
 
-	inline void VectorSubtract(const vec3_t& veca, const vec3_t& vecb, vec3_t& out)
+	inline void VectorSubtract(const vec3& veca, const vec3& vecb, vec3& out)
 	{
 		out.x = veca.x - vecb.x;
 		out.y = veca.y - vecb.y;
 		out.z = veca.z - vecb.z;
 	}
 
-	inline void VectorAdd(const vec3_t& veca, const vec3_t& vecb, vec3_t& out)
+	inline void VectorAdd(const vec3& veca, const vec3& vecb, vec3& out)
 	{
 		out.x = veca.x + vecb.x;
 		out.y = veca.y + vecb.y;
 		out.z = veca.z + vecb.z;
 	}
 
-	inline void VectorCopy(const vec3_t& in, vec3_t& out)
+	inline void VectorCopy(const vec3& in, vec3& out)
 	{
 		out.x = in.x;
 		out.y = in.y;
 		out.z = in.z;
 	}
 
-	inline void VectorMA(const vec3_t& veca, vec_t scale, const vec3_t& vecb, vec3_t& out)
+	inline void VectorMA(const vec3& veca, float scale, const vec3& vecb, vec3& out)
 	{
 		out.x = veca.x + scale * vecb.x;
 		out.y = veca.y + scale * vecb.y;
 		out.z = veca.z + scale * vecb.z;
 	}
 
-	inline void VectorScale(const vec3_t& in, vec_t scale, vec3_t& out)
+	inline void VectorScale(const vec3& in, float scale, vec3& out)
 	{
 		out.x = in.x * scale;
 		out.y = in.y * scale;
 		out.z = in.z * scale;
 	}
 
-	inline bool VectorCompare(const vec3_t& v1, const vec3_t& v2)
+	inline bool VectorCompare(const vec3& v1, const vec3& v2)
 	{
 		return (v1.x != v2.x || v1.y != v2.y || v1.z != v2.z);
 	}
 
-	inline void ClearBounds(vec3_t& mins, vec3_t& maxs)
+	inline void ClearBounds(vec3& mins, vec3& maxs)
 	{
 		mins.x = mins.y = mins.z = 99999;
 		maxs.x = maxs.y = maxs.z = -99999;
 	}
 
 }
+
+//-------------------------------------------------------------------------------------------------
+//
+// Old maths
+//
+//-------------------------------------------------------------------------------------------------
 
 typedef float vec_t;
 typedef vec_t vec3_t[3];

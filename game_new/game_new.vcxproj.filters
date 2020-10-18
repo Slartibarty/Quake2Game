@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Code">
+      <UniqueIdentifier>{f5a30afd-b8e6-44fd-8654-923b9dcf62ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Code\Common">
+      <UniqueIdentifier>{42057322-c73e-4507-a9c7-6238692fc005}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Code\Game Shared">
+      <UniqueIdentifier>{e36215d0-1edd-4c13-ba3d-e4490f59e97c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\common\q_defs.h">
+      <Filter>Code\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\q_math.h">
+      <Filter>Code\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\q_shared.h">
+      <Filter>Code\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\q_types.h">
+      <Filter>Code\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\game_shared\game_public.h">
+      <Filter>Code\Game Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="ng_local.h">
+      <Filter>Code</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\common\q_math.cpp">
+      <Filter>Code\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\q_shared.cpp">
+      <Filter>Code\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\game_shared\m_flash.cpp">
+      <Filter>Code\Game Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="ng_main.cpp">
+      <Filter>Code</Filter>
+    </ClCompile>
+    <ClCompile Include="ng_svcmds.cpp">
+      <Filter>Code</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

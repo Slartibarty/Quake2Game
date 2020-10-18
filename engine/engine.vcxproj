@@ -150,7 +150,7 @@
     <ClCompile Include="shared\net_chan.cpp" />
     <ClCompile Include="shared\net_wins.cpp" />
     <ClCompile Include="shared\misc_win.cpp" />
-    <ClCompile Include="shared\pmove_hl1.cpp" />
+    <ClCompile Include="shared\pmove.cpp" />
     <ClCompile Include="shared\sys_win.cpp" />
   </ItemGroup>
   <ItemGroup>

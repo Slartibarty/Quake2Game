@@ -239,7 +239,7 @@
     <ClCompile Include="..\game_shared\m_flash.cpp">
       <Filter>Code\Game</Filter>
     </ClCompile>
-    <ClCompile Include="shared\pmove_hl1.cpp">
+    <ClCompile Include="shared\pmove.cpp">
       <Filter>Code\Shared</Filter>
     </ClCompile>
   </ItemGroup>
