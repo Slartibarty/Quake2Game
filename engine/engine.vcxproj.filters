@@ -96,6 +96,12 @@
     <ClInclude Include="shared\q_formats.h">
       <Filter>Code\Shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\TnkString.h">
+      <Filter>Code\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\TnkVector.h">
+      <Filter>Code\Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="server\sv_ccmds.cpp">

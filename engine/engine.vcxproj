@@ -83,6 +83,8 @@
     <ClInclude Include="..\common\q_math.h" />
     <ClInclude Include="..\common\q_shared.h" />
     <ClInclude Include="..\common\q_types.h" />
+    <ClInclude Include="..\common\TnkString.h" />
+    <ClInclude Include="..\common\TnkVector.h" />
     <ClInclude Include="..\game_shared\game_public.h" />
     <ClInclude Include="client\cdaudio.h" />
     <ClInclude Include="client\client.h" />
