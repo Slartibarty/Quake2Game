@@ -989,8 +989,6 @@ CONTROLS MENU
 
 =======================================================================
 */
-extern cvar_t *in_joystick;
-
 static menuframework_s	s_options_menu;
 static menuaction_s		s_options_defaults_action;
 static menuaction_s		s_options_customize_options_action;
@@ -1002,7 +1000,6 @@ static menulist_s		s_options_lookspring_box;
 static menulist_s		s_options_lookstrafe_box;
 static menulist_s		s_options_crosshair_box;
 static menuslider_s		s_options_sfxvolume_slider;
-static menulist_s		s_options_joystick_box;
 static menulist_s		s_options_cdvolume_box;
 static menulist_s		s_options_quality_list;
 static menulist_s		s_options_compatibility_list;
@@ -1011,11 +1008,6 @@ static menulist_s		s_options_console_action;
 static void CrosshairFunc( void *unused )
 {
 	Cvar_SetValue( "crosshair", s_options_crosshair_box.curvalue );
-}
-
-static void JoystickFunc( void *unused )
-{
-	Cvar_SetValue( "in_joystick", s_options_joystick_box.curvalue );
 }
 
 static void CustomizeControlsFunc( void *unused )
@@ -1068,9 +1060,6 @@ static void ControlsSetMenuItemValues( void )
 
 	Cvar_SetValue( "crosshair", ClampCvar( 0, 3, crosshair->value ) );
 	s_options_crosshair_box.curvalue		= crosshair->value;
-
-	Cvar_SetValue( "in_joystick", ClampCvar( 0, 1, in_joystick->value ) );
-	s_options_joystick_box.curvalue		= in_joystick->value;
 }
 
 static void ControlsResetDefaultsFunc( void *unused )
@@ -1212,7 +1201,7 @@ void Options_MenuInit( void )
 
 	s_options_quality_list.generic.type	= MTYPE_SPINCONTROL;
 	s_options_quality_list.generic.x		= 0;
-	s_options_quality_list.generic.y		= 20;;
+	s_options_quality_list.generic.y		= 20;
 	s_options_quality_list.generic.name		= "sound quality";
 	s_options_quality_list.generic.callback = UpdateSoundQualityFunc;
 	s_options_quality_list.itemnames		= quality_items;
@@ -1283,13 +1272,6 @@ void Options_MenuInit( void )
 	s_options_noalttab_box.generic.callback = NoAltTabFunc;
 	s_options_noalttab_box.itemnames = yesno_names;
 */
-	s_options_joystick_box.generic.type = MTYPE_SPINCONTROL;
-	s_options_joystick_box.generic.x	= 0;
-	s_options_joystick_box.generic.y	= 120;
-	s_options_joystick_box.generic.name	= "use joystick";
-	s_options_joystick_box.generic.callback = JoystickFunc;
-	s_options_joystick_box.itemnames = yesno_names;
-
 	s_options_customize_options_action.generic.type	= MTYPE_ACTION;
 	s_options_customize_options_action.generic.x		= 0;
 	s_options_customize_options_action.generic.y		= 140;
@@ -1321,7 +1303,6 @@ void Options_MenuInit( void )
 	Menu_AddItem( &s_options_menu, ( void * ) &s_options_lookstrafe_box );
 	Menu_AddItem( &s_options_menu, ( void * ) &s_options_freelook_box );
 	Menu_AddItem( &s_options_menu, ( void * ) &s_options_crosshair_box );
-	Menu_AddItem( &s_options_menu, ( void * ) &s_options_joystick_box );
 	Menu_AddItem( &s_options_menu, ( void * ) &s_options_customize_options_action );
 	Menu_AddItem( &s_options_menu, ( void * ) &s_options_defaults_action );
 	Menu_AddItem( &s_options_menu, ( void * ) &s_options_console_action );

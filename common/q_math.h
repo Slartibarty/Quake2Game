@@ -264,15 +264,11 @@ inline void ClearBounds(vec3_t mins, vec3_t maxs)
 
 inline float LerpAngle(float a2, float a1, float frac)
 {
-#if 0
 	if (a1 - a2 > 180)
 		a1 -= 360;
 	if (a1 - a2 < -180)
 		a1 += 360;
 	return a2 + frac * (a1 - a2);
-#else
-	return std::lerp(a2, a1, frac);
-#endif
 }
 
 inline float anglemod(float a)

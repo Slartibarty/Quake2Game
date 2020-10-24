@@ -89,6 +89,8 @@ void GL_SetDefaultState(void);
 extern image_t		gltextures[MAX_GLTEXTURES];
 extern int			numgltextures;
 
+extern byte			g_gammatable[256];
+
 extern image_t		*r_notexture;
 extern image_t		*r_particletexture;
 
@@ -198,8 +200,6 @@ extern  cvar_t  *gl_lockpvs;
 extern	cvar_t	*vid_fullscreen;
 extern	cvar_t	*vid_gamma;
 
-extern	cvar_t	*intensity;
-
 extern	float	r_world_matrix[16];
 
 extern	model_t	*r_worldmodel;
@@ -308,7 +308,13 @@ extern refimport_t ri;		// gl_main.cpp
 
 void		GLimp_BeginFrame( void );
 void		GLimp_EndFrame( void );
+
+void		GLimp_SetGamma( byte *red, byte *green, byte *blue );
+void		GLimp_RestoreGamma( void );
+
 int 		GLimp_Init( void *hinstance, void *hWnd );
 void		GLimp_Shutdown( void );
-rserr_t    	GLimp_SetMode( int *pWidth, int *pHeight, int mode, qboolean fullscreen );
+
+rserr_t    	GLimp_SetMode( int *pWidth, int *pHeight, int mode, bool fullscreen );
+
 void		GLimp_AppActivate( qboolean active );

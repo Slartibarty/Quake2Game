@@ -10,8 +10,6 @@
 // Structure containing functions exported from refresh DLL
 refexport_t	re;
 
-static UINT MSH_MOUSEWHEEL;
-
 // Console variables that we need to access from this module
 cvar_t		*vid_gamma;
 cvar_t		*vid_ref;			// Name of Refresh DLL loaded
@@ -200,21 +198,6 @@ LRESULT CALLBACK MainWndProc (
     WPARAM  wParam,
     LPARAM  lParam)
 {
-	if ( uMsg == MSH_MOUSEWHEEL )
-	{
-		if ( ( ( int ) wParam ) > 0 )
-		{
-			Key_Event( K_MWHEELUP, true, sys_msg_time );
-			Key_Event( K_MWHEELUP, false, sys_msg_time );
-		}
-		else
-		{
-			Key_Event( K_MWHEELDOWN, true, sys_msg_time );
-			Key_Event( K_MWHEELDOWN, false, sys_msg_time );
-		}
-        return DefWindowProcW (hWnd, uMsg, wParam, lParam);
-	}
-
 	switch (uMsg)
 	{
 	case WM_MOUSEWHEEL:
@@ -240,7 +223,6 @@ LRESULT CALLBACK MainWndProc (
 	case WM_CREATE:
 		cl_hwnd = hWnd;
 
-		MSH_MOUSEWHEEL = RegisterWindowMessage("MSWHEEL_ROLLMSG"); 
         return DefWindowProcW (hWnd, uMsg, wParam, lParam);
 
 	case WM_PAINT:
@@ -258,7 +240,7 @@ LRESULT CALLBACK MainWndProc (
 
 			// KJB: Watch this for problems in fullscreen modes with Alt-tabbing.
 			fActive = LOWORD(wParam);
-			fMinimized = (BOOL) HIWORD(wParam);
+			fMinimized = HIWORD(wParam);
 
 			AppActivate( fActive != WA_INACTIVE, fMinimized);
 
@@ -271,20 +253,21 @@ LRESULT CALLBACK MainWndProc (
 		{
 			int		xPos, yPos;
 			RECT	r;
-			DWORD	style;
+			DWORD	style, exstyle;
 
 			if (!vid_fullscreen->value)
 			{
-				xPos = (short) LOWORD(lParam);    // horizontal position 
-				yPos = (short) HIWORD(lParam);    // vertical position 
+				xPos = LOWORD(lParam);	// horizontal position
+				yPos = HIWORD(lParam);	// vertical position
 
 				r.left   = 0;
 				r.top    = 0;
 				r.right  = 1;
 				r.bottom = 1;
 
-				style = GetWindowLongW( hWnd, GWL_STYLE );
-				AdjustWindowRect( &r, style, FALSE );
+				style = (DWORD)GetWindowLongPtrW(hWnd, GWL_STYLE);
+				exstyle = (DWORD)GetWindowLongPtrW(hWnd, GWL_EXSTYLE);
+				AdjustWindowRectEx( &r, style, FALSE, exstyle );
 
 				Cvar_SetValue( "vid_xpos", xPos + r.left);
 				Cvar_SetValue( "vid_ypos", yPos + r.top);
@@ -336,7 +319,7 @@ LRESULT CALLBACK MainWndProc (
 			}
 			return 0;
 		}
-		// fall through
+		// fallthrough
 	case WM_KEYDOWN:
 		Key_Event( MapKey( lParam ), true, sys_msg_time);
 		break;
@@ -377,7 +360,7 @@ static void VID_Front_f( void )
 /*
 ** VID_GetModeInfo
 */
-struct alignas(64) vidmode_t
+struct vidmode_t
 {
 	char	description[32];
 	int		width, height, mode;
@@ -385,21 +368,6 @@ struct alignas(64) vidmode_t
 
 static vidmode_t	*s_vid_modes;
 static int			s_num_modes;
-#if 0
-{
-	{ "Mode 0: 320x240",   320, 240,   0 },
-	{ "Mode 1: 400x300",   400, 300,   1 },
-	{ "Mode 2: 512x384",   512, 384,   2 },
-	{ "Mode 3: 640x480",   640, 480,   3 },
-	{ "Mode 4: 800x600",   800, 600,   4 },
-	{ "Mode 5: 960x720",   960, 720,   5 },
-	{ "Mode 6: 1024x768",  1024, 768,  6 },
-	{ "Mode 7: 1152x864",  1152, 864,  7 },
-	{ "Mode 8: 1280x960",  1280, 960, 8 },
-	{ "Mode 9: 1600x1200", 1600, 1200, 9 },
-	{ "Mode 10: 2048x1536", 2048, 1536, 10 }
-};
-#endif
 
 // Allocate space for 16 modes by default, 32, 64, etc
 static constexpr int DefaultNumModes = 16;
@@ -480,22 +448,16 @@ int VID_GetNumModes()
 */
 static void VID_UpdateWindowPosAndSize( int x, int y )
 {
-	RECT	r;
-	int		style;
-	int		w, h;
+	RECT r{ 0, 0, viddef.width, viddef.width };
 
-	r.left   = 0;
-	r.top    = 0;
-	r.right  = viddef.width;
-	r.bottom = viddef.height;
+	DWORD style = (DWORD)GetWindowLongPtrW(cl_hwnd, GWL_STYLE);
+	DWORD exstyle = (DWORD)GetWindowLongPtrW(cl_hwnd, GWL_EXSTYLE);
+	AdjustWindowRectEx( &r, style, FALSE, exstyle );
 
-	style = GetWindowLongW( cl_hwnd, GWL_STYLE );
-	AdjustWindowRect( &r, style, FALSE );
+	int w = r.right - r.left;
+	int h = r.bottom - r.top;
 
-	w = r.right - r.left;
-	h = r.bottom - r.top;
-
-	MoveWindow( cl_hwnd, vid_xpos->value, vid_ypos->value, w, h, TRUE );
+	SetWindowPos(cl_hwnd, NULL, x, y, w, h, SWP_NOZORDER);
 }
 
 /*
@@ -663,7 +625,7 @@ VID_Init
 void VID_Init (void)
 {
 	/* Create the video variables so we know how to start the graphics drivers */
-	vid_ref = Cvar_Get ("vid_ref", "soft", CVAR_ARCHIVE);
+	vid_ref = Cvar_Get ("vid_ref", "gl", CVAR_ARCHIVE);
 	vid_xpos = Cvar_Get ("vid_xpos", "3", CVAR_ARCHIVE);
 	vid_ypos = Cvar_Get ("vid_ypos", "22", CVAR_ARCHIVE);
 	vid_fullscreen = Cvar_Get ("vid_fullscreen", "0", CVAR_ARCHIVE);

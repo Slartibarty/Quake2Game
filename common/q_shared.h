@@ -12,9 +12,13 @@
 #include <cassert>
 #include <ctime>
 
+#include <string>
+
 #include "q_defs.h"
 #include "q_types.h"
 #include "q_math.h"
+
+#include "TnkString.h"
 
 //
 // per-level limits
@@ -59,7 +63,7 @@ enum multicast_t
 
 // Makes a 4-byte "packed ID" int32 out of 4 characters
 //
-inline consteval int MakeID(int d, int c, int b, int a) {
+inline consteval int32 MakeID(int32 d, int32 c, int32 b, int32 a) {
 	return ((a << 24) | (b << 16) | (c << 8) | (d));
 }
 
@@ -244,6 +248,114 @@ struct cvar_t
 	qboolean	modified;	// set each time the cvar is changed
 	float		value;
 	cvar_t		*next;
+};
+
+//-------------------------------------------------------------------------------------------------
+// CVARS 2 - cvars2.cpp
+//-------------------------------------------------------------------------------------------------
+
+#define CVAR2_NONE			0		// Nothing
+#define CVAR2_ARCHIVE		1		// Save this cvar to config.cfg
+#define	CVAR2_USERINFO		2		// Added to userinfo  when changed
+#define	CVAR2_SERVERINFO	4		// Added to serverinfo when changed
+#define	CVAR2_NOSET			8		// Don't allow change from console at all, but can be set from the command line
+#define	CVAR2_LATCH			16		// Save changes until server restart
+#define CVAR2_CHEAT			32		// Only usable if in SP or in MP when "cheats" is 1
+
+// Used by both Convar2 and Cvar2System
+bool Cvar2_InfoValidate( const char *s );
+
+//-------------------------------------------------------------------------------------------------
+// ConvarValue
+//
+// Helper class to make managing different values easier
+//-------------------------------------------------------------------------------------------------
+struct ConvarValue
+{
+	int64		i64Value;		// Result of atoi(pString)
+	double		dblValue;		// Result of atof(pString)
+
+	// Constructors
+	ConvarValue( const char *value ) { SetAllValues( value ); }
+	ConvarValue( double value ) { SetAllValues( value ); }
+	ConvarValue( int64 value ) { SetAllValues( value ); }
+
+	void SetAllValues( const char *value )
+	{
+		i64Value = atoll( value );
+		dblValue = atof( value );
+	}
+
+	void SetAllValues( double value )
+	{
+		i64Value = (int64)floor( value );
+		dblValue = value;
+	}
+
+	void SetAllValues( int64 value )
+	{
+		i64Value = value;
+		dblValue = (double)value;
+	}
+};
+
+//-------------------------------------------------------------------------------------------------
+// Convar2
+//
+// Convar's are not responsible for managing their own data, they are simply vessels carrying a bunch
+// of crap they have no control over.
+// Therefore, it is entirely up to Cvar2System to set the member variables of a convar.
+// This is because Cvar2System needs a static presense
+//-------------------------------------------------------------------------------------------------
+class Convar2
+{
+private:
+
+	friend class Convar2System;
+
+	tnk::String		pName;			// Key
+	tnk::String		pString;		// Value
+	tnk::String		pLatchedString;	// Latched value
+	uint32			nFlags;
+	bool			bModified;		// This is set to true when the cvar has been modified
+
+	ConvarValue		Values;
+
+public:
+
+	// Getters
+
+	const tnk::String	&GetName() const			{ return pName; }
+
+	// Legacy, really should move to callbacks
+	bool				IsModified() const			{ return bModified; }
+
+	const tnk::String	&GetValueString() const		{ return pString; }
+	bool				GetValueBool() const		{ return (bool)Values.i64Value; }
+	int					GetValueInt() const			{ return (int)Values.i64Value; }
+	int64				GetValueInt64() const		{ return Values.i64Value; }
+	float				GetValueFloat() const		{ return (float)Values.dblValue; }
+	double				GetValueDouble() const		{ return Values.dblValue; }
+
+	// Constructors and destructors
+
+	Convar2( const char *name, const char *value, uint32 flags )
+		: pName( name ), pString( value ), nFlags( flags ), bModified( false ), Values( value )
+	{
+	}
+
+	Convar2( const char *name, double value, uint32 flags )
+		: pName( name ), nFlags( flags ), bModified( false ), Values( value )
+	{
+		pString.ToString( value );
+	}
+
+	Convar2( const char *name, int64 value, uint32 flags )
+		: pName( name ), nFlags( flags ), bModified( false ), Values( value )
+	{
+		pString.ToString( value );
+	}
+
 };
 
 //-------------------------------------------------------------------------------------------------

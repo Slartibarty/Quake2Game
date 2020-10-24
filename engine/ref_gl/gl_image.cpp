@@ -4,6 +4,8 @@
 #include "gl_local.h"
 #include "../shared/imageloaders.h"
 
+#include <algorithm> // clamp
+
 #define STB_IMAGE_IMPLEMENTATION
 #define STBI_NO_STDIO
 #define STBI_NO_LINEAR
@@ -329,10 +331,7 @@ void GL_TextureMode(char *string)
 image_t		gltextures[MAX_GLTEXTURES];
 int			numgltextures;
 
-static byte			 intensitytable[256];
-static unsigned char gammatable[256];
-
-cvar_t		*intensity;
+byte		g_gammatable[256];
 
 unsigned	d_8to24table[256];
 
@@ -380,21 +379,6 @@ void GL_ImageList_f (void)
 }
 
 //-------------------------------------------------------------------------------------------------
-
-//-------------------------------------------------------------------------------------------------
-// Scale up the pixel values in a texture to increase the lighting range
-//-------------------------------------------------------------------------------------------------
-static void GL_LightScaleTexture(byte *in, int width, int height)
-{
-	int c = width * height;
-
-	for (int i = 0; i < c; i++, in += 4)
-	{
-		in[0] = intensitytable[in[0]];
-		in[1] = intensitytable[in[1]];
-		in[2] = intensitytable[in[2]];
-	}
-}
 
 //-------------------------------------------------------------------------------------------------
 // This must NEVER fail
@@ -659,35 +643,47 @@ static void GL_GetPalette (void)
 }
 
 //-------------------------------------------------------------------------------------------------
+// Builds the gamma table
 //-------------------------------------------------------------------------------------------------
-static void GL_InitTables()
+static void GL_BuildGammaTable( float gamma, int overbright )
 {
-	float g = vid_gamma->value;
+#if 1
+	int i, inf;
 
-	for (int i = 0; i < 256; i++)
+	for ( i = 0; i < 256; ++i )
 	{
-		if (g == 1.0f)
-		{
-			gammatable[i] = i;
-		}
-		else
-		{
-			int inf = (int)(255.0f * powf((i + 0.5f) / 255.5f, g) + 0.5f);
-			if (inf < 0)
-				inf = 0;
-			if (inf > 255)
-				inf = 255;
-			gammatable[i] = inf;
-		}
-	}
+		inf = static_cast<int>( 255.0f * powf( i / 255.0f, 1.0f / gamma ) + 0.5f );
 
-	for (int i = 0; i < 256; i++)
-	{
-		int j = (int)(i * intensity->value);
-		if (j > 255)
-			j = 255;
-		intensitytable[i] = j;
+		// Apply overbrightening
+		inf <<= overbright;
+
+		// Clamp value
+		inf = std::clamp( inf, 0, 255 );
+
+		g_gammatable[i] = static_cast<byte>( inf );
 	}
+#else
+	int i, inf;
+
+	int shift = 2;
+
+	for ( i = 0; i < 256; i++ ) {
+		if ( gamma == 1 ) {
+			inf = i;
+		}
+		else {
+			inf = static_cast<int>( 255 * pow( i / 255.0f, 1.0f / gamma ) + 0.5f );
+		}
+		inf <<= shift;
+		if ( inf < 0 ) {
+			inf = 0;
+		}
+		if ( inf > 255 ) {
+			inf = 255;
+		}
+		g_gammatable[i] = inf;
+	}
+#endif
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -768,15 +764,9 @@ void GL_InitImages(void)
 {
 	registration_sequence = 1;
 
-	// init intensity conversions
-	intensity = ri.Cvar_Get("intensity", "2", 0);
-
-	if (intensity->value <= 1)
-		ri.Cvar_Set("intensity", "1");
-
 	GL_GetPalette();
 
-	GL_InitTables();
+	GL_BuildGammaTable( vid_gamma->value, 2 );
 
 	R_InitParticleTexture();
 }

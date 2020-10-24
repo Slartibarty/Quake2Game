@@ -101,7 +101,7 @@
     <ClInclude Include="shared\common.h" />
     <ClInclude Include="shared\conproc.h" />
     <ClInclude Include="shared\crc.h" />
-    <ClInclude Include="shared\qfiles.h" />
+    <ClInclude Include="shared\q_formats.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\q_math.cpp" />
@@ -145,6 +145,7 @@
     <ClCompile Include="shared\conproc.cpp" />
     <ClCompile Include="shared\crc.cpp" />
     <ClCompile Include="shared\cvar.cpp" />
+    <ClCompile Include="shared\cvar2.cpp" />
     <ClCompile Include="shared\files.cpp" />
     <ClCompile Include="shared\md4.cpp" />
     <ClCompile Include="shared\net_chan.cpp" />

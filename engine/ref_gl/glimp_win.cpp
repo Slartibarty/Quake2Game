@@ -140,7 +140,7 @@ static void GLimp_DestroyDummyWindow( DummyVars &dvars )
 
 static constexpr auto	WINDOW_TITLE = L"Quake 2 - OpenGL";
 static constexpr auto	WINDOW_CLASS_NAME = L"Q2GAME";
-static constexpr DWORD	WINDOW_STYLE = (WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU);
+static constexpr DWORD	WINDOW_STYLE = (WS_OVERLAPPED | WS_CAPTION);
 
 //-------------------------------------------------------------------------------------------------
 // Resizes a window without destroying it
@@ -150,10 +150,13 @@ static void GLimp_SetWindowSize( int width, int height )
 	DWORD dwStyle = (DWORD)GetWindowLongPtrW( s_glwState.hWnd, GWL_STYLE );
 	DWORD dwExStyle = (DWORD)GetWindowLongPtrW( s_glwState.hWnd, GWL_EXSTYLE );
 
-	RECT r = { 0, 0, width, height };
+	RECT r{ 0, 0, width, height };
 	AdjustWindowRectEx( &r, dwStyle, false, dwExStyle );
 
-	SetWindowPos( s_glwState.hWnd, NULL, r.right - r.left, r.bottom - r.top, 0, 0, SWP_NOZORDER | SWP_NOMOVE );
+	int newWidth = r.right - r.left;
+	int newHeight = r.bottom - r.top;
+
+	SetWindowPos( s_glwState.hWnd, NULL, 0, 0, newWidth, newHeight, SWP_NOZORDER | SWP_NOMOVE );
 
 	ri.Vid_NewWindow( width, height );
 	vid.width = width;
@@ -406,15 +409,64 @@ static void GLimp_DestroyWindow( void )
 //
 //-------------------------------------------------------------------------------------------------
 
+static uint16 s_oldHardwareGamma[3][256];
+
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-rserr_t GLimp_SetMode( int *pWidth, int *pHeight, int mode, qboolean fullscreen )
+void GLimp_SetGamma( byte *red, byte *green, byte *blue )
+{
+	uint16 table[3][256];
+
+	for ( int i = 0; i < 256; i++ )
+	{
+		table[0][i] = ( ( (uint16)red[i] ) << 8 ) | red[i];
+		table[1][i] = ( ( (uint16)green[i] ) << 8 ) | green[i];
+		table[2][i] = ( ( (uint16)blue[i] ) << 8 ) | blue[i];
+	}
+
+	// enforce constantly increasing
+	for ( int j = 0; j < 3; j++ )
+	{
+		for ( int i = 1; i < 256; i++ )
+		{
+			if ( table[j][i] < table[j][i - 1] )
+			{
+				table[j][i] = table[j][i - 1];
+			}
+		}
+	}
+
+	HDC hDC = GetDC( nullptr );
+
+	GetDeviceGammaRamp( hDC, s_oldHardwareGamma );
+
+	ReleaseDC( nullptr, hDC );
+
+	BOOL result = SetDeviceGammaRamp( s_glwState.hDC, table );
+	if ( !result )
+	{
+		ri.Con_Printf( PRINT_ALL, "SetDeviceGammaRamp failed!\n" );
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+void GLimp_RestoreGamma( void )
+{
+	HDC hDC = GetDC( nullptr );
+
+	SetDeviceGammaRamp( hDC, s_oldHardwareGamma );
+
+	ReleaseDC( nullptr, hDC );
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+rserr_t GLimp_SetMode( int *pWidth, int *pHeight, int mode, bool fullscreen )
 {
 	int width, height;
 
-	ri.Con_Printf( PRINT_ALL, "Initializing OpenGL display\n" );
-
-	ri.Con_Printf( PRINT_ALL, "...setting mode %d:", mode );
+	ri.Con_Printf( PRINT_ALL, "Setting mode %d:", mode );
 
 	if ( !ri.Vid_GetModeInfo( &width, &height, mode ) )
 	{
@@ -423,7 +475,7 @@ rserr_t GLimp_SetMode( int *pWidth, int *pHeight, int mode, qboolean fullscreen 
 		return rserr_invalid_mode;
 	}
 
-	ri.Con_Printf( PRINT_ALL, " %d %d %s\n", width, height, fullscreen ? "W" : "FS" );
+//	ri.Con_Printf( PRINT_ALL, " %d %d %s\n", width, height, (fullscreen ? "FS" : "W"));
 
 	GLimp_PerformCDS( width, height, fullscreen, true );
 
@@ -431,23 +483,6 @@ rserr_t GLimp_SetMode( int *pWidth, int *pHeight, int mode, qboolean fullscreen 
 	*pHeight = height;
 
 	return rserr_ok;
-}
-
-//-------------------------------------------------------------------------------------------------
-// This routine does all OS specific shutdown procedures for the OpenGL
-// subsystem.  Under OpenGL this means NULLing out the current DC and
-// HGLRC, deleting the rendering context, and releasing the DC acquired
-// for the window.  The state structure is also nulled out.
-//-------------------------------------------------------------------------------------------------
-void GLimp_Shutdown( void )
-{
-	GLimp_DestroyWindow();
-
-	if ( gl_state.fullscreen == true )
-	{
-		ChangeDisplaySettingsW( 0, 0 );
-		gl_state.fullscreen = false;
-	}
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -481,7 +516,27 @@ qboolean GLimp_Init( void *hinstance, void *wndproc )
 
 	GLimp_CreateWindow( (WNDPROC)wndproc, width, height, (qboolean)vid_fullscreen->value );
 
+	gl_mode->modified = false;
+	vid_fullscreen->modified = false;
+
 	return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+// This routine does all OS specific shutdown procedures for the OpenGL
+// subsystem.  Under OpenGL this means NULLing out the current DC and
+// HGLRC, deleting the rendering context, and releasing the DC acquired
+// for the window.  The state structure is also nulled out.
+//-------------------------------------------------------------------------------------------------
+void GLimp_Shutdown( void )
+{
+	GLimp_DestroyWindow();
+
+	if ( gl_state.fullscreen == true )
+	{
+		ChangeDisplaySettingsW( 0, 0 );
+		gl_state.fullscreen = false;
+	}
 }
 
 //-------------------------------------------------------------------------------------------------

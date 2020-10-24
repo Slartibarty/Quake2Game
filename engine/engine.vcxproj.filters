@@ -63,9 +63,6 @@
     <ClInclude Include="server\server.h">
       <Filter>Code\Server</Filter>
     </ClInclude>
-    <ClInclude Include="shared\qfiles.h">
-      <Filter>Code\Shared</Filter>
-    </ClInclude>
     <ClInclude Include="shared\common.h">
       <Filter>Code\Shared</Filter>
     </ClInclude>
@@ -95,6 +92,9 @@
     </ClInclude>
     <ClInclude Include="..\common\q_defs.h">
       <Filter>Code\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\q_formats.h">
+      <Filter>Code\Shared</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -240,6 +240,9 @@
       <Filter>Code\Game</Filter>
     </ClCompile>
     <ClCompile Include="shared\pmove.cpp">
+      <Filter>Code\Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\cvar2.cpp">
       <Filter>Code\Shared</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,6 +1,5 @@
 //-------------------------------------------------------------------------------------------------
-// qfiles.h: quake file formats
-// This file must be identical in the quake and utils directories
+// q_formats.h: quake file formats
 //-------------------------------------------------------------------------------------------------
 
 #include "../../common/q_shared.h"

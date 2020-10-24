@@ -3,9 +3,6 @@
 
 #define REF_SOFT	0
 #define REF_OPENGL	1
-#define REF_3DFX	2
-#define REF_POWERVR	3
-#define REF_VERITE	4
 
 extern cvar_t *vid_ref;
 extern cvar_t *vid_fullscreen;
@@ -13,7 +10,6 @@ extern cvar_t *vid_gamma;
 extern cvar_t *scr_viewsize;
 
 static cvar_t *gl_mode;
-static cvar_t *gl_driver;
 static cvar_t *gl_picmip;
 static cvar_t *gl_finish;
 
@@ -125,19 +121,6 @@ static void ApplyChanges( void *unused )
 		break;
 	case REF_OPENGL:
 		Cvar_Set( "vid_ref", "gl" );
-		Cvar_Set( "gl_driver", "opengl32" );
-		break;
-	case REF_3DFX:
-		Cvar_Set( "vid_ref", "gl" );
-		Cvar_Set( "gl_driver", "3dfxgl" );
-		break;
-	case REF_POWERVR:
-		Cvar_Set( "vid_ref", "gl" );
-		Cvar_Set( "gl_driver", "pvrgl" );
-		break;
-	case REF_VERITE:
-		Cvar_Set( "vid_ref", "gl" );
-		Cvar_Set( "gl_driver", "veritegl" );
 		break;
 	}
 
@@ -153,8 +136,7 @@ static void ApplyChanges( void *unused )
 			//vid_ref->modified = true;
 		}
 
-		if ( gl_driver->modified )
-			vid_ref->modified = true;
+		// UPDATE RESOLUTION HERE
 	}
 
 	M_ForceMenuOff();
@@ -205,8 +187,8 @@ void VID_MenuInit( void )
 
 	static const char *refs[] =
 	{
-		"[software      ]",
-		"[default OpenGL]",
+		"[Software]",
+		"[OpenGL  ]",
 		0
 	};
 	static const char *yesno_names[] =
@@ -217,12 +199,10 @@ void VID_MenuInit( void )
 	};
 	int i;
 
-	if ( !gl_driver )
-		gl_driver = Cvar_Get( "gl_driver", "opengl32", 0 );
 	if ( !gl_picmip )
 		gl_picmip = Cvar_Get( "gl_picmip", "0", 0 );
 	if ( !gl_mode )
-		gl_mode = Cvar_Get( "gl_mode", "3", 0 );
+		gl_mode = Cvar_Get( "gl_mode", "0", 0 );
 	if ( !sw_mode )
 		sw_mode = Cvar_Get( "sw_mode", "0", 0 );
 	if ( !gl_finish )
@@ -248,15 +228,7 @@ void VID_MenuInit( void )
 	else if ( strcmp( vid_ref->string, "gl" ) == 0 )
 	{
 		s_current_menu_index = OPENGL_MENU;
-		if ( strcmp( gl_driver->string, "3dfxgl" ) == 0 )
-			s_ref_list[s_current_menu_index].curvalue = REF_3DFX;
-		else if ( strcmp( gl_driver->string, "pvrgl" ) == 0 )
-			s_ref_list[s_current_menu_index].curvalue = REF_POWERVR;
-		else if ( strcmp( gl_driver->string, "opengl32" ) == 0 )
-			s_ref_list[s_current_menu_index].curvalue = REF_OPENGL;
-		else
-//			s_ref_list[s_current_menu_index].curvalue = REF_VERITE;
-			s_ref_list[s_current_menu_index].curvalue = REF_OPENGL;
+		s_ref_list[s_current_menu_index].curvalue = REF_OPENGL;
 	}
 
 	s_software_menu.x = viddef.width * 0.50;

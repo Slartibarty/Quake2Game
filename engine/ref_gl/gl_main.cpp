@@ -2,9 +2,9 @@
 
 #include "gl_local.h"
 
-viddef_t	vid;
-
 refimport_t	ri;
+
+viddef_t	vid;
 
 model_t		*r_worldmodel;
 
@@ -866,7 +866,7 @@ void R_Register( void )
 	gl_particle_att_c = ri.Cvar_Get( "gl_particle_att_c", "0.01", CVAR_ARCHIVE );
 
 	gl_modulate = ri.Cvar_Get ("gl_modulate", "1", CVAR_ARCHIVE );
-	gl_mode = ri.Cvar_Get( "gl_mode", "3", CVAR_ARCHIVE );
+	gl_mode = ri.Cvar_Get( "gl_mode", "0", CVAR_ARCHIVE );
 	gl_lightmap = ri.Cvar_Get ("gl_lightmap", "0", 0);
 	gl_shadows = ri.Cvar_Get ("gl_shadows", "0", CVAR_ARCHIVE );
 	gl_dynamic = ri.Cvar_Get ("gl_dynamic", "1", 0);
@@ -915,37 +915,41 @@ qboolean R_SetMode (void)
 {
 	rserr_t err;
 
-	vid_fullscreen->modified = false;
-	gl_mode->modified = false;
-
-	if ( ( err = GLimp_SetMode( &vid.width, &vid.height, gl_mode->value, (qboolean)vid_fullscreen->value ) ) == rserr_ok )
+	if (gl_mode->modified || vid_fullscreen->modified)
 	{
-		gl_state.prev_mode = gl_mode->value;
-	}
-	else
-	{
-		if ( err == rserr_invalid_fullscreen )
-		{
-			ri.Cvar_SetValue( "vid_fullscreen", 0);
-			vid_fullscreen->modified = false;
-			ri.Con_Printf( PRINT_ALL, "ref_gl::R_SetMode() - fullscreen unavailable in this mode\n" );
-			if ( ( err = GLimp_SetMode( &vid.width, &vid.height, gl_mode->value, false ) ) == rserr_ok )
-				return true;
-		}
-		else if ( err == rserr_invalid_mode )
-		{
-			ri.Cvar_SetValue( "gl_mode", gl_state.prev_mode );
-			gl_mode->modified = false;
-			ri.Con_Printf( PRINT_ALL, "ref_gl::R_SetMode() - invalid mode\n" );
-		}
+		gl_mode->modified = false;
+		vid_fullscreen->modified = false;
 
-		// try setting it back to something safe
-		if ( ( err = GLimp_SetMode( &vid.width, &vid.height, gl_state.prev_mode, false ) ) != rserr_ok )
+		if ((err = GLimp_SetMode(&vid.width, &vid.height, gl_mode->value, (bool)vid_fullscreen->value)) == rserr_ok)
 		{
-			ri.Con_Printf( PRINT_ALL, "ref_gl::R_SetMode() - could not revert to safe mode\n" );
-			return false;
+			gl_state.prev_mode = gl_mode->value;
+		}
+		else
+		{
+			if (err == rserr_invalid_fullscreen)
+			{
+				ri.Cvar_SetValue("vid_fullscreen", 0);
+				vid_fullscreen->modified = false;
+				ri.Con_Printf(PRINT_ALL, "ref_gl::R_SetMode() - fullscreen unavailable in this mode\n");
+				if ((err = GLimp_SetMode(&vid.width, &vid.height, gl_mode->value, false)) == rserr_ok)
+					return true;
+			}
+			else if (err == rserr_invalid_mode)
+			{
+				ri.Cvar_SetValue("gl_mode", gl_state.prev_mode);
+				gl_mode->modified = false;
+				ri.Con_Printf(PRINT_ALL, "ref_gl::R_SetMode() - invalid mode\n");
+			}
+
+			// try setting it back to something safe
+			if ((err = GLimp_SetMode(&vid.width, &vid.height, gl_state.prev_mode, false)) != rserr_ok)
+			{
+				ri.Con_Printf(PRINT_ALL, "ref_gl::R_SetMode() - could not revert to safe mode\n");
+				return false;
+			}
 		}
 	}
+
 	return true;
 }
 
@@ -1005,9 +1009,11 @@ int R_Init( void *hinstance, void *hWnd )
 
 	GL_SetDefaultState();
 
-	GL_InitImages ();
-	Mod_Init ();
-	Draw_InitLocal ();
+	GL_InitImages();
+//	GLimp_SetGamma( g_gammatable, g_gammatable, g_gammatable );
+
+	Mod_Init();
+	Draw_InitLocal();
 
 	// Check for errors
 	GL_CheckErrors();
@@ -1029,7 +1035,8 @@ void R_Shutdown (void)
 
 	Mod_FreeAll ();
 
-	GL_ShutdownImages ();
+//	GLimp_RestoreGamma();
+	GL_ShutdownImages();
 
 	/*
 	** shut down OS specific OpenGL stuff like contexts, etc.
@@ -1055,6 +1062,9 @@ void R_BeginFrame( void )
 	}
 
 	GLimp_BeginFrame();
+
+	// Check if we need to set modes
+	R_SetMode();
 
 	/*
 	** go into 2D mode
@@ -1206,24 +1216,19 @@ void R_DrawBeam( entity_t *e )
 	glDepthMask( GL_TRUE );
 }
 
-//===================================================================
-
+//-------------------------------------------------------------------------------------------------
 
 void	R_BeginRegistration (const char *map);
 model_t	*R_RegisterModel (const char *name);
-void R_SetSky (const char *name, float rotate, vec3_t axis);
+void	R_SetSky (const char *name, float rotate, vec3_t axis);
 void	R_EndRegistration (void);
 
 void	R_RenderFrame (refdef_t *fd);
 
 image_t	*Draw_FindPic (const char *name);
 
-/*
-@@@@@@@@@@@@@@@@@@@@@
-GetRefAPI
-
-@@@@@@@@@@@@@@@@@@@@@
-*/
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
 refexport_t GetRefAPI (refimport_t rimp )
 {
 	refexport_t	re;
@@ -1265,6 +1270,7 @@ refexport_t GetRefAPI (refimport_t rimp )
 	return re;
 }
 
+//-------------------------------------------------------------------------------------------------
 
 #ifndef REF_HARD_LINKED
 

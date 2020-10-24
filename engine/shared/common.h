@@ -1,7 +1,9 @@
 // common.h -- definitions common between client and server, but not game.dll
 
 #include "../../common/q_shared.h"
-#include "qfiles.h"
+#include "q_formats.h"
+
+#include <forward_list>
 
 //=============================================================================
 
@@ -466,6 +468,62 @@ char	*Cvar_Serverinfo (void);
 extern	qboolean	userinfo_modified;
 // this is set each time a CVAR_USERINFO variable is changed
 // so that the client knows to send it to the server
+
+/*
+==============================================================
+
+Convars2
+
+==============================================================
+*/
+
+//-------------------------------------------------------------------------------------------------
+// Convar2System
+//-------------------------------------------------------------------------------------------------
+class Convar2System
+{
+private: // Private variables
+
+	std::forward_list<Convar2> m_ConvarList;
+
+private: // Private functions
+
+	bool InfoValidate( const char *s );
+
+	template< typename T >
+	Convar2 *InternalGet( const char *name, T value, uint32 flags );
+
+	template< typename T >
+	Convar2 *InternalSetByCvar( Convar2 *var, T value, bool force );
+
+	template< typename T >
+	Convar2 *InternalSet( const char *name, T value, bool force );
+
+public: // Public functions
+
+	Convar2 *FindByName( const char *name );
+
+	// Provided a partially complete function name, return a pointer to the first matching cvar name
+	const char *CompleteVariable( const char *partial );
+
+	// Get a cvar if it exists, else create it with the specified parameters
+	Convar2 *Get( const char *name, const char *value, uint32 flags );
+	Convar2 *Get( const char *name, int64 value, uint32 flags );
+	Convar2 *Get( const char *name, double value, uint32 flags );
+
+	// Set a cvar's value if it exists, else fail
+	Convar2 *Set( const char *name, const char *value, bool force = false );
+	Convar2 *Set( const char *name, int64 value, bool force = false );
+	Convar2 *Set( const char *name, double value, bool force = false );
+
+	// Set a cvar's value, else fail (via Convar2 structure)
+	Convar2 *Set( Convar2 *var, const char *value, bool force = false );
+	Convar2 *Set( Convar2 *var, int64 value, bool force = false );
+	Convar2 *Set( Convar2 *var, double value, bool force = false );
+
+};
+
+extern Convar2System cvars;
 
 /*
 ==============================================================
