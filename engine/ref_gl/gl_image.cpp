@@ -851,12 +851,14 @@ void GL_TexEnv(GLint mode)
 	}
 }
 
-void GL_Bind(GLuint texnum)
+void GL_Bind( GLuint texnum )
 {
-	if (gl_state.currenttextures[gl_state.currenttmu] == texnum)
+	// Are we already bound?
+	if ( gl_state.currenttextures[gl_state.currenttmu] == texnum )
 		return;
+
 	gl_state.currenttextures[gl_state.currenttmu] = texnum;
-	glBindTexture(GL_TEXTURE_2D, texnum);
+	glBindTexture( GL_TEXTURE_2D, texnum );
 }
 
 void GL_MBind(GLenum target, GLuint texnum)

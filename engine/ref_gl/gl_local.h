@@ -111,7 +111,9 @@ void		GL_ShutdownImages(void);
 
 void		GL_EnableMultitexture(qboolean enable);
 void		GL_SelectTexture(GLenum texture);
+			// Use this instead of glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, mode);
 void		GL_TexEnv(GLint value);
+			// Use this instead of glBindTexture
 void		GL_Bind(GLuint texnum);
 void		GL_MBind(GLenum target, GLuint texnum);
 
