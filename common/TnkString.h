@@ -24,7 +24,8 @@
 namespace tnk
 {
 	
-	// 16 bytes
+	// 16 bytes on x64
+	// 12 bytes on x86
 	class String
 	{
 	private:
@@ -210,7 +211,5 @@ namespace tnk
 		}
 
 	};
-
-	static_assert( sizeof( String ) == 16 );
 
 }
