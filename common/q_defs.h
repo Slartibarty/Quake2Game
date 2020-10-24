@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include <cstdlib>
-
 #if (defined _M_IX86 || defined __i386__) && !defined C_ONLY
 	#define id386	1
 #else
@@ -33,6 +31,6 @@
 #else	// GCC / Clang
 
 #define DLLEXPORT IMPLEMENT_THIS_MACRO
-#define FORCEINLINE
+#define FORCEINLINE inline
 
 #endif
