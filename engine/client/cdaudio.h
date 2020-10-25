@@ -1,4 +1,6 @@
 
+#pragma once
+
 int		CDAudio_Init(void);
 void	CDAudio_Shutdown(void);
 void	CDAudio_Play(int track, qboolean looping);

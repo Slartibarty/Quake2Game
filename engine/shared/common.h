@@ -1,5 +1,7 @@
 // common.h -- definitions common between client and server, but not game.dll
 
+#pragma once
+
 #include "../../common/q_shared.h"
 #include "q_formats.h"
 

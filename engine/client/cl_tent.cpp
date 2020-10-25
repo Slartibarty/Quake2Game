@@ -61,20 +61,20 @@ void CL_BFGExplosionParticles (vec3_t org);
 // RAFAEL
 void CL_BlueBlasterParticles (vec3_t org, vec3_t dir);
 
-struct sfx_s	*cl_sfx_ric1;
-struct sfx_s	*cl_sfx_ric2;
-struct sfx_s	*cl_sfx_ric3;
-struct sfx_s	*cl_sfx_lashit;
-struct sfx_s	*cl_sfx_spark5;
-struct sfx_s	*cl_sfx_spark6;
-struct sfx_s	*cl_sfx_spark7;
-struct sfx_s	*cl_sfx_railg;
-struct sfx_s	*cl_sfx_rockexp;
-struct sfx_s	*cl_sfx_grenexp;
-struct sfx_s	*cl_sfx_watrexp;
+sfx_t	*cl_sfx_ric1;
+sfx_t	*cl_sfx_ric2;
+sfx_t	*cl_sfx_ric3;
+sfx_t	*cl_sfx_lashit;
+sfx_t	*cl_sfx_spark5;
+sfx_t	*cl_sfx_spark6;
+sfx_t	*cl_sfx_spark7;
+sfx_t	*cl_sfx_railg;
+sfx_t	*cl_sfx_rockexp;
+sfx_t	*cl_sfx_grenexp;
+sfx_t	*cl_sfx_watrexp;
 // RAFAEL
-struct sfx_s	*cl_sfx_plasexp;
-struct sfx_s	*cl_sfx_footsteps[4];
+sfx_t	*cl_sfx_plasexp;
+sfx_t	*cl_sfx_footsteps[4];
 
 model_t	*cl_mod_explode;
 model_t	*cl_mod_smoke;
@@ -89,8 +89,8 @@ model_t	*cl_mod_powerscreen;
 model_t	*cl_mod_plasmaexplo;
 
 //ROGUE
-struct sfx_s	*cl_sfx_lightning;
-struct sfx_s	*cl_sfx_disrexp;
+sfx_t	*cl_sfx_lightning;
+sfx_t	*cl_sfx_disrexp;
 model_t	*cl_mod_lightning;
 model_t	*cl_mod_heatbeam;
 model_t	*cl_mod_monster_heatbeam;

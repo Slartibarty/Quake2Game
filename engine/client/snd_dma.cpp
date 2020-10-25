@@ -1,7 +1,6 @@
 // snd_dma.c -- main control for any streaming sound output device
 
-#include "client.h"
-#include "snd_loc.h"
+#include "snd_local.h"
 
 void S_Play(void);
 void S_SoundList(void);
@@ -573,15 +572,15 @@ void S_IssuePlaysound (playsound_t *ps)
 	S_FreePlaysound (ps);
 }
 
-struct sfx_s *S_RegisterSexedSound (entity_state_t *ent, char *base)
+sfx_t *S_RegisterSexedSound (entity_state_t *ent, char *base)
 {
-	int				n;
-	char			*p;
-	struct sfx_s	*sfx;
-	FILE			*f;
-	char			model[MAX_QPATH];
-	char			sexedFilename[MAX_QPATH];
-	char			maleFilename[MAX_QPATH];
+	int			n;
+	char		*p;
+	sfx_t		*sfx;
+	FILE		*f;
+	char		model[MAX_QPATH];
+	char		sexedFilename[MAX_QPATH];
+	char		maleFilename[MAX_QPATH];
 
 	// determine what model the client is using
 	model[0] = 0;

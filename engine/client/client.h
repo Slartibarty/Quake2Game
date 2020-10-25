@@ -1,13 +1,15 @@
 // client.h -- primary header for client
 
+#pragma once
+
 //define	PARANOID			// speed sapping error checking
 
-#include <stdlib.h>
-#include <math.h>
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <ctype.h>
+#include <cstdlib>
+#include <cmath>
+#include <cstring>
+#include <cstdarg>
+#include <cstdio>
+#include <cctype>
 
 #include "../shared/common.h"
 #include "../ref_shared/ref_public.h"
@@ -22,7 +24,7 @@
 
 //=============================================================================
 
-typedef struct
+struct frame_t
 {
 	qboolean		valid;			// cleared if delta parsing was invalid
 	int				serverframe;
@@ -32,9 +34,9 @@ typedef struct
 	player_state_t	playerstate;
 	int				num_entities;
 	int				parse_entities;	// non-masked index into cl_parse_entities array
-} frame_t;
+};
 
-typedef struct
+struct centity_t
 {
 	entity_state_t	baseline;		// delta from this if not from a previous frame
 	entity_state_t	current;
@@ -46,11 +48,11 @@ typedef struct
 	vec3_t		lerp_origin;		// for trails (variable hz)
 
 	int			fly_stoptime;
-} centity_t;
+};
 
 #define MAX_CLIENTWEAPONMODELS		20		// PGM -- upped from 16 to fit the chainfist vwep
 
-typedef struct
+struct clientinfo_t
 {
 	char	name[MAX_QPATH];
 	char	cinfo[MAX_QPATH];
@@ -59,7 +61,7 @@ typedef struct
 	char	iconname[MAX_QPATH];
 	model_t	*model;
 	model_t *weaponmodel[MAX_CLIENTWEAPONMODELS];
-} clientinfo_t;
+};
 
 extern char cl_weaponmodels[MAX_CLIENTWEAPONMODELS][MAX_QPATH];
 extern int num_cl_weaponmodels;
@@ -145,8 +147,8 @@ struct client_state_t
 	model_t		*model_draw[MAX_MODELS];
 	cmodel_t	*model_clip[MAX_MODELS];
 
-	struct sfx_s	*sound_precache[MAX_SOUNDS];
-	image_t			*image_precache[MAX_IMAGES];
+	sfx_t		*sound_precache[MAX_SOUNDS];
+	image_t		*image_precache[MAX_IMAGES];
 
 	clientinfo_t	clientinfo[MAX_CLIENTS];
 	clientinfo_t	baseclientinfo;
@@ -181,7 +183,7 @@ enum dltype_t {
 
 enum keydest_t {key_game, key_console, key_message, key_menu};
 
-typedef struct
+struct client_static_t
 {
 	connstate_t	state;
 	keydest_t	key_dest;
@@ -219,7 +221,7 @@ typedef struct
 	qboolean	demorecording;
 	qboolean	demowaiting;	// don't record until a non-delta message is received
 	FILE		*demofile;
-} client_static_t;
+};
 
 extern client_static_t	cls;
 
@@ -271,7 +273,7 @@ extern	cvar_t	*cl_timedemo;
 
 extern	cvar_t	*cl_vwep;
 
-typedef struct
+struct cdlight_t
 {
 	int		key;				// so entities can reuse same entry
 	vec3_t	color;
@@ -280,7 +282,7 @@ typedef struct
 	float	die;				// stop lighting after this time
 	float	decay;				// drop this each second
 	float	minlight;			// don't add when contributing less
-} cdlight_t;
+};
 
 extern	centity_t	cl_entities[MAX_EDICTS];
 extern	cdlight_t	cl_dlights[MAX_DLIGHTS];
@@ -303,7 +305,7 @@ qboolean	CL_CheckOrDownloadFile (const char *filename);
 void CL_AddNetgraph (void);
 
 //ROGUE
-typedef struct cl_sustain
+struct cl_sustain_t
 {
 	int			id;
 	int			type;
@@ -315,8 +317,8 @@ typedef struct cl_sustain
 	int			color;
 	int			count;
 	int			magnitude;
-	void		(*think)(struct cl_sustain *self);
-} cl_sustain_t;
+	void		(*think)(cl_sustain_t *self);
+};
 
 #define MAX_SUSTAINS		32
 void CL_ParticleSteamEffect2(cl_sustain_t *self);

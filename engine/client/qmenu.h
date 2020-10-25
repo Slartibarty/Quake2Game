@@ -1,5 +1,5 @@
-#ifndef __QMENU_H__
-#define __QMENU_H__
+
+#pragma once
 
 #define MAXMENUITEMS	64
 
@@ -117,5 +117,3 @@ void	 Menu_DrawString( int, int, const char * );
 void	 Menu_DrawStringDark( int, int, const char * );
 void	 Menu_DrawStringR2L( int, int, const char * );
 void	 Menu_DrawStringR2LDark( int, int, const char * );
-
-#endif

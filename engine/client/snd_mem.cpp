@@ -1,7 +1,6 @@
 // snd_mem.c: sound caching
 
-#include "client.h"
-#include "snd_loc.h"
+#include "snd_local.h"
 
 int			cache_full_cycle;
 

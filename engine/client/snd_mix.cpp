@@ -1,7 +1,6 @@
 // snd_mix.c -- portable code to mix sounds for snd_dma.c
 
-#include "client.h"
-#include "snd_loc.h"
+#include "snd_local.h"
 
 #define	PAINTBUFFER_SIZE	2048
 portable_samplepair_t paintbuffer[PAINTBUFFER_SIZE];

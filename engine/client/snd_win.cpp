@@ -1,5 +1,4 @@
-#include "client.h"
-#include "snd_loc.h"
+#include "snd_local.h"
 
 #include "winquake.h"
 #include <dsound.h>

@@ -1,5 +1,7 @@
 // screen.h
 
+#pragma once
+
 void	SCR_Init (void);
 
 void	SCR_UpdateScreen (void);

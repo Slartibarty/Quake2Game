@@ -1,5 +1,5 @@
-#ifndef __REF_H
-#define __REF_H
+
+#pragma once
 
 #define	MAX_DLIGHTS		32
 #define	MAX_ENTITIES	128
@@ -201,5 +201,3 @@ struct refimport_t
 
 // this is the only function actually exported at the linker level
 typedef	refexport_t	(*GetRefAPI_t) (refimport_t);
-
-#endif // __REF_H

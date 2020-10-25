@@ -2234,7 +2234,7 @@ An entity has just been parsed that has an event value
 the female events are there for backwards compatability
 ==============
 */
-extern struct sfx_s	*cl_sfx_footsteps[4];
+extern sfx_t *cl_sfx_footsteps[4];
 
 void CL_EntityEvent (entity_state_t *ent)
 {

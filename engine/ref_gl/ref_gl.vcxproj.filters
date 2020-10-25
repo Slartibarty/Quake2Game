@@ -4,9 +4,6 @@
     <Filter Include="Code">
       <UniqueIdentifier>{0122b98a-f557-4373-abec-9986e13f2585}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Code\Shared">
-      <UniqueIdentifier>{ded64fa5-dbcf-4bb9-928a-deb48a3a44c7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Code\Common">
       <UniqueIdentifier>{363d6534-0c40-41d5-9fc9-699ec37f00c7}</UniqueIdentifier>
     </Filter>
@@ -16,49 +13,25 @@
     <Filter Include="Code\External\GLEW">
       <UniqueIdentifier>{8cf85466-b653-455c-99aa-a6711c69154d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Code\Inlines">
-      <UniqueIdentifier>{bb590619-ca1c-4698-bb49-d82655af5adb}</UniqueIdentifier>
+    <Filter Include="Code\Refresh">
+      <UniqueIdentifier>{24d12eca-0f74-46ca-a309-08e31a13a0fc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Code\Ref Shared">
+    <Filter Include="Code\Refresh Shared">
       <UniqueIdentifier>{b4017d78-a701-438e-b62e-59022a783cfe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Code\Engine Shared">
+      <UniqueIdentifier>{ded64fa5-dbcf-4bb9-928a-deb48a3a44c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Code\Refresh\Inlines">
+      <UniqueIdentifier>{bb590619-ca1c-4698-bb49-d82655af5adb}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\external\glew\src\glew.c">
       <Filter>Code\External\GLEW</Filter>
     </ClCompile>
-    <ClCompile Include="gl_draw.cpp">
-      <Filter>Code</Filter>
-    </ClCompile>
-    <ClCompile Include="gl_image.cpp">
-      <Filter>Code</Filter>
-    </ClCompile>
-    <ClCompile Include="gl_light.cpp">
-      <Filter>Code</Filter>
-    </ClCompile>
-    <ClCompile Include="gl_main.cpp">
-      <Filter>Code</Filter>
-    </ClCompile>
-    <ClCompile Include="gl_mesh.cpp">
-      <Filter>Code</Filter>
-    </ClCompile>
-    <ClCompile Include="gl_misc.cpp">
-      <Filter>Code</Filter>
-    </ClCompile>
-    <ClCompile Include="gl_model.cpp">
-      <Filter>Code</Filter>
-    </ClCompile>
-    <ClCompile Include="gl_surf.cpp">
-      <Filter>Code</Filter>
-    </ClCompile>
-    <ClCompile Include="glimp_win.cpp">
-      <Filter>Code</Filter>
-    </ClCompile>
-    <ClCompile Include="gl_warp.cpp">
-      <Filter>Code</Filter>
-    </ClCompile>
     <ClCompile Include="..\shared\imageloaders.cpp">
-      <Filter>Code\Shared</Filter>
+      <Filter>Code\Engine Shared</Filter>
     </ClCompile>
     <ClCompile Include="..\..\common\q_math.cpp">
       <Filter>Code\Common</Filter>
@@ -67,18 +40,45 @@
       <Filter>Code\Common</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\misc_win.cpp">
-      <Filter>Code\Shared</Filter>
+      <Filter>Code\Engine Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="gl_draw.cpp">
+      <Filter>Code\Refresh</Filter>
+    </ClCompile>
+    <ClCompile Include="gl_image.cpp">
+      <Filter>Code\Refresh</Filter>
+    </ClCompile>
+    <ClCompile Include="gl_light.cpp">
+      <Filter>Code\Refresh</Filter>
+    </ClCompile>
+    <ClCompile Include="gl_main.cpp">
+      <Filter>Code\Refresh</Filter>
+    </ClCompile>
+    <ClCompile Include="gl_mesh.cpp">
+      <Filter>Code\Refresh</Filter>
+    </ClCompile>
+    <ClCompile Include="gl_misc.cpp">
+      <Filter>Code\Refresh</Filter>
+    </ClCompile>
+    <ClCompile Include="gl_model.cpp">
+      <Filter>Code\Refresh</Filter>
+    </ClCompile>
+    <ClCompile Include="gl_surf.cpp">
+      <Filter>Code\Refresh</Filter>
+    </ClCompile>
+    <ClCompile Include="gl_warp.cpp">
+      <Filter>Code\Refresh</Filter>
+    </ClCompile>
+    <ClCompile Include="glimp_win.cpp">
+      <Filter>Code\Refresh</Filter>
+    </ClCompile>
+    <ClCompile Include="gl_pch.cpp">
+      <Filter>Code\Refresh</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="gl_local.h">
-      <Filter>Code</Filter>
-    </ClInclude>
-    <ClInclude Include="gl_model.h">
-      <Filter>Code</Filter>
-    </ClInclude>
     <ClInclude Include="..\shared\common.h">
-      <Filter>Code\Shared</Filter>
+      <Filter>Code\Engine Shared</Filter>
     </ClInclude>
     <ClInclude Include="..\..\common\q_math.h">
       <Filter>Code\Common</Filter>
@@ -86,17 +86,11 @@
     <ClInclude Include="..\..\common\q_shared.h">
       <Filter>Code\Common</Filter>
     </ClInclude>
-    <ClInclude Include="anormtab.inl">
-      <Filter>Code\Inlines</Filter>
-    </ClInclude>
-    <ClInclude Include="warpsin.inl">
-      <Filter>Code\Inlines</Filter>
-    </ClInclude>
     <ClInclude Include="..\ref_shared\ref_public.h">
-      <Filter>Code\Ref Shared</Filter>
+      <Filter>Code\Refresh Shared</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\imageloaders.h">
-      <Filter>Code\Shared</Filter>
+      <Filter>Code\Engine Shared</Filter>
     </ClInclude>
     <ClInclude Include="..\..\common\q_types.h">
       <Filter>Code\Common</Filter>
@@ -104,10 +98,28 @@
     <ClInclude Include="..\..\common\q_defs.h">
       <Filter>Code\Common</Filter>
     </ClInclude>
+    <ClInclude Include="gl_local.h">
+      <Filter>Code\Refresh</Filter>
+    </ClInclude>
+    <ClInclude Include="gl_model.h">
+      <Filter>Code\Refresh</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\TnkString.h">
+      <Filter>Code\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\TnkVector.h">
+      <Filter>Code\Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\ref_shared\anorms.inl">
-      <Filter>Code\Ref Shared</Filter>
+      <Filter>Code\Refresh Shared</Filter>
+    </None>
+    <None Include="warpsin.inl">
+      <Filter>Code\Refresh\Inlines</Filter>
+    </None>
+    <None Include="anormtab.inl">
+      <Filter>Code\Refresh\Inlines</Filter>
     </None>
   </ItemGroup>
 </Project>

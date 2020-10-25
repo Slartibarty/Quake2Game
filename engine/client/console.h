@@ -1,7 +1,8 @@
-
 //
 // console
 //
+
+#pragma once
 
 #define	NUM_CON_TIMES 4
 

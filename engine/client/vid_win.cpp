@@ -5,8 +5,6 @@
 #include "client.h"
 #include "winquake.h"
 
-#include <vector>
-
 // Structure containing functions exported from refresh DLL
 refexport_t	re;
 

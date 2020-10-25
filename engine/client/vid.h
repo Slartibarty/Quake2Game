@@ -1,16 +1,18 @@
 // vid.h -- video driver defs
 
-typedef struct vrect_s
-{
-	int				x,y,width,height;
-} vrect_t;
+#pragma once
 
-typedef struct
+struct vrect_t
 {
-	unsigned		width, height;			// coordinates from main game
-} viddef_t;
+	int				x, y, width, height;
+};
 
-extern	viddef_t	viddef;				// global video state
+struct viddef_t
+{
+	unsigned		width, height;		// coordinates from main game
+};
+
+extern viddef_t viddef;					// global video state
 
 // Video module initialisation etc
 void	VID_Init (void);

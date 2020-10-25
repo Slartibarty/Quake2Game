@@ -1010,7 +1010,7 @@ int R_Init( void *hinstance, void *hWnd )
 	GL_SetDefaultState();
 
 	GL_InitImages();
-//	GLimp_SetGamma( g_gammatable, g_gammatable, g_gammatable );
+	GLimp_SetGamma( g_gammatable, g_gammatable, g_gammatable );
 
 	Mod_Init();
 	Draw_InitLocal();
@@ -1035,7 +1035,7 @@ void R_Shutdown (void)
 
 	Mod_FreeAll ();
 
-//	GLimp_RestoreGamma();
+	GLimp_RestoreGamma();
 	GL_ShutdownImages();
 
 	/*
