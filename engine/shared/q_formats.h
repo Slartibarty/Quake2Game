@@ -9,7 +9,7 @@
 // The .pak files are just a linear collapse of a directory tree
 //-------------------------------------------------------------------------------------------------
 
-static constexpr int IDPAKHEADER = MakeID('P', 'A', 'C', 'K');
+constexpr int IDPAKHEADER = MakeID('P', 'A', 'C', 'K');
 
 struct dpackfile_t
 {
@@ -51,7 +51,7 @@ struct pcx_t
 // .MD2 triangle model file format
 //-------------------------------------------------------------------------------------------------
 
-static constexpr int IDALIASHEADER = MakeID('I', 'D', 'P', '2');
+constexpr int IDALIASHEADER = MakeID('I', 'D', 'P', '2');
 
 #define ALIAS_VERSION	8
 
@@ -131,7 +131,7 @@ struct dmdl_t
 // .SP2 sprite file format
 //-------------------------------------------------------------------------------------------------
 
-static constexpr int IDSPRITEHEADER = MakeID('I', 'D', 'S', '2');
+constexpr int IDSPRITEHEADER = MakeID('I', 'D', 'S', '2');
 
 #define SPRITE_VERSION	2
 
@@ -170,7 +170,7 @@ struct miptex_t
 // .BSP file format
 //-------------------------------------------------------------------------------------------------
 
-static constexpr int IDBSPHEADER = MakeID('I', 'B', 'S', 'P');
+constexpr int IDBSPHEADER = MakeID('I', 'B', 'S', 'P');
 
 #define BSPVERSION	38
 
