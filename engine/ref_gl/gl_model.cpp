@@ -447,13 +447,18 @@ void Mod_LoadTexinfo (lump_t *l)
 			out->next = loadmodel->texinfo + next;
 		else
 		    out->next = NULL;
-		Com_sprintf (name, "textures/%s.wal", in->texture);
 
-		out->image = GL_FindImage (name, it_wall);
+		Com_sprintf( name, "textures/%s.tga", in->texture );
+		out->image = GL_FindImage( name, it_wall );
 		if (!out->image)
 		{
-			ri.Con_Printf (PRINT_ALL, "Couldn't load %s\n", name);
-			out->image = r_notexture;
+			Com_sprintf( name, "textures/%s.wal", in->texture );
+			out->image = GL_FindImage( name, it_wall );
+			if ( !out->image )
+			{
+				ri.Con_Printf( PRINT_ALL, "Couldn't load %s\n", name );
+				out->image = r_notexture;
+			}
 		}
 	}
 
