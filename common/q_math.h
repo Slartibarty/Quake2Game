@@ -47,6 +47,24 @@ namespace math
 			return sqrtf(x*x + y*y + z*z);
 		}
 
+		float Normalize()
+		{
+			float	length, ilength;
+
+			length = x * x + y * y + z * z;
+			length = sqrtf( length );
+
+			if ( length )
+			{
+				ilength = 1 / length;
+				x *= ilength;
+				y *= ilength;
+				z *= ilength;
+			}
+
+			return length;
+		}
+
 		void Scale(float scale)
 		{
 			x *= scale;
@@ -207,6 +225,20 @@ inline void VectorAdd(const vec3_t veca, const vec3_t vecb, vec3_t out)
 	out[0] = veca[0] + vecb[0];
 	out[1] = veca[1] + vecb[1];
 	out[2] = veca[2] + vecb[2];
+}
+
+inline void VectorMultiply(const vec3_t veca, const vec3_t vecb, vec3_t out)
+{
+	out[0] = veca[0] * vecb[0];
+	out[1] = veca[1] * vecb[1];
+	out[2] = veca[2] * vecb[2];
+}
+
+inline void VectorMultiply(const vec3_t veca, const float b, vec3_t out)
+{
+	out[0] = veca[0] * b;
+	out[1] = veca[1] * b;
+	out[2] = veca[2] * b;
 }
 
 inline void VectorCopy(const vec3_t in, vec3_t out)

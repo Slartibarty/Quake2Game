@@ -171,6 +171,15 @@
     <ClCompile Include="g_pch.cpp">
       <Filter>Code\Game</Filter>
     </ClCompile>
+    <ClCompile Include="m_ogre.cpp">
+      <Filter>Code\Game\Monsters</Filter>
+    </ClCompile>
+    <ClCompile Include="m_army.cpp">
+      <Filter>Code\Game\Monsters</Filter>
+    </ClCompile>
+    <ClCompile Include="m_dog.cpp">
+      <Filter>Code\Game\Monsters</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\game_shared\game_public.h">

@@ -119,6 +119,12 @@ void SP_turret_breach (edict_t *self);
 void SP_turret_base (edict_t *self);
 void SP_turret_driver (edict_t *self);
 
+// Quake 1
+
+void SP_monster_ogre( edict_t *self );
+void SP_monster_army( edict_t *self );
+void SP_monster_dog( edict_t *self );
+
 
 struct spawn_t
 {
@@ -126,7 +132,7 @@ struct spawn_t
 	void		(*spawn)(edict_t *ent);
 };
 
-static constexpr spawn_t g_spawns[]
+static const spawn_t g_spawns[]
 {
 	{"item_health", SP_item_health},
 	{"item_health_small", SP_item_health_small},
@@ -245,7 +251,13 @@ static constexpr spawn_t g_spawns[]
 
 	{"turret_breach", SP_turret_breach},
 	{"turret_base", SP_turret_base},
-	{"turret_driver", SP_turret_driver}
+	{"turret_driver", SP_turret_driver},
+
+	// Quake 1
+
+	{"monster_ogre", SP_monster_ogre},
+	{"monster_army", SP_monster_army},
+	{"monster_dog", SP_monster_dog}
 
 };
 
