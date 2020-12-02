@@ -167,6 +167,75 @@ struct miptex_t
 };
 
 //-------------------------------------------------------------------------------------------------
+// .WAS material script format
+//-------------------------------------------------------------------------------------------------
+
+struct was_t
+{
+	char		animname[32];			// next frame in animation chain
+	uint32		flags;
+	uint32		contents;
+	uint32		value;
+};
+
+//-------------------------------------------------------------------------------------------------
+// .WAD legacy storage format
+//-------------------------------------------------------------------------------------------------
+
+namespace wad2
+{
+	constexpr int IDWADHEADER = MakeID( 'W', 'A', 'D', '2' );
+	
+	// obsolete
+	enum compression_t : int8
+	{
+		CMP_NONE = 0,
+		CMP_LZSS
+	};
+
+	enum type_t : int8
+	{
+		TYP_LUMPY = 64,					// 64 + grab command number
+		TYP_PALETTE = 64,
+		TYP_QTEX = 65,
+		TYP_QPIC = 66,
+		TYP_SOUND = 67,
+		TYP_MIPTEX = 68,
+	};
+
+	struct qpic_t
+	{
+		int			width, height;
+		//byte		data[4];			// variably sized
+	};
+
+	struct miptex_t
+	{
+		char		name[16];
+		int32		width, height;
+		int32		nOffsets[4];
+	};
+
+	struct wadinfo_t
+	{
+		int32		identification;		// should be WAD2 or 2DAW
+		int32		numlumps;
+		int32		infotableofs;
+	};
+
+	struct lumpinfo_t
+	{
+		int32			filepos;
+		int32			disksize;
+		int32			size;			// uncompressed
+		type_t			type;
+		compression_t	compression;	// Always uncompressed
+		int16			pad;
+		char			name[16];		// must be null terminated
+	};
+}
+
+//-------------------------------------------------------------------------------------------------
 // .BSP file format
 //-------------------------------------------------------------------------------------------------
 

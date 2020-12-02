@@ -68,35 +68,16 @@ inline consteval int32 MakeID(int32 d, int32 c, int32 b, int32 a) {
 }
 
 //-------------------------------------------------------------------------------------------------
-// Misc - q_shared.cpp
-//-------------------------------------------------------------------------------------------------
-
-extern char null_string[1];
-
-inline void COM_StripExtension(const char *in, char *out)
-{
-	while (*in && *in != '.')
-		*out++ = *in++;
-	*out = 0;
-}
-
-// Returns the path up to, but not including the last /
-void COM_FilePath (const char *in, char *out);
-
-// Parse a token out of a string
-// data is an in/out parm, returns a parsed out token
-char *COM_Parse (char **data_p);
-
-void Com_PageInMemory (byte *buffer, int size);
-
-char *va(const char *format, ...);
-
-//-------------------------------------------------------------------------------------------------
 // Library replacement functions - q_shared.cpp
 //-------------------------------------------------------------------------------------------------
 
 // size_t is wack
 using strlen_t = int;
+
+inline strlen_t Q_strlen( const char *str )
+{
+	return static_cast<strlen_t>( strlen( str ) );
+}
 
 // Safe strcpy that ensures null termination
 // Returns bytes written
@@ -137,6 +118,43 @@ inline void Com_sprintf(char(&pDest)[nDestSize], const char *pFmt, ...)
 	Com_vsprintf(pDest, nDestSize, pFmt, args);
 	va_end(args);
 }
+
+//-------------------------------------------------------------------------------------------------
+// Misc - q_shared.cpp
+//-------------------------------------------------------------------------------------------------
+
+extern char null_string[1];
+
+inline bool Q_IsPathSeparator( char a )
+{
+	return ( a == '/' || a == '\\' );
+}
+
+inline void COM_StripExtension( const char *in, char *out )
+{
+	while ( *in && *in != '.' )
+		*out++ = *in++;
+	*out = '\0';
+}
+
+inline void COM_StripExtension( char *in )
+{
+	*( strrchr( in, '.' ) ) = '\0';
+}
+
+// Extract the filename from a path
+void COM_FileBase( const char *in, char *out );
+
+// Returns the path up to, but not including the last /
+void COM_FilePath( const char *in, char *out );
+
+// Parse a token out of a string
+// data is an in/out parm, returns a parsed out token
+char *COM_Parse( char **data_p );
+
+void Com_PageInMemory( byte *buffer, int size );
+
+char *va( const char *format, ... );
 
 //-------------------------------------------------------------------------------------------------
 // Byteswap functions - q_shared.cpp

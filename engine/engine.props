@@ -14,6 +14,7 @@
     </Link>
     <ClCompile>
       <PreprocessorDefinitions>_WINSOCK_DEPRECATED_NO_WARNINGS;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)\external\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup />

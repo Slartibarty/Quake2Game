@@ -16,6 +16,41 @@
 char null_string[1] = "";
 
 //-------------------------------------------------------------------------------------------------
+// Extract the filename from a path
+//-------------------------------------------------------------------------------------------------
+void COM_FileBase( const char *in, char *out )
+{
+	strlen_t len, start, end;
+
+	len = Q_strlen( in );
+
+	// Scan backwards for the extension
+	end = len - 1;
+	for ( ; end >= 0 && in[end] != '.' && !Q_IsPathSeparator( in[end] ); --end )
+		;
+
+	// No extension?
+	if ( in[end] != '.' )
+		end = len - 1;
+	else
+		--end;
+
+	// Scan backwards for the last slash
+	start = len - 1;
+	for ( ; start >= 0 && !Q_IsPathSeparator( in[start] ); --start )
+		;
+
+	if ( start < 0 || !Q_IsPathSeparator( in[start] ) )
+		start = 0;
+	else
+		++start;
+
+	//memcpy( out, in + start, end - start );
+	strncpy( out, in + start, end - start + 1 );
+	*( out + end - start + 1 ) = '\0';
+}
+
+//-------------------------------------------------------------------------------------------------
 // Returns the path up to, but not including the last /
 //-------------------------------------------------------------------------------------------------
 void COM_FilePath (const char *in, char *out)
