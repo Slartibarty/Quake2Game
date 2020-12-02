@@ -1,41 +1,57 @@
 
 #include "qbsp.h"
 
-int		nummiptex;
+int				nummiptex;
 textureref_t	textureref[MAX_MAP_TEXTURES];
 
 //==========================================================================
 
 
-int	FindMiptex (char *name)
+int	FindMiptex( const char *name )
 {
-	int		i;
-	char	path[1024];
+	int			i;
+	char		path[1024];
 	miptex_t	*mt;
+	was_t		*was;
 
-	for (i=0 ; i<nummiptex ; i++)
-		if (!strcmp (name, textureref[i].name))
-		{
+	if ( nummiptex == MAX_MAP_TEXTURES )
+		Error( "MAX_MAP_TEXTURES" );
+
+	for ( i = 0; i < nummiptex; i++ )
+	{
+		if ( strcmp( name, textureref[i].name ) == 0 )
 			return i;
-		}
-	if (nummiptex == MAX_MAP_TEXTURES)
-		Error ("MAX_MAP_TEXTURES");
-	strcpy (textureref[i].name, name);
+	}
+
+	strcpy( textureref[i].name, name );
 
 	// load the miptex to get the flags and values
-	sprintf (path, "%stextures/%s.wal", gamedir, name);
-	if (TryLoadFile (path, (void **)&mt) != -1)
+	sprintf( path, "%stextures/%s.wal", gamedir, name );
+	if ( TryLoadFile( path, (void **)&mt ) != -1 )
 	{
-		textureref[i].value = LittleLong (mt->value);
-		textureref[i].flags = LittleLong (mt->flags);
-		textureref[i].contents = LittleLong (mt->contents);
-		strcpy (textureref[i].animname, mt->animname);
-		free (mt);
+		textureref[i].value = LittleLong( mt->value );
+		textureref[i].flags = LittleLong( mt->flags );
+		textureref[i].contents = LittleLong( mt->contents );
+		strcpy( textureref[i].animname, mt->animname );
+		free( mt );
 	}
-	nummiptex++;
+	else
+	{
+		// Try a was
+		sprintf( path, "%stextures/%s.was", gamedir, name );
+		if ( TryLoadFile( path, (void **)&was ) != -1 )
+		{
+			textureref[i].value = LittleLong( was->value );
+			textureref[i].flags = LittleLong( was->flags );
+			textureref[i].contents = LittleLong( was->contents );
+			strcpy( textureref[i].animname, was->animname );
+			free( was );
+		}
+	}
+	++nummiptex;
 
-	if (textureref[i].animname[0])
-		FindMiptex (textureref[i].animname);
+	if ( textureref[i].animname[0] )
+		FindMiptex( textureref[i].animname );
 
 	return i;
 }

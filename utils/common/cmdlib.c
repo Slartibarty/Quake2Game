@@ -170,7 +170,7 @@ void SetQdirFromPath (char *path)
 
 	if (!(path[0] == '/' || path[0] == '\\' || path[1] == ':'))
 	{	// path is partial
-		Q_getwd (temp);
+		Q_getcwd (temp, sizeof(temp));
 		strcat (temp, path);
 		path = temp;
 	}
@@ -206,7 +206,7 @@ char *ExpandArg (char *path)
 
 	if (path[0] != '/' && path[0] != '\\' && path[1] != ':')
 	{
-		Q_getwd (full);
+		Q_getcwd (full, sizeof(full));
 		strcat (full, path);
 	}
 	else
@@ -281,14 +281,14 @@ double I_FloatTime (void)
 #endif
 }
 
-void Q_getwd (char *out)
+void Q_getcwd( char *buf, int buflen )
 {
-#ifdef WIN32
-   _getcwd (out, 256);
-   strcat (out, "\\");
+#ifdef _WIN32
+	_getcwd( buf, buflen );
+	strcat( buf, "\\" );
 #else
-   getwd (out);
-   strcat (out, "/");
+	getcwd( buf, buflen );
+	strcat( buf, "/" );
 #endif
 }
 

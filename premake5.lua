@@ -165,6 +165,8 @@ project( "qbsp3" )
 		"utils/common/polylib.*",
 		"utils/common/threads.*",
 		"utils/common/bspfile.*",
+		
+		"utils/common/qfiles.h",
 	
 		"utils/qbsp3/*"
 	} )

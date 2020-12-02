@@ -187,7 +187,17 @@ typedef struct miptex_s
 	int			value;
 } miptex_t;
 
+//-------------------------------------------------------------------------------------------------
+// .WAS material script format
+//-------------------------------------------------------------------------------------------------
 
+typedef struct was_s
+{
+	char			animname[32];			// next frame in animation chain
+	unsigned int	flags;
+	unsigned int	contents;
+	unsigned int	value;
+} was_t;
 
 /*
 ==============================================================================
