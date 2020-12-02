@@ -12,7 +12,7 @@
 #include <libc.h>
 #endif
 
-#define	BASEDIRNAME	"quake2"
+#define	BASEDIRNAME	"game"
 #define PATHSEPERATOR   '/'
 
 // set these before calling CheckParm
@@ -175,7 +175,7 @@ void SetQdirFromPath (char *path)
 		path = temp;
 	}
 
-	// search for "quake2" in path
+	// search for "game" in path
 
 	len = strlen(BASEDIRNAME);
 	for (c=path+strlen(path)-1 ; c != path ; c--)
@@ -437,7 +437,7 @@ int Q_strcasecmp (char *s1, char *s2)
 	return Q_strncasecmp (s1, s2, 99999);
 }
 
-
+#ifndef _WIN32
 char *strupr (char *start)
 {
 	char	*in;
@@ -461,7 +461,7 @@ char *strlower (char *start)
 	}
 	return start;
 }
-
+#endif
 
 /*
 =============================================================================

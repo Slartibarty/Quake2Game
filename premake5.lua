@@ -180,6 +180,7 @@ project( "qvis3" )
 		"utils/common/cmdlib.*",
 		"utils/common/mathlib.*",
 		"utils/common/threads.*",
+		"utils/common/scriplib.*",
 		"utils/common/bspfile.*",
 	
 		"utils/qvis3/*"
@@ -197,6 +198,7 @@ project( "qrad3" )
 		"utils/common/mathlib.*",
 		"utils/common/threads.*",
 		"utils/common/polylib.*",
+		"utils/common/scriplib.*",
 		"utils/common/bspfile.*",
 		"utils/common/lbmlib.*",
 	

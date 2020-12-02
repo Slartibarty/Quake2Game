@@ -198,28 +198,9 @@ int TexinfoForBrushTexture (plane_t *plane, brush_texture_t *bt, vec3_t origin);
 
 //=============================================================================
 
-void FindGCD (int *v);
+// map
 
-mapbrush_t *Brush_LoadEntity (entity_t *ent);
 int	PlaneTypeForNormal (vec3_t normal);
-qboolean MakeBrushPlanes (mapbrush_t *b);
-int		FindIntPlane (int *inormal, int *iorigin);
-void	CreateBrush (int brushnum);
-
-
-//=============================================================================
-
-// draw.c
-
-extern vec3_t	draw_mins, draw_maxs;
-extern	qboolean	drawflag;
-
-void Draw_ClearWindow (void);
-void DrawWinding (winding_t *w);
-
-void GLS_BeginScene (void);
-void GLS_Winding (winding_t *w, int code);
-void GLS_EndScene (void);
 
 //=============================================================================
 
@@ -236,8 +217,6 @@ void WriteBrushMap (char *name, bspbrush_t *list);
 //=============================================================================
 
 // brushbsp
-
-void WriteBrushList (char *name, bspbrush_t *brush, qboolean onlyvis);
 
 bspbrush_t *CopyBrush (bspbrush_t *brush);
 
@@ -276,13 +255,6 @@ void FreePortal (portal_t *p);
 void EmitAreaPortals (node_t *headnode);
 
 void MakeTreePortals (tree_t *tree);
-
-//=============================================================================
-
-// glfile.c
-
-void OutputWinding (winding_t *w, FILE *glview);
-void WriteGLView (tree_t *tree, char *source);
 
 //=============================================================================
 

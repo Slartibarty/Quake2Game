@@ -32,19 +32,13 @@ int		numbounce = 8;
 qboolean	extrasamples;
 
 float	subdiv = 64;
-qboolean	dumppatches;
 
-void BuildLightmaps (void);
 int TestLine (vec3_t start, vec3_t stop);
-
-int		junk;
 
 float	ambient = 0;
 float	maxlight = 196;
 
 float	lightscale = 1.0;
-
-qboolean	glview;
 
 qboolean	nopvs;
 
@@ -304,88 +298,6 @@ void FreeTransfers (void)
 	}
 }
 
-
-//===================================================================
-
-/*
-=============
-WriteWorld
-=============
-*/
-void WriteWorld (char *name)
-{
-	int		i, j;
-	FILE		*out;
-	patch_t		*patch;
-	winding_t	*w;
-
-	out = fopen (name, "w");
-	if (!out)
-		Error ("Couldn't open %s", name);
-
-	for (j=0, patch=patches ; j<num_patches ; j++, patch++)
-	{
-		w = patch->winding;
-		fprintf (out, "%i\n", w->numpoints);
-		for (i=0 ; i<w->numpoints ; i++)
-		{
-			fprintf (out, "%5.2f %5.2f %5.2f %5.3f %5.3f %5.3f\n",
-				w->p[i][0],
-				w->p[i][1],
-				w->p[i][2],
-				patch->totallight[0],
-				patch->totallight[1],
-				patch->totallight[2]);
-		}
-		fprintf (out, "\n");
-	}
-
-	fclose (out);
-}
-
-/*
-=============
-WriteGlView
-=============
-*/
-void WriteGlView (void)
-{
-	char	name[1024];
-	FILE	*f;
-	int		i, j;
-	patch_t	*p;
-	winding_t	*w;
-
-	strcpy (name, source);
-	StripExtension (name);
-	strcat (name, ".glr");
-
-	f = fopen (name, "w");
-	if (!f)
-		Error ("Couldn't open %s", f);
-
-	for (j=0 ; j<num_patches ; j++)
-	{
-		p = &patches[j];
-		w = p->winding;
-		fprintf (f, "%i\n", w->numpoints);
-		for (i=0 ; i<w->numpoints ; i++)
-		{
-			fprintf (f, "%5.2f %5.2f %5.2f %5.3f %5.3f %5.3f\n",
-				w->p[i][0],
-				w->p[i][1],
-				w->p[i][2],
-				p->totallight[0]/128,
-				p->totallight[1]/128,
-				p->totallight[2]/128);
-		}
-		fprintf (f, "\n");
-	}
-
-	fclose (f);
-}
-
-
 //==============================================================
 
 /*
@@ -467,7 +379,6 @@ void BounceLight (void)
 {
 	int		i, j;
 	float	added;
-	char	name[64];
 	patch_t	*p;
 
 	for (i=0 ; i<num_patches ; i++)
@@ -486,11 +397,6 @@ void BounceLight (void)
 		added = CollectLight ();
 
 		qprintf ("bounce:%i added:%f\n", i, added);
-		if ( dumppatches && (i==0 || i == numbounce-1) )
-		{
-			sprintf (name, "bounce%i.txt", i);
-			WriteWorld (name);
-		}
 	}
 }
 
@@ -551,9 +457,6 @@ void RadWorld (void)
 		CheckPatches ();
 	}
 
-	if (glview)
-		WriteGlView ();
-
 	// blend bounced light into direct light and save
 	PairEdges ();
 	LinkPlaneFaces ();
@@ -582,9 +485,7 @@ int main (int argc, char **argv)
 
 	for (i=1 ; i<argc ; i++)
 	{
-		if (!strcmp(argv[i],"-dump"))
-			dumppatches = true;
-		else if (!strcmp(argv[i],"-bounce"))
+		if (!strcmp(argv[i],"-bounce"))
 		{
 			numbounce = atoi (argv[i+1]);
 			i++;
@@ -624,11 +525,6 @@ int main (int argc, char **argv)
 			entity_scale *= atof(argv[i+1]);
 			printf ("entity light scaling at %f\n", entity_scale);
 			i++;
-		}
-		else if (!strcmp(argv[i],"-glview"))
-		{
-			glview = true;
-			printf ("glview = true\n");
 		}
 		else if (!strcmp(argv[i],"-nopvs"))
 		{

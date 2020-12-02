@@ -6,10 +6,6 @@
 #include "threads.h"
 #include "lbmlib.h"
 
-#ifdef WIN32
-#include <windows.h>
-#endif
-
 typedef enum
 {
 	emit_surface,

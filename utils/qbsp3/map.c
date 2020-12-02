@@ -22,8 +22,6 @@ vec3_t		map_mins, map_maxs;
 // undefine to make plane finding use linear sort
 #define	USE_HASHING
 
-void TestExpandBrushes (void);
-
 int		c_boxbevels;
 int		c_edgebevels;
 
@@ -935,63 +933,4 @@ void LoadMapFile (char *filename)
 	qprintf ("%5i areaportals\n", c_areaportals);
 	qprintf ("size: %5.0f,%5.0f,%5.0f to %5.0f,%5.0f,%5.0f\n", map_mins[0],map_mins[1],map_mins[2],
 		map_maxs[0],map_maxs[1],map_maxs[2]);
-
-//	TestExpandBrushes ();
-}
-
-
-//====================================================================
-
-
-/*
-================
-TestExpandBrushes
-
-Expands all the brush planes and saves a new map out
-================
-*/
-void TestExpandBrushes (void)
-{
-	FILE	*f;
-	side_t	*s;
-	int		i, j, bn;
-	winding_t	*w;
-	char	*name = "expanded.map";
-	mapbrush_t	*brush;
-	vec_t	dist;
-
-	printf ("writing %s\n", name);
-	f = fopen (name, "wb");
-	if (!f)
-		Error ("Can't write %s\b", name);
-
-	fprintf (f, "{\n\"classname\" \"worldspawn\"\n");
-
-	for (bn=0 ; bn<nummapbrushes ; bn++)
-	{
-		brush = &mapbrushes[bn];
-		fprintf (f, "{\n");
-		for (i=0 ; i<brush->numsides ; i++)
-		{
-			s = brush->original_sides + i;
-			dist = mapplanes[s->planenum].dist;
-			for (j=0 ; j<3 ; j++)
-				dist += fabs( 16 * mapplanes[s->planenum].normal[j] );
-
-			w = BaseWindingForPlane (mapplanes[s->planenum].normal, dist);
-
-			fprintf (f,"( %i %i %i ) ", (int)w->p[0][0], (int)w->p[0][1], (int)w->p[0][2]);
-			fprintf (f,"( %i %i %i ) ", (int)w->p[1][0], (int)w->p[1][1], (int)w->p[1][2]);
-			fprintf (f,"( %i %i %i ) ", (int)w->p[2][0], (int)w->p[2][1], (int)w->p[2][2]);
-
-			fprintf (f, "%s 0 0 0 1 1\n", texinfo[s->texinfo].texture);
-			FreeWinding (w);
-		}
-		fprintf (f, "}\n");
-	}
-	fprintf (f, "}\n");
-
-	fclose (f);
-
-	Error ("can't proceed after expanding brushes");
 }

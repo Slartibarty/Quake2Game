@@ -4,26 +4,6 @@ extern	int	c_nodes;
 
 void RemovePortalFromNode (portal_t *portal, node_t *l);
 
-node_t *NodeForPoint (node_t *node, vec3_t origin)
-{
-	plane_t	*plane;
-	vec_t	d;
-
-	while (node->planenum != PLANENUM_LEAF)
-	{
-		plane = &mapplanes[node->planenum];
-		d = DotProduct (origin, plane->normal) - plane->dist;
-		if (d >= 0)
-			node = node->children[0];
-		else
-			node = node->children[1];
-	}
-
-	return node;
-}
-
-
-
 /*
 =============
 FreeTreePortals_r

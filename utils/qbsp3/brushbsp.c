@@ -35,77 +35,6 @@ void FindBrushInTree (node_t *node, int brushnum)
 //==================================================
 
 /*
-================
-DrawBrushList
-================
-*/
-void DrawBrushList (bspbrush_t *brush, node_t *node)
-{
-	int		i;
-	side_t	*s;
-
-	GLS_BeginScene ();
-	for ( ; brush ; brush=brush->next)
-	{
-		for (i=0 ; i<brush->numsides ; i++)
-		{
-			s = &brush->sides[i];
-			if (!s->winding)
-				continue;
-			if (s->texinfo == TEXINFO_NODE)
-				GLS_Winding (s->winding, 1);
-			else if (!s->visible)
-				GLS_Winding (s->winding, 2);
-			else
-				GLS_Winding (s->winding, 0);
-		}
-	}
-	GLS_EndScene ();
-}
-
-/*
-================
-WriteBrushList
-================
-*/
-void WriteBrushList (char *name, bspbrush_t *brush, qboolean onlyvis)
-{
-	int		i;
-	side_t	*s;
-	FILE	*f;
-
-	qprintf ("writing %s\n", name);
-	f = SafeOpenWrite (name);
-
-	for ( ; brush ; brush=brush->next)
-	{
-		for (i=0 ; i<brush->numsides ; i++)
-		{
-			s = &brush->sides[i];
-			if (!s->winding)
-				continue;
-			if (onlyvis && !s->visible)
-				continue;
-			OutputWinding (brush->sides[i].winding, f);
-		}
-	}
-
-	fclose (f);
-}
-
-void PrintBrush (bspbrush_t *brush)
-{
-	int		i;
-
-	printf ("brush: %p\n", brush);
-	for (i=0;i<brush->numsides ; i++)
-	{
-		pw(brush->sides[i].winding);
-		printf ("\n");
-	}
-}
-
-/*
 ==================
 BoundBrush
 
@@ -1178,9 +1107,6 @@ node_t *BuildTree_r (node_t *node, bspbrush_t *brushes)
 
 	if (numthreads == 1)
 		c_nodes++;
-
-	if (drawflag)
-		DrawBrushList (brushes, node);
 
 	// find the best plane to use as a splitter
 	bestside = SelectSplitSide (brushes, node);
