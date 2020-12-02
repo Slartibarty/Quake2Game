@@ -1,8 +1,6 @@
-// vis.c
+// qvis3.c
 
 #include "vis.h"
-#include "threads.h"
-#include "stdlib.h"
 
 int			numportals;
 int			portalclusters;

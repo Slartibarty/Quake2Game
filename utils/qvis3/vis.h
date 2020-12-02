@@ -3,6 +3,7 @@
 #include "cmdlib.h"
 #include "mathlib.h"
 #include "bspfile.h"
+#include "threads.h"
 
 #define	MAX_PORTALS	32768
 

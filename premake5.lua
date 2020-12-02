@@ -154,7 +154,7 @@ group( "Utilities" )
 project( "qbsp3" )
 	kind( "ConsoleApp" )
 	targetname( "qbsp3" )
-	language( "C++" )
+	language( "C" )
 	targetdir( "../game" )
 	includedirs( "utils/common" )
 	
@@ -167,5 +167,39 @@ project( "qbsp3" )
 		"utils/common/bspfile.*",
 	
 		"utils/qbsp3/*"
+	} )
+	
+project( "qvis3" )
+	kind( "ConsoleApp" )
+	targetname( "qvis3" )
+	language( "C" )
+	targetdir( "../game" )
+	includedirs( "utils/common" )
+	
+	files( {
+		"utils/common/cmdlib.*",
+		"utils/common/mathlib.*",
+		"utils/common/threads.*",
+		"utils/common/bspfile.*",
+	
+		"utils/qvis3/*"
+	} )
+	
+project( "qrad3" )
+	kind( "ConsoleApp" )
+	targetname( "qrad3" )
+	language( "C" )
+	targetdir( "../game" )
+	includedirs( "utils/common" )
+	
+	files( {
+		"utils/common/cmdlib.*",
+		"utils/common/mathlib.*",
+		"utils/common/threads.*",
+		"utils/common/polylib.*",
+		"utils/common/bspfile.*",
+		"utils/common/lbmlib.*",
+	
+		"utils/qrad3/*"
 	} )
 
