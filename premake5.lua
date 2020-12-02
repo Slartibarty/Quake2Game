@@ -25,7 +25,7 @@ workspace( "quake2" )
 flags( { "MultiProcessorCompile", "NoBufferSecurityCheck" } )
 staticruntime( "On" )
 cppdialect( "C++20" )
-compileas( "C++" )
+--compileas( "C++" )
 warnings( "Default" )
 floatingpoint( "Fast" )
 characterset( "ASCII" )
@@ -146,3 +146,26 @@ project( "game" )
 		"**_null.*",
 		"**_pch.cpp"
 	} )
+	
+-- Utils
+
+group( "Utilities" )
+
+project( "qbsp3" )
+	kind( "ConsoleApp" )
+	targetname( "qbsp3" )
+	language( "C++" )
+	targetdir( "../game" )
+	includedirs( "utils/common" )
+	
+	files( {
+		"utils/common/cmdlib.*",
+		"utils/common/mathlib.*",
+		"utils/common/scriplib.*",
+		"utils/common/polylib.*",
+		"utils/common/threads.*",
+		"utils/common/bspfile.*",
+	
+		"utils/qbsp3/*"
+	} )
+
