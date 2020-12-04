@@ -4,15 +4,15 @@
 
 struct vrect_t
 {
-	int				x, y, width, height;
+	int		x, y, width, height;
 };
 
 struct viddef_t
 {
-	unsigned		width, height;		// coordinates from main game
+	int		width, height;		// coordinates from main game
 };
 
-extern viddef_t viddef;					// global video state
+extern viddef_t viddef;			// global video state
 
 // Video module initialisation etc
 void	VID_Init (void);
