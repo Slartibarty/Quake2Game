@@ -51,15 +51,17 @@ filter( "configurations:" .. conf_dbg )
 	symbols( "FastLink" )
 
 -- Config for all projects in release AND retail
-filter( "configurations:" .. conf_rel .. " or configurations:" .. conf_rtl )
+filter( "configurations:" .. conf_rel )
 	defines( { "NDEBUG" } )
 	symbols( "Full" )
 	optimize( "Speed" )
 
 -- Config for all projects in retail
 filter( "configurations:" .. conf_rtl )
-	symbols( "Off" )
+	defines( { "NDEBUG" } )
 	flags( { "LinkTimeOptimization" } )
+	symbols( "Off" )
+	optimize( "Speed" )
 
 -- Config for shared library projects
 filter( "kind:SharedLib" )
