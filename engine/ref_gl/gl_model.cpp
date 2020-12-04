@@ -448,6 +448,7 @@ void Mod_LoadTexinfo (lump_t *l)
 		else
 		    out->next = NULL;
 
+		// Maybe replace this with a texture-agnostic check in GL_FindImage?
 		Com_sprintf( name, "textures/%s.tga", in->texture );
 		out->image = GL_FindImage( name, it_wall );
 		if ( out->image == r_notexture )

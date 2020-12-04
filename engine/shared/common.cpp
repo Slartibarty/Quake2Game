@@ -1251,7 +1251,7 @@ void Com_EatWad_f( void )
 
 		pic32 = (byte *)malloc( c * 3 );
 
-		for ( int32 pixel = 0; pixel < c; pixel += 3 )
+		for ( int32 pixel = 0; pixel < (c * 3); pixel += 3 )
 		{
 			pic32[pixel+0] = palette[pic8[pixel+0]];
 			pic32[pixel+1] = palette[pic8[pixel+1]];
