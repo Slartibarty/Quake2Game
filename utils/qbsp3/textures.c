@@ -37,7 +37,7 @@ int	FindMiptex( const char *name )
 	}
 	else
 	{
-		// Try a was
+		// Try a was file
 		sprintf( path, "%stextures/%s.was", gamedir, name );
 		if ( TryLoadFile( path, (void **)&was ) != -1 )
 		{

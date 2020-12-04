@@ -39,7 +39,7 @@ typedef struct
 } transfer_t;
 
 
-#define	MAX_PATCHES	65000			// larger will cause 32 bit overflows
+#define	MAX_PATCHES	65536*2			// larger will cause 32 bit overflows
 
 typedef struct patch_s
 {
@@ -80,15 +80,6 @@ extern	int		nodeparents[MAX_MAP_NODES];
 
 extern	float	lightscale;
 
-
-void MakeShadowSplits (void);
-
-//==============================================
-
-
-void BuildVisMatrix (void);
-qboolean CheckVisBit (unsigned p1, unsigned p2);
-
 //==============================================
 
 extern	float ambient, maxlight;
@@ -101,8 +92,6 @@ extern int numbounce;
 extern	directlight_t	*directlights[MAX_MAP_LEAFS];
 
 extern	byte	nodehit[MAX_MAP_NODES];
-
-void BuildLightmaps (void);
 
 void BuildFacelights (int facenum);
 
@@ -118,7 +107,7 @@ dleaf_t		*PointInLeaf (vec3_t point);
 
 
 extern	dplane_t	backplanes[MAX_MAP_PLANES];
-extern	int			fakeplanes;					// created planes for origin offset 
+extern	int			fakeplanes;					// created planes for origin offset
 
 extern	float	subdiv;
 

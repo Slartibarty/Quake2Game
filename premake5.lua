@@ -159,6 +159,8 @@ project( "qbsp3" )
 	includedirs( "utils/common" )
 	
 	files( {
+		"common/windows_default.manifest",
+		
 		"utils/common/cmdlib.*",
 		"utils/common/mathlib.*",
 		"utils/common/scriplib.*",
@@ -179,6 +181,8 @@ project( "qvis3" )
 	includedirs( "utils/common" )
 	
 	files( {
+		"common/windows_default.manifest",
+
 		"utils/common/cmdlib.*",
 		"utils/common/mathlib.*",
 		"utils/common/threads.*",
@@ -193,9 +197,11 @@ project( "qrad3" )
 	targetname( "qrad3" )
 	language( "C" )
 	targetdir( "../game" )
-	includedirs( "utils/common" )
+	includedirs( { "utils/common", "external/stb" } )
 	
 	files( {
+		"common/windows_default.manifest",
+	
 		"utils/common/cmdlib.*",
 		"utils/common/mathlib.*",
 		"utils/common/threads.*",

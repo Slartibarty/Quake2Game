@@ -1,6 +1,13 @@
 
 #include "qrad.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#define STBI_NO_LINEAR
+#define STBI_NO_HDR
+#define STBI_ONLY_TGA
+#define STBI_NO_FAILURE_STRINGS
+#include "stb_image.h"
+
 vec3_t	texture_reflectivity[MAX_MAP_TEXINFO];
 
 /*
@@ -18,79 +25,112 @@ CalcTextureReflectivity
 */
 void CalcTextureReflectivity (void)
 {
-	int				i;
-	int				j, k, texels;
-	int				color[3];
-	int				texel;
-	byte			*palette;
-	char			path[1024];
-	float			r, scale;
-	miptex_t		*mt;
+#if 1
+	int			i, j;
+	byte		*palette = NULL;
+	char		path[1024];
+	miptex_t	*mt = NULL;
+	byte		*image;
+	int			width, height, texels;
 
-	sprintf (path, "%spics/colormap.pcx", gamedir);
+	int			texel;
+	int			color[3];
+	float		scale;
 
-	// get the game palette
-	Load256Image (path, NULL, &palette, NULL, NULL);
+	// always set index 0 even if no textures
+	texture_reflectivity[0][0] = 0.5f;
+	texture_reflectivity[0][1] = 0.5f;
+	texture_reflectivity[0][2] = 0.5f;
 
-	// allways set index 0 even if no textures
-	texture_reflectivity[0][0] = 0.5;
-	texture_reflectivity[0][1] = 0.5;
-	texture_reflectivity[0][2] = 0.5;
-
-	for (i=0 ; i<numtexinfo ; i++)
+	for ( i = 0; i < numtexinfo; ++i )
 	{
 		// see if an earlier texinfo allready got the value
-		for (j=0 ; j<i ; j++)
+		for ( j = 0; j < i; j++ )
 		{
-			if (!strcmp (texinfo[i].texture, texinfo[j].texture))
+			if ( !strcmp( texinfo[i].texture, texinfo[j].texture ) )
 			{
-				VectorCopy (texture_reflectivity[j], texture_reflectivity[i]);
+				VectorCopy( texture_reflectivity[j], texture_reflectivity[i] );
 				break;
 			}
 		}
-		if (j != i)
+		if ( j != i )
 			continue;
 
 		// load the wal file
-		sprintf (path, "%stextures/%s.wal", gamedir, texinfo[i].texture);
-		if (TryLoadFile (path, (void **)&mt) == -1)
+		sprintf( path, "%stextures/%s.tga", gamedir, texinfo[i].texture );
+		image = stbi_load( path, &width, &height, NULL, 3 );
+		if ( !image )
 		{
-			printf ("Couldn't load %s\n", path);
-			texture_reflectivity[i][0] = 0.5;
-			texture_reflectivity[i][1] = 0.5;
-			texture_reflectivity[i][2] = 0.5;
-			continue;
+			// nope, use a wal, makes sure we have the palette
+			if ( !palette )
+			{
+				sprintf( path, "%spics/colormap.pcx", gamedir );
+				Load256Image( path, NULL, &palette, NULL, NULL );
+			}
+
+			sprintf( path, "%stextures/%s.wal", gamedir, texinfo[i].texture );
+			if ( TryLoadFile( path, (void **)&mt ) == -1 )
+			{
+				printf( "Couldn't load %s\n", texinfo[i].texture );
+				texture_reflectivity[i][0] = 0.5f;
+				texture_reflectivity[i][1] = 0.5f;
+				texture_reflectivity[i][2] = 0.5f;
+				continue;
+			}
 		}
-		texels = LittleLong(mt->width)*LittleLong(mt->height);
+
+		if ( mt )
+		{
+			image = (byte *)mt + sizeof( miptex_t );
+			width = mt->width;
+			height = mt->height;
+		}
+
+		texels = width * height;
 		color[0] = color[1] = color[2] = 0;
 
-		for (j=0 ; j<texels ; j++)
+		for ( j = 0; j < texels; ++j )
 		{
-			texel = ((byte *)mt)[LittleLong(mt->offsets[0]) + j];
-			for (k=0 ; k<3 ; k++)
-				color[k] += palette[texel*3+k];
+			if ( mt )
+			{
+				texel = image + j;
+
+				color[0] += palette[texel * 3 + 0];
+				color[1] += palette[texel * 3 + 1];
+				color[2] += palette[texel * 3 + 2];
+			}
+			else
+			{
+				color[0] += image[j+0];
+				color[1] += image[j+1];
+				color[2] += image[j+2];
+			}
 		}
 
-		for (j=0 ; j<3 ; j++)
-		{
-			r = color[j]/texels/255.0;
-			texture_reflectivity[i][j] = r;
-		}
+		texture_reflectivity[i][0] = color[0] / texels / 255.0f;
+		texture_reflectivity[i][1] = color[1] / texels / 255.0f;
+		texture_reflectivity[i][2] = color[2] / texels / 255.0f;
+
+#if 1
 		// scale the reflectivity up, because the textures are
 		// so dim
-		scale = ColorNormalize (texture_reflectivity[i],
-			texture_reflectivity[i]);
-		if (scale < 0.5)
+		scale = ColorNormalize( texture_reflectivity[i],
+			texture_reflectivity[i] );
+		if ( scale < 0.5f )
 		{
-			scale *= 2;
-			VectorScale (texture_reflectivity[i], scale, texture_reflectivity[i]);
+			scale *= 2.0f;
+			VectorScale( texture_reflectivity[i], scale, texture_reflectivity[i] );
 		}
-#if 0
-texture_reflectivity[i][0] = 0.5;
-texture_reflectivity[i][1] = 0.5;
-texture_reflectivity[i][2] = 0.5;
 #endif
 	}
+#else
+	for ( int i = 0; i < numtexinfo; ++i )
+	{
+		texture_reflectivity[i][0] = 0.5f;
+		texture_reflectivity[i][1] = 0.5f;
+		texture_reflectivity[i][2] = 0.5f;
+	}
+#endif
 }
 
 /*

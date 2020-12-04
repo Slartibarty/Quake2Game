@@ -28,7 +28,7 @@ char		inbase[32], outbase[32];
 
 int			fakeplanes;					// created planes for origin offset 
 
-int		numbounce = 8;
+int			numbounce = 8;
 qboolean	extrasamples;
 
 float	subdiv = 64;

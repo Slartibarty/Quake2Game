@@ -118,9 +118,6 @@ extern	int		leafbytes, leaflongs;
 extern	int		portalbytes, portallongs;
 
 
-void LeafFlow (int leafnum);
-
-
 void BasePortalVis (int portalnum);
 void BetterPortalVis (int portalnum);
 void PortalFlow (int portalnum);
