@@ -371,7 +371,6 @@ void Map_SaveFile (char *filename, qboolean use_region )
 			fclose (f);
 			g_qeglobals.d_workcount = 0;
 		}
-		fclose (f);
 		Sys_Status ("Saved.\n", 0);
 	}
 }

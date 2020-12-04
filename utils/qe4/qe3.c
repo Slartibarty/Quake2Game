@@ -44,14 +44,6 @@ void *qmalloc (int size)
 	return b;
 }
 
-char *copystring (char *s)
-{
-	char	*b;
-	b = malloc(strlen(s)+1);
-	strcpy (b,s);
-	return b;
-}
-
 /*
 ===============
 QE_CheckAutoSave
@@ -99,7 +91,7 @@ qboolean QE_LoadProject (char *projectfile)
 
 	Sys_Printf ("QE_LoadProject (%s)\n", projectfile);
 
-	if ( LoadFileNoCrash (projectfile, (void *)&data) == -1)
+	if ( TryLoadFile (projectfile, (void *)&data) == -1)
 		return false;
 	StartTokenParsing (data);
 	g_qeglobals.d_project_entity = Entity_Parse (true);

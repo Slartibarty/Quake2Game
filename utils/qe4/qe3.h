@@ -144,7 +144,6 @@ typedef struct
 } QEGlobals_t;
 
 void *qmalloc (int size);
-char *copystring (char *s);
 char *ExpandReletivePath (char *p);
 
 void Pointfile_Delete (void);

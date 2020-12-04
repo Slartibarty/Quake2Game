@@ -6,6 +6,7 @@
 
 #ifdef WIN32
 #include <direct.h>
+#include <io.h>
 #endif
 
 #ifdef NeXT
@@ -37,7 +38,6 @@ Mimic unix command line expansion
 int		ex_argc;
 char	*ex_argv[MAX_EX_ARGC];
 #ifdef _WIN32
-#include "io.h"
 void ExpandWildcards (int *argc, char ***argv)
 {
 	struct _finddata_t fileinfo;
@@ -83,32 +83,8 @@ void ExpandWildcards (int *argc, char ***argv)
 #endif
 
 #ifdef WIN_ERROR
-#include <windows.h>
-/*
-=================
-Error
 
-For abnormal program terminations in windowed apps
-=================
-*/
-void Error (char *error, ...)
-{
-	va_list argptr;
-	char	text[1024];
-	char	text2[1024];
-	int		err;
-
-	err = GetLastError ();
-
-	va_start (argptr,error);
-	vsprintf (text, error,argptr);
-	va_end (argptr);
-
-	sprintf (text2, "%s\nGetLastError() = %i", text, err);
-    MessageBox(NULL, text2, "Error", 0 /* MB_OK */ );
-
-	exit (1);
-}
+// Apps should provide their own Error function
 
 #else
 /*

@@ -33,7 +33,7 @@ void QE_ExpandBspString (char *bspaction, char *out, char *mapname)
 	char	rsh[1024];
 	char	base[256];
 
-	ExtractFileName (mapname, base);
+	ExtractFileBase (mapname, base);
 	sprintf (src, "%s/maps/%s", ValueForKey(g_qeglobals.d_project_entity, "remotebasepath"), base);
 	strcpy (rsh, ValueForKey(g_qeglobals.d_project_entity, "rshcmd"));
 

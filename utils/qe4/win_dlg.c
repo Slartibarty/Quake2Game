@@ -1,7 +1,7 @@
 
 #include "qe3.h"
 
-BOOL CALLBACK GammaDlgProc (
+INT_PTR CALLBACK GammaDlgProc (
     HWND hwndDlg,	// handle to dialog box
     UINT uMsg,	// message
     WPARAM wParam,	// first message parameter
@@ -135,7 +135,7 @@ void GetSelectionIndex (int *ent, int *brush)
 	;
 }
 
-BOOL CALLBACK FindBrushDlgProc (
+INT_PTR CALLBACK FindBrushDlgProc (
     HWND hwndDlg,	// handle to dialog box
     UINT uMsg,	// message
     WPARAM wParam,	// first message parameter
@@ -195,7 +195,7 @@ void DoFind(void)
 */
 
 
-BOOL CALLBACK RotateDlgProc (
+INT_PTR CALLBACK RotateDlgProc (
     HWND hwndDlg,	// handle to dialog box
     UINT uMsg,	// message
     WPARAM wParam,	// first message parameter
@@ -261,7 +261,7 @@ void DoRotate(void)
 */
 
 
-BOOL CALLBACK SidesDlgProc (
+INT_PTR CALLBACK SidesDlgProc (
     HWND hwndDlg,	// handle to dialog box
     UINT uMsg,	// message
     WPARAM wParam,	// first message parameter
@@ -311,7 +311,7 @@ void DoSides(void)
 DoAbout
 ===================
 */
-BOOL CALLBACK AboutDlgProc( HWND hwndDlg,
+INT_PTR CALLBACK AboutDlgProc( HWND hwndDlg,
 						    UINT uMsg,
 						    WPARAM wParam,
 						    LPARAM lParam )
@@ -586,7 +586,7 @@ void UpdateSpinners(unsigned uMsg, WPARAM wParam, LPARAM lParam)
 
 
 
-BOOL CALLBACK SurfaceDlgProc (
+INT_PTR CALLBACK SurfaceDlgProc (
     HWND hwndDlg,	// handle to dialog box
     UINT uMsg,	// message
     WPARAM wParam,	// first message parameter

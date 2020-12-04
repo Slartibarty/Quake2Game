@@ -82,6 +82,7 @@ void _VectorScale (vec3_t v, vec_t scale, vec3_t out)
 	out[2] = v[2] * scale;
 }
 
+#ifndef QE4
 vec_t VectorNormalize (vec3_t in, vec3_t out)
 {
 	vec_t	length, ilength;
@@ -100,6 +101,25 @@ vec_t VectorNormalize (vec3_t in, vec3_t out)
 
 	return length;
 }
+#else
+vec_t VectorNormalize (vec3_t v)
+{
+	int		i;
+	float	length;
+	
+	length = 0.0f;
+	for (i=0 ; i< 3 ; i++)
+		length += v[i]*v[i];
+	length = (float)sqrt (length);
+	if (length == 0)
+		return (vec_t)0;
+		
+	for (i=0 ; i< 3 ; i++)
+		v[i] /= length;	
+
+	return length;
+}
+#endif
 
 vec_t ColorNormalize (vec3_t in, vec3_t out)
 {

@@ -498,11 +498,10 @@ int APIENTRY WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 
 	// the project file can be specified on the command line,
 	// or implicitly found in the scripts directory
-	if (lpCmdLine && strlen(lpCmdLine))
+	if ( __argc == 2 )
 	{
-		ParseCommandLine (lpCmdLine);
-		if (!QE_LoadProject(argv[1]))
-			Error ("Couldn't load %s project file", argv[1]);
+		if (!QE_LoadProject(__argv[1]))
+			Error ("Couldn't load %s project file", __argv[1]);
 	}
 	else if (!QE_LoadProject("scripts/quake.qe4"))
 		Error ("Couldn't load scripts/quake.qe4 project file");

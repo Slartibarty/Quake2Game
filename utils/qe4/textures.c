@@ -1,6 +1,13 @@
 #include "qe3.h"
 #include <io.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#define STBI_NO_LINEAR
+#define STBI_NO_HDR
+#define STBI_ONLY_TGA
+#define STBI_NO_FAILURE_STRINGS
+#include "stb_image.h"
+
 #define	TYP_MIPTEX	68
 static unsigned	tex_palette[256];
 
@@ -273,29 +280,28 @@ void Texture_SetMode(int iMenu)
 Texture_LoadTexture
 =================
 */
-qtexture_t *Texture_LoadTexture (miptex_t *qtex)
+qtexture_t *Texture_LoadTexture (byte *image, int width, int height, was_t *was, qboolean haspalette)
 {
-    byte		*source;
     unsigned	*dest;
-    int			width, height, i, count;
+    int			i, count;
 	int			total[3];
     qtexture_t	*q;
     
     q = qmalloc(sizeof(*q));
-    width = LittleLong(qtex->width);
-    height = LittleLong(qtex->height);
 
     q->width = width;
     q->height = height;
 
-	q->flags = qtex->flags;
-	q->value = qtex->value;
-	q->contents = qtex->contents;
+	q->flags = was->flags;
+	q->value = was->value;
+	q->contents = was->contents;
 
-	dest = qmalloc (width*height*4);
+	if ( haspalette )
+		dest = qmalloc( width * height * 4 );
+	else
+		dest = image;
 
     count = width*height;
-    source = (byte *)qtex + LittleLong(qtex->offsets[0]);
 
 	// The dib is upside down so we want to copy it into 
 	// the buffer bottom up.
@@ -303,7 +309,8 @@ qtexture_t *Texture_LoadTexture (miptex_t *qtex)
 	total[0] = total[1] = total[2] = 0;
     for (i=0 ; i<count ; i++)
 	{
-		dest[i] = tex_palette[source[i]];
+		if ( haspalette )
+			dest[i] = tex_palette[image[i]];
 
 		total[0] += ((byte *)(dest+i))[0];
 		total[1] += ((byte *)(dest+i))[1];
@@ -324,7 +331,8 @@ qtexture_t *Texture_LoadTexture (miptex_t *qtex)
 	else
 		gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height,GL_RGBA, GL_UNSIGNED_BYTE, dest);
 
-	free (dest);
+	if ( haspalette )
+		free (dest);
 
 	glBindTexture( GL_TEXTURE_2D, 0 );
 
@@ -410,48 +418,85 @@ Texture_ForName
 */
 qtexture_t *Texture_ForName (char *name)
 {
-    byte    *lump;
+	miptex_t	*mt;
+	was_t		*pwas;
+	was_t		was;
+	byte		*image;
 	qtexture_t	*q;
-	char	filename[1024];
+	int			width, height;
+	char		filename[1024];
+	qboolean	haspalette = false;
 
-//return notexture;
-	for (q=g_qeglobals.d_qtextures ; q ; q=q->next)
-    {
-		if (!strcmp(name,  q->name))
-		{
-			if (!g_dontuse)
-				q->inuse = true;
-		    return q;
-		}
-    }
+	memset( &was, 0, sizeof( was ) );
 
-	if (name[0] == '(')
+	for ( q = g_qeglobals.d_qtextures; q; q = q->next )
 	{
-		q = Texture_CreateSolid (name);
-		strncpy (q->name, name, sizeof(q->name)-1);
+		if ( !strcmp( name, q->name ) )
+		{
+			if ( !g_dontuse )
+				q->inuse = true;
+			return q;
+		}
+	}
+
+	if ( name[0] == '(' )
+	{
+		q = Texture_CreateSolid( name );
+		strncpy( q->name, name, sizeof( q->name ) - 1 );
 	}
 	else
 	{
-		// load the file
-		sprintf (filename, "%s/%s.tga", 
-			ValueForKey (g_qeglobals.d_project_entity, "texturepath"),
-			name);
-		Sys_Printf ("Loading %s\n", name);
-		if (LoadFile (filename, &lump) == -1)
+		Sys_Printf( "Loading %s\n", name );
+
+		sprintf( filename, "%s/%s.tga",
+			ValueForKey( g_qeglobals.d_project_entity, "texturepath" ),
+			name );
+
+		image = stbi_load( filename, &width, &height, NULL, 4 );
+		if ( !image )
 		{
 			sprintf( filename, "%s/%s.wal",
 				ValueForKey( g_qeglobals.d_project_entity, "texturepath" ),
 				name );
-			if ( LoadFile( filename, &lump ) == -1 )
+			if ( TryLoadFile( filename, &mt ) == -1 )
 			{
 				Sys_Printf( "     load failed!\n" );
 				return notexture;
 			}
+			haspalette = true;
+
+			width = mt->width;
+			height = mt->height;
+			was.contents = mt->contents;
+			was.flags = mt->flags;
+			was.value = mt->value;
+
+			image = (byte *)mt + sizeof( miptex_t );
 		}
-		q = Texture_LoadTexture ((miptex_t *)lump);
-		free (lump);
-		strncpy (q->name, name, sizeof(q->name)-1);
-		StripExtension (q->name);
+		else
+		{
+			// load a was
+			sprintf( filename, "%s/%s.was",
+				ValueForKey( g_qeglobals.d_project_entity, "texturepath" ),
+				name );
+
+			if ( TryLoadFile( filename, &pwas ) == -1 )
+			{
+				Sys_Printf( "     image has no associated .was!\n" );
+			}
+			else
+			{
+				was.contents = pwas->contents;
+				was.flags = pwas->flags;
+				was.value = pwas->value;
+				free( pwas );
+			}
+		}
+
+		q = Texture_LoadTexture( image, width, height, &was, haspalette );
+		free( image );
+		strncpy( q->name, name, sizeof( q->name ) - 1 );
+		StripExtension( q->name );
 	}
 
 	if (!g_dontuse)

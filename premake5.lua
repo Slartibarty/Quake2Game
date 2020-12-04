@@ -220,11 +220,18 @@ project( "qe4" )
 	targetname( "qe4" )
 	language( "C" )
 	targetdir( "../game" )
-	includedirs( { "external/stb" } )
+	defines( { "WIN_ERROR", "QE4" } )
+	includedirs( { "utils/common", "external/stb" } )
 	links( { "opengl32", "glu32" } )
 	
 	files( {
 		"common/*.manifest",
+		
+		"utils/common/cmdlib.*",
+		"utils/common/mathlib.*",
+		"utils/common/bspfile.h",
+		"utils/common/lbmlib.*",
+		"utils/common/qfiles.*",
 		
 		"utils/qe4/*"
 	} )
