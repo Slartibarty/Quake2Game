@@ -215,3 +215,16 @@ project( "qrad3" )
 		"utils/qrad3/*"
 	} )
 
+project( "qe4" )
+	kind( "WindowedApp" )
+	targetname( "qe4" )
+	language( "C" )
+	targetdir( "../game" )
+	includedirs( { "external/stb" } )
+	links( { "opengl32", "glu32" } )
+	
+	files( {
+		"common/*.manifest",
+		
+		"utils/qe4/*"
+	} )
