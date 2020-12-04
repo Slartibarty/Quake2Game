@@ -214,6 +214,28 @@ project( "qrad3" )
 	
 		"utils/qrad3/*"
 	} )
+	
+project( "qdata" )
+	kind( "ConsoleApp" )
+	targetname( "qdata" )
+	language( "C" )
+	targetdir( "../game" )
+	includedirs( { "utils/common", "external/stb" } )
+	
+	files( {
+		"common/windows_default.manifest",
+	
+		"utils/common/cmdlib.*",
+		"utils/common/scriplib.*",
+		"utils/common/mathlib.*",
+		"utils/common/trilib.*",
+		"utils/common/lbmlib.*",
+		"utils/common/threads.*",
+		"utils/common/l3dslib.*",
+		"utils/common/bspfile.*",
+	
+		"utils/qdata/*"
+	} )
 
 project( "qe4" )
 	kind( "WindowedApp" )
