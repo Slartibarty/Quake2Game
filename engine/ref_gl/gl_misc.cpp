@@ -8,6 +8,9 @@ Misc functions that don't fit anywhere else
 
 #include "gl_local.h"
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
 //-------------------------------------------------------------------------------------------------
 // Captures a screenshot
 //-------------------------------------------------------------------------------------------------
@@ -124,4 +127,181 @@ void GL_SetDefaultState(void)
 		glPointParameterfEXT(GL_POINT_SIZE_MAX_EXT, gl_particle_max_size->value);
 		glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT, attenuations);
 	}
+}
+
+//-------------------------------------------------------------------------------------------------
+// Extract a WAD file to 24-bit TGA files
+//-------------------------------------------------------------------------------------------------
+void GL_ExtractWad_f( void )
+{
+	if ( ri.Cmd_Argc() < 3 )
+	{
+		ri.Con_Printf( PRINT_ALL, "Usage: <file.wad> <palette.lmp>\n" );
+		return;
+	}
+
+	char wadbase[MAX_QPATH];
+	COM_FileBase( ri.Cmd_Argv( 1 ), wadbase );
+
+	// Create the output folder if it doesn't exist
+	Sys_Mkdir( va( "%s/textures/%s", ri.FS_Gamedir(), wadbase ) );
+
+	FILE *wadhandle;
+
+	wadhandle = fopen( va( "%s/%s", ri.FS_Gamedir(), ri.Cmd_Argv( 2 ) ), "rb" );
+	if ( !wadhandle )
+	{
+		ri.Con_Printf( PRINT_ALL, "Couldn't open %s\n", ri.Cmd_Argv( 2 ) );
+		return;
+	}
+
+	byte palette[256 * 3];
+
+	if ( fread( palette, 3, 256, wadhandle ) != 256 )
+	{
+		fclose( wadhandle );
+		ri.Con_Printf( PRINT_ALL, "Malformed palette lump\n" );
+	}
+
+	fclose( wadhandle );
+
+	wadhandle = fopen( va( "%s/%s", ri.FS_Gamedir(), ri.Cmd_Argv( 1 ) ), "rb" );
+	if ( !wadhandle )
+	{
+		ri.Con_Printf( PRINT_ALL, "Couldn't open %s\n", ri.Cmd_Argv( 1 ) );
+		return;
+	}
+
+	wad2::wadinfo_t wadheader;
+
+	if ( fread( &wadheader, sizeof( wadheader ), 1, wadhandle ) != 1 || wadheader.identification != wad2::IDWADHEADER )
+	{
+		fclose( wadhandle );
+		ri.Con_Printf( PRINT_ALL, "Malformed wadfile\n" );
+		return;
+	}
+
+	fseek( wadhandle, wadheader.infotableofs, SEEK_SET );
+
+	wad2::lumpinfo_t *wadlumps = (wad2::lumpinfo_t *)malloc( sizeof( wad2::lumpinfo_t ) * wadheader.numlumps );
+
+	if ( fread( wadlumps, sizeof( wad2::lumpinfo_t ), wadheader.numlumps, wadhandle ) != wadheader.numlumps )
+	{
+		free( wadlumps );
+		fclose( wadhandle );
+		ri.Con_Printf( PRINT_ALL, "Malformed wadfile\n" );
+		return;
+	}
+
+	for ( int32 i = 0; i < wadheader.numlumps; ++i )
+	{
+		assert( wadlumps[i].compression == wad2::CMP_NONE );
+
+		if ( wadlumps[i].type != wad2::TYP_MIPTEX )
+			continue;
+
+		wad2::miptex_t miptex;
+
+		fseek( wadhandle, wadlumps[i].filepos, SEEK_SET );
+		fread( &miptex, sizeof( miptex ), 1, wadhandle );
+
+		int32 c;
+		byte *pic8, *pic32;
+
+		c = miptex.width * miptex.height;
+
+		pic8 = (byte *)malloc( c );
+
+		fread( pic8, 1, c, wadhandle );
+
+		pic32 = (byte *)malloc( c * 3 );
+
+		for ( int32 pixel = 0; pixel < ( c * 3 ); pixel += 3 )
+		{
+			pic32[pixel + 0] = palette[pic8[pixel + 0]];
+			pic32[pixel + 1] = palette[pic8[pixel + 1]];
+			pic32[pixel + 2] = palette[pic8[pixel + 2]];
+		}
+
+		free( pic8 );
+
+		char outname[MAX_QPATH];
+		Com_sprintf( outname, "%s/textures/%s/%s.tga", ri.FS_Gamedir(), wadbase, wadlumps[i].name );
+
+		char *asterisk;
+		while ( ( asterisk = strchr( outname, '*' ) ) )
+		{
+			// Half-Lifeify the texture name
+			*asterisk = '!';
+		}
+
+		if ( stbi_write_tga( outname, miptex.width, miptex.height, 3, pic32 ) == 0 )
+		{
+			ri.Con_Printf( PRINT_ALL, "Failed to write %s\n", outname );
+		}
+
+		free( pic32 );
+
+		Com_sprintf( outname, "%s/textures/%s/%s.was", ri.FS_Gamedir(), wadbase, wadlumps[i].name );
+
+		while ( ( asterisk = strchr( outname, '*' ) ) )
+		{
+			// Half-Lifeify the texture name
+			*asterisk = '!';
+		}
+
+		was_t was{};
+		switch ( wadlumps[i].name[0] )
+		{
+		case '*':
+			was.contents |= CONTENTS_WATER;
+			break;
+		}
+
+		FILE *scripthandle = fopen( outname, "wb" );
+		if ( scripthandle )
+		{
+			fwrite( &was, sizeof( was ), 1, scripthandle );
+			fclose( scripthandle );
+		}
+
+	}
+
+	free( wadlumps );
+	fclose( wadhandle );
+}
+
+//-------------------------------------------------------------------------------------------------
+// Upgrade all WALs in a specified folder to TGAs and WAScripts
+//-------------------------------------------------------------------------------------------------
+void GL_UpgradeWals_f( void )
+{
+	if ( ri.Cmd_Argc() < 2 )
+	{
+		ri.Con_Printf( PRINT_ALL, "Usage: <folder>\n" );
+		return;
+	}
+
+	char		folder[MAX_OSPATH];
+	const char	*str;
+
+	Com_sprintf( folder, "%s/%s", ri.FS_Gamedir(), ri.Cmd_Argv( 1 ) );
+
+	str = Sys_FindFirst( folder, 0, 0 );
+	if ( !str ) {
+		ri.Con_Printf( PRINT_ALL, "No files found in folder\n" );
+		Sys_FindClose();
+		return;
+	}
+
+	for ( ; str; str = Sys_FindNext( 0, 0 ) )
+	{
+		if ( strstr( str, ".wal" ) == NULL )
+			continue;
+		ri.Con_Printf( PRINT_ALL, "Upgrading %s\n", str );
+
+	}
+
+	Sys_FindClose();
+
 }

@@ -194,9 +194,9 @@ PackDirectory_r
 void PackDirectory_r (char *dir)
 {
 	struct _finddata_t fileinfo;
-	int		handle;
-	char	dirstring[1024];
-	char	filename[1024];
+	intptr_t	handle;
+	char		dirstring[1024];
+	char		filename[1024];
 
 	sprintf (dirstring, "%s%s/*.*", gamedir, dir);
 
@@ -442,7 +442,7 @@ main
 */
 int main (int argc, char **argv)
 {
-	static	int		i;		// VC4.2 compiler bug if auto...
+	int		i;
 	char	path[1024];
 
 	ExpandWildcards (&argc, &argv);

@@ -39,7 +39,7 @@ typedef struct
 } transfer_t;
 
 
-#define	MAX_PATCHES	65536*2			// larger will cause 32 bit overflows
+#define	MAX_PATCHES	65536			// larger will cause 32 bit overflows
 
 typedef struct patch_s
 {

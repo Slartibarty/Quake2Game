@@ -233,6 +233,7 @@ project( "qdata" )
 		"utils/common/threads.*",
 		"utils/common/l3dslib.*",
 		"utils/common/bspfile.*",
+		"utils/common/md4.*",
 	
 		"utils/qdata/*"
 	} )

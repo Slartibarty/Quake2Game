@@ -904,6 +904,9 @@ void R_Register( void )
 	ri.Cmd_AddCommand( "screenshot", GL_ScreenShot_f );
 	ri.Cmd_AddCommand( "modellist", Mod_Modellist_f );
 	ri.Cmd_AddCommand( "gl_strings", GL_Strings_f );
+
+	ri.Cmd_AddCommand( "extractwad", GL_ExtractWad_f );
+	ri.Cmd_AddCommand( "upgradewals", GL_UpgradeWals_f );
 }
 
 /*
@@ -1032,6 +1035,9 @@ void R_Shutdown (void)
 	ri.Cmd_RemoveCommand ("screenshot");
 	ri.Cmd_RemoveCommand ("imagelist");
 	ri.Cmd_RemoveCommand ("gl_strings");
+
+	ri.Cmd_RemoveCommand ("extractwad");
+	ri.Cmd_RemoveCommand ("upgradewals");
 
 	Mod_FreeAll ();
 

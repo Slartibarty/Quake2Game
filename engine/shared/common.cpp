@@ -3,11 +3,7 @@
 #include "common.h"
 #include <setjmp.h>
 
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
-
 #define MAX_NUM_ARGVS	50
-
 
 int		com_argc;
 char	*com_argv[MAX_NUM_ARGVS+1];
@@ -1164,150 +1160,6 @@ void *Z_Malloc (int size)
 
 //============================================================================
 
-//-------------------------------------------------------------------------------------------------
-// Extract a WAD file to 24-bit TGA files
-//-------------------------------------------------------------------------------------------------
-void Com_EatWad_f( void )
-{
-	if ( Cmd_Argc() < 3 )
-	{
-		Com_Printf( "Usage: <file.wad> <palette.lmp>\n" );
-		return;
-	}
-
-	char wadbase[MAX_QPATH];
-	COM_FileBase( Cmd_Argv( 1 ), wadbase );
-
-	// Create the output folder if it doesn't exist
-	Sys_Mkdir( va( "%s/textures/%s", FS_Gamedir(), wadbase ) );
-
-	FILE *wadhandle;
-
-	wadhandle = fopen( va( "%s/%s", FS_Gamedir(), Cmd_Argv( 2 ) ), "rb" );
-	if ( !wadhandle )
-	{
-		Com_Printf( "Couldn't open %s\n", Cmd_Argv( 2 ) );
-		return;
-	}
-
-	byte palette[256 * 3];
-
-	if ( fread( palette, 3, 256, wadhandle ) != 256 )
-	{
-		fclose( wadhandle );
-		Com_Printf( "Malformed palette lump\n" );
-	}
-
-	fclose( wadhandle );
-
-	wadhandle = fopen( va( "%s/%s", FS_Gamedir(), Cmd_Argv( 1 ) ), "rb" );
-	if ( !wadhandle )
-	{
-		Com_Printf( "Couldn't open %s\n", Cmd_Argv( 1 ) );
-		return;
-	}
-
-	wad2::wadinfo_t wadheader;
-
-	if ( fread( &wadheader, sizeof( wadheader ), 1, wadhandle ) != 1 || wadheader.identification != wad2::IDWADHEADER )
-	{
-		fclose( wadhandle );
-		Com_Printf( "Malformed wadfile\n" );
-		return;
-	}
-
-	fseek( wadhandle, wadheader.infotableofs, SEEK_SET );
-
-	wad2::lumpinfo_t *wadlumps = (wad2::lumpinfo_t *)malloc( sizeof( wad2::lumpinfo_t ) * wadheader.numlumps );
-
-	if ( fread( wadlumps, sizeof( wad2::lumpinfo_t ), wadheader.numlumps, wadhandle ) != wadheader.numlumps )
-	{
-		free( wadlumps );
-		fclose( wadhandle );
-		Com_Printf( "Malformed wadfile\n" );
-		return;
-	}
-
-	for ( int32 i = 0; i < wadheader.numlumps; ++i )
-	{
-		assert( wadlumps[i].compression == wad2::CMP_NONE );
-
-		if ( wadlumps[i].type != wad2::TYP_MIPTEX )
-			continue;
-
-		wad2::miptex_t miptex;
-
-		fseek( wadhandle, wadlumps[i].filepos, SEEK_SET );
-		fread( &miptex, sizeof( miptex ), 1, wadhandle );
-
-		int32 c;
-		byte *pic8, *pic32;
-
-		c = miptex.width * miptex.height;
-
-		pic8 = (byte *)malloc( c );
-
-		fread( pic8, 1, c, wadhandle );
-
-		pic32 = (byte *)malloc( c * 3 );
-
-		for ( int32 pixel = 0; pixel < (c * 3); pixel += 3 )
-		{
-			pic32[pixel+0] = palette[pic8[pixel+0]];
-			pic32[pixel+1] = palette[pic8[pixel+1]];
-			pic32[pixel+2] = palette[pic8[pixel+2]];
-		}
-
-		free( pic8 );
-
-		char outname[MAX_QPATH];
-		Com_sprintf( outname, "%s/textures/%s/%s.tga", FS_Gamedir(), wadbase, wadlumps[i].name );
-
-		char *asterisk;
-		while ( ( asterisk = strchr( outname, '*' ) ) )
-		{
-			// Half-Lifeify the texture name
-			*asterisk = '!';
-		}
-
-		if ( stbi_write_tga( outname, miptex.width, miptex.height, 3, pic32 ) == 0 )
-		{
-			Com_Printf( "Failed to write %s\n", outname );
-		}
-
-		free( pic32 );
-
-		Com_sprintf( outname, "%s/textures/%s/%s.was", FS_Gamedir(), wadbase, wadlumps[i].name );
-
-		while ( ( asterisk = strchr( outname, '*' ) ) )
-		{
-			// Half-Lifeify the texture name
-			*asterisk = '!';
-		}
-
-		was_t was{};
-		switch ( wadlumps[i].name[0] )
-		{
-		case '*':
-			was.contents |= CONTENTS_WATER;
-			break;
-		}
-
-		FILE *scripthandle = fopen( outname, "wb" );
-		if ( scripthandle )
-		{
-			fwrite( &was, sizeof( was ), 1, scripthandle );
-			fclose( scripthandle );
-		}
-
-	}
-
-	free( wadlumps );
-	fclose( wadhandle );
-}
-
-//============================================================================
-
 static byte chktbl[1024]{
 0x84, 0x47, 0x51, 0xc1, 0x93, 0x22, 0x21, 0x24, 0x2f, 0x66, 0x60, 0x4d, 0xb0, 0x7c, 0xda,
 0x88, 0x54, 0x15, 0x2b, 0xc6, 0x6c, 0x89, 0xc5, 0x9d, 0x48, 0xee, 0xe6, 0x8a, 0xb5, 0xf4,
@@ -1491,7 +1343,6 @@ void Qcommon_Init (int argc, char **argv)
 	// init commands and vars
 	//
     Cmd_AddCommand ("z_stats", Z_Stats_f);
-    Cmd_AddCommand ("eatwad", Com_EatWad_f);
     Cmd_AddCommand ("error", Com_Error_f);
 
 	host_speeds = Cvar_Get ("host_speeds", "0", 0);
