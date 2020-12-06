@@ -387,9 +387,9 @@ void Cam_Draw (void)
 	glMatrixMode(GL_PROJECTION);
     glLoadIdentity ();
 
-    screenaspect = (double)camera.width/(double)camera.height;
-	yfov = 2.0*atan(screenaspect)*180.0/Q_PI;
-    MYgluPerspective (yfov,  screenaspect,  2.0,  8192.0);
+	screenaspect = (double)camera.width / (double)camera.height;
+	yfov = 2.0 * atan( (double)camera.height / (double)camera.width ) * 180.0 / Q_PI;
+    MYgluPerspective (yfov, screenaspect, 2.0, 8192.0);
 
     glRotatef (-90,  1, 0, 0);	    // put Z going up
     glRotatef (90,  0, 0, 1);	    // put Z going up

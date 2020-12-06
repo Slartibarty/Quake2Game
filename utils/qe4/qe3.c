@@ -9,7 +9,7 @@ void QE_CheckOpenGLForErrors(void)
     
     while ( ( i = glGetError() ) != GL_NO_ERROR )
     {
-		char buffer[100];
+		char buffer[128];
 
 		sprintf( buffer, "OpenGL Error: %s", gluErrorString( i ) );
 

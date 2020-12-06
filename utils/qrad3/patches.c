@@ -81,7 +81,7 @@ void CalcTextureReflectivity (void)
 
 		if ( mt )
 		{
-			image = (byte *)mt + sizeof( miptex_t );
+			//image = (byte *)mt + sizeof( miptex_t );
 			width = mt->width;
 			height = mt->height;
 		}
@@ -93,7 +93,8 @@ void CalcTextureReflectivity (void)
 		{
 			if ( mt )
 			{
-				texel = image + j;
+				// Hack: Straight frm the old code
+				texel = ( (byte *)mt )[ mt->offsets[0] + j];
 
 				color[0] += palette[texel * 3 + 0];
 				color[1] += palette[texel * 3 + 1];

@@ -494,6 +494,8 @@ qtexture_t *Texture_ForName (char *name)
 		}
 
 		q = Texture_LoadTexture( image, width, height, &was, haspalette );
+		if ( haspalette )
+			image = (byte *)mt;
 		free( image );
 		strncpy( q->name, name, sizeof( q->name ) - 1 );
 		StripExtension( q->name );
