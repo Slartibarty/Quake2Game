@@ -199,7 +199,7 @@ void PM_StepSlideMove_ (void)
 //
 		for (i=0 ; i<numplanes ; i++)
 		{
-			PM_ClipVelocity (pml.velocity, planes[i], pml.velocity, 1.01);
+			PM_ClipVelocity (pml.velocity, planes[i], pml.velocity, 1.01f);
 			for (j=0 ; j<numplanes ; j++)
 				if (j != i)
 				{
@@ -425,7 +425,7 @@ void PM_AddCurrents (vec3_t	wishvel)
 	// account for ladders
 	//
 
-	if (pml.ladder && fabs(pml.velocity[2]) <= 200)
+	if (pml.ladder && fabsf(pml.velocity[2]) <= 200)
 	{
 		if ((pm->viewangles[PITCH] <= -15) && (pm->cmd.forwardmove > 0))
 			wishvel[2] = 200;
@@ -539,7 +539,7 @@ void PM_WaterMove (void)
 		VectorScale (wishvel, pm_maxspeed/wishspeed, wishvel);
 		wishspeed = pm_maxspeed;
 	}
-	wishspeed *= 0.5;
+	wishspeed *= 0.5f;
 
 	PM_Accelerate (wishdir, wishspeed, pm_wateraccelerate);
 
@@ -664,7 +664,7 @@ void PM_CatagorizePosition (void)
 	point[0] = pml.origin[0];
 	point[1] = pml.origin[1];
 	point[2] = pml.origin[2] - 0.25f;
-	if (pml.velocity[2] > 180) //!!ZOID changed from 100 to 180 (ramp accel)
+	if (pml.velocity[2] > 180.0f) //!!ZOID changed from 100 to 180 (ramp accel)
 	{
 		pm->s.pm_flags &= ~PMF_ON_GROUND;
 		pm->groundentity = NULL;
@@ -676,7 +676,7 @@ void PM_CatagorizePosition (void)
 		pml.groundsurface = trace.surface;
 		pml.groundcontents = trace.contents;
 
-		if (!trace.ent || (trace.plane.normal[2] < 0.7 && !trace.startsolid) )
+		if (!trace.ent || (trace.plane.normal[2] < 0.7f && !trace.startsolid) )
 		{
 			pm->groundentity = NULL;
 			pm->s.pm_flags &= ~PMF_ON_GROUND;
@@ -696,11 +696,11 @@ void PM_CatagorizePosition (void)
 			{	// just hit the ground
 				pm->s.pm_flags |= PMF_ON_GROUND;
 				// don't do landing time if we were just going down a slope
-				if (pml.velocity[2] < -200)
+				if (pml.velocity[2] < -200.0f)
 				{
 					pm->s.pm_flags |= PMF_TIME_LAND;
 					// don't allow another jump for a little while
-					if (pml.velocity[2] < -400)
+					if (pml.velocity[2] < -400.0f)
 						pm->s.pm_time = 25;	
 					else
 						pm->s.pm_time = 18;
@@ -729,7 +729,7 @@ void PM_CatagorizePosition (void)
 	sample2 = pm->viewheight - pm->mins[2];
 	sample1 = sample2 / 2;
 
-	point[2] = pml.origin[2] + pm->mins[2] + 1;	
+	point[2] = pml.origin[2] + pm->mins[2] + 1.0f;
 	cont = pm->pointcontents (point);
 
 	if (cont & MASK_WATER)
@@ -780,15 +780,15 @@ void PM_CheckJump (void)
 	{	// swimming, not jumping
 		pm->groundentity = NULL;
 
-		if (pml.velocity[2] <= -300)
+		if (pml.velocity[2] <= -300.0f)
 			return;
 
 		if (pm->watertype == CONTENTS_WATER)
-			pml.velocity[2] = 100;
+			pml.velocity[2] = 100.0f;
 		else if (pm->watertype == CONTENTS_SLIME)
-			pml.velocity[2] = 80;
+			pml.velocity[2] = 80.0f;
 		else
-			pml.velocity[2] = 50;
+			pml.velocity[2] = 50.0f;
 		return;
 	}
 
@@ -798,9 +798,9 @@ void PM_CheckJump (void)
 	pm->s.pm_flags |= PMF_JUMP_HELD;
 
 	pm->groundentity = NULL;
-	pml.velocity[2] += 270;
-	if (pml.velocity[2] < 270)
-		pml.velocity[2] = 270;
+	pml.velocity[2] += 270.0f;
+	if (pml.velocity[2] < 270.0f)
+		pml.velocity[2] = 270.0f;
 }
 
 

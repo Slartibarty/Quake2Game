@@ -530,13 +530,13 @@ cmodel_t *CM_LoadMap (const char *name, bool clientload, unsigned *checksum)
 {
 	unsigned		*buf;
 	int				i;
-	dheader_t		header;
+	dheader_t		*header;
 	int				length;
 	static unsigned	last_checksum;
 
 	map_noareas = Cvar_Get ("map_noareas", "0", 0);
 
-	if (  !strcmp (map_name, name) && (clientload || !Cvar_VariableValue ("flushmap")) )
+	if ( !strcmp (map_name, name) && (clientload || !Cvar_VariableValue ("flushmap")) )
 	{
 		*checksum = last_checksum;
 		if (!clientload)
@@ -576,29 +576,29 @@ cmodel_t *CM_LoadMap (const char *name, bool clientload, unsigned *checksum)
 	last_checksum = LittleLong (Com_BlockChecksum (buf, length));
 	*checksum = last_checksum;
 
-	header = *(dheader_t *)buf;
+	header = (dheader_t *)buf;
 	for (i=0 ; i<sizeof(dheader_t)/4 ; i++)
 		((int *)&header)[i] = LittleLong ( ((int *)&header)[i]);
 
-	if (header.version != BSPVERSION)
+	if (header->version != BSPVERSION)
 		Com_Error (ERR_DROP, "CMod_LoadBrushModel: %s has wrong version number (%i should be %i)"
-		, name, header.version, BSPVERSION);
+		, name, header->version, BSPVERSION);
 
 	cmod_base = (byte *)buf;
 
 	// load into heap
-	CMod_LoadSurfaces (&header.lumps[LUMP_TEXINFO]);
-	CMod_LoadLeafs (&header.lumps[LUMP_LEAFS]);
-	CMod_LoadLeafBrushes (&header.lumps[LUMP_LEAFBRUSHES]);
-	CMod_LoadPlanes (&header.lumps[LUMP_PLANES]);
-	CMod_LoadBrushes (&header.lumps[LUMP_BRUSHES]);
-	CMod_LoadBrushSides (&header.lumps[LUMP_BRUSHSIDES]);
-	CMod_LoadSubmodels (&header.lumps[LUMP_MODELS]);
-	CMod_LoadNodes (&header.lumps[LUMP_NODES]);
-	CMod_LoadAreas (&header.lumps[LUMP_AREAS]);
-	CMod_LoadAreaPortals (&header.lumps[LUMP_AREAPORTALS]);
-	CMod_LoadVisibility (&header.lumps[LUMP_VISIBILITY]);
-	CMod_LoadEntityString (&header.lumps[LUMP_ENTITIES]);
+	CMod_LoadSurfaces (&header->lumps[LUMP_TEXINFO]);
+	CMod_LoadLeafs (&header->lumps[LUMP_LEAFS]);
+	CMod_LoadLeafBrushes (&header->lumps[LUMP_LEAFBRUSHES]);
+	CMod_LoadPlanes (&header->lumps[LUMP_PLANES]);
+	CMod_LoadBrushes (&header->lumps[LUMP_BRUSHES]);
+	CMod_LoadBrushSides (&header->lumps[LUMP_BRUSHSIDES]);
+	CMod_LoadSubmodels (&header->lumps[LUMP_MODELS]);
+	CMod_LoadNodes (&header->lumps[LUMP_NODES]);
+	CMod_LoadAreas (&header->lumps[LUMP_AREAS]);
+	CMod_LoadAreaPortals (&header->lumps[LUMP_AREAPORTALS]);
+	CMod_LoadVisibility (&header->lumps[LUMP_VISIBILITY]);
+	CMod_LoadEntityString (&header->lumps[LUMP_ENTITIES]);
 
 	FS_FreeFile (buf);
 
@@ -980,8 +980,8 @@ void CM_ClipBoxToBrush (vec3_t mins, vec3_t maxs, vec3_t p1, vec3_t p2,
 	float		f;
 	cbrushside_t	*side, *leadside;
 
-	enterfrac = -1;
-	leavefrac = 1;
+	enterfrac = -1.0f;
+	leavefrac = 1.0f;
 	clipplane = NULL;
 
 	if (!brush->numsides)
@@ -1024,16 +1024,16 @@ void CM_ClipBoxToBrush (vec3_t mins, vec3_t maxs, vec3_t p1, vec3_t p2,
 		d1 = DotProduct (p1, plane->normal) - dist;
 		d2 = DotProduct (p2, plane->normal) - dist;
 
-		if (d2 > 0)
+		if (d2 > 0.0f)
 			getout = true;	// endpoint is not in solid
-		if (d1 > 0)
+		if (d1 > 0.0f)
 			startout = true;
 
 		// if completely in front of face, no intersection
-		if (d1 > 0 && d2 >= d1)
+		if (d1 > 0.0f && d2 >= d1)
 			return;
 
-		if (d1 <= 0 && d2 <= 0)
+		if (d1 <= 0.0f && d2 <= 0.0f)
 			continue;
 
 		// crosses face
@@ -1064,10 +1064,10 @@ void CM_ClipBoxToBrush (vec3_t mins, vec3_t maxs, vec3_t p1, vec3_t p2,
 	}
 	if (enterfrac < leavefrac)
 	{
-		if (enterfrac > -1 && enterfrac < trace->fraction)
+		if (enterfrac > -1.0f && enterfrac < trace->fraction)
 		{
-			if (enterfrac < 0)
-				enterfrac = 0;
+			if (enterfrac < 0.0f)
+				enterfrac = 0.0f;
 			trace->fraction = enterfrac;
 			trace->plane = *clipplane;
 			trace->surface = &(leadside->surface->c);
@@ -1245,7 +1245,7 @@ void CM_RecursiveHullCheck (int num, float p1f, float p2f, vec3_t p1, vec3_t p2)
 		t1 = DotProduct (plane->normal, p1) - plane->dist;
 		t2 = DotProduct (plane->normal, p2) - plane->dist;
 		if (trace_ispoint)
-			offset = 0;
+			offset = 0.0f;
 		else
 			offset = fabsf(trace_extents[0]*plane->normal[0]) +
 				fabsf(trace_extents[1]*plane->normal[1]) +
@@ -1289,15 +1289,15 @@ return;
 	else
 	{
 		side = 0;
-		frac = 1;
-		frac2 = 0;
+		frac = 1.0f;
+		frac2 = 0.0f;
 	}
 
 	// move up to the node
-	if (frac < 0)
-		frac = 0;
-	if (frac > 1)
-		frac = 1;
+	if (frac < 0.0f)
+		frac = 0.0f;
+	if (frac > 1.0f)
+		frac = 1.0f;
 		
 	midf = p1f + (p2f - p1f)*frac;
 	for (i=0 ; i<3 ; i++)
@@ -1465,7 +1465,7 @@ trace_t		CM_TransformedBoxTrace (vec3_t start, vec3_t end,
 	// sweep the box through the model
 	trace = CM_BoxTrace (start_l, end_l, mins, maxs, headnode, brushmask);
 
-	if (rotated && trace.fraction != 1.0)
+	if (rotated && trace.fraction != 1.0f)
 	{
 		// FIXME: figure out how to do this with existing angles
 		VectorNegate (angles, a);

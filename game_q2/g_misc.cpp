@@ -38,14 +38,14 @@ Misc functions
 */
 void VelocityForDamage (int damage, vec3_t v)
 {
-	v[0] = 100.0 * crandom();
-	v[1] = 100.0 * crandom();
-	v[2] = 200.0 + 100.0 * random();
+	v[0] = 100.0f * crandom();
+	v[1] = 100.0f * crandom();
+	v[2] = 200.0f + 100.0f * random();
 
 	if (damage < 50)
-		VectorScale (v, 0.7, v);
+		VectorScale (v, 0.7f, v);
 	else 
-		VectorScale (v, 1.2, v);
+		VectorScale (v, 1.2f, v);
 }
 
 void ClipGibVelocity (edict_t *ent)
@@ -488,7 +488,7 @@ void SP_viewthing(edict_t *ent)
 	VectorSet (ent->maxs, 16, 16, 32);
 	ent->s.modelindex = gi.modelindex ("models/objects/banner/tris.md2");
 	gi.linkentity (ent);
-	ent->nextthink = level.time + 0.5;
+	ent->nextthink = level.time + 0.5f;
 	ent->think = TH_viewthing;
 	return;
 }
@@ -877,7 +877,7 @@ void barrel_explode (edict_t *self)
 	VectorMA (self->absmin, 0.5, self->size, self->s.origin);
 
 	// a few big chunks
-	spd = 1.5 * (float)self->dmg / 200.0;
+	spd = 1.5f * (float)self->dmg / 200.0f;
 	org[0] = self->s.origin[0] + crandom() * self->size[0];
 	org[1] = self->s.origin[1] + crandom() * self->size[1];
 	org[2] = self->s.origin[2] + crandom() * self->size[2];
@@ -888,7 +888,7 @@ void barrel_explode (edict_t *self)
 	ThrowDebris (self, "models/objects/debris1/tris.md2", spd, org);
 
 	// bottom corners
-	spd = 1.75 * (float)self->dmg / 200.0;
+	spd = 1.75f * (float)self->dmg / 200.0f;
 	VectorCopy (self->absmin, org);
 	ThrowDebris (self, "models/objects/debris3/tris.md2", spd, org);
 	VectorCopy (self->absmin, org);
@@ -1325,10 +1325,10 @@ void misc_viper_bomb_prethink (edict_t *self)
 	self->groundentity = NULL;
 
 	diff = self->timestamp - level.time;
-	if (diff < -1.0)
-		diff = -1.0;
+	if (diff < -1.0f)
+		diff = -1.0f;
 
-	VectorScale (self->moveinfo.dir, 1.0 + diff, v);
+	VectorScale (self->moveinfo.dir, 1.0f + diff, v);
 	v[2] = diff;
 
 	diff = self->s.angles[2];

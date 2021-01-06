@@ -135,7 +135,7 @@ static char			findbase[MAX_OSPATH];
 static char			findpath[MAX_OSPATH];
 static intptr_t		findhandle;
 
-static qboolean CompareAttributes( unsigned found, unsigned musthave, unsigned canthave )
+static bool CompareAttributes( unsigned found, unsigned musthave, unsigned canthave )
 {
 	if ( ( found & _A_RDONLY ) && ( canthave & SFF_RDONLY ) )
 		return false;

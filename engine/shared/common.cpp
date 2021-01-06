@@ -1273,12 +1273,12 @@ byte	COM_BlockSequenceCRCByte (byte *base, int length, int sequence)
 
 float	frand(void)
 {
-	return (rand()&32767)* (1.0f/32767);
+	return (rand()&32767)* (1.0f/32767.0f);
 }
 
 float	crand(void)
 {
-	return (rand()&32767)* (2.0f/32767) - 1;
+	return (rand()&32767)* (2.0f/32767.0f) - 1.0f;
 }
 
 void Key_Init (void);
