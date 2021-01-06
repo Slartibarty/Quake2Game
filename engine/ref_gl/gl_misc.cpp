@@ -84,7 +84,7 @@ void GL_Strings_f(void)
 	ri.Con_Printf(PRINT_ALL, "GL_VENDOR: %s\n", glGetString(GL_VENDOR));
 	ri.Con_Printf(PRINT_ALL, "GL_RENDERER: %s\n", glGetString(GL_RENDERER));
 	ri.Con_Printf(PRINT_ALL, "GL_VERSION: %s\n", glGetString(GL_VERSION));
-	ri.Con_Printf(PRINT_ALL, "GL_GLSL_VERSION: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
+//	ri.Con_Printf(PRINT_ALL, "GL_GLSL_VERSION: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
 //	ri.Con_Printf(PRINT_ALL, "GL_EXTENSIONS: %s\n", gl_config.extensions_string );
 }
 

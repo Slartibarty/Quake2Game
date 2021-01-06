@@ -44,7 +44,6 @@
 
 #define	PRINT_ALL			0
 #define PRINT_DEVELOPER		1		// only print when "developer 1"
-#define PRINT_ALERT			2		
 
 // destination class for gi.multicast()
 enum multicast_t

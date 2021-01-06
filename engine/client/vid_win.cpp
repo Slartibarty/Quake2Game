@@ -38,21 +38,16 @@ static void VID_Printf (int print_level, const char *fmt, ...)
 	char		msg[MAX_PRINT_MSG];
 	
 	va_start (argptr,fmt);
-	Com_sprintf (msg,fmt,argptr);
+	Com_vsprintf (msg,fmt,argptr);
 	va_end (argptr);
 
 	if (print_level == PRINT_ALL)
 	{
 		Com_Printf ("%s", msg);
 	}
-	else if ( print_level == PRINT_DEVELOPER )
+	else // if ( print_level == PRINT_DEVELOPER )
 	{
 		Com_DPrintf ("%s", msg);
-	}
-	else if ( print_level == PRINT_ALERT )
-	{
-		MessageBoxA( cl_hwnd, msg, "PRINT_ALERT", MB_ICONWARNING );
-		OutputDebugStringA( msg );
 	}
 }
 
@@ -62,7 +57,7 @@ static void VID_Error (int err_level, const char *fmt, ...)
 	char		msg[MAX_PRINT_MSG];
 	
 	va_start (argptr,fmt);
-	Com_sprintf (msg,fmt,argptr);
+	Com_vsprintf (msg,fmt,argptr);
 	va_end (argptr);
 
 	Com_Error (err_level,"%s", msg);
