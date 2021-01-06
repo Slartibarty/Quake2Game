@@ -38,7 +38,7 @@ filter( "platforms:" .. plat_win64 )
 
 -- Config for Windows
 filter( "system:windows" )
-	buildoptions( { "/Zc:preprocessor" } )
+	buildoptions( { "/permissive" } )
 	defines( { "WIN32", "_WINDOWS", "_CRT_SECURE_NO_WARNINGS" } )
 	
 -- Config for Windows, release, clean this up!

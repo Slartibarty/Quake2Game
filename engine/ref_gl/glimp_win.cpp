@@ -280,10 +280,8 @@ static void GLimp_CreateWindow( WNDPROC wndproc, int width, int height, qboolean
 		dwStyle = WINDOW_STYLE;
 		dwExStyle = 0;
 
-		cvar_t *vid_xpos = ri.Cvar_Get( "vid_xpos", "0", 0 );
-		cvar_t *vid_ypos = ri.Cvar_Get( "vid_ypos", "0", 0 );
-		xPos = (int)vid_xpos->value;
-		yPos = (int)vid_ypos->value;
+		xPos = CW_USEDEFAULT;
+		yPos = 0;
 	}
 
 	RECT r{ 0, 0, width, height };
@@ -579,4 +577,9 @@ void GLimp_AppActivate( qboolean active )
 		if ( vid_fullscreen->value )
 			ShowWindow( s_glwState.hWnd, SW_MINIMIZE );
 	}
+}
+
+void *GLimp_GetWindowHandle( void )
+{
+	return s_glwState.hWnd;
 }

@@ -2,8 +2,6 @@
 
 #include "client.h"
 
-cvar_t	*freelook;
-
 cvar_t	*adr0;
 cvar_t	*adr1;
 cvar_t	*adr2;
@@ -38,8 +36,6 @@ cvar_t	*cl_showclamp;
 cvar_t	*cl_paused;
 cvar_t	*cl_timedemo;
 
-cvar_t	*lookspring;
-cvar_t	*lookstrafe;
 cvar_t	*sensitivity;
 
 cvar_t	*m_pitch;
@@ -1386,9 +1382,6 @@ void CL_InitLocal (void)
 	cl_anglespeedkey = Cvar_Get ("cl_anglespeedkey", "1.5", 0);
 
 	cl_run = Cvar_Get ("cl_run", "0", CVAR_ARCHIVE);
-	freelook = Cvar_Get( "freelook", "0", CVAR_ARCHIVE );
-	lookspring = Cvar_Get ("lookspring", "0", CVAR_ARCHIVE);
-	lookstrafe = Cvar_Get ("lookstrafe", "0", CVAR_ARCHIVE);
 	sensitivity = Cvar_Get ("sensitivity", "3", CVAR_ARCHIVE);
 
 	m_pitch = Cvar_Get ("m_pitch", "0.022", CVAR_ARCHIVE);
@@ -1590,7 +1583,7 @@ void CL_SendCommand (void)
 	Sys_SendKeyEvents ();
 
 	// allow mice or other external controllers to add commands
-	IN_Commands ();
+	input::Commands ();
 
 	// process console commands
 	Cbuf_Execute ();
@@ -1626,12 +1619,12 @@ void CL_Frame (int msec)
 	{
 		if (cls.state == ca_connected && extratime < 100)
 			return;			// don't flood packets out while connecting
-		if (extratime < 1000/cl_maxfps->value)
+		if (extratime < 1000.0f/cl_maxfps->value)
 			return;			// framerate is too high
 	}
 
 	// let the mouse activate or deactivate
-	IN_Frame ();
+	input::Frame ();
 
 	// decide the simulation time
 	cls.frametime = extratime/1000.0f;
@@ -1743,7 +1736,7 @@ void CL_Init (void)
 
 	CDAudio_Init ();
 	CL_InitLocal ();
-	IN_Init ();
+	input::Init ();
 
 //	Cbuf_AddText ("exec autoexec.cfg\n");
 	FS_ExecAutoexec ();
@@ -1775,7 +1768,7 @@ void CL_Shutdown(void)
 
 	CDAudio_Shutdown ();
 	S_Shutdown();
-	IN_Shutdown ();
+	input::Shutdown ();
 	VID_Shutdown();
 }
 

@@ -4,16 +4,16 @@
 
 #pragma once
 
-void IN_Init();
+namespace input
+{
+	void Init();
 
-void IN_Shutdown();
+	void Shutdown();
 
-// oportunity for devices to stick commands on the script buffer
-void IN_Commands();
+	// oportunity for devices to stick commands on the script buffer
+	void Commands();
 
-void IN_Frame();
+	void Frame();
 
-// add additional movement on top of the keyboard move cmd
-void IN_Move(usercmd_t *cmd);
-
-void IN_Activate(qboolean active);
+	void Activate( bool active );
+}

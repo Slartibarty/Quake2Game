@@ -1269,6 +1269,7 @@ refexport_t GetRefAPI (refimport_t rimp )
 	re.BeginFrame = R_BeginFrame;
 	re.EndFrame = R_EndFrame;
 
+	re.GetWindowHandle = GLimp_GetWindowHandle;
 	re.AppActivate = GLimp_AppActivate;
 
 	//Swap_Init ();

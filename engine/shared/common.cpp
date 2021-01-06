@@ -1428,13 +1428,14 @@ void Qcommon_Frame (int msec)
 		}
 	}
 
-	if (fixedtime->value)
+	if ( fixedtime->value ) {
 		msec = fixedtime->value;
-	else if (timescale->value)
-	{
+	}
+	else if ( timescale->value ) {
 		msec *= timescale->value;
-		if (msec < 1)
+		if ( msec < 1 ) {
 			msec = 1;
+		}
 	}
 
 	if (showtrace->value)

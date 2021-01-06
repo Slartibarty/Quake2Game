@@ -5,315 +5,328 @@
 #include "client.h"
 #include "winquake.h"
 
-extern	unsigned	sys_msg_time;
+extern cvar_t *vid_fullscreen;
+extern bool	reflib_active;
+extern unsigned sys_msg_time;
 
-cvar_t *in_mouse;
-
-bool	in_appactive;
-
-
-//-------------------------------------------------------------------------------------------------
-// Mouse control
-//-------------------------------------------------------------------------------------------------
-
-// mouse variables
-cvar_t *m_filter;
-
-qboolean	mlooking;
-
-inline void IN_MLookDown()
+namespace input
 {
-	mlooking = true;
-}
+	static bool in_appactive;
+	static bool mouseactive;		// false when not in focus
+	static RECT window_rect;
+	static LONG last_xpos, last_ypos;
 
-inline void IN_MLookUp(void)
-{
-	mlooking = false;
-	if (!freelook->value && lookspring->value)
-		IN_CenterView();
-}
-
-int			mouse_buttons;
-int			mouse_oldbuttonstate;
-POINT		current_pos;
-int			mouse_x, mouse_y, old_mouse_x, old_mouse_y, mx_accum, my_accum;
-
-int			old_x, old_y;
-
-qboolean	mouseactive;	// false when not focus app
-
-qboolean	restore_spi;
-qboolean	mouseinitialized;
-int		originalmouseparms[3], newmouseparms[3] = { 0, 0, 0 };
-qboolean	mouseparmsvalid;
-
-int			window_center_x, window_center_y;
-RECT		window_rect;
-
-
-/*
-===========
-IN_ActivateMouse
-
-Called when the window gains focus or changes in some way
-===========
-*/
-void IN_ActivateMouse(void)
-{
-	int		width, height;
-
-	if (!mouseinitialized)
-		return;
-	if (!in_mouse->value)
+	static const byte scantokey[128]
 	{
-		mouseactive = false;
-		return;
-	}
-	if (mouseactive)
-		return;
+		//  0           1       2       3       4       5       6       7 
+		//  8           9       A       B       C       D       E       F 
+			0  ,    27,     '1',    '2',    '3',    '4',    '5',    '6',
+			'7',    '8',    '9',    '0',    '-',    '=',    K_BACKSPACE, 9, // 0 
+			'q',    'w',    'e',    'r',    't',    'y',    'u',    'i',
+			'o',    'p',    '[',    ']',    13 ,    K_CTRL,'a',  's',      // 1 
+			'd',    'f',    'g',    'h',    'j',    'k',    'l',    ';',
+			'\'' ,    '`',    K_SHIFT,'\\',  'z',    'x',    'c',    'v',      // 2 
+			'b',    'n',    'm',    ',',    '.',    '/',    K_SHIFT,'*',
+			K_ALT,' ',   0  ,    K_F1, K_F2, K_F3, K_F4, K_F5,   // 3 
+			K_F6, K_F7, K_F8, K_F9, K_F10,  K_PAUSE,    0  , K_HOME,
+			K_UPARROW,K_PGUP,K_KP_MINUS,K_LEFTARROW,K_KP_5,K_RIGHTARROW, K_KP_PLUS,K_END, //4 
+			K_DOWNARROW,K_PGDN,K_INS,K_DEL,0,0,             0,              K_F11,
+			K_F12,0  ,    0  ,    0  ,    0  ,    0  ,    0  ,    0,        // 5
+			0  ,    0  ,    0  ,    0  ,    0  ,    0  ,    0  ,    0,
+			0  ,    0  ,    0  ,    0  ,    0  ,    0  ,    0  ,    0,        // 6 
+			0  ,    0  ,    0  ,    0  ,    0  ,    0  ,    0  ,    0,
+			0  ,    0  ,    0  ,    0  ,    0  ,    0  ,    0  ,    0         // 7 
+	};
 
-	mouseactive = true;
-
-	if (mouseparmsvalid)
-		restore_spi = SystemParametersInfo(SPI_SETMOUSE, 0, newmouseparms, 0);
-
-	width = GetSystemMetrics(SM_CXSCREEN);
-	height = GetSystemMetrics(SM_CYSCREEN);
-
-	GetWindowRect(cl_hwnd, &window_rect);
-	if (window_rect.left < 0)
-		window_rect.left = 0;
-	if (window_rect.top < 0)
-		window_rect.top = 0;
-	if (window_rect.right >= width)
-		window_rect.right = width - 1;
-	if (window_rect.bottom >= height - 1)
-		window_rect.bottom = height - 1;
-
-	window_center_x = (window_rect.right + window_rect.left) / 2;
-	window_center_y = (window_rect.top + window_rect.bottom) / 2;
-
-	SetCursorPos(window_center_x, window_center_y);
-
-	old_x = window_center_x;
-	old_y = window_center_y;
-
-	SetCapture(cl_hwnd);
-	ClipCursor(&window_rect);
-	while (ShowCursor(FALSE) >= 0)
-		;
-}
-
-
-/*
-===========
-IN_DeactivateMouse
-
-Called when the window loses focus
-===========
-*/
-void IN_DeactivateMouse(void)
-{
-	if (!mouseinitialized)
-		return;
-	if (!mouseactive)
-		return;
-
-	if (restore_spi)
-		SystemParametersInfo(SPI_SETMOUSE, 0, originalmouseparms, 0);
-
-	mouseactive = false;
-
-	ClipCursor(NULL);
-	ReleaseCapture();
-	while (ShowCursor(TRUE) < 0)
-		;
-}
-
-
-
-/*
-===========
-IN_StartupMouse
-===========
-*/
-void IN_StartupMouse(void)
-{
-	cvar_t *cv;
-
-	cv = Cvar_Get("in_initmouse", "1", CVAR_NOSET);
-	if (!cv->value)
-		return;
-
-	mouseinitialized = true;
-	mouseparmsvalid = SystemParametersInfo(SPI_GETMOUSE, 0, originalmouseparms, 0);
-	mouse_buttons = 3;
-}
-
-/*
-===========
-IN_MouseEvent
-===========
-*/
-void IN_MouseEvent(int mstate)
-{
-	int		i;
-
-	if (!mouseinitialized)
-		return;
-
-	// perform button actions
-	for (i = 0; i < mouse_buttons; i++)
+	//-------------------------------------------------------------------------------------------------
+	// Map from windows to quake keynums
+	//-------------------------------------------------------------------------------------------------
+	static int MapKey( int scancode )
 	{
-		if ((mstate & (1 << i)) &&
-			!(mouse_oldbuttonstate & (1 << i)))
-		{
-			Key_Event(K_MOUSE1 + i, true, sys_msg_time);
-		}
+		int result = scantokey[scancode];
 
-		if (!(mstate & (1 << i)) &&
-			(mouse_oldbuttonstate & (1 << i)))
+		switch ( result )
 		{
-			Key_Event(K_MOUSE1 + i, false, sys_msg_time);
+		case K_HOME:
+			return K_KP_HOME;
+		case K_UPARROW:
+			return K_KP_UPARROW;
+		case K_PGUP:
+			return K_KP_PGUP;
+		case K_LEFTARROW:
+			return K_KP_LEFTARROW;
+		case K_RIGHTARROW:
+			return K_KP_RIGHTARROW;
+		case K_END:
+			return K_KP_END;
+		case K_DOWNARROW:
+			return K_KP_DOWNARROW;
+		case K_PGDN:
+			return K_KP_PGDN;
+		case K_INS:
+			return K_KP_INS;
+		case K_DEL:
+			return K_KP_DEL;
+		// Extended keys
+		case 0x0D:
+			return K_KP_ENTER;
+		case 0x2F:
+			return K_KP_SLASH;
+		case 0xAF:
+			return K_KP_PLUS;
+		default:
+			return result;
 		}
 	}
 
-	mouse_oldbuttonstate = mstate;
-}
-
-
-/*
-===========
-IN_MouseMove
-===========
-*/
-void IN_MouseMove(usercmd_t *cmd)
-{
-	int		mx, my;
-
-	if (!mouseactive)
-		return;
-
-	// find mouse movement
-	if (!GetCursorPos(&current_pos))
-		return;
-
-	mx = current_pos.x - window_center_x;
-	my = current_pos.y - window_center_y;
-
-	if (m_filter->value)
+	//-------------------------------------------------------------------------------------------------
+	//-------------------------------------------------------------------------------------------------
+	static void AppActivate( bool fActive, bool minimize )
 	{
-		mouse_x = (mx + old_mouse_x) * 0.5;
-		mouse_y = (my + old_mouse_y) * 0.5;
-	}
-	else
-	{
-		mouse_x = mx;
-		mouse_y = my;
-	}
+		Minimized = minimize;
 
-	old_mouse_x = mx;
-	old_mouse_y = my;
+		Key_ClearStates();
 
-	mouse_x *= sensitivity->value;
-	mouse_y *= sensitivity->value;
+		// we don't want to act like we're active if we're minimized
+		if ( fActive && !Minimized )
+			ActiveApp = true;
+		else
+			ActiveApp = false;
 
-	// add mouse X/Y movement to cmd
-	if ((in_strafe.state & 1) || (lookstrafe->value && mlooking))
-		cmd->sidemove += m_side->value * mouse_x;
-	else
-		cl.viewangles[YAW] -= m_yaw->value * mouse_x;
-
-	if ((mlooking || freelook->value) && !(in_strafe.state & 1))
-	{
-		cl.viewangles[PITCH] += m_pitch->value * mouse_y;
-	}
-	else
-	{
-		cmd->forwardmove -= m_forward->value * mouse_y;
-	}
-
-	// force the mouse to the center, so there's room to move
-	if (mx || my)
-		SetCursorPos(window_center_x, window_center_y);
-}
-
-
-//-------------------------------------------------------------------------------------------------
-// Public
-//-------------------------------------------------------------------------------------------------
-
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-void IN_Init(void)
-{
-	// mouse variables
-	m_filter = Cvar_Get("m_filter", "0", 0);
-	in_mouse = Cvar_Get("in_mouse", "1", CVAR_ARCHIVE);
-
-	Cmd_AddCommand("+mlook", IN_MLookDown);
-	Cmd_AddCommand("-mlook", IN_MLookUp);
-
-	IN_StartupMouse();
-}
-
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-void IN_Shutdown(void)
-{
-	IN_DeactivateMouse();
-}
-
-//-------------------------------------------------------------------------------------------------
-// Called every frame, even if not generating commands
-//-------------------------------------------------------------------------------------------------
-void IN_Frame(void)
-{
-	if (!mouseinitialized)
-		return;
-
-	if (!in_mouse || !in_appactive)
-	{
-		IN_DeactivateMouse();
-		return;
-	}
-
-	if (!cl.refresh_prepped
-		|| cls.key_dest == key_console
-		|| cls.key_dest == key_menu)
-	{
-		// temporarily deactivate if in fullscreen
-		if (Cvar_VariableValue("vid_fullscreen") == 0)
+		// minimize/restore mouse-capture on demand
+		if ( !ActiveApp )
 		{
-			IN_DeactivateMouse();
+			input::Activate( false );
+			CDAudio_Activate( false );
+			S_Activate( false );
+		}
+		else
+		{
+			input::Activate( true );
+			CDAudio_Activate( true );
+			S_Activate( true );
+		}
+	}
+
+	static void HandleKeyboardInput( RAWKEYBOARD &raw )
+	{
+		assert( raw.VKey < 256 );
+
+		bool down = ( raw.Message == WM_KEYDOWN ) ? true : false;
+
+		Key_Event( MapKey( raw.MakeCode ), down, sys_msg_time );
+	}
+
+	static void HandleMouseInput( RAWMOUSE &raw )
+	{
+		if ( mouseactive == false ) {
 			return;
 		}
+
+		RECT r;
+		GetClientRect( cl_hwnd, &r );
+
+		float xpos = float( raw.lLastX + last_xpos );
+		float ypos = float( raw.lLastY + last_ypos );
+		last_xpos = raw.lLastX;
+		last_ypos = raw.lLastY;
+
+		xpos *= sensitivity->value;
+		ypos *= sensitivity->value;
+
+#if 0
+		// force the mouse to the center, so there's room to move
+		if ( mx || my )
+			SetCursorPos( window_center_x, window_center_y );
+#endif
+
+		cl.viewangles[YAW] -= xpos; // m_yaw->value *
+		cl.viewangles[PITCH] += ypos; // m_pitch->value *
+
+		switch ( raw.usButtonFlags )
+		{
+		case RI_MOUSE_LEFT_BUTTON_DOWN:
+			Key_Event( K_MOUSE1, true, sys_msg_time );
+			break;
+		case RI_MOUSE_LEFT_BUTTON_UP:
+			Key_Event( K_MOUSE1, false, sys_msg_time );
+			break;
+		case RI_MOUSE_RIGHT_BUTTON_DOWN:
+			Key_Event( K_MOUSE2, true, sys_msg_time );
+			break;
+		case RI_MOUSE_RIGHT_BUTTON_UP:
+			Key_Event( K_MOUSE2, false, sys_msg_time );
+			break;
+		case RI_MOUSE_MIDDLE_BUTTON_DOWN:
+			Key_Event( K_MOUSE3, true, sys_msg_time );
+			break;
+		case RI_MOUSE_MIDDLE_BUTTON_UP:
+			Key_Event( K_MOUSE3, false, sys_msg_time );
+			break;
+		case RI_MOUSE_WHEEL:
+			Key_Event( ( (short)raw.usButtonData > 0 ) ? K_MWHEELUP : K_MWHEELDOWN, true, sys_msg_time );
+			Key_Event( ( (short)raw.usButtonData > 0 ) ? K_MWHEELUP : K_MWHEELDOWN, false, sys_msg_time );
+			break;
+		}
 	}
 
-	IN_ActivateMouse();
+	//-------------------------------------------------------------------------------------------------
+	// Called when the window gains focus
+	//-------------------------------------------------------------------------------------------------
+	static void ActivateMouse()
+	{
+		if ( mouseactive == true ) {
+			return;
+		}
+		mouseactive = true;
+
+		SetCapture( cl_hwnd );
+		ClipCursor( &window_rect );
+		while ( ShowCursor( FALSE ) >= 0 )
+			;
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	// Called when the window loses focus
+	//-------------------------------------------------------------------------------------------------
+	static void DeactivateMouse()
+	{
+		if ( mouseactive == false ) {
+			return;
+		}
+		mouseactive = false;
+
+		ClipCursor( nullptr );
+		ReleaseCapture();
+		while ( ShowCursor( TRUE ) < 0 )
+			;
+	}
+
+	void Init()
+	{
+		// Register for raw input
+
+		Com_Printf( "Initialising Windows InputSystem...\n" );
+
+		RAWINPUTDEVICE rid[2];
+
+		// Mouse
+		rid[0].usUsagePage = 0x01;
+		rid[0].usUsage = 0x02;
+		rid[0].dwFlags = 0;
+		rid[0].hwndTarget = cl_hwnd;
+
+		// Keyboard
+		rid[1].usUsagePage = 0x01;
+		rid[1].usUsage = 0x06;
+		rid[1].dwFlags = 0;
+		rid[1].hwndTarget = cl_hwnd;
+
+		BOOL result = RegisterRawInputDevices( rid, 2, sizeof( *rid ) );
+		if ( result == FALSE ) {
+			Com_Printf( "Failed to register for raw input!\n" );
+		}
+	}
+
+	void Shutdown()
+	{
+	}
+
+	void Commands()
+	{
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	// Called every frame, even if not generating commands
+	//-------------------------------------------------------------------------------------------------
+	void Frame()
+	{
+		if ( !in_appactive )
+		{
+			DeactivateMouse();
+			return;
+		}
+
+		if ( !cl.refresh_prepped
+			|| cls.key_dest == key_console
+			|| cls.key_dest == key_menu )
+		{
+			// Deactivate mouse if in a menu
+			DeactivateMouse();
+			return;
+		}
+
+		ActivateMouse();
+	}
+
+	void Activate( bool active )
+	{
+		in_appactive = active;
+	}
+
 }
 
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-void IN_Commands()
+LRESULT CALLBACK MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
+	using namespace input;
 
-}
+	switch ( uMsg )
+	{
+	case WM_INPUT:
+	{
+		UINT dwSize = sizeof( RAWINPUT );
 
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-void IN_Move(usercmd_t *cmd)
-{
-	IN_MouseMove(cmd);
-}
+		RAWINPUT raw;
 
-//-------------------------------------------------------------------------------------------------
-// Called when the main window gains or loses focus.
-// The window may have been destroyed and recreated
-// between a deactivate and an activate.
-//-------------------------------------------------------------------------------------------------
-void IN_Activate(qboolean active)
-{
-	in_appactive = active;
-	mouseactive = !active;		// force a new window check or turn off
+		// Now read into the buffer
+		GetRawInputData( (HRAWINPUT)lParam, RID_INPUT, &raw, &dwSize, sizeof( RAWINPUTHEADER ) );
+
+		switch ( raw.header.dwType )
+		{
+		case RIM_TYPEKEYBOARD:
+			HandleKeyboardInput( raw.data.keyboard );
+			break;
+		case RIM_TYPEMOUSE:
+			HandleMouseInput( raw.data.mouse );
+			break;
+		}
+	}
+	return 0;
+
+	case WM_PAINT:
+		SCR_DirtyScreen();	// force entire screen to update next frame
+		break;
+
+	case WM_ACTIVATE:
+	{
+		int fActive, fMinimized;
+
+		// KJB: Watch this for problems in fullscreen modes with Alt-tabbing.
+		fActive = (int)LOWORD( wParam );
+		fMinimized = (int)HIWORD( wParam );
+
+		AppActivate( fActive != WA_INACTIVE, fMinimized );
+
+		if ( reflib_active ) {
+			re.AppActivate( fActive != WA_INACTIVE );
+		}
+	}
+	return 0;
+
+	case WM_SIZE: [[fallthrough]];
+	case WM_MOVE:
+		GetWindowRect( hWnd, &window_rect );
+		return 0;
+
+	case WM_CREATE:
+		cl_hwnd = hWnd;
+		return 0;
+
+	case WM_DESTROY:
+		// let sound and input know about this?
+		cl_hwnd = NULL;
+		return 0;
+	}
+
+	return DefWindowProcW( hWnd, uMsg, wParam, lParam );
 }

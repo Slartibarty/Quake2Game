@@ -255,16 +255,12 @@ extern	cvar_t	*cl_shownet;
 extern	cvar_t	*cl_showmiss;
 extern	cvar_t	*cl_showclamp;
 
-extern	cvar_t	*lookspring;
-extern	cvar_t	*lookstrafe;
 extern	cvar_t	*sensitivity;
 
 extern	cvar_t	*m_pitch;
 extern	cvar_t	*m_yaw;
 extern	cvar_t	*m_forward;
 extern	cvar_t	*m_side;
-
-extern	cvar_t	*freelook;
 
 extern	cvar_t	*cl_lightlevel;	// FIXME HACK
 
@@ -455,8 +451,7 @@ typedef struct
 	int			state;
 } kbutton_t;
 
-extern	kbutton_t	in_mlook, in_klook;
-extern 	kbutton_t 	in_strafe;
+extern	kbutton_t	in_klook;
 extern 	kbutton_t 	in_speed;
 
 void CL_InitInput (void);
