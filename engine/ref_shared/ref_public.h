@@ -104,7 +104,7 @@ struct refdef_t
 };
 
 
-#define	API_VERSION		5
+#define	API_VERSION		4
 
 //
 // these are the functions exported by the refresh module
@@ -160,7 +160,6 @@ struct refexport_t
 	void	(*BeginFrame)(void);
 	void	(*EndFrame) (void);
 
-	void	*(*GetWindowHandle)(void);
 	void	(*AppActivate)( qboolean activate );
 };
 

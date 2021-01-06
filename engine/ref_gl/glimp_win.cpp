@@ -578,8 +578,3 @@ void GLimp_AppActivate( qboolean active )
 			ShowWindow( s_glwState.hWnd, SW_MINIMIZE );
 	}
 }
-
-void *GLimp_GetWindowHandle( void )
-{
-	return s_glwState.hWnd;
-}
