@@ -287,6 +287,8 @@ struct cvar_t
 // CVARS 2 - cvars2.cpp
 //-------------------------------------------------------------------------------------------------
 
+#if 0
+
 #define CVAR2_NONE			0		// Nothing
 #define CVAR2_ARCHIVE		1		// Save this cvar to config.cfg
 #define	CVAR2_USERINFO		2		// Added to userinfo  when changed
@@ -331,8 +333,6 @@ struct ConvarValue
 		dblValue = (double)value;
 	}
 };
-
-#if 0
 
 //-------------------------------------------------------------------------------------------------
 // Convar2

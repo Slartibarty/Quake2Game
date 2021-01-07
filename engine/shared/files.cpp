@@ -503,7 +503,7 @@ void FS_AddGameDirectory (char *dir)
 	//
 	// add the directory to the search path
 	//
-	search = (searchpath_t*)Z_Malloc (sizeof(searchpath_t));
+	search = (searchpath_t*)Z_Calloc (sizeof(searchpath_t));
 	strcpy (search->filename, dir);
 	search->next = fs_searchpaths;
 	fs_searchpaths = search;
@@ -517,7 +517,7 @@ void FS_AddGameDirectory (char *dir)
 		pak = FS_LoadPackFile (pakfile);
 		if (!pak)
 			continue;
-		search = (searchpath_t*)Z_Malloc (sizeof(searchpath_t));
+		search = (searchpath_t*)Z_Calloc (sizeof(searchpath_t));
 		search->pack = pak;
 		search->next = fs_searchpaths;
 		fs_searchpaths = search;		

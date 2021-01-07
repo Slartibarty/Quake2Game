@@ -3,6 +3,7 @@
 #include "common.h"
 #include "conproc.h"
 #include "../client/winquake.h"	// Hack?
+#include <process.h>
 
 //#define DEMO
 
@@ -389,6 +390,10 @@ HINSTANCE	g_hInstance;
 int main(int argc, char **argv)
 {
 	int time, oldtime, newtime;
+
+	// Make sure the CRT thinks we're a GUI app, this makes CRT asserts use a message box
+	// rather than printing to stderr
+	_set_app_type( _crt_gui_app );
 
 	g_hInstance = GetModuleHandleW(NULL);
 

@@ -94,6 +94,7 @@ void *Z_TagMalloc( size_t size, uint16 tag )
 	++z_tagcount;
 	z_tagbytes += size;
 
+	z->magic = Z_MAGIC;
 	z->tag = tag;
 	z->size = size;
 

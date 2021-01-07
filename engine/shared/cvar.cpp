@@ -137,7 +137,7 @@ cvar_t *Cvar_Get (const char *var_name, const char *var_value, int flags)
 		}
 	}
 
-	var = (cvar_t*)Z_Malloc (sizeof(*var));
+	var = (cvar_t*)Z_Calloc (sizeof(*var)); // We want zeroed memory for this
 	var->name = Z_CopyString(var_name);
 	var->string = Z_CopyString(var_value);
 	var->modified = true;
