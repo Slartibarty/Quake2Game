@@ -7,6 +7,7 @@ local conf_dbg = "debug"
 local conf_rel = "release"
 local conf_rtl = "retail"
 
+local plat_win32 = "x86"
 local plat_win64 = "x64"
 
 local build_dir = "../build"
@@ -15,7 +16,7 @@ local build_dir = "../build"
 
 workspace( "quake2" )
 	configurations( { conf_dbg, conf_rel, conf_rtl } )
-	platforms( { plat_win64 } )
+	platforms( { plat_win32, plat_win64 } )
 	location( build_dir )
 	preferredtoolarchitecture( "x86_64" )
 
@@ -31,6 +32,11 @@ floatingpoint( "Fast" )
 characterset( "ASCII" )
 exceptionhandling( "Off" )
 
+-- Config for all 32-bit projects
+filter( "platforms:" .. plat_win32 )
+	vectorextensions( "SSE2" )
+	architecture "x86"
+	
 -- Config for all 64-bit projects
 filter( "platforms:" .. plat_win64 )
 	vectorextensions( "AVX2" )
@@ -131,7 +137,12 @@ project( "ref_gl" )
 	
 project( "game" )
 	kind( "SharedLib" )
-	targetname( "game" .. plat_win64 )
+	filter( "platforms:" .. plat_win32 )
+		targetname "gamex86"
+	filter {}
+	filter( "platforms:" .. plat_win64 )
+		targetname "gamex64"
+	filter {}
 	language( "C++" )
 	targetdir( "../game/baseq2" )
 

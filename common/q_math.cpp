@@ -7,9 +7,9 @@ vec3_t vec3_origin = { 0,0,0 };
 
 //-------------------------------------------------------------------------------------------------
 
-inline float DEG2RAD(float a)
+inline float DegreesToRadians( float degrees )
 {
-	return ((a * M_PI_F) / 180.0f);
+	return degrees * 0.01745329251994329576923690768489f;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -55,10 +55,10 @@ void RotatePointAroundVector( vec3_t dst, const vec3_t dir, const vec3_t point, 
 	memset( zrot, 0, sizeof( zrot ) );
 	zrot[0][0] = zrot[1][1] = zrot[2][2] = 1.0f;
 
-	zrot[0][0] = cosf( DEG2RAD( degrees ) );
-	zrot[0][1] = sinf( DEG2RAD( degrees ) );
-	zrot[1][0] = -sinf( DEG2RAD( degrees ) );
-	zrot[1][1] = cosf( DEG2RAD( degrees ) );
+	zrot[0][0] = cosf( DegreesToRadians( degrees ) );
+	zrot[0][1] = sinf( DegreesToRadians( degrees ) );
+	zrot[1][0] = -sinf( DegreesToRadians( degrees ) );
+	zrot[1][1] = cosf( DegreesToRadians( degrees ) );
 
 	R_ConcatRotations( m, zrot, tmpmat );
 	R_ConcatRotations( tmpmat, im, rot );
@@ -148,7 +148,7 @@ void PerpendicularVector( vec3_t dst, const vec3_t src )
 			minelem = fabsf( src[i] );
 		}
 	}
-	tempvec[0] = tempvec[1] = tempvec[2] = 0.0f;
+	VectorClear( tempvec );
 	tempvec[pos] = 1.0f;
 
 	/*
@@ -229,7 +229,7 @@ int BoxOnPlaneSide (vec3_t emins, vec3_t emaxs, cplane_t *p)
 	int		sides;
 
 // fast axial cases (handled by the macro)
-#if 1
+#if 0
 	if (p->type < 3)
 	{
 		assert(0);
@@ -555,18 +555,14 @@ void AddPointToBounds (vec3_t v, vec3_t mins, vec3_t maxs)
 //-------------------------------------------------------------------------------------------------
 vec_t VectorNormalize (vec3_t v)
 {
-	float	length, ilength;
+	float length = sqrtf( v[0]*v[0] + v[1]*v[1] + v[2]*v[2] );
 
-	length = v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
-	length = sqrtf (length);
+	// FLT_EPSILON is added to the radius to eliminate the possibility of divide by zero
+	float ilength = 1.0f / ( length + FLT_EPSILON );
 
-	if (length)
-	{
-		ilength = 1/length;
-		v[0] *= ilength;
-		v[1] *= ilength;
-		v[2] *= ilength;
-	}
-		
+	v[0] *= ilength;
+	v[1] *= ilength;
+	v[2] *= ilength;
+
 	return length;
 }
