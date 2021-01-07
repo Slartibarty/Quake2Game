@@ -485,9 +485,6 @@ Key_SetBinding
 */
 void Key_SetBinding (int keynum, const char *binding)
 {
-	char	*newstr;
-	int		l;
-			
 	if (keynum == -1)
 		return;
 
@@ -499,11 +496,7 @@ void Key_SetBinding (int keynum, const char *binding)
 	}
 			
 // allocate memory for new binding
-	l = (int)strlen (binding);
-	newstr = (char*)Z_Malloc (l+1);
-	strcpy (newstr, binding);
-	newstr[l] = 0;
-	keybindings[keynum] = newstr;
+	keybindings[keynum] = Z_CopyString( binding );
 }
 
 /*

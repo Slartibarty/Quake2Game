@@ -99,7 +99,7 @@ void Cbuf_InsertText (const char *text)
 	templen = cmd_text.cursize;
 	if (templen)
 	{
-		temp = (char*)Z_Malloc (templen);
+		temp = (char*)Z_StackAlloc (templen);
 		memcpy (temp, cmd_text.data, templen);
 		SZ_Clear (&cmd_text);
 	}
@@ -113,7 +113,7 @@ void Cbuf_InsertText (const char *text)
 	if (templen)
 	{
 		SZ_Write (&cmd_text, (void*)temp, templen);
-		Z_Free (temp);
+		//Z_Free (temp);
 	}
 }
 
@@ -349,7 +349,7 @@ Cmd_Exec_f
 */
 void Cmd_Exec_f (void)
 {
-	char	*f, *f2;
+	char	*f;
 	int		len;
 
 	if (Cmd_Argc () != 2)
@@ -367,13 +367,13 @@ void Cmd_Exec_f (void)
 	Com_Printf ("execing %s\n",Cmd_Argv(1));
 	
 	// the file doesn't have a trailing 0, so we need to copy it off
-	f2 = (char*)Z_Malloc(len+1);
+	char *f2 = (char*)Z_StackAlloc(len+1);
 	memcpy (f2, f, len);
 	f2[len] = 0;
 
 	Cbuf_InsertText (f2);
 
-	Z_Free (f2);
+	//Z_Free (f2);
 	FS_FreeFile (f);
 }
 
@@ -435,7 +435,7 @@ void Cmd_Alias_f (void)
 
 	if (!a)
 	{
-		a = (cmdalias_t*)Z_Malloc (sizeof(cmdalias_t));
+		a = (cmdalias_t*)Z_Calloc (sizeof(cmdalias_t)); // Assume we want calloc for this
 		a->next = cmd_alias;
 		cmd_alias = a;
 	}
@@ -652,8 +652,7 @@ void Cmd_TokenizeString (char *text, qboolean macroExpand)
 
 		if (cmd_argc < MAX_STRING_TOKENS)
 		{
-			cmd_argv[cmd_argc] = (char*)Z_Malloc (strlen(com_token)+1);
-			strcpy (cmd_argv[cmd_argc], com_token);
+			cmd_argv[cmd_argc] = Z_CopyString( com_token );
 			cmd_argc++;
 		}
 	}
@@ -687,7 +686,7 @@ void	Cmd_AddCommand (const char *cmd_name, xcommand_t function)
 		}
 	}
 
-	cmd = (cmd_function_t*)Z_Malloc (sizeof(cmd_function_t));
+	cmd = (cmd_function_t*)Z_Calloc (sizeof(cmd_function_t)); // Assume we want calloc for this
 	cmd->name = cmd_name;
 	cmd->function = function;
 	cmd->next = cmd_functions;

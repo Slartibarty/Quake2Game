@@ -2413,6 +2413,7 @@ void StartServer_MenuInit( void )
 	** load the list of map names
 	*/
 	Com_sprintf( mapsname, "%s/maps.lst", FS_Gamedir() );
+	// Slart: This is some weird logic here, what's going on?
 	if ( ( fp = fopen( mapsname, "rb" ) ) == 0 )
 	{
 		if ( ( length = FS_LoadFile( "maps.lst", ( void ** ) &buffer ) ) == -1 )
@@ -2441,16 +2442,15 @@ void StartServer_MenuInit( void )
 	if ( nummaps == 0 )
 		Com_Error( ERR_DROP, "no maps in maps.lst\n" );
 
-	mapnames = (char**)Z_Malloc( sizeof( char * ) * ( nummaps + 1 ) );
-	memset( mapnames, 0, sizeof( char * ) * ( nummaps + 1 ) );
+	mapnames = (char**)Z_Calloc( sizeof( char * ) * ( nummaps + 1 ) );
 
 	s = buffer;
 
 	for ( i = 0; i < nummaps; i++ )
 	{
-		char  shortname[MAX_TOKEN_CHARS];
-		char  longname[MAX_TOKEN_CHARS];
-		char  scratch[256];
+		char	shortname[MAX_TOKEN_CHARS];
+		char	longname[MAX_TOKEN_CHARS];
+		char	scratch[256];
 		int		j, l;
 
 		strcpy( shortname, COM_Parse( &s ) );
@@ -2460,8 +2460,7 @@ void StartServer_MenuInit( void )
 		strcpy( longname, COM_Parse( &s ) );
 		Com_sprintf( scratch, "%s\n%s", longname, shortname );
 
-		mapnames[i] = (char*)Z_Malloc( strlen( scratch ) + 1 );
-		strcpy( mapnames[i], scratch );
+		mapnames[i] = Z_CopyString( scratch );
 	}
 	mapnames[nummaps] = 0;
 
@@ -3399,8 +3398,7 @@ static qboolean PlayerConfig_ScanDirectories( void )
 		if ( !nskins )
 			continue;
 
-		skinnames = (char**)Z_Malloc( sizeof( char * ) * ( nskins + 1 ) );
-		memset( skinnames, 0, sizeof( char * ) * ( nskins + 1 ) );
+		skinnames = (char**)Z_Calloc( sizeof( char * ) * ( nskins + 1 ) );
 
 		// copy the valid skins
 		for ( s = 0, k = 0; k < npcxfiles-1; k++ )

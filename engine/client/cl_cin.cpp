@@ -233,8 +233,7 @@ void Huff1TableInit (void)
 	byte	counts[256];
 	int		numhnodes;
 
-	cin.hnodes1 = (int*)Z_Malloc (256*256*2*4);
-	memset (cin.hnodes1, 0, 256*256*2*4);
+	cin.hnodes1 = (int*)Z_Calloc (256*256*2*4);
 
 	for (prev=0 ; prev<256 ; prev++)
 	{

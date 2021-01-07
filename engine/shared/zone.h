@@ -10,6 +10,19 @@
 
 #include <cstddef> // size_t
 
+#ifdef _WIN32
+#include <malloc.h>
+#else
+#include <alloca.h>
+#endif
+
+// Stack allocation
+#ifdef _WIN32
+#define Z_StackAlloc(x) _alloca(x)
+#else
+#define Z_StackAlloc(x) alloca(x)
+#endif
+
 // Normal
 void	*Z_Malloc( size_t size );
 void	*Z_Calloc( size_t size );

@@ -331,9 +331,9 @@ void SV_InitGame (void)
 	}
 
 	svs.spawncount = rand();
-	svs.clients = (client_t*)Z_Malloc (sizeof(client_t)*maxclients->value);
+	svs.clients = (client_t*)Z_Calloc (sizeof(client_t)*maxclients->value); // Assume we want calloc for this
 	svs.num_client_entities = maxclients->value*UPDATE_BACKUP*64;
-	svs.client_entities = (entity_state_t*)Z_Malloc (sizeof(entity_state_t)*svs.num_client_entities);
+	svs.client_entities = (entity_state_t*)Z_Calloc (sizeof(entity_state_t)*svs.num_client_entities); // Assume we want calloc for this
 
 	// init network stuff
 	NET_Config ( (maxclients->value > 1) );

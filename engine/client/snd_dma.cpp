@@ -241,14 +241,11 @@ S_AliasName
 
 ==================
 */
-sfx_t *S_AliasName (char *aliasname, char *truename)
+sfx_t *S_AliasName ( const char *aliasname, const char *truename )
 {
 	sfx_t	*sfx;
 	char	*s;
 	int		i;
-
-	s = (char*)Z_Malloc (MAX_QPATH);
-	strcpy (s, truename);
 
 	// find a free sfx
 	for (i=0 ; i < num_sfx ; i++)
@@ -264,9 +261,9 @@ sfx_t *S_AliasName (char *aliasname, char *truename)
 	
 	sfx = &known_sfx[i];
 	memset (sfx, 0, sizeof(*sfx));
-	strcpy (sfx->name, aliasname);
+	Q_strcpy (sfx->name, aliasname);
 	sfx->registration_sequence = s_registration_sequence;
-	sfx->truename = s;
+	sfx->truename = Z_CopyString( truename );
 
 	return sfx;
 }

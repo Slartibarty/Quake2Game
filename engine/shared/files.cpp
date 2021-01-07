@@ -378,8 +378,6 @@ int FS_LoadFile (const char *path, void **buffer)
 	byte	*buf;
 	int		len;
 
-	buf = NULL;	// quiet compiler warning
-
 // look for it in the filesystem or pack files
 	len = FS_FOpenFile (path, &h);
 	if (!h)
@@ -452,7 +450,7 @@ pack_t *FS_LoadPackFile (char *packfile)
 	if (numpackfiles > MAX_FILES_IN_PACK)
 		Com_Error (ERR_FATAL, "%s has %i files", packfile, numpackfiles);
 
-	newfiles = (packfile_t*)Z_Malloc (numpackfiles * sizeof(packfile_t));
+	newfiles = (packfile_t*)Z_Malloc (numpackfiles * sizeof(packfile_t)); // Assume we don't want calloc for this
 
 	fseek (packhandle, header.dirofs, SEEK_SET);
 	fread (info, 1, header.dirlen, packhandle);
@@ -472,7 +470,7 @@ pack_t *FS_LoadPackFile (char *packfile)
 		newfiles[i].filelen = LittleLong(info[i].filelen);
 	}
 
-	pack = (pack_t*)Z_Malloc (sizeof (pack_t));
+	pack = (pack_t*)Z_Malloc (sizeof (pack_t)); // Assume we don't want calloc for this
 	strcpy (pack->filename, packfile);
 	pack->handle = packhandle;
 	pack->numfiles = numpackfiles;
@@ -657,7 +655,7 @@ void FS_Link_f (void)
 	}
 
 	// create a new link
-	l = (filelink_t*)Z_Malloc(sizeof(*l));
+	l = (filelink_t*)Z_Malloc(sizeof(*l)); // Assume we don't want calloc for this
 	l->next = fs_links;
 	fs_links = l;
 	l->from = Z_CopyString(Cmd_Argv(1));
@@ -689,8 +687,7 @@ char **FS_ListFiles( char *findname, int *numfiles, unsigned musthave, unsigned 
 	nfiles++; // add space for a guard
 	*numfiles = nfiles;
 
-	list = (char**)Z_Malloc( sizeof( char * ) * nfiles );
-	memset( list, 0, sizeof( char * ) * nfiles );
+	list = (char**)Z_Calloc( sizeof( char * ) * nfiles );
 
 	s = Sys_FindFirst( findname, musthave, canthave );
 	nfiles = 0;
