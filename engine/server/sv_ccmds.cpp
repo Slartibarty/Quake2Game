@@ -460,7 +460,7 @@ static void SV_GameMap_f (void)
 			// clear all the client inuse flags before saving so that
 			// when the level is re-entered, the clients will spawn
 			// at spawn points instead of occupying body shells
-			savedInuse = (bool*)malloc(maxclients->value * sizeof(bool));
+			savedInuse = (bool*)Z_Malloc(maxclients->value * sizeof(bool));
 			for (i=0,cl=svs.clients ; i<maxclients->value; i++,cl++)
 			{
 				savedInuse[i] = cl->edict->inuse;
@@ -472,7 +472,7 @@ static void SV_GameMap_f (void)
 			// we must restore these for clients to transfer over correctly
 			for (i=0,cl=svs.clients ; i<maxclients->value; i++,cl++)
 				cl->edict->inuse = savedInuse[i];
-			free (savedInuse);
+			Z_Free (savedInuse);
 		}
 	}
 

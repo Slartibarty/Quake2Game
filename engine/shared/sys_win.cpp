@@ -249,7 +249,7 @@ char *Sys_GetClipboardData( void )
 		{
 			if ( ( cliptext = (char*)GlobalLock( hClipboardData ) ) != 0 ) 
 			{
-				data = (char*)malloc( GlobalSize( hClipboardData ) + 1 );
+				data = (char*)Z_Malloc( GlobalSize( hClipboardData ) + 1 );
 				strcpy( data, cliptext );
 				GlobalUnlock( hClipboardData );
 			}

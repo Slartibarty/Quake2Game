@@ -5,7 +5,7 @@
 #include "../../common/q_shared.h"
 #include "q_formats.h"
 
-#include <forward_list>
+#include "zone.h"
 
 //=============================================================================
 
@@ -107,10 +107,7 @@ void COM_ClearArgv (int arg);
 int COM_CheckParm (char *parm);
 void COM_AddParm (char *parm);
 
-void COM_Init (void);
 void COM_InitArgv (int argc, char **argv);
-
-char *CopyString (const char *in);
 
 //=============================================================================
 
@@ -471,6 +468,8 @@ extern	qboolean	userinfo_modified;
 // this is set each time a CVAR_USERINFO variable is changed
 // so that the client knows to send it to the server
 
+#if 0
+
 /*
 ==============================================================
 
@@ -526,6 +525,8 @@ public: // Public functions
 };
 
 extern Convar2System cvars;
+
+#endif
 
 /*
 ==============================================================
@@ -776,11 +777,6 @@ extern	int		time_before_game;
 extern	int		time_after_game;
 extern	int		time_before_ref;
 extern	int		time_after_ref;
-
-void Z_Free (void *ptr);
-void *Z_Malloc (int size);			// returns 0 filled memory
-void *Z_TagMalloc (int size, int tag);
-void Z_FreeTags (int tag);
 
 void Qcommon_Init (int argc, char **argv);
 void Qcommon_Frame (int msec);

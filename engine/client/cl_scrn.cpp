@@ -92,7 +92,7 @@ void CL_AddNetgraph (void)
 	ping /= 30;
 	if (ping > 30)
 		ping = 30;
-	SCR_DebugGraph (ping, 0xd0);
+	SCR_DebugGraph ( (float)ping, 0xd0);
 }
 
 
@@ -135,8 +135,7 @@ void SCR_DrawDebugGraph (void)
 
 	x = scr_vrect.x;
 	y = scr_vrect.y+scr_vrect.height;
-	re.DrawFill (x, y-scr_graphheight->value,
-		w, scr_graphheight->value, 8);
+	re.DrawFill (x, y-(int)scr_graphheight->value, w, (int)scr_graphheight->value, 8);
 
 	for (a=0 ; a<w ; a++)
 	{
@@ -146,7 +145,7 @@ void SCR_DrawDebugGraph (void)
 		v = v*scr_graphscale->value + scr_graphshift->value;
 		
 		if (v < 0)
-			v += scr_graphheight->value * (1+(int)(-v/scr_graphheight->value));
+			v += (int)scr_graphheight->value * (1+(int)(-v/scr_graphheight->value));
 		h = (int)v % (int)scr_graphheight->value;
 		re.DrawFill (x+w-1-a, y - h, 1,	h, color);
 	}
@@ -182,7 +181,7 @@ void SCR_CenterPrint (char *str)
 
 	strncpy (scr_centerstring, str, sizeof(scr_centerstring)-1);
 	scr_centertime_off = scr_centertime->value;
-	scr_centertime_start = cl.time;
+	scr_centertime_start = (float)cl.time;
 
 	// count the number of lines for centering
 	scr_center_lines = 1;
@@ -244,7 +243,7 @@ void SCR_DrawCenterString (void)
 	start = scr_centerstring;
 
 	if (scr_center_lines <= 4)
-		y = viddef.height*0.35;
+		y = (int)(viddef.height*0.35f);
 	else
 		y = 48;
 
@@ -304,7 +303,7 @@ static void SCR_CalcVrect (void)
 	if (scr_viewsize->value > 100)
 		Cvar_Set ("viewsize","100");
 
-	size = scr_viewsize->value;
+	size = (int)scr_viewsize->value;
 
 	scr_vrect.width = viddef.width*size/100;
 	scr_vrect.width &= ~7;
@@ -360,14 +359,14 @@ void SCR_Sky_f (void)
 		return;
 	}
 	if (Cmd_Argc() > 2)
-		rotate = atof(Cmd_Argv(2));
+		rotate = (float)atof(Cmd_Argv(2));
 	else
 		rotate = 0;
 	if (Cmd_Argc() == 6)
 	{
-		axis[0] = atof(Cmd_Argv(3));
-		axis[1] = atof(Cmd_Argv(4));
-		axis[2] = atof(Cmd_Argv(5));
+		axis[0] = (float)atof(Cmd_Argv(3));
+		axis[1] = (float)atof(Cmd_Argv(4));
+		axis[2] = (float)atof(Cmd_Argv(5));
 	}
 	else
 	{
@@ -556,7 +555,7 @@ void SCR_BeginLoadingPlaque (void)
 	else
 		scr_draw_loading = 1;
 	SCR_UpdateScreen ();
-	cls.disable_screen = Sys_Milliseconds ();
+	cls.disable_screen = (float)Sys_Milliseconds ();
 	cls.disable_servercount = cl.servercount;
 }
 
@@ -593,11 +592,11 @@ int entitycmpfnc( const entity_t *a, const entity_t *b )
 	*/
 	if ( a->model == b->model )
 	{
-		return ( ( intptr_t ) a->skin - ( intptr_t ) b->skin );
+		return (int)( (byte *) a->skin - (byte *) b->skin );
 	}
 	else
 	{
-		return ( ( intptr_t ) a->model - ( intptr_t ) b->model );
+		return (int)( (byte *) a->model - (byte *) b->model );
 	}
 }
 
@@ -709,7 +708,7 @@ void SCR_TileClear (void)
 	scr_dirty.y2 = -9999;
 
 	// don't bother with anything convered by the console)
-	top = scr_con_current*viddef.height;
+	top = (int)scr_con_current*viddef.height;
 	if (top >= clear.y1)
 		clear.y1 = top;
 
@@ -865,7 +864,7 @@ void SCR_DrawField (int x, int y, int color, int width, int value)
 	SCR_AddDirtyPoint (x+width*CHAR_WIDTH+2, y+23);
 
 	Com_sprintf (num, "%i", value);
-	l = strlen(num);
+	l = (int)strlen(num);
 	if (l > width)
 		l = width;
 	x += 2 + CHAR_WIDTH*(width - l);

@@ -417,9 +417,9 @@ byte *SCR_ReadNextFrame (void)
 	int		start, end, count;
 
 	// read the next frame
-	r = fread (&command, 4, 1, cl.cinematic_file);
+	r = (int)fread (&command, 4, 1, cl.cinematic_file);
 	if (r == 0)		// we'll give it one more chance
-		r = fread (&command, 4, 1, cl.cinematic_file);
+		r = (int)fread (&command, 4, 1, cl.cinematic_file);
 
 	if (r != 1)
 		return NULL;
@@ -487,7 +487,7 @@ void SCR_RunCinematic (void)
 		return;
 	}
 
-	frame = (cls.realtime - cl.cinematictime)*14.0/1000;
+	frame = (cls.realtime - cl.cinematictime)*14/1000;
 	if (frame <= cl.cinematicframe)
 		return;
 	if (frame > cl.cinematicframe+1)

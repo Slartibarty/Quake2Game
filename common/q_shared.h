@@ -18,8 +18,6 @@
 #include "q_types.h"
 #include "q_math.h"
 
-#include "TnkString.h"
-
 //
 // per-level limits
 //
@@ -70,8 +68,26 @@ inline consteval int32 MakeID(int32 d, int32 c, int32 b, int32 a) {
 // Library replacement functions - q_shared.cpp
 //-------------------------------------------------------------------------------------------------
 
+template< typename T >
+inline constexpr T Min( const T &valMin, const T &valMax )
+{
+	return valMin < valMax ? valMin : valMax;
+}
+
+template< typename T >
+inline constexpr T Max( const T &valMin, const T &valMax )
+{
+	return valMin > valMax ? valMin : valMax;
+}
+
+template< typename T >
+inline constexpr T Clamp( const T &val, const T &valMin, const T &valMax )
+{
+	return Min( Max( val, valMin ), valMax );
+}
+
 // size_t is wack
-using strlen_t = int;
+using strlen_t = uint32;
 
 inline strlen_t Q_strlen( const char *str )
 {
@@ -316,6 +332,8 @@ struct ConvarValue
 	}
 };
 
+#if 0
+
 //-------------------------------------------------------------------------------------------------
 // Convar2
 //
@@ -374,6 +392,8 @@ public:
 	}
 
 };
+
+#endif
 
 //-------------------------------------------------------------------------------------------------
 // Collision detection

@@ -6,6 +6,8 @@
 // Convars are their own thing
 //=================================================================================================
 
+#if 0
+
 // This has the Convar2 struct
 #include "common.h"
 
@@ -233,3 +235,5 @@ Convar2 *Set( Convar2 *var, double value, bool force /* = false */ )
 {
 	return nullptr;
 }
+
+#endif

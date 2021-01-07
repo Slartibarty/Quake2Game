@@ -112,7 +112,7 @@ static void VID_InitModes()
 	int numModes = 0;					// Same as s_num_modes
 	int lastAlloc = DefaultNumModes;	// The last count we allocated
 
-	s_vid_modes = (vidmode_t*)malloc(DefaultAlloc);
+	s_vid_modes = (vidmode_t*)Z_Malloc(DefaultAlloc);
 
 	while (EnumDisplaySettingsW(nullptr, internalNum, &dm) != FALSE)
 	{
@@ -148,7 +148,7 @@ static void VID_InitModes()
 
 static void VID_DeleteModes()
 {
-	free(s_vid_modes);
+	Z_Free(s_vid_modes);
 	s_vid_modes = nullptr;
 	s_num_modes = 0;
 }

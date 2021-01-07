@@ -79,6 +79,7 @@ filter {}
 
 -- Config for all projects in retail
 filter( filter_rtl )
+	defines { "Q_RETAIL" }
 	symbols "Off"
 	flags { "LinkTimeOptimization" }
 filter {}
@@ -100,6 +101,8 @@ project "engine"
 	linkoptions { "/ENTRY:mainCRTStartup" }
 	defines { "_WINSOCK_DEPRECATED_NO_WARNINGS" }
 	links { "ws2_32", "winmm", "dsound", "dxguid" }
+	
+	disablewarnings { "4244", "4267" }
 
 	files {
 		"common/*",
@@ -131,6 +134,8 @@ project "ref_gl"
 	includedirs { "external/glew/include" }
 	defines { "GLEW_STATIC", "GLEW_NO_GLU" }
 	links { "opengl32" }
+	
+	disablewarnings { "4244" }
 
 	files {
 		"common/*",

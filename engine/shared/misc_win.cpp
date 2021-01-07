@@ -21,7 +21,7 @@ void *Hunk_Begin (int maxsize)
 #ifdef VIRTUAL_ALLOC
 	membase = VirtualAlloc (NULL, maxsize, MEM_RESERVE, PAGE_NOACCESS);
 #else
-	membase = malloc (maxsize);
+	membase = Z_Malloc(maxsize);
 	memset (membase, 0, maxsize);
 #endif
 
@@ -79,7 +79,7 @@ void Hunk_Free (void *base)
 #ifdef VIRTUAL_ALLOC
 		VirtualFree (base, 0, MEM_RELEASE);
 #else
-		free (base);
+		Z_Free (base);
 #endif
 
 	--hunkcount;

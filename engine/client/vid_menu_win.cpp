@@ -79,7 +79,7 @@ static void BrightnessCallback( void *s )
 
 	if ( Q_stricmp( vid_ref->string, "soft" ) == 0 )
 	{
-		float gamma = ( 0.8 - ( slider->curvalue/10.0 - 0.5 ) ) + 0.5;
+		float gamma = ( 0.8f - ( slider->curvalue/10.0f - 0.5f ) ) + 0.5f;
 
 		Cvar_SetValue( "vid_gamma", gamma );
 	}
@@ -104,7 +104,7 @@ static void ApplyChanges( void *unused )
 	/*
 	** invert sense so greater = brighter, and scale to a range of 0.5 to 1.3
 	*/
-	gamma = ( 0.8 - ( s_brightness_slider[s_current_menu_index].curvalue/10.0 - 0.5 ) ) + 0.5;
+	gamma = ( 0.8f - ( s_brightness_slider[s_current_menu_index].curvalue/10.0f - 0.5f ) ) + 0.5f;
 
 	Cvar_SetValue( "vid_gamma", gamma );
 	Cvar_SetValue( "sw_stipplealpha", s_stipple_box.curvalue );
@@ -162,11 +162,11 @@ static void InitResolutions()
 
 		int numModes = VID_GetNumModes();
 
-		resolutions = (char **)malloc((numModes + 1) * sizeof(resolutions));
+		resolutions = (char **)Z_Malloc((numModes + 1) * sizeof(resolutions));
 
 		while (VID_GetModeInfo(&width, &height, mode) != false)
 		{
-			resolutions[mode] = (char*)malloc(32);
+			resolutions[mode] = (char*)Z_Malloc(32);
 			Com_sprintf(resolutions[mode], 32, "[%dx%d]", width, height);
 
 			++mode;
@@ -231,9 +231,9 @@ void VID_MenuInit( void )
 		s_ref_list[s_current_menu_index].curvalue = REF_OPENGL;
 	}
 
-	s_software_menu.x = viddef.width * 0.50;
+	s_software_menu.x = viddef.width * 0.50f;
 	s_software_menu.nitems = 0;
-	s_opengl_menu.x = viddef.width * 0.50;
+	s_opengl_menu.x = viddef.width * 0.50f;
 	s_opengl_menu.nitems = 0;
 
 	for ( i = 0; i < 2; i++ )
@@ -266,7 +266,7 @@ void VID_MenuInit( void )
 		s_brightness_slider[i].generic.callback = BrightnessCallback;
 		s_brightness_slider[i].minvalue = 5;
 		s_brightness_slider[i].maxvalue = 13;
-		s_brightness_slider[i].curvalue = ( 1.3 - vid_gamma->value + 0.5 ) * 10;
+		s_brightness_slider[i].curvalue = ( 1.3f - vid_gamma->value + 0.5f ) * 10;
 
 		s_fs_box[i].generic.type = MTYPE_SPINCONTROL;
 		s_fs_box[i].generic.x	= 0;

@@ -579,17 +579,17 @@ void CL_ParseStartSoundPacket(void)
 	sound_num = MSG_ReadByte (&net_message);
 
     if (flags & SND_VOLUME)
-		volume = MSG_ReadByte (&net_message) / 255.0;
+		volume = MSG_ReadByte (&net_message) / 255.0f;
 	else
 		volume = DEFAULT_SOUND_PACKET_VOLUME;
 	
     if (flags & SND_ATTENUATION)
-		attenuation = MSG_ReadByte (&net_message) / 64.0;
+		attenuation = MSG_ReadByte (&net_message) / 64.0f;
 	else
 		attenuation = DEFAULT_SOUND_PACKET_ATTENUATION;	
 
     if (flags & SND_OFFSET)
-		ofs = MSG_ReadByte (&net_message) / 1000.0;
+		ofs = MSG_ReadByte (&net_message) / 1000.0f;
 	else
 		ofs = 0;
 

@@ -369,15 +369,6 @@ void vectoangles (vec3_t value1, vec3_t angles)
 	angles[ROLL] = 0;
 }
 
-char *G_CopyString (const char *in)
-{
-	char	*out;
-	
-	out = (char*)gi.TagMalloc (strlen(in)+1, TAG_LEVEL);
-	strcpy (out, in);
-	return out;
-}
-
 
 void G_InitEdict (edict_t *e)
 {

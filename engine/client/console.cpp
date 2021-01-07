@@ -373,7 +373,7 @@ void Con_Print (const char *txt)
 			Con_Linefeed ();
 		// mark time for transparent overlay
 			if (con.current >= 0)
-				con.times[con.current % NUM_CON_TIMES] = cls.realtime;
+				con.times[con.current % NUM_CON_TIMES] = (float)cls.realtime;
 		}
 
 		switch (c)
@@ -399,26 +399,6 @@ void Con_Print (const char *txt)
 	}
 }
 
-
-/*
-==============
-Con_CenteredPrint
-==============
-*/
-void Con_CenteredPrint (char *text)
-{
-	int		l;
-	char	buffer[1024];
-
-	l = strlen(text);
-	l = (con.linewidth-l)/2;
-	if (l < 0)
-		l = 0;
-	memset (buffer, ' ', l);
-	strcpy (buffer+l, text);
-	strcat (buffer, "\n");
-	Con_Print (buffer);
-}
 
 /*
 ==============================================================================
@@ -557,7 +537,7 @@ void Con_DrawConsole (float frac)
 	char			version[64];
 	char			dlbar[1024];
 
-	lines = viddef.height * frac;
+	lines = (int)(viddef.height * frac);
 	if (lines <= 0)
 		return;
 
@@ -621,7 +601,7 @@ void Con_DrawConsole (float frac)
 			text = cls.downloadname;
 
 		x = con.linewidth - ((con.linewidth * 7) / 40);
-		y = x - strlen(text) - 8;
+		y = x - (int)strlen(text) - 8;
 		i = con.linewidth/3;
 		if (strlen(text) > i) {
 			y = x - i - 11;
@@ -631,7 +611,7 @@ void Con_DrawConsole (float frac)
 		} else
 			strcpy(dlbar, text);
 		strcat(dlbar, ": ");
-		i = strlen(dlbar);
+		i = (int)strlen(dlbar);
 		dlbar[i++] = '\x80';
 		// where's the dot go?
 		if (cls.downloadpercent == 0)
@@ -651,7 +631,7 @@ void Con_DrawConsole (float frac)
 
 		// draw it
 		y = con.vislines-12;
-		for (i = 0; i < strlen(dlbar); i++)
+		for (i = 0; i < (int)strlen(dlbar); i++)
 			re.DrawChar ( (i+1)<<3, y, dlbar[i]);
 	}
 //ZOID

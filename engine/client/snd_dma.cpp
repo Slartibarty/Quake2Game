@@ -436,22 +436,22 @@ void S_SpatializeOrigin (vec3_t origin, float master_vol, float dist_mult, int *
 
 	if (dma.channels == 1 || !dist_mult)
 	{ // no attenuation = no spatialization
-		rscale = 1.0;
-		lscale = 1.0;
+		rscale = 1.0f;
+		lscale = 1.0f;
 	}
 	else
 	{
-		rscale = 0.5 * (1.0 + dot);
-		lscale = 0.5*(1.0 - dot);
+		rscale = 0.5f * (1.0f + dot);
+		lscale = 0.5f*(1.0f - dot);
 	}
 
 	// add in distance effect
-	scale = (1.0 - dist) * rscale;
+	scale = (1.0f - dist) * rscale;
 	*right_vol = (int) (master_vol * scale);
 	if (*right_vol < 0)
 		*right_vol = 0;
 
-	scale = (1.0 - dist) * lscale;
+	scale = (1.0f - dist) * lscale;
 	*left_vol = (int) (master_vol * scale);
 	if (*left_vol < 0)
 		*left_vol = 0;
@@ -552,9 +552,9 @@ void S_IssuePlaysound (playsound_t *ps)
 
 	// spatialize
 	if (ps->attenuation == ATTN_STATIC)
-		ch->dist_mult = ps->attenuation * 0.001;
+		ch->dist_mult = ps->attenuation * 0.001f;
 	else
-		ch->dist_mult = ps->attenuation * 0.0005;
+		ch->dist_mult = ps->attenuation * 0.0005f;
 	ch->master_vol = ps->volume;
 	ch->entnum = ps->entnum;
 	ch->entchannel = ps->entchannel;
@@ -683,16 +683,16 @@ void S_StartSound(vec3_t origin, int entnum, int entchannel, sfx_t *sfx, float f
 	ps->sfx = sfx;
 
 	// drift s_beginofs
-	start = cl.frame.servertime * 0.001 * dma.speed + s_beginofs;
+	start = cl.frame.servertime * 0.001f * dma.speed + s_beginofs;
 	if (start < paintedtime)
 	{
 		start = paintedtime;
-		s_beginofs = start - (cl.frame.servertime * 0.001 * dma.speed);
+		s_beginofs = start - (cl.frame.servertime * 0.001f * dma.speed);
 	}
-	else if (start > paintedtime + 0.3 * dma.speed)
+	else if (start > paintedtime + 0.3f * dma.speed)
 	{
-		start = paintedtime + 0.1 * dma.speed;
-		s_beginofs = start - (cl.frame.servertime * 0.001 * dma.speed);
+		start = paintedtime + 0.1f * dma.speed;
+		s_beginofs = start - (cl.frame.servertime * 0.001f * dma.speed);
 	}
 	else
 	{

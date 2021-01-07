@@ -370,7 +370,7 @@ void CL_SendConnectPacket (void)
 	if (adr.port == 0)
 		adr.port = BigShort (PORT_SERVER);
 
-	port = Cvar_VariableValue ("qport");
+	port = (int)Cvar_VariableValue ("qport");
 	userinfo_modified = false;
 
 	Netchan_OutOfBandPrint (NS_CLIENT, adr, "connect %i %i %i \"%s\"\n",
@@ -416,7 +416,7 @@ void CL_CheckForResend (void)
 	if (adr.port == 0)
 		adr.port = BigShort (PORT_SERVER);
 
-	cls.connect_time = cls.realtime;	// for retransmit requests
+	cls.connect_time = (float)cls.realtime;	// for retransmit requests
 
 	Com_Printf ("Connecting to %s...\n", cls.servername);
 
@@ -518,7 +518,7 @@ void CL_Rcon_f (void)
 			to.port = BigShort (PORT_SERVER);
 	}
 	
-	NET_SendPacket (NS_CLIENT, strlen(message)+1, message, to);
+	NET_SendPacket (NS_CLIENT, (int)strlen(message)+1, message, to);
 }
 
 
@@ -583,9 +583,10 @@ void CL_Disconnect (void)
 	// send a disconnect message to the server
 	final[0] = clc_stringcmd;
 	strcpy ((char *)final+1, "disconnect");
-	Netchan_Transmit (&cls.netchan, strlen(final), (byte*)final);
-	Netchan_Transmit (&cls.netchan, strlen(final), (byte*)final);
-	Netchan_Transmit (&cls.netchan, strlen(final), (byte*)final);
+	int length = (int)strlen( final );
+	Netchan_Transmit (&cls.netchan, length, (byte*)final);
+	Netchan_Transmit (&cls.netchan, length, (byte*)final);
+	Netchan_Transmit (&cls.netchan, length, (byte*)final);
 
 	CL_ClearState ();
 
@@ -615,9 +616,9 @@ Contents allows \n escape character
 */
 void CL_Packet_f (void)
 {
-	char	send[2048];
-	int		i, l;
-	char	*in, *out;
+	char		send[2048];
+	strlen_t	i, l;
+	char		*in, *out;
 	netadr_t	adr;
 
 	if (Cmd_Argc() != 3)
@@ -653,7 +654,8 @@ void CL_Packet_f (void)
 	}
 	*out = 0;
 
-	NET_SendPacket (NS_CLIENT, out-send, send, adr);
+	// 64-bit safe (out-send)
+	NET_SendPacket (NS_CLIENT, (int)(out-send), send, adr);
 }
 
 /*
@@ -703,7 +705,7 @@ void CL_Reconnect_f (void)
 	if (*cls.servername) {
 		if (cls.state >= ca_connected) {
 			CL_Disconnect();
-			cls.connect_time = cls.realtime - 1500;
+			cls.connect_time = (float)(cls.realtime - 1500);
 		} else
 			cls.connect_time = -99999; // fire immediately
 

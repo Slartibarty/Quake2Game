@@ -272,6 +272,18 @@ static void PF_StartSound (edict_t *entity, int channel, int sound_num, float vo
 	SV_StartSound (NULL, entity, channel, sound_num, volume, attenuation, timeofs);
 }
 
+// Need these due to zone api changes
+
+void *Wrap_TagMalloc( int size, int tag )
+{
+	return Z_TagMalloc( size, tag );
+}
+
+void Wrap_TagFreeGroup( int tag )
+{
+	Z_TagFreeGroup( tag );
+}
+
 //==============================================
 
 /*
@@ -328,9 +340,9 @@ void SV_InitGameProgs (void)
 	gi.WriteDir = PF_WriteDir;
 	gi.WriteAngle = PF_WriteAngle;
 
-	gi.TagMalloc = Z_TagMalloc;
-	gi.TagFree = Z_Free;
-	gi.FreeTags = Z_FreeTags;
+	gi.TagMalloc = Wrap_TagMalloc;
+	gi.TagFree = Z_TagFree;
+	gi.FreeTags = Wrap_TagFreeGroup;
 
 	gi.cvar = Cvar_Get;
 	gi.cvar_set = Cvar_Set;

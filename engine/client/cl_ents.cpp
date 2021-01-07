@@ -436,14 +436,14 @@ void CL_ParsePlayerstate (frame_t *oldframe, frame_t *newframe)
 
 	if (flags & PS_BLEND)
 	{
-		state->blend[0] = MSG_ReadByte (&net_message)/255.0;
-		state->blend[1] = MSG_ReadByte (&net_message)/255.0;
-		state->blend[2] = MSG_ReadByte (&net_message)/255.0;
-		state->blend[3] = MSG_ReadByte (&net_message)/255.0;
+		state->blend[0] = MSG_ReadByte (&net_message)/255.0f;
+		state->blend[1] = MSG_ReadByte (&net_message)/255.0f;
+		state->blend[2] = MSG_ReadByte (&net_message)/255.0f;
+		state->blend[3] = MSG_ReadByte (&net_message)/255.0f;
 	}
 
 	if (flags & PS_FOV)
-		state->fov = MSG_ReadByte (&net_message);
+		state->fov = (float)MSG_ReadByte (&net_message);
 
 	if (flags & PS_RDFLAGS)
 		state->rdflags = MSG_ReadByte (&net_message);
@@ -575,9 +575,9 @@ void CL_ParseFrame (void)
 		{
 			cls.state = ca_active;
 			cl.force_refdef = true;
-			cl.predicted_origin[0] = cl.frame.playerstate.pmove.origin[0]*0.125;
-			cl.predicted_origin[1] = cl.frame.playerstate.pmove.origin[1]*0.125;
-			cl.predicted_origin[2] = cl.frame.playerstate.pmove.origin[2]*0.125;
+			cl.predicted_origin[0] = cl.frame.playerstate.pmove.origin[0]*0.125f;
+			cl.predicted_origin[1] = cl.frame.playerstate.pmove.origin[1]*0.125f;
+			cl.predicted_origin[2] = cl.frame.playerstate.pmove.origin[2]*0.125f;
 			VectorCopy (cl.frame.playerstate.viewangles, cl.predicted_angles);
 			if (cls.disable_servercount != cl.servercount
 				&& cl.refresh_prepped)
@@ -669,7 +669,7 @@ void CL_AddPacketEntities (frame_t *frame)
 	unsigned int		effects, renderfx;
 
 	// bonus items rotate at a fixed rate
-	autorotate = anglemod(cl.time/10);
+	autorotate = anglemod( (float)(cl.time / 10) );
 
 	// brush models can auto animate their frames
 	autoanim = 2*cl.time/1000;
@@ -729,7 +729,7 @@ void CL_AddPacketEntities (frame_t *frame)
 // pmm
 //======
 		ent.oldframe = cent->prev.frame;
-		ent.backlerp = 1.0 - cl.lerpfrac;
+		ent.backlerp = 1.0f - cl.lerpfrac;
 
 		if (renderfx & (RF_FRAMELERP|RF_BEAM))
 		{	// step origin discretely, because the frames
@@ -822,7 +822,7 @@ void CL_AddPacketEntities (frame_t *frame)
 		else if (effects & EF_SPINNINGLIGHTS)
 		{
 			ent.angles[0] = 0;
-			ent.angles[1] = anglemod(cl.time/2) + s1->angles[1];
+			ent.angles[1] = anglemod( (float)( cl.time / 2 ) ) + s1->angles[1];
 			ent.angles[2] = 180;
 			{
 				vec3_t forward;
@@ -938,7 +938,7 @@ void CL_AddPacketEntities (frame_t *frame)
 //			}
 			// pmm
 			ent.flags = renderfx | RF_TRANSLUCENT;
-			ent.alpha = 0.30;
+			ent.alpha = 0.30f;
 			V_AddEntity (&ent);
 		}
 
@@ -1062,7 +1062,7 @@ void CL_AddPacketEntities (frame_t *frame)
 				{
 					i = bfg_lightramp[s1->frame];
 				}
-				V_AddLight (ent.origin, i, 0, 1, 0);
+				V_AddLight (ent.origin, (float)i, 0, 1, 0);
 			}
 			// RAFAEL
 			else if (effects & EF_TRAP)
@@ -1070,7 +1070,7 @@ void CL_AddPacketEntities (frame_t *frame)
 				ent.origin[2] += 32;
 				CL_TrapParticles (&ent);
 				i = (rand()%100) + 100;
-				V_AddLight (ent.origin, i, 1, 0.8, 0.1);
+				V_AddLight (ent.origin, (float)i, 1, 0.8f, 0.1f);
 			}
 			else if (effects & EF_FLAG1)
 			{
@@ -1080,14 +1080,14 @@ void CL_AddPacketEntities (frame_t *frame)
 			else if (effects & EF_FLAG2)
 			{
 				CL_FlagTrail (cent->lerp_origin, ent.origin, 115);
-				V_AddLight (ent.origin, 225, 0.1, 0.1, 1);
+				V_AddLight (ent.origin, 225, 0.1f, 0.1f, 1);
 			}
 //======
 //ROGUE
 			else if (effects & EF_TAGTRAIL)
 			{
 				CL_TagTrail (cent->lerp_origin, ent.origin, 220);
-				V_AddLight (ent.origin, 225, 1.0, 1.0, 0.0);
+				V_AddLight (ent.origin, 225, 1.0f, 1.0f, 0.0f);
 			}
 			else if (effects & EF_TRACKERTRAIL)
 			{
@@ -1095,17 +1095,17 @@ void CL_AddPacketEntities (frame_t *frame)
 				{
 					float intensity;
 
-					intensity = 50 + (500 * (sin(cl.time/500.0) + 1.0));
+					intensity = 50 + (500 * (sinf(cl.time/500.0f) + 1.0f));
 					// FIXME - check out this effect in rendition
 					if(vidref_val == VIDREF_GL)
-						V_AddLight (ent.origin, intensity, -1.0, -1.0, -1.0);
+						V_AddLight (ent.origin, intensity, -1.0f, -1.0f, -1.0f);
 					else
-						V_AddLight (ent.origin, -1.0 * intensity, 1.0, 1.0, 1.0);
+						V_AddLight (ent.origin, -1.0f * intensity, 1.0f, 1.0f, 1.0f);
 					}
 				else
 				{
 					CL_Tracker_Shell (cent->lerp_origin);
-					V_AddLight (ent.origin, 155, -1.0, -1.0, -1.0);
+					V_AddLight (ent.origin, 155, -1.0f, -1.0f, -1.0f);
 				}
 			}
 			else if (effects & EF_TRACKER)
@@ -1233,7 +1233,7 @@ void CL_CalcViewValues (void)
 	ops = &oldframe->playerstate;
 
 	// see if the player entity was teleported this frame
-	if ( fabs(ops->pmove.origin[0] - ps->pmove.origin[0]) > 256*8
+	if ( abs(ops->pmove.origin[0] - ps->pmove.origin[0]) > 256*8
 		|| abs(ops->pmove.origin[1] - ps->pmove.origin[1]) > 256*8
 		|| abs(ops->pmove.origin[2] - ps->pmove.origin[2]) > 256*8)
 		ops = ps;		// don't interpolate
@@ -1246,7 +1246,7 @@ void CL_CalcViewValues (void)
 	{	// use predicted values
 		unsigned	delta;
 
-		backlerp = 1.0 - lerp;
+		backlerp = 1.0f - lerp;
 		for (i=0 ; i<3 ; i++)
 		{
 			cl.refdef.vieworg[i] = cl.predicted_origin[i] + ops->viewoffset[i] 
@@ -1257,14 +1257,14 @@ void CL_CalcViewValues (void)
 		// smooth out stair climbing
 		delta = cls.realtime - cl.predicted_step_time;
 		if (delta < 100)
-			cl.refdef.vieworg[2] -= cl.predicted_step * (100 - delta) * 0.01;
+			cl.refdef.vieworg[2] -= cl.predicted_step * (100 - delta) * 0.01f;
 	}
 	else
 	{	// just use interpolated values
 		for (i=0 ; i<3 ; i++)
-			cl.refdef.vieworg[i] = ops->pmove.origin[i]*0.125 + ops->viewoffset[i] 
-				+ lerp * (ps->pmove.origin[i]*0.125 + ps->viewoffset[i] 
-				- (ops->pmove.origin[i]*0.125 + ops->viewoffset[i]) );
+			cl.refdef.vieworg[i] = ops->pmove.origin[i]*0.125f + ops->viewoffset[i] 
+				+ lerp * (ps->pmove.origin[i]*0.125f + ps->viewoffset[i] 
+				- (ops->pmove.origin[i]*0.125f + ops->viewoffset[i]) );
 	}
 
 	// if not running a demo or on a locked frame, add the local angle movement
@@ -1312,7 +1312,7 @@ void CL_AddEntities (void)
 		if (cl_showclamp->value)
 			Com_Printf ("high clamp %i\n", cl.time - cl.frame.servertime);
 		cl.time = cl.frame.servertime;
-		cl.lerpfrac = 1.0;
+		cl.lerpfrac = 1.0f;
 	}
 	else if (cl.time < cl.frame.servertime - 100)
 	{
@@ -1322,10 +1322,10 @@ void CL_AddEntities (void)
 		cl.lerpfrac = 0;
 	}
 	else
-		cl.lerpfrac = 1.0 - (cl.frame.servertime - cl.time) * 0.01;
+		cl.lerpfrac = 1.0f - (cl.frame.servertime - cl.time) * 0.01f;
 
 	if (cl_timedemo->value)
-		cl.lerpfrac = 1.0;
+		cl.lerpfrac = 1.0f;
 
 //	CL_AddPacketEntities (&cl.frame);
 //	CL_AddTEnts ();

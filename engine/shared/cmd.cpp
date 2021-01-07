@@ -452,7 +452,7 @@ void Cmd_Alias_f (void)
 	}
 	strcat (cmd, "\n");
 	
-	a->value = CopyString (cmd);
+	a->value = Z_CopyString(cmd);
 }
 
 /*

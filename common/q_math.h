@@ -192,6 +192,25 @@ typedef vec_t vec5_t[5];
 #define M_PI_F		3.14159265358979323846f
 #endif
 
+namespace mathconst
+{
+	constexpr float	Pi = 3.14159265358979323846f;
+	constexpr float	TwoPi = 2.0f * Pi;
+	constexpr float	HalfPi = 0.5f * Pi;
+	constexpr float	OneFourth_Pi = 0.25f * Pi;
+	constexpr float OneOver_Pi = 1.0f / Pi;
+	constexpr float OneOver_TwoPi = 1.0f / TwoPi;
+	constexpr float E = 2.71828182845904523536f;
+	constexpr float Sqrt_2 = 1.41421356237309504880f;
+	constexpr float Sqrt_3 = 1.73205080756887729352f;
+	constexpr float	Sqrt_1Over2 = 0.70710678118654752440f;
+	constexpr float	Sqrt_1Over3 = 0.57735026918962576450f;
+	constexpr float	DegreesToRadians = Pi / 180.0f;
+	constexpr float	RadiansToDegrees = 180.0f / Pi;
+	constexpr float	SecondsToMilliseconds = 1000.0f;
+	constexpr float	MillisecondsToSeconds = 0.001f;
+}
+
 struct cplane_t;
 
 extern vec3_t vec3_origin;
@@ -305,7 +324,17 @@ inline float LerpAngle(float a2, float a1, float frac)
 
 inline float anglemod(float a)
 {
-	return (360.0f / 65536) * ((int)(a * (65536.0f / 360.0f)) & 65535);
+	return (360.0f / 65536.0f) * ((int)(a * (65536.0f / 360.0f)) & 65535);
+}
+
+inline float DegreesToRadians( float degrees )
+{
+	return degrees * mathconst::DegreesToRadians;
+}
+
+inline float RadiansToDegrees( float radians )
+{
+	return radians * mathconst::RadiansToDegrees;
 }
 
 void AddPointToBounds (vec3_t v, vec3_t mins, vec3_t maxs);

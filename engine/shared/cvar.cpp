@@ -138,10 +138,10 @@ cvar_t *Cvar_Get (const char *var_name, const char *var_value, int flags)
 	}
 
 	var = (cvar_t*)Z_Malloc (sizeof(*var));
-	var->name = CopyString (var_name);
-	var->string = CopyString (var_value);
+	var->name = Z_CopyString(var_name);
+	var->string = Z_CopyString(var_value);
 	var->modified = true;
-	var->value = atof (var->string);
+	var->value = (float)atof (var->string);
 
 	// link the variable in
 	var->next = cvar_vars;
@@ -201,12 +201,12 @@ cvar_t *Cvar_Set2 (const char *var_name, const char *value, qboolean force)
 			if (Com_ServerState())
 			{
 				Com_Printf ("%s will be changed for next game.\n", var_name);
-				var->latched_string = CopyString(value);
+				var->latched_string = Z_CopyString(value);
 			}
 			else
 			{
-				var->string = CopyString(value);
-				var->value = atof (var->string);
+				var->string = Z_CopyString(value);
+				var->value = (float)atof (var->string);
 				if (!strcmp(var->name, "game"))
 				{
 					FS_SetGamedir (var->string);
@@ -235,8 +235,8 @@ cvar_t *Cvar_Set2 (const char *var_name, const char *value, qboolean force)
 	
 	Z_Free (var->string);	// free the old value string
 	
-	var->string = CopyString(value);
-	var->value = atof (var->string);
+	var->string = Z_CopyString(value);
+	var->value = (float)atof (var->string);
 
 	return var;
 }
@@ -283,8 +283,8 @@ cvar_t *Cvar_FullSet (const char *var_name, const char *value, int flags)
 	
 	Z_Free (var->string);	// free the old value string
 	
-	var->string = CopyString(value);
-	var->value = atof (var->string);
+	var->string = Z_CopyString(value);
+	var->value = (float)atof (var->string);
 	var->flags = flags;
 
 	return var;
@@ -325,7 +325,7 @@ void Cvar_GetLatchedVars (void)
 		Z_Free (var->string);
 		var->string = var->latched_string;
 		var->latched_string = NULL;
-		var->value = atof(var->string);
+		var->value = (float)atof(var->string);
 		if (!strcmp(var->name, "game"))
 		{
 			FS_SetGamedir (var->string);

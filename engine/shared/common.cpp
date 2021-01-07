@@ -992,16 +992,6 @@ void COM_AddParm (char *parm)
 }
 
 
-char *CopyString (const char *in)
-{
-	char	*out;
-	
-	out = (char*)Z_Malloc (strlen(in)+1);
-	strcpy (out, in);
-	return out;
-}
-
-
 void Info_Print (char *s)
 {
 	char	key[512];
@@ -1043,119 +1033,6 @@ void Info_Print (char *s)
 			s++;
 		Com_Printf ("%s\n", value);
 	}
-}
-
-
-/*
-==============================================================================
-
-						ZONE MEMORY ALLOCATION
-
-just cleared malloc with counters now...
-
-==============================================================================
-*/
-
-#define	Z_MAGIC		0x1d1d
-
-
-struct zhead_t
-{
-	zhead_t *prev, *next;
-	short	magic;
-	short	tag;			// for group free
-	int		size;
-};
-
-zhead_t		z_chain;
-int		z_count, z_bytes;
-
-/*
-========================
-Z_Free
-========================
-*/
-void Z_Free (void *ptr)
-{
-	zhead_t	*z;
-
-	z = ((zhead_t *)ptr) - 1;
-
-	if (z->magic != Z_MAGIC)
-		Com_Error (ERR_FATAL, "Z_Free: bad magic");
-
-	z->prev->next = z->next;
-	z->next->prev = z->prev;
-
-	z_count--;
-	z_bytes -= z->size;
-	free (z);
-}
-
-
-/*
-========================
-Z_Stats_f
-========================
-*/
-void Z_Stats_f (void)
-{
-	Com_Printf ("%i bytes in %i blocks\n", z_bytes, z_count);
-}
-
-/*
-========================
-Z_FreeTags
-========================
-*/
-void Z_FreeTags (int tag)
-{
-	zhead_t	*z, *next;
-
-	for (z=z_chain.next ; z != &z_chain ; z=next)
-	{
-		next = z->next;
-		if (z->tag == tag)
-			Z_Free ((void *)(z+1));
-	}
-}
-
-/*
-========================
-Z_TagMalloc
-========================
-*/
-void *Z_TagMalloc (int size, int tag)
-{
-	zhead_t	*z;
-	
-	size = size + sizeof(zhead_t);
-	z = (zhead_t*)malloc(size);
-	if (!z)
-		Com_Error (ERR_FATAL, "Z_Malloc: failed on allocation of %i bytes",size);
-	memset (z, 0, size);
-	z_count++;
-	z_bytes += size;
-	z->magic = Z_MAGIC;
-	z->tag = tag;
-	z->size = size;
-
-	z->next = z_chain.next;
-	z->prev = &z_chain;
-	z_chain.next->prev = z;
-	z_chain.next = z;
-
-	return (void *)(z+1);
-}
-
-/*
-========================
-Z_Malloc
-========================
-*/
-void *Z_Malloc (int size)
-{
-	return Z_TagMalloc (size, 0);
 }
 
 //============================================================================
@@ -1310,7 +1187,7 @@ void Qcommon_Init (int argc, char **argv)
 	if (setjmp (abortframe) )
 		Sys_Error ("Error during initialization");
 
-	z_chain.next = z_chain.prev = &z_chain;
+	Z_Init();
 
 	// prepare enough of the subsystems to handle
 	// cvar and command buffer management
@@ -1493,4 +1370,5 @@ Qcommon_Shutdown
 */
 void Qcommon_Shutdown (void)
 {
+	Z_Shutdown();
 }
