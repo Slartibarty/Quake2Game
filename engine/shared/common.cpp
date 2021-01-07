@@ -1370,5 +1370,9 @@ Qcommon_Shutdown
 */
 void Qcommon_Shutdown (void)
 {
+	// This might seem odd, but the vid menu resolutions are calculated once per engine-run, so we clear them here instead
+	extern void DeleteResolutions();
+	DeleteResolutions();
+
 	Z_Shutdown();
 }

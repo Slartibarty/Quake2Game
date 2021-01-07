@@ -322,10 +322,22 @@ FS_ReadFile
 Properly handles partial reads
 =================
 */
-void CDAudio_Stop(void);
-#define	MAX_READ	0x10000		// read in blocks of 64k
 void FS_Read (void *buffer, int len, FILE *f)
 {
+#ifndef PROGRESSBAR_LATER
+	size_t read;
+
+	assert( len > 0 );
+
+	read = fread( buffer, len, 1, f );
+
+	if ( read == 0 ) {
+		Com_Error( ERR_FATAL, "FS_Read: 0 bytes read" );
+	}
+#else
+#define	MAX_READ	0x10000		// read in blocks of 64k
+	extern void CDAudio_Stop( void );
+
 	int		block, remaining;
 	int		read;
 	byte	*buf;
@@ -362,6 +374,7 @@ void FS_Read (void *buffer, int len, FILE *f)
 		remaining -= read;
 		buf += read;
 	}
+#endif
 }
 
 /*

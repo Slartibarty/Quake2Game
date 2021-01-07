@@ -178,6 +178,24 @@ static void InitResolutions()
 	}
 }
 
+// Due to how the vid menu is set up, this must be deleted when the game's closing
+void DeleteResolutions()
+{
+	if ( resolutions ) // We might not have entered the video menu
+	{
+		for ( int i = 0; ; ++i )
+		{
+			if ( resolutions[i] == nullptr )
+			{
+				Z_Free( resolutions[i] );
+				break;
+			}
+			Z_Free( resolutions[i] );
+		}
+		Z_Free( resolutions );
+	}
+}
+
 /*
 ** VID_MenuInit
 */

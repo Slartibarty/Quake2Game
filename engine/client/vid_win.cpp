@@ -127,7 +127,7 @@ static void VID_InitModes()
 
 		if (numModes+1 > lastAlloc)
 		{
-			s_vid_modes = (vidmode_t*)realloc(s_vid_modes, DefaultAlloc * allocMultiplier);
+			s_vid_modes = (vidmode_t*)Z_Realloc(s_vid_modes, DefaultAlloc * allocMultiplier);
 			lastAlloc = DefaultNumModes * allocMultiplier;
 			allocMultiplier += 2;
 		}

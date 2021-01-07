@@ -26,6 +26,7 @@
 // Normal
 void	*Z_Malloc( size_t size );
 void	*Z_Calloc( size_t size );
+void	*Z_Realloc( void *block, size_t size );
 char	*Z_CopyString( const char *in );
 void	Z_Free( void *block );
 

@@ -45,6 +45,10 @@ namespace input
 	{
 		int result = scantokey[scancode];
 
+		//
+		// EXTENDED KEYS DO NOT WORK PROPERLY
+		//
+
 		switch ( result )
 		{
 		case K_HOME:
