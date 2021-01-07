@@ -7,85 +7,101 @@ local conf_dbg = "debug"
 local conf_rel = "release"
 local conf_rtl = "retail"
 
-local plat_win32 = "x86"
-local plat_win64 = "x64"
+local plat_32bit = "x86"
+local plat_64bit = "x64"
 
 local build_dir = "../build"
 
+local filter_dbg = "configurations:" .. conf_dbg
+local filter_rel_or_rtl = "configurations:release or retail" -- TODO: This shouldn't be necessary
+local filter_rtl = "configurations:" .. conf_rtl
+
+local filter_32bit = "platforms:" .. plat_32bit
+local filter_64bit = "platforms:" .. plat_64bit
+
 -- Workspace definition -------------------------------------------------------
 
-workspace( "quake2" )
-	configurations( { conf_dbg, conf_rel, conf_rtl } )
-	platforms( { plat_win32, plat_win64 } )
+workspace "quake2"
+	configurations { conf_dbg, conf_rel, conf_rtl }
+	platforms { plat_32bit, plat_64bit }
 	location( build_dir )
-	preferredtoolarchitecture( "x86_64" )
+	preferredtoolarchitecture "x86_64"
+	startproject "engine"
 
 -- Configuration --------------------------------------------------------------
 
 -- Misc flags for all projects
-flags( { "MultiProcessorCompile", "NoBufferSecurityCheck" } )
-staticruntime( "On" )
-cppdialect( "C++20" )
---compileas( "C++" )
-warnings( "Default" )
-floatingpoint( "Fast" )
-characterset( "ASCII" )
-exceptionhandling( "Off" )
+
+includedirs { "external/stb" }
+
+flags { "MultiProcessorCompile", "NoBufferSecurityCheck" }
+staticruntime "On"
+cppdialect "C++20"
+warnings "Default"
+floatingpoint "Fast"
+characterset "ASCII"
+exceptionhandling "Off"
 
 -- Config for all 32-bit projects
-filter( "platforms:" .. plat_win32 )
-	vectorextensions( "SSE2" )
+filter( filter_32bit )
+	vectorextensions "SSE2"
 	architecture "x86"
+filter {}
 	
 -- Config for all 64-bit projects
-filter( "platforms:" .. plat_win64 )
-	vectorextensions( "AVX2" )
-	architecture( "x86_64" )
+filter( filter_64bit )
+	architecture "x86_64"
+filter {}
 
 -- Config for Windows
-filter( "system:windows" )
-	buildoptions( { "/permissive" } )
-	defines( { "WIN32", "_WINDOWS", "_CRT_SECURE_NO_WARNINGS" } )
+filter "system:windows"
+	buildoptions { "/permissive", "/Zc:__cplusplus" }
+	defines { "WIN32", "_WINDOWS", "_CRT_SECURE_NO_WARNINGS" }
+filter {}
 	
 -- Config for Windows, release, clean this up!
-filter( { "system:windows", "configurations:" .. conf_rel } )
-	buildoptions( { "/Gw" } )
+filter { "system:windows", filter_rel_or_rtl }
+	buildoptions { "/Gw", "/Zc:inline" }
+filter {}
 
--- Config for all projects in debug
-filter( "configurations:" .. conf_dbg )
-	defines( { "_DEBUG" } )
-	symbols( "FastLink" )
+-- Config for all projects in debug, _DEBUG is defined for library-compatibility
+filter( filter_dbg )
+	defines { "_DEBUG" }
+	symbols "FastLink"
+filter {}
 
--- Config for all projects in release AND retail
-filter( "configurations:" .. conf_rel )
-	defines( { "NDEBUG" } )
-	symbols( "Full" )
-	optimize( "Speed" )
+-- Config for all projects in release or retail, NDEBUG is defined for cstd compatibility (assert)
+filter( filter_rel_or_rtl )
+	defines { "NDEBUG" }
+	symbols "Full"
+	optimize "Speed"
+filter {}
 
 -- Config for all projects in retail
-filter( "configurations:" .. conf_rtl )
-	defines( { "NDEBUG" } )
-	flags( { "LinkTimeOptimization" } )
-	symbols( "Off" )
-	optimize( "Speed" )
+filter( filter_rtl )
+	symbols "Off"
+	flags { "LinkTimeOptimization" }
+filter {}
 
 -- Config for shared library projects
-filter( "kind:SharedLib" )
-	flags( { "NoManifest" } ) -- We don't want manifests for DLLs
+filter "kind:SharedLib"
+	flags { "NoManifest" } -- We don't want manifests for DLLs
+filter {}
 
 -- Project definitions --------------------------------------------------------
-	
-project( "engine" )
-	kind( "WindowedApp" )
-	targetname( "q2game" )
-	language( "C++" )
-	targetdir( "../game" )
-	linkoptions( { "/ENTRY:mainCRTStartup" } )
-	includedirs( { "external/stb" } )
-	defines( { "_WINSOCK_DEPRECATED_NO_WARNINGS" } )
-	links( { "ws2_32", "winmm", "dsound", "dxguid" } )
 
-	files( {
+group "game"
+	
+project "engine"
+	kind "WindowedApp"
+	targetname "q2game"
+	language "C++"
+	targetdir "../game"
+	linkoptions { "/ENTRY:mainCRTStartup" }
+	defines { "_WINSOCK_DEPRECATED_NO_WARNINGS" }
+	links { "ws2_32", "winmm", "dsound", "dxguid" }
+
+	files {
 		"common/*",
 		"engine/client/*",
 		"engine/server/*",
@@ -97,26 +113,26 @@ project( "engine" )
 		
 		"game_shared/game_public.h",
 		"game_shared/m_flash.cpp"
-	} )
+	}
 	
-	removefiles( {
+	removefiles {
 		"engine/client/cd_win.*",
 		"engine/res/rw_*",
 		"engine/shared/pmove_hl1.cpp",
 		"**/sv_null.*",
 		"**_pch.cpp"
-	} )
+	}
 	
-project( "ref_gl" )
-	kind( "SharedLib" )
-	targetname( "ref_gl" )
-	language( "C++" )
-	targetdir( "../game" )
-	includedirs( { "external/stb", "external/glew/include" } )
-	defines( { "GLEW_STATIC", "GLEW_NO_GLU" } )
-	links( { "opengl32" } )
+project "ref_gl"
+	kind "SharedLib"
+	targetname "ref_gl"
+	language "C++"
+	targetdir "../game"
+	includedirs { "external/glew/include" }
+	defines { "GLEW_STATIC", "GLEW_NO_GLU" }
+	links { "opengl32" }
 
-	files( {
+	files {
 		"common/*",
 		"engine/shared/imageloaders.*",
 		"engine/shared/misc_win.cpp",
@@ -125,54 +141,54 @@ project( "ref_gl" )
 		"engine/ref_gl/*",
 		"engine/ref_shared/*",
 		
-		"external/glew/src/glew.c",
-	} )
+		"external/glew/src/glew.c"
+	}
 	
-	removefiles( {
+	removefiles {
 		"**.manifest",
 	
 		"**_null.*",
 		"**_pch.cpp"
-	} )
+	}
 	
-project( "game" )
-	kind( "SharedLib" )
-	filter( "platforms:" .. plat_win32 )
+project "game_q2"
+	kind "SharedLib"
+	filter( filter_32bit )
 		targetname "gamex86"
 	filter {}
-	filter( "platforms:" .. plat_win64 )
+	filter( filter_64bit )
 		targetname "gamex64"
 	filter {}
-	language( "C++" )
-	targetdir( "../game/baseq2" )
+	language "C++"
+	targetdir "../game/baseq2"
 
-	files( {
+	files {
 		"common/*",
 		"game_q2/*",
 		"game_shared/*"
-	} )
+	}
 	
-	removefiles( {
+	removefiles {
 		"**.manifest",
 		"game_q2/p_view_hl1.cpp",
 		
 		"**_null.*",
 		"**_pch.cpp"
-	} )
+	}
 	
 -- Utils
 
-group( "Utilities" )
+group "utilities"
 
-project( "qbsp3" )
-	kind( "ConsoleApp" )
-	targetname( "qbsp3" )
-	language( "C" )
-	floatingpoint( "Default" )
-	targetdir( "../game" )
-	includedirs( "utils/common" )
+project "qbsp3"
+	kind "ConsoleApp"
+	targetname "qbsp3"
+	language "C"
+	floatingpoint "Default"
+	targetdir "../game"
+	includedirs "utils/common"
 	
-	files( {
+	files {
 		"common/windows_default.manifest",
 		
 		"utils/common/cmdlib.*",
@@ -185,17 +201,17 @@ project( "qbsp3" )
 		"utils/common/qfiles.h",
 	
 		"utils/qbsp3/*"
-	} )
+	}
 	
-project( "qvis3" )
-	kind( "ConsoleApp" )
-	targetname( "qvis3" )
-	language( "C" )
-	floatingpoint( "Default" )
-	targetdir( "../game" )
-	includedirs( "utils/common" )
+project "qvis3"
+	kind "ConsoleApp"
+	targetname "qvis3"
+	language "C"
+	floatingpoint "Default"
+	targetdir "../game"
+	includedirs "utils/common"
 	
-	files( {
+	files {
 		"common/windows_default.manifest",
 
 		"utils/common/cmdlib.*",
@@ -205,17 +221,17 @@ project( "qvis3" )
 		"utils/common/bspfile.*",
 	
 		"utils/qvis3/*"
-	} )
+	}
 	
-project( "qrad3" )
-	kind( "ConsoleApp" )
-	targetname( "qrad3" )
-	language( "C" )
-	floatingpoint( "Default" )
-	targetdir( "../game" )
-	includedirs( { "utils/common", "external/stb" } )
+project "qrad3"
+	kind "ConsoleApp"
+	targetname "qrad3"
+	language "C"
+	floatingpoint "Default"
+	targetdir "../game"
+	includedirs { "utils/common", "external/stb" }
 	
-	files( {
+	files {
 		"common/windows_default.manifest",
 	
 		"utils/common/cmdlib.*",
@@ -227,17 +243,17 @@ project( "qrad3" )
 		"utils/common/lbmlib.*",
 	
 		"utils/qrad3/*"
-	} )
+	}
 	
-project( "qdata" )
-	kind( "ConsoleApp" )
-	targetname( "qdata" )
-	language( "C" )
-	floatingpoint( "Default" )
-	targetdir( "../game" )
-	includedirs( { "utils/common", "external/stb" } )
+project "qdata"
+	kind "ConsoleApp"
+	targetname "qdata"
+	language "C"
+	floatingpoint "Default"
+	targetdir "../game"
+	includedirs { "utils/common", "external/stb" }
 	
-	files( {
+	files {
 		"common/windows_default.manifest",
 	
 		"utils/common/cmdlib.*",
@@ -251,19 +267,19 @@ project( "qdata" )
 		"utils/common/md4.*",
 	
 		"utils/qdata/*"
-	} )
+	}
 
-project( "qe4" )
-	kind( "WindowedApp" )
-	targetname( "qe4" )
-	language( "C" )
-	floatingpoint( "Default" )
-	targetdir( "../game" )
-	defines( { "WIN_ERROR", "QE4" } )
-	includedirs( { "utils/common", "external/stb" } )
-	links( { "opengl32", "glu32" } )
+project "qe4"
+	kind "WindowedApp"
+	targetname "qe4"
+	language "C"
+	floatingpoint "Default"
+	targetdir "../game"
+	defines { "WIN_ERROR", "QE4" }
+	includedirs { "utils/common", "external/stb" }
+	links { "opengl32", "glu32" }
 	
-	files( {
+	files {
 		"common/*.manifest",
 		
 		"utils/common/cmdlib.*",
@@ -273,4 +289,4 @@ project( "qe4" )
 		"utils/common/qfiles.*",
 		
 		"utils/qe4/*"
-	} )
+	}
