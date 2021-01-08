@@ -275,8 +275,8 @@ static int vec_to_st[6][3]
 };
 
 static float skymins[2][6], skymaxs[2][6];
-static constexpr float sky_min = 1.0f / 512.0f;
-static constexpr float sky_max = 511.0f / 512.0f;
+//static constexpr float sky_min = 1.0f / 512.0f;
+//static constexpr float sky_max = 511.0f / 512.0f;
 
 static void DrawSkyPolygon(int nump, vec3_t vecs)
 {
