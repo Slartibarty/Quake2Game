@@ -226,13 +226,13 @@ void S_PaintChannels(int endtime)
 			ps = s_pendingplays.next;
 			if (ps == &s_pendingplays)
 				break;	// no more pending sounds
-			if (ps->begin <= paintedtime)
+			if (ps->begin <= (unsigned)paintedtime)
 			{
 				S_IssuePlaysound (ps);
 				continue;
 			}
 
-			if (ps->begin < end)
+			if (ps->begin < (unsigned)end)
 				end = ps->begin;		// stop here
 			break;
 		}

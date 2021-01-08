@@ -717,7 +717,7 @@ static void SV_RunGameFrame (void)
 		ge->RunFrame ();
 
 		// never get more than one tic behind
-		if (sv.time < svs.realtime)
+		if (sv.time < (unsigned)svs.realtime)
 		{
 			if (sv_showclamp->value)
 				Com_Printf ("sv highclamp\n");
@@ -756,7 +756,7 @@ void SV_Frame (int msec)
 	SV_ReadPackets ();
 
 	// move autonomous things around if enough time has passed
-	if (!sv_timedemo->value && svs.realtime < sv.time)
+	if (!sv_timedemo->value && (unsigned)svs.realtime < sv.time)
 	{
 		// never let the time get too far off
 		if (sv.time - svs.realtime > 100)

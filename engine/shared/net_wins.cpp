@@ -103,6 +103,9 @@ qboolean	NET_CompareAdr (netadr_t a, netadr_t b)
 			return true;
 		return false;
 	}
+
+	// Slart: I assume false is what should be returned here
+	return false;
 }
 
 /*
@@ -133,6 +136,9 @@ qboolean	NET_CompareBaseAdr (netadr_t a, netadr_t b)
 			return true;
 		return false;
 	}
+
+	// Slart: I assume false is what should be returned here
+	return false;
 }
 
 char	*NET_AdrToString (netadr_t a)

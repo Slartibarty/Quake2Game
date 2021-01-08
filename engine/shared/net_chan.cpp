@@ -317,7 +317,7 @@ qboolean Netchan_Process (netchan_t *chan, sizebuf_t *msg)
 //
 // discard stale or duplicated packets
 //
-	if (sequence <= chan->incoming_sequence)
+	if (sequence <= (unsigned)chan->incoming_sequence)
 	{
 		if (showdrop->value)
 			Com_Printf ("%s:Out of order packet %i at %i\n"

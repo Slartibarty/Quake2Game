@@ -244,7 +244,6 @@ S_AliasName
 sfx_t *S_AliasName ( const char *aliasname, const char *truename )
 {
 	sfx_t	*sfx;
-	char	*s;
 	int		i;
 
 	// find a free sfx
@@ -1096,8 +1095,8 @@ void GetSoundtime(void)
 
 void S_Update_(void)
 {
-	unsigned        endtime;
-	int				samps;
+	int endtime;
+	int samps;
 
 	if (!sound_started)
 		return;

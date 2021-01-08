@@ -3450,6 +3450,9 @@ static qboolean PlayerConfig_ScanDirectories( void )
 	}
 	if ( dirnames )
 		FreeFileList( dirnames, ndirs );
+
+	// Slart: I assume false is what should be returned here
+	return false;
 }
 
 static int pmicmpfnc( const void *_a, const void *_b )
