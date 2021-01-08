@@ -212,14 +212,14 @@ void army_fire( edict_t *self )
 
 	// fire somewhat behind the player, so a dodging player is harder to hit
 
-	VectorSubtract( self->enemy->s.origin, self->enemy->velocity, dir );
-	VectorMultiply( dir, 0.2f, dir );
+	VectorMultiply( self->enemy->velocity, 0.2f, dir );
+	VectorSubtract( self->enemy->s.origin, dir, dir );
 	VectorSubtract( dir, self->s.origin, dir );
 	VectorNormalize( dir );
 
 	gi.sound( self, CHAN_WEAPON, sound_attack, 1, ATTN_NORM, 0 );
 
-	fire_shotgun( self, self->s.origin, dir, 4, 0, 200, 200, 4, MOD_UNKNOWN );
+	fire_shotgun( self, self->s.origin, dir, 4, 0, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, 4, MOD_UNKNOWN );
 }
 
 void army_pain( edict_t *self, edict_t *other, float kick, int damage )
