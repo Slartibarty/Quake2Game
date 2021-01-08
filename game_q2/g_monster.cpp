@@ -136,12 +136,12 @@ void M_CheckGround (edict_t *ent)
 // if the hull point one-quarter unit down is solid the entity is on ground
 	point[0] = ent->s.origin[0];
 	point[1] = ent->s.origin[1];
-	point[2] = ent->s.origin[2] - 0.25;
+	point[2] = ent->s.origin[2] - 0.25f;
 
 	trace = gi.trace (ent->s.origin, ent->mins, ent->maxs, point, ent, MASK_MONSTERSOLID);
 
 	// check steepness
-	if ( trace.plane.normal[2] < 0.7 && !trace.startsolid)
+	if ( trace.plane.normal[2] < 0.7f && !trace.startsolid)
 	{
 		ent->groundentity = NULL;
 		return;
@@ -254,7 +254,7 @@ void M_WorldEffects (edict_t *ent)
 	{
 		if (ent->damage_debounce_time < level.time)
 		{
-			ent->damage_debounce_time = level.time + 0.2;
+			ent->damage_debounce_time = level.time + 0.2f;
 			T_Damage (ent, world, world, vec3_origin, ent->s.origin, vec3_origin, 10*ent->waterlevel, 0, 0, MOD_LAVA);
 		}
 	}

@@ -331,10 +331,10 @@ ED_NewString
 */
 char *ED_NewString (char *string)
 {
-	char	*newb, *new_p;
-	int		i,l;
+	char		*newb, *new_p;
+	strlen_t	i,l;
 	
-	l = strlen(string) + 1;
+	l = Q_strlen(string) + 1;
 
 	newb = (char*)gi.TagMalloc (l, TAG_LEVEL);
 
@@ -399,10 +399,10 @@ void ED_ParseField (char *key, char *value, edict_t *ent)
 				*(int *)(b+f->ofs) = atoi(value);
 				break;
 			case F_FLOAT:
-				*(float *)(b+f->ofs) = atof(value);
+				*(float *)(b+f->ofs) = (float)atof(value);
 				break;
 			case F_ANGLEHACK:
-				v = atof(value);
+				v = (float)atof(value);
 				((float *)(b+f->ofs))[0] = 0;
 				((float *)(b+f->ofs))[1] = v;
 				((float *)(b+f->ofs))[2] = 0;

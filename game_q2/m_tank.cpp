@@ -653,26 +653,26 @@ void tank_attack(edict_t *self)
 
 	if (range <= 125)
 	{
-		if (r < 0.4)
+		if (r < 0.4f)
 			self->monsterinfo.currentmove = &tank_move_attack_chain;
 		else 
 			self->monsterinfo.currentmove = &tank_move_attack_blast;
 	}
 	else if (range <= 250)
 	{
-		if (r < 0.5)
+		if (r < 0.5f)
 			self->monsterinfo.currentmove = &tank_move_attack_chain;
 		else
 			self->monsterinfo.currentmove = &tank_move_attack_blast;
 	}
 	else
 	{
-		if (r < 0.33)
+		if (r < 0.33f)
 			self->monsterinfo.currentmove = &tank_move_attack_chain;
-		else if (r < 0.66)
+		else if (r < 0.66f)
 		{
 			self->monsterinfo.currentmove = &tank_move_attack_pre_rocket;
-			self->pain_debounce_time = level.time + 5.0;	// no pain for a while
+			self->pain_debounce_time = level.time + 5.0f;	// no pain for a while
 		}
 		else
 			self->monsterinfo.currentmove = &tank_move_attack_blast;

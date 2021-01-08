@@ -91,7 +91,7 @@ void UpdateChaseCam(edict_t *ent)
 
 void ChaseNext(edict_t *ent)
 {
-	int i;
+	ptrdiff_t i;
 	edict_t *e;
 
 	if (!ent->client->chase_target)
@@ -115,7 +115,7 @@ void ChaseNext(edict_t *ent)
 
 void ChasePrev(edict_t *ent)
 {
-	int i;
+	ptrdiff_t i;
 	edict_t *e;
 
 	if (!ent->client->chase_target)

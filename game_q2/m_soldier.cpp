@@ -811,7 +811,7 @@ void soldier_dodge (edict_t *self, edict_t *attacker, float eta)
 	float	r;
 
 	r = random();
-	if (r > 0.25)
+	if (r > 0.25f)
 		return;
 
 	if (!self->enemy)
@@ -823,12 +823,12 @@ void soldier_dodge (edict_t *self, edict_t *attacker, float eta)
 		return;
 	}
 
-	self->monsterinfo.pausetime = level.time + eta + 0.3;
+	self->monsterinfo.pausetime = level.time + eta + 0.3f;
 	r = random();
 
 	if (skill->value == 1)
 	{
-		if (r > 0.33)
+		if (r > 0.33f)
 			self->monsterinfo.currentmove = &soldier_move_duck;
 		else
 			self->monsterinfo.currentmove = &soldier_move_attack3;
@@ -837,7 +837,7 @@ void soldier_dodge (edict_t *self, edict_t *attacker, float eta)
 
 	if (skill->value >= 2)
 	{
-		if (r > 0.66)
+		if (r > 0.66f)
 			self->monsterinfo.currentmove = &soldier_move_duck;
 		else
 			self->monsterinfo.currentmove = &soldier_move_attack3;

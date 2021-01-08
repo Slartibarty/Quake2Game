@@ -394,12 +394,12 @@ qboolean SV_Push (edict_t *pusher, vec3_t move, vec3_t amove)
 	for (i=0 ; i<3 ; i++)
 	{
 		float	temp;
-		temp = move[i]*8.0;
-		if (temp > 0.0)
-			temp += 0.5;
+		temp = move[i]*8.0f;
+		if (temp > 0.0f)
+			temp += 0.5f;
 		else
-			temp -= 0.5;
-		move[i] = 0.125 * (int)temp;
+			temp -= 0.5f;
+		move[i] = 0.125f * (int)temp;
 	}
 
 	// find the bounding box

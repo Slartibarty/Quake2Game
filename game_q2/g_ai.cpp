@@ -30,8 +30,8 @@ In coop games, sight_client will cycle between the clients.
 */
 void AI_SetSightClient (void)
 {
-	edict_t	*ent;
-	int		start, check;
+	edict_t *ent;
+	ptrdiff_t start, check;
 
 	if (level.sight_client == NULL)
 		start = 1;
@@ -335,7 +335,8 @@ void FoundTarget (edict_t *self)
 		level.sight_entity->light_level = 128;
 	}
 
-	self->show_hostile = level.time + 1;		// wake up other monsters
+	// Slart: This cast is really weird, won't it always be true?
+	self->show_hostile = (qboolean)(level.time + 1);	// wake up other monsters
 
 	VectorCopy(self->enemy->s.origin, self->monsterinfo.last_sighting);
 	self->monsterinfo.trail_time = level.time;
@@ -775,7 +776,7 @@ qboolean ai_checkattack (edict_t *self, float dist)
 			}
 			else
 			{
-				self->show_hostile = level.time + 1;
+				self->show_hostile = (qboolean)(level.time + 1); // Slart: This happens elsewhere too, weird logic
 				return false;
 			}
 		}
@@ -841,7 +842,8 @@ qboolean ai_checkattack (edict_t *self, float dist)
 		}
 	}
 
-	self->show_hostile = level.time + 1;		// wake up other monsters
+	// Slart: This weird logic occurs elsewhere
+	self->show_hostile = (qboolean)(level.time + 1);		// wake up other monsters
 
 // check knowledge of enemy
 	enemy_vis = visible(self, self->enemy);
@@ -1055,7 +1057,7 @@ void ai_run (edict_t *self, float dist)
 			{
 				if (left < 1)
 				{
-					VectorSet(v, d2 * left * 0.5, -16, 0);
+					VectorSet(v, d2 * left * 0.5f, -16, 0);
 					G_ProjectSource (self->s.origin, v, v_forward, v_right, left_target);
 //					gi.dprintf("incomplete path, go part way and adjust again\n");
 				}
@@ -1072,7 +1074,7 @@ void ai_run (edict_t *self, float dist)
 			{
 				if (right < 1)
 				{
-					VectorSet(v, d2 * right * 0.5, 16, 0);
+					VectorSet(v, d2 * right * 0.5f, 16, 0);
 					G_ProjectSource (self->s.origin, v, v_forward, v_right, right_target);
 //					gi.dprintf("incomplete path, go part way and adjust again\n");
 				}

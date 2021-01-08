@@ -887,7 +887,7 @@ void MakronToss (edict_t *self)
 	edict_t	*ent;
 
 	ent = G_Spawn ();
-	ent->nextthink = level.time + 0.8;
+	ent->nextthink = level.time + 0.8f;
 	ent->think = MakronSpawn;
 	ent->target = self->target;
 	VectorCopy (self->s.origin, ent->s.origin);

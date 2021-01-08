@@ -332,13 +332,13 @@ mmove_t brain_move_duck = {FRAME_duck01, FRAME_duck08, brain_frames_duck, brain_
 
 void brain_dodge (edict_t *self, edict_t *attacker, float eta)
 {
-	if (random() > 0.25)
+	if (random() > 0.25f)
 		return;
 
 	if (!self->enemy)
 		self->enemy = attacker;
 
-	self->monsterinfo.pausetime = level.time + eta + 0.5;
+	self->monsterinfo.pausetime = level.time + eta + 0.5f;
 	self->monsterinfo.currentmove = &brain_move_duck;
 }
 

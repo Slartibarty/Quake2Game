@@ -392,9 +392,9 @@ static void Grenade_Explode (edict_t *ent)
 		vec3_t	dir;
 
 		VectorAdd (ent->enemy->mins, ent->enemy->maxs, v);
-		VectorMA (ent->enemy->s.origin, 0.5, v, v);
+		VectorMA (ent->enemy->s.origin, 0.5f, v, v);
 		VectorSubtract (ent->s.origin, v, v);
-		points = ent->dmg - 0.5 * VectorLength (v);
+		points = ent->dmg - 0.5f * VectorLength (v);
 		VectorSubtract (ent->enemy->s.origin, ent->s.origin, dir);
 		if (ent->spawnflags & 1)
 			mod = MOD_HANDGRENADE;
@@ -411,7 +411,7 @@ static void Grenade_Explode (edict_t *ent)
 		mod = MOD_G_SPLASH;
 	T_RadiusDamage(ent, ent->owner, ent->dmg, ent->enemy, ent->dmg_radius, mod);
 
-	VectorMA (ent->s.origin, -0.02, ent->velocity, origin);
+	VectorMA (ent->s.origin, -0.02f, ent->velocity, origin);
 	gi.WriteByte (svc_temp_entity);
 	if (ent->waterlevel)
 	{
@@ -476,8 +476,8 @@ void fire_grenade (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int s
 	grenade = G_Spawn();
 	VectorCopy (start, grenade->s.origin);
 	VectorScale (aimdir, speed, grenade->velocity);
-	VectorMA (grenade->velocity, 200 + crandom() * 10.0, up, grenade->velocity);
-	VectorMA (grenade->velocity, crandom() * 10.0, right, grenade->velocity);
+	VectorMA (grenade->velocity, 200 + crandom() * 10.0f, up, grenade->velocity);
+	VectorMA (grenade->velocity, crandom() * 10.0f, right, grenade->velocity);
 	VectorSet (grenade->avelocity, 300, 300, 300);
 	grenade->movetype = MOVETYPE_BOUNCE;
 	grenade->clipmask = MASK_SHOT;
@@ -509,8 +509,8 @@ void fire_grenade2 (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int 
 	grenade = G_Spawn();
 	VectorCopy (start, grenade->s.origin);
 	VectorScale (aimdir, speed, grenade->velocity);
-	VectorMA (grenade->velocity, 200 + crandom() * 10.0, up, grenade->velocity);
-	VectorMA (grenade->velocity, crandom() * 10.0, right, grenade->velocity);
+	VectorMA (grenade->velocity, 200 + crandom() * 10.0f, up, grenade->velocity);
+	VectorMA (grenade->velocity, crandom() * 10.0f, right, grenade->velocity);
 	VectorSet (grenade->avelocity, 300, 300, 300);
 	grenade->movetype = MOVETYPE_BOUNCE;
 	grenade->clipmask = MASK_SHOT;
@@ -724,12 +724,12 @@ void bfg_explode (edict_t *self)
 				continue;
 
 			VectorAdd (ent->mins, ent->maxs, v);
-			VectorMA (ent->s.origin, 0.5, v, v);
+			VectorMA (ent->s.origin, 0.5f, v, v);
 			VectorSubtract (self->s.origin, v, v);
 			dist = VectorLength(v);
-			points = self->radius_dmg * (1.0 - sqrt(dist/self->dmg_radius));
+			points = self->radius_dmg * (1.0f - sqrt(dist/self->dmg_radius));
 			if (ent == self->owner)
-				points = points * 0.5;
+				points = points * 0.5f;
 
 			gi.WriteByte (svc_temp_entity);
 			gi.WriteByte (TE_BFG_EXPLOSION);

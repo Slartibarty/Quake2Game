@@ -113,7 +113,7 @@ void P_DamageFeedback (edict_t *player)
 	if ((level.time > player->pain_debounce_time) && !(player->flags & FL_GODMODE) && (client->invincible_framenum <= level.framenum))
 	{
 		r = 1 + (rand()&1);
-		player->pain_debounce_time = level.time + 0.7;
+		player->pain_debounce_time = level.time + 0.7f;
 		if (player->health < 25)
 			l = 25;
 		else if (player->health < 50)
@@ -128,11 +128,11 @@ void P_DamageFeedback (edict_t *player)
 	// the total alpha of the blend is always proportional to count
 	if (client->damage_alpha < 0)
 		client->damage_alpha = 0;
-	client->damage_alpha += count*0.01;
-	if (client->damage_alpha < 0.2)
-		client->damage_alpha = 0.2;
-	if (client->damage_alpha > 0.6)
-		client->damage_alpha = 0.6;		// don't go too saturated
+	client->damage_alpha += count*0.01f;
+	if (client->damage_alpha < 0.2f)
+		client->damage_alpha = 0.2f;
+	if (client->damage_alpha > 0.6f)
+		client->damage_alpha = 0.6f;		// don't go too saturated
 
 	// the color of the blend will vary based on how much was absorbed
 	// by different armors
@@ -154,8 +154,8 @@ void P_DamageFeedback (edict_t *player)
 	{
 		kick = kick * 100 / player->health;
 
-		if (kick < count*0.5)
-			kick = count*0.5;
+		if (kick < count*0.5f)
+			kick = count*0.5f;
 		if (kick > 50)
 			kick = 50;
 
@@ -163,10 +163,10 @@ void P_DamageFeedback (edict_t *player)
 		VectorNormalize (v);
 		
 		side = DotProduct (v, right);
-		client->v_dmg_roll = kick*side*0.3;
+		client->v_dmg_roll = kick*side*0.3f;
 		
 		side = -DotProduct (v, forward);
-		client->v_dmg_pitch = kick*side*0.3;
+		client->v_dmg_pitch = kick*side*0.3f;
 
 		client->v_dmg_time = level.time + DAMAGE_TIME;
 	}
@@ -498,7 +498,7 @@ void P_FallingDamage (edict_t *ent)
 			return;
 		delta = ent->velocity[2] - ent->client->oldvelocity[2];
 	}
-	delta = delta*delta * 0.0001;
+	delta = delta*delta * 0.0001f;
 
 	// never take falling damage if completely underwater
 	if (ent->waterlevel == 3)
@@ -517,7 +517,7 @@ void P_FallingDamage (edict_t *ent)
 		return;
 	}
 
-	ent->client->fall_value = delta*0.5;
+	ent->client->fall_value = delta*0.5f;
 	if (ent->client->fall_value > 40)
 		ent->client->fall_value = 40;
 	ent->client->fall_time = level.time + FALL_TIME;
