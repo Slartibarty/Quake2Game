@@ -1296,7 +1296,7 @@ void ClientBegin (edict_t *ent)
 
 	// if there is already a body waiting for us (a loadgame), just
 	// take it, otherwise spawn one from scratch
-	if (ent->inuse == true)
+	if (ent->inuse == 1) // true
 	{
 		// the client has cleared the client side viewangles upon
 		// connecting to the server, which is different than the
