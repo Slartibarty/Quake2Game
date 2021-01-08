@@ -167,6 +167,14 @@ project "game_q2"
 	filter {}
 	language "C++"
 	targetdir "../game/baseq2"
+	
+	disablewarnings { "4244", "4311", "4302" }
+	
+	pchsource( "game_q2/g_pch.cpp" )
+	pchheader( "g_local.h" )
+	filter( "files:not game_q2/**" )
+		flags( { "NoPCH" } )
+	filter( {} )
 
 	files {
 		"common/*",
@@ -179,7 +187,7 @@ project "game_q2"
 		"game_q2/p_view_hl1.cpp",
 		
 		"**_null.*",
-		"**_pch.cpp"
+		--"**_pch.cpp"
 	}
 	
 -- Utils
