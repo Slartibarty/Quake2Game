@@ -40,9 +40,9 @@ void _VectorAdd (vec3_t va, vec3_t vb, vec3_t out);
 void _VectorCopy (vec3_t in, vec3_t out);
 void _VectorScale (vec3_t v, vec_t scale, vec3_t out);
 
-double VectorLength(vec3_t v);
+vec_t VectorLength(vec3_t v);
 
-void VectorMA (vec3_t va, double scale, vec3_t vb, vec3_t vc);
+void VectorMA (vec3_t va, vec_t scale, vec3_t vb, vec3_t vc);
 
 void CrossProduct (vec3_t v1, vec3_t v2, vec3_t cross);
 #ifndef QE4

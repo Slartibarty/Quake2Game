@@ -33,8 +33,6 @@ qboolean	extrasamples;
 
 float	subdiv = 64;
 
-int TestLine (vec3_t start, vec3_t stop);
-
 float	ambient = 0;
 float	maxlight = 196;
 

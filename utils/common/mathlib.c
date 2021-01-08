@@ -2,21 +2,14 @@
 
 #include "cmdlib.h"
 #include "mathlib.h"
+#include <float.h> // FLT_EPSILON
 
 vec3_t vec3_origin = {0,0,0};
 
 
-double VectorLength(vec3_t v)
+vec_t VectorLength(vec3_t v)
 {
-	int		i;
-	double	length;
-	
-	length = 0;
-	for (i=0 ; i< 3 ; i++)
-		length += v[i]*v[i];
-	length = sqrt (length);		// FIXME
-
-	return length;
+	return sqrtf(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
 }
 
 qboolean VectorCompare (vec3_t v1, vec3_t v2)
@@ -35,7 +28,7 @@ vec_t Q_rint (vec_t in)
 	return floor (in + 0.5);
 }
 
-void VectorMA (vec3_t va, double scale, vec3_t vb, vec3_t vc)
+void VectorMA (vec3_t va, vec_t scale, vec3_t vb, vec3_t vc)
 {
 	vc[0] = va[0] + scale*vb[0];
 	vc[1] = va[1] + scale*vb[1];
@@ -104,18 +97,14 @@ vec_t VectorNormalize (vec3_t in, vec3_t out)
 #else
 vec_t VectorNormalize (vec3_t v)
 {
-	int		i;
-	float	length;
-	
-	length = 0.0f;
-	for (i=0 ; i< 3 ; i++)
-		length += v[i]*v[i];
-	length = (float)sqrt (length);
-	if (length == 0)
-		return (vec_t)0;
-		
-	for (i=0 ; i< 3 ; i++)
-		v[i] /= length;	
+	float length = sqrtf( v[0] * v[0] + v[1] * v[1] + v[2] * v[2] );
+
+	// FLT_EPSILON is added to the radius to eliminate the possibility of divide by zero
+	float ilength = 1.0f / ( length + FLT_EPSILON );
+
+	v[0] *= ilength;
+	v[1] *= ilength;
+	v[2] *= ilength;
 
 	return length;
 }

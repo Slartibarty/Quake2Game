@@ -125,10 +125,10 @@ void CL_RegisterTEntSounds (void)
 	S_RegisterSound ("player/fall2.wav");
 	S_RegisterSound ("player/fall1.wav");
 
-	cl_sfx_footsteps[0] = S_RegisterSound ("player/pl_step1.wav");
-	cl_sfx_footsteps[1] = S_RegisterSound ("player/pl_step2.wav");
-	cl_sfx_footsteps[2] = S_RegisterSound ("player/pl_step3.wav");
-	cl_sfx_footsteps[3] = S_RegisterSound ("player/pl_step4.wav");
+	cl_sfx_footsteps[0] = S_RegisterSound ("player/step1.wav");
+	cl_sfx_footsteps[1] = S_RegisterSound ("player/step2.wav");
+	cl_sfx_footsteps[2] = S_RegisterSound ("player/step3.wav");
+	cl_sfx_footsteps[3] = S_RegisterSound ("player/step4.wav");
 
 //PGM
 	cl_sfx_lightning = S_RegisterSound ("weapons/tesla.wav");

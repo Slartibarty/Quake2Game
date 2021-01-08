@@ -251,6 +251,28 @@ project "qrad3"
 		"utils/qrad3/*"
 	}
 	
+project "light"
+	kind "ConsoleApp"
+	targetname "light"
+	language "C"
+	floatingpoint "Default"
+	targetdir "../game"
+	defines { "QE4" } -- We want the alternate VectorNormalize
+	includedirs { "utils/common" }
+	
+	files {
+		"common/windows_default.manifest",
+	
+		"utils/common/cmdlib.*",
+		"utils/common/mathlib.*",
+		"utils/common/scriplib.*",
+		"utils/common/threads.*",
+		"utils/common/bspfile.*",
+	
+		"utils/qrad3/trace.c",
+		"utils/light/*"
+	}
+	
 project "qdata"
 	kind "ConsoleApp"
 	targetname "qdata"
