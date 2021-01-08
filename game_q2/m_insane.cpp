@@ -507,11 +507,13 @@ void insane_checkdown (edict_t *self)
 //	if ( (self->s.frame == FRAME_stand94) || (self->s.frame == FRAME_stand65) )
 	if (self->spawnflags & 32)				// Always stand
 		return;
-	if (random() < 0.3)
-		if (random() < 0.5)
+	if (random() < 0.3f)
+	{
+		if (random() < 0.5f)
 			self->monsterinfo.currentmove = &insane_move_uptodown;
 		else
-			self->monsterinfo.currentmove = &insane_move_jumpdown; 
+			self->monsterinfo.currentmove = &insane_move_jumpdown;
+	}
 }
 
 void insane_checkup (edict_t *self)

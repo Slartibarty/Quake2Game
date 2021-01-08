@@ -752,8 +752,8 @@ used by ai_run and ai_stand
 */
 qboolean ai_checkattack (edict_t *self, float dist)
 {
-	vec3_t		temp;
-	qboolean	hesDeadJim;
+	vec3_t	temp;
+	bool	hesDeadJim;
 
 // this causes monsters to run blindly to the combat point w/o firing
 	if (self->goalentity)
@@ -763,13 +763,15 @@ qboolean ai_checkattack (edict_t *self, float dist)
 
 		if (self->monsterinfo.aiflags & AI_SOUND_TARGET)
 		{
-			if ((level.time - self->enemy->teleport_time) > 5.0)
+			if ((level.time - self->enemy->teleport_time) > 5.0f)
 			{
 				if (self->goalentity == self->enemy)
+				{
 					if (self->movetarget)
 						self->goalentity = self->movetarget;
 					else
 						self->goalentity = NULL;
+				}
 				self->monsterinfo.aiflags &= ~AI_SOUND_TARGET;
 				if (self->monsterinfo.aiflags & AI_TEMP_STAND_GROUND)
 					self->monsterinfo.aiflags &= ~(AI_STAND_GROUND | AI_TEMP_STAND_GROUND);

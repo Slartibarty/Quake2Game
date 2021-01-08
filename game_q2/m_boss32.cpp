@@ -544,7 +544,7 @@ void makron_pain (edict_t *self, edict_t *other, float kick, int damage)
 
 	// Lessen the chance of him going into his pain frames
 	if (damage <=25)
-		if (random()<0.2)
+		if (random()<0.2f)
 			return;
 
 	self->pain_debounce_time = level.time + 3;
@@ -565,17 +565,21 @@ void makron_pain (edict_t *self, edict_t *other, float kick, int damage)
 	else
 	{
 		if (damage <= 150)
-			if (random() <= 0.45)
+		{
+			if (random() <= 0.45f)
 			{
 				gi.sound (self, CHAN_VOICE, sound_pain6, 1, ATTN_NONE,0);
 				self->monsterinfo.currentmove = &makron_move_pain6;
 			}
+		}
 		else
-			if (random() <= 0.35)
+		{
+			if (random() <= 0.35f)
 			{
 				gi.sound (self, CHAN_VOICE, sound_pain6, 1, ATTN_NONE,0);
 				self->monsterinfo.currentmove = &makron_move_pain6;
 			}
+		}
 	}
 };
 
