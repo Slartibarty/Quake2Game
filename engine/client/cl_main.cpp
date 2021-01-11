@@ -1757,11 +1757,11 @@ to run quit through here before the final handoff to the sys code.
 */
 void CL_Shutdown(void)
 {
-	static qboolean isdown = false;
+	static bool isdown = false;
 	
 	if (isdown)
 	{
-		printf ("recursive shutdown\n");
+	//	printf ("recursive shutdown\n");
 		return;
 	}
 	isdown = true;

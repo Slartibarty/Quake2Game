@@ -140,7 +140,7 @@ static void GLimp_DestroyDummyWindow( DummyVars &dvars )
 
 static constexpr auto	WINDOW_TITLE = L"Quake 2 - OpenGL";
 static constexpr auto	WINDOW_CLASS_NAME = L"Q2GAME";
-static constexpr DWORD	WINDOW_STYLE = (WS_OVERLAPPED | WS_CAPTION);
+static constexpr DWORD	WINDOW_STYLE = ( WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX );
 
 //-------------------------------------------------------------------------------------------------
 // Resizes a window without destroying it

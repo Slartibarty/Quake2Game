@@ -213,17 +213,18 @@ Sys_SendKeyEvents
 Send Key_Event calls
 ================
 */
-void Sys_SendKeyEvents (void)
+void Sys_SendKeyEvents( void )
 {
-    MSG        msg;
+	MSG msg;
 
-	while (PeekMessageW (&msg, NULL, 0, 0, PM_NOREMOVE))
+	while ( PeekMessageW( &msg, NULL, 0, 0, PM_NOREMOVE ) )
 	{
-		if (!GetMessageW (&msg, NULL, 0, 0))
-			Sys_Quit ();
+		if ( !GetMessageW( &msg, NULL, 0, 0 ) ) {
+			Com_Quit();
+		}
 		sys_msg_time = msg.time;
-      	TranslateMessage (&msg);
-      	DispatchMessageW (&msg);
+		TranslateMessage( &msg );
+		DispatchMessageW( &msg );
 	}
 
 	// grab frame time
