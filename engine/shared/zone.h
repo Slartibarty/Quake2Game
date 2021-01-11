@@ -38,6 +38,3 @@ void	Z_TagFreeGroup( uint16 tag );
 // Status
 void	Z_Init();
 void	Z_Shutdown();	// Warns of unfreed allocations
-
-// Concommand
-void	Z_Stats_f();

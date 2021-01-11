@@ -12,8 +12,6 @@
 #include <cassert>
 #include <ctime>
 
-#include <string>
-
 #include "q_defs.h"
 #include "q_types.h"
 #include "q_math.h"

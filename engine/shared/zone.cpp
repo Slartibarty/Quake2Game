@@ -158,7 +158,7 @@ void Z_TagFreeGroup( uint16 tag )
 //=================================================================================================
 
 // Concommand to return misc info
-void Z_Stats_f()
+static void Z_Stats_f()
 {
 #ifdef Q_MEM_DEBUG
 	Com_Printf(
@@ -181,6 +181,8 @@ void Z_Stats_f()
 void Z_Init()
 {
 	z_tagchain.next = z_tagchain.prev = &z_tagchain;
+
+	Cmd_AddCommand( "z_stats", Z_Stats_f );
 }
 
 //-------------------------------------------------------------------------------------------------

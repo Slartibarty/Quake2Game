@@ -420,10 +420,6 @@ void CL_RegisterSounds (void);
 
 void CL_Quit_f (void);
 
-void IN_Accumulate (void);
-
-void CL_ParseLayout (void);
-
 
 //
 // cl_main
@@ -435,7 +431,6 @@ void CL_Init (void);
 void CL_FixUpGender(void);
 void CL_Disconnect (void);
 void CL_Disconnect_f (void);
-void CL_GetChallengePacket (void);
 void CL_PingServers_f (void);
 void CL_Snd_Restart_f (void);
 void CL_RequestNextDownload (void);
@@ -456,14 +451,11 @@ extern 	kbutton_t 	in_speed;
 
 void CL_InitInput (void);
 void CL_SendCmd (void);
-void CL_SendMove (usercmd_t *cmd);
 
 void CL_ClearState (void);
 
 void CL_ReadPackets (void);
 
-int  CL_ReadFromServer (void);
-void CL_WriteToServer (usercmd_t *cmd);
 void CL_BaseMove (usercmd_t *cmd);
 
 void IN_CenterView (void);
@@ -513,8 +505,6 @@ void CL_SmokeAndFlash(vec3_t origin);
 //
 // cl_pred.c
 //
-void CL_InitPrediction (void);
-void CL_PredictMove (void);
 void CL_CheckPredictionError (void);
 
 //

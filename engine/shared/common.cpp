@@ -1136,7 +1136,7 @@ byte	COM_BlockSequenceCRCByte (byte *base, int length, int sequence)
 
 	length += 4;
 
-	crc = CRC_Block(chkb, length);
+	crc = crc16::Block(chkb, length);
 
 	for (x=0, n=0; n<length; n++)
 		x += chkb[n];
@@ -1182,8 +1182,6 @@ Qcommon_Init
 */
 void Qcommon_Init (int argc, char **argv)
 {
-	char	*s;
-
 	if (setjmp (abortframe) )
 		Sys_Error ("Error during initialization");
 
@@ -1219,7 +1217,6 @@ void Qcommon_Init (int argc, char **argv)
 	//
 	// init commands and vars
 	//
-    Cmd_AddCommand ("z_stats", Z_Stats_f);
     Cmd_AddCommand ("error", Com_Error_f);
 
 	host_speeds = Cvar_Get ("host_speeds", "0", 0);
@@ -1235,9 +1232,8 @@ void Qcommon_Init (int argc, char **argv)
 	dedicated = Cvar_Get ("dedicated", "0", CVAR_NOSET);
 #endif
 
-	s = va("%4.2f %s %s", VERSION, __DATE__, BLD_STRING);
-	Cvar_Get ("version", s, CVAR_SERVERINFO|CVAR_NOSET);
-
+	// Create the version convar
+	Cvar_Get( "version", va( "%4.2f %s %s", VERSION, __DATE__, BLD_STRING ), CVAR_SERVERINFO | CVAR_NOSET );
 
 	if (dedicated->value)
 		Cmd_AddCommand ("quit", Com_Quit);

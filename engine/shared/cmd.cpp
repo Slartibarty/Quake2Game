@@ -77,7 +77,7 @@ void Cbuf_AddText (const char *text)
 		Com_Printf ("Cbuf_AddText: overflow\n");
 		return;
 	}
-	SZ_Write (&cmd_text, (void*)text, strlen (text));
+	SZ_Write (&cmd_text, (void*)text, l);
 }
 
 

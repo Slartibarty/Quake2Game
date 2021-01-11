@@ -5,9 +5,9 @@
 #pragma once
 
 #if (defined _M_IX86 || defined __i386__) && !defined C_ONLY
-	#define id386	1
+#define id386	1
 #else
-	#define id386	0
+#define id386	0
 #endif
 
 #define	MAX_STRING_CHARS	1024	// max length of a string passed to Cmd_TokenizeString
@@ -23,6 +23,9 @@
 	#define countof(a) (sizeof(a) / sizeof(*a))
 #endif
 
+#define STRINGIFY(a) #a
+#define XSTRINGIFY(a) STRINGIFY(a)
+
 #ifdef _WIN32	// MSVC / Clang-CL
 
 #define DLLEXPORT __declspec(dllexport)
@@ -30,6 +33,7 @@
 
 #else	// GCC / Clang
 
+#error
 #define DLLEXPORT IMPLEMENT_THIS_MACRO
 #define FORCEINLINE inline
 

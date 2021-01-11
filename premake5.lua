@@ -137,6 +137,12 @@ project "ref_gl"
 	links { "opengl32" }
 	
 	disablewarnings { "4244" }
+	
+	pchsource( "engine/ref_gl/gl_pch.cpp" )
+	pchheader( "gl_local.h" )
+	filter( "files:not engine/ref_gl/**" )
+		flags( { "NoPCH" } )
+	filter( {} )
 
 	files {
 		"common/*",
@@ -154,7 +160,7 @@ project "ref_gl"
 		"**.manifest",
 	
 		"**_null.*",
-		"**_pch.cpp"
+		--"**_pch.cpp"
 	}
 	
 project "game_q2"

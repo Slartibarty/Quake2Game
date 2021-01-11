@@ -5,11 +5,12 @@
 #include "../../common/q_shared.h"
 #include "q_formats.h"
 
+#include "crc.h"
 #include "zone.h"
 
 //=============================================================================
 
-#define	VERSION 3.21
+#define	VERSION "3.21"
 
 #define	BASEDIRNAME "baseq2"
 
@@ -39,7 +40,7 @@
 #define BLD_CONFIG "Debug"
 #endif
 
-#define BLD_STRING (BLD_PLATFORM " " BLD_CONFIG)
+#define BLD_STRING BLD_PLATFORM " " BLD_CONFIG
 
 //=============================================================================
 
@@ -112,15 +113,6 @@ void COM_InitArgv (int argc, char **argv);
 //=============================================================================
 
 void Info_Print (char *s);
-
-
-/* crc.h */
-
-void CRC_Init(unsigned short *crcvalue);
-void CRC_ProcessByte(unsigned short *crcvalue, byte data);
-unsigned short CRC_Value(unsigned short crcvalue);
-unsigned short CRC_Block (byte *start, int count);
-
 
 
 /*
