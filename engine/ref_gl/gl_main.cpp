@@ -308,6 +308,9 @@ void R_DrawEntitiesOnList (void)
 			case mod_alias:
 				R_DrawAliasModel (currententity);
 				break;
+			case mod_studio:
+				R_DrawStudioModel (currententity);
+				break;
 			case mod_brush:
 				R_DrawBrushModel (currententity);
 				break;
@@ -347,6 +350,9 @@ void R_DrawEntitiesOnList (void)
 			{
 			case mod_alias:
 				R_DrawAliasModel (currententity);
+				break;
+			case mod_studio:
+				R_DrawStudioModel (currententity);
 				break;
 			case mod_brush:
 				R_DrawBrushModel (currententity);

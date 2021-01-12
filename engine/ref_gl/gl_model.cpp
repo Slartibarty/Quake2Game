@@ -5,9 +5,10 @@
 model_t			*loadmodel;
 static int		modfilelen;
 
-void Mod_LoadSpriteModel (model_t *mod, void *buffer);
-void Mod_LoadBrushModel (model_t *mod, void *buffer);
-void Mod_LoadAliasModel (model_t *mod, void *buffer);
+void Mod_LoadSpriteModel( model_t *mod, void *buffer );
+void Mod_LoadBrushModel( model_t *mod, void *buffer );
+void Mod_LoadAliasModel( model_t *mod, void *buffer );
+void Mod_LoadStudioModel( model_t *mod, void *buffer );
 
 static byte	mod_novis[MAX_MAP_LEAFS/8];
 
@@ -228,7 +229,12 @@ model_t *Mod_ForName (const char *name, qboolean crash)
 		loadmodel->extradata = Hunk_Begin (0x200000);
 		Mod_LoadAliasModel (mod, buf);
 		break;
-		
+
+	case IDSTUDIOHEADER:
+		loadmodel->extradata = Hunk_Begin( 0x400000 );
+		Mod_LoadStudioModel( mod, buf );
+		break;
+
 	case IDSPRITEHEADER:
 		loadmodel->extradata = Hunk_Begin (0x10000);
 		Mod_LoadSpriteModel (mod, buf);
@@ -1033,6 +1039,53 @@ void Mod_LoadAliasModel (model_t *mod, void *buffer)
 /*
 ==============================================================================
 
+STUDIO MODELS
+
+==============================================================================
+*/
+
+/*
+=================
+Mod_LoadStudioModel
+=================
+*/
+void Mod_LoadStudioModel( model_t *mod, void *buffer )
+{
+//	int					i;
+//	byte				*pin;
+	studiohdr_t			*phdr;
+//	mstudiotexture_t	*ptexture;
+
+//	pin = (byte *)buffer;
+	phdr = (studiohdr_t *)Hunk_Alloc( modfilelen );
+	memcpy( phdr, buffer, modfilelen ); // Don't bother with swapping
+
+#if 0
+	ptexture = (mstudiotexture_t *)( pin + phdr->textureindex );
+	if ( phdr->textureindex != 0 )
+	{
+		for ( i = 0; i < phdr->numtextures; ++i )
+		{
+			// strcpy( name, mod->name );
+			// strcpy( name, ptexture[i].name );
+			//UploadTexture( &ptexture[i], pin + ptexture[i].index, pin + ptexture[i].width * ptexture[i].height + ptexture[i].index );
+		}
+	}
+#endif
+
+	mod->type = mod_studio;
+
+	mod->mins[0] = -32;
+	mod->mins[1] = -32;
+	mod->mins[2] = -32;
+	mod->maxs[0] = 32;
+	mod->maxs[1] = 32;
+	mod->maxs[2] = 32;
+}
+
+/*
+==============================================================================
+
 SPRITE MODELS
 
 ==============================================================================
@@ -1120,6 +1173,7 @@ model_t *R_RegisterModel (const char *name)
 	int		i;
 	dsprite_t	*sprout;
 	dmdl_t		*pheader;
+	studiohdr_t	*pstudio;
 
 	mod = Mod_ForName (name, false);
 	if (mod)
@@ -1140,6 +1194,16 @@ model_t *R_RegisterModel (const char *name)
 				mod->skins[i] = GL_FindImage ((char *)pheader + pheader->ofs_skins + i*MAX_SKINNAME, it_skin);
 //PGM
 			mod->numframes = pheader->num_frames;
+//PGM
+		}
+		else if (mod->type == mod_studio)
+		{
+		//	pstudio = (studiohdr_t *)mod->extradata;
+		//	for ( i = 0; i < pstudio->num_skins; i++ ) {
+		//		mod->skins[i] = GL_FindImage( (char *)pstudio + pheader->ofs_skins + i * MAX_SKINNAME, it_skin );
+		//	}
+//PGM
+		//	mod->numframes = pstudio->num_frames;
 //PGM
 		}
 		else if (mod->type == mod_brush)

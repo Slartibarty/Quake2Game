@@ -237,6 +237,7 @@ extern	int		c_visible_lightmaps;
 extern	int		c_visible_textures;
 
 void	R_DrawAliasModel (entity_t *e);
+void	R_DrawStudioModel (entity_t *e);
 void	R_DrawBrushModel (entity_t *e);
 void	R_DrawSpriteModel (entity_t *e);
 void	R_DrawBeam( entity_t *e );

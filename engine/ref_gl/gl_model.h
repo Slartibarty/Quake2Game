@@ -149,7 +149,7 @@ struct mleaf_t
 // Whole model
 //
 
-enum modtype_t { mod_bad, mod_brush, mod_sprite, mod_alias };
+enum modtype_t { mod_bad, mod_brush, mod_sprite, mod_alias, mod_studio };
 
 struct model_t
 {

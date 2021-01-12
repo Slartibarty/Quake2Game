@@ -486,7 +486,7 @@ void SP_viewthing(edict_t *ent)
 	ent->s.renderfx = RF_FRAMELERP;
 	VectorSet (ent->mins, -16, -16, -24);
 	VectorSet (ent->maxs, 16, 16, 32);
-	ent->s.modelindex = gi.modelindex ("models/objects/banner/tris.md2");
+	ent->s.modelindex = gi.modelindex ("models/scientist.mdl");
 	gi.linkentity (ent);
 	ent->nextthink = level.time + 0.5f;
 	ent->think = TH_viewthing;

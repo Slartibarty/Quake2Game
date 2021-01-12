@@ -824,4 +824,134 @@ void R_DrawAliasModel (entity_t *e)
 	glColor4f (1,1,1,1);
 }
 
+/*
+=============================================================
 
+  STUDIO MODELS
+
+=============================================================
+*/
+
+int m_bodynum;			// bodypart selection
+mstudiomodel_t *m_pmodel;
+
+void Studio_DrawPoints( studiohdr_t *phdr )
+{
+	int					i, j;
+	mstudiomesh_t		*pmesh;
+	byte				*pvertbone;
+	byte				*pnormbone;
+	vec3_t				*pstudioverts;
+	vec3_t				*pstudionorms;
+	float 				*av;
+	float				*lv;
+	float				lv_tmp;
+	short				*pskinref;
+
+	pvertbone = ((byte *)phdr + m_pmodel->vertinfoindex);
+	pnormbone = ((byte *)phdr + m_pmodel->norminfoindex);
+
+	pmesh = (mstudiomesh_t *)((byte *)phdr + m_pmodel->meshindex);
+
+	pstudioverts = (vec3_t *)((byte *)phdr + m_pmodel->vertindex);
+	pstudionorms = (vec3_t *)((byte *)phdr + m_pmodel->normindex);
+
+//
+// clip and draw all triangles
+//
+
+	glCullFace(GL_FRONT);
+
+	for (j = 0; j < m_pmodel->nummesh; j++) 
+	{
+		float	s, t;
+		short	*ptricmds;
+
+		pmesh = (mstudiomesh_t *)((byte *)phdr + m_pmodel->meshindex) + j;
+		ptricmds = (short *)((byte *)phdr + pmesh->triindex);
+
+		s = 256;
+		t = 256;
+
+		while (i = *(ptricmds++))
+		{
+			if (i < 0)
+			{
+				glBegin( GL_TRIANGLE_FAN );
+				i = -i;
+			}
+			else
+			{
+				glBegin( GL_TRIANGLE_STRIP );
+			}
+
+
+			for( ; i > 0; i--, ptricmds += 4)
+			{
+				// FIX: put these in as integer coords, not floats
+				glTexCoord2f(ptricmds[2]*s, ptricmds[3]*t);
+					
+			//	lv = g_pvlightvalues[ptricmds[1]];
+			//	glColor4f( lv[0], lv[1], lv[2], 1.0 );
+
+				av = pstudioverts[ptricmds[0]];
+				glVertex3f(av[0], av[1], av[2]);
+			}
+			glEnd( );
+		}
+	}
+}
+
+static void Studio_SetupModel( studiohdr_t *phdr, int bodypart )
+{
+	int index;
+
+	if ( bodypart > phdr->numbodyparts )
+	{
+		// Con_DPrintf ("StudioModel::SetupModel: no such bodypart %d\n", bodypart);
+		bodypart = 0;
+	}
+
+	mstudiobodyparts_t *pbodypart = (mstudiobodyparts_t *)( (byte *)phdr + phdr->bodypartindex ) + bodypart;
+
+	index = m_bodynum / pbodypart->base;
+	index = index % pbodypart->nummodels;
+
+	m_pmodel = (mstudiomodel_t *)( (byte *)phdr + pbodypart->modelindex ) + index;
+}
+
+/*
+=================
+R_DrawStudioModel
+
+=================
+*/
+void R_DrawStudioModel( entity_t *e )
+{
+	int i;
+	studiohdr_t *phdr;
+
+	phdr = (studiohdr_t *)currentmodel->extradata;
+
+	glPushMatrix();
+	e->angles[PITCH] = -e->angles[PITCH];	// sigh.
+	R_RotateForEntity( e );
+	e->angles[PITCH] = -e->angles[PITCH];	// sigh.
+
+	// draw it
+
+	glShadeModel( GL_SMOOTH );
+	GL_TexEnv( GL_MODULATE );
+
+	// whatever
+	for ( i = 0; i < phdr->numbodyparts; ++i )
+	{
+		Studio_SetupModel( phdr, i );
+		Studio_DrawPoints( phdr );
+	}
+
+	GL_TexEnv( GL_REPLACE );
+	glShadeModel( GL_FLAT );
+
+	glPopMatrix();
+}
