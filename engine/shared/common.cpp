@@ -1,7 +1,21 @@
 // common.c -- misc functions used in client and server
 
+#include "../../common/q_shared.h"
+
+#include <csetjmp>
+
+#include "cmd.h"
+#include "crc.h"
+#include "cvar.h"
+#include "files.h"
+#include "net.h"
+#include "sys.h"
+#include "zone.h"
+
 #include "common.h"
-#include <setjmp.h>
+
+extern void SCR_EndLoadingPlaque( void );
+extern void Key_Init( void ); // This should really be in common? It's not part of the client? Or is it? huh? what.
 
 #define MAX_NUM_ARGVS	50
 
@@ -239,679 +253,6 @@ void Com_SetServerState (int state)
 	server_state = state;
 }
 
-
-/*
-==============================================================================
-
-			MESSAGE IO FUNCTIONS
-
-Handles byte ordering and avoids alignment errors
-==============================================================================
-*/
-
-vec3_t	bytedirs[NUMVERTEXNORMALS]
-{
-#include "../ref_shared/anorms.inl"
-};
-
-//
-// writing functions
-//
-
-void MSG_WriteChar (sizebuf_t *sb, int c)
-{
-	byte	*buf;
-	
-#ifdef PARANOID
-	if (c < -128 || c > 127)
-		Com_Error (ERR_FATAL, "MSG_WriteChar: range error");
-#endif
-
-	buf = (byte*)SZ_GetSpace (sb, 1);
-	buf[0] = c;
-}
-
-void MSG_WriteByte (sizebuf_t *sb, int c)
-{
-	byte	*buf;
-	
-#ifdef PARANOID
-	if (c < 0 || c > 255)
-		Com_Error (ERR_FATAL, "MSG_WriteByte: range error");
-#endif
-
-	buf = (byte*)SZ_GetSpace (sb, 1);
-	buf[0] = c;
-}
-
-void MSG_WriteShort (sizebuf_t *sb, int c)
-{
-	byte	*buf;
-	
-#ifdef PARANOID
-	if (c < ((short)0x8000) || c > (short)0x7fff)
-		Com_Error (ERR_FATAL, "MSG_WriteShort: range error");
-#endif
-
-	buf = (byte*)SZ_GetSpace (sb, 2);
-	buf[0] = c&0xff;
-	buf[1] = c>>8;
-}
-
-void MSG_WriteLong (sizebuf_t *sb, int c)
-{
-	byte	*buf;
-	
-	buf = (byte*)SZ_GetSpace (sb, 4);
-	buf[0] = c&0xff;
-	buf[1] = (c>>8)&0xff;
-	buf[2] = (c>>16)&0xff;
-	buf[3] = c>>24;
-}
-
-void MSG_WriteFloat (sizebuf_t *sb, float f)
-{
-	union
-	{
-		float	f;
-		int	l;
-	} dat;
-	
-	
-	dat.f = f;
-	dat.l = LittleLong (dat.l);
-	
-	SZ_Write (sb, &dat.l, 4);
-}
-
-void MSG_WriteString (sizebuf_t *sb, const char *s)
-{
-	if (!s)
-		SZ_Write (sb, "", 1);
-	else
-		SZ_Write (sb, s, strlen(s)+1);
-}
-
-void MSG_WriteCoord (sizebuf_t *sb, float f)
-{
-	MSG_WriteShort (sb, (int)(f*8));
-}
-
-void MSG_WritePos (sizebuf_t *sb, vec3_t pos)
-{
-	MSG_WriteShort (sb, (int)(pos[0]*8));
-	MSG_WriteShort (sb, (int)(pos[1]*8));
-	MSG_WriteShort (sb, (int)(pos[2]*8));
-}
-
-void MSG_WriteAngle (sizebuf_t *sb, float f)
-{
-	MSG_WriteByte (sb, (int)(f*256/360) & 255);
-}
-
-void MSG_WriteAngle16 (sizebuf_t *sb, float f)
-{
-	MSG_WriteShort (sb, ANGLE2SHORT(f));
-}
-
-
-void MSG_WriteDeltaUsercmd (sizebuf_t *buf, usercmd_t *from, usercmd_t *cmd)
-{
-	int		bits;
-
-//
-// send the movement message
-//
-	bits = 0;
-	if (cmd->angles[0] != from->angles[0])
-		bits |= CM_ANGLE1;
-	if (cmd->angles[1] != from->angles[1])
-		bits |= CM_ANGLE2;
-	if (cmd->angles[2] != from->angles[2])
-		bits |= CM_ANGLE3;
-	if (cmd->forwardmove != from->forwardmove)
-		bits |= CM_FORWARD;
-	if (cmd->sidemove != from->sidemove)
-		bits |= CM_SIDE;
-	if (cmd->upmove != from->upmove)
-		bits |= CM_UP;
-	if (cmd->buttons != from->buttons)
-		bits |= CM_BUTTONS;
-	if (cmd->impulse != from->impulse)
-		bits |= CM_IMPULSE;
-
-    MSG_WriteByte (buf, bits);
-
-	if (bits & CM_ANGLE1)
-		MSG_WriteShort (buf, cmd->angles[0]);
-	if (bits & CM_ANGLE2)
-		MSG_WriteShort (buf, cmd->angles[1]);
-	if (bits & CM_ANGLE3)
-		MSG_WriteShort (buf, cmd->angles[2]);
-	
-	if (bits & CM_FORWARD)
-		MSG_WriteShort (buf, cmd->forwardmove);
-	if (bits & CM_SIDE)
-	  	MSG_WriteShort (buf, cmd->sidemove);
-	if (bits & CM_UP)
-		MSG_WriteShort (buf, cmd->upmove);
-
- 	if (bits & CM_BUTTONS)
-	  	MSG_WriteByte (buf, cmd->buttons);
- 	if (bits & CM_IMPULSE)
-	    MSG_WriteByte (buf, cmd->impulse);
-
-    MSG_WriteByte (buf, cmd->msec);
-	MSG_WriteByte (buf, cmd->lightlevel);
-}
-
-
-void MSG_WriteDir (sizebuf_t *sb, vec3_t dir)
-{
-	int		i, best;
-	float	d, bestd;
-	
-	if (!dir)
-	{
-		MSG_WriteByte (sb, 0);
-		return;
-	}
-
-	bestd = 0;
-	best = 0;
-	for (i=0 ; i<NUMVERTEXNORMALS ; i++)
-	{
-		d = DotProduct (dir, bytedirs[i]);
-		if (d > bestd)
-		{
-			bestd = d;
-			best = i;
-		}
-	}
-	MSG_WriteByte (sb, best);
-}
-
-
-void MSG_ReadDir (sizebuf_t *sb, vec3_t dir)
-{
-	int		b;
-
-	b = MSG_ReadByte (sb);
-	if (b >= NUMVERTEXNORMALS)
-		Com_Error (ERR_DROP, "MSF_ReadDir: out of range");
-	VectorCopy (bytedirs[b], dir);
-}
-
-
-/*
-==================
-MSG_WriteDeltaEntity
-
-Writes part of a packetentities message.
-Can delta from either a baseline or a previous packet_entity
-==================
-*/
-void MSG_WriteDeltaEntity (entity_state_t *from, entity_state_t *to, sizebuf_t *msg, qboolean force, qboolean newentity)
-{
-	int		bits;
-
-	if (!to->number)
-		Com_Error (ERR_FATAL, "Unset entity number");
-	if (to->number >= MAX_EDICTS)
-		Com_Error (ERR_FATAL, "Entity number >= MAX_EDICTS");
-
-// send an update
-	bits = 0;
-
-	if (to->number >= 256)
-		bits |= U_NUMBER16;		// number8 is implicit otherwise
-
-	if (to->origin[0] != from->origin[0])
-		bits |= U_ORIGIN1;
-	if (to->origin[1] != from->origin[1])
-		bits |= U_ORIGIN2;
-	if (to->origin[2] != from->origin[2])
-		bits |= U_ORIGIN3;
-
-	if ( to->angles[0] != from->angles[0] )
-		bits |= U_ANGLE1;		
-	if ( to->angles[1] != from->angles[1] )
-		bits |= U_ANGLE2;
-	if ( to->angles[2] != from->angles[2] )
-		bits |= U_ANGLE3;
-		
-	if ( to->skinnum != from->skinnum )
-	{
-		if ((unsigned)to->skinnum < 256)
-			bits |= U_SKIN8;
-		else if ((unsigned)to->skinnum < 0x10000)
-			bits |= U_SKIN16;
-		else
-			bits |= (U_SKIN8|U_SKIN16);
-	}
-		
-	if ( to->frame != from->frame )
-	{
-		if (to->frame < 256)
-			bits |= U_FRAME8;
-		else
-			bits |= U_FRAME16;
-	}
-
-	if ( to->effects != from->effects )
-	{
-		if (to->effects < 256)
-			bits |= U_EFFECTS8;
-		else if (to->effects < 0x8000)
-			bits |= U_EFFECTS16;
-		else
-			bits |= U_EFFECTS8|U_EFFECTS16;
-	}
-	
-	if ( to->renderfx != from->renderfx )
-	{
-		if (to->renderfx < 256)
-			bits |= U_RENDERFX8;
-		else if (to->renderfx < 0x8000)
-			bits |= U_RENDERFX16;
-		else
-			bits |= U_RENDERFX8|U_RENDERFX16;
-	}
-	
-	if ( to->solid != from->solid )
-		bits |= U_SOLID;
-
-	// event is not delta compressed, just 0 compressed
-	if ( to->event  )
-		bits |= U_EVENT;
-	
-	if ( to->modelindex != from->modelindex )
-		bits |= U_MODEL;
-	if ( to->modelindex2 != from->modelindex2 )
-		bits |= U_MODEL2;
-	if ( to->modelindex3 != from->modelindex3 )
-		bits |= U_MODEL3;
-	if ( to->modelindex4 != from->modelindex4 )
-		bits |= U_MODEL4;
-
-	if ( to->sound != from->sound )
-		bits |= U_SOUND;
-
-	if (newentity || (to->renderfx & RF_BEAM))
-		bits |= U_OLDORIGIN;
-
-	//
-	// write the message
-	//
-	if (!bits && !force)
-		return;		// nothing to send!
-
-	//----------
-
-	if (bits & 0xff000000)
-		bits |= U_MOREBITS3 | U_MOREBITS2 | U_MOREBITS1;
-	else if (bits & 0x00ff0000)
-		bits |= U_MOREBITS2 | U_MOREBITS1;
-	else if (bits & 0x0000ff00)
-		bits |= U_MOREBITS1;
-
-	MSG_WriteByte (msg,	bits&255 );
-
-	if (bits & 0xff000000)
-	{
-		MSG_WriteByte (msg,	(bits>>8)&255 );
-		MSG_WriteByte (msg,	(bits>>16)&255 );
-		MSG_WriteByte (msg,	(bits>>24)&255 );
-	}
-	else if (bits & 0x00ff0000)
-	{
-		MSG_WriteByte (msg,	(bits>>8)&255 );
-		MSG_WriteByte (msg,	(bits>>16)&255 );
-	}
-	else if (bits & 0x0000ff00)
-	{
-		MSG_WriteByte (msg,	(bits>>8)&255 );
-	}
-
-	//----------
-
-	if (bits & U_NUMBER16)
-		MSG_WriteShort (msg, to->number);
-	else
-		MSG_WriteByte (msg,	to->number);
-
-	if (bits & U_MODEL)
-		MSG_WriteByte (msg,	to->modelindex);
-	if (bits & U_MODEL2)
-		MSG_WriteByte (msg,	to->modelindex2);
-	if (bits & U_MODEL3)
-		MSG_WriteByte (msg,	to->modelindex3);
-	if (bits & U_MODEL4)
-		MSG_WriteByte (msg,	to->modelindex4);
-
-	if (bits & U_FRAME8)
-		MSG_WriteByte (msg, to->frame);
-	if (bits & U_FRAME16)
-		MSG_WriteShort (msg, to->frame);
-
-	if ((bits & U_SKIN8) && (bits & U_SKIN16))		//used for laser colors
-		MSG_WriteLong (msg, to->skinnum);
-	else if (bits & U_SKIN8)
-		MSG_WriteByte (msg, to->skinnum);
-	else if (bits & U_SKIN16)
-		MSG_WriteShort (msg, to->skinnum);
-
-
-	if ( (bits & (U_EFFECTS8|U_EFFECTS16)) == (U_EFFECTS8|U_EFFECTS16) )
-		MSG_WriteLong (msg, to->effects);
-	else if (bits & U_EFFECTS8)
-		MSG_WriteByte (msg, to->effects);
-	else if (bits & U_EFFECTS16)
-		MSG_WriteShort (msg, to->effects);
-
-	if ( (bits & (U_RENDERFX8|U_RENDERFX16)) == (U_RENDERFX8|U_RENDERFX16) )
-		MSG_WriteLong (msg, to->renderfx);
-	else if (bits & U_RENDERFX8)
-		MSG_WriteByte (msg, to->renderfx);
-	else if (bits & U_RENDERFX16)
-		MSG_WriteShort (msg, to->renderfx);
-
-	if (bits & U_ORIGIN1)
-		MSG_WriteCoord (msg, to->origin[0]);		
-	if (bits & U_ORIGIN2)
-		MSG_WriteCoord (msg, to->origin[1]);
-	if (bits & U_ORIGIN3)
-		MSG_WriteCoord (msg, to->origin[2]);
-
-	if (bits & U_ANGLE1)
-		MSG_WriteAngle(msg, to->angles[0]);
-	if (bits & U_ANGLE2)
-		MSG_WriteAngle(msg, to->angles[1]);
-	if (bits & U_ANGLE3)
-		MSG_WriteAngle(msg, to->angles[2]);
-
-	if (bits & U_OLDORIGIN)
-	{
-		MSG_WriteCoord (msg, to->old_origin[0]);
-		MSG_WriteCoord (msg, to->old_origin[1]);
-		MSG_WriteCoord (msg, to->old_origin[2]);
-	}
-
-	if (bits & U_SOUND)
-		MSG_WriteByte (msg, to->sound);
-	if (bits & U_EVENT)
-		MSG_WriteByte (msg, to->event);
-	if (bits & U_SOLID)
-		MSG_WriteShort (msg, to->solid);
-}
-
-
-//============================================================
-
-//
-// reading functions
-//
-
-void MSG_BeginReading (sizebuf_t *msg)
-{
-	msg->readcount = 0;
-}
-
-// returns -1 if no more characters are available
-int MSG_ReadChar (sizebuf_t *msg_read)
-{
-	int	c;
-	
-	if (msg_read->readcount+1 > msg_read->cursize)
-		c = -1;
-	else
-		c = (signed char)msg_read->data[msg_read->readcount];
-	msg_read->readcount++;
-	
-	return c;
-}
-
-int MSG_ReadByte (sizebuf_t *msg_read)
-{
-	int	c;
-	
-	if (msg_read->readcount+1 > msg_read->cursize)
-		c = -1;
-	else
-		c = (unsigned char)msg_read->data[msg_read->readcount];
-	msg_read->readcount++;
-	
-	return c;
-}
-
-int MSG_ReadShort (sizebuf_t *msg_read)
-{
-	int	c;
-	
-	if (msg_read->readcount+2 > msg_read->cursize)
-		c = -1;
-	else		
-		c = (short)(msg_read->data[msg_read->readcount]
-		+ (msg_read->data[msg_read->readcount+1]<<8));
-	
-	msg_read->readcount += 2;
-	
-	return c;
-}
-
-int MSG_ReadLong (sizebuf_t *msg_read)
-{
-	int	c;
-	
-	if (msg_read->readcount+4 > msg_read->cursize)
-		c = -1;
-	else
-		c = msg_read->data[msg_read->readcount]
-		+ (msg_read->data[msg_read->readcount+1]<<8)
-		+ (msg_read->data[msg_read->readcount+2]<<16)
-		+ (msg_read->data[msg_read->readcount+3]<<24);
-	
-	msg_read->readcount += 4;
-	
-	return c;
-}
-
-float MSG_ReadFloat (sizebuf_t *msg_read)
-{
-	union
-	{
-		byte	b[4];
-		float	f;
-		int	l;
-	} dat;
-	
-	if (msg_read->readcount+4 > msg_read->cursize)
-		dat.f = -1;
-	else
-	{
-		dat.b[0] =	msg_read->data[msg_read->readcount];
-		dat.b[1] =	msg_read->data[msg_read->readcount+1];
-		dat.b[2] =	msg_read->data[msg_read->readcount+2];
-		dat.b[3] =	msg_read->data[msg_read->readcount+3];
-	}
-	msg_read->readcount += 4;
-	
-	dat.l = LittleLong (dat.l);
-
-	return dat.f;	
-}
-
-char *MSG_ReadString (sizebuf_t *msg_read)
-{
-	static char	string[2048];
-	int		l,c;
-	
-	l = 0;
-	do
-	{
-		c = MSG_ReadChar (msg_read);
-		if (c == -1 || c == 0)
-			break;
-		string[l] = c;
-		l++;
-	} while (l < sizeof(string)-1);
-	
-	string[l] = 0;
-	
-	return string;
-}
-
-char *MSG_ReadStringLine (sizebuf_t *msg_read)
-{
-	static char	string[2048];
-	int		l,c;
-	
-	l = 0;
-	do
-	{
-		c = MSG_ReadChar (msg_read);
-		if (c == -1 || c == 0 || c == '\n')
-			break;
-		string[l] = c;
-		l++;
-	} while (l < sizeof(string)-1);
-	
-	string[l] = 0;
-	
-	return string;
-}
-
-float MSG_ReadCoord (sizebuf_t *msg_read)
-{
-	return MSG_ReadShort(msg_read) * (1.0f/8);
-}
-
-void MSG_ReadPos (sizebuf_t *msg_read, vec3_t pos)
-{
-	pos[0] = MSG_ReadShort(msg_read) * (1.0f/8);
-	pos[1] = MSG_ReadShort(msg_read) * (1.0f/8);
-	pos[2] = MSG_ReadShort(msg_read) * (1.0f/8);
-}
-
-float MSG_ReadAngle (sizebuf_t *msg_read)
-{
-	return MSG_ReadChar(msg_read) * (360.0f/256);
-}
-
-float MSG_ReadAngle16 (sizebuf_t *msg_read)
-{
-	return SHORT2ANGLE(MSG_ReadShort(msg_read));
-}
-
-void MSG_ReadDeltaUsercmd (sizebuf_t *msg_read, usercmd_t *from, usercmd_t *move)
-{
-	int bits;
-
-	memcpy (move, from, sizeof(*move));
-
-	bits = MSG_ReadByte (msg_read);
-		
-// read current angles
-	if (bits & CM_ANGLE1)
-		move->angles[0] = MSG_ReadShort (msg_read);
-	if (bits & CM_ANGLE2)
-		move->angles[1] = MSG_ReadShort (msg_read);
-	if (bits & CM_ANGLE3)
-		move->angles[2] = MSG_ReadShort (msg_read);
-		
-// read movement
-	if (bits & CM_FORWARD)
-		move->forwardmove = MSG_ReadShort (msg_read);
-	if (bits & CM_SIDE)
-		move->sidemove = MSG_ReadShort (msg_read);
-	if (bits & CM_UP)
-		move->upmove = MSG_ReadShort (msg_read);
-	
-// read buttons
-	if (bits & CM_BUTTONS)
-		move->buttons = MSG_ReadByte (msg_read);
-
-	if (bits & CM_IMPULSE)
-		move->impulse = MSG_ReadByte (msg_read);
-
-// read time to run command
-	move->msec = MSG_ReadByte (msg_read);
-
-// read the light level
-	move->lightlevel = MSG_ReadByte (msg_read);
-}
-
-
-void MSG_ReadData (sizebuf_t *msg_read, void *data, int len)
-{
-	int		i;
-
-	for (i=0 ; i<len ; i++)
-		((byte *)data)[i] = MSG_ReadByte (msg_read);
-}
-
-
-//===========================================================================
-
-void SZ_Init (sizebuf_t *buf, byte *data, int length)
-{
-	memset (buf, 0, sizeof(*buf));
-	buf->data = data;
-	buf->maxsize = length;
-}
-
-void SZ_Clear (sizebuf_t *buf)
-{
-	buf->cursize = 0;
-	buf->overflowed = false;
-}
-
-void *SZ_GetSpace (sizebuf_t *buf, int length)
-{
-	void	*data;
-	
-	if (buf->cursize + length > buf->maxsize)
-	{
-		if (!buf->allowoverflow)
-			Com_Error (ERR_FATAL, "SZ_GetSpace: overflow without allowoverflow set");
-		
-		if (length > buf->maxsize)
-			Com_Error (ERR_FATAL, "SZ_GetSpace: %i is > full buffer size", length);
-			
-		Com_Printf ("SZ_GetSpace: overflow\n");
-		SZ_Clear (buf); 
-		buf->overflowed = true;
-	}
-
-	data = buf->data + buf->cursize;
-	buf->cursize += length;
-	
-	return data;
-}
-
-void SZ_Write (sizebuf_t *buf, const void *data, int length)
-{
-	memcpy (SZ_GetSpace(buf,length),data,length);		
-}
-
-void SZ_Print (sizebuf_t *buf, const char *data)
-{
-	int		len;
-	
-	len = strlen(data)+1;
-
-	if (buf->cursize)
-	{
-		if (buf->data[buf->cursize-1])
-			memcpy ((byte *)SZ_GetSpace(buf, len),data,len); // no trailing 0
-		else
-			memcpy ((byte *)SZ_GetSpace(buf, len-1)-1,data,len); // write over trailing 0
-	}
-	else
-		memcpy ((byte *)SZ_GetSpace(buf, len),data,len);
-}
-
-
 //============================================================================
 
 
@@ -992,7 +333,7 @@ void COM_AddParm (char *parm)
 }
 
 
-void Info_Print (char *s)
+void Info_Print (const char *s)
 {
 	char	key[512];
 	char	value[512];
@@ -1037,7 +378,7 @@ void Info_Print (char *s)
 
 //============================================================================
 
-static byte chktbl[1024]{
+static const byte chktbl[1024]{
 0x84, 0x47, 0x51, 0xc1, 0x93, 0x22, 0x21, 0x24, 0x2f, 0x66, 0x60, 0x4d, 0xb0, 0x7c, 0xda,
 0x88, 0x54, 0x15, 0x2b, 0xc6, 0x6c, 0x89, 0xc5, 0x9d, 0x48, 0xee, 0xe6, 0x8a, 0xb5, 0xf4,
 0xcb, 0xfb, 0xf1, 0x0c, 0x2e, 0xa0, 0xd7, 0xc9, 0x1f, 0xd6, 0x06, 0x9a, 0x09, 0x41, 0x54,
@@ -1114,7 +455,7 @@ For proxy protecting
 byte	COM_BlockSequenceCRCByte (byte *base, int length, int sequence)
 {
 	int		n;
-	byte	*p;
+	const byte	*p;
 	int		x;
 	byte chkb[60 + 4];
 	unsigned short crc;
@@ -1158,8 +499,13 @@ float	crand(void)
 	return (rand()&32767)* (2.0f/32767.0f) - 1.0f;
 }
 
-void Key_Init (void);
-void SCR_EndLoadingPlaque (void);
+// Compressed vertex normals
+vec3_t bytedirs[NUMVERTEXNORMALS]
+{
+#include "../ref_shared/anorms.inl"
+};
+
+//========================================================
 
 /*
 =============
@@ -1169,11 +515,10 @@ Just throw a fatal error to
 test error shutdown procedures
 =============
 */
-void Com_Error_f (void)
+static void Com_Error_f (void)
 {
 	Com_Error (ERR_FATAL, "%s", Cmd_Argv(1));
 }
-
 
 /*
 =================

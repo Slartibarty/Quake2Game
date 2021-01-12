@@ -2,7 +2,22 @@
 
 //define	PARANOID			// speed sapping error checking
 
+#include "../../common/q_shared.h"
+
 #include "../shared/common.h"
+#include "../shared/cmd.h"
+#include "../shared/cmodel.h"
+#include "../shared/cvar.h"
+#include "../shared/files.h"
+#include "../shared/msg.h"
+#include "../shared/net.h"
+#include "../shared/msg.h"
+#include "../shared/pmove.h"
+#include "../shared/protocol.h"
+#include "../shared/sys.h"
+#include "../shared/zone.h"
+#include "../shared/q_formats.h"
+
 #include "../../game_shared/game_public.h"
 
 //=============================================================================

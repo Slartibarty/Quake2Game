@@ -1,9 +1,16 @@
 // sys_win.c
 
-#include "common.h"
-#include "conproc.h"
+#include "../../common/q_shared.h"
+
 #include "../client/winquake.h"	// Hack?
 #include <process.h>
+
+#include "common.h"
+#include "conproc.h"
+#include "files.h"
+#include "zone.h"
+
+#include "sys.h"
 
 //#define DEMO
 

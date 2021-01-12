@@ -1,6 +1,8 @@
 
 // game_public.h -- game dll information visible to server
 
+#pragma once
+
 #define	GAME_API_VERSION	3
 
 // edict->svflags

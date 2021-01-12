@@ -4,8 +4,6 @@
 #include "gl_local.h"
 #include "../shared/imageloaders.h"
 
-#include <algorithm> // clamp
-
 #define STB_IMAGE_IMPLEMENTATION
 #define STBI_NO_STDIO
 #define STBI_NO_LINEAR
@@ -658,7 +656,7 @@ static void GL_BuildGammaTable( float gamma, int overbright )
 		inf <<= overbright;
 
 		// Clamp value
-		inf = std::clamp( inf, 0, 255 );
+		inf = Clamp( inf, 0, 255 );
 
 		g_gammatable[i] = static_cast<byte>( inf );
 	}

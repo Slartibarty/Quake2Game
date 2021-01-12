@@ -100,7 +100,6 @@ project "engine"
 	language "C++"
 	targetdir "../game"
 	linkoptions { "/ENTRY:mainCRTStartup" }
-	defines { "_WINSOCK_DEPRECATED_NO_WARNINGS" }
 	links { "ws2_32", "winmm", "dsound", "dxguid" }
 	
 	disablewarnings { "4244", "4267" }

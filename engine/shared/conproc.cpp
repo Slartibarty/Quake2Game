@@ -1,6 +1,6 @@
 // conproc.c -- support for qhost
 
-#include <stdio.h>
+#include <cstdio>
 #include <process.h>
 #include <Windows.h>
 

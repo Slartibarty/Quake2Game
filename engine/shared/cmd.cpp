@@ -1,6 +1,16 @@
-// cmd.c -- Quake script command processing module
+//=================================================================================================
+// Quake script command processing module
+//=================================================================================================
+
+#include "../../common/q_shared.h"
 
 #include "common.h"
+#include "cvar.h"
+#include "sizebuf.h"
+#include "files.h"
+#include "zone.h"
+
+#include "cmd.h"
 
 #define	MAX_ALIAS_NAME	32
 

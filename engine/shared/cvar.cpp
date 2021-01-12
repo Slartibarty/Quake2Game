@@ -1,6 +1,13 @@
 // cvar.c -- dynamic variable tracking
 
+#include "../../common/q_shared.h"
+
 #include "common.h"
+#include "cmd.h"
+#include "files.h"
+#include "zone.h"
+
+#include "cvar.h"
 
 cvar_t	*cvar_vars;
 

@@ -1,7 +1,9 @@
 
+#include "../../common/q_shared.h"
+
 #include "common.h"
 
-#define _VectorCopy(a,b)			(b[0]=a[0],b[1]=a[1],b[2]=a[2])
+#include "pmove.h"
 
 #define	STEPSIZE	18
 

@@ -1,5 +1,11 @@
 
+#include "../../common/q_shared.h"
+
 #include "common.h"
+#include "cvar.h"
+#include "msg.h"
+
+#include "net.h"
 
 /*
 

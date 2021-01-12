@@ -5,6 +5,11 @@
 //=================================================================================================
 
 #include "common.h"
+
+#include <cassert>
+
+#include "cmd.h"
+
 #include "zone.h"
 
 #ifndef Q_RETAIL

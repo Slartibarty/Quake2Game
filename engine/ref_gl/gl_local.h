@@ -1,7 +1,10 @@
 
 #pragma once
 
-#include "../shared/common.h"
+#include "../../common/q_shared.h"
+
+#include "../shared/q_formats.h"
+
 #include "../ref_shared/ref_public.h"
 
 #ifdef _WIN32

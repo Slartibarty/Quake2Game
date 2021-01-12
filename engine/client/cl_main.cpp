@@ -361,7 +361,7 @@ void CL_SendConnectPacket (void)
 	netadr_t	adr;
 	int		port;
 
-	if (!NET_StringToAdr (cls.servername, &adr))
+	if (!NET_StringToAdr (cls.servername, adr))
 	{
 		Com_Printf ("Bad server address\n");
 		cls.connect_time = 0;
@@ -407,7 +407,7 @@ void CL_CheckForResend (void)
 	if (cls.realtime - cls.connect_time < 3000)
 		return;
 
-	if (!NET_StringToAdr (cls.servername, &adr))
+	if (!NET_StringToAdr (cls.servername, adr))
 	{
 		Com_Printf ("Bad server address\n");
 		cls.state = ca_disconnected;
@@ -513,7 +513,7 @@ void CL_Rcon_f (void)
 
 			return;
 		}
-		NET_StringToAdr (rcon_address->string, &to);
+		NET_StringToAdr (rcon_address->string, to);
 		if (to.port == 0)
 			to.port = BigShort (PORT_SERVER);
 	}
@@ -629,7 +629,7 @@ void CL_Packet_f (void)
 
 	NET_Config (true);		// allow remote
 
-	if (!NET_StringToAdr (Cmd_Argv(1), &adr))
+	if (!NET_StringToAdr (Cmd_Argv(1), adr))
 	{
 		Com_Printf ("Bad address\n");
 		return;
@@ -744,7 +744,6 @@ void CL_PingServers_f (void)
 	char		name[32];
 	char		*adrstring;
 	cvar_t		*noudp;
-	cvar_t		*noipx;
 
 	NET_Config (true);		// allow remote
 
@@ -759,14 +758,6 @@ void CL_PingServers_f (void)
 		Netchan_OutOfBandPrint (NS_CLIENT, adr, va("info %i", PROTOCOL_VERSION));
 	}
 
-	noipx = Cvar_Get ("noipx", "0", CVAR_NOSET);
-	if (!noipx->value)
-	{
-		adr.type = NA_BROADCAST_IPX;
-		adr.port = BigShort(PORT_SERVER);
-		Netchan_OutOfBandPrint (NS_CLIENT, adr, va("info %i", PROTOCOL_VERSION));
-	}
-
 	// send a packet to each address book entry
 	for (i=0 ; i<16 ; i++)
 	{
@@ -776,7 +767,7 @@ void CL_PingServers_f (void)
 			continue;
 
 		Com_Printf ("pinging %s...\n", adrstring);
-		if (!NET_StringToAdr (adrstring, &adr))
+		if (!NET_StringToAdr (adrstring, adr))
 		{
 			Com_Printf ("Bad address: %s\n", adrstring);
 			continue;

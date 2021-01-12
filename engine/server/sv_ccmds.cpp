@@ -40,7 +40,7 @@ static void SV_SetMaster_f (void)
 		if (slot == MAX_MASTERS)
 			break;
 
-		if (!NET_StringToAdr (Cmd_Argv(i), &master_adr[i]))
+		if (!NET_StringToAdr (Cmd_Argv(i), master_adr[i]))
 		{
 			Com_Printf ("Bad address: %s\n", Cmd_Argv(i));
 			continue;

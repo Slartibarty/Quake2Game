@@ -1,7 +1,11 @@
 
-#include "common.h"
 #include <io.h>
+#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+
+#include "../../common/q_shared.h"
+
+#include "common.h"
 
 //=================================================================================================
 
