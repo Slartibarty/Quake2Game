@@ -1669,6 +1669,8 @@ void CL_Frame (int msec)
 	SCR_RunCinematic ();
 	SCR_RunConsole ();
 
+//	Com_Printf( "Time:  %d %d %f\n", cl.time, cls.realtime, cls.frametime );
+
 	cls.framecount++;
 
 	if ( log_stats->value )

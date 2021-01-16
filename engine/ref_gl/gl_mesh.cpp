@@ -1399,7 +1399,7 @@ static mstudiomodel_t *Studio_SetupModel( studiohdr_t *phdr, int bodypart )
 
 	if ( bodypart > phdr->numbodyparts )
 	{
-		ri.Con_Printf( PRINT_DEVELOPER, "StudioModel::SetupModel: no such bodypart %d\n", bodypart );
+		ri.Con_Printf( PRINT_DEVELOPER, "Studio_SetupModel: no such bodypart %d\n", bodypart );
 		bodypart = 0;
 	}
 
@@ -1452,7 +1452,8 @@ void R_DrawStudioModel( entity_t *e )
 		Studio_DrawPoints( phdr, phdr, pmodel, e->origin );
 	}
 
-	Studio_AdvanceFrame( phdr, r_newrefdef.time );
+	// Debug
+	//Studio_AdvanceFrame( phdr, r_newrefdef.time );
 
 	GL_TexEnv( GL_REPLACE );
 	glShadeModel( GL_FLAT );

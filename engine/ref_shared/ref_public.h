@@ -87,6 +87,7 @@ struct refdef_t
 	vec3_t		viewangles;
 	vec4_t		blend;				// rgba 0-1 full screen blend
 	float		time;				// time is uesed to auto animate
+	float		frametime;			// time since last frame, in milliseconds
 	int			rdflags;			// RDF_UNDERWATER, etc
 
 	byte		*areabits;			// if not NULL, only areas with set bits will be drawn
