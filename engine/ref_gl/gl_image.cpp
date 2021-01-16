@@ -12,6 +12,8 @@
 #define STBI_NO_FAILURE_STRINGS
 #include "stb_image.h"
 
+#include "stb_image_write.h"
+
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include "stb_image_resize.h"
 
@@ -575,18 +577,23 @@ image_t	*GL_FindImage (const char *name, imagetype_t type, byte *pic, int width,
 	if ( pic )
 	{
 		int c = width * height;
-		uint *pic32 = (uint *)malloc( ( width * height ) * 4 );
-		uint *palette = (uint *)( pic + width + height );
+		byte *pic32 = (byte *)malloc( c * 4 );
+		byte *palette = (byte *)( pic + width + height );
 
-		for ( i = 0; i < ( width * height ) * 4; i += 4 )
+		int j;
+		for ( i = 0, j = 0; i < c * 4; i += 4, j += 3 )
 		{
-			pic32[0+i] = palette[pic[0+i]];
-			pic32[1+i] = palette[pic[1+i]];
-			pic32[2+i] = palette[pic[2+i]];
+			pic32[0+i] = palette[pic[0+j]];
+			pic32[1+i] = palette[pic[1+j]];
+			pic32[2+i] = palette[pic[2+j]];
 			pic32[3+i] = 255;
 		}
 		
-		image = GL_CreateImage( name, pic, width, height, type );
+		image = GL_CreateImage( name, pic32, width, height, type );
+
+		stbi_write_bmp( "Blarps.bmp", width, height, 4, pic32 );
+
+		free( pic32 );
 
 		return image;
 	}

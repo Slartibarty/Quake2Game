@@ -1051,27 +1051,27 @@ Mod_LoadStudioModel
 */
 void Mod_LoadStudioModel( model_t *mod, void *buffer )
 {
-//	int					i;
-//	byte				*pin;
+	int					i;
 	studiohdr_t			*phdr;
-//	mstudiotexture_t	*ptexture;
+	mstudiotexture_t	*ptexture;
 
-//	pin = (byte *)buffer;
 	phdr = (studiohdr_t *)Hunk_Alloc( modfilelen );
 	memcpy( phdr, buffer, modfilelen ); // Don't bother with swapping
 
-#if 0
-	ptexture = (mstudiotexture_t *)( pin + phdr->textureindex );
+	assert( phdr->numtextures <= 32 );
+
 	if ( phdr->textureindex != 0 )
 	{
+		ptexture = (mstudiotexture_t *)( (byte *)phdr + phdr->textureindex );
+
 		for ( i = 0; i < phdr->numtextures; ++i )
 		{
 			// strcpy( name, mod->name );
 			// strcpy( name, ptexture[i].name );
-			//UploadTexture( &ptexture[i], pin + ptexture[i].index, pin + ptexture[i].width * ptexture[i].height + ptexture[i].index );
+			mod->skins[i] = GL_FindImage( ptexture[i].name, it_skin, (byte *)phdr + ptexture[i].index, ptexture[i].width, ptexture[i].height );
+			ptexture[i].index = mod->skins[i]->texnum;
 		}
 	}
-#endif
 
 	mod->type = mod_studio;
 
@@ -1203,16 +1203,14 @@ model_t *R_RegisterModel (const char *name)
 			pstudio = (studiohdr_t *)mod->extradata;
 			assert( pstudio->numtextures < 32 );
 
-#if 0
 			ptexture = (mstudiotexture_t *)( (byte *)pstudio + pstudio->textureindex );
 
 			if ( pstudio->textureindex != 0 )
 			{
 				for ( i = 0; i < pstudio->numtextures; i++ ) {
-					mod->skins[i] = GL_FindImage( ptexture->name, it_skin, (byte *)pstudio + ptexture[i].index, ptexture[i].width, ptexture[i].height );
+					mod->skins[i] = GL_FindImage( ptexture->name, it_skin );
 				}
 			}
-#endif
 //PGM
 		//	mod->numframes = pstudio->num_frames;
 //PGM

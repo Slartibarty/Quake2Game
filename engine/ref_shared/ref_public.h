@@ -30,32 +30,32 @@ struct image_t;
 
 struct entity_t
 {
-	model_t				*model;			// opaque type outside refresh
-	float				angles[3];
+	model_t		*model;				// opaque type outside refresh
+	vec3_t		angles;
 
 	/*
 	** most recent data
 	*/
-	float				origin[3];		// also used as RF_BEAM's "from"
-	int					frame;			// also used as RF_BEAM's diameter
+	vec3_t		origin;				// also used as RF_BEAM's "from"
+	int			frame;				// also used as RF_BEAM's diameter
 
 	/*
 	** previous data for lerping
 	*/
-	float				oldorigin[3];	// also used as RF_BEAM's "to"
-	int					oldframe;
+	vec3_t		oldorigin;			// also used as RF_BEAM's "to"
+	int			oldframe;
 
 	/*
 	** misc
 	*/
-	float	backlerp;				// 0.0 = current, 1.0 = old
-	int		skinnum;				// also used as RF_BEAM's palette index
+	float		backlerp;			// 0.0 = current, 1.0 = old
+	int			skinnum;			// also used as RF_BEAM's palette index
 
-	int		lightstyle;				// for flashing entities
-	float	alpha;					// ignore if RF_TRANSLUCENT isn't set
+	int			lightstyle;			// for flashing entities
+	float		alpha;				// ignore if RF_TRANSLUCENT isn't set
 
-	image_t	*skin;					// NULL for inline skin
-	int		flags;
+	image_t		*skin;				// NULL for inline skin
+	int			flags;
 
 };
 

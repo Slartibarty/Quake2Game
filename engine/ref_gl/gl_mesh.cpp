@@ -1318,8 +1318,9 @@ static void Studio_DrawPoints( studiohdr_t *phdr, studiohdr_t *ptexturehdr, mstu
 	pstudionorms = (vec3_t *)((byte *)phdr + pmodel->normindex);
 
 	pskinref = (short *)((byte *)ptexturehdr + ptexturehdr->skinindex);
-	if (m_skinnum != 0 && m_skinnum < ptexturehdr->numskinfamilies)
-		pskinref += (m_skinnum * ptexturehdr->numskinref);
+	if ( m_skinnum != 0 && m_skinnum < ptexturehdr->numskinfamilies ) {
+		pskinref += ( m_skinnum * ptexturehdr->numskinref );
+	}
 
 	for (i = 0; i < pmodel->numverts; i++)
 	{
@@ -1333,7 +1334,7 @@ static void Studio_DrawPoints( studiohdr_t *phdr, studiohdr_t *ptexturehdr, mstu
 	for (j = 0; j < pmodel->nummesh; j++) 
 	{
 		int flags = 0;
-		//flags = ptexture[pskinref[pmesh[j].skinref]].flags;
+		flags = ptexture[pskinref[pmesh[j].skinref]].flags;
 		for (i = 0; i < pmesh[j].numnorms; i++, lv += 3, pstudionorms++, pnormbone++)
 		{
 			Studio_Lighting (&lv_tmp, *pnormbone, flags, (float *)pstudionorms);
@@ -1348,7 +1349,7 @@ static void Studio_DrawPoints( studiohdr_t *phdr, studiohdr_t *ptexturehdr, mstu
 		}
 	}
 
-	glCullFace(GL_FRONT);
+//	glCullFace(GL_FRONT);
 
 	for (j = 0; j < pmodel->nummesh; j++)
 	{
@@ -1358,12 +1359,10 @@ static void Studio_DrawPoints( studiohdr_t *phdr, studiohdr_t *ptexturehdr, mstu
 		pmesh = (mstudiomesh_t *)((byte *)phdr + pmodel->meshindex) + j;
 		ptricmds = (short *)((byte *)phdr + pmesh->triindex);
 
-	//	s = 1.0f / (float)ptexture[pskinref[pmesh->skinref]].width;
-	//	t = 1.0f / (float)ptexture[pskinref[pmesh->skinref]].height;
-		s = 1.0f / 256.0f;
-		t = 1.0f / 256.0f;
+		s = 1.0f / (float)ptexture[pskinref[pmesh->skinref]].width;
+		t = 1.0f / (float)ptexture[pskinref[pmesh->skinref]].height;
 
-	//	glBindTexture( GL_TEXTURE_2D, ptexture[pskinref[pmesh->skinref]].index );
+		GL_Bind( ptexture[pskinref[pmesh->skinref]].index );
 
 		while (i = *(ptricmds++))
 		{
