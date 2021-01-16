@@ -28,9 +28,11 @@
 #include "screen.h"
 #include "sound.h"
 #include "input.h"
-#include "keys.h"
+#include "cl_keys.h"
 #include "console.h"
 #include "cdaudio.h"
+
+#include "keycodes.h"
 
 //=============================================================================
 

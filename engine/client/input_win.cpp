@@ -43,43 +43,55 @@ namespace input
 	//-------------------------------------------------------------------------------------------------
 	static int MapKey( int scancode )
 	{
-		int result = scantokey[scancode];
+		int modified = ( scancode >> 16 ) & 255;
 
-		//
-		// EXTENDED KEYS DO NOT WORK PROPERLY
-		//
+		if ( modified > 127 ) {
+			return 0;
+		}
 
-		switch ( result )
+		int result = scantokey[modified];
+
+		if ( !( scancode & ( 1 << 24 ) ) )
 		{
-		case K_HOME:
-			return K_KP_HOME;
-		case K_UPARROW:
-			return K_KP_UPARROW;
-		case K_PGUP:
-			return K_KP_PGUP;
-		case K_LEFTARROW:
-			return K_KP_LEFTARROW;
-		case K_RIGHTARROW:
-			return K_KP_RIGHTARROW;
-		case K_END:
-			return K_KP_END;
-		case K_DOWNARROW:
-			return K_KP_DOWNARROW;
-		case K_PGDN:
-			return K_KP_PGDN;
-		case K_INS:
-			return K_KP_INS;
-		case K_DEL:
-			return K_KP_DEL;
-		// Extended keys
-		case 0x0D:
-			return K_KP_ENTER;
-		case 0x2F:
-			return K_KP_SLASH;
-		case 0xAF:
-			return K_KP_PLUS;
-		default:
-			return result;
+			switch ( result )
+			{
+			case K_HOME:
+				return K_KP_HOME;
+			case K_UPARROW:
+				return K_KP_UPARROW;
+			case K_PGUP:
+				return K_KP_PGUP;
+			case K_LEFTARROW:
+				return K_KP_LEFTARROW;
+			case K_RIGHTARROW:
+				return K_KP_RIGHTARROW;
+			case K_END:
+				return K_KP_END;
+			case K_DOWNARROW:
+				return K_KP_DOWNARROW;
+			case K_PGDN:
+				return K_KP_PGDN;
+			case K_INS:
+				return K_KP_INS;
+			case K_DEL:
+				return K_KP_DEL;
+			default:
+				return result;
+			}
+		}
+		else
+		{
+			switch ( result )
+			{
+			case 0x0D:
+				return K_KP_ENTER;
+			case 0x2F:
+				return K_KP_SLASH;
+			case 0xAF:
+				return K_KP_PLUS;
+			default:
+				return result;
+			}
 		}
 	}
 

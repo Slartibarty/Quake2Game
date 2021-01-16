@@ -6,31 +6,31 @@ key up events are sent even if in console mode
 
 */
 
+#define MAXCMDLINE 256
 
-#define		MAXCMDLINE	256
 char	key_lines[32][MAXCMDLINE];
 int		key_linepos;
 int		shift_down=false;
-int	anykeydown;
+int		anykeydown;
 
 int		edit_line=0;
 int		history_line=0;
 
 int		key_waiting;
 char	*keybindings[256];
-qboolean	consolekeys[256];	// if true, can't be rebound while in console
-qboolean	menubound[256];	// if true, can't be rebound while in menu
+bool	consolekeys[256];	// if true, can't be rebound while in console
+bool	menubound[256];	// if true, can't be rebound while in menu
 int		keyshift[256];		// key to map to if shift held down in console
 int		key_repeats[256];	// if > 1, it is autorepeating
-qboolean	keydown[256];
+bool	keydown[256];
 
-typedef struct
+struct keyname_t
 {
 	const char	*name;
 	int			keynum;
-} keyname_t;
+};
 
-keyname_t keynames[] =
+static const keyname_t keynames[]
 {
 	{"TAB", K_TAB},
 	{"ENTER", K_ENTER},
@@ -322,7 +322,7 @@ void Key_Console (int key)
 		}
 		else
 		{
-			strcpy(key_lines[edit_line], key_lines[history_line]);
+			Q_strcpy(key_lines[edit_line], key_lines[history_line]);
 			key_linepos = (int)strlen(key_lines[edit_line]);
 		}
 		return;
@@ -368,7 +368,7 @@ void Key_Console (int key)
 
 //============================================================================
 
-qboolean	chat_team;
+bool		chat_team;
 char		chat_buffer[MAXCMDLINE];
 int			chat_bufferlen = 0;
 
@@ -432,7 +432,7 @@ the K_* names are matched up.
 */
 int Key_StringToKeynum (char *str)
 {
-	keyname_t	*kn;
+	const keyname_t *kn;
 	
 	if (!str || !str[0])
 		return -1;
@@ -458,7 +458,7 @@ FIXME: handle quote special (general escape sequence?)
 */
 const char *Key_KeynumToString (int keynum)
 {
-	keyname_t	*kn;	
+	const keyname_t *kn;
 	static	char	tinystr[2];
 	
 	if (keynum == -1)
@@ -588,11 +588,14 @@ Writes lines containing "bind key value"
 */
 void Key_WriteBindings (FILE *f)
 {
-	int		i;
+	int i;
 
-	for (i=0 ; i<256 ; i++)
-		if (keybindings[i] && keybindings[i][0])
-			fprintf (f, "bind %s \"%s\"\n", Key_KeynumToString(i), keybindings[i]);
+	for ( i = 0; i < 256; i++ )
+	{
+		if ( keybindings[i] && keybindings[i][0] ) {
+			fprintf( f, "bind %s \"%s\"\n", Key_KeynumToString( i ), keybindings[i] );
+		}
+	}
 }
 
 
@@ -604,11 +607,14 @@ Key_Bindlist_f
 */
 void Key_Bindlist_f (void)
 {
-	int		i;
+	int i;
 
-	for (i=0 ; i<256 ; i++)
-		if (keybindings[i] && keybindings[i][0])
-			Com_Printf ("%s \"%s\"\n", Key_KeynumToString(i), keybindings[i]);
+	for ( i = 0; i < 256; i++ )
+	{
+		if ( keybindings[i] && keybindings[i][0] ) {
+			Com_Printf( "%s \"%s\"\n", Key_KeynumToString( i ), keybindings[i] );
+		}
+	}
 }
 
 
@@ -712,7 +718,7 @@ Called by the system between frames for both key up and key down events
 Should NOT be called during an interrupt!
 ===================
 */
-void Key_Event (int key, qboolean down, unsigned time)
+void Key_Event (int key, bool down, unsigned time)
 {
 	char	*kb;
 	char	cmd[1024];
