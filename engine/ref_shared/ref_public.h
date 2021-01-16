@@ -75,7 +75,7 @@ struct particle_t
 
 struct lightstyle_t
 {
-	float		rgb[3];			// 0.0 - 2.0
+	vec3_t		rgb;			// 0.0 - 2.0
 	float		white;			// highest of rgb
 };
 
@@ -83,9 +83,9 @@ struct refdef_t
 {
 	int			x, y, width, height;// in virtual screen coordinates
 	float		fov_x, fov_y;
-	float		vieworg[3];
-	float		viewangles[3];
-	float		blend[4];			// rgba 0-1 full screen blend
+	vec3_t		vieworg;
+	vec3_t		viewangles;
+	vec4_t		blend;				// rgba 0-1 full screen blend
 	float		time;				// time is uesed to auto animate
 	int			rdflags;			// RDF_UNDERWATER, etc
 
@@ -104,7 +104,7 @@ struct refdef_t
 };
 
 
-#define	API_VERSION		4
+#define	API_VERSION		5
 
 //
 // these are the functions exported by the refresh module

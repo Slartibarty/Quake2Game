@@ -177,6 +177,7 @@ namespace math
 
 typedef float vec_t;
 typedef vec_t vec3_t[3];
+typedef vec_t vec4_t[4];
 typedef vec_t vec5_t[5];
 
 // angle indexes
@@ -302,6 +303,28 @@ inline void VectorScale(const vec3_t in, float scale, vec3_t out)
 	out[2] = in[2] * scale;
 }
 
+inline void VectorRotate( const vec3_t in1, const float in2[3][4], vec3_t out )
+{
+	out[0] = DotProduct( in1, in2[0] );
+	out[1] = DotProduct( in1, in2[1] );
+	out[2] = DotProduct( in1, in2[2] );
+}
+
+// rotate by the inverse of the matrix
+inline void VectorIRotate( const vec3_t in1, const float in2[3][4], vec3_t out )
+{
+	out[0] = in1[0] * in2[0][0] + in1[1] * in2[1][0] + in1[2] * in2[2][0];
+	out[1] = in1[0] * in2[0][1] + in1[1] * in2[1][1] + in1[2] * in2[2][1];
+	out[2] = in1[0] * in2[0][2] + in1[1] * in2[1][2] + in1[2] * in2[2][2];
+}
+
+inline void VectorTransform( const vec3_t in1, const float in2[3][4], vec3_t out )
+{
+	out[0] = DotProduct( in1, in2[0] ) + in2[0][3];
+	out[1] = DotProduct( in1, in2[1] ) + in2[1][3];
+	out[2] = DotProduct( in1, in2[2] ) + in2[2][3];
+}
+
 inline bool VectorCompare(const vec3_t v1, const vec3_t v2)
 {
 	return (v1[0] != v2[0] || v1[1] != v2[1] || v1[2] != v2[2]);
@@ -365,6 +388,10 @@ int BoxOnPlaneSide (vec3_t emins, vec3_t emaxs, cplane_t *plane);
 void ProjectPointOnPlane( vec3_t dst, const vec3_t p, const vec3_t normal );
 void PerpendicularVector( vec3_t dst, const vec3_t src );
 void RotatePointAroundVector( vec3_t dst, const vec3_t dir, const vec3_t point, float degrees );
+
+void AngleQuaternion( const vec3_t angles, vec4_t quaternion );
+void QuaternionMatrix( const vec4_t quaternion, float( *matrix )[4] );
+void QuaternionSlerp( const vec4_t p, vec4_t q, float t, vec4_t qt );
 
 #define _DotProduct(x,y)		(x[0]*y[0]+x[1]*y[1]+x[2]*y[2])
 #define _VectorSubtract(a,b,c)	(c[0]=a[0]-b[0],c[1]=a[1]-b[1],c[2]=a[2]-b[2])

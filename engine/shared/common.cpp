@@ -646,10 +646,10 @@ void Qcommon_Frame (int msec)
 		}
 	}
 
-	if ( fixedtime->value ) {
+	if ( fixedtime->value != 0.0f ) {
 		msec = fixedtime->value;
 	}
-	else if ( timescale->value ) {
+	else if ( timescale->value != 1.0f ) {
 		msec *= timescale->value;
 		if ( msec < 1 ) {
 			msec = 1;

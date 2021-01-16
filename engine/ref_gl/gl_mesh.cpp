@@ -832,10 +832,469 @@ void R_DrawAliasModel (entity_t *e)
 =============================================================
 */
 
-int m_bodynum;			// bodypart selection
-mstudiomodel_t *m_pmodel;
+static constexpr float StudioLambert = 1.5f;
 
-void Studio_DrawPoints( studiohdr_t *phdr )
+vec3_t			g_xformverts[MAXSTUDIOVERTS];	// transformed vertices
+vec3_t			g_lightvalues[MAXSTUDIOVERTS];	// light surface normals
+vec3_t			*g_pxformverts;
+vec3_t			*g_pvlightvalues;
+
+vec3_t			g_lightvec;						// light vector in model reference frame
+vec3_t			g_blightvec[MAXSTUDIOBONES];	// light vectors in bone reference frames
+int				g_ambientlight;					// ambient world light
+float			g_shadelight;					// direct world light
+vec3_t			g_lightcolor;
+
+int				g_smodels_total;				// cookie
+
+float			g_bonetransform[MAXSTUDIOBONES][3][4];	// bone transformation matrix
+
+int				g_chrome[MAXSTUDIOVERTS][2];	// texture coords for surface normals
+int				g_chromeage[MAXSTUDIOBONES];	// last time chrome vectors were updated
+vec3_t			g_chromeup[MAXSTUDIOBONES];		// chrome vector "up" in bone reference frames
+vec3_t			g_chromeright[MAXSTUDIOBONES];	// chrome vector "right" in bone reference frames
+
+int				m_bodynum;			// bodypart selection
+vec4_t			m_adj;				// FIX: non persistant, make static
+byte			m_controller[4];	// bone controllers
+byte			m_blending[2];		// animation blending
+byte			m_mouth;			// mouth position
+int				m_sequence = 5;		// sequence index
+int				m_skinnum = 0;
+float			m_frame = 0;
+
+static void Studio_CalcBoneAdj( studiohdr_t *phdr )
+{
+	int					i, j;
+	float				value;
+	mstudiobonecontroller_t *pbonecontroller;
+	
+	pbonecontroller = (mstudiobonecontroller_t *)((byte *)phdr + phdr->bonecontrollerindex);
+
+	for (j = 0; j < phdr->numbonecontrollers; j++)
+	{
+		i = pbonecontroller[j].index;
+		if (i <= 3)
+		{
+			// check for 360% wrapping
+			if (pbonecontroller[j].type & STUDIO_RLOOP)
+			{
+				value = m_controller[i] * (360.0f/256.0f) + pbonecontroller[j].start;
+			}
+			else 
+			{
+				value = m_controller[i] / 255.0f;
+				if (value < 0.0f) value = 0.0f;
+				if (value > 1.0f) value = 1.0f;
+				value = (1.0f - value) * pbonecontroller[j].start + value * pbonecontroller[j].end;
+			}
+		//	ri.Con_Printf( PRINT_DEVELOPER, "%d %d %f : %f\n", m_controller[j], m_prevcontroller[j], value, dadt );
+		}
+		else
+		{
+			value = m_mouth / 64.0f;
+			if (value > 1.0f) value = 1.0f;
+			value = (1.0f - value) * pbonecontroller[j].start + value * pbonecontroller[j].end;
+		//	ri.Con_Printf( PRINT_DEVELOPER, "%d %f\n", mouthopen, value );
+		}
+		switch(pbonecontroller[j].type & STUDIO_TYPES)
+		{
+		case STUDIO_XR:
+		case STUDIO_YR:
+		case STUDIO_ZR:
+			m_adj[j] = DegreesToRadians( value );
+			break;
+		case STUDIO_X:
+		case STUDIO_Y:
+		case STUDIO_Z:
+			m_adj[j] = value;
+			break;
+		}
+	}
+}
+
+static void Studio_CalcBoneQuaternion( int frame, float s, mstudiobone_t *pbone, mstudioanim_t *panim, float *q )
+{
+	int					j, k;
+	vec4_t				q1, q2;
+	vec3_t				angle1, angle2;
+	mstudioanimvalue_t	*panimvalue;
+
+	for (j = 0; j < 3; j++)
+	{
+		if (panim->offset[j+3] == 0)
+		{
+			angle2[j] = angle1[j] = pbone->value[j+3]; // default;
+		}
+		else
+		{
+			panimvalue = (mstudioanimvalue_t *)((byte *)panim + panim->offset[j+3]);
+			k = frame;
+			while (panimvalue->num.total <= k)
+			{
+				k -= panimvalue->num.total;
+				panimvalue += panimvalue->num.valid + 1;
+			}
+			// Bah, missing blend!
+			if (panimvalue->num.valid > k)
+			{
+				angle1[j] = panimvalue[k+1].value;
+
+				if (panimvalue->num.valid > k + 1)
+				{
+					angle2[j] = panimvalue[k+2].value;
+				}
+				else
+				{
+					if (panimvalue->num.total > k + 1)
+						angle2[j] = angle1[j];
+					else
+						angle2[j] = panimvalue[panimvalue->num.valid+2].value;
+				}
+			}
+			else
+			{
+				angle1[j] = panimvalue[panimvalue->num.valid].value;
+				if (panimvalue->num.total > k + 1)
+				{
+					angle2[j] = angle1[j];
+				}
+				else
+				{
+					angle2[j] = panimvalue[panimvalue->num.valid + 2].value;
+				}
+			}
+			angle1[j] = pbone->value[j+3] + angle1[j] * pbone->scale[j+3];
+			angle2[j] = pbone->value[j+3] + angle2[j] * pbone->scale[j+3];
+		}
+
+		if (pbone->bonecontroller[j+3] != -1)
+		{
+			angle1[j] += m_adj[pbone->bonecontroller[j+3]];
+			angle2[j] += m_adj[pbone->bonecontroller[j+3]];
+		}
+	}
+
+	if (!VectorCompare( angle1, angle2 ))
+	{
+		AngleQuaternion( angle1, q1 );
+		AngleQuaternion( angle2, q2 );
+		QuaternionSlerp( q1, q2, s, q );
+	}
+	else
+	{
+		AngleQuaternion( angle1, q );
+	}
+}
+
+
+static void Studio_CalcBonePosition( int frame, float s, mstudiobone_t *pbone, mstudioanim_t *panim, float *pos )
+{
+	int					j, k;
+	mstudioanimvalue_t	*panimvalue;
+
+	for (j = 0; j < 3; j++)
+	{
+		pos[j] = pbone->value[j]; // default;
+		if (panim->offset[j] != 0)
+		{
+			panimvalue = (mstudioanimvalue_t *)((byte *)panim + panim->offset[j]);
+			
+			k = frame;
+			// find span of values that includes the frame we want
+			while (panimvalue->num.total <= k)
+			{
+				k -= panimvalue->num.total;
+				panimvalue += panimvalue->num.valid + 1;
+			}
+			// if we're inside the span
+			if (panimvalue->num.valid > k)
+			{
+				// and there's more data in the span
+				if (panimvalue->num.valid > k + 1)
+				{
+					pos[j] += (panimvalue[k+1].value * (1.0f - s) + s * panimvalue[k+2].value) * pbone->scale[j];
+				}
+				else
+				{
+					pos[j] += panimvalue[k+1].value * pbone->scale[j];
+				}
+			}
+			else
+			{
+				// are we at the end of the repeating values section and there's another section with data?
+				if (panimvalue->num.total <= k + 1)
+				{
+					pos[j] += (panimvalue[panimvalue->num.valid].value * (1.0f - s) + s * panimvalue[panimvalue->num.valid + 2].value) * pbone->scale[j];
+				}
+				else
+				{
+					pos[j] += panimvalue[panimvalue->num.valid].value * pbone->scale[j];
+				}
+			}
+		}
+		if (pbone->bonecontroller[j] != -1)
+		{
+			pos[j] += m_adj[pbone->bonecontroller[j]];
+		}
+	}
+}
+
+
+static void Studio_CalcRotations ( vec3_t *pos, vec4_t *q, studiohdr_t *phdr, mstudioseqdesc_t *pseqdesc, mstudioanim_t *panim, float f )
+{
+	int					i;
+	int					frame;
+	mstudiobone_t		*pbone;
+	float				s;
+
+	frame = (int)f;
+	s = (f - frame);
+
+	// add in programatic controllers
+	Studio_CalcBoneAdj( phdr );
+
+	pbone		= (mstudiobone_t *)((byte *)phdr + phdr->boneindex);
+	for (i = 0; i < phdr->numbones; i++, pbone++, panim++)
+	{
+		Studio_CalcBoneQuaternion( frame, s, pbone, panim, q[i] );
+		Studio_CalcBonePosition( frame, s, pbone, panim, pos[i] );
+	}
+
+	if (pseqdesc->motiontype & STUDIO_X)
+		pos[pseqdesc->motionbone][0] = 0.0f;
+	if (pseqdesc->motiontype & STUDIO_Y)
+		pos[pseqdesc->motionbone][1] = 0.0f;
+	if (pseqdesc->motiontype & STUDIO_Z)
+		pos[pseqdesc->motionbone][2] = 0.0f;
+}
+
+static mstudioanim_t *Studio_GetAnim( studiohdr_t *phdr, mstudioseqdesc_t *pseqdesc )
+{
+	mstudioseqgroup_t	*pseqgroup;
+	pseqgroup = (mstudioseqgroup_t *)((byte *)phdr + phdr->seqgroupindex) + pseqdesc->seqgroup;
+
+	if (pseqdesc->seqgroup == 0)
+	{
+		return (mstudioanim_t *)((byte *)phdr + pseqgroup->unused2 /* was pseqgroup->data, will be almost always be 0 */ + pseqdesc->animindex);
+	}
+
+//	return (mstudioanim_t *)((byte *)m_panimhdr[pseqdesc->seqgroup] + pseqdesc->animindex);
+	return nullptr;
+}
+
+static void Studio_SlerpBones( studiohdr_t *phdr, vec4_t q1[], vec3_t pos1[], vec4_t q2[], vec3_t pos2[], float s )
+{
+	int			i;
+	vec4_t		q3;
+	float		s1;
+
+	s = Clamp( s, 0.0f, 1.0f );
+
+	s1 = 1.0f - s;
+
+	for (i = 0; i < phdr->numbones; i++)
+	{
+		QuaternionSlerp( q1[i], q2[i], s, q3 );
+		q1[i][0] = q3[0];
+		q1[i][1] = q3[1];
+		q1[i][2] = q3[2];
+		q1[i][3] = q3[3];
+		pos1[i][0] = pos1[i][0] * s1 + pos2[i][0] * s;
+		pos1[i][1] = pos1[i][1] * s1 + pos2[i][1] * s;
+		pos1[i][2] = pos1[i][2] * s1 + pos2[i][2] * s;
+	}
+}
+
+static void Studio_AdvanceFrame( studiohdr_t *phdr, float dt )
+{	
+	mstudioseqdesc_t *pseqdesc;
+	pseqdesc = (mstudioseqdesc_t *)((byte *)phdr + phdr->seqindex) + m_sequence;
+
+	if ( dt > 0.1f ) {
+		dt = 0.1f;
+	}
+	m_frame += dt * pseqdesc->fps;
+
+	if (pseqdesc->numframes <= 1)
+	{
+		m_frame = 0.0f;
+	}
+	else
+	{
+		// wrap
+		m_frame -= (int)(m_frame / (pseqdesc->numframes - 1)) * (pseqdesc->numframes - 1);
+	}
+}
+
+static void Studio_SetUpBones( studiohdr_t *phdr )
+{
+	int					i;
+
+	mstudiobone_t		*pbones;
+	mstudioseqdesc_t	*pseqdesc;
+	mstudioanim_t		*panim;
+
+	vec3_t				pos[MAXSTUDIOBONES];
+	float				bonematrix[3][4];
+	vec4_t				q[MAXSTUDIOBONES];
+
+	vec3_t				pos2[MAXSTUDIOBONES];
+	vec4_t				q2[MAXSTUDIOBONES];
+	vec3_t				pos3[MAXSTUDIOBONES];
+	vec4_t				q3[MAXSTUDIOBONES];
+	vec3_t				pos4[MAXSTUDIOBONES];
+	vec4_t				q4[MAXSTUDIOBONES];
+
+
+	if (m_sequence >= phdr->numseq) {
+		m_sequence = 0;
+	}
+
+	pseqdesc = (mstudioseqdesc_t *)((byte *)phdr + phdr->seqindex) + m_sequence;
+
+	panim = Studio_GetAnim( phdr, pseqdesc );
+	Studio_CalcRotations( pos, q, phdr, pseqdesc, panim, m_frame );
+
+	if (pseqdesc->numblends > 1)
+	{
+		float s;
+
+		panim += phdr->numbones;
+		Studio_CalcRotations( pos2, q2, phdr, pseqdesc, panim, m_frame );
+		s = m_blending[0] / 255.0f;
+
+		Studio_SlerpBones( phdr, q, pos, q2, pos2, s );
+
+		if (pseqdesc->numblends == 4)
+		{
+			panim += phdr->numbones;
+			Studio_CalcRotations( pos3, q3, phdr, pseqdesc, panim, m_frame );
+
+			panim += phdr->numbones;
+			Studio_CalcRotations( pos4, q4, phdr, pseqdesc, panim, m_frame );
+
+			s = m_blending[0] / 255.0f;
+			Studio_SlerpBones( phdr, q3, pos3, q4, pos4, s );
+
+			s = m_blending[1] / 255.0f;
+			Studio_SlerpBones( phdr, q, pos, q3, pos3, s );
+		}
+	}
+
+	pbones = (mstudiobone_t *)((byte *)phdr + phdr->boneindex);
+
+	for (i = 0; i < phdr->numbones; i++) {
+		QuaternionMatrix( q[i], bonematrix );
+
+		bonematrix[0][3] = pos[i][0];
+		bonematrix[1][3] = pos[i][1];
+		bonematrix[2][3] = pos[i][2];
+
+		if (pbones[i].parent == -1) {
+			memcpy(g_bonetransform[i], bonematrix, sizeof(float) * 12);
+		} 
+		else {
+			R_ConcatTransforms (g_bonetransform[pbones[i].parent], bonematrix, g_bonetransform[i]);
+		}
+	}
+}
+
+static void Studio_Lighting( float *lv, int bone, int flags, vec3_t normal )
+{
+	float 	illum;
+	float	lightcos;
+
+	illum = g_ambientlight;
+
+	if ( flags & STUDIO_NF_FLATSHADE )
+	{
+		illum += g_shadelight * 0.8f;
+	}
+	else
+	{
+		float r;
+		lightcos = DotProduct( normal, g_blightvec[bone] ); // -1 colinear, 1 opposite
+
+		if ( lightcos > 1.0f )
+			lightcos = 1.0f;
+
+		illum += g_shadelight;
+
+		r = StudioLambert;
+		if ( r <= 1.0f ) r = 1.0f;
+
+		lightcos = ( lightcos + ( r - 1.0f ) ) / r; 		// do modified hemispherical lighting
+		if ( lightcos > 0.0f )
+		{
+			illum -= g_shadelight * lightcos;
+		}
+		if ( illum <= 0.0f )
+			illum = 0.0f;
+	}
+
+	if ( illum > 255.0f )
+		illum = 255.0f;
+	*lv = illum / 255.0f;	// Light from 0 to 1.0
+}
+
+static void Studio_Chrome( int *pchrome, int bone, vec3_t origin, vec3_t normal )
+{
+	float n;
+
+	if ( g_chromeage[bone] != g_smodels_total )
+	{
+		// calculate vectors from the viewer to the bone. This roughly adjusts for position
+		vec3_t chromeupvec;		// g_chrome t vector in world reference frame
+		vec3_t chromerightvec;	// g_chrome s vector in world reference frame
+		vec3_t tmp;				// vector pointing at bone in world reference frame
+		VectorScale( origin, -1, tmp );
+		tmp[0] += g_bonetransform[bone][0][3];
+		tmp[1] += g_bonetransform[bone][1][3];
+		tmp[2] += g_bonetransform[bone][2][3];
+		VectorNormalize( tmp );
+		CrossProduct( tmp, vright, chromeupvec );
+		VectorNormalize( chromeupvec );
+		CrossProduct( tmp, chromeupvec, chromerightvec );
+		VectorNormalize( chromerightvec );
+
+		VectorIRotate( chromeupvec, g_bonetransform[bone], g_chromeup[bone] );
+		VectorIRotate( chromerightvec, g_bonetransform[bone], g_chromeright[bone] );
+
+		g_chromeage[bone] = g_smodels_total;
+	}
+
+	// calc s coord
+	n = DotProduct( normal, g_chromeright[bone] );
+	pchrome[0] = ( n + 1.0f ) * 32; // FIX: make this a float
+
+	// calc t coord
+	n = DotProduct( normal, g_chromeup[bone] );
+	pchrome[1] = ( n + 1.0f ) * 32; // FIX: make this a float
+}
+
+static void Studio_SetupLighting( studiohdr_t *phdr )
+{
+	int i;
+	g_ambientlight = 32;
+	g_shadelight = 192.0f;
+
+	g_lightvec[0] = 0.0f;
+	g_lightvec[1] = 0.0f;
+	g_lightvec[2] = -1.0f;
+
+	g_lightcolor[0] = 1.0f;
+	g_lightcolor[1] = 1.0f;
+	g_lightcolor[2] = 1.0f;
+
+	// TODO: only do it for bones that actually have textures
+	for ( i = 0; i < phdr->numbones; i++ )
+	{
+		VectorIRotate( g_lightvec, g_bonetransform[i], g_blightvec[i] );
+	}
+}
+
+static void Studio_DrawPoints( studiohdr_t *phdr, studiohdr_t *ptexturehdr, mstudiomodel_t *pmodel, vec3_t origin )
 {
 	int					i, j;
 	mstudiomesh_t		*pmesh;
@@ -843,35 +1302,68 @@ void Studio_DrawPoints( studiohdr_t *phdr )
 	byte				*pnormbone;
 	vec3_t				*pstudioverts;
 	vec3_t				*pstudionorms;
+	mstudiotexture_t	*ptexture;
 	float 				*av;
 	float				*lv;
 	float				lv_tmp;
 	short				*pskinref;
 
-	pvertbone = ((byte *)phdr + m_pmodel->vertinfoindex);
-	pnormbone = ((byte *)phdr + m_pmodel->norminfoindex);
+	pvertbone = ((byte *)phdr + pmodel->vertinfoindex);
+	pnormbone = ((byte *)phdr + pmodel->norminfoindex);
+	ptexture = (mstudiotexture_t *)((byte *)ptexturehdr + ptexturehdr->textureindex);
 
-	pmesh = (mstudiomesh_t *)((byte *)phdr + m_pmodel->meshindex);
+	pmesh = (mstudiomesh_t *)((byte *)phdr + pmodel->meshindex);
 
-	pstudioverts = (vec3_t *)((byte *)phdr + m_pmodel->vertindex);
-	pstudionorms = (vec3_t *)((byte *)phdr + m_pmodel->normindex);
+	pstudioverts = (vec3_t *)((byte *)phdr + pmodel->vertindex);
+	pstudionorms = (vec3_t *)((byte *)phdr + pmodel->normindex);
+
+	pskinref = (short *)((byte *)ptexturehdr + ptexturehdr->skinindex);
+	if (m_skinnum != 0 && m_skinnum < ptexturehdr->numskinfamilies)
+		pskinref += (m_skinnum * ptexturehdr->numskinref);
+
+	for (i = 0; i < pmodel->numverts; i++)
+	{
+		VectorTransform (pstudioverts[i], g_bonetransform[pvertbone[i]], g_pxformverts[i]);
+	}
 
 //
 // clip and draw all triangles
 //
+	lv = (float *)g_pvlightvalues;
+	for (j = 0; j < pmodel->nummesh; j++) 
+	{
+		int flags = 0;
+		//flags = ptexture[pskinref[pmesh[j].skinref]].flags;
+		for (i = 0; i < pmesh[j].numnorms; i++, lv += 3, pstudionorms++, pnormbone++)
+		{
+			Studio_Lighting (&lv_tmp, *pnormbone, flags, (float *)pstudionorms);
+
+			// FIX: move this check out of the inner loop
+			if (flags & STUDIO_NF_CHROME)
+				Studio_Chrome( g_chrome[(float (*)[3])lv - g_pvlightvalues], *pnormbone, origin, (float *)pstudionorms );
+
+			lv[0] = lv_tmp * g_lightcolor[0];
+			lv[1] = lv_tmp * g_lightcolor[1];
+			lv[2] = lv_tmp * g_lightcolor[2];
+		}
+	}
 
 	glCullFace(GL_FRONT);
 
-	for (j = 0; j < m_pmodel->nummesh; j++) 
+	for (j = 0; j < pmodel->nummesh; j++)
 	{
 		float	s, t;
 		short	*ptricmds;
 
-		pmesh = (mstudiomesh_t *)((byte *)phdr + m_pmodel->meshindex) + j;
+		pmesh = (mstudiomesh_t *)((byte *)phdr + pmodel->meshindex) + j;
 		ptricmds = (short *)((byte *)phdr + pmesh->triindex);
 
-		s = 256;
-		t = 256;
+	//	s = 1.0f / (float)ptexture[pskinref[pmesh->skinref]].width;
+	//	t = 1.0f / (float)ptexture[pskinref[pmesh->skinref]].height;
+		s = 1.0f / 256.0f;
+		t = 1.0f / 256.0f;
+
+	//	glBindTexture( GL_TEXTURE_2D, ptexture[pskinref[pmesh->skinref]].index );
 
 		while (i = *(ptricmds++))
 		{
@@ -885,30 +1377,29 @@ void Studio_DrawPoints( studiohdr_t *phdr )
 				glBegin( GL_TRIANGLE_STRIP );
 			}
 
-
 			for( ; i > 0; i--, ptricmds += 4)
 			{
 				// FIX: put these in as integer coords, not floats
 				glTexCoord2f(ptricmds[2]*s, ptricmds[3]*t);
 					
-			//	lv = g_pvlightvalues[ptricmds[1]];
-			//	glColor4f( lv[0], lv[1], lv[2], 1.0 );
+				lv = g_pvlightvalues[ptricmds[1]];
+				glColor4f( lv[0], lv[1], lv[2], 1.0 );
 
-				av = pstudioverts[ptricmds[0]];
+				av = g_pxformverts[ptricmds[0]];
 				glVertex3f(av[0], av[1], av[2]);
 			}
-			glEnd( );
+			glEnd();
 		}
 	}
 }
 
-static void Studio_SetupModel( studiohdr_t *phdr, int bodypart )
+static mstudiomodel_t *Studio_SetupModel( studiohdr_t *phdr, int bodypart )
 {
 	int index;
 
 	if ( bodypart > phdr->numbodyparts )
 	{
-		// Con_DPrintf ("StudioModel::SetupModel: no such bodypart %d\n", bodypart);
+		ri.Con_Printf( PRINT_DEVELOPER, "StudioModel::SetupModel: no such bodypart %d\n", bodypart );
 		bodypart = 0;
 	}
 
@@ -917,7 +1408,7 @@ static void Studio_SetupModel( studiohdr_t *phdr, int bodypart )
 	index = m_bodynum / pbodypart->base;
 	index = index % pbodypart->nummodels;
 
-	m_pmodel = (mstudiomodel_t *)( (byte *)phdr + pbodypart->modelindex ) + index;
+	return (mstudiomodel_t *)( (byte *)phdr + pbodypart->modelindex ) + index;
 }
 
 /*
@@ -929,26 +1420,39 @@ R_DrawStudioModel
 void R_DrawStudioModel( entity_t *e )
 {
 	int i;
+	mstudiomodel_t *pmodel;
 	studiohdr_t *phdr;
 
 	phdr = (studiohdr_t *)currentmodel->extradata;
 
+	g_pxformverts = &g_xformverts[0];
+	g_pvlightvalues = &g_lightvalues[0];
+
+	if ( phdr->numbodyparts == 0 )
+		return;
+
 	glPushMatrix();
-	e->angles[PITCH] = -e->angles[PITCH];	// sigh.
+//	e->angles[PITCH] = -e->angles[PITCH];	// sigh.
 	R_RotateForEntity( e );
-	e->angles[PITCH] = -e->angles[PITCH];	// sigh.
+//	e->angles[PITCH] = -e->angles[PITCH];	// sigh.
 
 	// draw it
 
 	glShadeModel( GL_SMOOTH );
 	GL_TexEnv( GL_MODULATE );
 
+	Studio_SetUpBones( phdr );
+
+	Studio_SetupLighting( phdr );
+
 	// whatever
 	for ( i = 0; i < phdr->numbodyparts; ++i )
 	{
-		Studio_SetupModel( phdr, i );
-		Studio_DrawPoints( phdr );
+		pmodel = Studio_SetupModel( phdr, i );
+		Studio_DrawPoints( phdr, phdr, pmodel, e->origin );
 	}
+
+	Studio_AdvanceFrame( phdr, r_newrefdef.time );
 
 	GL_TexEnv( GL_REPLACE );
 	glShadeModel( GL_FLAT );

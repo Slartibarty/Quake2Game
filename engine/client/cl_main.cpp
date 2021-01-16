@@ -1526,7 +1526,7 @@ cheatvar_t	cheatvars[]{
 	{"fixedtime", "0"},
 	{"sw_draworder", "0"},
 	{"gl_lightmap", "0"},
-	{"gl_saturatelighting", "0"},
+//	{"gl_saturatelighting", "0"},
 	{NULL, NULL}
 };
 
@@ -1612,7 +1612,7 @@ void CL_Frame (int msec)
 	{
 		if (cls.state == ca_connected && extratime < 100)
 			return;			// don't flood packets out while connecting
-		if (extratime < 1000.0f/cl_maxfps->value)
+		if (extratime < mathconst::SecondsToMilliseconds / cl_maxfps->value)
 			return;			// framerate is too high
 	}
 
@@ -1620,7 +1620,7 @@ void CL_Frame (int msec)
 	input::Frame ();
 
 	// decide the simulation time
-	cls.frametime = extratime/1000.0f;
+	cls.frametime = extratime * mathconst::MillisecondsToSeconds; // SlartTime
 	cl.time += extratime;
 	cls.realtime = curtime;
 
@@ -1629,8 +1629,8 @@ void CL_Frame (int msec)
 	if (cls.frametime > (1.0f / cl_minfps->value))
 		cls.frametime = (1.0f / cl_minfps->value);
 #else
-	if (cls.frametime > (1.0f / 5))
-		cls.frametime = (1.0f / 5);
+//	if (cls.frametime > (1.0f / 5))
+//		cls.frametime = (1.0f / 5);
 #endif
 
 	// if in the debugger last frame, don't timeout

@@ -105,7 +105,7 @@ extern unsigned		d_8to24table[256];
 void		GL_TextureMode(char *string);
 void		GL_ImageList_f(void);
 
-image_t		*GL_FindImage(const char *name, imagetype_t type);
+image_t		*GL_FindImage(const char *name, imagetype_t type, byte *pic = nullptr, int width = 0, int height = 0);
 image_t		*R_RegisterSkin(const char *name);
 
 void		GL_FreeUnusedImages(void);

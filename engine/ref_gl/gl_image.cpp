@@ -549,8 +549,11 @@ static image_t *GL_CreateImage(const char *name, const byte *pic, int width, int
 
 //-------------------------------------------------------------------------------------------------
 // Finds or loads the given image
+//
+// THIS CHOKES ON TEXTURES WITH THE SAME NAME, STUDIOMODELS CAN HAVE IDENTICAL TEXTURE NAMES THAT ARE
+// DIFFERENT!!! THIS IS BAD!
 //-------------------------------------------------------------------------------------------------
-image_t	*GL_FindImage (const char *name, imagetype_t type)
+image_t	*GL_FindImage (const char *name, imagetype_t type, byte *pic, int width, int height)
 {
 	assert(name);
 
@@ -567,19 +570,38 @@ image_t	*GL_FindImage (const char *name, imagetype_t type)
 	}
 
 	//
+	// load the pic from an 8-bit buffer (studiomodels)
+	//
+	if ( pic )
+	{
+		int c = width * height;
+		uint *pic32 = (uint *)malloc( ( width * height ) * 4 );
+		uint *palette = (uint *)( pic + width + height );
+
+		for ( i = 0; i < ( width * height ) * 4; i += 4 )
+		{
+			pic32[0+i] = palette[pic[0+i]];
+			pic32[1+i] = palette[pic[1+i]];
+			pic32[2+i] = palette[pic[2+i]];
+			pic32[3+i] = 255;
+		}
+		
+		image = GL_CreateImage( name, pic, width, height, type );
+
+		return image;
+	}
+
+	//
 	// load the pic from disk
 	//
-	byte *pic;
-	int width, height;
-
-	pic = GL_LoadImage(name, width, height);
-	if (!pic) {
+	pic = GL_LoadImage( name, width, height );
+	if ( !pic ) {
 		return r_notexture;
 	}
 
-	image = GL_CreateImage(name, pic, width, height, type);
+	image = GL_CreateImage( name, pic, width, height, type );
 
-	free(pic);
+	free( pic );
 
 	return image;
 }

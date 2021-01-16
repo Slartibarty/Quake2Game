@@ -117,9 +117,9 @@ static void DrawGLFlowingPoly (msurface_t *fa)
 
 	p = fa->polys;
 
-	scroll = -64 * ( (r_newrefdef.time / 40.0f) - (int)(r_newrefdef.time / 40.0f) );
-	if(scroll == 0.0)
-		scroll = -64.0;
+	scroll = -64.0f * ( (r_newrefdef.time / 40.0f) - (int)(r_newrefdef.time / 40.0f) );
+	if(scroll == 0.0f)
+		scroll = -64.0f;
 
 	glBegin (GL_POLYGON);
 	v = p->verts[0];
@@ -662,7 +662,7 @@ dynamic:
 		{
 			float scroll;
 		
-			scroll = -64 * ( (r_newrefdef.time / 40.0f) - (int)(r_newrefdef.time / 40.0f) );
+			scroll = -64.0f * ( (r_newrefdef.time / 40.0f) - (int)(r_newrefdef.time / 40.0f) );
 			if(scroll == 0.0f)
 				scroll = -64.0f;
 
@@ -710,7 +710,7 @@ dynamic:
 		{
 			float scroll;
 		
-			scroll = -64 * ( (r_newrefdef.time / 40.0f) - (int)(r_newrefdef.time / 40.0f) );
+			scroll = -64.f * ( (r_newrefdef.time / 40.0f) - (int)(r_newrefdef.time / 40.0f) );
 			if(scroll == 0.0f)
 				scroll = -64.0f;
 

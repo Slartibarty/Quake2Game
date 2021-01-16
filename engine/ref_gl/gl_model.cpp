@@ -1169,11 +1169,13 @@ R_RegisterModel
 */
 model_t *R_RegisterModel (const char *name)
 {
-	model_t	*mod;
-	int		i;
-	dsprite_t	*sprout;
-	dmdl_t		*pheader;
-	studiohdr_t	*pstudio;
+	model_t		*mod;
+	int			i;
+	dsprite_t			*sprout;
+	dmdl_t				*pheader;
+
+	studiohdr_t			*pstudio;
+	mstudiotexture_t	*ptexture;
 
 	mod = Mod_ForName (name, false);
 	if (mod)
@@ -1198,10 +1200,19 @@ model_t *R_RegisterModel (const char *name)
 		}
 		else if (mod->type == mod_studio)
 		{
-		//	pstudio = (studiohdr_t *)mod->extradata;
-		//	for ( i = 0; i < pstudio->num_skins; i++ ) {
-		//		mod->skins[i] = GL_FindImage( (char *)pstudio + pheader->ofs_skins + i * MAX_SKINNAME, it_skin );
-		//	}
+			pstudio = (studiohdr_t *)mod->extradata;
+			assert( pstudio->numtextures < 32 );
+
+#if 0
+			ptexture = (mstudiotexture_t *)( (byte *)pstudio + pstudio->textureindex );
+
+			if ( pstudio->textureindex != 0 )
+			{
+				for ( i = 0; i < pstudio->numtextures; i++ ) {
+					mod->skins[i] = GL_FindImage( ptexture->name, it_skin, (byte *)pstudio + ptexture[i].index, ptexture[i].width, ptexture[i].height );
+				}
+			}
+#endif
 //PGM
 		//	mod->numframes = pstudio->num_frames;
 //PGM
