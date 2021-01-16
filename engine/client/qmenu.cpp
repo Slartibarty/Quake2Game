@@ -108,7 +108,7 @@ void Field_Draw( menufield_s *f )
 
 qboolean Field_Key( menufield_s *f, int key )
 {
-	extern int keydown[];
+	extern bool keydown[]; // cl_keys.cpp
 
 	switch ( key )
 	{

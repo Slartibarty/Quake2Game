@@ -41,17 +41,15 @@ namespace input
 	//-------------------------------------------------------------------------------------------------
 	// Map from windows to quake keynums
 	//-------------------------------------------------------------------------------------------------
-	static int MapKey( int scancode )
+	static int MapKey( int scancode, bool extended )
 	{
-		int modified = ( scancode >> 16 ) & 255;
-
-		if ( modified > 127 ) {
+		if ( scancode > 127 ) {
 			return 0;
 		}
 
-		int result = scantokey[modified];
+		int result = scantokey[scancode];
 
-		if ( !( scancode & ( 1 << 24 ) ) )
+		if ( !extended )
 		{
 			switch ( result )
 			{
@@ -130,7 +128,7 @@ namespace input
 
 		bool down = ( raw.Message == WM_KEYDOWN ) ? true : false;
 
-		Key_Event( MapKey( raw.MakeCode ), down, sys_msg_time );
+		Key_Event( MapKey( raw.MakeCode, raw.Flags & RI_KEY_E0 ), down, sys_msg_time );
 	}
 
 	static void HandleMouseInput( RAWMOUSE &raw )
