@@ -634,7 +634,7 @@ void SCR_TimeRefresh_f (void)
 	}
 
 	stop = Sys_Milliseconds ();
-	time = (stop-start)/1000.0f;
+	time = (stop-start) * mathconst::MillisecondsToSeconds;
 	Com_Printf ("%f seconds (%f fps)\n", time, 128/time);
 }
 

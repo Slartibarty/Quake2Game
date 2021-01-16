@@ -103,7 +103,7 @@ int Sys_Milliseconds (void)
 	static LARGE_INTEGER	startTime;
 
 	static double			timeToMS;
-	static qboolean			initialized = false;
+	static bool				initialized = false;
 
 	if (!initialized)
 	{
