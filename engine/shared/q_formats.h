@@ -60,7 +60,7 @@ constexpr int IDALIASHEADER = MakeID('I', 'D', 'P', '2');
 #define	MAX_TRIANGLES	4096
 #define MAX_VERTS		2048
 #define MAX_FRAMES		512
-#define MAX_MD2SKINS	32
+#define MAX_MD2SKINS	64		// Slart: Bumped to 64 from 32, the opfor scientist has 33 textures
 #define	MAX_SKINNAME	64
 
 struct dstvert_t

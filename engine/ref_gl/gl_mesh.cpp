@@ -16,12 +16,10 @@ static float	r_avertexnormals[NUMVERTEXNORMALS][3]{
 #include "../ref_shared/anorms.inl"
 };
 
-typedef float vec4_t[4];
-
 static vec4_t	s_lerped[MAX_VERTS];
 
 static vec3_t	shadevector;
-static float	shadelight[3];
+static vec3_t	shadelight;
 
 // precalculated dot products for quantized angles
 #define SHADEDOT_QUANT 16
@@ -1154,6 +1152,7 @@ static void Studio_SetUpBones( studiohdr_t *phdr )
 	pseqdesc = (mstudioseqdesc_t *)((byte *)phdr + phdr->seqindex) + m_sequence;
 
 	panim = Studio_GetAnim( phdr, pseqdesc );
+	assert( panim );
 	Studio_CalcRotations( pos, q, phdr, pseqdesc, panim, m_frame );
 
 	if (pseqdesc->numblends > 1)
@@ -1364,30 +1363,61 @@ static void Studio_DrawPoints( studiohdr_t *phdr, studiohdr_t *ptexturehdr, mstu
 
 		GL_Bind( ptexture[pskinref[pmesh->skinref]].index );
 
-		while (i = *(ptricmds++))
+		if (ptexture[pskinref[pmesh->skinref]].flags & STUDIO_NF_CHROME)
 		{
-			if (i < 0)
+			while (i = *(ptricmds++))
 			{
-				glBegin( GL_TRIANGLE_FAN );
-				i = -i;
-			}
-			else
-			{
-				glBegin( GL_TRIANGLE_STRIP );
-			}
+				if (i < 0)
+				{
+					glBegin( GL_TRIANGLE_FAN );
+					i = -i;
+				}
+				else
+				{
+					glBegin( GL_TRIANGLE_STRIP );
+				}
 
-			for( ; i > 0; i--, ptricmds += 4)
-			{
-				// FIX: put these in as integer coords, not floats
-				glTexCoord2f(ptricmds[2]*s, ptricmds[3]*t);
+				for( ; i > 0; i--, ptricmds += 4)
+				{
+					// FIX: put these in as integer coords, not floats
+					glTexCoord2f(g_chrome[ptricmds[1]][0]*s, g_chrome[ptricmds[1]][1]*t);
 					
-				lv = g_pvlightvalues[ptricmds[1]];
-				glColor4f( lv[0], lv[1], lv[2], 1.0 );
+					lv = g_pvlightvalues[ptricmds[1]];
+					glColor4f( lv[0], lv[1], lv[2], 1.0 );
 
-				av = g_pxformverts[ptricmds[0]];
-				glVertex3f(av[0], av[1], av[2]);
-			}
-			glEnd();
+					av = g_pxformverts[ptricmds[0]];
+					glVertex3f(av[0], av[1], av[2]);
+				}
+				glEnd( );
+			}	
+		} 
+		else 
+		{
+			while (i = *(ptricmds++))
+			{
+				if (i < 0)
+				{
+					glBegin( GL_TRIANGLE_FAN );
+					i = -i;
+				}
+				else
+				{
+					glBegin( GL_TRIANGLE_STRIP );
+				}
+
+				for( ; i > 0; i--, ptricmds += 4)
+				{
+					// FIX: put these in as integer coords, not floats
+					glTexCoord2f(ptricmds[2]*s, ptricmds[3]*t);
+					
+					lv = g_pvlightvalues[ptricmds[1]];
+					glColor4f( lv[0], lv[1], lv[2], 1.0 );
+
+					av = g_pxformverts[ptricmds[0]];
+					glVertex3f(av[0], av[1], av[2]);
+				}
+				glEnd();
+			}	
 		}
 	}
 }
@@ -1424,6 +1454,8 @@ void R_DrawStudioModel( entity_t *e )
 
 	phdr = (studiohdr_t *)currentmodel->extradata;
 
+	++g_smodels_total; // render data cache cookie
+
 	g_pxformverts = &g_xformverts[0];
 	g_pvlightvalues = &g_lightvalues[0];
 
@@ -1452,7 +1484,7 @@ void R_DrawStudioModel( entity_t *e )
 	}
 
 	// Debug
-	//Studio_AdvanceFrame( phdr, r_newrefdef.time );
+	Studio_AdvanceFrame( phdr, r_newrefdef.frametime );
 
 	GL_TexEnv( GL_REPLACE );
 	glShadeModel( GL_FLAT );

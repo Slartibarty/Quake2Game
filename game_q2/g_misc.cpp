@@ -471,26 +471,25 @@ void SP_point_combat (edict_t *self)
 /*QUAKED viewthing (0 .5 .8) (-8 -8 -8) (8 8 8)
 Just for the debugging level.  Don't use
 */
-void TH_viewthing(edict_t *ent)
+void TH_viewthing( edict_t *ent )
 {
 	ent->s.frame = (ent->s.frame + 1) % 7;
 	ent->nextthink = level.time + FRAMETIME;
 }
 
-void SP_viewthing(edict_t *ent)
+void SP_viewthing( edict_t *ent )
 {
-	gi.dprintf ("viewthing spawned\n");
+	gi.dprintf( "viewthing spawned\n" );
 
-	ent->movetype = MOVETYPE_TOSS;
+	ent->movetype = MOVETYPE_NONE;
 	ent->solid = SOLID_BBOX;
-	ent->s.renderfx = RF_FRAMELERP;
-	VectorSet (ent->mins, -16, -16, -24);
-	VectorSet (ent->maxs, 16, 16, 32);
-	ent->s.modelindex = gi.modelindex ("models/hgrunt_opfor.mdl");
-	gi.linkentity (ent);
-	ent->nextthink = level.time + 0.5f;
-	ent->think = TH_viewthing;
-	return;
+	VectorSet( ent->mins, -16, -16, -24 );
+	VectorSet( ent->maxs, 16, 16, 32 );
+	ent->s.modelindex = gi.modelindex( "models/barney.mdl" );
+	gi.linkentity( ent );
+
+//	ent->think = TH_viewthing;
+//	ent->nextthink = level.time + FRAMETIME;
 }
 
 

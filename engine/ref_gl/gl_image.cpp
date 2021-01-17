@@ -549,6 +549,11 @@ static image_t *GL_CreateImage(const char *name, const byte *pic, int width, int
 	return image;
 }
 
+struct rgb_t
+{
+	byte r, g, b;
+};
+
 //-------------------------------------------------------------------------------------------------
 // Finds or loads the given image
 //
@@ -557,14 +562,14 @@ static image_t *GL_CreateImage(const char *name, const byte *pic, int width, int
 //-------------------------------------------------------------------------------------------------
 image_t	*GL_FindImage (const char *name, imagetype_t type, byte *pic, int width, int height)
 {
-	assert(name);
+	assert( name && name[0] );
 
 	// look for it
-	int i;
-	image_t *image;
-	for (i = 0, image = gltextures; i < numgltextures; i++, image++)
+	image_t *image = gltextures;
+	image_t *imagemax = image + numgltextures;
+	for ( ; image <= imagemax; ++image )
 	{
-		if (strcmp(name, image->name) == 0)
+		if ( strcmp( name, image->name ) == 0 )
 		{
 			image->registration_sequence = registration_sequence;
 			return image;
@@ -576,22 +581,21 @@ image_t	*GL_FindImage (const char *name, imagetype_t type, byte *pic, int width,
 	//
 	if ( pic )
 	{
-		int c = width * height;
-		byte *pic32 = (byte *)malloc( c * 4 );
-		byte *palette = (byte *)( pic + width + height );
+		int outsize = width * height * 4;
+		byte *pic32 = (byte *)malloc( outsize );
+		rgb_t *palette = (rgb_t *)( pic + width * height );
 
-		int j;
-		for ( i = 0, j = 0; i < c * 4; i += 4, j += 3 )
+		for ( int i = 0, j = 0; i < outsize; i += 4, ++j )
 		{
-			pic32[0+i] = palette[pic[0+j]];
-			pic32[1+i] = palette[pic[1+j]];
-			pic32[2+i] = palette[pic[2+j]];
-			pic32[3+i] = 255;
+			pic32[i+0] = palette[pic[j]].r;
+			pic32[i+1] = palette[pic[j]].g;
+			pic32[i+2] = palette[pic[j]].b;
+			pic32[i+3] = 255; // SlartTodo: Studiomodels can have alphatest transparency
 		}
+
+	//	stbi_write_bmp( name, width, height, 4, pic32 );
 		
 		image = GL_CreateImage( name, pic32, width, height, type );
-
-		stbi_write_bmp( "Blarps.bmp", width, height, 4, pic32 );
 
 		free( pic32 );
 

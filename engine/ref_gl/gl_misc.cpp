@@ -93,7 +93,7 @@ void GL_Strings_f(void)
 //-------------------------------------------------------------------------------------------------
 void GL_SetDefaultState(void)
 {
-	glClearColor(1.0f, 0.0f, 0.5f, 1.0f);
+	glClearColor( DEFAULT_CLEARCOLOR );
 	glCullFace(GL_FRONT);
 	glEnable(GL_TEXTURE_2D);
 

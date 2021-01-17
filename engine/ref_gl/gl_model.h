@@ -169,10 +169,10 @@ struct model_t
 	float		radius;
 
 //
-// solid volume for clipping 
+// solid volume for clipping (unused)
 //
-	qboolean	clipbox;
-	vec3_t		clipmins, clipmaxs;
+//	qboolean	clipbox;
+//	vec3_t		clipmins, clipmaxs;
 
 //
 // brush model

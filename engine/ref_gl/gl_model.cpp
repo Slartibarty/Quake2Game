@@ -1058,7 +1058,9 @@ void Mod_LoadStudioModel( model_t *mod, void *buffer )
 	phdr = (studiohdr_t *)Hunk_Alloc( modfilelen );
 	memcpy( phdr, buffer, modfilelen ); // Don't bother with swapping
 
-	assert( phdr->numtextures <= 32 );
+	assert( phdr->numtextures <= MAX_MD2SKINS );
+
+	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
 	if ( phdr->textureindex != 0 )
 	{
@@ -1075,12 +1077,8 @@ void Mod_LoadStudioModel( model_t *mod, void *buffer )
 
 	mod->type = mod_studio;
 
-	mod->mins[0] = -32;
-	mod->mins[1] = -32;
-	mod->mins[2] = -32;
-	mod->maxs[0] = 32;
-	mod->maxs[1] = 32;
-	mod->maxs[2] = 32;
+	VectorCopy( phdr->min, mod->mins );
+	VectorCopy( phdr->max, mod->maxs );
 }
 
 /*
@@ -1201,7 +1199,7 @@ model_t *R_RegisterModel (const char *name)
 		else if (mod->type == mod_studio)
 		{
 			pstudio = (studiohdr_t *)mod->extradata;
-			assert( pstudio->numtextures < 32 );
+			assert( pstudio->numtextures < MAX_MD2SKINS );
 
 			ptexture = (mstudiotexture_t *)( (byte *)pstudio + pstudio->textureindex );
 
