@@ -26,7 +26,6 @@ void *Hunk_Begin (int maxsize)
 	membase = VirtualAlloc (NULL, maxsize, MEM_RESERVE, PAGE_NOACCESS);
 #else
 	membase = Z_Malloc(maxsize);
-	memset (membase, 0, maxsize);
 #endif
 
 	if (!membase)

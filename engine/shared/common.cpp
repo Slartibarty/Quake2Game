@@ -128,7 +128,7 @@ void Com_Printf (const char *fmt, ...)
 				logfile = fopen (name, "w");
 		}
 		if (logfile)
-			fprintf (logfile, "%s", msg);
+			fputs (msg, logfile);
 		if (logfile_active->value > 1)
 			fflush (logfile);		// force it to save every time
 	}

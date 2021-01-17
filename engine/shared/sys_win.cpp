@@ -294,21 +294,22 @@ GAME DLL
 ========================================================================
 */
 
-static HINSTANCE	game_library;
+static HINSTANCE game_library;
 
 /*
 =================
 Sys_UnloadGame
 =================
 */
-void Sys_UnloadGame (void)
+void Sys_UnloadGame( void )
 {
-	if (!FreeLibrary (game_library))
-		Com_Error (ERR_FATAL, "FreeLibrary failed for game library");
-	game_library = NULL;
+	if ( !FreeLibrary( game_library ) ) {
+		Com_Error( ERR_FATAL, "FreeLibrary failed for game library" );
+	}
+	game_library = nullptr;
 }
 
-typedef void *(*GetGameAPI_t) (void *);
+typedef void *( *GetGameAPI_t ) ( void * );
 
 /*
 =================
@@ -317,71 +318,41 @@ Sys_GetGameAPI
 Loads the game dll
 =================
 */
-void *Sys_GetGameAPI (void *parms)
+void *Sys_GetGameAPI( void *parms )
 {
-	GetGameAPI_t GetGameAPI;
-	char	name[MAX_OSPATH];
-	char	*path;
-	char	cwd[MAX_OSPATH];
+	char name[MAX_OSPATH];
 
 	const char *gamename = "game" BLD_ARCHITECTURE ".dll";
 
-#ifdef NDEBUG
-	const char *debugdir = "release";
-#else
-	const char *debugdir = "debug";
-#endif
-
-	if (game_library)
-		Com_Error (ERR_FATAL, "Sys_GetGameAPI without Sys_UnloadingGame");
-
-	// check the current debug directory first for development purposes
-	GetCurrentDirectoryA (sizeof(cwd), cwd);
-	Com_sprintf (name, "%s/%s/%s", cwd, debugdir, gamename);
-	game_library = LoadLibraryA ( name );
-	if (game_library)
-	{
-		Com_DPrintf ("LoadLibrary (%s)\n", name);
+	if ( game_library ) {
+		Com_Error( ERR_FATAL, "Sys_GetGameAPI without Sys_UnloadingGame" );
 	}
-	else
+
+	// now run through the search paths
+	char *path = nullptr;
+	while ( 1 )
 	{
-#if 0
-		// check the current directory for other development purposes
-		Com_sprintf (name, "%s/%s", cwd, gamename);
-		game_library = LoadLibrary ( name );
-		if (game_library)
-		{
-			Com_DPrintf ("LoadLibrary (%s)\n", name);
+		path = FS_NextPath( path );
+		if ( !path ) {
+			return nullptr;		// couldn't find one anywhere
 		}
-		else
-#endif
+		Com_sprintf( name, "%s/%s", path, gamename );
+		game_library = LoadLibraryA( name );
+		if ( game_library )
 		{
-			// now run through the search paths
-			path = NULL;
-			while (1)
-			{
-				path = FS_NextPath (path);
-				if (!path)
-					return NULL;		// couldn't find one anywhere
-				Com_sprintf (name, "%s/%s", path, gamename);
-				game_library = LoadLibraryA (name);
-				if (game_library)
-				{
-					Com_DPrintf ("LoadLibrary (%s)\n",name);
-					break;
-				}
-			}
+			Com_DPrintf( "LoadLibrary (%s)\n", name );
+			break;
 		}
 	}
 
-	GetGameAPI = (GetGameAPI_t)GetProcAddress (game_library, "GetGameAPI");
-	if (!GetGameAPI)
+	GetGameAPI_t GetGameAPI = (GetGameAPI_t)GetProcAddress( game_library, "GetGameAPI" );
+	if ( !GetGameAPI )
 	{
-		Sys_UnloadGame ();
-		return NULL;
+		Sys_UnloadGame();
+		return nullptr;
 	}
 
-	return GetGameAPI (parms);
+	return GetGameAPI( parms );
 }
 
 //=======================================================================
@@ -408,10 +379,15 @@ int main(int argc, char **argv)
 
 	// no abort/retry/fail errors
 	// Slart: Was SetErrorMode
-	SetThreadErrorMode(SEM_FAILCRITICALERRORS, NULL);
+	//SetThreadErrorMode(SEM_FAILCRITICALERRORS, NULL);
 
 	Qcommon_Init (argc, argv);
 	oldtime = Sys_Milliseconds ();
+
+	if ( GetACP() == CP_UTF8 )
+	{
+		Com_DPrintf( "Using Windows UTF-8 codepage\n" );
+	}
 
     /* main window message loop */
 	while (1)

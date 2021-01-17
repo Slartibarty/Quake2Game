@@ -333,7 +333,7 @@ void Con_Print (const char *txt)
 {
 	int		y;
 	int		c, l;
-	static int	cr;
+	static bool	cr;
 	int		mask;
 
 	if (!con.initialized)
@@ -384,7 +384,7 @@ void Con_Print (const char *txt)
 
 		case '\r':
 			con.x = 0;
-			cr = 1;
+			cr = true;
 			break;
 
 		default:	// display character and advance
