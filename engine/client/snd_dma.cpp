@@ -679,16 +679,16 @@ void S_StartSound(vec3_t origin, int entnum, int entchannel, sfx_t *sfx, float f
 	ps->sfx = sfx;
 
 	// drift s_beginofs
-	start = cl.frame.servertime * 0.001f * dma.speed + s_beginofs;
+	start = cl.frame.servertime * mathconst::MillisecondsToSeconds * dma.speed + s_beginofs;
 	if (start < paintedtime)
 	{
 		start = paintedtime;
-		s_beginofs = start - (cl.frame.servertime * 0.001f * dma.speed);
+		s_beginofs = start - (cl.frame.servertime * mathconst::MillisecondsToSeconds * dma.speed);
 	}
 	else if (start > paintedtime + 0.3f * dma.speed)
 	{
 		start = paintedtime + 0.1f * dma.speed;
-		s_beginofs = start - (cl.frame.servertime * 0.001f * dma.speed);
+		s_beginofs = start - (cl.frame.servertime * mathconst::MillisecondsToSeconds * dma.speed);
 	}
 	else
 	{
