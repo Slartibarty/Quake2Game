@@ -29,7 +29,7 @@
 #include "sound.h"
 #include "input.h"
 #include "cl_keys.h"
-#include "console.h"
+#include "cl_console.h"
 #include "cdaudio.h"
 
 #include "keycodes.h"

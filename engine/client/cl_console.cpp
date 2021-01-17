@@ -1,4 +1,6 @@
-// console.c
+//=================================================================================================
+// The console
+//=================================================================================================
 
 #include "client.h"
 
@@ -7,10 +9,10 @@ console_t	con;
 cvar_t		*con_notifytime;
 
 
-#define		MAXCMDLINE	256
-extern	char	key_lines[32][MAXCMDLINE];
-extern	int		edit_line;
-extern	int		key_linepos;
+#define			MAXCMDLINE 256
+extern char		key_lines[32][MAXCMDLINE];
+extern int		edit_line;
+extern int		key_linepos;
 		
 
 void DrawString (int x, int y, const char *s)
@@ -549,7 +551,7 @@ void Con_DrawConsole (float frac)
 	SCR_AddDirtyPoint (0,0);
 	SCR_AddDirtyPoint (viddef.width-1,lines-1);
 
-	Com_sprintf (version, "v%4.2f", VERSION);
+	Com_sprintf (version, "v%s", VERSION);
 	for (x=0 ; x<5 ; x++)
 		re.DrawChar (viddef.width-44+x*8, lines-12, 128 + version[x] );
 

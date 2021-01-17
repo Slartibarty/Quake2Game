@@ -1,15 +1,16 @@
-//
-// console
-//
+//=================================================================================================
+// The console
+//=================================================================================================
 
 #pragma once
 
-#define	NUM_CON_TIMES 4
+#define NUM_CON_TIMES	4
 
-#define		CON_TEXTSIZE	32768
-typedef struct
+#define CON_TEXTSIZE	32768
+
+struct console_t
 {
-	qboolean	initialized;
+	bool	initialized;
 
 	char	text[CON_TEXTSIZE];
 	int		current;		// line where next message will be printed
@@ -26,10 +27,10 @@ typedef struct
 	int		vislines;
 
 	float	times[NUM_CON_TIMES];	// cls.realtime time the line was generated
-								// for transparent notify lines
-} console_t;
+									// for transparent notify lines
+};
 
-extern	console_t	con;
+extern console_t con;
 
 void Con_CheckResize (void);
 void Con_Init (void);
