@@ -1238,7 +1238,7 @@ struct entity_state_t
 	int		modelindex2, modelindex3, modelindex4;	// weapons, CTF flags, etc
 	int		frame;
 	int		skinnum;
-	unsigned int		effects;		// PGM - we're filling it, so it needs to be unsigned
+	uint	effects;		// PGM - we're filling it, so it needs to be unsigned
 	int		renderfx;
 	int		solid;			// for client side prediction, 8*(bits 0-4) is x/y radius
 							// 8*(bits 5-9) is z down distance, 8(bits10-15) is z up
