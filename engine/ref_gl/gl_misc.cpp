@@ -23,7 +23,7 @@ void GL_ScreenShot_f(void)
 	FILE		*f;
 
 	// create the scrnshots directory if it doesn't exist
-	Com_sprintf (checkname, "%s/scrnshot", ri.FS_Gamedir());
+	Q_sprintf_s (checkname, "%s/scrnshot", ri.FS_Gamedir());
 	Sys_Mkdir (checkname);
 
 // 
@@ -35,7 +35,7 @@ void GL_ScreenShot_f(void)
 	{ 
 		picname[5] = i/10 + '0'; 
 		picname[6] = i%10 + '0'; 
-		Com_sprintf (checkname, "%s/scrnshot/%s", ri.FS_Gamedir(), picname);
+		Q_sprintf_s (checkname, "%s/scrnshot/%s", ri.FS_Gamedir(), picname);
 		f = fopen (checkname, "rb");
 		if (!f)
 			break;	// file doesn't exist
@@ -226,7 +226,7 @@ void GL_ExtractWad_f( void )
 		free( pic8 );
 
 		char outname[MAX_QPATH];
-		Com_sprintf( outname, "%s/textures/%s/%s.tga", ri.FS_Gamedir(), wadbase, wadlumps[i].name );
+		Q_sprintf_s( outname, "%s/textures/%s/%s.tga", ri.FS_Gamedir(), wadbase, wadlumps[i].name );
 
 		char *asterisk;
 		while ( ( asterisk = strchr( outname, '*' ) ) )
@@ -242,7 +242,7 @@ void GL_ExtractWad_f( void )
 
 		free( pic32 );
 
-		Com_sprintf( outname, "%s/textures/%s/%s.was", ri.FS_Gamedir(), wadbase, wadlumps[i].name );
+		Q_sprintf_s( outname, "%s/textures/%s/%s.was", ri.FS_Gamedir(), wadbase, wadlumps[i].name );
 
 		while ( ( asterisk = strchr( outname, '*' ) ) )
 		{
@@ -285,7 +285,7 @@ void GL_UpgradeWals_f( void )
 	char		folder[MAX_OSPATH];
 	const char	*str;
 
-	Com_sprintf( folder, "%s/%s", ri.FS_Gamedir(), ri.Cmd_Argv( 1 ) );
+	Q_sprintf_s( folder, "%s/%s", ri.FS_Gamedir(), ri.Cmd_Argv( 1 ) );
 
 	str = Sys_FindFirst( folder, 0, 0 );
 	if ( !str ) {

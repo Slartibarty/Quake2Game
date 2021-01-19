@@ -167,7 +167,7 @@ static void InitResolutions()
 		while (VID_GetModeInfo(&width, &height, mode) != false)
 		{
 			resolutions[mode] = (char*)Z_Malloc(32);
-			Com_sprintf(resolutions[mode], 32, "[%dx%d]", width, height);
+			Q_sprintf_s(resolutions[mode], 32, "[%dx%d]", width, height);
 
 			++mode;
 		}

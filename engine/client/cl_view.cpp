@@ -385,7 +385,7 @@ void V_Gun_Model_f (void)
 		gun_model = NULL;
 		return;
 	}
-	Com_sprintf (name, "models/%s/tris.md2", Cmd_Argv(1));
+	Q_sprintf_s (name, "models/%s/tris.md2", Cmd_Argv(1));
 	gun_model = re.RegisterModel (name);
 }
 

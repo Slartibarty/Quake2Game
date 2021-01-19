@@ -38,7 +38,7 @@ static void VID_Printf (int print_level, const char *fmt, ...)
 	char		msg[MAX_PRINT_MSG];
 	
 	va_start (argptr,fmt);
-	Com_vsprintf (msg,fmt,argptr);
+	Q_vsprintf_s (msg,fmt,argptr);
 	va_end (argptr);
 
 	if (print_level == PRINT_ALL)
@@ -57,7 +57,7 @@ static void VID_Error (int err_level, const char *fmt, ...)
 	char		msg[MAX_PRINT_MSG];
 	
 	va_start (argptr,fmt);
-	Com_vsprintf (msg,fmt,argptr);
+	Q_vsprintf_s (msg,fmt,argptr);
 	va_end (argptr);
 
 	Com_Error (err_level,"%s", msg);
@@ -136,7 +136,7 @@ static void VID_InitModes()
 
 		vidmode_t &mode = s_vid_modes[numModes];
 
-		Com_sprintf(mode.description, "Mode %d:\t%dx%d", numModes, dm.dmPelsWidth, dm.dmPelsHeight);
+		Q_sprintf_s(mode.description, "Mode %d:\t%dx%d", numModes, dm.dmPelsWidth, dm.dmPelsHeight);
 		mode.width = dm.dmPelsWidth;
 		mode.height = dm.dmPelsHeight;
 		mode.mode = numModes;
@@ -298,7 +298,7 @@ void VID_CheckChanges (void)
 		cl.refresh_prepped = false;
 		cls.disable_screen = true;
 
-		Com_sprintf( name, "ref_%s.dll", vid_ref->string );
+		Q_sprintf_s( name, "ref_%s.dll", vid_ref->string );
 		if ( !VID_LoadRefresh( name ) )
 		{
 			if ( strcmp (vid_ref->string, "soft") == 0 )

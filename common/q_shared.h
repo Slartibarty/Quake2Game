@@ -96,12 +96,12 @@ inline strlen_t Q_strlen( const char *str )
 
 // Safe strcpy that ensures null termination
 // Returns bytes written
-void Q_strcpy(char *pDest, strlen_t nDestSize, const char *pSrc);
+void Q_strcpy_s(char *pDest, strlen_t nDestSize, const char *pSrc);
 
 template< strlen_t nDestSize >
-inline void Q_strcpy(char (&pDest)[nDestSize], const char *pSrc)
+inline void Q_strcpy_s(char (&pDest)[nDestSize], const char *pSrc)
 {
-	Q_strcpy(pDest, nDestSize, pSrc);
+	Q_strcpy_s(pDest, nDestSize, pSrc);
 }
 
 // portable case insensitive compare
@@ -109,28 +109,28 @@ int Q_strcasecmp (const char *s1, const char *s2);
 int Q_strncasecmp (const char *s1, const char *s2, strlen_t n);
 int Q_stricmp(const char *s1, const char *s2);
 
-void Com_vsprintf(char *pDest, strlen_t nDestSize, const char *pFmt, va_list args);
+void Q_vsprintf_s(char *pDest, strlen_t nDestSize, const char *pFmt, va_list args);
 
 template< strlen_t nDestSize >
-inline void Com_vsprintf(char(&pDest)[nDestSize], const char *pFmt, va_list args)
+inline void Q_vsprintf_s(char(&pDest)[nDestSize], const char *pFmt, va_list args)
 {
-	Com_vsprintf(pDest, nDestSize, pFmt, args);
+	Q_vsprintf_s(pDest, nDestSize, pFmt, args);
 }
 
-inline void Com_sprintf(char *pDest, strlen_t nDestSize, const char *pFmt, ...)
+inline void Q_sprintf_s(char *pDest, strlen_t nDestSize, const char *pFmt, ...)
 {
 	va_list args;
 	va_start(args, pFmt);
-	Com_vsprintf(pDest, nDestSize, pFmt, args);
+	Q_vsprintf_s(pDest, nDestSize, pFmt, args);
 	va_end(args);
 }
 
 template< strlen_t nDestSize >
-inline void Com_sprintf(char(&pDest)[nDestSize], const char *pFmt, ...)
+inline void Q_sprintf_s(char(&pDest)[nDestSize], const char *pFmt, ...)
 {
 	va_list args;
 	va_start(args, pFmt);
-	Com_vsprintf(pDest, nDestSize, pFmt, args);
+	Q_vsprintf_s(pDest, nDestSize, pFmt, args);
 	va_end(args);
 }
 

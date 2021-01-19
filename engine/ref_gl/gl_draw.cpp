@@ -70,7 +70,7 @@ image_t	*Draw_FindPic (const char *name)
 	if (name[0] != '/' && name[0] != '\\')
 	{
 		char fullname[MAX_QPATH];
-		Com_sprintf(fullname, "pics/%s.pcx", name);
+		Q_sprintf_s(fullname, "pics/%s.pcx", name);
 		gl = GL_FindImage(fullname, it_pic);
 	}
 	else

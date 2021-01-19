@@ -207,7 +207,7 @@ void DeathmatchScoreboardMessage (edict_t *ent, edict_t *killer)
 			tag = NULL;
 		if (tag)
 		{
-			Com_sprintf (entry, sizeof(entry),
+			Q_sprintf_s (entry, sizeof(entry),
 				"xv %i yv %i picn %s ",x+32, y, tag);
 			j = (int)strlen(entry);
 			if (stringlength + j > 1024)
@@ -217,7 +217,7 @@ void DeathmatchScoreboardMessage (edict_t *ent, edict_t *killer)
 		}
 
 		// send the layout
-		Com_sprintf (entry, sizeof(entry),
+		Q_sprintf_s (entry, sizeof(entry),
 			"client %i %i %i %i %i %i ",
 			x, y, sorted[i], cl->resp.score, cl->ping, (level.framenum - cl->resp.enterframe)/600);
 		j = (int)strlen(entry);
@@ -295,7 +295,7 @@ void HelpComputer (edict_t *ent)
 		sk = "hard+";
 
 	// send the layout
-	Com_sprintf (string, sizeof(string),
+	Q_sprintf_s (string, sizeof(string),
 		"xv 32 yv 8 picn help "			// background
 		"xv 202 yv 12 string2 \"%s\" "		// skill
 		"xv 0 yv 24 cstring2 \"%s\" "		// level name

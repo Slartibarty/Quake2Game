@@ -118,7 +118,7 @@ void Netchan_OutOfBandPrint (netsrc_t net_socket, netadr_t adr, const char *form
 	static char		string[MAX_MSGLEN - 4];
 	
 	va_start (argptr, format);
-	Com_vsprintf (string, format, argptr);
+	Q_vsprintf_s (string, format, argptr);
 	va_end (argptr);
 
 	Netchan_OutOfBand (net_socket, adr, strlen(string), (byte *)string);

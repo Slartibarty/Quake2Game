@@ -603,7 +603,7 @@ void R_SetSky(const char *name, float rotate, vec3_t axis)
 
 	for (int i = 0; i < 6; i++)
 	{
-		Com_sprintf(pathname, "env/%s%s.tga", skyname, suf[i]);
+		Q_sprintf_s(pathname, "env/%s%s.tga", skyname, suf[i]);
 
 		sky_images[i] = GL_FindImage(pathname, it_sky);
 		if (!sky_images[i])

@@ -137,7 +137,7 @@ void Con_Dump_f (void)
 		return;
 	}
 
-	Com_sprintf (name, "%s/%s.txt", FS_Gamedir(), Cmd_Argv(1));
+	Q_sprintf_s (name, "%s/%s.txt", FS_Gamedir(), Cmd_Argv(1));
 
 	Com_Printf ("Dumped console text to %s.\n", name);
 	FS_CreatePath (name);
@@ -551,7 +551,7 @@ void Con_DrawConsole (float frac)
 	SCR_AddDirtyPoint (0,0);
 	SCR_AddDirtyPoint (viddef.width-1,lines-1);
 
-	Com_sprintf (version, "v%s", VERSION);
+	Q_sprintf_s (version, "v%s", VERSION);
 	for (x=0 ; x<5 ; x++)
 		re.DrawChar (viddef.width-44+x*8, lines-12, 128 + version[x] );
 

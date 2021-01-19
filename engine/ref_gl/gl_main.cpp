@@ -1293,7 +1293,7 @@ void Sys_Error (const char *error, ...)
 	char		text[MAX_PRINT_MSG];
 
 	va_start (argptr, error);
-	Com_vsprintf (text, error, argptr);
+	Q_vsprintf_s (text, error, argptr);
 	va_end (argptr);
 
 	ri.Sys_Error (ERR_FATAL, "%s", text);
@@ -1305,7 +1305,7 @@ void Com_Printf (const char *fmt, ...)
 	char		text[MAX_PRINT_MSG];
 
 	va_start (argptr, fmt);
-	Com_vsprintf (text, fmt, argptr);
+	Q_vsprintf_s (text, fmt, argptr);
 	va_end (argptr);
 
 	ri.Con_Printf (PRINT_ALL, "%s", text);

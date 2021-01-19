@@ -530,7 +530,7 @@ static image_t *GL_CreateImage(const char *name, const byte *pic, int width, int
 	}
 	image = &gltextures[i];
 
-	Q_strcpy(image->name, name);
+	Q_strcpy_s(image->name, name);
 	image->registration_sequence = registration_sequence;
 
 	image->width = width;

@@ -204,7 +204,7 @@ int FS_FOpenFile (const char *filename, FILE **file)
 	{
 		if (!strncmp (filename, link->from, link->fromlength))
 		{
-			Com_sprintf (netpath, "%s%s",link->to, filename+link->fromlength);
+			Q_sprintf_s (netpath, "%s%s",link->to, filename+link->fromlength);
 			*file = fopen (netpath, "rb");
 			if (*file)
 			{		
@@ -242,7 +242,7 @@ int FS_FOpenFile (const char *filename, FILE **file)
 		{		
 	// check a file in the directory tree
 			
-			Com_sprintf (netpath, "%s/%s",search->filename, filename);
+			Q_sprintf_s (netpath, "%s/%s",search->filename, filename);
 			
 			*file = fopen (netpath, "rb");
 			if (!*file)
@@ -277,7 +277,7 @@ int FS_FOpenFile (char *filename, FILE **file)
 	// get config from directory, everything else from pak
 	if (!strcmp(filename, "config.cfg") || !strncmp(filename, "players/", 8))
 	{
-		Com_sprintf (netpath, sizeof(netpath), "%s/%s",FS_Gamedir(), filename);
+		Q_sprintf_s (netpath, sizeof(netpath), "%s/%s",FS_Gamedir(), filename);
 		
 		*file = fopen (netpath, "rb");
 		if (!*file)
@@ -529,7 +529,7 @@ void FS_AddGameDirectory (char *dir)
 	//
 	for (i=0; i<10; i++)
 	{
-		Com_sprintf (pakfile, "%s/pak%i.pak", dir, i);
+		Q_sprintf_s (pakfile, "%s/pak%i.pak", dir, i);
 		pak = FS_LoadPackFile (pakfile);
 		if (!pak)
 			continue;
@@ -569,9 +569,9 @@ void FS_ExecAutoexec (void)
 
 	dir = Cvar_VariableString("gamedir");
 	if (*dir)
-		Com_sprintf(name, "%s/%s/autoexec.cfg", fs_basedir->string, dir); 
+		Q_sprintf_s(name, "%s/%s/autoexec.cfg", fs_basedir->string, dir); 
 	else
-		Com_sprintf(name, "%s/%s/autoexec.cfg", fs_basedir->string, BASEDIRNAME); 
+		Q_sprintf_s(name, "%s/%s/autoexec.cfg", fs_basedir->string, BASEDIRNAME); 
 	if (Sys_FindFirst(name, 0, SFF_SUBDIR | SFF_HIDDEN | SFF_SYSTEM))
 		Cbuf_AddText ("exec autoexec.cfg\n");
 	Sys_FindClose();
@@ -618,7 +618,7 @@ void FS_SetGamedir (const char *dir)
 	if (dedicated && !dedicated->value)
 		Cbuf_AddText ("vid_restart\nsnd_restart\n");
 
-	Com_sprintf (fs_gamedir, "%s/%s", fs_basedir->string, dir);
+	Q_sprintf_s (fs_gamedir, "%s/%s", fs_basedir->string, dir);
 
 	if (!strcmp(dir,BASEDIRNAME) || (*dir == 0))
 	{
@@ -746,7 +746,7 @@ void FS_Dir_f( void )
 	{
 		char *tmp = findname;
 
-		Com_sprintf( findname, "%s/%s", path, wildcard );
+		Q_sprintf_s( findname, "%s/%s", path, wildcard );
 
 		while ( *tmp != 0 )
 		{

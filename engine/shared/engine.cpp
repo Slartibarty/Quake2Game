@@ -87,7 +87,7 @@ void Com_Printf (const char *fmt, ...)
 	char		msg[MAX_PRINT_MSG];
 
 	va_start (argptr,fmt);
-	Com_vsprintf (msg,fmt,argptr);
+	Q_vsprintf_s (msg,fmt,argptr);
 	va_end (argptr);
 
 	if (rd_target)
@@ -113,7 +113,7 @@ void Com_Printf (const char *fmt, ...)
 		
 		if (!logfile)
 		{
-			Com_sprintf (name, "%s/qconsole.log", FS_Gamedir ());
+			Q_sprintf_s (name, "%s/qconsole.log", FS_Gamedir ());
 			if (logfile_active->value > 2)
 				logfile = fopen (name, "a");
 			else
@@ -143,7 +143,7 @@ void Com_DPrintf (const char *fmt, ...)
 		return;			// don't confuse non-developers with techie stuff...
 
 	va_start (argptr,fmt);
-	Com_vsprintf (msg,fmt,argptr);
+	Q_vsprintf_s (msg,fmt,argptr);
 	va_end (argptr);
 	
 	Com_Printf ("%s", msg);
@@ -169,7 +169,7 @@ void Com_Error (int code, const char *fmt, ...)
 	recursive = true;
 
 	va_start (argptr,fmt);
-	Com_vsprintf (msg,fmt,argptr);
+	Q_vsprintf_s (msg,fmt,argptr);
 	va_end (argptr);
 	
 	if (code == ERR_DISCONNECT)

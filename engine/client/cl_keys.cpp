@@ -322,7 +322,7 @@ void Key_Console (int key)
 		}
 		else
 		{
-			Q_strcpy(key_lines[edit_line], key_lines[history_line]);
+			strcpy(key_lines[edit_line], key_lines[history_line]);
 			key_linepos = (int)strlen(key_lines[edit_line]);
 		}
 		return;
@@ -824,7 +824,7 @@ void Key_Event (int key, bool down, unsigned time)
 		kb = keybindings[key];
 		if (kb && kb[0] == '+')
 		{
-			Com_sprintf (cmd, "-%s %i %i\n", kb+1, key, time);
+			Q_sprintf_s (cmd, "-%s %i %i\n", kb+1, key, time);
 			Cbuf_AddText (cmd);
 		}
 		if (keyshift[key] != key)
@@ -832,7 +832,7 @@ void Key_Event (int key, bool down, unsigned time)
 			kb = keybindings[keyshift[key]];
 			if (kb && kb[0] == '+')
 			{
-				Com_sprintf (cmd, "-%s %i %i\n", kb+1, key, time);
+				Q_sprintf_s (cmd, "-%s %i %i\n", kb+1, key, time);
 				Cbuf_AddText (cmd);
 			}
 		}
@@ -851,7 +851,7 @@ void Key_Event (int key, bool down, unsigned time)
 		{
 			if (kb[0] == '+')
 			{	// button commands add keynum and time as a parm
-				Com_sprintf (cmd, "%s %i %i\n", kb, key, time);
+				Q_sprintf_s (cmd, "%s %i %i\n", kb, key, time);
 				Cbuf_AddText (cmd);
 			}
 			else

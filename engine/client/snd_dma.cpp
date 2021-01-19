@@ -260,7 +260,7 @@ sfx_t *S_AliasName ( const char *aliasname, const char *truename )
 	
 	sfx = &known_sfx[i];
 	memset (sfx, 0, sizeof(*sfx));
-	Q_strcpy (sfx->name, aliasname);
+	Q_strcpy_s (sfx->name, aliasname);
 	sfx->registration_sequence = s_registration_sequence;
 	sfx->truename = Z_CopyString( truename );
 
@@ -598,7 +598,7 @@ sfx_t *S_RegisterSexedSound (entity_state_t *ent, char *base)
 		strcpy(model, "male");
 
 	// see if we already know of the model specific sound
-	Com_sprintf (sexedFilename, "#players/%s/%s", model, base+1);
+	Q_sprintf_s (sexedFilename, "#players/%s/%s", model, base+1);
 	sfx = S_FindName (sexedFilename, false);
 
 	if (!sfx)
@@ -614,7 +614,7 @@ sfx_t *S_RegisterSexedSound (entity_state_t *ent, char *base)
 		else
 		{
 			// no, revert to the male sound in the pak0.pak
-			Com_sprintf (maleFilename, "player/%s/%s", "male", base+1);
+			Q_sprintf_s (maleFilename, "player/%s/%s", "male", base+1);
 			sfx = S_AliasName (sexedFilename, maleFilename);
 		}
 	}

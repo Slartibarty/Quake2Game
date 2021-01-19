@@ -455,11 +455,11 @@ void Mod_LoadTexinfo (lump_t *l)
 		    out->next = NULL;
 
 		// Maybe replace this with a texture-agnostic check in GL_FindImage?
-		Com_sprintf( name, "textures/%s.tga", in->texture );
+		Q_sprintf_s( name, "textures/%s.tga", in->texture );
 		out->image = GL_FindImage( name, it_wall );
 		if ( out->image == r_notexture )
 		{
-			Com_sprintf( name, "textures/%s.wal", in->texture );
+			Q_sprintf_s( name, "textures/%s.wal", in->texture );
 			out->image = GL_FindImage( name, it_wall );
 			if ( out->image == r_notexture )
 			{
@@ -1146,7 +1146,7 @@ void R_BeginRegistration (const char *model)
 	registration_sequence++;
 	r_oldviewcluster = -1;		// force markleafs
 
-	Com_sprintf (fullname, "maps/%s.bsp", model);
+	Q_sprintf_s (fullname, "maps/%s.bsp", model);
 
 	// explicitly free the old map if different
 	// this guarantees that mod_known[0] is the world map

@@ -294,14 +294,14 @@ void M_DrawCursor( int x, int y, int f )
 
 		for ( i = 0; i < NUM_CURSOR_FRAMES; i++ )
 		{
-			Com_sprintf( cursorname, "m_cursor%d", i );
+			Q_sprintf_s( cursorname, "m_cursor%d", i );
 
 			re.RegisterPic( cursorname );
 		}
 		cached = true;
 	}
 
-	Com_sprintf( cursorname, "m_cursor%d", f );
+	Q_sprintf_s( cursorname, "m_cursor%d", f );
 	re.DrawPic( x, y, cursorname );
 }
 
@@ -948,7 +948,7 @@ static const char *Keys_MenuKey( int key )
 		{
 			char cmd[1024];
 
-			Com_sprintf (cmd, "bind \"%s\" \"%s\"\n", Key_KeynumToString(key), bindnames[item->generic.localdata[0]][0]);
+			Q_sprintf_s (cmd, "bind \"%s\" \"%s\"\n", Key_KeynumToString(key), bindnames[item->generic.localdata[0]][0]);
 			Cbuf_InsertText (cmd);
 		}
 		
@@ -1923,7 +1923,7 @@ void Create_Savestrings (void)
 
 	for (i=0 ; i<MAX_SAVEGAMES ; i++)
 	{
-		Com_sprintf (name, "%s/save/save%i/server.ssv", FS_Gamedir(), i);
+		Q_sprintf_s (name, "%s/save/save%i/server.ssv", FS_Gamedir(), i);
 		f = fopen (name, "rb");
 		if (!f)
 		{
@@ -2131,7 +2131,7 @@ void JoinServerFunc( void *self )
 	if (index >= m_num_servers)
 		return;
 
-	Com_sprintf (buffer, "connect %s\n", NET_AdrToString (local_server_netadr[index]));
+	Q_sprintf_s (buffer, "connect %s\n", NET_AdrToString (local_server_netadr[index]));
 	Cbuf_AddText (buffer);
 	M_ForceMenuOff ();
 }
@@ -2405,7 +2405,7 @@ void StartServer_MenuInit( void )
 	/*
 	** load the list of map names
 	*/
-	Com_sprintf( mapsname, "%s/maps.lst", FS_Gamedir() );
+	Q_sprintf_s( mapsname, "%s/maps.lst", FS_Gamedir() );
 	// Slart: This is some weird logic here, what's going on?
 	if ( ( fp = fopen( mapsname, "rb" ) ) == 0 )
 	{
@@ -2451,7 +2451,7 @@ void StartServer_MenuInit( void )
 		for (j=0 ; j<l ; j++)
 			shortname[j] = toupper(shortname[j]);
 		strcpy( longname, COM_Parse( &s ) );
-		Com_sprintf( scratch, "%s\n%s", longname, shortname );
+		Q_sprintf_s( scratch, "%s\n%s", longname, shortname );
 
 		mapnames[i] = Z_CopyString( scratch );
 	}
@@ -2779,7 +2779,7 @@ static void DMFlagCallback( void *self )
 setvalue:
 	Cvar_SetValue ("dmflags", (float)flags);
 
-	Com_sprintf( dmoptions_statusbar, "dmflags = %d", flags );
+	Q_sprintf_s( dmoptions_statusbar, "dmflags = %d", flags );
 
 }
 
@@ -3165,7 +3165,7 @@ void AddressBook_MenuInit( void )
 		cvar_t *adr;
 		char buffer[20];
 
-		Com_sprintf( buffer, "adr%d", i );
+		Q_sprintf_s( buffer, "adr%d", i );
 
 		adr = Cvar_Get( buffer, "", CVAR_ARCHIVE );
 
@@ -3194,7 +3194,7 @@ const char *AddressBook_MenuKey( int key )
 
 		for ( index = 0; index < NUM_ADDRESSBOOK_ENTRIES; index++ )
 		{
-			Com_sprintf( buffer, "adr%d", index );
+			Q_sprintf_s( buffer, "adr%d", index );
 			Cvar_Set( buffer, s_addressbook_fields[index].buffer );
 		}
 	}
@@ -3325,7 +3325,7 @@ static qboolean PlayerConfig_ScanDirectories( void )
 	do 
 	{
 		path = FS_NextPath( path );
-		Com_sprintf( findname, "%s/players/*.*", path );
+		Q_sprintf_s( findname, "%s/players/*.*", path );
 
 		if ( ( dirnames = FS_ListFiles( findname, &ndirs, SFF_SUBDIR, 0 ) ) != 0 )
 			break;
@@ -3657,9 +3657,9 @@ void PlayerConfig_MenuDraw( void )
 
 		memset( &entity, 0, sizeof( entity ) );
 
-		Com_sprintf( scratch, "players/%s/tris.md2", s_pmi[s_player_model_box.curvalue].directory );
+		Q_sprintf_s( scratch, "players/%s/tris.md2", s_pmi[s_player_model_box.curvalue].directory );
 		entity.model = re.RegisterModel( scratch );
-		Com_sprintf( scratch, "players/%s/%s.pcx", s_pmi[s_player_model_box.curvalue].directory, s_pmi[s_player_model_box.curvalue].skindisplaynames[s_player_skin_box.curvalue] );
+		Q_sprintf_s( scratch, "players/%s/%s.pcx", s_pmi[s_player_model_box.curvalue].directory, s_pmi[s_player_model_box.curvalue].skindisplaynames[s_player_skin_box.curvalue] );
 		entity.skin = re.RegisterSkin( scratch );
 		entity.flags = RF_FULLBRIGHT;
 		entity.origin[0] = 80;
@@ -3686,7 +3686,7 @@ void PlayerConfig_MenuDraw( void )
 
 		re.RenderFrame( &refdef );
 
-		Com_sprintf( scratch, "/players/%s/%s_i.pcx", 
+		Q_sprintf_s( scratch, "/players/%s/%s_i.pcx", 
 			s_pmi[s_player_model_box.curvalue].directory,
 			s_pmi[s_player_model_box.curvalue].skindisplaynames[s_player_skin_box.curvalue] );
 		re.DrawPic( s_player_config_menu.x - 40, refdef.y, scratch );
@@ -3703,7 +3703,7 @@ const char *PlayerConfig_MenuKey (int key)
 
 		Cvar_Set( "name", s_player_name_field.buffer );
 
-		Com_sprintf( scratch, "%s/%s", 
+		Q_sprintf_s( scratch, "%s/%s", 
 			s_pmi[s_player_model_box.curvalue].directory, 
 			s_pmi[s_player_model_box.curvalue].skindisplaynames[s_player_skin_box.curvalue] );
 

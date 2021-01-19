@@ -107,7 +107,7 @@ static void SV_CheckForSavegame (void)
 	if (Cvar_VariableValue ("deathmatch"))
 		return;
 
-	Com_sprintf (name, "%s/save/current/%s.sav", FS_Gamedir(), sv.name);
+	Q_sprintf_s (name, "%s/save/current/%s.sav", FS_Gamedir(), sv.name);
 	f = fopen (name, "rb");
 	if (!f)
 		return;		// no savegame
@@ -176,7 +176,7 @@ static void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serve
 	strcpy (sv.configstrings[CS_NAME], server);
 	if (Cvar_VariableValue ("deathmatch"))
 	{
-		Com_sprintf(sv.configstrings[CS_AIRACCEL], "%g", sv_airaccelerate->value);
+		Q_sprintf_s(sv.configstrings[CS_AIRACCEL], "%g", sv_airaccelerate->value);
 		pm_airaccelerate = sv_airaccelerate->value;
 	}
 	else
@@ -209,11 +209,11 @@ static void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serve
 	}
 	else
 	{
-		Com_sprintf (sv.configstrings[CS_MODELS+1],
+		Q_sprintf_s (sv.configstrings[CS_MODELS+1],
 			"maps/%s.bsp", server);
 		sv.models[1] = CM_LoadMap (sv.configstrings[CS_MODELS+1], false, &checksum);
 	}
-	Com_sprintf (sv.configstrings[CS_MAPCHECKSUM],
+	Q_sprintf_s (sv.configstrings[CS_MAPCHECKSUM],
 		"%i", checksum);
 
 	//
@@ -223,7 +223,7 @@ static void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serve
 	
 	for (i=1 ; i< CM_NumInlineModels() ; i++)
 	{
-		Com_sprintf (sv.configstrings[CS_MODELS+1+i],
+		Q_sprintf_s (sv.configstrings[CS_MODELS+1+i],
 			"*%i", i);
 		sv.models[i+1] = CM_InlineModel (sv.configstrings[CS_MODELS+1+i]);
 	}
@@ -340,7 +340,7 @@ void SV_InitGame (void)
 
 	// heartbeats will always be sent to the id master
 	svs.last_heartbeat = -99999;		// send immediately
-	Com_sprintf(idmaster, "192.246.40.37:%i", PORT_MASTER);
+	Q_sprintf_s(idmaster, "192.246.40.37:%i", PORT_MASTER);
 	NET_StringToAdr (idmaster, master_adr[0]);
 
 	// init game

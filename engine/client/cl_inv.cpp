@@ -95,7 +95,7 @@ void CL_DrawInventory (void)
 	{
 		item = index[i];
 		// search for a binding
-		Com_sprintf (binding, "use %s", cl.configstrings[CS_ITEMS+item]);
+		Q_sprintf_s (binding, "use %s", cl.configstrings[CS_ITEMS+item]);
 		bind = "";
 		for (j=0 ; j<256 ; j++)
 			if (keybindings[j] && !Q_stricmp (keybindings[j], binding))
@@ -104,7 +104,7 @@ void CL_DrawInventory (void)
 				break;
 			}
 
-		Com_sprintf (string, "%6s %3i %s", bind, cl.inventory[item],
+		Q_sprintf_s (string, "%6s %3i %s", bind, cl.inventory[item],
 			cl.configstrings[CS_ITEMS+item] );
 		if (item != selected)
 			SetStringHighBit (string);

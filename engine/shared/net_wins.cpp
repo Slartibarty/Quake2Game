@@ -130,7 +130,7 @@ char *NET_AdrToString( const netadr_t &a )
 		strcpy( s, "loopback" );
 		break;
 	case NA_IP:
-		Com_sprintf( s, "%i.%i.%i.%i:%i", a.ip[0], a.ip[1], a.ip[2], a.ip[3], ntohs( a.port ) );
+		Q_sprintf_s( s, "%i.%i.%i.%i:%i", a.ip[0], a.ip[1], a.ip[2], a.ip[3], ntohs( a.port ) );
 		break;
 	}
 
@@ -165,7 +165,7 @@ static bool NET_StringToSockaddr( const char *s, sockaddr *sadr )
 
 		( (sockaddr_in *)sadr )->sin_port = 0;
 
-		Q_strcpy( copy, s );
+		Q_strcpy_s( copy, s );
 		// strip off a trailing :port if present
 		for ( char *colon = copy; *colon; ++colon )
 		{

@@ -177,7 +177,7 @@ char *Sys_FindFirst (const char *path, unsigned musthave, unsigned canthave )
 		return NULL;
 	if ( !CompareAttributes( findinfo.attrib, musthave, canthave ) )
 		return NULL;
-	Com_sprintf (findpath, "%s/%s", findbase, findinfo.name);
+	Q_sprintf_s (findpath, "%s/%s", findbase, findinfo.name);
 	return findpath;
 }
 
@@ -192,7 +192,7 @@ char *Sys_FindNext (unsigned musthave, unsigned canthave)
 	if ( !CompareAttributes( findinfo.attrib, musthave, canthave ) )
 		return NULL;
 
-	Com_sprintf (findpath, "%s/%s", findbase, findinfo.name);
+	Q_sprintf_s (findpath, "%s/%s", findbase, findinfo.name);
 	return findpath;
 }
 

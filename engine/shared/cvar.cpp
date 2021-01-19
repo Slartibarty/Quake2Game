@@ -302,9 +302,9 @@ void Cvar_SetValue (const char *var_name, float value)
 	char	val[32];
 
 	if (value == (int)value)
-		Com_sprintf (val, "%i",(int)value);
+		Q_sprintf_s (val, "%i",(int)value);
 	else
-		Com_sprintf (val, "%f",value);
+		Q_sprintf_s (val, "%f",value);
 	Cvar_Set (var_name, val);
 }
 
@@ -420,7 +420,7 @@ void Cvar_WriteVariables (const char *path)
 	{
 		if (var->flags & CVAR_ARCHIVE)
 		{
-			Com_sprintf (buffer, "set %s \"%s\"\n", var->name, var->string);
+			Q_sprintf_s (buffer, "set %s \"%s\"\n", var->name, var->string);
 			fprintf (f, "%s", buffer);
 		}
 	}

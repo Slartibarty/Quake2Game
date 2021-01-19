@@ -171,7 +171,7 @@ char *va(const char *format, ...)
 	va_list			argptr;
 
 	va_start(argptr, format);
-	Com_vsprintf(string, format, argptr);
+	Q_vsprintf_s(string, format, argptr);
 	va_end(argptr);
 
 	return string;
@@ -187,7 +187,7 @@ char *va(const char *format, ...)
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-void Q_strcpy(char *pDest, strlen_t nDestSize, const char *pSrc)
+void Q_strcpy_s(char *pDest, strlen_t nDestSize, const char *pSrc)
 {
 	AssertString(pSrc);
 
@@ -232,7 +232,7 @@ int Q_stricmp(const char *s1, const char *s2)
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-void Com_vsprintf(char *pDest, strlen_t nDestSize, const char *pFmt, va_list args)
+void Q_vsprintf_s(char *pDest, strlen_t nDestSize, const char *pFmt, va_list args)
 {
 #if 0
 #ifdef _WIN32
@@ -436,7 +436,7 @@ void Info_SetValueForKey (char *s, const char *key, const char *value)
 	if (!value || !strlen(value))
 		return;
 
-	Com_sprintf (newi, "\\%s\\%s", key, value);
+	Q_sprintf_s (newi, "\\%s\\%s", key, value);
 
 	if (strlen(newi) + strlen(s) > MAX_INFO_STRING)
 	{

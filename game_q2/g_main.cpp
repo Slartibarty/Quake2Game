@@ -127,7 +127,7 @@ void Sys_Error (const char *error, ...)
 	char		text[MAX_PRINT_MSG];
 
 	va_start (argptr, error);
-	Com_vsprintf (text, error, argptr);
+	Q_vsprintf_s (text, error, argptr);
 	va_end (argptr);
 
 	gi.error (ERR_FATAL, "%s", text);
@@ -139,7 +139,7 @@ void Com_Printf (const char *msg, ...)
 	char		text[MAX_PRINT_MSG];
 
 	va_start (argptr, msg);
-	Com_vsprintf (text, msg, argptr);
+	Q_vsprintf_s (text, msg, argptr);
 	va_end (argptr);
 
 	gi.dprintf ("%s", text);
@@ -185,7 +185,7 @@ edict_t *CreateTargetChangeLevel(char *map)
 
 	ent = G_Spawn ();
 	ent->classname = "target_changelevel";
-	Com_sprintf(level.nextmap, sizeof(level.nextmap), "%s", map);
+	Q_sprintf_s(level.nextmap, sizeof(level.nextmap), "%s", map);
 	ent->map = level.nextmap;
 	return ent;
 }
@@ -333,7 +333,7 @@ void ExitLevel (void)
 	edict_t	*ent;
 	char	command [256];
 
-	Com_sprintf (command, sizeof(command), "gamemap \"%s\"\n", level.changemap);
+	Q_sprintf_s (command, sizeof(command), "gamemap \"%s\"\n", level.changemap);
 	gi.AddCommandString (command);
 	level.changemap = NULL;
 	level.exitintermission = 0;

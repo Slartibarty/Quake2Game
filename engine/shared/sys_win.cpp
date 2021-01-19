@@ -39,7 +39,7 @@ void Sys_Error (const char *error, ...)
 	Qcommon_Shutdown ();
 
 	va_start (argptr, error);
-	Com_vsprintf (text, error, argptr);
+	Q_vsprintf_s (text, error, argptr);
 	va_end (argptr);
 
 	// cl_hwnd can be null
@@ -333,7 +333,7 @@ void *Sys_GetGameAPI( void *parms )
 		if ( !path ) {
 			return nullptr;		// couldn't find one anywhere
 		}
-		Com_sprintf( name, "%s/%s", path, gamename );
+		Q_sprintf_s( name, "%s/%s", path, gamename );
 		game_library = LoadLibraryA( name );
 		if ( game_library )
 		{
