@@ -976,7 +976,7 @@ static void GL_CheckErrors(void)
 R_Init
 ===============
 */
-int R_Init( void *hinstance, void *hWnd )
+bool R_Init( void *hinstance, void *hWnd )
 {	
 	extern float r_turbsin[256];
 

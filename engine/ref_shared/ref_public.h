@@ -116,7 +116,7 @@ struct refexport_t
 	int		api_version;
 
 	// called when the library is loaded
-	qboolean	(*Init) ( void *hinstance, void *wndproc );
+	bool	(*Init) ( void *hinstance, void *wndproc );
 
 	// called before the library is unloaded
 	void	(*Shutdown) (void);
@@ -161,7 +161,7 @@ struct refexport_t
 	void	(*BeginFrame)(void);
 	void	(*EndFrame) (void);
 
-	void	(*AppActivate)( qboolean activate );
+	void	(*AppActivate)( bool activate );
 };
 
 //

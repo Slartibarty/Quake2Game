@@ -328,4 +328,4 @@ void		GLimp_Shutdown( void );
 
 rserr_t    	GLimp_SetMode( int *pWidth, int *pHeight, int mode, bool fullscreen );
 
-void		GLimp_AppActivate( qboolean active );
+void		GLimp_AppActivate( bool active );
