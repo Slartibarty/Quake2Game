@@ -223,7 +223,7 @@ void		Info_SetValueForKey (char *s, const char *key, const char *value);
 qboolean	Info_Validate (const char *s);
 
 //-------------------------------------------------------------------------------------------------
-// System specific - sys_win.cpp
+// System specific - misc_win.cpp
 //-------------------------------------------------------------------------------------------------
 
 extern	int	curtime;		// time returned by last Sys_Milliseconds

@@ -55,7 +55,7 @@ filter {}
 
 -- Config for Windows
 filter "system:windows"
-	buildoptions { "/permissive", "/Zc:__cplusplus" }
+	buildoptions { "/utf-8", "/permissive", "/Zc:__cplusplus" }
 	defines { "WIN32", "_WINDOWS", "_CRT_SECURE_NO_WARNINGS" }
 	links { "noenv.obj" }
 filter {}
