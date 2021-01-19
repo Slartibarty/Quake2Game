@@ -216,7 +216,7 @@ extern	model_t	*r_worldmodel;
 
 extern	double	gldepthmin, gldepthmax;
 
-int 	R_Init(void *hinstance, void *hWnd);
+bool 	R_Init(void *hinstance, void *hWnd);
 void	R_Shutdown(void);
 
 void	R_RenderView(refdef_t *fd);
