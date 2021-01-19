@@ -1,5 +1,6 @@
 //-------------------------------------------------------------------------------------------------
 // Basic defines extracted from q_shared.h
+// Some of these are a best fit for regular q_shared.h, like the MAX_STRING/TOKEN defines
 //-------------------------------------------------------------------------------------------------
 
 #pragma once

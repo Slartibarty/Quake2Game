@@ -467,12 +467,12 @@ void Cmd_Alias_f (void)
 =============================================================================
 */
 
-typedef struct cmd_function_s
+struct cmd_function_t
 {
-	struct cmd_function_s	*next;
-	const char				*name;
-	xcommand_t				function;
-} cmd_function_t;
+	cmd_function_t	*next;
+	const char		*name;
+	xcommand_t		function;
+};
 
 
 static	int			cmd_argc;
