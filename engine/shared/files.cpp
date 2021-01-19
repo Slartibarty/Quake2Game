@@ -2,13 +2,7 @@
 // The virtual filesystem
 //=================================================================================================
 
-#include "../../common/q_shared.h"
-
-#include "common.h"
-#include "cmd.h"
-#include "cvar.h"
-#include "zone.h"
-#include "q_formats.h"
+#include "engine.h"
 
 #include "files.h"
 

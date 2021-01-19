@@ -2,15 +2,11 @@
 // WinSock2 implementation of Quake's networking layer
 //=================================================================================================
 
+#include "engine.h"
+
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #include <Windows.h>
-
-#include "../../common/q_shared.h"
-
-#include "common.h"
-#include "cvar.h"
-#include "protocol.h"
 
 #include "net.h"
 

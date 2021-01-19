@@ -606,12 +606,12 @@ trace_t SV_Trace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, edict_t *p
 {
 	moveclip_t	clip;
 
+	memset( &clip, 0, sizeof( moveclip_t ) );
+
 	if (!mins)
 		mins = vec3_origin;
 	if (!maxs)
 		maxs = vec3_origin;
-
-	memset ( &clip, 0, sizeof ( moveclip_t ) );
 
 	// clip to world
 	clip.trace = CM_BoxTrace (start, end, mins, maxs, 0, contentmask);

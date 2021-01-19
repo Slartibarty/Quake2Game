@@ -1,14 +1,36 @@
-// common.h -- misc functions used in client and server
+//=================================================================================================
+// The main header for the engine
+// This file glues the client and server together
+// It's like q_shared, but for the engine level
+//=================================================================================================
 
 #pragma once
 
-#include "../../common/q_defs.h"
-#include "../../common/q_types.h"
-#include "../../common/q_math.h"	// vec3_t
+// Grab q_shared
+#include "../../common/q_shared.h"
 
-struct cvar_t;
+// Include all our sub headers, since this is the main header for the entire engine
+// We'll eventually want to use precompiled headers or a unity build, so these big includes make sense
+// In all these headers we include the headers they need if they were ever to function on their own,
+// this goes against the classic-quake way where you don't ever do that, but in a world of magical pragmas
+// this is perfectly fine
+#include "cmd.h"
+#include "cmodel.h"
+#include "conproc.h"
+#include "crc.h"
+#include "cvar.h"
+#include "files.h"
+#include "msg.h"
+#include "net.h"
+#include "pmove.h"
+#include "protocol.h"
+#include "sizebuf.h"
+#include "sys.h"
+#include "zone.h"
 
-//=============================================================================
+#include "q_formats.h" // File formats
+
+//-------------------------------------------------------------------------------------------------
 
 #define	VERSION "3.21"
 
@@ -42,9 +64,9 @@ struct cvar_t;
 
 #define BLD_STRING BLD_PLATFORM " " BLD_CONFIG
 
-//=================================================================================================
+//-------------------------------------------------------------------------------------------------
 // Misc
-//=================================================================================================
+//-------------------------------------------------------------------------------------------------
 
 #define	ERR_FATAL	0		// exit the entire game with a popup window
 #define	ERR_DROP	1		// print to console and disconnect from game
@@ -109,9 +131,9 @@ void Qcommon_Init (int argc, char **argv);
 void Qcommon_Frame (int msec);
 void Qcommon_Shutdown (void);
 
-//=================================================================================================
+//-------------------------------------------------------------------------------------------------
 // client / server systems
-//=================================================================================================
+//-------------------------------------------------------------------------------------------------
 
 void CL_Init (void);
 void CL_Drop (void);

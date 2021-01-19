@@ -4,12 +4,14 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdlib>
 #include <cmath>
 #include <cstring>
 #include <cstdarg>
 #include <cstdio>
 #include <cassert>
+#include <cctype>
 #include <ctime>
 
 #include "q_defs.h"

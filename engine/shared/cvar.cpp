@@ -1,11 +1,6 @@
 // cvar.c -- dynamic variable tracking
 
-#include "../../common/q_shared.h"
-
-#include "common.h"
-#include "cmd.h"
-#include "files.h"
-#include "zone.h"
+#include "engine.h"
 
 #include "cvar.h"
 
@@ -16,7 +11,7 @@ cvar_t	*cvar_vars;
 Cvar_InfoValidate
 ============
 */
-static qboolean Cvar_InfoValidate (const char *s)
+static bool Cvar_InfoValidate (const char *s)
 {
 	if (strstr (s, "\\"))
 		return false;

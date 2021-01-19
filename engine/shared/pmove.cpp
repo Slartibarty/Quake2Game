@@ -1,7 +1,5 @@
 
-#include "../../common/q_shared.h"
-
-#include "common.h"
+#include "engine.h"
 
 #include "pmove.h"
 

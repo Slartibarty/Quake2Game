@@ -1,14 +1,11 @@
 // sys_win.c
 
-#include "../../common/q_shared.h"
+#include "engine.h"
 
-#include "../client/winquake.h"	// Hack?
 #include <process.h>
-
-#include "common.h"
-#include "conproc.h"
-#include "files.h"
-#include "zone.h"
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#include "../client/winquake.h"	// Hack?
 
 #include "sys.h"
 

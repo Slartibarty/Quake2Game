@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include "../../common/q_types.h"
-
 //-------------------------------------------------------------------------------------------------
 // Command buffer
 //-------------------------------------------------------------------------------------------------
@@ -43,10 +41,10 @@ void Cbuf_InsertText( const char *text );
 void Cbuf_ExecuteText( int exec_when, char *text );
 // this can be used in place of either Cbuf_AddText or Cbuf_InsertText
 
-void Cbuf_AddEarlyCommands( qboolean clear );
+void Cbuf_AddEarlyCommands( bool clear );
 // adds all the +set commands from the command line
 
-qboolean Cbuf_AddLateCommands( void );
+bool Cbuf_AddLateCommands( void );
 // adds all the remaining + commands from the command line
 // Returns true if any late commands were added, which
 // will keep the demoloop from immediately starting
@@ -85,7 +83,7 @@ void	Cmd_AddCommand( const char *cmd_name, xcommand_t function );
 // as a clc_stringcmd instead of executed locally
 void	Cmd_RemoveCommand( const char *cmd_name );
 
-qboolean Cmd_Exists( const char *cmd_name );
+bool Cmd_Exists( const char *cmd_name );
 // used by the cvar code to check for cvar / command name overlap
 
 const char *Cmd_CompleteCommand( const char *partial );
@@ -99,7 +97,7 @@ char	*Cmd_Args( void );
 // functions. Cmd_Argv () will return an empty string, not a NULL
 // if arg > argc, so string operations are always safe.
 
-void	Cmd_TokenizeString( char *text, qboolean macroExpand );
+void	Cmd_TokenizeString( char *text, bool macroExpand );
 // Takes a null terminated string.  Does not need to be /n terminated.
 // breaks the string up into arg tokens.
 

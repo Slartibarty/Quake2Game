@@ -2,10 +2,7 @@
 // Message IO functions
 //=================================================================================================
 
-#include "../../common/q_shared.h"
-#include "common.h" // vertex normals
-
-#include "protocol.h"
+#include "engine.h"
 
 #include "msg.h"
 

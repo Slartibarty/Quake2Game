@@ -2,9 +2,6 @@
 
 #pragma once
 
-#define NOMINMAX
-#include <Windows.h>
-
 extern HINSTANCE	g_hInstance;
 
 extern HWND			cl_hwnd;

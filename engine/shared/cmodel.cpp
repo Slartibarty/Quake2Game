@@ -2,12 +2,7 @@
 // Model loading
 //=================================================================================================
 
-#include "../../common/q_shared.h"
-
-#include "common.h"
-#include "cvar.h"
-#include "files.h"
-#include "q_formats.h"
+#include "engine.h"
 
 #include "cmodel.h"
 

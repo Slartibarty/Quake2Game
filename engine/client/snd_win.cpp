@@ -1,7 +1,9 @@
 #include "snd_local.h"
 
-#include "winquake.h"
+#define DIRECTSOUND_VERSION 0x0900
+
 #include <dsound.h>
+#include "winquake.h"
 
 #define SECONDARY_BUFFER_SIZE	0x10000
 
@@ -312,7 +314,7 @@ void SNDDMA_Shutdown(void)
 	pDS = NULL;
 	pDSBuf = NULL;
 	dsound_init = false;
-	memset((void*)&dma, 0, sizeof(dma));
+	memset(&dma, 0, sizeof(dma));
 }
 
 /*

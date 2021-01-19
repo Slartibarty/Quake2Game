@@ -1,18 +1,10 @@
-// common.c -- misc functions used in client and server
+//=================================================================================================
+// The main file for the engine
+//=================================================================================================
 
-#include "../../common/q_shared.h"
+#include "engine.h"
 
 #include <csetjmp>
-
-#include "cmd.h"
-#include "crc.h"
-#include "cvar.h"
-#include "files.h"
-#include "net.h"
-#include "sys.h"
-#include "zone.h"
-
-#include "common.h"
 
 extern void SCR_EndLoadingPlaque( void );
 extern void Key_Init( void ); // This should really be in common? It's not part of the client? Or is it? huh? what.

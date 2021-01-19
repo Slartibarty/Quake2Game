@@ -1,6 +1,6 @@
 // q_math.c -- math primitives
 
-#include "q_shared.h"	// PITCH, YAW, ROLL
+#include "q_shared.h"	// cplane_t
 #include "q_math.h"
 
 vec3_t vec3_origin = { 0,0,0 };

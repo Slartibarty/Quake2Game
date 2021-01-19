@@ -1,7 +1,9 @@
 // conproc.c -- support for qhost
 
+#include <cstdlib>
 #include <cstdio>
 #include <process.h>
+#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
 #include "conproc.h"
@@ -27,7 +29,7 @@ HANDLE	heventParentSend;
 HANDLE	hStdout;
 HANDLE	hStdin;
 
-unsigned _stdcall RequestProc (void *arg);
+unsigned __stdcall RequestProc (void *arg);
 LPVOID GetMappedBuffer (HANDLE hfileBuffer);
 void ReleaseMappedBuffer (LPVOID pBuffer);
 BOOL GetScreenBufferLines (int *piLines);
@@ -140,7 +142,7 @@ void DeinitConProc (void)
 }
 
 
-unsigned _stdcall RequestProc (void *arg)
+unsigned __stdcall RequestProc (void *arg)
 {
 	int		*pBuffer;
 	DWORD	dwRet;

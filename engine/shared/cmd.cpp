@@ -2,13 +2,7 @@
 // Quake script command processing module
 //=================================================================================================
 
-#include "../../common/q_shared.h"
-
-#include "common.h"
-#include "cvar.h"
-#include "sizebuf.h"
-#include "files.h"
-#include "zone.h"
+#include "engine.h"
 
 #include "cmd.h"
 
@@ -249,7 +243,7 @@ the client and server initialize for the first time.
 Other commands are added late, after all initialization is complete.
 ===============
 */
-void Cbuf_AddEarlyCommands (qboolean clear)
+void Cbuf_AddEarlyCommands (bool clear)
 {
 	int		i;
 	char	*s;
@@ -282,13 +276,13 @@ Returns true if any late commands were added, which
 will keep the demoloop from immediately starting
 =================
 */
-qboolean Cbuf_AddLateCommands (void)
+bool Cbuf_AddLateCommands (void)
 {
 	int		i, j;
 	int		s;
 	char	*text, *build, c;
 	int		argc;
-	qboolean	ret;
+	bool	ret;
 
 // build the combined string to parse from
 	s = 0;
@@ -332,7 +326,7 @@ qboolean Cbuf_AddLateCommands (void)
 		}
 	}
 
-	ret = (build[0] != 0);
+	ret = build[0] != 0;
 	if (ret)
 		Cbuf_AddText (build);
 	
@@ -605,7 +599,7 @@ Parses the given string into command line tokens.
 $Cvars will be expanded unless they are in a quoted token
 ============
 */
-void Cmd_TokenizeString (char *text, qboolean macroExpand)
+void Cmd_TokenizeString (char *text, bool macroExpand)
 {
 	int		i;
 	char	*com_token;
@@ -736,7 +730,7 @@ void	Cmd_RemoveCommand (const char *cmd_name)
 Cmd_Exists
 ============
 */
-qboolean	Cmd_Exists (const char *cmd_name)
+bool Cmd_Exists (const char *cmd_name)
 {
 	cmd_function_t	*cmd;
 
