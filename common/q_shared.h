@@ -134,6 +134,16 @@ inline void Q_sprintf_s(char(&pDest)[nDestSize], const char *pFmt, ...)
 	va_end(args);
 }
 
+void Q_vsprintf(char *pDest, const char *pFmt, va_list args);
+
+inline void Q_sprintf(char *pDest, const char *pFmt, ...)
+{
+	va_list args;
+	va_start(args, pFmt);
+	Q_vsprintf(pDest, pFmt, args);
+	va_end(args);
+}
+
 //-------------------------------------------------------------------------------------------------
 // Misc - q_shared.cpp
 //-------------------------------------------------------------------------------------------------

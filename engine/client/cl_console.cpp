@@ -629,7 +629,7 @@ void Con_DrawConsole (float frac)
 		dlbar[i++] = '\x82';
 		dlbar[i] = 0;
 
-		sprintf(dlbar + strlen(dlbar), " %02d%%", cls.downloadpercent);
+		Q_sprintf(dlbar + strlen(dlbar), " %02d%%", cls.downloadpercent);
 
 		// draw it
 		y = con.vislines-12;

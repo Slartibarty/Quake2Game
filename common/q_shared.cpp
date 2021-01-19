@@ -246,6 +246,17 @@ void Q_vsprintf_s(char *pDest, strlen_t nDestSize, const char *pFmt, va_list arg
 }
 
 //-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+void Q_vsprintf(char *pDest, const char *pFmt, va_list args)
+{
+#if 0
+	vsprintf(pDest, pFmt, args);
+#else
+	stbsp_vsprintf(pDest, pFmt, args);
+#endif
+}
+
+//-------------------------------------------------------------------------------------------------
 //
 // Byte order functions
 //
