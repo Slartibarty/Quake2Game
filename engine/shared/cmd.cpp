@@ -17,7 +17,7 @@ struct cmdalias_t
 
 cmdalias_t	*cmd_alias;
 
-qboolean	cmd_wait;
+static bool cmd_wait;
 
 #define	ALIAS_LOOP_COUNT	16
 int		alias_count;		// for detecting runaway loops
@@ -294,7 +294,7 @@ bool Cbuf_AddLateCommands (void)
 	if (!s)
 		return false;
 		
-	text = (char*)Z_Malloc (s+1);
+	text = (char*)Z_StackAlloc (s+1);
 	text[0] = 0;
 	for (i=1 ; i<argc ; i++)
 	{
@@ -304,7 +304,7 @@ bool Cbuf_AddLateCommands (void)
 	}
 	
 // pull out the commands
-	build = (char*)Z_Malloc (s+1);
+	build = (char*)Z_StackAlloc (s+1);
 	build[0] = 0;
 	
 	for (i=0 ; i<s-1 ; i++)
@@ -330,9 +330,6 @@ bool Cbuf_AddLateCommands (void)
 	if (ret)
 		Cbuf_AddText (build);
 	
-	Z_Free (text);
-	Z_Free (build);
-
 	return ret;
 }
 

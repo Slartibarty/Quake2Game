@@ -1060,8 +1060,6 @@ void Mod_LoadStudioModel( model_t *mod, void *buffer )
 
 	assert( phdr->numtextures <= MAX_MD2SKINS );
 
-	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-
 	if ( phdr->textureindex != 0 )
 	{
 		ptexture = (mstudiotexture_t *)( (byte *)phdr + phdr->textureindex );

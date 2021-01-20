@@ -150,7 +150,7 @@ static void VID_InitModes()
 	s_num_modes = numModes;
 }
 
-static void VID_DeleteModes()
+static void VID_FreeModes()
 {
 	Z_Free(s_vid_modes);
 	s_vid_modes = nullptr;
@@ -412,7 +412,7 @@ VID_Shutdown
 */
 void VID_Shutdown (void)
 {
-	VID_DeleteModes();
+	VID_FreeModes();
 	if ( reflib_active )
 	{
 		R_Shutdown ();

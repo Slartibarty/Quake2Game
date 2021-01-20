@@ -1,7 +1,5 @@
 // server.h
 
-//define	PARANOID			// speed sapping error checking
-
 #include "../shared/engine.h"
 #include "../../game_shared/game_public.h"
 

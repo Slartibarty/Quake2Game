@@ -551,7 +551,8 @@ void Con_DrawConsole (float frac)
 	SCR_AddDirtyPoint (0,0);
 	SCR_AddDirtyPoint (viddef.width-1,lines-1);
 
-	Q_sprintf_s (version, "v%s", VERSION);
+	version[0] = 'v';
+	strcpy( version + 1, VERSION );
 	for (x=0 ; x<5 ; x++)
 		R_DrawChar (viddef.width-44+x*8, lines-12, 128 + version[x] );
 

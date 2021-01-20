@@ -2,8 +2,6 @@
 
 #pragma once
 
-//define	PARANOID			// speed sapping error checking
-
 #include "../shared/engine.h"
 #include "../ref_shared/ref_public.h"
 

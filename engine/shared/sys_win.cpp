@@ -42,8 +42,8 @@ void Sys_Error (const char *error, ...)
 	Q_vsprintf_s (text, error, argptr);
 	va_end (argptr);
 
-	// cl_hwnd can be null
-	MessageBoxA(cl_hwnd, text, "Error", MB_OK | MB_ICONERROR);
+	// We won't have a window by now
+	MessageBoxA( nullptr, "wtf", "Error", MB_OK | MB_ICONERROR );
 
 // shut down QHOST hooks if necessary
 	DeinitConProc ();
