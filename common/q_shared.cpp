@@ -167,7 +167,7 @@ void Com_PageInMemory (byte *buffer, int size)
 //-------------------------------------------------------------------------------------------------
 char *va(const char *format, ...)
 {
-	static char		string[8192];
+	static char		string[MAX_PRINT_MSG];
 	va_list			argptr;
 
 	va_start(argptr, format);
