@@ -524,6 +524,8 @@ struct mapsurface_t  // used internally due to name len probs //ZOID
 
 struct edict_t;
 
+#if 0 // Legacy trace_t
+
 // a trace is returned when a box is swept through the world
 struct trace_t
 {
@@ -534,8 +536,25 @@ struct trace_t
 	cplane_t	plane;		// surface normal at impact
 	csurface_t	*surface;	// surface hit
 	int			contents;	// contents on other side of surface hit
-	edict_t		*ent;	// not set by CM_*() functions
+	edict_t		*ent;		// not set by CM_*() functions
 };
+
+#else
+
+// a trace is returned when a box is swept through the world
+struct trace_t
+{
+	cplane_t	plane;		// surface normal at impact
+	vec3_t		endpos;		// final position
+	edict_t		*ent;		// not set by CM_*() functions
+	csurface_t	*surface;	// surface hit
+	float		fraction;	// time completed, 1.0 = didn't hit anything
+	int			contents;	// contents on other side of surface hit
+	bool		allsolid;	// if true, plane is not valid
+	bool		startsolid;	// if true, the initial point was in a solid area
+};
+
+#endif
 
 //-------------------------------------------------------------------------------------------------
 // Player movement
