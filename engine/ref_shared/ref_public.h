@@ -105,6 +105,8 @@ struct refdef_t
 };
 
 
+#ifndef REF_HARD_LINKED
+
 #define	API_VERSION		5
 
 //
@@ -175,7 +177,6 @@ struct refimport_t
 	void	(*Cmd_RemoveCommand) (const char *name);
 	int		(*Cmd_Argc) (void);
 	char	*(*Cmd_Argv) (int i);
-	void	(*Cmd_ExecuteText) (int exec_when, char *text);
 
 	void	(*Con_Printf) (int print_level, const char *str, ...);
 
@@ -199,6 +200,38 @@ struct refimport_t
 	void		(*Vid_NewWindow)( int width, int height );
 };
 
-
 // this is the only function actually exported at the linker level
 typedef	refexport_t	(*GetRefAPI_t) (refimport_t);
+
+#else
+
+bool	R_Init ( void *hinstance, void *wndproc );
+
+void	R_Shutdown (void);
+
+void	R_BeginRegistration (const char *map);
+model_t *R_RegisterModel (const char *name);
+image_t *R_RegisterSkin (const char *name);
+image_t *Draw_FindPic (const char *name);
+void	R_SetSky (const char *name, float rotate, vec3_t axis);
+void	R_EndRegistration (void);
+
+void	R_RenderFrame (refdef_t *fd);
+
+void	Draw_GetPicSize (int *w, int *h, const char *name);
+void	Draw_Pic (int x, int y, const char *name);
+void	Draw_StretchPic (int x, int y, int w, int h, const char *name);
+void	Draw_Char (int x, int y, int c);
+void	Draw_TileClear (int x, int y, int w, int h, const char *name);
+void	Draw_Fill (int x, int y, int w, int h, int c);
+void	Draw_FadeScreen (void);
+
+void	Draw_StretchRaw (int x, int y, int w, int h, int cols, int rows, byte *data);
+
+void	R_SetPalette ( const unsigned char *palette);
+void	R_BeginFrame (void);
+void	R_EndFrame (void);
+
+void	GLimp_AppActivate ( bool activate );
+
+#endif

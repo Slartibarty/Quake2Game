@@ -247,7 +247,7 @@ void CL_PrepRefresh (void)
 	// register models, pics, and skins
 	Com_Printf ("Map: %s\r", mapname); 
 	SCR_UpdateScreen ();
-	re.BeginRegistration (mapname);
+	R_BeginRegistration (mapname);
 	Com_Printf ("                                     \r");
 
 	// precache status bar pics
@@ -281,7 +281,7 @@ void CL_PrepRefresh (void)
 		} 
 		else
 		{
-			cl.model_draw[i] = re.RegisterModel (cl.configstrings[CS_MODELS+i]);
+			cl.model_draw[i] = R_RegisterModel (cl.configstrings[CS_MODELS+i]);
 			if (name[0] == '*')
 				cl.model_clip[i] = CM_InlineModel (cl.configstrings[CS_MODELS+i]);
 			else
@@ -295,7 +295,7 @@ void CL_PrepRefresh (void)
 	SCR_UpdateScreen ();
 	for (i=1 ; i<MAX_IMAGES && cl.configstrings[CS_IMAGES+i][0] ; i++)
 	{
-		cl.image_precache[i] = re.RegisterPic (cl.configstrings[CS_IMAGES+i]);
+		cl.image_precache[i] = R_RegisterPic (cl.configstrings[CS_IMAGES+i]);
 		Sys_SendKeyEvents ();	// pump message loop
 	}
 	
@@ -321,11 +321,11 @@ void CL_PrepRefresh (void)
 	rotate = (float)atof (cl.configstrings[CS_SKYROTATE]);
 	sscanf (cl.configstrings[CS_SKYAXIS], "%f %f %f", 
 		&axis[0], &axis[1], &axis[2]);
-	re.SetSky (cl.configstrings[CS_SKY], rotate, axis);
+	R_SetSky (cl.configstrings[CS_SKY], rotate, axis);
 	Com_Printf ("                                     \r");
 
 	// the renderer can now free unneeded stuff
-	re.EndRegistration ();
+	R_EndRegistration ();
 
 	// clear any lines of console text
 	Con_ClearNotify ();
@@ -386,7 +386,7 @@ void V_Gun_Model_f (void)
 		return;
 	}
 	Q_sprintf_s (name, "models/%s/tris.md2", Cmd_Argv(1));
-	gun_model = re.RegisterModel (name);
+	gun_model = R_RegisterModel (name);
 }
 
 //============================================================================
@@ -411,7 +411,7 @@ void SCR_DrawCrosshair (void)
 	if (!crosshair_pic[0])
 		return;
 
-	re.DrawPic (scr_vrect.x + ((scr_vrect.width - crosshair_width)>>1)
+	R_DrawPic (scr_vrect.x + ((scr_vrect.width - crosshair_width)>>1)
 	, scr_vrect.y + ((scr_vrect.height - crosshair_height)>>1), crosshair_pic);
 }
 
@@ -507,7 +507,7 @@ void V_RenderView (void)
         qsort( cl.refdef.entities, cl.refdef.num_entities, sizeof( cl.refdef.entities[0] ), (int (*)(const void *, const void *))entitycmpfnc );
 	}
 
-	re.RenderFrame (&cl.refdef);
+	R_RenderFrame (&cl.refdef);
 	if (cl_stats->value)
 		Com_Printf ("ent:%i  lt:%i  part:%i\n", r_numentities, r_numdlights, r_numparticles);
 	if ( log_stats->value && ( log_stats_file != 0 ) )

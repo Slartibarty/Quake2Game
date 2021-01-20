@@ -7,8 +7,10 @@
 #include <Windows.h>
 #include "winquake.h"
 
+#ifndef REF_HARD_LINKED
 // Structure containing functions exported from refresh DLL
-refexport_t	re;
+refexport_t re;
+#endif
 
 // Console variables that we need to access from this module
 cvar_t		*vid_gamma;
@@ -32,7 +34,7 @@ DLL GLUE
 ==========================================================================
 */
 
-static void VID_Printf (int print_level, const char *fmt, ...)
+void VID_Printf (int print_level, const char *fmt, ...)
 {
 	va_list		argptr;
 	char		msg[MAX_PRINT_MSG];
@@ -51,7 +53,7 @@ static void VID_Printf (int print_level, const char *fmt, ...)
 	}
 }
 
-static void VID_Error (int err_level, const char *fmt, ...)
+void VID_Error (int err_level, const char *fmt, ...)
 {
 	va_list		argptr;
 	char		msg[MAX_PRINT_MSG];
@@ -174,13 +176,15 @@ int VID_GetNumModes()
 /*
 ** VID_NewWindow
 */
-static void VID_NewWindow ( int width, int height)
+void VID_NewWindow ( int width, int height)
 {
 	viddef.width  = width;
 	viddef.height = height;
 
 	cl.force_refdef = true;		// can't use a paused refdef
 }
+
+#ifndef REF_HARD_LINKED
 
 static void VID_FreeReflib (void)
 {
@@ -196,14 +200,14 @@ static void VID_FreeReflib (void)
 VID_LoadRefresh
 ==============
 */
-static qboolean VID_LoadRefresh( const char *name )
+static bool VID_LoadRefresh( const char *name )
 {
 	refimport_t	ri;
 	GetRefAPI_t	GetRefAPI;
 	
 	if ( reflib_active )
 	{
-		re.Shutdown();
+		R_Shutdown();
 		VID_FreeReflib ();
 	}
 
@@ -244,9 +248,9 @@ static qboolean VID_LoadRefresh( const char *name )
 	}
 
 	extern LRESULT CALLBACK MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
-	if ( re.Init( g_hInstance, MainWndProc ) == -1 )
+	if ( R_Init( g_hInstance, MainWndProc ) == false )
 	{
-		re.Shutdown();
+		R_Shutdown();
 		VID_FreeReflib ();
 		return false;
 	}
@@ -317,6 +321,68 @@ void VID_CheckChanges (void)
 	}
 }
 
+#else
+
+static bool VID_LoadRefresh()
+{
+	if ( reflib_active )
+	{
+		R_Shutdown();
+	}
+
+	Com_Printf( "------- Loading renderer -------\n" );
+
+	extern LRESULT CALLBACK MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
+	if ( R_Init( g_hInstance, MainWndProc ) == false )
+	{
+		R_Shutdown();
+		return false;
+	}
+
+	Com_Printf( "------------------------------------\n" );
+	reflib_active = true;
+
+	vidref_val = VIDREF_GL; // PGM
+
+	return true;
+}
+
+/*
+============
+VID_CheckChanges
+
+This function gets called once just before drawing each frame, and it's sole purpose in life
+is to check to see if any of the video mode parameters have changed, and if they have to 
+update the rendering DLL and/or video mode to match.
+============
+*/
+void VID_CheckChanges( void )
+{
+	if ( vid_ref->modified )
+	{
+		cl.force_refdef = true;		// can't use a paused refdef
+		S_StopAllSounds();
+	}
+	while ( vid_ref->modified )
+	{
+		/*
+		** refresh has changed
+		*/
+		vid_ref->modified = false;
+		vid_fullscreen->modified = true;
+		cl.refresh_prepped = false;
+		cls.disable_screen = true;
+
+		if ( !VID_LoadRefresh() )
+		{
+			Com_Error( ERR_FATAL, "Couldn't load renderer!" );
+		}
+		cls.disable_screen = false;
+	}
+}
+
+#endif
+
 /*
 ============
 VID_Init
@@ -349,8 +415,12 @@ void VID_Shutdown (void)
 	VID_DeleteModes();
 	if ( reflib_active )
 	{
-		re.Shutdown ();
+		R_Shutdown ();
+#ifndef REF_HARD_LINKED
 		VID_FreeReflib ();
+#else
+		reflib_active = false;
+#endif
 	}
 }
 

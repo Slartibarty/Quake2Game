@@ -1,9 +1,12 @@
 
 #pragma once
 
+#ifndef REF_HARD_LINKED
 #include "../../common/q_shared.h"
-
 #include "../shared/q_formats.h"
+#else
+#include "../shared/engine.h"
+#endif
 
 #include "../ref_shared/ref_public.h"
 
@@ -187,7 +190,6 @@ extern	cvar_t	*gl_mode;
 extern	cvar_t	*gl_lightmap;
 extern	cvar_t	*gl_shadows;
 extern	cvar_t	*gl_dynamic;
-extern	cvar_t	*gl_round_down;
 extern	cvar_t	*gl_picmip;
 extern	cvar_t	*gl_skymip;
 extern	cvar_t	*gl_showtris;
@@ -200,8 +202,6 @@ extern	cvar_t	*gl_polyblend;
 extern	cvar_t	*gl_flashblend;
 extern	cvar_t	*gl_lightmaptype;
 extern	cvar_t	*gl_modulate;
-extern	cvar_t	*gl_playermip;
-extern	cvar_t	*gl_3dlabs_broken;
 extern	cvar_t	*gl_swapinterval;
 extern	cvar_t	*gl_texturemode;
 extern  cvar_t  *gl_saturatelighting;
@@ -311,7 +311,11 @@ extern glstate_t	gl_state;
 // Imported functions
 //-------------------------------------------------------------------------------------------------
 
+#ifndef REF_HARD_LINKED
+
 extern refimport_t ri;		// gl_main.cpp
+
+#endif
 
 //-------------------------------------------------------------------------------------------------
 // Implementation specific functions
@@ -323,9 +327,56 @@ void		GLimp_EndFrame( void );
 void		GLimp_SetGamma( byte *red, byte *green, byte *blue );
 void		GLimp_RestoreGamma( void );
 
-int 		GLimp_Init( void *hinstance, void *hWnd );
+bool 		GLimp_Init( void *hinstance, void *hWnd );
 void		GLimp_Shutdown( void );
 
 rserr_t    	GLimp_SetMode( int *pWidth, int *pHeight, int mode, bool fullscreen );
 
 void		GLimp_AppActivate( bool active );
+
+//-------------------------------------------------------------------------------------------------
+// Use defines for all imported functions
+// This allows us to use the same names for both static links and dynamic links
+// We could also use forceinline functions
+//-------------------------------------------------------------------------------------------------
+#ifndef REF_HARD_LINKED
+
+#define RI_Sys_Error			ri.Sys_Error
+#define RI_Cmd_AddCommand		ri.Cmd_AddCommand
+#define RI_Cmd_RemoveCommand	ri.Cmd_RemoveCommand
+#define RI_Cmd_Argc				ri.Cmd_Argc
+#define RI_Cmd_Argv				ri.Cmd_Argv
+#define RI_Con_Printf			ri.Con_Printf
+#define RI_FS_LoadFile			ri.FS_LoadFile
+#define RI_FS_FreeFile			ri.FS_FreeFile
+#define RI_FS_Gamedir			ri.FS_Gamedir
+#define RI_Cvar_Get				ri.Cvar_Get
+#define RI_Cvar_Set				ri.Cvar_Set
+#define RI_Cvar_SetValue		ri.Cvar_SetValue
+#define RI_Vid_GetModeInfo		ri.Vid_GetModeInfo
+#define RI_Vid_NewWindow		ri.Vid_NewWindow
+
+#else
+
+extern void VID_Error( int err_level, const char *fmt, ... );
+extern void VID_Printf( int print_level, const char *fmt, ... );
+
+extern qboolean VID_GetModeInfo( int *width, int *height, int mode );
+extern void VID_NewWindow( int width, int height );
+
+#define RI_Sys_Error			VID_Error
+#define RI_Cmd_AddCommand		Cmd_AddCommand
+#define RI_Cmd_RemoveCommand	Cmd_RemoveCommand
+#define RI_Cmd_Argc				Cmd_Argc
+#define RI_Cmd_Argv				Cmd_Argv
+#define RI_Con_Printf			VID_Printf
+#define RI_FS_LoadFile			FS_LoadFile
+#define RI_FS_FreeFile			FS_FreeFile
+#define RI_FS_Gamedir			FS_Gamedir
+#define RI_Cvar_Get				Cvar_Get
+#define RI_Cvar_Set				Cvar_Set
+#define RI_Cvar_SetValue		Cvar_SetValue
+#define RI_Vid_GetModeInfo		VID_GetModeInfo
+#define RI_Vid_NewWindow		VID_NewWindow
+
+#endif

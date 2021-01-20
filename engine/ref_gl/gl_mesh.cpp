@@ -362,13 +362,13 @@ static bool R_CullAliasModel( vec3_t bbox[8], entity_t *e )
 
 	if ( ( e->frame >= paliashdr->num_frames ) || ( e->frame < 0 ) )
 	{
-		ri.Con_Printf (PRINT_ALL, "R_CullAliasModel %s: no such frame %d\n", 
+		RI_Con_Printf (PRINT_ALL, "R_CullAliasModel %s: no such frame %d\n", 
 			currentmodel->name, e->frame);
 		e->frame = 0;
 	}
 	if ( ( e->oldframe >= paliashdr->num_frames ) || ( e->oldframe < 0 ) )
 	{
-		ri.Con_Printf (PRINT_ALL, "R_CullAliasModel %s: no such oldframe %d\n", 
+		RI_Con_Printf (PRINT_ALL, "R_CullAliasModel %s: no such oldframe %d\n", 
 			currentmodel->name, e->oldframe);
 		e->oldframe = 0;
 	}
@@ -750,7 +750,7 @@ void R_DrawAliasModel (entity_t *e)
 	if ( (currententity->frame >= paliashdr->num_frames) 
 		|| (currententity->frame < 0) )
 	{
-		ri.Con_Printf (PRINT_ALL, "R_DrawAliasModel %s: no such frame %d\n",
+		RI_Con_Printf (PRINT_ALL, "R_DrawAliasModel %s: no such frame %d\n",
 			currentmodel->name, currententity->frame);
 		currententity->frame = 0;
 		currententity->oldframe = 0;
@@ -759,7 +759,7 @@ void R_DrawAliasModel (entity_t *e)
 	if ( (currententity->oldframe >= paliashdr->num_frames)
 		|| (currententity->oldframe < 0))
 	{
-		ri.Con_Printf (PRINT_ALL, "R_DrawAliasModel %s: no such oldframe %d\n",
+		RI_Con_Printf (PRINT_ALL, "R_DrawAliasModel %s: no such oldframe %d\n",
 			currentmodel->name, currententity->oldframe);
 		currententity->frame = 0;
 		currententity->oldframe = 0;
@@ -886,14 +886,14 @@ static void Studio_CalcBoneAdj( studiohdr_t *phdr )
 				if (value > 1.0f) value = 1.0f;
 				value = (1.0f - value) * pbonecontroller[j].start + value * pbonecontroller[j].end;
 			}
-		//	ri.Con_Printf( PRINT_DEVELOPER, "%d %d %f : %f\n", m_controller[j], m_prevcontroller[j], value, dadt );
+		//	RI_Con_Printf( PRINT_DEVELOPER, "%d %d %f : %f\n", m_controller[j], m_prevcontroller[j], value, dadt );
 		}
 		else
 		{
 			value = m_mouth / 64.0f;
 			if (value > 1.0f) value = 1.0f;
 			value = (1.0f - value) * pbonecontroller[j].start + value * pbonecontroller[j].end;
-		//	ri.Con_Printf( PRINT_DEVELOPER, "%d %f\n", mouthopen, value );
+		//	RI_Con_Printf( PRINT_DEVELOPER, "%d %f\n", mouthopen, value );
 		}
 		switch(pbonecontroller[j].type & STUDIO_TYPES)
 		{
@@ -1428,7 +1428,7 @@ static mstudiomodel_t *Studio_SetupModel( studiohdr_t *phdr, int bodypart )
 
 	if ( bodypart > phdr->numbodyparts )
 	{
-		ri.Con_Printf( PRINT_DEVELOPER, "Studio_SetupModel: no such bodypart %d\n", bodypart );
+		RI_Con_Printf( PRINT_DEVELOPER, "Studio_SetupModel: no such bodypart %d\n", bodypart );
 		bodypart = 0;
 	}
 

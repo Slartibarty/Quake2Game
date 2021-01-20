@@ -324,7 +324,7 @@ LRESULT CALLBACK MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		AppActivate( fActive != WA_INACTIVE, fMinimized );
 
 		if ( reflib_active ) {
-			re.AppActivate( fActive != WA_INACTIVE );
+			R_AppActivate( fActive != WA_INACTIVE );
 		}
 	}
 	return 0;

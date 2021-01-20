@@ -42,6 +42,9 @@ floatingpoint "Fast"
 characterset "ASCII"
 exceptionhandling "Off"
 
+-- Global defines
+defines { "REF_HARD_LINKED" }
+
 -- Config for all 32-bit projects
 filter( filter_32bit )
 	vectorextensions "SSE2"
@@ -100,7 +103,7 @@ project "engine"
 	language "C++"
 	targetdir "../game"
 	linkoptions { "/ENTRY:mainCRTStartup" }
-	links { "ws2_32", "winmm", "dsound", "dxguid" }
+	links { "ref_gl", "ws2_32", "winmm", "dsound", "dxguid" }
 	
 	disablewarnings { "4244", "4267" }
 
@@ -127,7 +130,7 @@ project "engine"
 	}
 	
 project "ref_gl"
-	kind "SharedLib"
+	kind "StaticLib"
 	targetname "ref_gl"
 	language "C++"
 	targetdir "../game"

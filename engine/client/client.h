@@ -419,7 +419,9 @@ void CL_Quit_f (void);
 //
 // cl_main
 //
-extern	refexport_t	re;		// interface to refresh .dll
+#ifndef REF_HARD_LINKED
+extern refexport_t re;		// interface to refresh .dll
+#endif
 
 void CL_Init (void);
 
@@ -536,3 +538,51 @@ void CL_DrawInventory (void);
 // cl_pred.c
 //
 void CL_PredictMovement (void);
+
+//-------------------------------------------------------------------------------------------------
+// Use defines for all exported functions
+// This allows us to use the same names for both static links and dynamic links
+// We could also use forceinline functions
+//-------------------------------------------------------------------------------------------------
+#ifndef REF_HARD_LINKED
+
+#define R_Init					re.Init
+#define R_Shutdown				re.Shutdown
+#define R_BeginRegistration		re.BeginRegistration
+#define R_RegisterModel			re.RegisterModel
+#define R_RegisterSkin			re.RegisterSkin
+#define R_RegisterPic			re.RegisterPic
+#define R_SetSky				re.SetSky
+#define R_EndRegistration		re.EndRegistration
+#define R_RenderFrame			re.RenderFrame
+#define R_DrawGetPicSize		re.DrawGetPicSize
+#define R_DrawPic				re.DrawPic
+#define R_DrawStretchPic		re.DrawStretchPic
+#define R_DrawChar				re.DrawChar
+#define R_DrawTileClear			re.DrawTileClear
+#define R_DrawFill				re.DrawFill
+#define R_DrawFadeScreen		re.DrawFadeScreen
+#define R_DrawStretchRaw		re.DrawStretchRaw
+#define R_CinematicSetPalette	re.CinematicSetPalette
+#define R_BeginFrame			re.BeginFrame
+#define R_EndFrame				re.EndFrame
+#define R_AppActivate			re.AppActivate
+
+#else
+
+#define R_RegisterPic			Draw_FindPic
+
+#define R_DrawGetPicSize		Draw_GetPicSize
+#define R_DrawPic				Draw_Pic
+#define R_DrawStretchPic		Draw_StretchPic
+#define R_DrawChar				Draw_Char
+#define R_DrawTileClear			Draw_TileClear
+#define R_DrawFill				Draw_Fill
+#define R_DrawFadeScreen		Draw_FadeScreen
+#define R_DrawStretchRaw		Draw_StretchRaw
+
+#define R_CinematicSetPalette	R_SetPalette
+
+#define R_AppActivate			GLimp_AppActivate
+
+#endif

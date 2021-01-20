@@ -53,8 +53,8 @@ static void M_Banner( const char *name )
 {
 	int w, h;
 
-	re.DrawGetPicSize (&w, &h, name );
-	re.DrawPic( viddef.width / 2 - w / 2, viddef.height / 2 - 110, name );
+	R_DrawGetPicSize (&w, &h, name );
+	R_DrawPic( viddef.width / 2 - w / 2, viddef.height / 2 - 110, name );
 }
 
 void M_PushMenu ( void (*draw) (void), const char *(*key) (int k) )
@@ -245,7 +245,7 @@ higher res screens.
 */
 void M_DrawCharacter (int cx, int cy, int num)
 {
-	re.DrawChar ( cx + ((viddef.width - 320)>>1), cy + ((viddef.height - 240)>>1), num);
+	R_DrawChar ( cx + ((viddef.width - 320)>>1), cy + ((viddef.height - 240)>>1), num);
 }
 
 void M_Print (int cx, int cy, const char *str)
@@ -270,7 +270,7 @@ void M_PrintWhite (int cx, int cy, const char *str)
 
 void M_DrawPic (int x, int y, const char *pic)
 {
-	re.DrawPic (x + ((viddef.width - 320)>>1), y + ((viddef.height - 240)>>1), pic);
+	R_DrawPic (x + ((viddef.width - 320)>>1), y + ((viddef.height - 240)>>1), pic);
 }
 
 
@@ -296,13 +296,13 @@ void M_DrawCursor( int x, int y, int f )
 		{
 			Q_sprintf_s( cursorname, "m_cursor%d", i );
 
-			re.RegisterPic( cursorname );
+			R_RegisterPic( cursorname );
 		}
 		cached = true;
 	}
 
 	Q_sprintf_s( cursorname, "m_cursor%d", f );
-	re.DrawPic( x, y, cursorname );
+	R_DrawPic( x, y, cursorname );
 }
 
 void M_DrawTextBox (int x, int y, int width, int lines)
@@ -380,7 +380,7 @@ void M_Main_Draw (void)
 
 	for ( i = 0; names[i] != 0; i++ )
 	{
-		re.DrawGetPicSize( &w, &h, names[i] );
+		R_DrawGetPicSize( &w, &h, names[i] );
 
 		if ( w > widest )
 			widest = w;
@@ -393,18 +393,18 @@ void M_Main_Draw (void)
 	for ( i = 0; names[i] != 0; i++ )
 	{
 		if ( i != m_main_cursor )
-			re.DrawPic( xoffset, ystart + i * 40 + 13, names[i] );
+			R_DrawPic( xoffset, ystart + i * 40 + 13, names[i] );
 	}
 	strcpy( litname, names[m_main_cursor] );
 	strcat( litname, "_sel" );
-	re.DrawPic( xoffset, ystart + m_main_cursor * 40 + 13, litname );
+	R_DrawPic( xoffset, ystart + m_main_cursor * 40 + 13, litname );
 
 	M_DrawCursor( xoffset - 25, ystart + m_main_cursor * 40 + 11, (int)(cls.realtime / 100)%NUM_CURSOR_FRAMES );
 
-	re.DrawGetPicSize( &w, &h, "m_main_plaque" );
-	re.DrawPic( xoffset - 30 - w, ystart, "m_main_plaque" );
+	R_DrawGetPicSize( &w, &h, "m_main_plaque" );
+	R_DrawPic( xoffset - 30 - w, ystart, "m_main_plaque" );
 
-	re.DrawPic( xoffset - 30 - w, ystart + h + 5, "m_main_logo" );
+	R_DrawPic( xoffset - 30 - w, ystart + h + 5, "m_main_logo" );
 }
 
 
@@ -659,9 +659,9 @@ static void M_FindKeysForCommand (const char *command, int *twokeys)
 static void KeyCursorDrawFunc( menuframework_s *menu )
 {
 	if ( bind_grab )
-		re.DrawChar( menu->x, menu->y + menu->cursor * 9, '=' );
+		R_DrawChar( menu->x, menu->y + menu->cursor * 9, '=' );
 	else
-		re.DrawChar( menu->x, menu->y + menu->cursor * 9, 12 + ( ( int ) ( Sys_Milliseconds() / 250 ) & 1 ) );
+		R_DrawChar( menu->x, menu->y + menu->cursor * 9, 12 + ( ( int ) ( Sys_Milliseconds() / 250 ) & 1 ) );
 }
 
 static void DrawKeyBindingFunc( void *self )
@@ -1100,7 +1100,7 @@ static void UpdateSoundQualityFunc( void *unused )
 	M_Print( 16 + 16, 120 - 48 + 24, "please be patient." );
 
 	// the text box won't show up unless we do a buffer swap
-	re.EndFrame();
+	R_EndFrame();
 
 	CL_Snd_Restart_f();
 }
@@ -1671,9 +1671,9 @@ void M_Credits_MenuDraw( void )
 			x = ( viddef.width - (int)strlen( credits[i] ) * 8 - stringoffset * 8 ) / 2 + ( j + stringoffset ) * 8;
 
 			if ( bold )
-				re.DrawChar( x, y, credits[i][j+stringoffset] + 128 );
+				R_DrawChar( x, y, credits[i][j+stringoffset] + 128 );
 			else
-				re.DrawChar( x, y, credits[i][j+stringoffset] );
+				R_DrawChar( x, y, credits[i][j+stringoffset] );
 		}
 	}
 
@@ -2159,7 +2159,7 @@ void SearchLocalGames( void )
 	M_Print( 16 + 16, 120 - 48 + 24, "please be patient." );
 
 	// the text box won't show up unless we do a buffer swap
-	re.EndFrame();
+	R_EndFrame();
 
 	// send out info packets
 	CL_PingServers_f();
@@ -3658,9 +3658,9 @@ void PlayerConfig_MenuDraw( void )
 		memset( &entity, 0, sizeof( entity ) );
 
 		Q_sprintf_s( scratch, "players/%s/tris.md2", s_pmi[s_player_model_box.curvalue].directory );
-		entity.model = re.RegisterModel( scratch );
+		entity.model = R_RegisterModel( scratch );
 		Q_sprintf_s( scratch, "players/%s/%s.pcx", s_pmi[s_player_model_box.curvalue].directory, s_pmi[s_player_model_box.curvalue].skindisplaynames[s_player_skin_box.curvalue] );
-		entity.skin = re.RegisterSkin( scratch );
+		entity.skin = R_RegisterSkin( scratch );
 		entity.flags = RF_FULLBRIGHT;
 		entity.origin[0] = 80;
 		entity.origin[1] = 0;
@@ -3684,12 +3684,12 @@ void PlayerConfig_MenuDraw( void )
 		M_DrawTextBox( ( refdef.x ) * ( 320.0F / viddef.width ) - 8, ( viddef.height / 2 ) * ( 240.0F / viddef.height) - 77, refdef.width / 8, refdef.height / 8 );
 		refdef.height += 4;
 
-		re.RenderFrame( &refdef );
+		R_RenderFrame( &refdef );
 
 		Q_sprintf_s( scratch, "/players/%s/%s_i.pcx", 
 			s_pmi[s_player_model_box.curvalue].directory,
 			s_pmi[s_player_model_box.curvalue].skindisplaynames[s_player_skin_box.curvalue] );
-		re.DrawPic( s_player_config_menu.x - 40, refdef.y, scratch );
+		R_DrawPic( s_player_config_menu.x - 40, refdef.y, scratch );
 	}
 }
 
@@ -3794,8 +3794,8 @@ void M_Quit_Draw (void)
 {
 	int		w, h;
 
-	re.DrawGetPicSize (&w, &h, "quit");
-	re.DrawPic ( (viddef.width-w)/2, (viddef.height-h)/2, "quit");
+	R_DrawGetPicSize (&w, &h, "quit");
+	R_DrawPic ( (viddef.width-w)/2, (viddef.height-h)/2, "quit");
 }
 
 
@@ -3851,9 +3851,9 @@ void M_Draw (void)
 
 	// dim everything behind it down
 	if (cl.cinematictime > 0)
-		re.DrawFill (0,0,viddef.width, viddef.height, 0);
+		R_DrawFill (0,0,viddef.width, viddef.height, 0);
 	else
-		re.DrawFadeScreen ();
+		R_DrawFadeScreen ();
 
 	m_drawfunc ();
 

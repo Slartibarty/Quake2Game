@@ -13,7 +13,7 @@ void Draw_InitLocal (void)
 	// load console characters (don't bilerp characters)
 	draw_chars = GL_FindImage("pics/conchars.pcx", it_pic);
 	if (!draw_chars) {
-		ri.Sys_Error(ERR_FATAL, "Could not get console font: pics/conchars");
+		RI_Sys_Error(ERR_FATAL, "Could not get console font: pics/conchars");
 	}
 
 	// Undo this if we ever make pics linear filtered again
@@ -104,7 +104,7 @@ void Draw_StretchPic (int x, int y, int w, int h, const char *pic)
 	gl = Draw_FindPic(pic);
 	if (!gl)
 	{
-		ri.Con_Printf(PRINT_ALL, "Can't find pic: %s\n", pic);
+		RI_Con_Printf(PRINT_ALL, "Can't find pic: %s\n", pic);
 		return;
 	}
 
@@ -137,7 +137,7 @@ void Draw_Pic (int x, int y, const char *pic)
 	gl = Draw_FindPic(pic);
 	if (!gl)
 	{
-		ri.Con_Printf(PRINT_ALL, "Can't find pic: %s\n", pic);
+		RI_Con_Printf(PRINT_ALL, "Can't find pic: %s\n", pic);
 		return;
 	}
 
@@ -165,7 +165,7 @@ void Draw_TileClear (int x, int y, int w, int h, const char *pic)
 	image = Draw_FindPic(pic);
 	if (!image)
 	{
-		ri.Con_Printf(PRINT_ALL, "Can't find pic: %s\n", pic);
+		RI_Con_Printf(PRINT_ALL, "Can't find pic: %s\n", pic);
 		return;
 	}
 
@@ -195,7 +195,7 @@ void Draw_Fill (int x, int y, int w, int h, int c)
 	} color;
 
 	if (c > 255)
-		ri.Sys_Error(ERR_FATAL, "Draw_Fill: bad color");
+		RI_Sys_Error(ERR_FATAL, "Draw_Fill: bad color");
 
 	glDisable(GL_TEXTURE_2D);
 

@@ -23,7 +23,7 @@ void GL_ScreenShot_f(void)
 	FILE		*f;
 
 	// create the scrnshots directory if it doesn't exist
-	Q_sprintf_s (checkname, "%s/scrnshot", ri.FS_Gamedir());
+	Q_sprintf_s (checkname, "%s/scrnshot", RI_FS_Gamedir());
 	Sys_Mkdir (checkname);
 
 // 
@@ -35,7 +35,7 @@ void GL_ScreenShot_f(void)
 	{ 
 		picname[5] = i/10 + '0'; 
 		picname[6] = i%10 + '0'; 
-		Q_sprintf_s (checkname, "%s/scrnshot/%s", ri.FS_Gamedir(), picname);
+		Q_sprintf_s (checkname, "%s/scrnshot/%s", RI_FS_Gamedir(), picname);
 		f = fopen (checkname, "rb");
 		if (!f)
 			break;	// file doesn't exist
@@ -43,7 +43,7 @@ void GL_ScreenShot_f(void)
 	} 
 	if (i==100) 
 	{
-		ri.Con_Printf (PRINT_ALL, "SCR_ScreenShot_f: Couldn't create a file\n"); 
+		RI_Con_Printf (PRINT_ALL, "SCR_ScreenShot_f: Couldn't create a file\n"); 
 		return;
  	}
 
@@ -73,7 +73,7 @@ void GL_ScreenShot_f(void)
 	fclose (f);
 
 	free (buffer);
-	ri.Con_Printf (PRINT_ALL, "Wrote %s\n", picname);
+	RI_Con_Printf (PRINT_ALL, "Wrote %s\n", picname);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -81,11 +81,11 @@ void GL_ScreenShot_f(void)
 //-------------------------------------------------------------------------------------------------
 void GL_Strings_f(void)
 {
-	ri.Con_Printf(PRINT_ALL, "GL_VENDOR: %s\n", glGetString(GL_VENDOR));
-	ri.Con_Printf(PRINT_ALL, "GL_RENDERER: %s\n", glGetString(GL_RENDERER));
-	ri.Con_Printf(PRINT_ALL, "GL_VERSION: %s\n", glGetString(GL_VERSION));
-//	ri.Con_Printf(PRINT_ALL, "GL_GLSL_VERSION: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
-//	ri.Con_Printf(PRINT_ALL, "GL_EXTENSIONS: %s\n", gl_config.extensions_string );
+	RI_Con_Printf(PRINT_ALL, "GL_VENDOR: %s\n", glGetString(GL_VENDOR));
+	RI_Con_Printf(PRINT_ALL, "GL_RENDERER: %s\n", glGetString(GL_RENDERER));
+	RI_Con_Printf(PRINT_ALL, "GL_VERSION: %s\n", glGetString(GL_VERSION));
+//	RI_Con_Printf(PRINT_ALL, "GL_GLSL_VERSION: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
+//	RI_Con_Printf(PRINT_ALL, "GL_EXTENSIONS: %s\n", gl_config.extensions_string );
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -134,24 +134,24 @@ void GL_SetDefaultState(void)
 //-------------------------------------------------------------------------------------------------
 void GL_ExtractWad_f( void )
 {
-	if ( ri.Cmd_Argc() < 3 )
+	if ( RI_Cmd_Argc() < 3 )
 	{
-		ri.Con_Printf( PRINT_ALL, "Usage: <file.wad> <palette.lmp>\n" );
+		RI_Con_Printf( PRINT_ALL, "Usage: <file.wad> <palette.lmp>\n" );
 		return;
 	}
 
 	char wadbase[MAX_QPATH];
-	COM_FileBase( ri.Cmd_Argv( 1 ), wadbase );
+	COM_FileBase( RI_Cmd_Argv( 1 ), wadbase );
 
 	// Create the output folder if it doesn't exist
-	Sys_Mkdir( va( "%s/textures/%s", ri.FS_Gamedir(), wadbase ) );
+	Sys_Mkdir( va( "%s/textures/%s", RI_FS_Gamedir(), wadbase ) );
 
 	FILE *wadhandle;
 
-	wadhandle = fopen( va( "%s/%s", ri.FS_Gamedir(), ri.Cmd_Argv( 2 ) ), "rb" );
+	wadhandle = fopen( va( "%s/%s", RI_FS_Gamedir(), RI_Cmd_Argv( 2 ) ), "rb" );
 	if ( !wadhandle )
 	{
-		ri.Con_Printf( PRINT_ALL, "Couldn't open %s\n", ri.Cmd_Argv( 2 ) );
+		RI_Con_Printf( PRINT_ALL, "Couldn't open %s\n", RI_Cmd_Argv( 2 ) );
 		return;
 	}
 
@@ -160,15 +160,15 @@ void GL_ExtractWad_f( void )
 	if ( fread( palette, 3, 256, wadhandle ) != 256 )
 	{
 		fclose( wadhandle );
-		ri.Con_Printf( PRINT_ALL, "Malformed palette lump\n" );
+		RI_Con_Printf( PRINT_ALL, "Malformed palette lump\n" );
 	}
 
 	fclose( wadhandle );
 
-	wadhandle = fopen( va( "%s/%s", ri.FS_Gamedir(), ri.Cmd_Argv( 1 ) ), "rb" );
+	wadhandle = fopen( va( "%s/%s", RI_FS_Gamedir(), RI_Cmd_Argv( 1 ) ), "rb" );
 	if ( !wadhandle )
 	{
-		ri.Con_Printf( PRINT_ALL, "Couldn't open %s\n", ri.Cmd_Argv( 1 ) );
+		RI_Con_Printf( PRINT_ALL, "Couldn't open %s\n", RI_Cmd_Argv( 1 ) );
 		return;
 	}
 
@@ -177,7 +177,7 @@ void GL_ExtractWad_f( void )
 	if ( fread( &wadheader, sizeof( wadheader ), 1, wadhandle ) != 1 || wadheader.identification != wad2::IDWADHEADER )
 	{
 		fclose( wadhandle );
-		ri.Con_Printf( PRINT_ALL, "Malformed wadfile\n" );
+		RI_Con_Printf( PRINT_ALL, "Malformed wadfile\n" );
 		return;
 	}
 
@@ -189,7 +189,7 @@ void GL_ExtractWad_f( void )
 	{
 		free( wadlumps );
 		fclose( wadhandle );
-		ri.Con_Printf( PRINT_ALL, "Malformed wadfile\n" );
+		RI_Con_Printf( PRINT_ALL, "Malformed wadfile\n" );
 		return;
 	}
 
@@ -226,7 +226,7 @@ void GL_ExtractWad_f( void )
 		free( pic8 );
 
 		char outname[MAX_QPATH];
-		Q_sprintf_s( outname, "%s/textures/%s/%s.tga", ri.FS_Gamedir(), wadbase, wadlumps[i].name );
+		Q_sprintf_s( outname, "%s/textures/%s/%s.tga", RI_FS_Gamedir(), wadbase, wadlumps[i].name );
 
 		char *asterisk;
 		while ( ( asterisk = strchr( outname, '*' ) ) )
@@ -237,12 +237,12 @@ void GL_ExtractWad_f( void )
 
 		if ( stbi_write_tga( outname, miptex.width, miptex.height, 3, pic32 ) == 0 )
 		{
-			ri.Con_Printf( PRINT_ALL, "Failed to write %s\n", outname );
+			RI_Con_Printf( PRINT_ALL, "Failed to write %s\n", outname );
 		}
 
 		free( pic32 );
 
-		Q_sprintf_s( outname, "%s/textures/%s/%s.was", ri.FS_Gamedir(), wadbase, wadlumps[i].name );
+		Q_sprintf_s( outname, "%s/textures/%s/%s.was", RI_FS_Gamedir(), wadbase, wadlumps[i].name );
 
 		while ( ( asterisk = strchr( outname, '*' ) ) )
 		{
@@ -276,20 +276,20 @@ void GL_ExtractWad_f( void )
 //-------------------------------------------------------------------------------------------------
 void GL_UpgradeWals_f( void )
 {
-	if ( ri.Cmd_Argc() < 2 )
+	if ( RI_Cmd_Argc() < 2 )
 	{
-		ri.Con_Printf( PRINT_ALL, "Usage: <folder>\n" );
+		RI_Con_Printf( PRINT_ALL, "Usage: <folder>\n" );
 		return;
 	}
 
 	char		folder[MAX_OSPATH];
 	const char	*str;
 
-	Q_sprintf_s( folder, "%s/%s", ri.FS_Gamedir(), ri.Cmd_Argv( 1 ) );
+	Q_sprintf_s( folder, "%s/%s", RI_FS_Gamedir(), RI_Cmd_Argv( 1 ) );
 
 	str = Sys_FindFirst( folder, 0, 0 );
 	if ( !str ) {
-		ri.Con_Printf( PRINT_ALL, "No files found in folder\n" );
+		RI_Con_Printf( PRINT_ALL, "No files found in folder\n" );
 		Sys_FindClose();
 		return;
 	}
@@ -298,7 +298,7 @@ void GL_UpgradeWals_f( void )
 	{
 		if ( strstr( str, ".wal" ) == NULL )
 			continue;
-		ri.Con_Printf( PRINT_ALL, "Upgrading %s\n", str );
+		RI_Con_Printf( PRINT_ALL, "Upgrading %s\n", str );
 
 	}
 

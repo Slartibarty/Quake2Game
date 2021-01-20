@@ -19,8 +19,8 @@ static void	 SpinControl_DoSlide( menulist_s *s, int dir );
 #define VID_WIDTH viddef.width
 #define VID_HEIGHT viddef.height
 
-#define Draw_Char re.DrawChar
-#define Draw_Fill re.DrawFill
+#define Draw_Char R_DrawChar
+#define Draw_Fill R_DrawFill
 
 void Action_DoEnter( menuaction_s *a )
 {

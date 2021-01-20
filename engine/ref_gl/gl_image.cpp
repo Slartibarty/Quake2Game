@@ -47,7 +47,7 @@ namespace ImageLoaders
 			|| xmax >= 1023
 			|| ymax >= 1023)
 		{
-			ri.Con_Printf(PRINT_ALL, "Bad pcx file (%i x %i) (%i x %i)\n", xmax + 1, ymax + 1, pcx->xmax, pcx->ymax);
+			RI_Con_Printf(PRINT_ALL, "Bad pcx file (%i x %i) (%i x %i)\n", xmax + 1, ymax + 1, pcx->xmax, pcx->ymax);
 			return nullptr;
 		}
 
@@ -156,7 +156,7 @@ namespace ImageLoaders
 			|| xmax >= 1024
 			|| ymax >= 1024)
 		{
-			ri.Con_Printf(PRINT_ALL, "Bad pcx file (%i x %i) (%i x %i)\n", xmax + 1, ymax + 1, pcx->xmax, pcx->ymax);
+			RI_Con_Printf(PRINT_ALL, "Bad pcx file (%i x %i) (%i x %i)\n", xmax + 1, ymax + 1, pcx->xmax, pcx->ymax);
 			return;
 		}
 
@@ -192,7 +192,7 @@ namespace ImageLoaders
 
 		if (raw - (byte *)pcx > rawlen)
 		{
-			ri.Con_Printf(PRINT_DEVELOPER, "PCX file was malformed");
+			RI_Con_Printf(PRINT_DEVELOPER, "PCX file was malformed");
 			free(*pic);
 			*pic = NULL;
 		}
@@ -307,7 +307,7 @@ void GL_TextureMode(char *string)
 
 	if (i == NUM_GL_MODES)
 	{
-		ri.Con_Printf(PRINT_ALL, "bad filter name\n");
+		RI_Con_Printf(PRINT_ALL, "bad filter name\n");
 		return;
 	}
 
@@ -345,7 +345,7 @@ void GL_ImageList_f (void)
 	image_t	*image;
 	int		texels;
 
-	ri.Con_Printf (PRINT_ALL, "------------------\n");
+	RI_Con_Printf (PRINT_ALL, "------------------\n");
 	texels = 0;
 
 	for (i=0, image=gltextures ; i<numgltextures ; i++, image++)
@@ -356,26 +356,26 @@ void GL_ImageList_f (void)
 		switch (image->type)
 		{
 		case it_skin:
-			ri.Con_Printf (PRINT_ALL, "M");
+			RI_Con_Printf (PRINT_ALL, "M");
 			break;
 		case it_sprite:
-			ri.Con_Printf (PRINT_ALL, "S");
+			RI_Con_Printf (PRINT_ALL, "S");
 			break;
 		case it_wall:
-			ri.Con_Printf (PRINT_ALL, "W");
+			RI_Con_Printf (PRINT_ALL, "W");
 			break;
 		case it_pic:
-			ri.Con_Printf (PRINT_ALL, "P");
+			RI_Con_Printf (PRINT_ALL, "P");
 			break;
 		default:
-			ri.Con_Printf (PRINT_ALL, " ");
+			RI_Con_Printf (PRINT_ALL, " ");
 			break;
 		}
 
-		ri.Con_Printf (PRINT_ALL,  " %3i %3i RGB: %s\n",
+		RI_Con_Printf (PRINT_ALL,  " %3i %3i RGB: %s\n",
 			image->width, image->height, image->name);
 	}
-	ri.Con_Printf (PRINT_ALL, "Total texel count (not counting mipmaps): %i\n", texels);
+	RI_Con_Printf (PRINT_ALL, "Total texel count (not counting mipmaps): %i\n", texels);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -468,7 +468,7 @@ static byte *GL_LoadImage(const char *pName, int &width, int &height)
 	byte		*pBuffer;
 	int			nBufLen;
 
-	nBufLen = ri.FS_LoadFile(pName, (void **)&pBuffer);
+	nBufLen = RI_FS_LoadFile(pName, (void **)&pBuffer);
 	if (!pBuffer)
 	{
 		return nullptr;
@@ -494,8 +494,8 @@ static byte *GL_LoadImage(const char *pName, int &width, int &height)
 	}
 	else
 	{
-		ri.FS_FreeFile(pBuffer);
-		ri.Con_Printf(PRINT_ALL, "GL_LoadImage - %s is an unsupported image format!", pName);
+		RI_FS_FreeFile(pBuffer);
+		RI_Con_Printf(PRINT_ALL, "GL_LoadImage - %s is an unsupported image format!", pName);
 		return nullptr;
 	}
 
@@ -504,7 +504,7 @@ static byte *GL_LoadImage(const char *pName, int &width, int &height)
 		return nullptr;
 	}
 
-	ri.FS_FreeFile(pBuffer);
+	RI_FS_FreeFile(pBuffer);
 	return pPic;
 }
 
@@ -525,7 +525,7 @@ static image_t *GL_CreateImage(const char *name, const byte *pic, int width, int
 	if (i == numgltextures)
 	{
 		if (numgltextures == MAX_GLTEXTURES)
-			ri.Sys_Error(ERR_DROP, "MAX_GLTEXTURES");
+			RI_Sys_Error(ERR_DROP, "MAX_GLTEXTURES");
 		numgltextures++;
 	}
 	image = &gltextures[i];
@@ -658,19 +658,19 @@ static void GL_GetPalette (void)
 	byte	*pBuffer;
 	int		nBufLen;
 
-	nBufLen = ri.FS_LoadFile("pics/colormap.pcx", (void**)&pBuffer);
+	nBufLen = RI_FS_LoadFile("pics/colormap.pcx", (void**)&pBuffer);
 	if (!pBuffer)
 	{
-		ri.Sys_Error(ERR_FATAL, "Couldn't load pics/colormap.pcx");
+		RI_Sys_Error(ERR_FATAL, "Couldn't load pics/colormap.pcx");
 	}
 
 	if (!ImageLoaders::CreateColormapFromPCX(pBuffer, nBufLen, d_8to24table))
 	{
-		ri.FS_FreeFile(pBuffer);
-		ri.Sys_Error(ERR_FATAL, "pics/colormap.pcx is not a valid PCX!");
+		RI_FS_FreeFile(pBuffer);
+		RI_Sys_Error(ERR_FATAL, "pics/colormap.pcx is not a valid PCX!");
 	}
 
-	ri.FS_FreeFile(pBuffer);
+	RI_FS_FreeFile(pBuffer);
 }
 
 //-------------------------------------------------------------------------------------------------

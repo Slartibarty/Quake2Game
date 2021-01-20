@@ -147,37 +147,37 @@ CL_RegisterTEntModels
 */
 void CL_RegisterTEntModels (void)
 {
-	cl_mod_explode = re.RegisterModel ("models/objects/explode/tris.md2");
-	cl_mod_smoke = re.RegisterModel ("models/objects/smoke/tris.md2");
-	cl_mod_flash = re.RegisterModel ("models/objects/flash/tris.md2");
-	cl_mod_parasite_segment = re.RegisterModel ("models/monsters/parasite/segment/tris.md2");
-	cl_mod_grapple_cable = re.RegisterModel ("models/ctf/segment/tris.md2");
-	cl_mod_parasite_tip = re.RegisterModel ("models/monsters/parasite/tip/tris.md2");
-	cl_mod_explo4 = re.RegisterModel ("models/objects/r_explode/tris.md2");
-	cl_mod_bfg_explo = re.RegisterModel ("sprites/s_bfg2.sp2");
-	cl_mod_powerscreen = re.RegisterModel ("models/items/armor/effect/tris.md2");
+	cl_mod_explode = R_RegisterModel ("models/objects/explode/tris.md2");
+	cl_mod_smoke = R_RegisterModel ("models/objects/smoke/tris.md2");
+	cl_mod_flash = R_RegisterModel ("models/objects/flash/tris.md2");
+	cl_mod_parasite_segment = R_RegisterModel ("models/monsters/parasite/segment/tris.md2");
+	cl_mod_grapple_cable = R_RegisterModel ("models/ctf/segment/tris.md2");
+	cl_mod_parasite_tip = R_RegisterModel ("models/monsters/parasite/tip/tris.md2");
+	cl_mod_explo4 = R_RegisterModel ("models/objects/r_explode/tris.md2");
+	cl_mod_bfg_explo = R_RegisterModel ("sprites/s_bfg2.sp2");
+	cl_mod_powerscreen = R_RegisterModel ("models/items/armor/effect/tris.md2");
 
-re.RegisterModel ("models/objects/laser/tris.md2");
-re.RegisterModel ("models/objects/grenade2/tris.md2");
-re.RegisterModel ("models/weapons/v_machn/tris.md2");
-re.RegisterModel ("models/weapons/v_handgr/tris.md2");
-re.RegisterModel ("models/weapons/v_shotg2/tris.md2");
-re.RegisterModel ("models/objects/gibs/bone/tris.md2");
-re.RegisterModel ("models/objects/gibs/sm_meat/tris.md2");
-re.RegisterModel ("models/objects/gibs/bone2/tris.md2");
+R_RegisterModel ("models/objects/laser/tris.md2");
+R_RegisterModel ("models/objects/grenade2/tris.md2");
+R_RegisterModel ("models/weapons/v_machn/tris.md2");
+R_RegisterModel ("models/weapons/v_handgr/tris.md2");
+R_RegisterModel ("models/weapons/v_shotg2/tris.md2");
+R_RegisterModel ("models/objects/gibs/bone/tris.md2");
+R_RegisterModel ("models/objects/gibs/sm_meat/tris.md2");
+R_RegisterModel ("models/objects/gibs/bone2/tris.md2");
 // RAFAEL
-// re.RegisterModel ("models/objects/blaser/tris.md2");
+// R_RegisterModel ("models/objects/blaser/tris.md2");
 
-re.RegisterPic ("w_machinegun");
-re.RegisterPic ("a_bullets");
-re.RegisterPic ("i_health");
-re.RegisterPic ("a_grenades");
+R_RegisterPic ("w_machinegun");
+R_RegisterPic ("a_bullets");
+R_RegisterPic ("i_health");
+R_RegisterPic ("a_grenades");
 
 //ROGUE
-	cl_mod_explo4_big = re.RegisterModel ("models/objects/r_explode2/tris.md2");
-	cl_mod_lightning = re.RegisterModel ("models/proj/lightning/tris.md2");
-	cl_mod_heatbeam = re.RegisterModel ("models/proj/beam/tris.md2");
-	cl_mod_monster_heatbeam = re.RegisterModel ("models/proj/widowbeam/tris.md2");
+	cl_mod_explo4_big = R_RegisterModel ("models/objects/r_explode2/tris.md2");
+	cl_mod_lightning = R_RegisterModel ("models/proj/lightning/tris.md2");
+	cl_mod_heatbeam = R_RegisterModel ("models/proj/beam/tris.md2");
+	cl_mod_monster_heatbeam = R_RegisterModel ("models/proj/widowbeam/tris.md2");
 //ROGUE
 }	
 

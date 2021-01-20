@@ -570,7 +570,8 @@ void Qcommon_Init (int argc, char **argv)
 #endif
 
 	// Create the version convar
-	Cvar_Get( "version", va( "%4.2f %s %s", VERSION, __DATE__, BLD_STRING ), CVAR_SERVERINFO | CVAR_NOSET );
+	//Cvar_Get( "version", va( "%4.2f %s %s", VERSION, __DATE__, BLD_STRING ), CVAR_SERVERINFO | CVAR_NOSET );
+	Cvar_Get( "version", "WHATEVER", CVAR_SERVERINFO | CVAR_NOSET );
 
 	if (dedicated->value)
 		Cmd_AddCommand ("quit", Com_Quit);
@@ -598,7 +599,7 @@ void Qcommon_Init (int argc, char **argv)
 		SCR_EndLoadingPlaque ();
 	}
 
-	Com_Printf ("====== Quake2 Initialized ======\n\n");	
+	Com_Printf ("====== Quake2 Initialized ======\n\n");
 }
 
 /*
