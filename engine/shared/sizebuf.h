@@ -8,12 +8,12 @@
 
 struct sizebuf_t
 {
-	bool		allowoverflow;	// if false, do a Com_Error
-	bool		overflowed;		// set to true if the buffer size failed
-	byte		*data;
-	int			maxsize;
-	int			cursize;
-	int			readcount;
+	byte	*data;
+	int		maxsize;
+	int		cursize;
+	int		readcount;
+	bool	allowoverflow;	// if false, do a Com_Error
+	bool	overflowed;		// set to true if the buffer size failed
 };
 
 void SZ_Init( sizebuf_t *buf, byte *data, int length );
