@@ -361,7 +361,7 @@ void		GLimp_AppActivate( bool active );
 extern void VID_Error( int err_level, const char *fmt, ... );
 extern void VID_Printf( int print_level, const char *fmt, ... );
 
-extern qboolean VID_GetModeInfo( int *width, int *height, int mode );
+extern bool VID_GetModeInfo( int *width, int *height, int mode );
 extern void VID_NewWindow( int width, int height );
 
 #define RI_Sys_Error			VID_Error

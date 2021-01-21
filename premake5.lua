@@ -192,10 +192,6 @@ project "game_q2"
 	
 	removefiles {
 		"**.manifest",
-		"game_q2/p_view_hl1.cpp",
-		
-		"**_null.*",
-		--"**_pch.cpp"
 	}
 	
 -- Utils
