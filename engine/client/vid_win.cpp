@@ -157,7 +157,7 @@ static void VID_FreeModes()
 	s_num_modes = 0;
 }
 
-qboolean VID_GetModeInfo( int *width, int *height, int mode )
+bool VID_GetModeInfo( int *width, int *height, int mode )
 {
 	if ( mode < 0 || mode >= s_num_modes)
 		return false;

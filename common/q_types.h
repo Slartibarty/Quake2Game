@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------------------------------------
-// Basic types extracted from q_shared.h
+// Basic types
 //-------------------------------------------------------------------------------------------------
 
 #pragma once
@@ -19,4 +19,4 @@ using uint64 = uint64_t;
 using byte = uint8;
 using uint = unsigned int;
 
-using qboolean = int;
+using qboolean = int; // Must always be 32-bits

@@ -180,6 +180,8 @@ typedef vec_t vec3_t[3];
 typedef vec_t vec4_t[4];
 typedef vec_t vec5_t[5];
 
+extern vec3_t vec3_origin;
+
 // angle indexes
 #define	PITCH		0		// up / down
 #define	YAW			1		// left / right
@@ -193,6 +195,7 @@ typedef vec_t vec5_t[5];
 #define M_PI_F		3.14159265358979323846f
 #endif
 
+// These suck, the namespace name also sucks
 namespace mathconst
 {
 	constexpr float	Pi = 3.14159265358979323846f;
@@ -213,8 +216,6 @@ namespace mathconst
 }
 
 struct cplane_t;
-
-extern vec3_t vec3_origin;
 
 inline float DotProduct(const vec3_t v1, const vec3_t v2)
 {

@@ -196,7 +196,7 @@ struct refimport_t
 	cvar_t	*(*Cvar_Set)( const char *name, const char *value );
 	void	 (*Cvar_SetValue)( const char *name, float value );
 
-	qboolean	(*Vid_GetModeInfo)( int *width, int *height, int mode );
+	bool		(*Vid_GetModeInfo)( int *width, int *height, int mode );
 	void		(*Vid_NewWindow)( int width, int height );
 };
 
