@@ -525,7 +525,7 @@ static image_t *GL_CreateImage(const char *name, const byte *pic, int width, int
 	if (i == numgltextures)
 	{
 		if (numgltextures == MAX_GLTEXTURES)
-			RI_Sys_Error(ERR_DROP, "MAX_GLTEXTURES");
+			RI_Com_Error(ERR_DROP, "MAX_GLTEXTURES");
 		numgltextures++;
 	}
 	image = &gltextures[i];
@@ -661,13 +661,13 @@ static void GL_GetPalette (void)
 	nBufLen = RI_FS_LoadFile("pics/colormap.pcx", (void**)&pBuffer);
 	if (!pBuffer)
 	{
-		RI_Sys_Error(ERR_FATAL, "Couldn't load pics/colormap.pcx");
+		RI_Com_Error(ERR_FATAL, "Couldn't load pics/colormap.pcx");
 	}
 
 	if (!ImageLoaders::CreateColormapFromPCX(pBuffer, nBufLen, d_8to24table))
 	{
 		RI_FS_FreeFile(pBuffer);
-		RI_Sys_Error(ERR_FATAL, "pics/colormap.pcx is not a valid PCX!");
+		RI_Com_Error(ERR_FATAL, "pics/colormap.pcx is not a valid PCX!");
 	}
 
 	RI_FS_FreeFile(pBuffer);

@@ -341,7 +341,7 @@ void		GLimp_AppActivate( bool active );
 //-------------------------------------------------------------------------------------------------
 #ifndef REF_HARD_LINKED
 
-#define RI_Sys_Error			ri.Sys_Error
+#define RI_Com_Error			ri.Sys_Error
 #define RI_Cmd_AddCommand		ri.Cmd_AddCommand
 #define RI_Cmd_RemoveCommand	ri.Cmd_RemoveCommand
 #define RI_Cmd_Argc				ri.Cmd_Argc
@@ -362,7 +362,7 @@ void		GLimp_AppActivate( bool active );
 extern bool VID_GetModeInfo( int *width, int *height, int mode );
 extern void VID_NewWindow( int width, int height );
 
-#define RI_Sys_Error			Com_Error
+#define RI_Com_Error			Com_Error
 #define RI_Cmd_AddCommand		Cmd_AddCommand
 #define RI_Cmd_RemoveCommand	Cmd_RemoveCommand
 #define RI_Cmd_Argc				Cmd_Argc

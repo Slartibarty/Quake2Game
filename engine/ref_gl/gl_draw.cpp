@@ -13,7 +13,7 @@ void Draw_InitLocal (void)
 	// load console characters (don't bilerp characters)
 	draw_chars = GL_FindImage("pics/conchars.pcx", it_pic);
 	if (!draw_chars) {
-		RI_Sys_Error(ERR_FATAL, "Could not get console font: pics/conchars");
+		RI_Com_Error(ERR_FATAL, "Could not get console font: pics/conchars");
 	}
 
 	// Undo this if we ever make pics linear filtered again
@@ -195,7 +195,7 @@ void Draw_Fill (int x, int y, int w, int h, int c)
 	} color;
 
 	if (c > 255)
-		RI_Sys_Error(ERR_FATAL, "Draw_Fill: bad color");
+		RI_Com_Error(ERR_FATAL, "Draw_Fill: bad color");
 
 	glDisable(GL_TEXTURE_2D);
 

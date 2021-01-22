@@ -319,7 +319,7 @@ void R_DrawEntitiesOnList (void)
 				R_DrawSpriteModel (currententity);
 				break;
 			default:
-				RI_Sys_Error (ERR_DROP, "Bad modeltype");
+				RI_Com_Error (ERR_DROP, "Bad modeltype");
 				break;
 			}
 		}
@@ -362,7 +362,7 @@ void R_DrawEntitiesOnList (void)
 				R_DrawSpriteModel (currententity);
 				break;
 			default:
-				RI_Sys_Error (ERR_DROP, "Bad modeltype");
+				RI_Com_Error (ERR_DROP, "Bad modeltype");
 				break;
 			}
 		}
@@ -737,7 +737,7 @@ void R_RenderView (refdef_t *fd)
 	r_newrefdef = *fd;
 
 	if (!r_worldmodel && !( r_newrefdef.rdflags & RDF_NOWORLDMODEL ) )
-		RI_Sys_Error (ERR_DROP, "R_RenderView: NULL worldmodel");
+		RI_Com_Error (ERR_DROP, "R_RenderView: NULL worldmodel");
 
 	if (r_speeds->value)
 	{
@@ -1297,7 +1297,7 @@ void Sys_Error (const char *error, ...)
 	Q_vsprintf_s (text, error, argptr);
 	va_end (argptr);
 
-	RI_Sys_Error (ERR_FATAL, "%s", text);
+	RI_Com_Error (ERR_FATAL, "%s", text);
 }
 
 void Com_Printf (const char *fmt, ...)
