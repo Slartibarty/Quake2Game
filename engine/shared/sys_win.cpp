@@ -109,9 +109,9 @@ Sys_ConsoleInput
 */
 char *Sys_ConsoleInput (void)
 {
-	INPUT_RECORD	recs[1024];
-	DWORD	numread, numevents, dummy;
-	int		ch;
+	INPUT_RECORD recs;
+	DWORD numread, numevents, dummy;
+	int ch;
 
 	if (!dedicated || !dedicated->value)
 		return NULL;
@@ -124,17 +124,17 @@ char *Sys_ConsoleInput (void)
 		if (numevents == 0)
 			break;
 
-		if (!ReadConsoleInput(hinput, recs, 1, &numread))
+		if (!ReadConsoleInput(hinput, &recs, 1, &numread))
 			Sys_Error ("Error reading console input");
 
 		if (numread != 1)
 			Sys_Error ("Couldn't read console input");
 
-		if (recs[0].EventType == KEY_EVENT)
+		if (recs.EventType == KEY_EVENT)
 		{
-			if (!recs[0].Event.KeyEvent.bKeyDown)
+			if (!recs.Event.KeyEvent.bKeyDown)
 			{
-				ch = recs[0].Event.KeyEvent.uChar.AsciiChar;
+				ch = recs.Event.KeyEvent.uChar.AsciiChar;
 
 				switch (ch)
 				{

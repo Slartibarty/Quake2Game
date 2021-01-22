@@ -651,8 +651,9 @@ void Engine_Frame (int msec)
 
 	if (showtrace->value)
 	{
-		extern	int c_traces, c_brush_traces;
-		extern	int	c_pointcontents;
+		// cmodel
+		extern int c_traces, c_brush_traces;
+		extern int c_pointcontents;
 
 		Com_Printf ("%4i traces  %4i points\n", c_traces, c_pointcontents);
 		c_traces = 0;
@@ -705,6 +706,7 @@ Engine_Shutdown
 void Engine_Shutdown (void)
 {
 	// This might seem odd, but the vid menu resolutions are calculated once per engine-run, so we clear them here instead
+	// THIS SUCKS!!!! BREAKS SERVER CLIENT CONNECTION!!! DO IT IN CL_SHUTDOWN
 	extern void DeleteResolutions();
 	DeleteResolutions();
 

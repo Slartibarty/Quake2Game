@@ -554,7 +554,7 @@ static void SV_GiveMsec (void)
 	int			i;
 	client_t	*cl;
 
-	if (sv.framenum & 15)
+	if (sv.framenum & 15) // SlartTodo: What?
 		return;
 
 	for (i=0 ; i<maxclients->value ; i++)
@@ -582,6 +582,7 @@ static void SV_ReadPackets (void)
 	while (NET_GetPacket (NS_SERVER, &net_from, &net_message))
 	{
 		// check for connectionless packet (0xffffffff) first
+		// SlartTodo: Is this correct?
 		if (*(int *)net_message.data == -1)
 		{
 			SV_ConnectionlessPacket ();
@@ -820,7 +821,7 @@ void Master_Heartbeat (void)
 	if (svs.last_heartbeat > svs.realtime)
 		svs.last_heartbeat = svs.realtime;
 
-	if (svs.realtime - svs.last_heartbeat < HEARTBEAT_SECONDS*1000)
+	if (svs.realtime - svs.last_heartbeat < HEARTBEAT_SECONDS * mathconst::SecondsToMilliseconds)
 		return;		// not time to send yet
 
 	svs.last_heartbeat = svs.realtime;
