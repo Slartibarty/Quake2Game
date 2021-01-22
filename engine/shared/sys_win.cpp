@@ -36,7 +36,7 @@ void Sys_Error (const char *error, ...)
 	char		text[MAX_PRINT_MSG];
 
 	CL_Shutdown ();
-	Qcommon_Shutdown ();
+	Engine_Shutdown ();
 
 	va_start (argptr, error);
 	Q_vsprintf_s (text, error, argptr);
@@ -55,7 +55,7 @@ void Sys_Error (const char *error, ...)
 void Sys_Quit (void)
 {
 	CL_Shutdown();
-	Qcommon_Shutdown ();
+	Engine_Shutdown ();
 	if (dedicated && dedicated->value)
 		FreeConsole ();
 
@@ -354,6 +354,27 @@ void *Sys_GetGameAPI( void *parms )
 
 //=======================================================================
 
+#if 0
+static char whatevertest[]{ "Hello this is a very long string, whatever, blah blah, hey my name is jeff I am trypfjs nd ksd wdsld 566 ((8***7&&@@~~}}{{ ??>><< dsjdjosojd jsdj snncnk knsdnddks dksnkndiqhiqhishiqsh iqr857835 7811 $$$ ffmfmc cmc vnvnv ... /// ;;; '''' #### [[[]]] p---+++++**---++++, how much longer can i make this huh im just testing my rambling capabilities it's completely random what I type it could be anything at all i could start talking about half-life alpha stuff it's just a constnat stream of mind isn't that really cool huh? what are you doing dude, it's not funny I'm very amusing or not i dont know im not you i am the funneist person who ever lived just liek joker (2019) this is athreat and i am very dangerous I own 15 sword and a burrito taco machine, beat that bub." };
+
+void Cmd_Testwhatever()
+{
+	int varthing;
+	char test01[256]{ "Hello World!" };
+
+	double start, end;
+
+	start = Time_FloatMicroseconds();
+	varthing = Q_strcasecmp( whatevertest, whatevertest );
+	end = Time_FloatMicroseconds();
+	Com_Printf( "Q_strcasecmp Took %f microseconds\n", end - start );
+	start = Time_FloatMicroseconds();
+	varthing = _stricmp( whatevertest, whatevertest );
+	end = Time_FloatMicroseconds();
+	Com_Printf( "_stricmp Took %f microseconds\n", end - start );
+}
+#endif
+
 /*
 ==================
 WinMain
@@ -378,7 +399,9 @@ int main(int argc, char **argv)
 	// Slart: Was SetErrorMode
 	//SetThreadErrorMode(SEM_FAILCRITICALERRORS, NULL);
 
-	Qcommon_Init (argc, argv);
+	Time_Init();
+
+	Engine_Init (argc, argv);
 	oldtime = Sys_Milliseconds ();
 
 	if ( GetACP() == CP_UTF8 )
@@ -401,7 +424,7 @@ int main(int argc, char **argv)
 			time = newtime - oldtime;
 		} while (time < 1);
 
-		Qcommon_Frame (time);
+		Engine_Frame (time);
 
 		oldtime = newtime;
 	}

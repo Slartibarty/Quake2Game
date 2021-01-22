@@ -3,15 +3,10 @@
 #include "gl_local.h"
 
 #ifndef REF_HARD_LINKED
-
 refimport_t	ri;
-
 #define REFEXTERN
-
 #else
-
 #define REFEXTERN extern
-
 #endif
 
 viddef_t	vid;
@@ -980,6 +975,8 @@ R_Init
 */
 bool R_Init( void *hinstance, void *hWnd )
 {	
+	RI_Con_Printf (PRINT_ALL, "ref_gl version: " REF_VERSION "\n");
+
 	extern float r_turbsin[256];
 
 	for ( int j = 0; j < 256; j++ )
@@ -987,7 +984,9 @@ bool R_Init( void *hinstance, void *hWnd )
 		r_turbsin[j] *= 0.5f;
 	}
 
-	RI_Con_Printf (PRINT_ALL, "ref_gl version: " REF_VERSION "\n");
+#ifndef REF_HARD_LINKED
+	Time_Init();
+#endif
 
 	R_Register();
 

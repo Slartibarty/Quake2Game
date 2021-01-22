@@ -60,12 +60,11 @@ filter {}
 filter "system:windows"
 	buildoptions { "/utf-8", "/permissive", "/Zc:__cplusplus" }
 	defines { "WIN32", "_WINDOWS", "_CRT_SECURE_NO_WARNINGS" }
-	links { "noenv.obj" }
 filter {}
 	
 -- Config for Windows, release, clean this up!
 filter { "system:windows", filter_rel_or_rtl }
-	buildoptions { "/Gw", "/Zc:inline" }
+	buildoptions { "/Gw" }
 filter {}
 
 -- Config for all projects in debug, _DEBUG is defined for library-compatibility
@@ -102,8 +101,10 @@ project "engine"
 	targetname "q2game"
 	language "C++"
 	targetdir "../game"
+	includedirs { "external/glew/include" }
+	defines { "GLEW_STATIC", "GLEW_NO_GLU" }
 	linkoptions { "/ENTRY:mainCRTStartup" }
-	links { "ref_gl", "ws2_32", "winmm", "dsound", "dxguid" }
+	links { "ws2_32", "dsound", "dxguid", "opengl32", "noenv.obj" }
 	
 	disablewarnings { "4244", "4267" }
 
@@ -114,21 +115,24 @@ project "engine"
 		"engine/res/*",
 		"engine/shared/*",
 		
-		"engine/ref_shared/anorms.inl",
-		"engine/ref_shared/ref_public.h",
+		"engine/ref_gl/*",
+		"engine/ref_shared/*",
 		
 		"game_shared/game_public.h",
-		"game_shared/m_flash.cpp"
+		"game_shared/m_flash.cpp",
+		
+		"external/glew/src/glew.c"
 	}
 	
 	removefiles {
 		"engine/client/cd_win.*",
 		"engine/res/rw_*",
-		"engine/shared/pmove_hl1.cpp",
+		"**.def",
 		"**/sv_null.*",
 		"**_pch.cpp"
 	}
 	
+--[[
 project "ref_gl"
 	kind "StaticLib"
 	targetname "ref_gl"
@@ -147,9 +151,7 @@ project "ref_gl"
 	filter( {} )
 
 	files {
-		"common/*",
-		"engine/shared/imageloaders.*",
-		"engine/shared/misc_win.cpp",
+		"common/*.h",
 		"engine/res/resource.h",
 		
 		"engine/ref_gl/*",
@@ -160,10 +162,8 @@ project "ref_gl"
 	
 	removefiles {
 		"**.manifest",
-	
-		"**_null.*",
-		--"**_pch.cpp"
 	}
+--]]
 	
 project "game_q2"
 	kind "SharedLib"

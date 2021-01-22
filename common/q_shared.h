@@ -109,9 +109,9 @@ inline void Q_strcpy_s(char (&pDest)[nDestSize], const char *pSrc)
 }
 
 // portable case insensitive compare
-int Q_strcasecmp (const char *s1, const char *s2);
-int Q_strncasecmp (const char *s1, const char *s2, strlen_t n);
-int Q_stricmp(const char *s1, const char *s2);
+int Q_strcasecmp( const char *s1, const char *s2 );
+int Q_strncasecmp( const char *s1, const char *s2, strlen_t n );
+#define Q_stricmp Q_strcasecmp // FIXME: replace all Q_stricmp with Q_strcasecmp
 
 void Q_vsprintf_s(char *pDest, strlen_t nDestSize, const char *pFmt, va_list args);
 
@@ -242,9 +242,19 @@ qboolean	Info_Validate (const char *s);
 // System specific - misc_win.cpp
 //-------------------------------------------------------------------------------------------------
 
-extern	int	curtime;		// time returned by last Sys_Milliseconds
+extern int curtime; // time returned by last Sys_Milliseconds
 
-int		Sys_Milliseconds (void);
+void	Time_Init();
+double	Time_FloatSeconds();
+double	Time_FloatMilliseconds();
+double	Time_FloatMicroseconds();
+
+int64	Time_Milliseconds();
+int64	Time_Microseconds();
+
+// Legacy
+int		Sys_Milliseconds();
+
 void	Sys_CopyFile (const char *src, const char *dst);
 void	Sys_Mkdir (const char *path);
 

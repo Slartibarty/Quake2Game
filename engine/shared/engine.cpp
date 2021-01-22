@@ -514,10 +514,10 @@ static void Com_Error_f (void)
 
 /*
 =================
-Qcommon_Init
+Engine_Init
 =================
 */
-void Qcommon_Init (int argc, char **argv)
+void Engine_Init (int argc, char **argv)
 {
 	if (setjmp (abortframe) )
 		Sys_Error ("Error during initialization");
@@ -604,10 +604,10 @@ void Qcommon_Init (int argc, char **argv)
 
 /*
 =================
-Qcommon_Frame
+Engine_Frame
 =================
 */
-void Qcommon_Frame (int msec)
+void Engine_Frame (int msec)
 {
 	char	*s;
 	int		time_before, time_between, time_after;
@@ -699,10 +699,10 @@ void Qcommon_Frame (int msec)
 
 /*
 =================
-Qcommon_Shutdown
+Engine_Shutdown
 =================
 */
-void Qcommon_Shutdown (void)
+void Engine_Shutdown (void)
 {
 	// This might seem odd, but the vid menu resolutions are calculated once per engine-run, so we clear them here instead
 	extern void DeleteResolutions();

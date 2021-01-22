@@ -127,9 +127,9 @@ extern	int		time_after_game;
 extern	int		time_before_ref;
 extern	int		time_after_ref;
 
-void Qcommon_Init (int argc, char **argv);
-void Qcommon_Frame (int msec);
-void Qcommon_Shutdown (void);
+void Engine_Init (int argc, char **argv);
+void Engine_Frame (int msec);
+void Engine_Shutdown (void);
 
 //-------------------------------------------------------------------------------------------------
 // client / server systems

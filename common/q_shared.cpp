@@ -183,6 +183,21 @@ char *va(const char *format, ...)
 //
 //-------------------------------------------------------------------------------------------------
 
+#define USE_FAST_CASE_CONVERSION
+#ifdef USE_FAST_CASE_CONVERSION
+// Faster conversion of an ascii char to upper case. This function does not obey locale or any language
+// setting. It should not be used to convert characters for printing, but it is a better choice
+// for internal strings such as used for hash table keys, etc. It's meant to be inlined and used
+// in places like the various dictionary classes. Not obeying locale also protects you from things
+// like your hash values being different depending on the locale setting.
+#define FastASCIIToUpper( c ) ( ( ( (c) >= 'a' ) && ( (c) <= 'z' ) ) ? ( (c) - 32 ) : (c) )
+/// similar to FastASCIIToLower
+#define FastASCIIToLower( c ) ( ( ( (c) >= 'A' ) && ( (c) <= 'Z' ) ) ? ( (c) + 32 ) : (c) )
+#else
+#define FastASCIIToLower tolower
+#define FastASCIIToUpper toupper
+#endif
+
 #define AssertString(str) assert( str && str[0] )
 
 //-------------------------------------------------------------------------------------------------
@@ -202,32 +217,96 @@ void Q_strcpy_s(char *pDest, strlen_t nDestSize, const char *pSrc)
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-int Q_strcasecmp(const char *s1, const char *s2)
+int Q_strcasecmp( const char *s1, const char *s2 )
 {
-#ifdef _WIN32
-	return _stricmp(s1, s2);
-#else
-	return strcasecmp(s1, s2);
-#endif
+	// It is not uncommon to compare a string to itself. Since stricmp
+	// is expensive and pointer comparison is cheap, this simple test
+	// can save a lot of cycles, and cache pollution.
+	// This also implicitly does the s1 and s2 both equal to NULL check
+	// that the POSIX code used to have.
+//	if ( s1 == s2 )
+//		return 0;
+
+	const uint8 *pS1 = (const uint8 *)s1;
+	const uint8 *pS2 = (const uint8 *)s2;
+	for ( ;;)
+	{
+		int c1 = *( pS1++ );
+		int c2 = *( pS2++ );
+		if ( c1 == c2 )
+		{
+			if ( !c1 ) return 0;
+		}
+		else
+		{
+			if ( !c2 )
+			{
+				return c1 - c2;
+			}
+			c1 = FastASCIIToLower( c1 );
+			c2 = FastASCIIToLower( c2 );
+			if ( c1 != c2 )
+			{
+				return c1 - c2;
+			}
+		}
+		c1 = *( pS1++ );
+		c2 = *( pS2++ );
+		if ( c1 == c2 )
+		{
+			if ( !c1 ) return 0;
+		}
+		else
+		{
+			if ( !c2 )
+			{
+				return c1 - c2;
+			}
+			c1 = FastASCIIToLower( c1 );
+			c2 = FastASCIIToLower( c2 );
+			if ( c1 != c2 )
+			{
+				return c1 - c2;
+			}
+		}
+	}
 }
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-int Q_strncasecmp(const char *s1, const char *s2, strlen_t n)
+int Q_strncasecmp( const char *s1, const char *s2, strlen_t n )
 {
-#ifdef _WIN32
-	return _strnicmp(s1, s2, n);
-#else
-	return strcasecmp(s1, s2);
-#endif
-}
+	assert( n > 0 );
 
-//-------------------------------------------------------------------------------------------------
-// FIXME: replace all Q_stricmp with Q_strcasecmp
-//-------------------------------------------------------------------------------------------------
-int Q_stricmp(const char *s1, const char *s2)
-{
-	return Q_strcasecmp(s1, s2);
+	if ( s1 == s2 )
+		return 0;
+
+	const uint8 *pS1 = (const uint8 *)s1;
+	const uint8 *pS2 = (const uint8 *)s2;
+	while ( n-- > 0 )
+	{
+		int c1 = *( pS1++ );
+		int c2 = *( pS2++ );
+		if ( c1 == c2 )
+		{
+			if ( !c1 ) return 0;
+		}
+		else
+		{
+			if ( !c2 )
+			{
+				return c1 - c2;
+			}
+			c1 = FastASCIIToLower( c1 );
+			c2 = FastASCIIToLower( c2 );
+			if ( c1 != c2 )
+			{
+				return c1 - c2;
+			}
+		}
+	}
+
+	return 0;
 }
 
 //-------------------------------------------------------------------------------------------------

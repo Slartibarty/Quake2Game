@@ -88,34 +88,87 @@ void Hunk_Free (void *base)
 
 //=================================================================================================
 
-/*
-================
-Sys_Milliseconds
-================
-*/
+static int64	startTime;
+static double	toSeconds;
+static double	toMilliseconds;
+static double	toMicroseconds;
+
 int curtime;
-int Sys_Milliseconds (void)
+
+void Time_Init()
 {
-	static LARGE_INTEGER	currentTime;
-	static LARGE_INTEGER	startTime;
+	QueryPerformanceFrequency( (LARGE_INTEGER *)&startTime );
+	toSeconds = 1e0 / startTime;
+	toMilliseconds = 1e3 / startTime;
+	toMicroseconds = 1e6 / startTime;
 
-	static double			timeToMS;
-	static bool				initialized = false;
+	QueryPerformanceCounter( (LARGE_INTEGER *)&startTime );
+}
 
-	if (!initialized)
-	{
-		QueryPerformanceFrequency (&currentTime);
-		timeToMS = 1e3 / currentTime.QuadPart;
+double Time_FloatSeconds()
+{
+	int64 currentTime;
 
-		QueryPerformanceCounter (&startTime);
+	QueryPerformanceCounter( (LARGE_INTEGER *)&currentTime );
 
-		initialized = true;
-	}
+	return ( currentTime - startTime ) * toSeconds;
+}
 
-	QueryPerformanceCounter (&currentTime);
+double Time_FloatMilliseconds()
+{
+	int64 currentTime;
+
+	QueryPerformanceCounter( (LARGE_INTEGER *)&currentTime );
+
+	return ( currentTime - startTime ) * toMilliseconds;
+}
+
+double Time_FloatMicroseconds()
+{
+	int64 currentTime;
+
+	QueryPerformanceCounter( (LARGE_INTEGER *)&currentTime );
+
+	return ( currentTime - startTime ) * toMicroseconds;
+}
+
+// Practically useless
+/*int64 Time_Seconds()
+{
+	int64 currentTime;
+
+	QueryPerformanceCounter( (LARGE_INTEGER *)&currentTime );
+
+	return llround( ( currentTime - startTime ) * toSeconds );
+}*/
+
+int64 Time_Milliseconds()
+{
+	int64 currentTime;
+
+	QueryPerformanceCounter( (LARGE_INTEGER *)&currentTime );
+
+	return llround( ( currentTime - startTime ) * toMilliseconds );
+}
+
+int64 Time_Microseconds()
+{
+	int64 currentTime;
+
+	QueryPerformanceCounter( (LARGE_INTEGER *)&currentTime );
+
+	return llround( ( currentTime - startTime ) * toMilliseconds );
+}
+
+// LEGACY
+int Sys_Milliseconds()
+{
+	int64 currentTime;
+
+	QueryPerformanceCounter( (LARGE_INTEGER *)&currentTime );
 
 	// SlartTodo: Replace int with int64
-	curtime = (int)((currentTime.QuadPart - startTime.QuadPart) * timeToMS);
+	curtime = (int)( ( currentTime - startTime ) * toMilliseconds );
 
 	return curtime;
 }
