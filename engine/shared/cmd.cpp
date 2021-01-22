@@ -74,7 +74,7 @@ void Cbuf_AddText (const char *text)
 {
 	int		l;
 	
-	l = strlen (text);
+	l = (int)strlen (text);
 
 	if (cmd_text.cursize + l >= cmd_text.maxsize)
 	{
