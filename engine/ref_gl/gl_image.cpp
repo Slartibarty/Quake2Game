@@ -47,7 +47,7 @@ namespace ImageLoaders
 			|| xmax >= 1023
 			|| ymax >= 1023)
 		{
-			RI_Con_Printf(PRINT_ALL, "Bad pcx file (%i x %i) (%i x %i)\n", xmax + 1, ymax + 1, pcx->xmax, pcx->ymax);
+			RI_Com_Printf("Bad pcx file (%i x %i) (%i x %i)\n", xmax + 1, ymax + 1, pcx->xmax, pcx->ymax);
 			return nullptr;
 		}
 
@@ -156,7 +156,7 @@ namespace ImageLoaders
 			|| xmax >= 1024
 			|| ymax >= 1024)
 		{
-			RI_Con_Printf(PRINT_ALL, "Bad pcx file (%i x %i) (%i x %i)\n", xmax + 1, ymax + 1, pcx->xmax, pcx->ymax);
+			RI_Com_Printf("Bad pcx file (%i x %i) (%i x %i)\n", xmax + 1, ymax + 1, pcx->xmax, pcx->ymax);
 			return;
 		}
 
@@ -192,7 +192,7 @@ namespace ImageLoaders
 
 		if (raw - (byte *)pcx > rawlen)
 		{
-			RI_Con_Printf(PRINT_DEVELOPER, "PCX file was malformed");
+			RI_Com_DPrintf("PCX file was malformed");
 			free(*pic);
 			*pic = NULL;
 		}
@@ -307,7 +307,7 @@ void GL_TextureMode(char *string)
 
 	if (i == NUM_GL_MODES)
 	{
-		RI_Con_Printf(PRINT_ALL, "bad filter name\n");
+		RI_Com_Printf("bad filter name\n");
 		return;
 	}
 
@@ -345,7 +345,7 @@ void GL_ImageList_f (void)
 	image_t	*image;
 	int		texels;
 
-	RI_Con_Printf (PRINT_ALL, "------------------\n");
+	RI_Com_Printf("------------------\n");
 	texels = 0;
 
 	for (i=0, image=gltextures ; i<numgltextures ; i++, image++)
@@ -356,26 +356,26 @@ void GL_ImageList_f (void)
 		switch (image->type)
 		{
 		case it_skin:
-			RI_Con_Printf (PRINT_ALL, "M");
+			RI_Com_Printf("M");
 			break;
 		case it_sprite:
-			RI_Con_Printf (PRINT_ALL, "S");
+			RI_Com_Printf("S");
 			break;
 		case it_wall:
-			RI_Con_Printf (PRINT_ALL, "W");
+			RI_Com_Printf("W");
 			break;
 		case it_pic:
-			RI_Con_Printf (PRINT_ALL, "P");
+			RI_Com_Printf("P");
 			break;
 		default:
-			RI_Con_Printf (PRINT_ALL, " ");
+			RI_Com_Printf(" ");
 			break;
 		}
 
-		RI_Con_Printf (PRINT_ALL,  " %3i %3i RGB: %s\n",
+		RI_Com_Printf( " %3i %3i RGB: %s\n",
 			image->width, image->height, image->name);
 	}
-	RI_Con_Printf (PRINT_ALL, "Total texel count (not counting mipmaps): %i\n", texels);
+	RI_Com_Printf("Total texel count (not counting mipmaps): %i\n", texels);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -495,7 +495,7 @@ static byte *GL_LoadImage(const char *pName, int &width, int &height)
 	else
 	{
 		RI_FS_FreeFile(pBuffer);
-		RI_Con_Printf(PRINT_ALL, "GL_LoadImage - %s is an unsupported image format!", pName);
+		RI_Com_Printf("GL_LoadImage - %s is an unsupported image format!", pName);
 		return nullptr;
 	}
 

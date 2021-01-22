@@ -104,7 +104,7 @@ void Draw_StretchPic (int x, int y, int w, int h, const char *pic)
 	gl = Draw_FindPic(pic);
 	if (!gl)
 	{
-		RI_Con_Printf(PRINT_ALL, "Can't find pic: %s\n", pic);
+		RI_Com_Printf("Can't find pic: %s\n", pic);
 		return;
 	}
 
@@ -137,7 +137,7 @@ void Draw_Pic (int x, int y, const char *pic)
 	gl = Draw_FindPic(pic);
 	if (!gl)
 	{
-		RI_Con_Printf(PRINT_ALL, "Can't find pic: %s\n", pic);
+		RI_Com_Printf("Can't find pic: %s\n", pic);
 		return;
 	}
 
@@ -165,7 +165,7 @@ void Draw_TileClear (int x, int y, int w, int h, const char *pic)
 	image = Draw_FindPic(pic);
 	if (!image)
 	{
-		RI_Con_Printf(PRINT_ALL, "Can't find pic: %s\n", pic);
+		RI_Com_Printf("Can't find pic: %s\n", pic);
 		return;
 	}
 

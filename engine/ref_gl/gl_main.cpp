@@ -159,7 +159,7 @@ void R_DrawSpriteModel (entity_t *e)
 #if 0
 	if (e->frame < 0 || e->frame >= psprite->numframes)
 	{
-		RI_Con_Printf (PRINT_ALL, "no such sprite frame %i\n", e->frame);
+		RI_Com_Printf("no such sprite frame %i\n", e->frame);
 		e->frame = 0;
 	}
 #endif
@@ -772,7 +772,7 @@ void R_RenderView (refdef_t *fd)
 
 	if (r_speeds->value)
 	{
-		RI_Con_Printf (PRINT_ALL, "%4i wpoly %4i epoly %i tex %i lmaps\n",
+		RI_Com_Printf("%4i wpoly %4i epoly %i tex %i lmaps\n",
 			c_brush_polys, 
 			c_alias_polys, 
 			c_visible_textures, 
@@ -936,7 +936,7 @@ qboolean R_SetMode (void)
 			{
 				RI_Cvar_SetValue("vid_fullscreen", 0);
 				vid_fullscreen->modified = false;
-				RI_Con_Printf(PRINT_ALL, "ref_gl::R_SetMode() - fullscreen unavailable in this mode\n");
+				RI_Com_Printf("ref_gl::R_SetMode() - fullscreen unavailable in this mode\n");
 				if ((err = GLimp_SetMode(&vid.width, &vid.height, gl_mode->value, false)) == rserr_ok)
 					return true;
 			}
@@ -944,13 +944,13 @@ qboolean R_SetMode (void)
 			{
 				RI_Cvar_SetValue("gl_mode", gl_state.prev_mode);
 				gl_mode->modified = false;
-				RI_Con_Printf(PRINT_ALL, "ref_gl::R_SetMode() - invalid mode\n");
+				RI_Com_Printf("ref_gl::R_SetMode() - invalid mode\n");
 			}
 
 			// try setting it back to something safe
 			if ((err = GLimp_SetMode(&vid.width, &vid.height, gl_state.prev_mode, false)) != rserr_ok)
 			{
-				RI_Con_Printf(PRINT_ALL, "ref_gl::R_SetMode() - could not revert to safe mode\n");
+				RI_Com_Printf("ref_gl::R_SetMode() - could not revert to safe mode\n");
 				return false;
 			}
 		}
@@ -964,7 +964,7 @@ static void GL_CheckErrors(void)
 	GLenum err;
 	while ((err = glGetError()) != GL_NO_ERROR)
 	{
-		RI_Con_Printf(PRINT_ALL, "glGetError() = 0x%x\n", err);
+		RI_Com_Printf("glGetError() = 0x%x\n", err);
 	}
 }
 
@@ -975,7 +975,7 @@ R_Init
 */
 bool R_Init( void *hinstance, void *hWnd )
 {	
-	RI_Con_Printf (PRINT_ALL, "ref_gl version: " REF_VERSION "\n");
+	RI_Com_Printf("ref_gl version: " REF_VERSION "\n");
 
 	extern float r_turbsin[256];
 
@@ -1003,13 +1003,13 @@ bool R_Init( void *hinstance, void *hWnd )
 	** get our various GL strings
 	*/
 	gl_config.vendor_string = (const char*)glGetString (GL_VENDOR);
-	RI_Con_Printf (PRINT_ALL, "GL_VENDOR: %s\n", gl_config.vendor_string );
+	RI_Com_Printf("GL_VENDOR: %s\n", gl_config.vendor_string );
 	gl_config.renderer_string = (const char*)glGetString (GL_RENDERER);
-	RI_Con_Printf (PRINT_ALL, "GL_RENDERER: %s\n", gl_config.renderer_string );
+	RI_Com_Printf("GL_RENDERER: %s\n", gl_config.renderer_string );
 	gl_config.version_string = (const char*)glGetString (GL_VERSION);
-	RI_Con_Printf (PRINT_ALL, "GL_VERSION: %s\n", gl_config.version_string );
+	RI_Com_Printf("GL_VERSION: %s\n", gl_config.version_string );
 	gl_config.extensions_string = (const char*)glGetString (GL_EXTENSIONS);
-//	RI_Con_Printf (PRINT_ALL, "GL_EXTENSIONS: %s\n", gl_config.extensions_string );
+//	RI_Com_Printf("GL_EXTENSIONS: %s\n", gl_config.extensions_string );
 
 	RI_Cvar_Set( "scr_drawall", "0" );
 
@@ -1309,7 +1309,7 @@ void Com_Printf (const char *fmt, ...)
 	Q_vsprintf_s (text, fmt, argptr);
 	va_end (argptr);
 
-	RI_Con_Printf (PRINT_ALL, "%s", text);
+	RI_Com_Printf("%s", text);
 }
 
 #endif

@@ -358,18 +358,17 @@ void		GLimp_AppActivate( bool active );
 
 #else
 
-extern void VID_Error( int err_level, const char *fmt, ... );
-extern void VID_Printf( int print_level, const char *fmt, ... );
-
+// Client functions
 extern bool VID_GetModeInfo( int *width, int *height, int mode );
 extern void VID_NewWindow( int width, int height );
 
-#define RI_Sys_Error			VID_Error
+#define RI_Sys_Error			Com_Error
 #define RI_Cmd_AddCommand		Cmd_AddCommand
 #define RI_Cmd_RemoveCommand	Cmd_RemoveCommand
 #define RI_Cmd_Argc				Cmd_Argc
 #define RI_Cmd_Argv				Cmd_Argv
-#define RI_Con_Printf			VID_Printf
+#define RI_Com_Printf			Com_Printf
+#define RI_Com_DPrintf			Com_DPrintf
 #define RI_FS_LoadFile			FS_LoadFile
 #define RI_FS_FreeFile			FS_FreeFile
 #define RI_FS_Gamedir			FS_Gamedir
