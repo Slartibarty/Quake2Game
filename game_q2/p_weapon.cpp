@@ -3,6 +3,9 @@
 #include "g_local.h"
 #include "m_player.h"
 
+#define MACHINEGUN_DOESNT_SUCK
+#define MACHINEGUN_SPREAD 200
+
 
 static qboolean	is_quad;
 static byte		is_silenced;
@@ -980,19 +983,21 @@ void Machinegun_Fire (edict_t *ent)
 	ent->client->kick_angles[0] = ent->client->machinegun_shots * -1.5f;
 
 	// raise the gun as it is firing
+#ifndef MACHINEGUN_DOESNT_SUCK
 	if (!deathmatch->value)
 	{
 		ent->client->machinegun_shots++;
 		if (ent->client->machinegun_shots > 9)
 			ent->client->machinegun_shots = 9;
 	}
+#endif
 
 	// get start / end positions
 	VectorAdd (ent->client->v_angle, ent->client->kick_angles, angles);
 	AngleVectors (angles, forward, right, NULL);
 	VectorSet(offset, 0, 8, ent->viewheight-8);
 	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
-	fire_bullet (ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_MACHINEGUN);
+	fire_bullet (ent, start, forward, damage, kick, MACHINEGUN_SPREAD, MACHINEGUN_SPREAD, MOD_MACHINEGUN);
 
 	gi.WriteByte (svc_muzzleflash);
 	gi.WriteShort (ent-g_edicts);
