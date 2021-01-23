@@ -24,6 +24,8 @@
 #define _Printf_format_string_
 #endif
 
+//#define OLD_TRACE_T					// Uncomment to support old mods
+
 #define	MAX_STRING_CHARS	1024	// max length of a string passed to Cmd_TokenizeString
 #define	MAX_STRING_TOKENS	80		// max tokens resulting from Cmd_TokenizeString
 #define	MAX_TOKEN_CHARS		128		// max length of an individual token
@@ -315,172 +317,10 @@ struct cvar_t
 };
 
 //-------------------------------------------------------------------------------------------------
-// CVARS 2 - cvars2.cpp
-//-------------------------------------------------------------------------------------------------
-
-#if 0
-
-#define CVAR2_NONE			0		// Nothing
-#define CVAR2_ARCHIVE		1		// Save this cvar to config.cfg
-#define	CVAR2_USERINFO		2		// Added to userinfo  when changed
-#define	CVAR2_SERVERINFO	4		// Added to serverinfo when changed
-#define	CVAR2_NOSET			8		// Don't allow change from console at all, but can be set from the command line
-#define	CVAR2_LATCH			16		// Save changes until server restart
-#define CVAR2_CHEAT			32		// Only usable if in SP or in MP when "cheats" is 1
-
-// Used by both Convar2 and Cvar2System
-bool Cvar2_InfoValidate( const char *s );
-
-//-------------------------------------------------------------------------------------------------
-// ConvarValue
-//
-// Helper class to make managing different values easier
-//-------------------------------------------------------------------------------------------------
-struct ConvarValue
-{
-	int64		i64Value;		// Result of atoi(pString)
-	double		dblValue;		// Result of atof(pString)
-
-	// Constructors
-	ConvarValue( const char *value ) { SetAllValues( value ); }
-	ConvarValue( double value ) { SetAllValues( value ); }
-	ConvarValue( int64 value ) { SetAllValues( value ); }
-
-	void SetAllValues( const char *value )
-	{
-		i64Value = atoll( value );
-		dblValue = atof( value );
-	}
-
-	void SetAllValues( double value )
-	{
-		i64Value = (int64)floor( value );
-		dblValue = value;
-	}
-
-	void SetAllValues( int64 value )
-	{
-		i64Value = value;
-		dblValue = (double)value;
-	}
-};
-
-//-------------------------------------------------------------------------------------------------
-// Convar2
-//
-// Convar's are not responsible for managing their own data, they are simply vessels carrying a bunch
-// of crap they have no control over.
-// Therefore, it is entirely up to Cvar2System to set the member variables of a convar.
-// This is because Cvar2System needs a static presense
-//-------------------------------------------------------------------------------------------------
-class Convar2
-{
-private:
-
-	friend class Convar2System;
-
-	tnk::String		pName;			// Key
-	tnk::String		pString;		// Value
-	tnk::String		pLatchedString;	// Latched value
-	uint32			nFlags;
-	bool			bModified;		// This is set to true when the cvar has been modified
-
-	ConvarValue		Values;
-
-public:
-
-	// Getters
-
-	const tnk::String	&GetName() const			{ return pName; }
-
-	// Legacy, really should move to callbacks
-	bool				IsModified() const			{ return bModified; }
-
-	const tnk::String	&GetValueString() const		{ return pString; }
-	bool				GetValueBool() const		{ return (bool)Values.i64Value; }
-	int					GetValueInt() const			{ return (int)Values.i64Value; }
-	int64				GetValueInt64() const		{ return Values.i64Value; }
-	float				GetValueFloat() const		{ return (float)Values.dblValue; }
-	double				GetValueDouble() const		{ return Values.dblValue; }
-
-	// Constructors and destructors
-
-	Convar2( const char *name, const char *value, uint32 flags )
-		: pName( name ), pString( value ), nFlags( flags ), bModified( false ), Values( value )
-	{
-	}
-
-	Convar2( const char *name, double value, uint32 flags )
-		: pName( name ), nFlags( flags ), bModified( false ), Values( value )
-	{
-		pString.ToString( value );
-	}
-
-	Convar2( const char *name, int64 value, uint32 flags )
-		: pName( name ), nFlags( flags ), bModified( false ), Values( value )
-	{
-		pString.ToString( value );
-	}
-
-};
-
-#endif
-
-//-------------------------------------------------------------------------------------------------
 // Collision detection
 //-------------------------------------------------------------------------------------------------
 
-//
-// Per-brush flags
-//
-
-// lower bits are stronger, and will eat weaker brushes completely
-#define	CONTENTS_SOLID			1		// an eye is never valid in a solid
-#define	CONTENTS_WINDOW			2		// translucent, but not watery
-#define	CONTENTS_AUX			4
-#define	CONTENTS_LAVA			8
-#define	CONTENTS_SLIME			16
-#define	CONTENTS_WATER			32
-#define	CONTENTS_MIST			64
-#define	LAST_VISIBLE_CONTENTS	CONTENTS_MIST
-
-// remaining contents are non-visible, and don't eat brushes
-
-#define	CONTENTS_AREAPORTAL		0x8000
-
-#define	CONTENTS_PLAYERCLIP		0x10000
-#define	CONTENTS_MONSTERCLIP	0x20000
-
-// currents can be added to any other contents, and may be mixed
-#define	CONTENTS_CURRENT_0		0x40000
-#define	CONTENTS_CURRENT_90		0x80000
-#define	CONTENTS_CURRENT_180	0x100000
-#define	CONTENTS_CURRENT_270	0x200000
-#define	CONTENTS_CURRENT_UP		0x400000
-#define	CONTENTS_CURRENT_DOWN	0x800000
-
-#define	CONTENTS_ORIGIN			0x1000000	// removed before bsping an entity
-
-#define	CONTENTS_MONSTER		0x2000000	// should never be on a brush, only in game
-#define	CONTENTS_DEADMONSTER	0x4000000
-#define	CONTENTS_DETAIL			0x8000000	// brushes to be added after vis leafs
-#define	CONTENTS_TRANSLUCENT	0x10000000	// auto set if any surface has trans
-#define	CONTENTS_LADDER			0x20000000
-
-//
-// Surface flags
-//
-
-#define	SURF_LIGHT		0x1		// value will hold the light strength
-
-#define	SURF_SLICK		0x2		// effects game physics
-
-#define	SURF_SKY		0x4		// don't draw, but add to skybox
-#define	SURF_WARP		0x8		// turbulent water warp
-#define	SURF_TRANS33	0x10
-#define	SURF_TRANS66	0x20
-#define	SURF_FLOWING	0x40	// scroll towards angle
-#define	SURF_NODRAW		0x80	// don't bother referencing the texture
+#include "bspflags.h"
 
 //
 // Content masks
@@ -545,7 +385,7 @@ struct mapsurface_t  // used internally due to name len probs //ZOID
 
 struct edict_t;
 
-#if 0 // Legacy trace_t
+#ifdef OLD_TRACE_T // Legacy trace_t
 
 // a trace is returned when a box is swept through the world
 struct trace_t
