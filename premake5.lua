@@ -103,8 +103,13 @@ project "engine"
 	targetdir "../game"
 	includedirs { "external/glew/include" }
 	defines { "GLEW_STATIC", "GLEW_NO_GLU" }
-	linkoptions { "/ENTRY:mainCRTStartup" }
-	links { "ws2_32", "dsound", "dxguid", "opengl32", "noenv.obj" }
+	filter "system:windows"
+		linkoptions { "/ENTRY:mainCRTStartup" }
+		links { "ws2_32", "dsound", "dxguid", "opengl32", "noenv.obj" }
+	flter {}
+	filter "system:linux"
+		links { "sdl2" }
+	filter {}
 	
 	disablewarnings { "4244", "4267" }
 
@@ -195,6 +200,8 @@ project "game_q2"
 	}
 	
 -- Utils
+
+filter "system:windows"
 
 group "utilities"
 
@@ -330,3 +337,5 @@ project "qe4"
 		
 		"utils/qe4/*"
 	}
+
+filter {}
