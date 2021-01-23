@@ -188,7 +188,9 @@ static void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *t
 	if (ps->rdflags != ops->rdflags)
 		pflags |= PS_RDFLAGS;
 
-	if (ps->gunframe != ops->gunframe)
+	if (ps->gunframe != ops->gunframe
+		|| !VectorCompare( ps->gunoffset, ops->gunoffset )
+		|| !VectorCompare( ps->gunangles, ops->gunangles ) )
 		pflags |= PS_WEAPONFRAME;
 
 	pflags |= PS_WEAPONINDEX;
