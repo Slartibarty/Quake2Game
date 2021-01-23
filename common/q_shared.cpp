@@ -165,7 +165,7 @@ void Com_PageInMemory (byte *buffer, int size)
 // does a varargs printf into a temp buffer, so I don't need to have
 // varargs versions of all text functions.
 //-------------------------------------------------------------------------------------------------
-char *va(const char *format, ...)
+char *va(_Printf_format_string_ const char *format, ...)
 {
 	static char		string[MAX_PRINT_MSG];
 	va_list			argptr;
@@ -311,7 +311,7 @@ int Q_strncasecmp( const char *s1, const char *s2, strlen_t n )
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-void Q_vsprintf_s(char *pDest, strlen_t nDestSize, const char *pFmt, va_list args)
+void Q_vsprintf_s(char *pDest, strlen_t nDestSize, _Printf_format_string_ const char *pFmt, va_list args)
 {
 #if 0
 #ifdef _WIN32
@@ -326,7 +326,7 @@ void Q_vsprintf_s(char *pDest, strlen_t nDestSize, const char *pFmt, va_list arg
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-void Q_vsprintf(char *pDest, const char *pFmt, va_list args)
+void Q_vsprintf(char *pDest, _Printf_format_string_ const char *pFmt, va_list args)
 {
 #if 0
 	vsprintf(pDest, pFmt, args);

@@ -82,13 +82,13 @@ struct edict_t
 //
 // functions provided by the main engine
 //
-typedef struct
+struct game_import_t
 {
 	// special messages
-	void	(*bprintf) (int printlevel, const char *fmt, ...);
-	void	(*dprintf) (const char *fmt, ...);
-	void	(*cprintf) (edict_t *ent, int printlevel, const char *fmt, ...);
-	void	(*centerprintf) (edict_t *ent, const char *fmt, ...);
+	void	(*bprintf) (int printlevel, _Printf_format_string_ const char *fmt, ...);
+	void	(*dprintf) (_Printf_format_string_ const char *fmt, ...);
+	void	(*cprintf) (edict_t *ent, int printlevel, _Printf_format_string_ const char *fmt, ...);
+	void	(*centerprintf) (edict_t *ent, _Printf_format_string_ const char *fmt, ...);
 	void	(*sound) (edict_t *ent, int channel, int soundindex, float volume, float attenuation, float timeofs);
 	void	(*positioned_sound) (vec3_t origin, edict_t *ent, int channel, int soundinedex, float volume, float attenuation, float timeofs);
 
@@ -98,7 +98,7 @@ typedef struct
 	// they connect, and changes are sent to all connected clients.
 	void	(*configstring) (int num, const char *string);
 
-	void	(*error) (const char *fmt, ...);
+	void	(*error) (_Printf_format_string_ const char *fmt, ...);
 
 	// the *index functions create configstrings and some internal server state
 	int		(*modelindex) (const char *name);
@@ -156,7 +156,7 @@ typedef struct
 	void	(*AddCommandString) (const char *text);
 
 	void	(*DebugGraph) (float value, int color);
-} game_import_t;
+};
 
 //
 // functions exported by the game subsystem

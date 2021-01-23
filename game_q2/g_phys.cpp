@@ -698,14 +698,14 @@ void SV_Physics_Toss (edict_t *ent)
 	if (trace.fraction < 1)
 	{
 		if (ent->movetype == MOVETYPE_BOUNCE)
-			backoff = 1.5;
+			backoff = 1.5f;
 		else
 			backoff = 1;
 
 		ClipVelocity (ent->velocity, trace.plane.normal, ent->velocity, backoff);
 
 	// stop if on ground
-		if (trace.plane.normal[2] > 0.7)
+		if (trace.plane.normal[2] > 0.7f)
 		{		
 			if (ent->velocity[2] < 60 || ent->movetype != MOVETYPE_BOUNCE )
 			{
@@ -716,8 +716,11 @@ void SV_Physics_Toss (edict_t *ent)
 			}
 		}
 
-//		if (ent->touch)
-//			ent->touch (ent, trace.ent, &trace.plane, trace.surface);
+		// Why did the id guys comment this out?
+		// It's the reason why gibs don't ever activate their gib_touch
+		// q2test plays the gib touch sound, so is this some kind of hack?
+	//	if (ent->touch)
+	//		ent->touch (ent, trace.ent, &trace.plane, trace.surface);
 	}
 	
 // check for water transition
@@ -915,7 +918,7 @@ void G_RunEntity (edict_t *ent)
 	if (ent->prethink)
 		ent->prethink (ent);
 
-	switch ( (int)ent->movetype)
+	switch ( ent->movetype )
 	{
 	case MOVETYPE_PUSH:
 	case MOVETYPE_STOP:

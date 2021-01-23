@@ -18,6 +18,12 @@
 #include "q_types.h"
 #include "q_math.h"
 
+#ifdef _WIN32
+#include <sal.h>
+#else
+#define _Printf_format_string_
+#endif
+
 #define	MAX_STRING_CHARS	1024	// max length of a string passed to Cmd_TokenizeString
 #define	MAX_STRING_TOKENS	80		// max tokens resulting from Cmd_TokenizeString
 #define	MAX_TOKEN_CHARS		128		// max length of an individual token
@@ -93,6 +99,7 @@ inline constexpr T Clamp( const T &val, const T &valMin, const T &valMax )
 // size_t is wack
 using strlen_t = uint32;
 
+[[nodiscard]]
 inline strlen_t Q_strlen( const char *str )
 {
 	return static_cast<strlen_t>( strlen( str ) );
@@ -113,39 +120,39 @@ int Q_strcasecmp( const char *s1, const char *s2 );
 int Q_strncasecmp( const char *s1, const char *s2, strlen_t n );
 #define Q_stricmp Q_strcasecmp // FIXME: replace all Q_stricmp with Q_strcasecmp
 
-void Q_vsprintf_s(char *pDest, strlen_t nDestSize, const char *pFmt, va_list args);
+void Q_vsprintf_s(char *pDest, strlen_t nDestSize, _Printf_format_string_ const char *pFmt, va_list args);
 
 template< strlen_t nDestSize >
-inline void Q_vsprintf_s(char(&pDest)[nDestSize], const char *pFmt, va_list args)
+inline void Q_vsprintf_s( char( &pDest )[nDestSize], _Printf_format_string_ const char *pFmt, va_list args )
 {
-	Q_vsprintf_s(pDest, nDestSize, pFmt, args);
+	Q_vsprintf_s( pDest, nDestSize, pFmt, args );
 }
 
-inline void Q_sprintf_s(char *pDest, strlen_t nDestSize, const char *pFmt, ...)
+inline void Q_sprintf_s( char *pDest, strlen_t nDestSize, _Printf_format_string_ const char *pFmt, ... )
 {
 	va_list args;
-	va_start(args, pFmt);
-	Q_vsprintf_s(pDest, nDestSize, pFmt, args);
-	va_end(args);
+	va_start( args, pFmt );
+	Q_vsprintf_s( pDest, nDestSize, pFmt, args );
+	va_end( args );
 }
 
 template< strlen_t nDestSize >
-inline void Q_sprintf_s(char(&pDest)[nDestSize], const char *pFmt, ...)
+inline void Q_sprintf_s( char( &pDest )[nDestSize], _Printf_format_string_ const char *pFmt, ... )
 {
 	va_list args;
-	va_start(args, pFmt);
-	Q_vsprintf_s(pDest, nDestSize, pFmt, args);
-	va_end(args);
+	va_start( args, pFmt );
+	Q_vsprintf_s( pDest, nDestSize, pFmt, args );
+	va_end( args );
 }
 
-void Q_vsprintf(char *pDest, const char *pFmt, va_list args);
+void Q_vsprintf( char *pDest, _Printf_format_string_ const char *pFmt, va_list args );
 
-inline void Q_sprintf(char *pDest, const char *pFmt, ...)
+inline void Q_sprintf( char *pDest, _Printf_format_string_ const char *pFmt, ... )
 {
 	va_list args;
-	va_start(args, pFmt);
-	Q_vsprintf(pDest, pFmt, args);
-	va_end(args);
+	va_start( args, pFmt );
+	Q_vsprintf( pDest, pFmt, args );
+	va_end( args );
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -183,7 +190,7 @@ char *COM_Parse( char **data_p );
 
 void Com_PageInMemory( byte *buffer, int size );
 
-char *va( const char *format, ... );
+char *va( _Printf_format_string_ const char *format, ... );
 
 //-------------------------------------------------------------------------------------------------
 // Byteswap functions - q_shared.cpp
@@ -281,8 +288,8 @@ void	Sys_FindClose (void);
 
 // this is only here so the functions in q_shared.c and q_shwin.c can link
 [[noreturn]]
-void Sys_Error (const char *error, ...);
-void Com_Printf (const char *msg, ...);
+void Sys_Error( _Printf_format_string_ const char *error, ... );
+void Com_Printf( _Printf_format_string_ const char *msg, ... );
 
 //-------------------------------------------------------------------------------------------------
 // CVARS - cvars.cpp

@@ -43,7 +43,7 @@ void Sys_Error (const char *error, ...)
 	va_end (argptr);
 
 	// We won't have a window by now
-	MessageBoxA( nullptr, "wtf", "Error", MB_OK | MB_ICONERROR );
+	MessageBoxA( nullptr, text, "Engine Error", MB_OK | MB_ICONERROR );
 
 // shut down QHOST hooks if necessary
 	DeinitConProc ();

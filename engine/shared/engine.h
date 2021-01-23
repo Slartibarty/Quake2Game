@@ -83,11 +83,11 @@ typedef void (*rd_flush_t)(int target, char *buffer);
 
 void		Com_BeginRedirect (int target, char *buffer, int buffersize, rd_flush_t flush);
 void		Com_EndRedirect (void);
-void		Com_Printf (const char *fmt, ...);
-void		Com_DPrintf (const char *fmt, ...);
-void		Com_Error (int code, const char *fmt, ...);
+void		Com_Printf( _Printf_format_string_ const char *fmt, ... );
+void		Com_DPrintf( _Printf_format_string_ const char *fmt, ... );
+void		Com_Error( int code, _Printf_format_string_ const char *fmt, ... );
 [[noreturn]]
-void		Com_Quit (void);
+void		Com_Quit( void );
 
 // Our copy of the command line parameters
 int			COM_Argc( void );

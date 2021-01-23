@@ -17,7 +17,7 @@ void	Sys_ConsoleOutput( const char *string );
 void	Sys_SendKeyEvents( void );
 
 [[noreturn]]
-void	Sys_Error( const char *error, ... );
+void	Sys_Error( _Printf_format_string_ const char *error, ... );
 [[noreturn]]
 void	Sys_Quit( void );
 

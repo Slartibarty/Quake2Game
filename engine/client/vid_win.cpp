@@ -34,6 +34,7 @@ DLL GLUE
 ==========================================================================
 */
 
+#ifndef REF_HARD_LINKED
 void VID_Printf (int print_level, const char *fmt, ...)
 {
 	va_list		argptr;
@@ -64,6 +65,7 @@ void VID_Error (int err_level, const char *fmt, ...)
 
 	Com_Error (err_level,"%s", msg);
 }
+#endif
 
 //==========================================================================
 
@@ -412,6 +414,9 @@ VID_Shutdown
 */
 void VID_Shutdown (void)
 {
+	// vid_menu
+	extern void DeleteResolutions();
+	DeleteResolutions();
 	VID_FreeModes();
 	if ( reflib_active )
 	{

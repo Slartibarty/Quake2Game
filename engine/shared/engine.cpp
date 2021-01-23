@@ -705,10 +705,5 @@ Engine_Shutdown
 */
 void Engine_Shutdown (void)
 {
-	// This might seem odd, but the vid menu resolutions are calculated once per engine-run, so we clear them here instead
-	// THIS SUCKS!!!! BREAKS SERVER CLIENT CONNECTION!!! DO IT IN CL_SHUTDOWN
-	extern void DeleteResolutions();
-	DeleteResolutions();
-
 	Z_Shutdown();
 }

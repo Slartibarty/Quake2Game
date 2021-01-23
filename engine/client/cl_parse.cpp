@@ -439,7 +439,7 @@ void CL_LoadClientinfo (clientinfo_t *ci, char *s)
 		// it, so default to grunt
 		if (!ci->skin) {
 			// see if the skin exists for the male model
-			Q_sprintf_s (skin_filename, "players/%s/grunt.pcx", model_name, skin_name);
+			Q_sprintf_s (skin_filename, "players/%s/grunt.pcx", model_name);
 			ci->skin = R_RegisterSkin (skin_filename);
 		}
 
