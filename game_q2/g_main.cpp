@@ -201,7 +201,7 @@ void EndDMLevel (void)
 {
 	edict_t		*ent;
 	char *s, *t, *f;
-	static const char *seps = " ,\n\r";
+	const char *seps = " ,\n\r";
 
 	// stay on same level flag
 	if ((int)dmflags->value & DF_SAME_LEVEL)
@@ -212,7 +212,9 @@ void EndDMLevel (void)
 
 	// see if it's in the map list
 	if (*sv_maplist->string) {
-		s = strdup(sv_maplist->string);
+		// Copy the string
+		s = (char *)G_StackAlloc( strlen( sv_maplist->string ) );
+		strcpy( s, sv_maplist->string );
 		f = NULL;
 		t = strtok(s, seps);
 		while (t != NULL) {
@@ -226,14 +228,14 @@ void EndDMLevel (void)
 						BeginIntermission (CreateTargetChangeLevel (f) );
 				} else
 					BeginIntermission (CreateTargetChangeLevel (t) );
-				free(s);
+			//	free(s);
 				return;
 			}
 			if (!f)
 				f = t;
 			t = strtok(NULL, seps);
 		}
-		free(s);
+	//	free(s);
 	}
 
 	if (level.nextmap[0]) // go to a specific map

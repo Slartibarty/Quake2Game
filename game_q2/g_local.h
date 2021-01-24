@@ -2,6 +2,12 @@
 
 #include "../common/q_shared.h"
 
+#ifdef _WIN32
+#include <malloc.h>
+#else
+#include <alloca.h>
+#endif
+
 // define GAME_INCLUDE so that game.h does not define the
 // short, server-visible gclient_t and edict_t structures,
 // because we define the full size ones in this file
@@ -503,6 +509,12 @@ inline float crandom( void )
 {
 	return (2.0f * (random() - 0.5f));
 }
+
+#ifdef _WIN32
+#define G_StackAlloc _alloca
+#else
+#define G_StackAlloc alloca
+#endif
 
 extern	cvar_t	*maxentities;
 extern	cvar_t	*deathmatch;
