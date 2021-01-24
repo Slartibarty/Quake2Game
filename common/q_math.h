@@ -328,7 +328,7 @@ inline void VectorTransform( const vec3_t in1, const float in2[3][4], vec3_t out
 
 inline bool VectorCompare(const vec3_t v1, const vec3_t v2)
 {
-	return (v1[0] != v2[0] || v1[1] != v2[1] || v1[2] != v2[2]);
+	return (v1[0] == v2[0] && v1[1] == v2[1] && v1[2] == v2[2]);
 }
 
 inline void ClearBounds(vec3_t mins, vec3_t maxs)

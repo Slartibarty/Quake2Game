@@ -1247,7 +1247,7 @@ void CL_AddBeams (void)
 		{
 			model_length = 30.0f;
 		}
-		steps = ceilf(d/model_length);
+		steps = ceil(d/model_length);
 		len = (d-model_length)/(steps-1);
 
 		// PMM - special case for lightning model .. if the real length is shorter than the model,
@@ -1584,7 +1584,7 @@ void CL_AddExplosions (void)
 		if (ex->type == ex_free)
 			continue;
 		frac = (cl.time - ex->start)/100.0f;
-		f = floorf(frac);
+		f = floor(frac);
 
 		ent = &ex->ent;
 

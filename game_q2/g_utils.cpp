@@ -287,10 +287,10 @@ char	*vtos (vec3_t v)
 }
 
 
-vec3_t VEC_UP		= {0, -1, 0};
-vec3_t MOVEDIR_UP	= {0, 0, 1};
-vec3_t VEC_DOWN		= {0, -2, 0};
-vec3_t MOVEDIR_DOWN	= {0, 0, -1};
+const vec3_t VEC_UP			= {0, -1, 0};
+const vec3_t MOVEDIR_UP		= {0, 0, 1};
+const vec3_t VEC_DOWN		= {0, -2, 0};
+const vec3_t MOVEDIR_DOWN	= {0, 0, -1};
 
 void G_SetMovedir (vec3_t angles, vec3_t movedir)
 {
