@@ -3316,10 +3316,10 @@ static qboolean PlayerConfig_ScanDirectories( void )
 	char scratch[1024];
 	int ndirs = 0, npms = 0;
 	char **dirnames;
-	char *path = NULL;
+	const char *path = NULL;
 	int i;
 
-	extern char **FS_ListFiles( char *, int *, unsigned, unsigned );
+	extern char **FS_ListFiles( const char *, int *, unsigned, unsigned );
 
 	s_numplayermodels = 0;
 

@@ -553,11 +553,12 @@ SCR_PlayCinematic
 
 ==================
 */
-void SCR_PlayCinematic (char *arg)
+void SCR_PlayCinematic (const char *arg)
 {
 	int		width, height;
 	byte	*palette;
-	char	name[MAX_OSPATH], *dot;
+	char	name[MAX_OSPATH];
+	const char *dot;
 
 	// make sure CD isn't playing music
 	CDAudio_Stop();

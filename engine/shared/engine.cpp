@@ -546,7 +546,7 @@ void Engine_Init (int argc, char **argv)
 	Cbuf_AddEarlyCommands (false);
 	Cbuf_Execute ();
 
-	FS_InitFilesystem ();
+	FS_Init ();
 
 	Cbuf_AddText ("exec default.cfg\n");
 	Cbuf_AddText ("exec config.cfg\n");

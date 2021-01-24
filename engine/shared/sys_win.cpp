@@ -326,7 +326,7 @@ void *Sys_GetGameAPI( void *parms )
 	}
 
 	// now run through the search paths
-	char *path = nullptr;
+	const char *path = nullptr;
 	while ( 1 )
 	{
 		path = FS_NextPath( path );
@@ -397,7 +397,7 @@ int main(int argc, char **argv)
 
 	// no abort/retry/fail errors
 	// Slart: Was SetErrorMode
-	//SetThreadErrorMode(SEM_FAILCRITICALERRORS, NULL);
+	SetThreadErrorMode(SEM_FAILCRITICALERRORS, NULL);
 
 	Time_Init();
 

@@ -209,9 +209,9 @@ cvar_t *Cvar_Set2 (const char *var_name, const char *value, qboolean force)
 			{
 				var->string = Z_CopyString(value);
 				var->value = (float)atof (var->string);
-				if (!strcmp(var->name, "game"))
+				if (strcmp(var->name, "game") == 0)
 				{
-					FS_SetGamedir (var->string);
+					FS_SetGamedir (var->string, true);
 					FS_ExecAutoexec ();
 				}
 			}
@@ -328,9 +328,9 @@ void Cvar_GetLatchedVars (void)
 		var->string = var->latched_string;
 		var->latched_string = NULL;
 		var->value = (float)atof(var->string);
-		if (!strcmp(var->name, "game"))
+		if (strcmp(var->name, "game") == 0)
 		{
-			FS_SetGamedir (var->string);
+			FS_SetGamedir (var->string, true);
 			FS_ExecAutoexec ();
 		}
 	}

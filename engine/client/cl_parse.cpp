@@ -305,11 +305,17 @@ void CL_ParseServerData (void)
 
 	// game directory
 	str = MSG_ReadString (&net_message);
-	strncpy (cl.gamedir, str, sizeof(cl.gamedir)-1);
-
+	assert( fs_gamedirvar->string && *fs_gamedirvar->string );
 	// set gamedir
-	if ((*str && (!fs_gamedirvar->string || !*fs_gamedirvar->string || strcmp(fs_gamedirvar->string, str))) || (!*str && (fs_gamedirvar->string || *fs_gamedirvar->string)))
-		Cvar_Set("game", str);
+	if ( ( str && *str ) && strcmp( str, fs_gamedirvar->string ) != 0 )
+	{
+		Q_strcpy_s( cl.gamedir, str );
+		Cvar_Set( "game", str );
+	}
+	else
+	{
+		Q_strcpy_s( cl.gamedir, fs_gamedirvar->string );
+	}
 
 	// parse player entity number
 	cl.playernum = MSG_ReadShort (&net_message);

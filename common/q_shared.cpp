@@ -198,13 +198,13 @@ char *va(_Printf_format_string_ const char *format, ...)
 #define FastASCIIToUpper toupper
 #endif
 
-#define AssertString(str) assert( str && str[0] )
+//#define AssertString(str) assert( str && str[0] )
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 void Q_strcpy_s(char *pDest, strlen_t nDestSize, const char *pSrc)
 {
-	AssertString(pSrc);
+	assert( pDest && pSrc );
 
 	char *pLast = pDest + nDestSize - 1;
 	while ((pDest < pLast) && (*pSrc != 0))

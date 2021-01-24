@@ -106,7 +106,7 @@ project "engine"
 	filter "system:windows"
 		linkoptions { "/ENTRY:mainCRTStartup" }
 		links { "ws2_32", "dsound", "dxguid", "opengl32", "noenv.obj" }
-	flter {}
+	filter {}
 	filter "system:linux"
 		links { "sdl2" }
 	filter {}
@@ -129,12 +129,23 @@ project "engine"
 		"external/glew/src/glew.c"
 	}
 	
+	filter "system:windows"
+		removefiles {
+			"**/*_linux.*"
+		}
+	filter {}
+	filter "system:linux"
+		removefiles {
+			"**/*_win.*"
+		}
+	filter {}
+	
 	removefiles {
 		"engine/client/cd_win.*",
 		"engine/res/rw_*",
 		"**/cd_vorbis.cpp",
 		"**.def",
-		"**/*null.*",
+		"**/*sv_null.*",
 		"**_pch.cpp"
 	}
 	
