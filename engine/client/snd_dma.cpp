@@ -77,13 +77,13 @@ void S_SoundInfo_f(void)
 		return;
 	}
 	
-    Com_Printf("%5d stereo\n", dma.channels - 1);
+    Com_Printf("%5d channels\n", dma.channels);
     Com_Printf("%5d samples\n", dma.samples);
     Com_Printf("%5d samplepos\n", dma.samplepos);
     Com_Printf("%5d samplebits\n", dma.samplebits);
     Com_Printf("%5d submission_chunk\n", dma.submission_chunk);
     Com_Printf("%5d speed\n", dma.speed);
-    Com_Printf("0x%x dma buffer\n", dma.buffer);
+    Com_Printf("%p dma buffer\n", dma.buffer);
 }
 
 

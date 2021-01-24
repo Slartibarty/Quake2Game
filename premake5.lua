@@ -127,8 +127,9 @@ project "engine"
 	removefiles {
 		"engine/client/cd_win.*",
 		"engine/res/rw_*",
+		"**/cd_vorbis.cpp",
 		"**.def",
-		"**/sv_null.*",
+		"**/*null.*",
 		"**_pch.cpp"
 	}
 	

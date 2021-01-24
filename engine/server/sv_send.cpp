@@ -43,7 +43,7 @@ SV_ClientPrintf
 Sends text across to be displayed if the level passes
 =================
 */
-void SV_ClientPrintf (client_t *cl, int level, const char *fmt, ...)
+void SV_ClientPrintf (client_t *cl, int level, _Printf_format_string_ const char *fmt, ...)
 {
 	va_list		argptr;
 	char		string[MAX_PRINT_MSG];
@@ -67,7 +67,7 @@ SV_BroadcastPrintf
 Sends text to all active clients
 =================
 */
-void SV_BroadcastPrintf (int level, const char *fmt, ...)
+void SV_BroadcastPrintf (int level, _Printf_format_string_ const char *fmt, ...)
 {
 	va_list		argptr;
 	char		string[2048];
@@ -110,7 +110,7 @@ SV_BroadcastCommand
 Sends text to all active clients
 =================
 */
-void SV_BroadcastCommand (const char *fmt, ...)
+void SV_BroadcastCommand (_Printf_format_string_ const char *fmt, ...)
 {
 	va_list		argptr;
 	char		string[1024];

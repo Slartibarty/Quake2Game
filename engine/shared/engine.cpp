@@ -73,6 +73,44 @@ void Com_EndRedirect (void)
 	rd_flush = NULL;
 }
 
+static void Com_Print_Internal( const char *msg )
+{
+	if ( rd_target )
+	{
+		if ( ( strlen( msg ) + strlen( rd_buffer ) ) > ( rd_buffersize - 1 ) )
+		{
+			rd_flush( rd_target, rd_buffer );
+			*rd_buffer = 0;
+		}
+		strcat( rd_buffer, msg );
+		return;
+	}
+
+	Con_Print( msg );
+
+	// also echo to debugging console
+	Sys_ConsoleOutput( msg );
+
+	// logfile
+	if ( logfile_active && logfile_active->value )
+	{
+		char	name[MAX_QPATH];
+
+		if ( !logfile )
+		{
+			Q_sprintf_s( name, "%s/qconsole.log", FS_Gamedir() );
+			if ( logfile_active->value > 2 )
+				logfile = fopen( name, "a" );
+			else
+				logfile = fopen( name, "w" );
+		}
+		if ( logfile )
+			fputs( msg, logfile );
+		if ( logfile_active->value > 1 )
+			fflush( logfile );		// force it to save every time
+	}
+}
+
 /*
 =============
 Com_Printf
@@ -81,51 +119,17 @@ Both client and server can use this, and it will output
 to the apropriate place.
 =============
 */
-void Com_Printf (const char *fmt, ...)
+void Com_Printf( _Printf_format_string_ const char *fmt, ... )
 {
 	va_list		argptr;
 	char		msg[MAX_PRINT_MSG];
 
-	va_start (argptr,fmt);
-	Q_vsprintf_s (msg,fmt,argptr);
-	va_end (argptr);
+	va_start( argptr, fmt );
+	Q_vsprintf_s( msg, fmt, argptr );
+	va_end( argptr );
 
-	if (rd_target)
-	{
-		if ((strlen (msg) + strlen(rd_buffer)) > (rd_buffersize - 1))
-		{
-			rd_flush(rd_target, rd_buffer);
-			*rd_buffer = 0;
-		}
-		strcat (rd_buffer, msg);
-		return;
-	}
-
-	Con_Print (msg);
-		
-	// also echo to debugging console
-	Sys_ConsoleOutput (msg);
-
-	// logfile
-	if (logfile_active && logfile_active->value)
-	{
-		char	name[MAX_QPATH];
-		
-		if (!logfile)
-		{
-			Q_sprintf_s (name, "%s/qconsole.log", FS_Gamedir ());
-			if (logfile_active->value > 2)
-				logfile = fopen (name, "a");
-			else
-				logfile = fopen (name, "w");
-		}
-		if (logfile)
-			fputs (msg, logfile);
-		if (logfile_active->value > 1)
-			fflush (logfile);		// force it to save every time
-	}
+	Com_Print_Internal( msg );
 }
-
 
 /*
 ================
@@ -134,21 +138,20 @@ Com_DPrintf
 A Com_Printf that only shows up if the "developer" cvar is set
 ================
 */
-void Com_DPrintf (const char *fmt, ...)
+void Com_DPrintf( _Printf_format_string_ const char *fmt, ... )
 {
 	va_list		argptr;
 	char		msg[MAX_PRINT_MSG];
-		
-	if (!developer || !developer->value)
+
+	if ( !developer || !developer->value )
 		return;			// don't confuse non-developers with techie stuff...
 
-	va_start (argptr,fmt);
-	Q_vsprintf_s (msg,fmt,argptr);
-	va_end (argptr);
-	
-	Com_Printf ("%s", msg);
-}
+	va_start( argptr, fmt );
+	Q_vsprintf_s( msg, fmt, argptr );
+	va_end( argptr );
 
+	Com_Print_Internal( msg );
+}
 
 /*
 =============
@@ -158,7 +161,7 @@ Both client and server can use this, and it will
 do the apropriate things.
 =============
 */
-void Com_Error (int code, const char *fmt, ...)
+void Com_Error (int code, _Printf_format_string_ const char *fmt, ...)
 {
 	va_list				argptr;
 	static char			msg[MAX_PRINT_MSG];

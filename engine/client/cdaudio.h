@@ -1,9 +1,9 @@
 
 #pragma once
 
-int		CDAudio_Init(void);
-void	CDAudio_Shutdown(void);
-void	CDAudio_Play(int track, qboolean looping);
-void	CDAudio_Stop(void);
-void	CDAudio_Update(void);
-void	CDAudio_Activate (qboolean active);
+bool	CDAudio_Init();
+void	CDAudio_Shutdown();
+void	CDAudio_Play( int track, bool looping );
+void	CDAudio_Stop();
+void	CDAudio_Update();
+void	CDAudio_Activate( bool active );

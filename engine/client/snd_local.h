@@ -135,6 +135,8 @@ extern cvar_t	*s_testsound;
 extern cvar_t	*s_primary;
 
 wavinfo_t GetWavinfo (char *name, byte *wav, int wavlength);
+bool IsWav( byte *wav );
+bool IsOgg( byte *ogg );
 
 void S_InitScaletable (void);
 
