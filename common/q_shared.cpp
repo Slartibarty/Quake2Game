@@ -224,8 +224,8 @@ int Q_strcasecmp( const char *s1, const char *s2 )
 	// can save a lot of cycles, and cache pollution.
 	// This also implicitly does the s1 and s2 both equal to NULL check
 	// that the POSIX code used to have.
-//	if ( s1 == s2 )
-//		return 0;
+	if ( s1 == s2 )
+		return 0;
 
 	const uint8 *pS1 = (const uint8 *)s1;
 	const uint8 *pS2 = (const uint8 *)s2;
@@ -423,7 +423,7 @@ char *Info_ValueForKey (const char *s, const char *key)
 		}
 		*o = 0;
 
-		if (!strcmp (key, pkey) )
+		if (!Q_strcmp (key, pkey) )
 			return value[valueindex];
 
 		if (!*s)
@@ -469,7 +469,7 @@ void Info_RemoveKey (char *s, const char *key)
 		}
 		*o = 0;
 
-		if (!strcmp (key, pkey) )
+		if (!Q_strcmp (key, pkey) )
 		{
 			strcpy (start, s);	// remove this part
 			return;

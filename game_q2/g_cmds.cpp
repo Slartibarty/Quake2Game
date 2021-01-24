@@ -38,7 +38,7 @@ qboolean OnSameTeam (edict_t *ent1, edict_t *ent2)
 	strcpy (ent1Team, ClientTeam (ent1));
 	strcpy (ent2Team, ClientTeam (ent2));
 
-	if (strcmp(ent1Team, ent2Team) == 0)
+	if (Q_strcmp(ent1Team, ent2Team) == 0)
 		return true;
 	return false;
 }

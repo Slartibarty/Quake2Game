@@ -157,6 +157,7 @@ void SP_target_secret (edict_t *ent)
 	ent->svflags = SVF_NOCLIENT;
 	level.total_secrets++;
 	// map bug hack
+	// SlartHack
 	if (!Q_stricmp(level.mapname, "mine3") && ent->s.origin[0] == 280 && ent->s.origin[1] == -2048 && ent->s.origin[2] == -624)
 		ent->message = "You have found a secret area.";
 }
@@ -290,6 +291,7 @@ void SP_target_changelevel (edict_t *ent)
 	}
 
 	// ugly hack because *SOMEBODY* screwed up their map
+	// SlartHack
    if((Q_stricmp(level.mapname, "fact1") == 0) && (Q_stricmp(ent->map, "fact3") == 0))
 	   ent->map = "fact3$secret1";
 
@@ -669,7 +671,7 @@ void target_lightramp_use (edict_t *self, edict_t *other, edict_t *activator)
 			e = G_Find (e, FOFS(targetname), self->target);
 			if (!e)
 				break;
-			if (strcmp(e->classname, "light") != 0)
+			if (Q_strcmp(e->classname, "light") != 0)
 			{
 				gi.dprintf("%s at %s ", self->classname, vtos(self->s.origin));
 				gi.dprintf("target %s (%s at %s) is not a light\n", self->target, e->classname, vtos(e->s.origin));

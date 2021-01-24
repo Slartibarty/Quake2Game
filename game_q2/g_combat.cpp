@@ -86,7 +86,7 @@ void Killed (edict_t *targ, edict_t *inflictor, edict_t *attacker, int damage, v
 			if (coop->value && attacker->client)
 				attacker->client->resp.score++;
 			// medics won't heal monsters that they kill themselves
-			if (strcmp(attacker->classname, "monster_medic") == 0)
+			if (Q_strcmp(attacker->classname, "monster_medic") == 0)
 				targ->owner = attacker;
 		}
 	}
@@ -316,11 +316,11 @@ void M_ReactToDamage (edict_t *targ, edict_t *attacker)
 	// it's the same base (walk/swim/fly) type and a different classname and it's not a tank
 	// (they spray too much), get mad at them
 	if (((targ->flags & (FL_FLY|FL_SWIM)) == (attacker->flags & (FL_FLY|FL_SWIM))) &&
-		 (strcmp (targ->classname, attacker->classname) != 0) &&
-		 (strcmp(attacker->classname, "monster_tank") != 0) &&
-		 (strcmp(attacker->classname, "monster_supertank") != 0) &&
-		 (strcmp(attacker->classname, "monster_makron") != 0) &&
-		 (strcmp(attacker->classname, "monster_jorg") != 0) )
+		 (Q_strcmp (targ->classname, attacker->classname) != 0) &&
+		 (Q_strcmp(attacker->classname, "monster_tank") != 0) &&
+		 (Q_strcmp(attacker->classname, "monster_supertank") != 0) &&
+		 (Q_strcmp(attacker->classname, "monster_makron") != 0) &&
+		 (Q_strcmp(attacker->classname, "monster_jorg") != 0) )
 	{
 		if (targ->enemy && targ->enemy->client)
 			targ->oldenemy = targ->enemy;

@@ -582,7 +582,7 @@ void monster_start_go (edict_t *self)
 		fixup = false;
 		while ((target = G_Find (target, FOFS(targetname), self->target)) != NULL)
 		{
-			if (strcmp(target->classname, "point_combat") == 0)
+			if (Q_strcmp(target->classname, "point_combat") == 0)
 			{
 				self->combattarget = self->target;
 				fixup = true;
@@ -606,7 +606,7 @@ void monster_start_go (edict_t *self)
 		target = NULL;
 		while ((target = G_Find (target, FOFS(targetname), self->combattarget)) != NULL)
 		{
-			if (strcmp(target->classname, "point_combat") != 0)
+			if (Q_strcmp(target->classname, "point_combat") != 0)
 			{
 				gi.dprintf("%s at (%i %i %i) has a bad combattarget %s : %s at (%i %i %i)\n",
 					self->classname, (int)self->s.origin[0], (int)self->s.origin[1], (int)self->s.origin[2],
@@ -626,7 +626,7 @@ void monster_start_go (edict_t *self)
 			self->monsterinfo.pausetime = 100000000;
 			self->monsterinfo.stand (self);
 		}
-		else if (strcmp (self->movetarget->classname, "path_corner") == 0)
+		else if (Q_strcmp (self->movetarget->classname, "path_corner") == 0)
 		{
 			VectorSubtract (self->goalentity->s.origin, self->s.origin, v);
 			self->ideal_yaw = self->s.angles[YAW] = vectoyaw(v);

@@ -187,9 +187,8 @@ void InitGame (void)
 	// items
 	InitItems ();
 
-	strcpy (game.helpmessage1, "");
-
-	strcpy (game.helpmessage2, "");
+	game.helpmessage1[0] = '\0';
+	game.helpmessage2[0] = '\0';
 
 	// initialize all entities for this game
 	game.maxentities = maxentities->value;
@@ -479,7 +478,7 @@ void ReadGame (char *filename)
 		gi.error ("Couldn't open %s", filename);
 
 	fread (str, sizeof(str), 1, f);
-	if (strcmp (str, __DATE__))
+	if (Q_strcmp (str, __DATE__))
 	{
 		fclose (f);
 		gi.error ("Savegame from an older version.\n");
@@ -745,7 +744,7 @@ void ReadLevel (char *filename)
 
 		// fire any cross-level triggers
 		if (ent->classname)
-			if (strcmp(ent->classname, "target_crosslevel_target") == 0)
+			if (Q_strcmp(ent->classname, "target_crosslevel_target") == 0)
 				ent->nextthink = level.time + ent->delay;
 	}
 }

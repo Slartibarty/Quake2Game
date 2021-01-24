@@ -33,7 +33,7 @@ const char *svc_strings[256] =
 
 void CL_DownloadFileName(char *dest, int destlen, const char *fn)
 {
-	if (strncmp(fn, "players", 7) == 0)
+	if (Q_strncmp(fn, "players", 7) == 0)
 		Q_sprintf_s (dest, destlen, "%s/%s", BASEDIRNAME, fn);
 	else
 		Q_sprintf_s (dest, destlen, "%s/%s", FS_Gamedir(), fn);

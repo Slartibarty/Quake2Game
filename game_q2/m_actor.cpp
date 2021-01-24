@@ -384,7 +384,7 @@ void actor_use (edict_t *self, edict_t *other, edict_t *activator)
 	vec3_t		v;
 
 	self->goalentity = self->movetarget = G_PickTarget(self->target);
-	if ((!self->movetarget) || (strcmp(self->movetarget->classname, "target_actor") != 0))
+	if ((!self->movetarget) || (Q_strcmp(self->movetarget->classname, "target_actor") != 0))
 	{
 		gi.dprintf ("%s has bad target %s at %s\n", self->classname, self->target, vtos(self->s.origin));
 		self->target = NULL;

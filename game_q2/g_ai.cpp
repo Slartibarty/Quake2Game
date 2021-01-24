@@ -396,7 +396,7 @@ qboolean FindTarget (edict_t *self)
 	{
 		if (self->goalentity && self->goalentity->inuse && self->goalentity->classname)
 		{
-			if (strcmp(self->goalentity->classname, "target_actor") == 0)
+			if (Q_strcmp(self->goalentity->classname, "target_actor") == 0)
 				return false;
 		}
 
@@ -503,7 +503,7 @@ qboolean FindTarget (edict_t *self)
 
 		self->enemy = client;
 
-		if (strcmp(self->enemy->classname, "player_noise") != 0)
+		if (Q_strcmp(self->enemy->classname, "player_noise") != 0)
 		{
 			self->monsterinfo.aiflags &= ~AI_SOUND_TARGET;
 

@@ -842,7 +842,7 @@ void door_use_areaportals (edict_t *self, qboolean open)
 
 	while ((t = G_Find (t, FOFS(targetname), self->target)))
 	{
-		if (strcmp(t->classname, "func_areaportal") == 0)
+		if (Q_strcmp(t->classname, "func_areaportal") == 0)
 		{
 			gi.SetAreaPortalState (t->style, open);
 		}
@@ -896,9 +896,9 @@ void door_go_down (edict_t *self)
 	}
 	
 	self->moveinfo.state = STATE_DOWN;
-	if (strcmp(self->classname, "func_door") == 0)
+	if (Q_strcmp(self->classname, "func_door") == 0)
 		Move_Calc (self, self->moveinfo.start_origin, door_hit_bottom);
-	else if (strcmp(self->classname, "func_door_rotating") == 0)
+	else if (Q_strcmp(self->classname, "func_door_rotating") == 0)
 		AngleMove_Calc (self, door_hit_bottom);
 }
 
@@ -921,9 +921,9 @@ void door_go_up (edict_t *self, edict_t *activator)
 		self->s.sound = self->moveinfo.sound_middle;
 	}
 	self->moveinfo.state = STATE_UP;
-	if (strcmp(self->classname, "func_door") == 0)
+	if (Q_strcmp(self->classname, "func_door") == 0)
 		Move_Calc (self, self->moveinfo.end_origin, door_hit_top);
-	else if (strcmp(self->classname, "func_door_rotating") == 0)
+	else if (Q_strcmp(self->classname, "func_door_rotating") == 0)
 		AngleMove_Calc (self, door_hit_top);
 
 	G_UseTargets (self, activator);
@@ -1720,7 +1720,7 @@ void trigger_elevator_init (edict_t *self)
 		gi.dprintf("trigger_elevator unable to find target %s\n", self->target);
 		return;
 	}
-	if (strcmp(self->movetarget->classname, "func_train") != 0)
+	if (Q_strcmp(self->movetarget->classname, "func_train") != 0)
 	{
 		gi.dprintf("trigger_elevator target %s is not a train\n", self->target);
 		return;

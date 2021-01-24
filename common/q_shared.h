@@ -117,6 +117,16 @@ inline void Q_strcpy_s(char (&pDest)[nDestSize], const char *pSrc)
 	Q_strcpy_s(pDest, nDestSize, pSrc);
 }
 
+inline int Q_strcmp( const char *s1, const char *s2 )
+{
+	return s1 == s2 ? 0 : strcmp( s1, s2 );
+}
+
+inline int Q_strncmp( const char *s1, const char *s2, strlen_t maxcount )
+{
+	return s1 == s2 ? 0 : strncmp( s1, s2, maxcount );
+}
+
 // portable case insensitive compare
 int Q_strcasecmp( const char *s1, const char *s2 );
 int Q_strncasecmp( const char *s1, const char *s2, strlen_t n );

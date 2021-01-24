@@ -772,19 +772,22 @@ void CL_AddPacketEntities (frame_t *frame)
 
 //============
 //PGM
+// 				// SlartMissionpack
+				// SlartTodo: This code sucks, it casts the image_t to a char*
+				// to get access to the name variable at the beginning of the struct
 				if (renderfx & RF_USE_DISGUISE)
 				{
-					if(!strncmp((char *)ent.skin, "players/male", 12))
+					if(!Q_strncmp((char *)ent.skin, "players/male", 12))
 					{
 						ent.skin = R_RegisterSkin ("players/male/disguise.pcx");
 						ent.model = R_RegisterModel ("players/male/tris.md2");
 					}
-					else if(!strncmp((char *)ent.skin, "players/female", 14))
+					else if(!Q_strncmp((char *)ent.skin, "players/female", 14))
 					{
 						ent.skin = R_RegisterSkin ("players/female/disguise.pcx");
 						ent.model = R_RegisterModel ("players/female/tris.md2");
 					}
-					else if(!strncmp((char *)ent.skin, "players/cyborg", 14))
+					else if(!Q_strncmp((char *)ent.skin, "players/cyborg", 14))
 					{
 						ent.skin = R_RegisterSkin ("players/cyborg/disguise.pcx");
 						ent.model = R_RegisterModel ("players/cyborg/tris.md2");

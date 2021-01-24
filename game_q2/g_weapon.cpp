@@ -157,7 +157,7 @@ static void fire_lead (edict_t *self, vec3_t start, vec3_t aimdir, int damage, i
 			{
 				if (tr.contents & CONTENTS_WATER)
 				{
-					if (strcmp(tr.surface->name, "*brwater") == 0) // SlartHack
+					if (Q_strcmp(tr.surface->name, "*brwater") == 0) // SlartHack
 						color = SPLASH_BROWN_WATER;
 					else
 						color = SPLASH_BLUE_WATER;
@@ -207,7 +207,7 @@ static void fire_lead (edict_t *self, vec3_t start, vec3_t aimdir, int damage, i
 			}
 			else
 			{
-				if (strncmp (tr.surface->name, "sky", 3) != 0)
+				if (Q_strncmp (tr.surface->name, "sky", 3) != 0)
 				{
 					gi.WriteByte (svc_temp_entity);
 					gi.WriteByte (te_impact);
@@ -812,7 +812,7 @@ void bfg_think (edict_t *self)
 		if (!ent->takedamage)
 			continue;
 
-		if (!(ent->svflags & SVF_MONSTER) && (!ent->client) && (strcmp(ent->classname, "misc_explobox") != 0))
+		if (!(ent->svflags & SVF_MONSTER) && (!ent->client) && (Q_strcmp(ent->classname, "misc_explobox") != 0))
 			continue;
 
 		VectorMA (ent->absmin, 0.5, ent->size, point);

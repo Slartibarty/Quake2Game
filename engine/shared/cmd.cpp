@@ -768,10 +768,10 @@ const char *Cmd_CompleteCommand (const char *partial)
 
 // check for partial match
 	for (cmd=cmd_functions ; cmd ; cmd=cmd->next)
-		if (!strncmp (partial,cmd->name, len))
+		if (!Q_strncmp (partial,cmd->name, len))
 			return cmd->name;
 	for (a=cmd_alias ; a ; a=a->next)
-		if (!strncmp (partial, a->name, len))
+		if (!Q_strncmp (partial, a->name, len))
 			return a->name;
 
 	return NULL;

@@ -404,7 +404,7 @@ qboolean Pickup_Key (edict_t *ent, edict_t *other)
 {
 	if (coop->value)
 	{
-		if (strcmp(ent->classname, "key_power_cube") == 0)
+		if (Q_strcmp(ent->classname, "key_power_cube") == 0)
 		{
 			if (other->client->pers.power_cubes & ((ent->spawnflags & 0x0000ff00)>> 8))
 				return false;
@@ -1018,13 +1018,14 @@ void PrecacheItem (gitem_t *it)
 			s++;
 
 		// determine type based on extension
-		if (!strcmp(data+len-3, "md2"))
+		// SlartTodo: This is bad
+		if (!Q_strcmp(data+len-3, "md2"))
 			gi.modelindex (data);
-		else if (!strcmp(data+len-3, "sp2"))
+		else if (!Q_strcmp(data+len-3, "sp2"))
 			gi.modelindex (data);
-		else if (!strcmp(data+len-3, "wav"))
+		else if (!Q_strcmp(data+len-3, "wav"))
 			gi.soundindex (data);
-		if (!strcmp(data+len-3, "pcx"))
+		if (!Q_strcmp(data+len-3, "pcx"))
 			gi.imageindex (data);
 	}
 }
@@ -1045,7 +1046,7 @@ void SpawnItem (edict_t *ent, gitem_t *item)
 
 	if (ent->spawnflags)
 	{
-		if (strcmp(ent->classname, "key_power_cube") != 0)
+		if (Q_strcmp(ent->classname, "key_power_cube") != 0)
 		{
 			ent->spawnflags = 0;
 			gi.dprintf("%s at %s has invalid spawnflags set\n", ent->classname, vtos(ent->s.origin));
@@ -1081,7 +1082,7 @@ void SpawnItem (edict_t *ent, gitem_t *item)
 		}
 		if ( (int)dmflags->value & DF_INFINITE_AMMO )
 		{
-			if ( (item->flags == IT_AMMO) || (strcmp(ent->classname, "weapon_bfg") == 0) )
+			if ( (item->flags == IT_AMMO) || (Q_strcmp(ent->classname, "weapon_bfg") == 0) )
 			{
 				G_FreeEdict (ent);
 				return;
@@ -1089,7 +1090,7 @@ void SpawnItem (edict_t *ent, gitem_t *item)
 		}
 	}
 
-	if (coop->value && (strcmp(ent->classname, "key_power_cube") == 0))
+	if (coop->value && (Q_strcmp(ent->classname, "key_power_cube") == 0))
 	{
 		ent->spawnflags |= (1 << (8 + level.power_cubes));
 		level.power_cubes++;

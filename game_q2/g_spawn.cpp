@@ -273,7 +273,7 @@ const char *G_SpawnsHasEntityByName (const char *classname)
 {
 	for (const auto &spawn : g_spawns)
 	{
-		if (strcmp (spawn.name, classname) == 0)
+		if (Q_strcmp (spawn.name, classname) == 0)
 		{
 			return spawn.name;
 		}
@@ -305,7 +305,7 @@ void ED_CallSpawn (edict_t *ent)
 	{
 		if (!item->classname)
 			continue;
-		if (!strcmp(item->classname, ent->classname))
+		if (!Q_strcmp(item->classname, ent->classname))
 		{	// found it
 			SpawnItem (ent, item);
 			return;
@@ -315,7 +315,7 @@ void ED_CallSpawn (edict_t *ent)
 	// check normal spawn functions
 	for (const auto& s : g_spawns)
 	{
-		if (!strcmp(s.name, ent->classname))
+		if (!Q_strcmp(s.name, ent->classname))
 		{	// found it
 			s.spawn (ent);
 			return;
@@ -508,7 +508,7 @@ void G_FindTeams (void)
 				continue;
 			if (e2->flags & FL_TEAMSLAVE)
 				continue;
-			if (!strcmp(e->team, e2->team))
+			if (!Q_strcmp(e->team, e2->team))
 			{
 				c2++;
 				chain->teamchain = e2;
@@ -580,6 +580,7 @@ void SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 		entities = ED_ParseEdict (entities, ent);
 
 		// yet another map hack
+		// SlartHack
 		if (!Q_stricmp(level.mapname, "command") && !Q_stricmp(ent->classname, "trigger_once") && !Q_stricmp(ent->model, "*27"))
 			ent->spawnflags &= ~SPAWNFLAG_NOT_HARD;
 

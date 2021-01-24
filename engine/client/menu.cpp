@@ -629,7 +629,7 @@ static void M_UnbindCommand (const char *command)
 		b = keybindings[j];
 		if (!b)
 			continue;
-		if (!strncmp (b, command, l) )
+		if (!Q_strncmp (b, command, l) )
 			Key_SetBinding (j, "");
 	}
 }
@@ -650,7 +650,7 @@ static void M_FindKeysForCommand (const char *command, int *twokeys)
 		b = keybindings[j];
 		if (!b)
 			continue;
-		if (!strncmp (b, command, l) )
+		if (!Q_strncmp (b, command, l) )
 		{
 			twokeys[count] = j;
 			count++;

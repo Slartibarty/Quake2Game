@@ -216,7 +216,7 @@ void trigger_key_use (edict_t *self, edict_t *other, edict_t *activator)
 		int		player;
 		edict_t	*ent;
 
-		if (strcmp(self->item->classname, "key_power_cube") == 0)
+		if (Q_strcmp(self->item->classname, "key_power_cube") == 0)
 		{
 			int	cube;
 
@@ -374,7 +374,7 @@ static int windsound;
 
 void trigger_push_touch (edict_t *self, edict_t *other, cplane_t *plane, csurface_t *surf)
 {
-	if (strcmp(other->classname, "grenade") == 0)
+	if (Q_strcmp(other->classname, "grenade") == 0)
 	{
 		VectorScale (self->movedir, self->speed * 10, other->velocity);
 	}
