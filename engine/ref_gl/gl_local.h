@@ -17,6 +17,8 @@
 #include "GL/glew.h"
 #ifdef _WIN32
 #include "GL/wglew.h"
+#elif defined __linux__
+#include "GL/glxew.h"
 #endif
 
 #define REF_VERSION		"GL 0.02"

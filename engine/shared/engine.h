@@ -48,7 +48,8 @@
 
 #elif defined __linux__
 
-#error
+#define BLD_PLATFORM "Linux64"
+#define BLD_ARCHITECTURE "x64"
 
 #else
 

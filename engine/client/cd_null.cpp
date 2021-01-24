@@ -1,26 +1,26 @@
 #include "../../common/q_types.h"
 
-int CDAudio_Init(void)
+bool CDAudio_Init()
 {
-	return 1;
+	return true;
 }
 
-void CDAudio_Shutdown(void)
-{
-}
-
-void CDAudio_Play(int track, qboolean looping)
+void CDAudio_Shutdown()
 {
 }
 
-void CDAudio_Stop(void)
+void CDAudio_Play(int track, bool looping)
 {
 }
 
-void CDAudio_Update(void)
+void CDAudio_Stop()
 {
 }
 
-void CDAudio_Activate(qboolean active)
+void CDAudio_Update()
+{
+}
+
+void CDAudio_Activate(bool active)
 {
 }
