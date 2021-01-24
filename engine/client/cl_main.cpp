@@ -393,7 +393,7 @@ void CL_CheckForResend (void)
 	if (cls.state == ca_disconnected && Com_ServerState() )
 	{
 		cls.state = ca_connecting;
-		strncpy (cls.servername, "localhost", sizeof(cls.servername)-1);
+		Q_strcpy_s (cls.servername, "localhost");
 		// we don't need a challenge on the localhost
 		CL_SendConnectPacket ();
 		return;
@@ -456,7 +456,7 @@ void CL_Connect_f (void)
 	CL_Disconnect ();
 
 	cls.state = ca_connecting;
-	strncpy (cls.servername, server, sizeof(cls.servername)-1);
+	Q_strcpy_s (cls.servername, server);
 	cls.connect_time = -99999;	// CL_CheckForResend() will fire immediately
 }
 
@@ -992,7 +992,7 @@ void CL_FixUpGender(void)
 			return;
 		}
 
-		strncpy(sk, skin->string, sizeof(sk) - 1);
+		Q_strcpy_s(sk, skin->string);
 		if ((p = strchr(sk, '/')) != NULL)
 			*p = 0;
 		if (Q_stricmp(sk, "male") == 0 || Q_stricmp(sk, "cyborg") == 0)

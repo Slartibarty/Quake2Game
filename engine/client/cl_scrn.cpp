@@ -179,7 +179,7 @@ void SCR_CenterPrint (char *str)
 	char	line[64];
 	int		i, j, l;
 
-	strncpy (scr_centerstring, str, sizeof(scr_centerstring)-1);
+	Q_strcpy_s (scr_centerstring, str);
 	scr_centertime_off = scr_centertime->value;
 	scr_centertime_start = (float)cl.time;
 

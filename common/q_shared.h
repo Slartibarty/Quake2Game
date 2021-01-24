@@ -344,7 +344,6 @@ struct cvar_t
 
 
 // plane_t structure
-// !!! if this is changed, it must be changed in asm code too !!!
 struct cplane_t
 {
 	vec3_t	normal;
@@ -352,16 +351,6 @@ struct cplane_t
 	byte	type;			// for fast side tests
 	byte	signbits;		// signx + (signy<<1) + (signz<<1)
 };
-
-// structure offset for asm code
-#define CPLANE_NORMAL_X			0
-#define CPLANE_NORMAL_Y			4
-#define CPLANE_NORMAL_Z			8
-#define CPLANE_DIST				12
-#define CPLANE_TYPE				16
-#define CPLANE_SIGNBITS			17
-#define CPLANE_PAD0				18
-#define CPLANE_PAD1				19
 
 struct cmodel_t
 {
@@ -377,6 +366,8 @@ struct csurface_t
 	int			value;
 };
 
+// SlartTodo: This structure can go away when we drop support for old Q2 game DLLs
+//
 struct mapsurface_t  // used internally due to name len probs //ZOID
 {
 	csurface_t	c;
@@ -403,6 +394,7 @@ struct trace_t
 #else
 
 // a trace is returned when a box is swept through the world
+// this packed version of trace_t is 64 bytes, while the old one was 72
 struct trace_t
 {
 	cplane_t	plane;		// surface normal at impact

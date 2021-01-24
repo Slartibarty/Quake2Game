@@ -272,7 +272,7 @@ static void SVC_DirectConnect (void)
 
 	challenge = atoi(Cmd_Argv(3));
 
-	strncpy (userinfo, Cmd_Argv(4), sizeof(userinfo)-1);
+	Q_strcpy_s (userinfo, Cmd_Argv(4));
 	userinfo[sizeof(userinfo) - 1] = 0;
 
 	// force the IP key/value pair so the game can filter based on ip
@@ -373,7 +373,7 @@ gotnewcl:
 	}
 
 	// parse some info from the info strings
-	strncpy (newcl->userinfo, userinfo, sizeof(newcl->userinfo)-1);
+	Q_strcpy_s (newcl->userinfo, userinfo);
 	SV_UserinfoChanged (newcl);
 
 	// send the connect packet to the client
@@ -887,7 +887,7 @@ void SV_UserinfoChanged (client_t *cl)
 	ge->ClientUserinfoChanged (cl->edict, cl->userinfo);
 	
 	// name for C code
-	strncpy (cl->name, Info_ValueForKey (cl->userinfo, "name"), sizeof(cl->name)-1);
+	Q_strcpy_s (cl->name, Info_ValueForKey (cl->userinfo, "name"));
 	// mask off high bit
 	for (i=0 ; i<sizeof(cl->name) ; i++)
 		cl->name[i] &= 127;

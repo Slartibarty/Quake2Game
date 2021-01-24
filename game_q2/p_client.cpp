@@ -1356,12 +1356,13 @@ void ClientUserinfoChanged (edict_t *ent, char *userinfo)
 	// check for malformed or illegal info strings
 	if (!Info_Validate(userinfo))
 	{
+		// SlartTodo: wtf
 		strcpy (userinfo, "\\name\\badinfo\\skin\\male/grunt");
 	}
 
 	// set name
 	s = Info_ValueForKey (userinfo, "name");
-	strncpy (ent->client->pers.netname, s, sizeof(ent->client->pers.netname)-1);
+	Q_strcpy_s (ent->client->pers.netname, s);
 
 	// set spectator
 	s = Info_ValueForKey (userinfo, "spectator");
@@ -1401,7 +1402,7 @@ void ClientUserinfoChanged (edict_t *ent, char *userinfo)
 	}
 
 	// save off the userinfo in case we want to check something later
-	strncpy (ent->client->pers.userinfo, userinfo, sizeof(ent->client->pers.userinfo)-1);
+	Q_strcpy_s (ent->client->pers.userinfo, userinfo);
 }
 
 

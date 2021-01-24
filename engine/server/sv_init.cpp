@@ -27,7 +27,7 @@ static int SV_FindIndex (const char *name, int start, int max, qboolean create)
 	if (i == max)
 		Com_Error (ERR_DROP, "*Index: overflow");
 
-	strncpy (sv.configstrings[start+i], name, sizeof(sv.configstrings[i]));
+	Q_strcpy_s (sv.configstrings[start+i], name);
 
 	if (sv.state != ss_loading)
 	{	// send the update to everyone

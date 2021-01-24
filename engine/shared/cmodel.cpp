@@ -177,8 +177,8 @@ void CMod_LoadSurfaces (lump_t *l)
 
 	for ( i=0 ; i<count ; i++, in++, out++)
 	{
-		strncpy (out->c.name, in->texture, sizeof(out->c.name)-1);
-		strncpy (out->rname, in->texture, sizeof(out->rname)-1);
+		Q_strcpy_s (out->c.name, in->texture);
+		Q_strcpy_s (out->rname, in->texture);
 		out->c.flags = LittleLong (in->flags);
 		out->c.value = LittleLong (in->value);
 	}

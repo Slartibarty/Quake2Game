@@ -374,11 +374,11 @@ void CL_LoadClientinfo (clientinfo_t *ci, char *s)
 	char		skin_filename[MAX_QPATH];
 	char		weapon_filename[MAX_QPATH];
 
-	strncpy(ci->cinfo, s, sizeof(ci->cinfo));
+	Q_strcpy_s(ci->cinfo, s);
 	ci->cinfo[sizeof(ci->cinfo)-1] = 0;
 
 	// isolate the player's name
-	strncpy(ci->name, s, sizeof(ci->name));
+	Q_strcpy_s(ci->name, s);
 	ci->name[sizeof(ci->name)-1] = 0;
 	t = strstr (s, "\\");
 	if (t)
@@ -514,7 +514,7 @@ void CL_ParseConfigString (void)
 		Com_Error (ERR_DROP, "configstring > MAX_CONFIGSTRINGS");
 	s = MSG_ReadString(&net_message);
 
-	strncpy (olds, cl.configstrings[i], sizeof(olds));
+	Q_strcpy_s (olds, cl.configstrings[i]);
 	olds[sizeof(olds) - 1] = 0;
 
 	strcpy (cl.configstrings[i], s);
@@ -773,7 +773,7 @@ void CL_ParseServerMessage (void)
 
 		case svc_layout:
 			s = MSG_ReadString (&net_message);
-			strncpy (cl.layout, s, sizeof(cl.layout)-1);
+			Q_strcpy_s (cl.layout, s);
 			break;
 
 		case svc_playerinfo:

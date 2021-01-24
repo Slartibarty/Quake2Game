@@ -2117,7 +2117,7 @@ void M_AddToServerList (netadr_t adr, char *info)
 			return;
 
 	local_server_netadr[m_num_servers] = adr;
-	strncpy (local_server_names[m_num_servers], info, sizeof(local_server_names[0])-1);
+	Q_strcpy_s (local_server_names[m_num_servers], info);
 	m_num_servers++;
 }
 
@@ -3438,7 +3438,7 @@ static qboolean PlayerConfig_ScanDirectories( void )
 		else
 			c = b;
 
-		strncpy( s_pmi[s_numplayermodels].displayname, c + 1, MAX_DISPLAYNAME-1 );
+		Q_strcpy_s( s_pmi[s_numplayermodels].displayname, c + 1 );
 		strcpy( s_pmi[s_numplayermodels].directory, c + 1 );
 
 		FreeFileList( pcxnames, npcxfiles );

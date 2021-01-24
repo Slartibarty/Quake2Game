@@ -479,7 +479,7 @@ static void SV_GameMap_f (void)
 	SV_Map (false, Cmd_Argv(1), false );
 
 	// archive server state
-	strncpy (svs.mapcmd, Cmd_Argv(1), sizeof(svs.mapcmd)-1);
+	Q_strcpy_s (svs.mapcmd, Cmd_Argv(1));
 
 	// copy off the level to the autosave slot
 	if (!dedicated->value)
