@@ -25,6 +25,7 @@ CalcTextureReflectivity
 */
 void CalcTextureReflectivity (void)
 {
+#if 0
 #if 1
 	int			i, j;
 	byte		*palette = NULL;
@@ -130,6 +131,76 @@ void CalcTextureReflectivity (void)
 		texture_reflectivity[i][0] = 0.5f;
 		texture_reflectivity[i][1] = 0.5f;
 		texture_reflectivity[i][2] = 0.5f;
+	}
+#endif
+#else
+	int				i;
+	int				j, k, texels;
+	int				color[3];
+	int				texel;
+	byte			*palette;
+	char			path[1024];
+	float			r, scale;
+	miptex_t		*mt;
+
+	sprintf (path, "%spics/colormap.pcx", gamedir);
+
+	// get the game palette
+	Load256Image (path, NULL, &palette, NULL, NULL);
+
+	// allways set index 0 even if no textures
+	texture_reflectivity[0][0] = 0.5;
+	texture_reflectivity[0][1] = 0.5;
+	texture_reflectivity[0][2] = 0.5;
+
+	for (i=0 ; i<numtexinfo ; i++)
+	{
+		// see if an earlier texinfo allready got the value
+		for (j=0 ; j<i ; j++)
+		{
+			if (!strcmp (texinfo[i].texture, texinfo[j].texture))
+			{
+				VectorCopy (texture_reflectivity[j], texture_reflectivity[i]);
+				break;
+			}
+		}
+		if (j != i)
+			continue;
+
+		// load the wal file
+		sprintf (path, "%stextures/%s.wal", gamedir, texinfo[i].texture);
+		if (TryLoadFile (path, (void **)&mt) == -1)
+		{
+			printf ("Couldn't load %s\n", path);
+			texture_reflectivity[i][0] = 0.5;
+			texture_reflectivity[i][1] = 0.5;
+			texture_reflectivity[i][2] = 0.5;
+			continue;
+		}
+		texels = LittleLong(mt->width)*LittleLong(mt->height);
+		color[0] = color[1] = color[2] = 0;
+
+		for (j=0 ; j<texels ; j++)
+		{
+			texel = ((byte *)mt)[LittleLong(mt->offsets[0]) + j];
+			for (k=0 ; k<3 ; k++)
+				color[k] += palette[texel*3+k];
+		}
+
+		for (j=0 ; j<3 ; j++)
+		{
+			r = color[j]/texels/255.0;
+			texture_reflectivity[i][j] = r;
+		}
+		// scale the reflectivity up, because the textures are
+		// so dim
+		scale = ColorNormalize (texture_reflectivity[i],
+			texture_reflectivity[i]);
+		if (scale < 0.5)
+		{
+			scale *= 2;
+			VectorScale (texture_reflectivity[i], scale, texture_reflectivity[i]);
+		}
 	}
 #endif
 }

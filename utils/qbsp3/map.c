@@ -520,12 +520,12 @@ ParseBrush
 void ParseBrush (entity_t *mapent)
 {
 	mapbrush_t		*b;
-	int			i,j, k;
-	int			mt;
-	side_t		*side, *s2;
-	int			planenum;
+	int				i,j, k;
+	textureref_t	*mt;
+	side_t			*side, *s2;
+	int				planenum;
 	brush_texture_t	td;
-	int			planepts[3][3];
+	int				planepts[3][3];
 
 	if (nummapbrushes == MAX_MAP_BRUSHES)
 		Error ("nummapbrushes == MAX_MAP_BRUSHES");
@@ -586,10 +586,10 @@ void ParseBrush (entity_t *mapent)
 
 		// find default flags and values
 		mt = FindMiptex (td.name);
-		td.flags = textureref[mt].flags;
-		td.value = textureref[mt].value;
-		side->contents = textureref[mt].contents;
-		side->surf = td.flags = textureref[mt].flags;
+		td.flags = mt->flags;
+		td.value = mt->value;
+		side->contents = mt->contents;
+		side->surf = td.flags = mt->flags;
 
 		if (TokenAvailable())
 		{

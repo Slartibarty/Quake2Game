@@ -188,11 +188,7 @@ typedef struct
 	char	animname[64];
 } textureref_t;
 
-#define	MAX_MAP_TEXTURES	1024
-
-extern	textureref_t	textureref[MAX_MAP_TEXTURES];
-
-int	FindMiptex( const char *name );
+textureref_t *FindMiptex( const char *name );
 
 int TexinfoForBrushTexture (plane_t *plane, brush_texture_t *bt, vec3_t origin);
 
