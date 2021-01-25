@@ -9,6 +9,7 @@
 #define STBI_NO_LINEAR
 #define STBI_NO_HDR
 #define STBI_ONLY_TGA
+#define STBI_ONLY_PNG
 #define STBI_NO_FAILURE_STRINGS
 #include "stb_image.h"
 
@@ -478,9 +479,8 @@ static byte *GL_LoadImage(const char *pName, int &width, int &height)
 
 	const char *pExt = strrchr(pName, '.') + 1;
 
-	if (Q_stricmp(pExt, "tga") == 0)
+	if (Q_stricmp(pExt, "png") == 0 || Q_stricmp(pExt, "tga") == 0)
 	{
-		// We use STB for TGA
 		pPic = stbi_load_from_memory(pBuffer, nBufLen, &width, &height, nullptr, 4);
 	}
 	else if (Q_stricmp(pExt, "pcx") == 0)
