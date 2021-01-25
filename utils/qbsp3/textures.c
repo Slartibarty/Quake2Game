@@ -178,10 +178,16 @@ void ParseMaterial( char *data, textureref_t *ref )
 
 	for ( ; token[0] != '}'; Com_Parse2( &data, &token, sizeof( tokenhack ) ) )
 	{
-		if ( strcmp( token, "$basetexture" ) == 0 )
+		/*if ( strcmp( token, "$basetexture" ) == 0 )
 		{
 			Com_Parse2( &data, &token, sizeof( tokenhack ) );
 			strcpy( ref->name, token );
+			continue;
+		}*/
+		if ( strcmp( token, "$nextframe" ) == 0 )
+		{
+			Com_Parse2( &data, &token, sizeof( tokenhack ) );
+			strcpy( ref->animname, token );
 			continue;
 		}
 		if ( strcmp( token, "$contentflags" ) == 0 )
@@ -211,6 +217,7 @@ textureref_t *FindMiptex( const char *name )
 	int			i;
 	char		path[_MAX_PATH];
 	miptex_t	*mt;
+	textureref_t	*ref;
 
 	if ( nummiptex == MAX_MAP_TEXTURES )
 		Error( "MAX_MAP_TEXTURES" );
@@ -221,16 +228,20 @@ textureref_t *FindMiptex( const char *name )
 			return &textureref[i];
 	}
 
-	strcpy( textureref[i].name, name );
+	ref = &textureref[i];
+
+	// Structure is already zeroed
+
+	strcpy( ref->name, name );
 
 	// load the miptex to get the flags and values
 	sprintf( path, "%stextures/%s.wal", gamedir, name );
 	if ( TryLoadFile( path, (void **)&mt ) != -1 )
 	{
-		textureref[i].value = LittleLong( mt->value );
-		textureref[i].flags = LittleLong( mt->flags );
-		textureref[i].contents = LittleLong( mt->contents );
-		strcpy( textureref[i].animname, mt->animname );
+		ref->value = LittleLong( mt->value );
+		ref->flags = LittleLong( mt->flags );
+		ref->contents = LittleLong( mt->contents );
+		strcpy( ref->animname, mt->animname );
 		free( mt );
 	}
 	else // No WAL
@@ -240,17 +251,17 @@ textureref_t *FindMiptex( const char *name )
 		sprintf( path, "%smaterials/%s.mat", gamedir, name );
 		if ( TryLoadFile( path, (void **)&data ) != -1 )
 		{
-			strcpy( textureref[i].name, name );
-			ParseMaterial( data, &textureref[i] );
+			strcpy( ref->name, name );
+			ParseMaterial( data, ref );
 		}
 	}
 
 	++nummiptex;
 
-	if ( textureref[i].animname[0] )
-		FindMiptex( textureref[i].animname ); // Recurse
+	if ( ref->animname[0] )
+		FindMiptex( ref->animname ); // Recurse
 
-	return &textureref[i];
+	return ref;
 }
 
 
