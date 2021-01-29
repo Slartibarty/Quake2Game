@@ -28,7 +28,7 @@ int			r_framecount;		// used for dlight push checking
 
 int			c_brush_polys, c_alias_polys;
 
-static float	v_blend[4];		// final blending color
+static vec4_t	v_blend;		// final blending color
 
 //
 // view origin
@@ -191,7 +191,7 @@ void R_DrawSpriteModel (entity_t *e)
 
 	glColor4f( 1, 1, 1, alpha );
 
-    GL_Bind(currentmodel->skins[e->frame]->texnum);
+    GL_Bind(currentmodel->skins[e->frame]->image->texnum);
 
 	GL_TexEnv( GL_MODULATE );
 
@@ -383,7 +383,7 @@ void GL_DrawParticles( int num_particles, const particle_t particles[], const un
 	float			scale;
 	byte			color[4];
 
-    GL_Bind(r_particletexture->texnum);
+    GL_Bind(mat_particletexture->image->texnum);
 	glDepthMask( GL_FALSE );		// no z buffering
 	glEnable( GL_BLEND );
 	GL_TexEnv( GL_MODULATE );
@@ -781,7 +781,7 @@ void R_RenderView (refdef_t *fd)
 }
 
 
-void	R_SetGL2D (void)
+static void R_SetGL2D (void)
 {
 	// set 2D virtual screen size
 	glViewport (0,0, vid.width, vid.height);
@@ -974,7 +974,7 @@ R_Init
 ===============
 */
 bool R_Init( void *hinstance, void *hWnd )
-{	
+{
 	RI_Com_Printf("ref_gl version: " REF_VERSION "\n");
 
 	extern float r_turbsin[256];
@@ -1082,17 +1082,7 @@ void R_BeginFrame( void )
 	/*
 	** go into 2D mode
 	*/
-	glViewport (0,0, vid.width, vid.height);
-	glMatrixMode(GL_PROJECTION);
-    glLoadIdentity ();
-	glOrtho  (0, vid.width, vid.height, 0, -99999, 99999);
-	glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity ();
-	glDisable (GL_DEPTH_TEST);
-	glDisable (GL_CULL_FACE);
-	glDisable (GL_BLEND);
-	glEnable (GL_ALPHA_TEST);
-	glColor4f (1,1,1,1);
+	R_SetGL2D();
 
 	/*
 	** texturemode stuff

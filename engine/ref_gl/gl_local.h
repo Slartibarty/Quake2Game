@@ -26,37 +26,6 @@
 #define DEFAULT_CLEARCOLOR		0.0f, 0.0f, 0.0f, 1.0f	// Black
 
 //-------------------------------------------------------------------------------------------------
-// Image types
-//-------------------------------------------------------------------------------------------------
-
-enum imagetype_t
-{
-	it_skin,
-	it_sprite,
-	it_wall,
-	it_pic,
-	it_sky
-};
-
-struct msurface_t;
-
-struct image_t
-{
-	char				name[MAX_QPATH];			// game path, including extension
-	imagetype_t			type;
-	int					width, height;				// source image
-	int					registration_sequence;		// 0 = free
-	msurface_t			*texturechain;				// for sort-by-texture world drawing
-	GLuint				texnum;						// gl texture binding
-	float				sl, tl, sh, th;				// 0,0 - 1,1 unless part of the scrap
-	bool				scrap;
-};
-
-#define TEXNUM_LIGHTMAPS	1024
-
-#define MAX_GLTEXTURES		2048
-
-//-------------------------------------------------------------------------------------------------
 
 // Convenient return type
 enum rserr_t
@@ -70,14 +39,6 @@ enum rserr_t
 };
 
 #include "gl_model.h"
-
-// Our vertex format, doesn't appear to be used
-struct glvert_t
-{
-	float	x, y, z;
-	float	s, t;
-	float	r, g, b;
-};
 
 #define	MAX_LBM_HEIGHT		480		// Unused
 
@@ -99,21 +60,25 @@ void GL_UpgradeWals_f( void );
 // gl_image.cpp
 //-------------------------------------------------------------------------------------------------
 
-extern image_t		gltextures[MAX_GLTEXTURES];
-extern int			numgltextures;
+#define MAX_GLTEXTURES		2048
+#define MAX_GLMATERIALS		2048
+
+extern material_t	glmaterials[MAX_GLMATERIALS];
+extern int			numglmaterials;
 
 extern byte			g_gammatable[256];
 
-extern image_t		*r_notexture;
-extern image_t		*r_particletexture;
+extern material_t	*mat_notexture;
+extern material_t	*mat_particletexture;
 
 extern unsigned		d_8to24table[256];
 
 void		GL_TextureMode(char *string);
 void		GL_ImageList_f(void);
 
-image_t		*GL_FindImage(const char *name, imagetype_t type, byte *pic = nullptr, int width = 0, int height = 0);
-image_t		*R_RegisterSkin(const char *name);
+//image_t	*GL_FindImage(const char *name, imagetype_t type, byte *pic = nullptr, int width = 0, int height = 0);
+material_t	*GL_FindMaterial( const char *name, byte *pic = nullptr, int width = 0, int height = 0 );
+material_t	*R_RegisterSkin(const char *name);
 
 void		GL_FreeUnusedImages(void);
 
@@ -129,6 +94,65 @@ void		GL_TexEnv(GLint value);
 			// Use this instead of glBindTexture
 void		GL_Bind(GLuint texnum);
 void		GL_MBind(GLenum target, GLuint texnum);
+
+enum imagetype_t
+{
+	it_skin,
+	it_sprite,
+	it_wall,
+	it_pic,
+	it_sky
+};
+
+struct msurface_t;
+
+struct image_t
+{
+	char				name[MAX_QPATH];			// game path, including extension
+	imagetype_t			type;
+	int					width, height;				// source image
+	GLuint				texnum;						// gl texture binding
+	int					refcount;
+	float				sl, tl, sh, th;				// 0,0 - 1,1 unless part of the scrap
+	bool				scrap;						// true if this is part of a larger sheet
+
+	void DecrementRefCount() { --refcount; assert( refcount >= 0 ); }
+};
+
+struct material_t
+{
+	char				name[MAX_QPATH];			// game path, including extension
+	msurface_t			*texturechain;				// for sort-by-texture world drawing
+	image_t				*image;						// the only image, may extend to more in the future
+	material_t			*nextframe;					// the next frame
+	int					registration_sequence;		// 0 = free
+	int					contentflags;				// legacy
+	int					surfaceflags;				// legacy
+	int					value;						// legacy
+
+	// Returns true if this material is the missing texture
+	bool IsMissing() { return this == mat_notexture; }
+
+	// Returns true if the image referenced is the missing image
+	bool IsImageMissing() { return image == mat_notexture->image; }
+
+	// Returns true if this material is perfectly okay
+	bool IsOkay() { return !IsMissing() && !IsImageMissing(); }
+
+	// Bind the referenced texture
+	void Bind()
+	{
+		//assert( image->refcount > 0 );
+		GL_Bind( image->texnum );
+	}
+
+	// Deference the referenced image and clear this struct
+	void DerefAndClear()
+	{
+		image->DecrementRefCount();
+		memset( this, 0, sizeof( *this ) );
+	}
+};
 
 //-------------------------------------------------------------------------------------------------
 // gl_main.cpp

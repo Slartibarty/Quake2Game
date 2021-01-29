@@ -53,3 +53,7 @@
 #define	SURF_TRANS66	0x20
 #define	SURF_FLOWING	0x40	// scroll towards angle
 #define	SURF_NODRAW		0x80	// don't bother referencing the texture
+
+// From utils qfiles.h
+#define	SURF_HINT		0x100	// make a primary bsp splitter
+#define	SURF_SKIP		0x200	// completely ignore, allowing non-closed brushes

@@ -409,7 +409,7 @@ int main(int argc, char **argv)
 		Com_DPrintf( "Using Windows UTF-8 codepage\n" );
 	}
 
-    /* main window message loop */
+	/* main window message loop */
 	while (1)
 	{
 		// if at a full screen console, don't update unless needed
@@ -430,5 +430,5 @@ int main(int argc, char **argv)
 	}
 
 	// never gets here
-    return TRUE;
+	return TRUE;
 }

@@ -26,7 +26,7 @@
 #define SHELL_WHITE_COLOR	0xD7
 
 struct model_t;
-struct image_t;
+struct material_t;
 
 struct entity_t
 {
@@ -54,7 +54,7 @@ struct entity_t
 	int			lightstyle;			// for flashing entities
 	float		alpha;				// ignore if RF_TRANSLUCENT isn't set
 
-	image_t		*skin;				// NULL for inline skin
+	material_t	*skin;				// NULL for inline skin
 	int			flags;
 
 };
@@ -211,8 +211,8 @@ void	R_Shutdown (void);
 
 void	R_BeginRegistration (const char *map);
 model_t *R_RegisterModel (const char *name);
-image_t *R_RegisterSkin (const char *name);
-image_t *Draw_FindPic (const char *name);
+material_t *R_RegisterSkin (const char *name);
+material_t *Draw_FindPic (const char *name);
 void	R_SetSky (const char *name, float rotate, vec3_t axis);
 void	R_EndRegistration (void);
 

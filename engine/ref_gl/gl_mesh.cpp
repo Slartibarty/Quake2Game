@@ -500,7 +500,7 @@ void R_DrawAliasModel (entity_t *e)
 	dmdl_t		*paliashdr;
 	float		an;
 	vec3_t		bbox[8];
-	image_t		*skin;
+	material_t	*skin;
 
 	if ( !( e->flags & RF_WEAPONMODEL ) )
 	{
@@ -733,8 +733,8 @@ void R_DrawAliasModel (entity_t *e)
 		}
 	}
 	if (!skin)
-		skin = r_notexture;	// fallback...
-	GL_Bind(skin->texnum);
+		skin = mat_notexture;	// fallback...
+	GL_Bind(skin->image->texnum);
 
 	// draw it
 

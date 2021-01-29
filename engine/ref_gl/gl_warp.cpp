@@ -13,7 +13,7 @@ extern model_t		*loadmodel;
 static char			skyname[MAX_QPATH];
 static float		skyrotate;
 static vec3_t		skyaxis;
-static image_t		*sky_images[6];
+static material_t	*sky_images[6];
 
 static msurface_t	*warpface;
 
@@ -573,7 +573,7 @@ void R_DrawSkyBox(void)
 			|| skymins[1][i] >= skymaxs[1][i])
 			continue;
 
-		GL_Bind(sky_images[skytexorder[i]]->texnum);
+		GL_Bind(sky_images[skytexorder[i]]->image->texnum);
 
 		glBegin(GL_QUADS);
 		MakeSkyVec(skymins[0][i], skymins[1][i], i);
@@ -592,21 +592,19 @@ R_SetSky
 ============
 */
 // 3dstudio environment map names
-static constexpr const char *suf[6] = { "rt", "bk", "lf", "ft", "up", "dn" };
-void R_SetSky(const char *name, float rotate, vec3_t axis)
+static const char *suf[6] = { "rt", "bk", "lf", "ft", "up", "dn" };
+void R_SetSky( const char *name, float rotate, vec3_t axis )
 {
 	char pathname[MAX_QPATH];
 
-	Q_strcpy_s(skyname, name);
+	Q_strcpy_s( skyname, name );
 	skyrotate = rotate;
-	VectorCopy(axis, skyaxis);
+	VectorCopy( axis, skyaxis );
 
-	for (int i = 0; i < 6; i++)
+	for ( int i = 0; i < 6; i++ )
 	{
-		Q_sprintf_s(pathname, "env/%s%s.tga", skyname, suf[i]);
+		Q_sprintf_s( pathname, "materials/env/%s%s.mat", skyname, suf[i] );
 
-		sky_images[i] = GL_FindImage(pathname, it_sky);
-		if (!sky_images[i])
-			sky_images[i] = r_notexture;
+		sky_images[i] = GL_FindMaterial( pathname );
 	}
 }

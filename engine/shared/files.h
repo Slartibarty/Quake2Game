@@ -19,7 +19,7 @@ void		FS_Read( void *buffer, int len, FILE *f );
 
 // a null buffer will just return the file length without loading
 // a -1 length is not present
-int			FS_LoadFile( const char *path, void **buffer );
+int			FS_LoadFile( const char *path, void **buffer, int extradata = 0 );
 void		FS_FreeFile( void *buffer );
 
 const char	*FS_NextPath( const char *prevpath );

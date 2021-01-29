@@ -16,6 +16,8 @@
 
 #define GL_LIGHTMAP_FORMAT GL_RGBA
 
+#define TEXNUM_LIGHTMAPS	1024
+
 // Globals
 
 static vec3_t		modelorg;		// relative to viewpoint
@@ -64,12 +66,12 @@ R_TextureAnimation
 Returns the proper texture for a given time and base texture
 ===============
 */
-static image_t *R_TextureAnimation (mtexinfo_t *tex)
+static material_t *R_TextureAnimation (mtexinfo_t *tex)
 {
 	int c;
 
 	if (!tex->next)
-		return tex->image;
+		return tex->material;
 
 	c = currententity->frame % tex->numframes;
 	while (c)
@@ -78,7 +80,7 @@ static image_t *R_TextureAnimation (mtexinfo_t *tex)
 		c--;
 	}
 
-	return tex->image;
+	return tex->material;
 }
 
 /*
@@ -364,16 +366,16 @@ R_RenderBrushPoly
 void R_RenderBrushPoly (msurface_t *fa)
 {
 	int			maps;
-	image_t		*image;
+	material_t	*mat;
 	qboolean	is_dynamic = false;
 
 	c_brush_polys++;
 
-	image = R_TextureAnimation (fa->texinfo);
+	mat = R_TextureAnimation (fa->texinfo);
 
 	if (fa->flags & SURF_DRAWTURB)
 	{	
-		GL_Bind( image->texnum );
+		GL_Bind( mat->image->texnum );
 
 		// warp texture, no lightmaps
 		GL_TexEnv( GL_MODULATE );
@@ -386,7 +388,7 @@ void R_RenderBrushPoly (msurface_t *fa)
 	}
 	else
 	{
-		GL_Bind( image->texnum );
+		GL_Bind( mat->image->texnum );
 
 		GL_TexEnv( GL_REPLACE );
 	}
@@ -483,7 +485,7 @@ void R_DrawAlphaSurfaces (void)
 
 	for (s=r_alpha_surfaces ; s ; s=s->texturechain)
 	{
-		GL_Bind(s->texinfo->image->texnum);
+		GL_Bind(s->texinfo->material->image->texnum);
 		c_brush_polys++;
 		if (s->texinfo->flags & SURF_TRANS33)
 			glColor4f (1.0f,1.0f,1.0f,0.33f);
@@ -515,7 +517,7 @@ void DrawTextureChains (void)
 {
 	int		i;
 	msurface_t	*s;
-	image_t		*image;
+	material_t	*mat;
 
 	c_visible_textures = 0;
 
@@ -523,11 +525,11 @@ void DrawTextureChains (void)
 
 	if ( !GLEW_ARB_multitexture || !gl_ext_multitexture->value )
 	{
-		for ( i = 0, image=gltextures ; i<numgltextures ; i++,image++)
+		for ( i = 0, mat=glmaterials ; i<numglmaterials ; i++,mat++)
 		{
-			if (!image->registration_sequence)
+			if (!mat->registration_sequence)
 				continue;
-			s = image->texturechain;
+			s = mat->texturechain;
 			if (!s)
 				continue;
 			c_visible_textures++;
@@ -535,20 +537,20 @@ void DrawTextureChains (void)
 			for ( ; s ; s=s->texturechain)
 				R_RenderBrushPoly (s);
 
-			image->texturechain = NULL;
+			mat->texturechain = NULL;
 		}
 	}
 	else
 	{
-		for ( i = 0, image=gltextures ; i<numgltextures ; i++,image++)
+		for ( i = 0, mat=glmaterials ; i<numglmaterials ; i++,mat++)
 		{
-			if (!image->registration_sequence)
+			if (!mat->registration_sequence)
 				continue;
-			if (!image->texturechain)
+			if (!mat->texturechain)
 				continue;
 			c_visible_textures++;
 
-			for ( s = image->texturechain; s ; s=s->texturechain)
+			for ( s = mat->texturechain; s ; s=s->texturechain)
 			{
 				if ( !( s->flags & SURF_DRAWTURB ) )
 					R_RenderBrushPoly (s);
@@ -556,11 +558,11 @@ void DrawTextureChains (void)
 		}
 
 		GL_EnableMultitexture( false );
-		for ( i = 0, image=gltextures ; i<numgltextures ; i++,image++)
+		for ( i = 0, mat=glmaterials ; i<numglmaterials ; i++,mat++)
 		{
-			if (!image->registration_sequence)
+			if (!mat->registration_sequence)
 				continue;
-			s = image->texturechain;
+			s = mat->texturechain;
 			if (!s)
 				continue;
 
@@ -570,7 +572,7 @@ void DrawTextureChains (void)
 					R_RenderBrushPoly (s);
 			}
 
-			image->texturechain = NULL;
+			mat->texturechain = NULL;
 		}
 //		GL_EnableMultitexture( true );
 	}
@@ -584,8 +586,9 @@ static void GL_RenderLightmappedPoly( msurface_t *surf )
 	int		i, nv = surf->polys->numverts;
 	int		map;
 	float	*v;
-	image_t *image = R_TextureAnimation( surf->texinfo );
-	qboolean is_dynamic = false;
+	material_t *mat = R_TextureAnimation( surf->texinfo );
+	image_t *image = mat->image;
+	bool is_dynamic = false;
 	unsigned lmtex = surf->lightmaptexturenum;
 	glpoly_t *p;
 
@@ -919,7 +922,7 @@ void R_RecursiveWorldNode (mnode_t *node)
 	msurface_t	*surf, **mark;
 	mleaf_t		*pleaf;
 	float		dot;
-	image_t		*image;
+	material_t	*mat;
 
 	if (node->contents == CONTENTS_SOLID)
 		return;		// solid
@@ -1020,9 +1023,9 @@ void R_RecursiveWorldNode (mnode_t *node)
 				// the polygon is visible, so add it to the texture
 				// sorted chain
 				// FIXME: this is a hack for animation
-				image = R_TextureAnimation (surf->texinfo);
-				surf->texturechain = image->texturechain;
-				image->texturechain = surf;
+				mat = R_TextureAnimation (surf->texinfo);
+				surf->texturechain = mat->texturechain;
+				mat->texturechain = surf;
 			}
 		}
 	}
@@ -1329,10 +1332,10 @@ void GL_BuildPolygonFromSurface(msurface_t *fa)
 			vec = currentmodel->vertexes[r_pedge->v[1]].position;
 		}
 		s = DotProduct (vec, fa->texinfo->vecs[0]) + fa->texinfo->vecs[0][3];
-		s /= fa->texinfo->image->width;
+		s /= fa->texinfo->material->image->width;
 
 		t = DotProduct (vec, fa->texinfo->vecs[1]) + fa->texinfo->vecs[1][3];
-		t /= fa->texinfo->image->height;
+		t /= fa->texinfo->material->image->height;
 
 		VectorAdd (total, vec, total);
 		VectorCopy (vec, poly->verts[i]);

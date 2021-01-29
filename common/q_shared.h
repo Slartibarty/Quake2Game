@@ -173,7 +173,7 @@ inline void Q_sprintf( char *pDest, _Printf_format_string_ const char *pFmt, ...
 
 extern char null_string[1];
 
-inline bool Q_IsPathSeparator( char a )
+inline bool COM_IsPathSeparator( char a )
 {
 	return ( a == '/' || a == '\\' );
 }
@@ -185,11 +185,6 @@ inline void COM_StripExtension( const char *in, char *out )
 	*out = '\0';
 }
 
-inline void COM_StripExtension( char *in )
-{
-	*( strrchr( in, '.' ) ) = '\0';
-}
-
 // Extract the filename from a path
 void COM_FileBase( const char *in, char *out );
 
@@ -199,6 +194,7 @@ void COM_FilePath( const char *in, char *out );
 // Parse a token out of a string
 // data is an in/out parm, returns a parsed out token
 char *COM_Parse( char **data_p );
+void COM_Parse2( char **data_p, char **token_p, int tokenlen );
 
 void Com_PageInMemory( byte *buffer, int size );
 

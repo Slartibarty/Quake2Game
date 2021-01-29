@@ -216,7 +216,7 @@ textureref_t *FindMiptex( const char *name )
 {
 	int			i;
 	char		path[_MAX_PATH];
-	miptex_t	*mt;
+	char		*data;
 	textureref_t	*ref;
 
 	if ( nummiptex == MAX_MAP_TEXTURES )
@@ -234,25 +234,24 @@ textureref_t *FindMiptex( const char *name )
 
 	strcpy( ref->name, name );
 
-	// load the miptex to get the flags and values
-	sprintf( path, "%stextures/%s.wal", gamedir, name );
-	if ( TryLoadFile( path, (void **)&mt ) != -1 )
+	sprintf( path, "%smaterials/%s.mat", gamedir, name );
+	if ( TryLoadFile( path, (void **)&data ) != -1 )
 	{
-		ref->value = LittleLong( mt->value );
-		ref->flags = LittleLong( mt->flags );
-		ref->contents = LittleLong( mt->contents );
-		strcpy( ref->animname, mt->animname );
-		free( mt );
+		strcpy( ref->name, name );
+		ParseMaterial( data, ref );
 	}
 	else // No WAL
 	{
-		char *data;
+		miptex_t *mt;
 
-		sprintf( path, "%smaterials/%s.mat", gamedir, name );
-		if ( TryLoadFile( path, (void **)&data ) != -1 )
+		sprintf( path, "%stextures/%s.wal", gamedir, name );
+		if ( TryLoadFile( path, (void **)&mt ) != -1 )
 		{
-			strcpy( ref->name, name );
-			ParseMaterial( data, ref );
+			ref->value = LittleLong( mt->value );
+			ref->flags = LittleLong( mt->flags );
+			ref->contents = LittleLong( mt->contents );
+			strcpy( ref->animname, mt->animname );
+			free( mt );
 		}
 	}
 

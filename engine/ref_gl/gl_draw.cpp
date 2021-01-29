@@ -4,22 +4,20 @@
 
 #include "gl_local.h"
 
-static image_t *draw_chars;
+static constexpr auto ConChars_Name = "conchars";
+
+static material_t *draw_chars;
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-void Draw_InitLocal (void)
+void Draw_InitLocal( void )
 {
-	// load console characters (don't bilerp characters)
-	draw_chars = GL_FindImage("pics/conchars.pcx", it_pic);
-	if (!draw_chars) {
-		RI_Com_Error(ERR_FATAL, "Could not get console font: pics/conchars");
+	// load console characters
+	draw_chars = Draw_FindPic( ConChars_Name );
+	if ( !draw_chars->IsOkay() ) {
+		// This is super aggressive, but it easily warns about bad game folders
+		RI_Com_Error( ERR_FATAL, "Could not get console font: %s", ConChars_Name );
 	}
-
-	// Undo this if we ever make pics linear filtered again
-//	GL_Bind(draw_chars->texnum);
-//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -27,17 +25,17 @@ void Draw_InitLocal (void)
 // It can be clipped to the top of the screen to allow the console to be
 // smoothly scrolled off.
 //-------------------------------------------------------------------------------------------------
-void Draw_Char (int x, int y, int num)
+void Draw_Char( int x, int y, int num )
 {
-	int				row, col;
-	float			frow, fcol, size;
+	int row, col;
+	float frow, fcol, size;
 
 	num &= 255;
 
-	if ((num & 127) == 32)
+	if ( ( num & 127 ) == 32 )
 		return;		// space
 
-	if (y <= -8)
+	if ( y <= -8 )
 		return;		// totally off screen
 
 	row = num >> 4;
@@ -47,68 +45,63 @@ void Draw_Char (int x, int y, int num)
 	fcol = col * 0.0625f;
 	size = 0.0625f;
 
-	GL_Bind(draw_chars->texnum);
+	draw_chars->Bind();
 
-	glBegin(GL_QUADS);
-	glTexCoord2f(fcol, frow);
-	glVertex2i(x, y);
-	glTexCoord2f(fcol + size, frow);
-	glVertex2i(x + 8, y);
-	glTexCoord2f(fcol + size, frow + size);
-	glVertex2i(x + 8, y + 8);
-	glTexCoord2f(fcol, frow + size);
-	glVertex2i(x, y + 8);
+	glBegin( GL_QUADS );
+	glTexCoord2f( fcol, frow );
+	glVertex2i( x, y );
+	glTexCoord2f( fcol + size, frow );
+	glVertex2i( x + 8, y );
+	glTexCoord2f( fcol + size, frow + size );
+	glVertex2i( x + 8, y + 8 );
+	glTexCoord2f( fcol, frow + size );
+	glVertex2i( x, y + 8 );
 	glEnd();
 }
 
 //-------------------------------------------------------------------------------------------------
+// Input is a filename with no decoration
 //-------------------------------------------------------------------------------------------------
-image_t	*Draw_FindPic (const char *name)
+material_t *Draw_FindPic( const char *name )
 {
-	image_t *gl;
-
-	if (name[0] != '/' && name[0] != '\\')
-	{
-		char fullname[MAX_QPATH];
-		Q_sprintf_s(fullname, "pics/%s.pcx", name);
-		gl = GL_FindImage(fullname, it_pic);
-	}
-	else
-		gl = GL_FindImage(name + 1, it_pic);
-
-	return gl;
+	char fullname[MAX_QPATH];
+	Q_sprintf_s( fullname, "materials/pics/%s.mat", name );
+	return GL_FindMaterial( fullname );
 }
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-void Draw_GetPicSize (int *w, int *h, const char *pic)
+void Draw_GetPicSize( int *w, int *h, const char *pic )
 {
-	image_t *gl;
+	material_t *mat;
 
-	gl = Draw_FindPic(pic);
-	if (!gl)
+	mat = Draw_FindPic( pic );
+	if ( !mat )
 	{
 		*w = *h = -1;
 		return;
 	}
-	*w = gl->width;
-	*h = gl->height;
+	*w = mat->image->width;
+	*h = mat->image->height;
 }
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-void Draw_StretchPic (int x, int y, int w, int h, const char *pic)
+void Draw_StretchPic( int x, int y, int w, int h, const char *pic )
 {
-	image_t *gl;
+	material_t *mat;
+	image_t *img;
 
-	gl = Draw_FindPic(pic);
-	if (!gl)
+	mat = Draw_FindPic( pic );
+	if ( !mat )
 	{
-		RI_Com_Printf("Can't find pic: %s\n", pic);
+		RI_Com_Printf( "Can't find pic: %s\n", pic );
 		return;
 	}
 
-	GL_Bind(gl->texnum);
+	img = mat->image;
+
+	mat->Bind();
 
 	// SlartTodo: This is called every single frame a stretchpic needs to be drawn,
 	// surely this must be a bad thing
@@ -116,41 +109,45 @@ void Draw_StretchPic (int x, int y, int w, int h, const char *pic)
 	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	glBegin(GL_QUADS);
-	glTexCoord2f(gl->sl, gl->tl);
-	glVertex2i(x, y);
-	glTexCoord2f(gl->sh, gl->tl);
-	glVertex2i(x + w, y);
-	glTexCoord2f(gl->sh, gl->th);
-	glVertex2i(x + w, y + h);
-	glTexCoord2f(gl->sl, gl->th);
-	glVertex2i(x, y + h);
+	glBegin( GL_QUADS );
+	glTexCoord2f( img->sl, img->tl );
+	glVertex2i( x, y );
+	glTexCoord2f( img->sh, img->tl );
+	glVertex2i( x + w, y );
+	glTexCoord2f( img->sh, img->th );
+	glVertex2i( x + w, y + h );
+	glTexCoord2f( img->sl, img->th );
+	glVertex2i( x, y + h );
 	glEnd();
 }
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-void Draw_Pic (int x, int y, const char *pic)
+void Draw_Pic( int x, int y, const char *pic )
 {
-	image_t *gl;
+	material_t *mat;
+	image_t *img;
 
-	gl = Draw_FindPic(pic);
-	if (!gl)
+	mat = Draw_FindPic( pic );
+	if ( !mat )
 	{
-		RI_Com_Printf("Can't find pic: %s\n", pic);
+		RI_Com_Printf( "Can't find pic: %s\n", pic );
 		return;
 	}
 
-	GL_Bind(gl->texnum);
-	glBegin(GL_QUADS);
-	glTexCoord2f(gl->sl, gl->tl);
-	glVertex2i(x, y);
-	glTexCoord2f(gl->sh, gl->tl);
-	glVertex2i(x + gl->width, y);
-	glTexCoord2f(gl->sh, gl->th);
-	glVertex2i(x + gl->width, y + gl->height);
-	glTexCoord2f(gl->sl, gl->th);
-	glVertex2i(x, y + gl->height);
+	img = mat->image;
+
+	mat->Bind();
+
+	glBegin( GL_QUADS );
+	glTexCoord2f( img->sl, img->tl );
+	glVertex2i( x, y );
+	glTexCoord2f( img->sh, img->tl );
+	glVertex2i( x + img->width, y );
+	glTexCoord2f( img->sh, img->th );
+	glVertex2i( x + img->width, y + img->height );
+	glTexCoord2f( img->sl, img->th );
+	glVertex2i( x, y + img->height );
 	glEnd();
 }
 
@@ -158,35 +155,38 @@ void Draw_Pic (int x, int y, const char *pic)
 // This repeats a 64*64 tile graphic to fill the screen around a sized down
 // refresh window.
 //-------------------------------------------------------------------------------------------------
-void Draw_TileClear (int x, int y, int w, int h, const char *pic)
+void Draw_TileClear( int x, int y, int w, int h, const char *pic )
 {
-	image_t *image;
+	material_t *mat;
+	image_t *img;
 
-	image = Draw_FindPic(pic);
-	if (!image)
+	mat = Draw_FindPic( pic );
+	if ( !mat )
 	{
-		RI_Com_Printf("Can't find pic: %s\n", pic);
+		RI_Com_Printf( "Can't find pic: %s\n", pic );
 		return;
 	}
 
-	GL_Bind(image->texnum);
-	glBegin(GL_QUADS);
-	glTexCoord2f(x / 64.0f, y / 64.0f);
-	glVertex2i(x, y);
-	glTexCoord2f((x + w) / 64.0f, y / 64.0f);
-	glVertex2i(x + w, y);
-	glTexCoord2f((x + w) / 64.0f, (y + h) / 64.0f);
-	glVertex2i(x + w, y + h);
-	glTexCoord2f(x / 64.0f, (y + h) / 64.0f);
-	glVertex2i(x, y + h);
+	img = mat->image;
+
+	mat->Bind();
+
+	glBegin( GL_QUADS );
+	glTexCoord2f( x / 64.0f, y / 64.0f );
+	glVertex2i( x, y );
+	glTexCoord2f( ( x + w ) / 64.0f, y / 64.0f );
+	glVertex2i( x + w, y );
+	glTexCoord2f( ( x + w ) / 64.0f, ( y + h ) / 64.0f );
+	glVertex2i( x + w, y + h );
+	glTexCoord2f( x / 64.0f, ( y + h ) / 64.0f );
+	glVertex2i( x, y + h );
 	glEnd();
 }
-
 
 //-------------------------------------------------------------------------------------------------
 // Fills a box of pixels with a single color
 //-------------------------------------------------------------------------------------------------
-void Draw_Fill (int x, int y, int w, int h, int c)
+void Draw_Fill( int x, int y, int w, int h, int c )
 {
 	union
 	{
@@ -194,46 +194,46 @@ void Draw_Fill (int x, int y, int w, int h, int c)
 		byte	v[4];
 	} color;
 
-	if (c > 255)
-		RI_Com_Error(ERR_FATAL, "Draw_Fill: bad color");
+	if ( c > 255 )
+		RI_Com_Error( ERR_FATAL, "Draw_Fill: bad color" );
 
-	glDisable(GL_TEXTURE_2D);
+	glDisable( GL_TEXTURE_2D );
 
 	color.c = d_8to24table[c];
-	glColor3f(color.v[0] / 255.0f,
+	glColor3f( color.v[0] / 255.0f,
 		color.v[1] / 255.0f,
-		color.v[2] / 255.0f);
+		color.v[2] / 255.0f );
 
-	glBegin(GL_QUADS);
+	glBegin( GL_QUADS );
 
-	glVertex2i(x, y);
-	glVertex2i(x + w, y);
-	glVertex2i(x + w, y + h);
-	glVertex2i(x, y + h);
+	glVertex2i( x, y );
+	glVertex2i( x + w, y );
+	glVertex2i( x + w, y + h );
+	glVertex2i( x, y + h );
 
 	glEnd();
-	glColor3f(1.0f, 1.0f, 1.0f);
-	glEnable(GL_TEXTURE_2D);
+	glColor3f( 1.0f, 1.0f, 1.0f );
+	glEnable( GL_TEXTURE_2D );
 }
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-void Draw_FadeScreen (void)
+void Draw_FadeScreen( void )
 {
-	glEnable(GL_BLEND);
-	glDisable(GL_TEXTURE_2D);
-	glColor4f(0.0f, 0.0f, 0.0f, 0.8f);
-	glBegin(GL_QUADS);
+	glEnable( GL_BLEND );
+	glDisable( GL_TEXTURE_2D );
+	glColor4f( 0.0f, 0.0f, 0.0f, 0.8f );
+	glBegin( GL_QUADS );
 
-	glVertex2i(0, 0);
-	glVertex2i(r_newrefdef.width, 0);
-	glVertex2i(r_newrefdef.width, r_newrefdef.height);
-	glVertex2i(0, r_newrefdef.height);
+	glVertex2i( 0, 0 );
+	glVertex2i( r_newrefdef.width, 0 );
+	glVertex2i( r_newrefdef.width, r_newrefdef.height );
+	glVertex2i( 0, r_newrefdef.height );
 
 	glEnd();
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	glEnable(GL_TEXTURE_2D);
-	glDisable(GL_BLEND);
+	glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
+	glEnable( GL_TEXTURE_2D );
+	glDisable( GL_BLEND );
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -243,17 +243,17 @@ extern unsigned	r_rawpalette[256];
 //-------------------------------------------------------------------------------------------------
 // Used for rendering cinematic frames
 //-------------------------------------------------------------------------------------------------
-void Draw_StretchRaw (int x, int y, int w, int h, int cols, int rows, byte *data)
+void Draw_StretchRaw( int x, int y, int w, int h, int cols, int rows, byte *data )
 {
 	uint		image32[256 * 256];
 	int			i, j, trows;
-	byte*		source;
+	byte		*source;
 	int			frac, fracstep;
 	float		hscale;
 	int			row;
 	float		t;
 
-	if (rows <= 256)
+	if ( rows <= 256 )
 	{
 		hscale = 1;
 		trows = rows;
@@ -266,18 +266,18 @@ void Draw_StretchRaw (int x, int y, int w, int h, int cols, int rows, byte *data
 	t = rows * hscale / 256;
 
 	{
-		uint* dest;
+		uint *dest;
 
-		for (i = 0; i < trows; i++)
+		for ( i = 0; i < trows; i++ )
 		{
-			row = (int)(i * hscale);
-			if (row > rows)
+			row = (int)( i * hscale );
+			if ( row > rows )
 				break;
 			source = data + cols * row;
 			dest = &image32[i * 256];
 			fracstep = cols * 0x10000 / 256;
 			frac = fracstep >> 1;
-			for (j = 0; j < 256; j++)
+			for ( j = 0; j < 256; j++ )
 			{
 				dest[j] = r_rawpalette[source[frac >> 16]];
 				frac += fracstep;
@@ -287,28 +287,28 @@ void Draw_StretchRaw (int x, int y, int w, int h, int cols, int rows, byte *data
 
 	GLuint id;
 
-	glGenTextures(1, &id);
-	GL_Bind(id);
+	glGenTextures( 1, &id );
+	GL_Bind( id );
 
 	// Upload frame
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, image32);
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, image32 );
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f, 0.0f);
-	glVertex2i(x, y);
-	glTexCoord2f(1.0f, 0.0f);
-	glVertex2i(x + w, y);
-	glTexCoord2f(1.0f, t);
-	glVertex2i(x + w, y + h);
-	glTexCoord2f(0.0f, t);
-	glVertex2i(x, y + h);
+	glBegin( GL_QUADS );
+	glTexCoord2f( 0.0f, 0.0f );
+	glVertex2i( x, y );
+	glTexCoord2f( 1.0f, 0.0f );
+	glVertex2i( x + w, y );
+	glTexCoord2f( 1.0f, t );
+	glVertex2i( x + w, y + h );
+	glTexCoord2f( 0.0f, t );
+	glVertex2i( x, y + h );
 	glEnd();
 
-	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindTexture( GL_TEXTURE_2D, 0 );
 
 	// Delete frame
-	glDeleteTextures(1, &id);
+	glDeleteTextures( 1, &id );
 }

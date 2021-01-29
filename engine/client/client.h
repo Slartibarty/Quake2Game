@@ -47,13 +47,13 @@ struct centity_t
 
 struct clientinfo_t
 {
-	char	name[MAX_QPATH];
-	char	cinfo[MAX_QPATH];
-	image_t *skin;
-	image_t *icon;
-	char	iconname[MAX_QPATH];
-	model_t	*model;
-	model_t *weaponmodel[MAX_CLIENTWEAPONMODELS];
+	char		name[MAX_QPATH];
+	char		cinfo[MAX_QPATH];
+	material_t	*skin;
+	material_t	*icon;
+	char		iconname[MAX_QPATH];
+	model_t		*model;
+	model_t		*weaponmodel[MAX_CLIENTWEAPONMODELS];
 };
 
 extern char cl_weaponmodels[MAX_CLIENTWEAPONMODELS][MAX_QPATH];
@@ -141,7 +141,7 @@ struct client_state_t
 	cmodel_t	*model_clip[MAX_MODELS];
 
 	sfx_t		*sound_precache[MAX_SOUNDS];
-	image_t		*image_precache[MAX_IMAGES];
+//	image_t		*image_precache[MAX_IMAGES]; // SlartMaterialSystemTodo
 
 	clientinfo_t	clientinfo[MAX_CLIENTS];
 	clientinfo_t	baseclientinfo;

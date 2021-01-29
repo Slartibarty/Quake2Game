@@ -272,13 +272,27 @@ namespace ImageLoaders
 
 //-------------------------------------------------------------------------------------------------
 
+material_t *mat_notexture; // use for bad textures
+material_t *mat_particletexture; // little dot for particles
+
+image_t		gltextures[MAX_GLTEXTURES];
+int			numgltextures;
+material_t	glmaterials[MAX_GLMATERIALS];
+int			numglmaterials;
+
+byte		g_gammatable[256];
+
+unsigned	d_8to24table[256];
+
+//-------------------------------------------------------------------------------------------------
+
 struct glmode_t
 {
 	const char *name;
 	GLint minimize, maximize;
 };
 
-static glmode_t modes[]
+static const glmode_t modes[]
 {
 	{"GL_NEAREST", GL_NEAREST, GL_NEAREST},
 	{"GL_LINEAR", GL_LINEAR, GL_LINEAR},
@@ -290,8 +304,8 @@ static glmode_t modes[]
 
 static constexpr int NUM_GL_MODES = countof(modes);
 
-static GLint	gl_filter_min = GL_LINEAR_MIPMAP_LINEAR;
-static GLint	gl_filter_max = GL_LINEAR;
+static GLint gl_filter_min = GL_LINEAR_MIPMAP_LINEAR;
+static GLint gl_filter_max = GL_LINEAR;
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
@@ -329,55 +343,67 @@ void GL_TextureMode(char *string)
 
 //-------------------------------------------------------------------------------------------------
 
-image_t		gltextures[MAX_GLTEXTURES];
-int			numgltextures;
-
-byte		g_gammatable[256];
-
-unsigned	d_8to24table[256];
-
 //-------------------------------------------------------------------------------------------------
-
+// List textures
 //-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-void GL_ImageList_f (void)
+void GL_ImageList_f( void )
 {
-	int		i;
-	image_t	*image;
-	int		texels;
+	int i;
+	image_t *image;
+	size_t texels;
 
-	RI_Com_Printf("------------------\n");
+	RI_Com_Printf( "------------------\n" );
 	texels = 0;
 
-	for (i=0, image=gltextures ; i<numgltextures ; i++, image++)
+	for ( i = 0, image = gltextures; i < numgltextures; i++, image++ )
 	{
-		if (image->texnum <= 0)
-			continue;
-		texels += image->width *image->height;
-		switch (image->type)
+		assert( image->texnum > 0 );
+	//	if ( image->texnum <= 0 )
+	//		continue;
+		texels += (size_t)image->width * (size_t)image->height;
+		switch ( image->type )
 		{
 		case it_skin:
-			RI_Com_Printf("M");
+			RI_Com_Printf( "M" );
 			break;
 		case it_sprite:
-			RI_Com_Printf("S");
+			RI_Com_Printf( "S" );
 			break;
 		case it_wall:
-			RI_Com_Printf("W");
+			RI_Com_Printf( "W" );
 			break;
 		case it_pic:
-			RI_Com_Printf("P");
+			RI_Com_Printf( "P" );
+			break;
+		case it_sky:
+			RI_Com_Printf( "E" );
 			break;
 		default:
-			RI_Com_Printf(" ");
+			RI_Com_Printf( " " );
 			break;
 		}
 
-		RI_Com_Printf( " %3i %3i RGB: %s\n",
-			image->width, image->height, image->name);
+		RI_Com_Printf( " %3d %3d RGBA: %s\n", image->width, image->height, image->name );
 	}
-	RI_Com_Printf("Total texel count (not counting mipmaps): %i\n", texels);
+
+	RI_Com_Printf( "Total texel count (not counting mipmaps): %zu\n", texels );
 }
+
+//-------------------------------------------------------------------------------------------------
+// List materials
+//-------------------------------------------------------------------------------------------------
+/*void GL_MaterialList_f()
+{
+	int i;
+	material_t *material;
+
+	RI_Com_Printf( "------------------\n" );
+
+	for ( i = 0, material = glmaterials; i < numgltextures; ++i, ++material )
+	{
+		RI_Com_Printf( "%3d %3d RGB: %s\n", image->width, image->height, material->name );
+	}
+}*/
 
 //-------------------------------------------------------------------------------------------------
 
@@ -390,9 +416,6 @@ void GL_ImageList_f (void)
 //-------------------------------------------------------------------------------------------------
 static GLuint GL_Upload32 (const byte *pData, int nWidth, int nHeight, imagetype_t eType)
 {
-	// Lightscale everything!
-//	GL_LightScaleTexture((byte*)data, width, height);
-
 	GLuint id;
 
 	// Generate and bind the texture
@@ -407,6 +430,7 @@ static GLuint GL_Upload32 (const byte *pData, int nWidth, int nHeight, imagetype
 	{
 		if (GLEW_ARB_framebuffer_object)
 		{
+			// This sucks
 			glGenerateMipmap(GL_TEXTURE_2D);
 		}
 		else
@@ -462,12 +486,53 @@ static GLuint GL_Upload32 (const byte *pData, int nWidth, int nHeight, imagetype
 }
 
 //-------------------------------------------------------------------------------------------------
+// This is the only function that can create image_t's
+//-------------------------------------------------------------------------------------------------
+static image_t *GL_CreateImage(const char *name, const byte *pic, int width, int height, imagetype_t type)
+{
+	int			i;
+	image_t		*image;
+
+	// find a free image_t
+	for (i = 0, image = gltextures; i < numgltextures; i++, image++)
+	{
+		if (!image->texnum)
+			break;
+	}
+	if (i == numgltextures)
+	{
+		if (numgltextures == MAX_GLTEXTURES)
+			RI_Com_Error(ERR_DROP, "MAX_GLTEXTURES");
+		numgltextures++;
+	}
+	image = &gltextures[i];
+
+	Q_strcpy_s(image->name, name);
+	image->refcount = 0;			// Incremented by GL_FindImage
+
+	image->width = width;
+	image->height = height;
+	image->type = type;
+
+	// Upload it!
+	// Pics and skies are never mipmapped (they don't need em)
+	image->texnum = GL_Upload32(pic, width, height, type);
+
+	image->sl = 0;
+	image->sh = 1;
+	image->tl = 0;
+	image->th = 1;
+
+	return image;
+}
+
+//-------------------------------------------------------------------------------------------------
 // Loads any of the supported image types into a cannonical 32 bit format.
 //-------------------------------------------------------------------------------------------------
 static byte *GL_LoadImage(const char *pName, int &width, int &height)
 {
-	byte		*pBuffer;
-	int			nBufLen;
+	byte *pBuffer;
+	int nBufLen;
 
 	nBufLen = RI_FS_LoadFile(pName, (void **)&pBuffer);
 	if (!pBuffer)
@@ -499,54 +564,14 @@ static byte *GL_LoadImage(const char *pName, int &width, int &height)
 		return nullptr;
 	}
 
+	RI_FS_FreeFile( pBuffer );
+
 	if (!pPic)
 	{
 		return nullptr;
 	}
 
-	RI_FS_FreeFile(pBuffer);
 	return pPic;
-}
-
-//-------------------------------------------------------------------------------------------------
-// This is the only way any image_t are created
-//-------------------------------------------------------------------------------------------------
-static image_t *GL_CreateImage(const char *name, const byte *pic, int width, int height, imagetype_t type)
-{
-	int			i;
-	image_t		*image;
-
-	// find a free image_t
-	for (i = 0, image = gltextures; i < numgltextures; i++, image++)
-	{
-		if (!image->texnum)
-			break;
-	}
-	if (i == numgltextures)
-	{
-		if (numgltextures == MAX_GLTEXTURES)
-			RI_Com_Error(ERR_DROP, "MAX_GLTEXTURES");
-		numgltextures++;
-	}
-	image = &gltextures[i];
-
-	Q_strcpy_s(image->name, name);
-	image->registration_sequence = registration_sequence;
-
-	image->width = width;
-	image->height = height;
-	image->type = type;
-
-	// Upload it!
-	// Pics and skies are never mipmapped (they don't need em)
-	image->texnum = GL_Upload32(pic, width, height, type);
-
-	image->sl = 0;
-	image->sh = 1;
-	image->tl = 0;
-	image->th = 1;
-
-	return image;
 }
 
 struct rgb_t
@@ -560,18 +585,19 @@ struct rgb_t
 // THIS CHOKES ON TEXTURES WITH THE SAME NAME, STUDIOMODELS CAN HAVE IDENTICAL TEXTURE NAMES THAT ARE
 // DIFFERENT!!! THIS IS BAD!
 //-------------------------------------------------------------------------------------------------
-image_t	*GL_FindImage (const char *name, imagetype_t type, byte *pic, int width, int height)
+image_t	*GL_FindImage (const char *name, imagetype_t type, byte *pic = nullptr, int width = 0, int height = 0)
 {
+	int i, j;
+	image_t *image;
+
 	assert( name && name[0] );
 
 	// look for it
-	image_t *image = gltextures;
-	image_t *imagemax = image + numgltextures;
-	for ( ; image <= imagemax; ++image )
+	for ( i = 0, image = gltextures; i < numgltextures; ++i, ++image )
 	{
-		if ( strcmp( name, image->name ) == 0 )
+		if ( Q_strcmp( name, image->name ) == 0 )
 		{
-			image->registration_sequence = registration_sequence;
+			++image->refcount;
 			return image;
 		}
 	}
@@ -585,20 +611,19 @@ image_t	*GL_FindImage (const char *name, imagetype_t type, byte *pic, int width,
 		byte *pic32 = (byte *)malloc( outsize );
 		rgb_t *palette = (rgb_t *)( pic + width * height );
 
-		for ( int i = 0, j = 0; i < outsize; i += 4, ++j )
+		for ( i = 0, j = 0; i < outsize; i += 4, ++j )
 		{
 			pic32[i+0] = palette[pic[j]].r;
 			pic32[i+1] = palette[pic[j]].g;
 			pic32[i+2] = palette[pic[j]].b;
 			pic32[i+3] = 255; // SlartTodo: Studiomodels can have alphatest transparency
 		}
-
-	//	stbi_write_bmp( name, width, height, 4, pic32 );
 		
 		image = GL_CreateImage( name, pic32, width, height, type );
 
 		free( pic32 );
 
+		++image->refcount;
 		return image;
 	}
 
@@ -607,47 +632,296 @@ image_t	*GL_FindImage (const char *name, imagetype_t type, byte *pic, int width,
 	//
 	pic = GL_LoadImage( name, width, height );
 	if ( !pic ) {
-		return r_notexture;
+		return nullptr;
 	}
 
 	image = GL_CreateImage( name, pic, width, height, type );
 
 	free( pic );
 
+	++image->refcount;
 	return image;
+}
+
+#define FLAGCHECK(flag) if ( Q_strcmp( data, #flag ) == 0 ) { return flag; }
+
+int StringToContentFlag( const char *data )
+{
+	FLAGCHECK( CONTENTS_SOLID );
+	FLAGCHECK( CONTENTS_WINDOW );
+	FLAGCHECK( CONTENTS_AUX );
+	FLAGCHECK( CONTENTS_LAVA );
+	FLAGCHECK( CONTENTS_SLIME );
+	FLAGCHECK( CONTENTS_WATER );
+	FLAGCHECK( CONTENTS_MIST );
+	// last visible
+	FLAGCHECK( CONTENTS_AREAPORTAL );
+	FLAGCHECK( CONTENTS_PLAYERCLIP );
+	FLAGCHECK( CONTENTS_MONSTERCLIP );
+	FLAGCHECK( CONTENTS_CURRENT_0 );
+	FLAGCHECK( CONTENTS_CURRENT_90 );
+	FLAGCHECK( CONTENTS_CURRENT_180 );
+	FLAGCHECK( CONTENTS_CURRENT_270 );
+	FLAGCHECK( CONTENTS_CURRENT_UP );
+	FLAGCHECK( CONTENTS_CURRENT_DOWN );
+	FLAGCHECK( CONTENTS_ORIGIN );
+	FLAGCHECK( CONTENTS_MONSTER );
+	FLAGCHECK( CONTENTS_DEADMONSTER );
+	FLAGCHECK( CONTENTS_DETAIL );
+	FLAGCHECK( CONTENTS_TRANSLUCENT );
+	FLAGCHECK( CONTENTS_LADDER );
+
+	return 0;
+}
+
+int StringToSurfaceFlag( const char *data )
+{
+	FLAGCHECK( SURF_LIGHT );
+	FLAGCHECK( SURF_SLICK );
+	FLAGCHECK( SURF_SKY );
+	FLAGCHECK( SURF_WARP );
+	FLAGCHECK( SURF_TRANS33 );
+	FLAGCHECK( SURF_TRANS66 );
+	FLAGCHECK( SURF_FLOWING );
+	FLAGCHECK( SURF_NODRAW );
+	FLAGCHECK( SURF_HINT );
+	FLAGCHECK( SURF_SKIP );
+
+	return 0;
+}
+
+#undef FLAGCHECK
+
+int ParseSurfaceFlags( char *data, int type )
+{
+	char tokenhack[MAX_TOKEN_CHARS];
+	char *token = tokenhack;
+	int flags = 0;
+
+	COM_Parse2( &data, &token, sizeof( tokenhack ) );
+
+	// Parse until the end baby
+	while ( data )
+	{
+		if ( type == 1 )
+			flags |= StringToContentFlag( token );
+		else
+			flags |= StringToSurfaceFlag( token );
+
+		COM_Parse2( &data, &token, sizeof( tokenhack ) );
+	}
+
+	return flags;
+}
+
+bool ParseMaterial( char *data, material_t *material )
+{
+	char tokenhack[MAX_TOKEN_CHARS];
+	char *token = tokenhack;
+
+	COM_Parse2( &data, &token, sizeof( tokenhack ) );
+	if ( token[0] != '{' )
+	{
+		// Malformed
+		RI_Com_Printf( "Malformed material %s\n", material->name );
+		return false;
+	}
+
+	COM_Parse2( &data, &token, sizeof( tokenhack ) );
+
+	for ( ; token[0] != '}'; COM_Parse2( &data, &token, sizeof( tokenhack ) ) )
+	{
+		if ( Q_strcmp( token, "$basetexture" ) == 0 )
+		{
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
+			material->image = GL_FindImage( token, it_wall );
+			continue;
+		}
+		if ( Q_strcmp( token, "$nextframe" ) == 0 )
+		{
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
+			material->nextframe = GL_FindMaterial( token );
+			if ( material->nextframe == mat_notexture ) // minor SlartHack
+			{
+				material->nextframe = nullptr;
+			}
+			continue;
+		}
+		if ( Q_strcmp( token, "$contentflags" ) == 0 )
+		{
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
+			material->contentflags = ParseSurfaceFlags( token, 1 );
+			continue;
+		}
+		if ( Q_strcmp( token, "$surfaceflags" ) == 0 )
+		{
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
+			material->surfaceflags = ParseSurfaceFlags( token, 0 );
+			continue;
+		}
+		if ( Q_strcmp( token, "$value" ) == 0 )
+		{
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
+			material->value = atoi( token );
+			continue;
+		}
+	}
+
+	return true;
+}
+
+static material_t *GL_CreateMaterialFromData( const char *name, image_t *image )
+{
+	int i;
+	material_t *material;
+
+	// find a free material_t
+	for ( i = 0, material = glmaterials; i < numglmaterials; i++, material++ )
+	{
+		if ( material->image == nullptr )
+			break;
+	}
+	if ( i == numglmaterials )
+	{
+		if ( numglmaterials == MAX_GLMATERIALS )
+			RI_Com_Error( ERR_DROP, "MAX_GLMATERIALS" );
+		++numglmaterials;
+	}
+	material = &glmaterials[i];
+	memset( material, 0, sizeof( *material ) );
+	
+	Q_strcpy_s( material->name, name );
+	material->image = image;
+	++material->image->refcount;
+
+	return material;
+}
+
+static material_t *GL_CreateMaterial( const char *name )
+{
+	char *pBuffer;
+	int nBufLen;
+	int i;
+	material_t *material;
+
+	// Horrible hack, clean this up
+#if 0
+	char newname[MAX_QPATH];
+	assert( strlen( name ) < MAX_QPATH );
+	Q_strcpy_s( newname, name );
+	strcat( newname, ".mat" );
+#endif
+
+	nBufLen = RI_FS_LoadFile( name, (void **)&pBuffer, 1 );
+	if ( !pBuffer )
+	{
+		return mat_notexture;
+	}
+
+	// find a free material_t
+	for ( i = 0, material = glmaterials; i < numglmaterials; i++, material++ )
+	{
+		if ( material->image == nullptr )
+			break;
+	}
+	if ( i == numglmaterials )
+	{
+		if ( numglmaterials == MAX_GLMATERIALS )
+			RI_Com_Error( ERR_DROP, "MAX_GLMATERIALS" ); // This can probably just return mat_notexture
+		++numglmaterials;
+	}
+	material = &glmaterials[i];
+	memset( material, 0, sizeof( *material ) );
+
+	Q_strcpy_s( material->name, name );
+	material->image = mat_notexture->image;
+
+	if ( !ParseMaterial( pBuffer, material ) )
+	{
+		return mat_notexture;
+	}
+
+	return material;
+}
+
+material_t *GL_FindMaterial( const char *name, byte *pic, int width, int height )
+{
+	int i;
+	material_t *material;
+
+	assert( name && name[0] );
+
+	// look for it
+	for ( i = 0, material = glmaterials; i < numglmaterials; ++i, ++material )
+	{
+		if ( Q_strcmp( name, material->name ) == 0 )
+		{
+			material->registration_sequence = registration_sequence;
+			return material;
+		}
+	}
+
+	material = GL_CreateMaterial( name );
+
+	return material;
 }
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-image_t *R_RegisterSkin (const char *name)
+material_t *R_RegisterSkin( const char *name )
 {
-	return GL_FindImage (name, it_skin);
+	return GL_FindMaterial( name );
 }
 
 //-------------------------------------------------------------------------------------------------
 // Any image that was not touched on this registration sequence
 // will be freed.
 //-------------------------------------------------------------------------------------------------
-void GL_FreeUnusedImages (void)
+void GL_FreeUnusedImages( void )
 {
-	// never free r_notexture or particle texture
-	r_notexture->registration_sequence = registration_sequence;
-	r_particletexture->registration_sequence = registration_sequence;
+	int i;
+	image_t *image;
 
-	int		i;
-	image_t	*image;
-
-	for (i=0, image=gltextures ; i<numgltextures ; i++, image++)
+	for ( i = 0, image = gltextures; i < numgltextures; i++, image++ )
 	{
-		if (image->registration_sequence == registration_sequence)
+		assert( image->refcount >= 0 );
+		if ( image->refcount == 0 ) {
+			assert( image->texnum <= 0 );
 			continue;		// used this sequence
-		if (!image->registration_sequence)
-			continue;		// free image_t slot
-		if (image->type == it_pic)
+		}
+		if ( image == mat_notexture->image || image == mat_particletexture->image )
+			continue;		// generated texture, delete only at shutdown
+		if ( image->type == it_pic )
 			continue;		// don't free pics
+
 		// free it
-		glDeleteTextures (1, &image->texnum);
-		memset (image, 0, sizeof(*image));
+		glDeleteTextures( 1, &image->texnum );
+		memset( image, 0, sizeof( *image ) );
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+// Any image that was not touched on this registration sequence
+// will be freed.
+//-------------------------------------------------------------------------------------------------
+void GL_FreeUnusedMaterials( void )
+{
+	int i;
+	material_t *material;
+
+	for ( i = 0, material = glmaterials; i < numglmaterials; i++, material++ )
+	{
+		if ( material->registration_sequence == registration_sequence )
+			continue;		// used this sequence
+		if ( material == mat_notexture || material == mat_particletexture )
+			continue;		// generated material, delete only at shutdown
+		if ( material->registration_sequence == 0 )
+			continue;		// free image_t slot
+
+		// Decrement refcount
+		assert( material->image->refcount > 0 );
+		--material->image->refcount;
+		memset( material, 0, sizeof( *material ) );
 	}
 }
 
@@ -678,7 +952,6 @@ static void GL_GetPalette (void)
 //-------------------------------------------------------------------------------------------------
 static void GL_BuildGammaTable( float gamma, int overbright )
 {
-#if 1
 	int i, inf;
 
 	for ( i = 0; i < 256; ++i )
@@ -693,28 +966,6 @@ static void GL_BuildGammaTable( float gamma, int overbright )
 
 		g_gammatable[i] = static_cast<byte>( inf );
 	}
-#else
-	int i, inf;
-
-	int shift = 2;
-
-	for ( i = 0; i < 256; i++ ) {
-		if ( gamma == 1 ) {
-			inf = i;
-		}
-		else {
-			inf = static_cast<int>( 255 * pow( i / 255.0f, 1.0f / gamma ) + 0.5f );
-		}
-		inf <<= shift;
-		if ( inf < 0 ) {
-			inf = 0;
-		}
-		if ( inf > 255 ) {
-			inf = 255;
-		}
-		g_gammatable[i] = inf;
-	}
-#endif
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -735,23 +986,21 @@ static const byte particletexture[8][8]{
 };
 
 static const byte missingtexture[8][8]{
-	{1,0,1,0,1,0,1,0},
-	{0,1,0,1,0,1,0,1},
-	{1,0,1,0,1,0,1,0},
-	{0,1,0,1,0,1,0,1},
-	{1,0,1,0,1,0,1,0},
-	{0,1,0,1,0,1,0,1},
-	{1,0,1,0,1,0,1,0},
-	{0,1,0,1,0,1,0,1}
+	{1,1,0,0,1,1,0,0},
+	{1,1,0,0,1,1,0,0},
+	{0,0,1,1,0,0,1,1},
+	{0,0,1,1,0,0,1,1},
+	{1,1,0,0,1,1,0,0},
+	{1,1,0,0,1,1,0,0},
+	{0,0,1,1,0,0,1,1},
+	{0,0,1,1,0,0,1,1}
 };
-
-image_t *r_notexture;			// use for bad textures
-image_t *r_particletexture;		// little dot for particles
 
 static void R_InitParticleTexture(void)
 {
-	int		x, y;
-	byte	data[8][8][4];
+	int x, y;
+	byte data[8][8][4];
+	image_t *img;
 
 	//
 	// particle texture
@@ -766,7 +1015,8 @@ static void R_InitParticleTexture(void)
 			data[y][x][3] = particletexture[x][y] * 255;
 		}
 	}
-	r_particletexture = GL_CreateImage("***particle***", (byte *)data, 8, 8, it_sprite);
+	img = GL_CreateImage("***particle***", (byte *)data, 8, 8, it_sprite);
+	mat_particletexture = GL_CreateMaterialFromData( "***particle***", img );
 
 	//
 	// also use this for bad textures, but without alpha
@@ -777,11 +1027,12 @@ static void R_InitParticleTexture(void)
 		{
 			data[y][x][0] = missingtexture[x][y] * 255;
 			data[y][x][1] = 0;
-			data[y][x][2] = missingtexture[x][y] * 255;;
+			data[y][x][2] = missingtexture[x][y] * 255;
 			data[y][x][3] = 255;
 		}
 	}
-	r_notexture = GL_CreateImage("***r_notexture***", (byte *)data, 8, 8, it_pic);
+	img = GL_CreateImage("***r_notexture***", (byte *)data, 8, 8, it_pic);
+	mat_notexture = GL_CreateMaterialFromData( "***r_notexture***", img );
 	// We upload as a pic, but we don't want clamping! Set it here
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -806,16 +1057,33 @@ void GL_InitImages(void)
 //-------------------------------------------------------------------------------------------------
 void GL_ShutdownImages (void)
 {
-	int		i;
-	image_t	*image;
+	int i;
+	material_t *material;
+	image_t *image;
 
-	for (i=0, image=gltextures ; i<numgltextures ; i++, image++)
+	// Clear our generated materials
+	mat_particletexture->DerefAndClear();
+
+	// Clear materials
+	for ( i = 0, material = glmaterials; i < numglmaterials; ++i, ++material )
 	{
-		if (image->registration_sequence == 0)
-			continue;		// free image_t slot
-		// free it
-		glDeleteTextures (1, &image->texnum);
-		memset (image, 0, sizeof(*image));
+		if ( material->image == nullptr )
+			continue; // Free slot
+
+		// Decrement refcount
+		assert( material->image->refcount > 0 );
+		--material->image->refcount;
+		memset( material, 0, sizeof( *material ) );
+	}
+
+	// Clear textures
+	for ( i = 0, image = gltextures; i < numgltextures; ++i, ++image )
+	{
+		assert( image->refcount == 0 );
+
+		// Free image
+		glDeleteTextures( 1, &image->texnum );
+		memset( image, 0, sizeof( *image ) );
 	}
 }
 

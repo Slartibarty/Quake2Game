@@ -454,17 +454,11 @@ void Mod_LoadTexinfo (lump_t *l)
 		else
 		    out->next = NULL;
 
-		// Maybe replace this with a texture-agnostic check in GL_FindImage?
-		Q_sprintf_s( name, "textures/%s.tga", in->texture );
-		out->image = GL_FindImage( name, it_wall );
-		if ( out->image == r_notexture )
+		Q_sprintf_s( name, "materials/%s.mat", in->texture );
+		out->material = GL_FindMaterial( name );
+		if ( out->material == mat_notexture )
 		{
-			Q_sprintf_s( name, "textures/%s.wal", in->texture );
-			out->image = GL_FindImage( name, it_wall );
-			if ( out->image == r_notexture )
-			{
-				RI_Com_Printf( "Couldn't load %s\n", name );
-			}
+			RI_Com_Printf( "Couldn't load %s\n", name );
 		}
 	}
 
@@ -1024,8 +1018,7 @@ void Mod_LoadAliasModel (model_t *mod, void *buffer)
 		pheader->num_skins*MAX_SKINNAME);
 	for (i=0 ; i<pheader->num_skins ; i++)
 	{
-		mod->skins[i] = GL_FindImage ((char *)pheader + pheader->ofs_skins + i*MAX_SKINNAME
-			, it_skin);
+		mod->skins[i] = GL_FindMaterial( (char *)pheader + pheader->ofs_skins + i * MAX_SKINNAME );
 	}
 
 	mod->mins[0] = -32;
@@ -1068,8 +1061,8 @@ void Mod_LoadStudioModel( model_t *mod, void *buffer )
 		{
 			// strcpy( name, mod->name );
 			// strcpy( name, ptexture[i].name );
-			mod->skins[i] = GL_FindImage( ptexture[i].name, it_skin, (byte *)phdr + ptexture[i].index, ptexture[i].width, ptexture[i].height );
-			ptexture[i].index = mod->skins[i]->texnum;
+			mod->skins[i] = GL_FindMaterial( ptexture[i].name, (byte *)phdr + ptexture[i].index, ptexture[i].width, ptexture[i].height );
+			ptexture[i].index = mod->skins[i]->image->texnum;
 		}
 	}
 
@@ -1120,8 +1113,7 @@ void Mod_LoadSpriteModel (model_t *mod, void *buffer)
 		sprout->frames[i].origin_x = LittleLong (sprin->frames[i].origin_x);
 		sprout->frames[i].origin_y = LittleLong (sprin->frames[i].origin_y);
 		memcpy (sprout->frames[i].name, sprin->frames[i].name, MAX_SKINNAME);
-		mod->skins[i] = GL_FindImage (sprout->frames[i].name,
-			it_sprite);
+		mod->skins[i] = GL_FindMaterial (sprout->frames[i].name);
 	}
 
 	mod->type = mod_sprite;
@@ -1183,13 +1175,13 @@ model_t *R_RegisterModel (const char *name)
 		{
 			sprout = (dsprite_t *)mod->extradata;
 			for (i=0 ; i<sprout->numframes ; i++)
-				mod->skins[i] = GL_FindImage (sprout->frames[i].name, it_sprite);
+				mod->skins[i] = GL_FindMaterial (sprout->frames[i].name);
 		}
 		else if (mod->type == mod_alias)
 		{
 			pheader = (dmdl_t *)mod->extradata;
 			for (i=0 ; i<pheader->num_skins ; i++)
-				mod->skins[i] = GL_FindImage ((char *)pheader + pheader->ofs_skins + i*MAX_SKINNAME, it_skin);
+				mod->skins[i] = GL_FindMaterial ((char *)pheader + pheader->ofs_skins + i*MAX_SKINNAME);
 //PGM
 			mod->numframes = pheader->num_frames;
 //PGM
@@ -1204,7 +1196,7 @@ model_t *R_RegisterModel (const char *name)
 			if ( pstudio->textureindex != 0 )
 			{
 				for ( i = 0; i < pstudio->numtextures; i++ ) {
-					mod->skins[i] = GL_FindImage( ptexture->name, it_skin );
+					mod->skins[i] = GL_FindMaterial( ptexture->name );
 				}
 			}
 //PGM
@@ -1214,7 +1206,7 @@ model_t *R_RegisterModel (const char *name)
 		else if (mod->type == mod_brush)
 		{
 			for (i=0 ; i<mod->numtexinfo ; i++)
-				mod->texinfo[i].image->registration_sequence = registration_sequence;
+				mod->texinfo[i].material->registration_sequence = registration_sequence;
 		}
 	}
 	return mod;

@@ -426,10 +426,12 @@ void FS_Read( void *buffer, int len, FILE *f )
 // Filename are relative to the quake search path
 // a null buffer will just return the file length without loading
 //-------------------------------------------------------------------------------------------------
-int FS_LoadFile( const char *path, void **buffer )
+int FS_LoadFile( const char *path, void **buffer, int extradata )
 {
 	FILE *h;
 	int len;
+
+	assert( extradata >= 0 );
 
 	// look for it in the filesystem or pack files
 	len = FS_FOpenFile( path, &h );
@@ -443,16 +445,19 @@ int FS_LoadFile( const char *path, void **buffer )
 	if ( !buffer )
 	{
 		FS_FCloseFile( h );
+		assert( extradata == 0 ); // Shouldn't have extradata specified if we don't have a buffer
 		return len;
 	}
 
-	*buffer = Z_Malloc( len );
+	*buffer = Z_Malloc( len + extradata );
 
 	FS_Read( *buffer, len, h );
 
+	memset( (byte *)*buffer + len, 0, extradata );
+
 	FS_FCloseFile( h );
 
-	return len;
+	return len + extradata;
 }
 
 //-------------------------------------------------------------------------------------------------

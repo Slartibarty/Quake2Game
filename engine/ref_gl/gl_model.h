@@ -59,7 +59,7 @@ struct mtexinfo_t
 	int			flags;
 	int			numframes;
 	mtexinfo_t	*next;		// animation chain
-	image_t		*image;
+	material_t	*material;
 };
 
 #define	VERTEXSIZE	7
@@ -216,7 +216,7 @@ struct model_t
 	byte		*lightdata;
 
 	// for alias models and skins
-	image_t		*skins[MAX_MD2SKINS];
+	material_t	*skins[MAX_MD2SKINS];
 
 	int			extradatasize;
 	void		*extradata;

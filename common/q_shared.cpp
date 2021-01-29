@@ -26,7 +26,7 @@ void COM_FileBase( const char *in, char *out )
 
 	// Scan backwards for the extension
 	end = len - 1;
-	for ( ; end >= 0 && in[end] != '.' && !Q_IsPathSeparator( in[end] ); --end )
+	for ( ; end >= 0 && in[end] != '.' && !COM_IsPathSeparator( in[end] ); --end )
 		;
 
 	// No extension?
@@ -37,10 +37,10 @@ void COM_FileBase( const char *in, char *out )
 
 	// Scan backwards for the last slash
 	start = len - 1;
-	for ( ; start >= 0 && !Q_IsPathSeparator( in[start] ); --start )
+	for ( ; start >= 0 && !COM_IsPathSeparator( in[start] ); --start )
 		;
 
-	if ( start < 0 || !Q_IsPathSeparator( in[start] ) )
+	if ( start < 0 || !COM_IsPathSeparator( in[start] ) )
 		start = 0;
 	else
 		++start;
@@ -148,6 +148,91 @@ skipwhite:
 
 	*data_p = data;
 	return com_token;
+}
+
+//-------------------------------------------------------------------------------------------------
+// Parse a token out of a string (version 2, no global variables)
+//-------------------------------------------------------------------------------------------------
+void COM_Parse2( char **data_p, char **token_p, int tokenlen )
+{
+	int		c;
+	int		len;
+	char	*data;
+	char	*token;
+
+	data = *data_p;
+	token = *token_p;
+	len = 0;
+
+	if ( !data )
+	{
+		*data_p = NULL;
+		token[0] = '\0';
+		return;
+	}
+
+// skip whitespace
+skipwhite:
+	while ( ( c = *data ) <= ' ' )
+	{
+		if ( c == 0 )
+		{
+			*data_p = NULL;
+			token[0] = '\0';
+			return;
+		}
+		data++;
+	}
+
+// skip // comments
+	if ( c == '/' && data[1] == '/' )
+	{
+		while ( *data && *data != '\n' )
+			data++;
+		goto skipwhite;
+	}
+
+// handle quoted strings specially
+	if ( c == '\"' )
+	{
+		data++;
+		while ( 1 )
+		{
+			c = *data++;
+			if ( c == '\"' || !c )
+			{
+				token[len] = 0;
+				*data_p = data;
+				return;
+			}
+			if ( len < tokenlen )
+			{
+				token[len] = c;
+				len++;
+			}
+		}
+	}
+
+// parse a regular word
+	do
+	{
+		if ( len < tokenlen )
+		{
+			token[len] = c;
+			len++;
+		}
+		data++;
+		c = *data;
+	} while ( c > 32 );
+
+	if ( len == tokenlen )
+	{
+	//	Com_Printf ("Token exceeded %i chars, discarded.\n", MAX_TOKEN_CHARS);
+		len = 0;
+	}
+	token[len] = 0;
+
+	*data_p = data;
 }
 
 //-------------------------------------------------------------------------------------------------
