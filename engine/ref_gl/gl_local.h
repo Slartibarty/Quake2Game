@@ -81,7 +81,8 @@ void		GL_ImageList_f(void);
 material_t	*GL_FindMaterial( const char *name, byte *pic = nullptr, int width = 0, int height = 0 );
 material_t	*R_RegisterSkin(const char *name);
 
-void		GL_FreeUnusedImages(void);
+//void		GL_FreeUnusedImages(void);
+void		GL_FreeUnusedMaterials(void);
 
 void		GL_InitImages(void);
 void		GL_ShutdownImages(void);
@@ -113,7 +114,8 @@ using imageflags_t = uint8;
 #define IF_NOMIPS		1	// Do not use or generate mipmaps (infers no anisotropy)
 #define IF_NOANISO		2	// Do not use anisotropic filtering (only applies to mipmapped images)
 #define IF_NEAREST		4	// Use nearest filtering (as opposed to linear filtering)
-#define IF_CLAMP		8	// Clamp to edge
+#define IF_CLAMPS		8	// Clamp to edge (S)
+#define IF_CLAMPT		16	// Clamp to edge (T)
 
 struct image_t
 {
@@ -125,7 +127,23 @@ struct image_t
 	float				sl, tl, sh, th;				// 0,0 - 1,1 unless part of the scrap
 	bool				scrap;						// true if this is part of a larger sheet
 
-	void DecrementRefCount() { --refcount; assert( refcount >= 0 ); }
+	void IncrementRefCount()
+	{
+		assert( refcount >= 0 );
+		++refcount;
+	}
+
+	void DecrementRefCount()
+	{
+		--refcount;
+		assert( refcount >= 0 );
+	}
+
+	void Delete()
+	{
+		glDeleteTextures( 1, &texnum );
+		memset( this, 0, sizeof( *this ) );
+	}
 };
 
 struct msurface_t;
@@ -154,17 +172,25 @@ struct material_t
 	void Bind()
 	{
 		//assert( image->refcount > 0 );
-		sizeof( image_t );
 		GL_Bind( image->texnum );
 	}
 
 	// Deference the referenced image and clear this struct
-	void DerefAndClear()
+	void Delete()
 	{
 		image->DecrementRefCount();
+		if ( image->refcount == 0 ) {
+			// Save time in FreeUnusedImages
+			image->Delete();
+		}
 		memset( this, 0, sizeof( *this ) );
 	}
 };
+
+namespace ImageLoaders
+{
+	byte *LoadWAL( const byte *pBuffer, int nBufLen, int &width, int &height );
+}
 
 //-------------------------------------------------------------------------------------------------
 // gl_main.cpp

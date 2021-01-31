@@ -6,7 +6,7 @@
 
 static constexpr auto ConChars_Name = "materials/pics/conchars" MAT_EXT;
 
-static material_t *draw_chars;
+material_t *draw_chars;
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
@@ -16,7 +16,7 @@ void Draw_InitLocal( void )
 	draw_chars = GL_FindMaterial( ConChars_Name );
 	if ( !draw_chars->IsOkay() ) {
 		// This is super aggressive, but it easily warns about bad game folders
-		RI_Com_Error( ERR_FATAL, "Could not get console font: %s", ConChars_Name );
+		RI_Com_Printf( "Could not get console font: %s", ConChars_Name );
 	}
 }
 
@@ -308,7 +308,7 @@ void Draw_StretchRaw( int x, int y, int w, int h, int cols, int rows, byte *data
 	glVertex2i( x, y + h );
 	glEnd();
 
-	glBindTexture( GL_TEXTURE_2D, 0 );
+	GL_Bind( 0 );
 
 	// Delete frame
 	glDeleteTextures( 1, &id );

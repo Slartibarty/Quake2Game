@@ -284,7 +284,7 @@ void GL_UpgradeWals_f( void )
 	char		folder[MAX_OSPATH];
 	const char	*str;
 
-	Q_sprintf_s( folder, "%s/%s", RI_FS_Gamedir(), RI_Cmd_Argv( 1 ) );
+	Q_sprintf_s( folder, "%s/%s/*", RI_FS_Gamedir(), RI_Cmd_Argv( 1 ) );
 
 	str = Sys_FindFirst( folder, 0, 0 );
 	if ( !str ) {
@@ -299,8 +299,30 @@ void GL_UpgradeWals_f( void )
 			continue;
 		RI_Com_Printf( "Upgrading %s\n", str );
 
+		FILE *handle = fopen( str, "rb" );
+
+		fseek( handle, 0, SEEK_END );
+		int length = ftell( handle );
+		fseek( handle, 0, SEEK_SET );
+
+		byte *file = (byte *)malloc( length );
+
+		fread( file, 1, length, handle );
+
+		fclose( handle );
+
+		int width, height;
+		byte *data = ImageLoaders::LoadWAL( file, length, width, height );
+		free( file );
+
+		char tempname[MAX_QPATH];
+		Q_strcpy_s( tempname, str );
+		strcpy( strstr( tempname, ".wal" ), ".tga" );
+
+		stbi_write_tga( tempname, width, height, 4, data );
+
+		free( data );
 	}
 
 	Sys_FindClose();
-
 }

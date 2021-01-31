@@ -734,7 +734,7 @@ void R_DrawAliasModel (entity_t *e)
 	}
 	if (!skin)
 		skin = mat_notexture;	// fallback...
-	GL_Bind(skin->image->texnum);
+	skin->Bind();
 
 	// draw it
 

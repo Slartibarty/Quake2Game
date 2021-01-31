@@ -374,8 +374,8 @@ void R_RenderBrushPoly (msurface_t *fa)
 	mat = R_TextureAnimation (fa->texinfo);
 
 	if (fa->flags & SURF_DRAWTURB)
-	{	
-		GL_Bind( mat->image->texnum );
+	{
+		mat->Bind();
 
 		// warp texture, no lightmaps
 		GL_TexEnv( GL_MODULATE );
@@ -388,7 +388,7 @@ void R_RenderBrushPoly (msurface_t *fa)
 	}
 	else
 	{
-		GL_Bind( mat->image->texnum );
+		mat->Bind();
 
 		GL_TexEnv( GL_REPLACE );
 	}
@@ -485,7 +485,7 @@ void R_DrawAlphaSurfaces (void)
 
 	for (s=r_alpha_surfaces ; s ; s=s->texturechain)
 	{
-		GL_Bind(s->texinfo->material->image->texnum);
+		s->texinfo->material->Bind();
 		c_brush_polys++;
 		if (s->texinfo->flags & SURF_TRANS33)
 			glColor4f (1.0f,1.0f,1.0f,0.33f);

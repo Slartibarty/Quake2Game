@@ -324,8 +324,8 @@ void FS_Init()
 	fs_base_searchpaths = fs_searchpaths;
 
 	// check for game override
-	fs_gamedirvar = Cvar_Get( "game", "", CVAR_LATCH | CVAR_SERVERINFO );
-	if ( fs_gamedirvar->string[0] )
+	fs_gamedirvar = Cvar_Get( "game", BASEDIRNAME, CVAR_LATCH | CVAR_SERVERINFO );
+	if ( Q_strcmp( fs_gamedirvar->string, BASEDIRNAME ) != 0 )
 		FS_SetGamedir( fs_gamedirvar->string, false );
 }
 
@@ -550,7 +550,6 @@ void FS_SetGamedir( const char *dir, bool flush )
 //-------------------------------------------------------------------------------------------------
 const char *FS_Gamedir()
 {
-	assert( strcmp( fs_gamedir, "./slartq2" ) == 0 );
 	return *fs_gamedir ? fs_gamedir : BASEDIRNAME;
 }
 

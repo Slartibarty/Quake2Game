@@ -190,7 +190,7 @@ void R_DrawSpriteModel (entity_t *e)
 
 	glColor4f( 1, 1, 1, alpha );
 
-    GL_Bind(currentmodel->skins[e->frame]->image->texnum);
+	currentmodel->skins[e->frame]->Bind();
 
 	GL_TexEnv( GL_MODULATE );
 
@@ -382,7 +382,8 @@ void GL_DrawParticles( int num_particles, const particle_t particles[], const un
 	float			scale;
 	byte			color[4];
 
-    GL_Bind(mat_particletexture->image->texnum);
+	mat_particletexture->Bind();
+
 	glDepthMask( GL_FALSE );		// no z buffering
 	glEnable( GL_BLEND );
 	GL_TexEnv( GL_MODULATE );

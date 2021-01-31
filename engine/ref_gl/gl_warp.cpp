@@ -540,7 +540,7 @@ static void MakeSkyVec(float s, float t, int axis)
 R_DrawSkyBox
 ==============
 */
-static constexpr int skytexorder[6]{ 0,2,1,3,4,5 };
+static const int skytexorder[6]{ 0,2,1,3,4,5 };
 void R_DrawSkyBox(void)
 {
 	int		i;
@@ -573,7 +573,7 @@ void R_DrawSkyBox(void)
 			|| skymins[1][i] >= skymaxs[1][i])
 			continue;
 
-		GL_Bind(sky_images[skytexorder[i]]->image->texnum);
+		sky_images[skytexorder[i]]->Bind();
 
 		glBegin(GL_QUADS);
 		MakeSkyVec(skymins[0][i], skymins[1][i], i);

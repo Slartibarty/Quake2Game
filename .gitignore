@@ -3,6 +3,9 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# Quake2Game
+utils/fastmat/fastmat.exe
+
 # User-specific files
 *.rsuser
 *.suo

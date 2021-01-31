@@ -434,10 +434,12 @@ static GLuint GL_Upload32( const byte *pData, int nWidth, int nHeight, imageflag
 	}
 
 	// Clamp
-	// TODO: Separate flags for S and T?
-	if ( GLEW_EXT_texture_edge_clamp && ( flags & IF_CLAMP ) )
+	if ( GLEW_EXT_texture_edge_clamp && ( flags & IF_CLAMPS ) )
 	{
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE_EXT );
+	}
+	if ( GLEW_EXT_texture_edge_clamp && ( flags & IF_CLAMPT ) )
+	{
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE_EXT );
 	}
 
@@ -591,6 +593,7 @@ image_t	*GL_FindImage (const char *name, imageflags_t flags, byte *pic = nullptr
 	//
 	pic = GL_LoadImage( name, width, height );
 	if ( !pic ) {
+		mat_notexture->image->IncrementRefCount();
 		return mat_notexture->image;
 	}
 
@@ -705,7 +708,7 @@ bool ParseMaterial( char *data, material_t *material )
 		{
 			COM_Parse2( &data, &token, sizeof( tokenhack ) );
 			material->nextframe = GL_FindMaterial( token );
-			if ( material->nextframe == mat_notexture ) // minor SlartHack
+			if ( material->nextframe == mat_notexture ) // SLARTHACK: THIS IS REALLY BAD!!! REFCOUNT!!!
 			{
 				material->nextframe = nullptr;
 			}
@@ -735,6 +738,24 @@ bool ParseMaterial( char *data, material_t *material )
 			if ( atoi( token ) )
 			{
 				flags |= IF_NEAREST;
+			}
+			continue;
+		}
+		if ( Q_strcmp( token, "$clamps" ) == 0 )
+		{
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
+			if ( atoi( token ) )
+			{
+				flags |= IF_CLAMPS;
+			}
+			continue;
+		}
+		if ( Q_strcmp( token, "$clampt" ) == 0 )
+		{
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
+			if ( atoi( token ) )
+			{
+				flags |= IF_CLAMPT;
 			}
 			continue;
 		}
@@ -847,6 +868,11 @@ material_t *GL_FindMaterial( const char *name, byte *pic, int width, int height 
 
 	assert( name && name[0] );
 
+	if ( !strstr( name, ".mat" ) )
+	{
+		return mat_notexture;
+	}
+
 	// look for it
 	for ( i = 0, material = glmaterials; i < numglmaterials; ++i, ++material )
 	{
@@ -866,9 +892,11 @@ material_t *GL_FindMaterial( const char *name, byte *pic, int width, int height 
 //-------------------------------------------------------------------------------------------------
 material_t *R_RegisterSkin( const char *name )
 {
-	return GL_FindMaterial( name );
+	// No
+	return mat_notexture;
 }
 
+#if 0
 //-------------------------------------------------------------------------------------------------
 // Any image that was not touched on this registration sequence
 // will be freed.
@@ -880,19 +908,16 @@ void GL_FreeUnusedImages( void )
 
 	for ( i = 0, image = gltextures; i < numgltextures; i++, image++ )
 	{
-		assert( image->refcount >= 0 );
-		if ( image->refcount == 0 ) {
-			assert( image->texnum <= 0 );
+		if ( image->refcount != 0 )
 			continue;		// used this sequence
-		}
+
 		if ( image == mat_notexture->image || image == mat_particletexture->image )
 			continue;		// generated texture, delete only at shutdown
 
-		// free it
-		glDeleteTextures( 1, &image->texnum );
-		memset( image, 0, sizeof( *image ) );
+		image->Delete();
 	}
 }
+#endif
 
 //-------------------------------------------------------------------------------------------------
 // Any image that was not touched on this registration sequence
@@ -905,17 +930,14 @@ void GL_FreeUnusedMaterials( void )
 
 	for ( i = 0, material = glmaterials; i < numglmaterials; i++, material++ )
 	{
-		if ( material->registration_sequence == registration_sequence )
-			continue;		// used this sequence
 		if ( material == mat_notexture || material == mat_particletexture )
 			continue;		// generated material, delete only at shutdown
+		if ( material->registration_sequence == registration_sequence )
+			continue;		// used this sequence
 		if ( material->registration_sequence == 0 )
 			continue;		// free image_t slot
 
-		// Decrement refcount
-		assert( material->image->refcount > 0 );
-		--material->image->refcount;
-		memset( material, 0, sizeof( *material ) );
+		material->Delete();
 	}
 }
 
@@ -1009,7 +1031,7 @@ static void R_InitParticleTexture(void)
 			data[y][x][3] = particletexture[x][y] * 255;
 		}
 	}
-	img = GL_CreateImage("***particle***", (byte *)data, 8, 8, IF_NOANISO | IF_CLAMP);
+	img = GL_CreateImage("***particle***", (byte *)data, 8, 8, IF_NOANISO | IF_CLAMPS | IF_CLAMPT);
 	mat_particletexture = GL_CreateMaterialFromData( "***particle***", img );
 
 	//
@@ -1056,7 +1078,10 @@ void GL_ShutdownImages (void)
 	image_t *image;
 
 	// Clear our generated materials
-	mat_particletexture->DerefAndClear();
+	extern material_t *draw_chars;
+	draw_chars->Delete();
+	mat_particletexture->Delete();
+	mat_notexture->Delete();
 
 	// Clear materials
 	for ( i = 0, material = glmaterials; i < numglmaterials; ++i, ++material )
@@ -1065,20 +1090,17 @@ void GL_ShutdownImages (void)
 			continue; // Free slot
 
 		// Decrement refcount
-		assert( material->image->refcount > 0 );
-		--material->image->refcount;
-		memset( material, 0, sizeof( *material ) );
+		material->Delete();
 	}
 
-	// Clear textures
-	for ( i = 0, image = gltextures; i < numgltextures; ++i, ++image )
+	// Images are dereferenced by the material when their refcount reaches 0
+	// Go through every single material for security
+#ifdef Q_DEBUG
+	for ( i = 0, image = gltextures; i < MAX_GLTEXTURES; ++i, ++image )
 	{
-		assert( image->refcount == 0 );
-
-		// Free image
-		glDeleteTextures( 1, &image->texnum );
-		memset( image, 0, sizeof( *image ) );
+		assert( image->refcount == 0 && image->texnum == 0 );
 	}
+#endif
 }
 
 //-------------------------------------------------------------------------------------------------

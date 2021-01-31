@@ -1234,7 +1234,7 @@ void R_EndRegistration (void)
 		}
 	}
 
-	GL_FreeUnusedImages ();
+	GL_FreeUnusedMaterials ();
 }
 
 
