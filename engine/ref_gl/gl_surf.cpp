@@ -242,7 +242,7 @@ void R_BlendLightmaps (void)
 	{
 		glEnable(GL_BLEND);
 
-		if (gl_saturatelighting->value)
+		if (gl_overbright->value)
 		{
 			glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
 		}

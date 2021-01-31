@@ -89,9 +89,8 @@ cvar_t	*gl_clear;
 cvar_t	*gl_cull;
 cvar_t	*gl_polyblend;
 cvar_t	*gl_flashblend;
-cvar_t  *gl_saturatelighting;
+cvar_t  *gl_overbright;
 cvar_t	*gl_swapinterval;
-cvar_t	*gl_texturemode;
 cvar_t	*gl_lockpvs;
 
 REFEXTERN cvar_t	*vid_fullscreen;
@@ -885,7 +884,6 @@ void R_Register( void )
 	gl_cull = RI_Cvar_Get ("gl_cull", "1", 0);
 	gl_polyblend = RI_Cvar_Get ("gl_polyblend", "1", 0);
 	gl_flashblend = RI_Cvar_Get ("gl_flashblend", "0", 0);
-	gl_texturemode = RI_Cvar_Get( "gl_texturemode", "GL_LINEAR_MIPMAP_LINEAR", CVAR_ARCHIVE );
 	gl_lockpvs = RI_Cvar_Get( "gl_lockpvs", "0", 0 );
 
 	gl_vertex_arrays = RI_Cvar_Get( "gl_vertex_arrays", "0", CVAR_ARCHIVE );
@@ -897,7 +895,7 @@ void R_Register( void )
 
 	gl_swapinterval = RI_Cvar_Get( "gl_swapinterval", "0", CVAR_ARCHIVE );
 
-	gl_saturatelighting = RI_Cvar_Get( "gl_saturatelighting", "1", 0 );
+	gl_overbright = RI_Cvar_Get( "gl_overbright", "1", 0 );
 
 	vid_fullscreen = RI_Cvar_Get( "vid_fullscreen", "0", CVAR_ARCHIVE );
 	vid_gamma = RI_Cvar_Get( "vid_gamma", "1.0", CVAR_ARCHIVE );
@@ -1083,15 +1081,6 @@ void R_BeginFrame( void )
 	** go into 2D mode
 	*/
 	R_SetGL2D();
-
-	/*
-	** texturemode stuff
-	*/
-	if ( gl_texturemode->modified )
-	{
-		GL_TextureMode( gl_texturemode->string );
-		gl_texturemode->modified = false;
-	}
 
 	//
 	// clear screen if desired

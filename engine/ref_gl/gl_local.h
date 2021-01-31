@@ -25,6 +25,8 @@
 
 #define DEFAULT_CLEARCOLOR		0.0f, 0.0f, 0.0f, 1.0f	// Black
 
+#define MAT_EXT ".mat"
+
 //-------------------------------------------------------------------------------------------------
 
 // Convenient return type
@@ -73,7 +75,6 @@ extern material_t	*mat_particletexture;
 
 extern unsigned		d_8to24table[256];
 
-void		GL_TextureMode(char *string);
 void		GL_ImageList_f(void);
 
 //image_t	*GL_FindImage(const char *name, imagetype_t type, byte *pic = nullptr, int width = 0, int height = 0);
@@ -95,21 +96,29 @@ void		GL_TexEnv(GLint value);
 void		GL_Bind(GLuint texnum);
 void		GL_MBind(GLenum target, GLuint texnum);
 
-enum imagetype_t
-{
-	it_skin,
-	it_sprite,
-	it_wall,
-	it_pic,
-	it_sky
-};
+// Image flags
+// Mipmaps are opt-out
+// Anisotropic filtering is opt-out
+// Clamping is opt-in
+//
+// NOTABLE OVERSIGHT:
+// The first material to use an image decides whether an image uses mipmaps or not
+// This may confuse artists who expect a mipmapped texture, when the image was first
+// referenced without them
+// A solution to this problem is to generate mipmaps when required, but only once
+//
+using imageflags_t = uint8;
 
-struct msurface_t;
+#define IF_NONE			0	// Gaben sound pack for FLStudio 6.1
+#define IF_NOMIPS		1	// Do not use or generate mipmaps (infers no anisotropy)
+#define IF_NOANISO		2	// Do not use anisotropic filtering (only applies to mipmapped images)
+#define IF_NEAREST		4	// Use nearest filtering (as opposed to linear filtering)
+#define IF_CLAMP		8	// Clamp to edge
 
 struct image_t
 {
 	char				name[MAX_QPATH];			// game path, including extension
-	imagetype_t			type;
+	imageflags_t		flags;
 	int					width, height;				// source image
 	GLuint				texnum;						// gl texture binding
 	int					refcount;
@@ -118,6 +127,8 @@ struct image_t
 
 	void DecrementRefCount() { --refcount; assert( refcount >= 0 ); }
 };
+
+struct msurface_t;
 
 struct material_t
 {
@@ -143,6 +154,7 @@ struct material_t
 	void Bind()
 	{
 		//assert( image->refcount > 0 );
+		sizeof( image_t );
 		GL_Bind( image->texnum );
 	}
 
@@ -229,8 +241,7 @@ extern	cvar_t	*gl_flashblend;
 extern	cvar_t	*gl_lightmaptype;
 extern	cvar_t	*gl_modulate;
 extern	cvar_t	*gl_swapinterval;
-extern	cvar_t	*gl_texturemode;
-extern  cvar_t  *gl_saturatelighting;
+extern  cvar_t  *gl_overbright;
 extern  cvar_t  *gl_lockpvs;
 
 extern	cvar_t	*vid_fullscreen;

@@ -286,68 +286,12 @@ unsigned	d_8to24table[256];
 
 //-------------------------------------------------------------------------------------------------
 
-struct glmode_t
-{
-	const char *name;
-	GLint minimize, maximize;
-};
-
-static const glmode_t modes[]
-{
-	{"GL_NEAREST", GL_NEAREST, GL_NEAREST},
-	{"GL_LINEAR", GL_LINEAR, GL_LINEAR},
-	{"GL_NEAREST_MIPMAP_NEAREST", GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST},
-	{"GL_LINEAR_MIPMAP_NEAREST", GL_LINEAR_MIPMAP_NEAREST, GL_LINEAR},
-	{"GL_NEAREST_MIPMAP_LINEAR", GL_NEAREST_MIPMAP_LINEAR, GL_NEAREST},
-	{"GL_LINEAR_MIPMAP_LINEAR", GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR}
-};
-
-static constexpr int NUM_GL_MODES = countof(modes);
-
-static GLint gl_filter_min = GL_LINEAR_MIPMAP_LINEAR;
-static GLint gl_filter_max = GL_LINEAR;
-
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-void GL_TextureMode(char *string)
-{
-	int		i;
-	image_t *glt;
-
-	for (i = 0; i < NUM_GL_MODES; i++)
-	{
-		if (!Q_stricmp(modes[i].name, string))
-			break;
-	}
-
-	if (i == NUM_GL_MODES)
-	{
-		RI_Com_Printf("bad filter name\n");
-		return;
-	}
-
-	gl_filter_min = modes[i].minimize;
-	gl_filter_max = modes[i].maximize;
-
-	// change all the existing mipmap texture objects
-	for (i = 0, glt = gltextures; i < numgltextures; i++, glt++)
-	{
-		if (glt->type != it_pic && glt->type != it_sky)
-		{
-			GL_Bind(glt->texnum);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
-		}
-	}
-}
-
-//-------------------------------------------------------------------------------------------------
-
 //-------------------------------------------------------------------------------------------------
 // List textures
 //-------------------------------------------------------------------------------------------------
 void GL_ImageList_f( void )
 {
+#if 0
 	int i;
 	image_t *image;
 	size_t texels;
@@ -387,6 +331,9 @@ void GL_ImageList_f( void )
 	}
 
 	RI_Com_Printf( "Total texel count (not counting mipmaps): %zu\n", texels );
+#else
+	RI_Com_Printf( "NOT IMPLEMENTED!\n" );
+#endif
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -414,72 +361,84 @@ void GL_ImageList_f( void )
 // We want to mipmap walls, skins and sprites, although never
 // 2D pics or skies
 //-------------------------------------------------------------------------------------------------
-static GLuint GL_Upload32 (const byte *pData, int nWidth, int nHeight, imagetype_t eType)
+static GLuint GL_Upload32( const byte *pData, int nWidth, int nHeight, imageflags_t flags )
 {
 	GLuint id;
 
 	// Generate and bind the texture
-	glGenTextures(1, &id);
-	GL_Bind(id);
+	glGenTextures( 1, &id );
+	GL_Bind( id );
 
 	// Upload it
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, nWidth, nHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, pData);
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, nWidth, nHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, pData );
 
-	// Pics and skies should never be mipmapped
-	if (eType != it_pic && eType != it_sky)
+	// Mips
+	if ( !( flags & IF_NOMIPS ) )
 	{
-		if (GLEW_ARB_framebuffer_object)
+		if ( GLEW_ARB_framebuffer_object )
 		{
 			// This sucks
-			glGenerateMipmap(GL_TEXTURE_2D);
+			glGenerateMipmap( GL_TEXTURE_2D );
 		}
 		else
 		{
+			// This sucks even more
 			int nOutWidth = nWidth / 2;
 			int nOutHeight = nHeight / 2;
 			int nLevel = 1;
 
-			byte* pNewData = (byte*)malloc((nOutWidth * nOutHeight) * 4);
+			byte *pNewData = (byte *)malloc( ( nOutWidth * nOutHeight ) * 4 );
 
-			while (nOutWidth > 1 && nOutHeight > 1)
+			while ( nOutWidth > 1 && nOutHeight > 1 )
 			{
-				stbir_resize_uint8(pData, nWidth, nHeight, 0, pNewData, nOutWidth, nOutHeight, 0, 4);
-				glTexImage2D(GL_TEXTURE_2D, nLevel, GL_RGBA8, nOutWidth, nOutHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, pNewData);
+				stbir_resize_uint8( pData, nWidth, nHeight, 0, pNewData, nOutWidth, nOutHeight, 0, 4 );
+				glTexImage2D( GL_TEXTURE_2D, nLevel, GL_RGBA8, nOutWidth, nOutHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, pNewData );
 
 				++nLevel;
 				nOutWidth /= 2;
 				nOutHeight /= 2;
 			}
 
-			free(pNewData);
+			free( pNewData );
 		}
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
-		// Only mipmappable textures should be anisotropic
-		// It's safe to do this because we clamp it in GL_TextureAnisoMode in GL_SetDefaultState
-		// Sprites should never be anisotropically filtered because they always face the player
-		if (GLEW_ARB_texture_filter_anisotropic && eType != it_sprite) {
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, 16.0f);
+		if ( flags & IF_NEAREST )
+		{
+			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR );
+			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 		}
-	}
-	else if (eType == it_pic)
-	{
-		// NEVER filter pics, EVER, it looks like ass
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		else
+		{
+			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+		}
+
+		if ( GLEW_ARB_texture_filter_anisotropic && !( flags & IF_NOANISO ) )
+		{
+			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, 16.0f ); // Don't hardcode this value
+		}
 	}
 	else
 	{
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_max);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
+		// No mips
+		if ( flags & IF_NEAREST )
+		{
+			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+		}
+		else
+		{
+			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+		}
 	}
 
-	// Clamp everything that isn't lit
-	if (GLEW_EXT_texture_edge_clamp && eType != it_wall && eType != it_skin)
+	// Clamp
+	// TODO: Separate flags for S and T?
+	if ( GLEW_EXT_texture_edge_clamp && ( flags & IF_CLAMP ) )
 	{
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE_EXT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE_EXT);
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE_EXT );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE_EXT );
 	}
 
 	return id;
@@ -488,7 +447,7 @@ static GLuint GL_Upload32 (const byte *pData, int nWidth, int nHeight, imagetype
 //-------------------------------------------------------------------------------------------------
 // This is the only function that can create image_t's
 //-------------------------------------------------------------------------------------------------
-static image_t *GL_CreateImage(const char *name, const byte *pic, int width, int height, imagetype_t type)
+static image_t *GL_CreateImage(const char *name, const byte *pic, int width, int height, imageflags_t flags)
 {
 	int			i;
 	image_t		*image;
@@ -512,11 +471,11 @@ static image_t *GL_CreateImage(const char *name, const byte *pic, int width, int
 
 	image->width = width;
 	image->height = height;
-	image->type = type;
+	image->flags = flags;
 
 	// Upload it!
 	// Pics and skies are never mipmapped (they don't need em)
-	image->texnum = GL_Upload32(pic, width, height, type);
+	image->texnum = GL_Upload32(pic, width, height, flags);
 
 	image->sl = 0;
 	image->sh = 1;
@@ -585,7 +544,7 @@ struct rgb_t
 // THIS CHOKES ON TEXTURES WITH THE SAME NAME, STUDIOMODELS CAN HAVE IDENTICAL TEXTURE NAMES THAT ARE
 // DIFFERENT!!! THIS IS BAD!
 //-------------------------------------------------------------------------------------------------
-image_t	*GL_FindImage (const char *name, imagetype_t type, byte *pic = nullptr, int width = 0, int height = 0)
+image_t	*GL_FindImage (const char *name, imageflags_t flags, byte *pic = nullptr, int width = 0, int height = 0)
 {
 	int i, j;
 	image_t *image;
@@ -619,7 +578,7 @@ image_t	*GL_FindImage (const char *name, imagetype_t type, byte *pic = nullptr, 
 			pic32[i+3] = 255; // SlartTodo: Studiomodels can have alphatest transparency
 		}
 		
-		image = GL_CreateImage( name, pic32, width, height, type );
+		image = GL_CreateImage( name, pic32, width, height, flags );
 
 		free( pic32 );
 
@@ -632,10 +591,10 @@ image_t	*GL_FindImage (const char *name, imagetype_t type, byte *pic = nullptr, 
 	//
 	pic = GL_LoadImage( name, width, height );
 	if ( !pic ) {
-		return nullptr;
+		return mat_notexture->image;
 	}
 
-	image = GL_CreateImage( name, pic, width, height, type );
+	image = GL_CreateImage( name, pic, width, height, flags );
 
 	free( pic );
 
@@ -719,6 +678,11 @@ bool ParseMaterial( char *data, material_t *material )
 	char tokenhack[MAX_TOKEN_CHARS];
 	char *token = tokenhack;
 
+	char basetexture[MAX_TOKEN_CHARS]; // For storing off the basetexture for later
+	basetexture[0] = '\0';
+
+	imageflags_t flags = 0;
+
 	COM_Parse2( &data, &token, sizeof( tokenhack ) );
 	if ( token[0] != '{' )
 	{
@@ -734,7 +698,7 @@ bool ParseMaterial( char *data, material_t *material )
 		if ( Q_strcmp( token, "$basetexture" ) == 0 )
 		{
 			COM_Parse2( &data, &token, sizeof( tokenhack ) );
-			material->image = GL_FindImage( token, it_wall );
+			Q_strcpy_s( basetexture, token );
 			continue;
 		}
 		if ( Q_strcmp( token, "$nextframe" ) == 0 )
@@ -744,6 +708,33 @@ bool ParseMaterial( char *data, material_t *material )
 			if ( material->nextframe == mat_notexture ) // minor SlartHack
 			{
 				material->nextframe = nullptr;
+			}
+			continue;
+		}
+		if ( Q_strcmp( token, "$nomips" ) == 0 )
+		{
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
+			if ( atoi( token ) )
+			{
+				flags |= IF_NOMIPS;
+			}
+			continue;
+		}
+		if ( Q_strcmp( token, "$noaniso" ) == 0 )
+		{
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
+			if ( atoi( token ) )
+			{
+				flags |= IF_NOANISO;
+			}
+			continue;
+		}
+		if ( Q_strcmp( token, "$nearestfilter" ) == 0 )
+		{
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
+			if ( atoi( token ) )
+			{
+				flags |= IF_NEAREST;
 			}
 			continue;
 		}
@@ -765,6 +756,11 @@ bool ParseMaterial( char *data, material_t *material )
 			material->value = atoi( token );
 			continue;
 		}
+	}
+
+	if ( basetexture[0] )
+	{
+		material->image = GL_FindImage( basetexture, flags );
 	}
 
 	return true;
@@ -891,8 +887,6 @@ void GL_FreeUnusedImages( void )
 		}
 		if ( image == mat_notexture->image || image == mat_particletexture->image )
 			continue;		// generated texture, delete only at shutdown
-		if ( image->type == it_pic )
-			continue;		// don't free pics
 
 		// free it
 		glDeleteTextures( 1, &image->texnum );
@@ -1015,7 +1009,7 @@ static void R_InitParticleTexture(void)
 			data[y][x][3] = particletexture[x][y] * 255;
 		}
 	}
-	img = GL_CreateImage("***particle***", (byte *)data, 8, 8, it_sprite);
+	img = GL_CreateImage("***particle***", (byte *)data, 8, 8, IF_NOANISO | IF_CLAMP);
 	mat_particletexture = GL_CreateMaterialFromData( "***particle***", img );
 
 	//
@@ -1031,7 +1025,7 @@ static void R_InitParticleTexture(void)
 			data[y][x][3] = 255;
 		}
 	}
-	img = GL_CreateImage("***r_notexture***", (byte *)data, 8, 8, it_pic);
+	img = GL_CreateImage("***r_notexture***", (byte *)data, 8, 8, IF_NONE);
 	mat_notexture = GL_CreateMaterialFromData( "***r_notexture***", img );
 	// We upload as a pic, but we don't want clamping! Set it here
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);

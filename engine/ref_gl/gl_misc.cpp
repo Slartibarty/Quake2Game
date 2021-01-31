@@ -113,8 +113,6 @@ void GL_SetDefaultState(void)
 
 	GL_TexEnv(GL_REPLACE);
 
-	GL_TextureMode(gl_texturemode->string);
-
 	if (GLEW_EXT_point_parameters && gl_ext_pointparameters->value)
 	{
 		float attenuations[3];

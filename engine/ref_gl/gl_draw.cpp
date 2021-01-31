@@ -4,7 +4,7 @@
 
 #include "gl_local.h"
 
-static constexpr auto ConChars_Name = "conchars";
+static constexpr auto ConChars_Name = "materials/pics/conchars" MAT_EXT;
 
 static material_t *draw_chars;
 
@@ -13,7 +13,7 @@ static material_t *draw_chars;
 void Draw_InitLocal( void )
 {
 	// load console characters
-	draw_chars = Draw_FindPic( ConChars_Name );
+	draw_chars = GL_FindMaterial( ConChars_Name );
 	if ( !draw_chars->IsOkay() ) {
 		// This is super aggressive, but it easily warns about bad game folders
 		RI_Com_Error( ERR_FATAL, "Could not get console font: %s", ConChars_Name );
@@ -61,6 +61,7 @@ void Draw_Char( int x, int y, int num )
 
 //-------------------------------------------------------------------------------------------------
 // Input is a filename with no decoration
+// We want to phase this function out eventually
 //-------------------------------------------------------------------------------------------------
 material_t *Draw_FindPic( const char *name )
 {
