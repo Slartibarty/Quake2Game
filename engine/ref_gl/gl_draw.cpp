@@ -16,7 +16,7 @@ void Draw_InitLocal( void )
 	draw_chars = GL_FindMaterial( ConChars_Name );
 	if ( !draw_chars->IsOkay() ) {
 		// This is super aggressive, but it easily warns about bad game folders
-		RI_Com_Printf( "Could not get console font: %s", ConChars_Name );
+		Com_Printf( "Could not get console font: %s", ConChars_Name );
 	}
 }
 
@@ -96,7 +96,7 @@ void Draw_StretchPic( int x, int y, int w, int h, const char *pic )
 	mat = Draw_FindPic( pic );
 	if ( !mat )
 	{
-		RI_Com_Printf( "Can't find pic: %s\n", pic );
+		Com_Printf( "Can't find pic: %s\n", pic );
 		return;
 	}
 
@@ -132,7 +132,7 @@ void Draw_Pic( int x, int y, const char *pic )
 	mat = Draw_FindPic( pic );
 	if ( !mat )
 	{
-		RI_Com_Printf( "Can't find pic: %s\n", pic );
+		Com_Printf( "Can't find pic: %s\n", pic );
 		return;
 	}
 
@@ -164,7 +164,7 @@ void Draw_TileClear( int x, int y, int w, int h, const char *pic )
 	mat = Draw_FindPic( pic );
 	if ( !mat )
 	{
-		RI_Com_Printf( "Can't find pic: %s\n", pic );
+		Com_Printf( "Can't find pic: %s\n", pic );
 		return;
 	}
 
@@ -196,7 +196,7 @@ void Draw_Fill( int x, int y, int w, int h, int c )
 	} color;
 
 	if ( c > 255 )
-		RI_Com_Error( ERR_FATAL, "Draw_Fill: bad color" );
+		Com_Error( ERR_FATAL, "Draw_Fill: bad color" );
 
 	glDisable( GL_TEXTURE_2D );
 

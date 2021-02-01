@@ -158,7 +158,7 @@ static void GLimp_SetWindowSize( int width, int height )
 
 	SetWindowPos( s_glwState.hWnd, NULL, 0, 0, newWidth, newHeight, SWP_NOZORDER | SWP_NOMOVE );
 
-	RI_Vid_NewWindow( width, height );
+	VID_NewWindow( width, height );
 	vid.width = width;
 	vid.height = height;
 }
@@ -178,13 +178,13 @@ static void GLimp_PerformCDS( int width, int height, qboolean fullscreen, qboole
 			.dmPelsHeight = (DWORD)height
 		};
 
-		RI_Com_Printf( "...attempting fullscreen\n" "...calling CDS: " );
+		Com_Printf( "...attempting fullscreen\n" "...calling CDS: " );
 
 		if ( ChangeDisplaySettingsW( &dm, CDS_FULLSCREEN ) == DISP_CHANGE_SUCCESSFUL )
 		{
 			gl_state.fullscreen = true;
 
-			RI_Com_Printf( "ok\n" );
+			Com_Printf( "ok\n" );
 
 			if ( alertWindow )
 			{
@@ -193,16 +193,16 @@ static void GLimp_PerformCDS( int width, int height, qboolean fullscreen, qboole
 		}
 		else
 		{
-			RI_Com_Printf( " failed\n" );
+			Com_Printf( " failed\n" );
 
-			RI_Com_Printf( "...setting windowed mode\n" );
+			Com_Printf( "...setting windowed mode\n" );
 
 			ChangeDisplaySettingsW( 0, 0 );
 		}
 	}
 	else
 	{
-		RI_Com_Printf( "...setting windowed mode\n" );
+		Com_Printf( "...setting windowed mode\n" );
 
 		ChangeDisplaySettingsW( 0, 0 );
 
@@ -374,7 +374,7 @@ static void GLimp_CreateWindow( WNDPROC wndproc, int width, int height, qboolean
 	}
 
 	// let the sound and input subsystems know about the new window
-	RI_Vid_NewWindow( width, height );
+	VID_NewWindow( width, height );
 	vid.width = width;
 	vid.height = height;
 
@@ -447,7 +447,7 @@ void GLimp_SetGamma( byte *red, byte *green, byte *blue )
 	BOOL result = SetDeviceGammaRamp( s_glwState.hDC, table );
 	if ( !result )
 	{
-		RI_Com_Printf( "SetDeviceGammaRamp failed!\n" );
+		Com_Printf( "SetDeviceGammaRamp failed!\n" );
 	}
 }
 
@@ -468,16 +468,16 @@ rserr_t GLimp_SetMode( int *pWidth, int *pHeight, int mode, bool fullscreen )
 {
 	int width, height;
 
-	RI_Com_Printf( "Setting mode %d:", mode );
+	Com_Printf( "Setting mode %d:", mode );
 
-	if ( !RI_Vid_GetModeInfo( &width, &height, mode ) )
+	if ( !VID_GetModeInfo( &width, &height, mode ) )
 	{
-		RI_Com_Printf( " invalid mode\n" );
+		Com_Printf( " invalid mode\n" );
 		*pWidth = 0; *pHeight = 0;
 		return rserr_invalid_mode;
 	}
 
-//	RI_Com_Printf( " %d %d %s\n", width, height, (fullscreen ? "FS" : "W"));
+//	Com_Printf( " %d %d %s\n", width, height, (fullscreen ? "FS" : "W"));
 
 	GLimp_PerformCDS( width, height, fullscreen, true );
 
@@ -503,16 +503,16 @@ bool GLimp_Init( void *hinstance, void *wndproc )
 	glewExperimental = GL_TRUE;
 	if ( glewInit() != GLEW_OK && wglewInit() != GLEW_OK )
 	{
-		RI_Com_Printf( "ref_gl::GLimp_Init() - could not load OpenGL bindings\n" );
+		Com_Printf( "ref_gl::GLimp_Init() - could not load OpenGL bindings\n" );
 		return false;
 	}
 
 	GLimp_DestroyDummyWindow( dvars );
 
 	int width, height;
-	if ( !RI_Vid_GetModeInfo( &width, &height, (int)gl_mode->value ) )
+	if ( !VID_GetModeInfo( &width, &height, (int)gl_mode->value ) )
 	{
-		RI_Com_Printf( "ref_gl::GLimp_Init() - invalid mode\n" );
+		Com_Printf( "ref_gl::GLimp_Init() - invalid mode\n" );
 		return false;
 	}
 

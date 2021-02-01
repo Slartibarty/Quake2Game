@@ -23,7 +23,7 @@ void GL_ScreenShot_f(void)
 	FILE		*f;
 
 	// create the scrnshots directory if it doesn't exist
-	Q_sprintf_s (checkname, "%s/scrnshot", RI_FS_Gamedir());
+	Q_sprintf_s (checkname, "%s/scrnshot", FS_Gamedir());
 	Sys_Mkdir (checkname);
 
 // 
@@ -35,7 +35,7 @@ void GL_ScreenShot_f(void)
 	{ 
 		picname[5] = i/10 + '0'; 
 		picname[6] = i%10 + '0'; 
-		Q_sprintf_s (checkname, "%s/scrnshot/%s", RI_FS_Gamedir(), picname);
+		Q_sprintf_s (checkname, "%s/scrnshot/%s", FS_Gamedir(), picname);
 		f = fopen (checkname, "rb");
 		if (!f)
 			break;	// file doesn't exist
@@ -43,7 +43,7 @@ void GL_ScreenShot_f(void)
 	} 
 	if (i==100) 
 	{
-		RI_Com_Printf("SCR_ScreenShot_f: Couldn't create a file\n"); 
+		Com_Printf("SCR_ScreenShot_f: Couldn't create a file\n"); 
 		return;
  	}
 
@@ -73,7 +73,7 @@ void GL_ScreenShot_f(void)
 	fclose (f);
 
 	free (buffer);
-	RI_Com_Printf("Wrote %s\n", picname);
+	Com_Printf("Wrote %s\n", picname);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -81,51 +81,11 @@ void GL_ScreenShot_f(void)
 //-------------------------------------------------------------------------------------------------
 void GL_Strings_f(void)
 {
-	RI_Com_Printf("GL_VENDOR: %s\n", glGetString(GL_VENDOR));
-	RI_Com_Printf("GL_RENDERER: %s\n", glGetString(GL_RENDERER));
-	RI_Com_Printf("GL_VERSION: %s\n", glGetString(GL_VERSION));
-//	RI_Com_Printf("GL_GLSL_VERSION: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
-//	RI_Com_Printf("GL_EXTENSIONS: %s\n", gl_config.extensions_string );
-}
-
-//-------------------------------------------------------------------------------------------------
-// Sets some OpenGL state variables
-// Called once by R_Init
-//-------------------------------------------------------------------------------------------------
-void GL_SetDefaultState(void)
-{
-	glClearColor( DEFAULT_CLEARCOLOR );
-	glCullFace(GL_FRONT);
-	glEnable(GL_TEXTURE_2D);
-
-	glEnable(GL_ALPHA_TEST);
-	glAlphaFunc(GL_GREATER, 0.666f);
-
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_BLEND);
-
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-
-	glShadeModel(GL_FLAT);
-
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	GL_TexEnv(GL_REPLACE);
-
-	if (GLEW_EXT_point_parameters && gl_ext_pointparameters->value)
-	{
-		float attenuations[3];
-
-		attenuations[0] = gl_particle_att_a->value;
-		attenuations[1] = gl_particle_att_b->value;
-		attenuations[2] = gl_particle_att_c->value;
-
-		glEnable(GL_POINT_SMOOTH);
-		glPointParameterfEXT(GL_POINT_SIZE_MIN_EXT, gl_particle_min_size->value);
-		glPointParameterfEXT(GL_POINT_SIZE_MAX_EXT, gl_particle_max_size->value);
-		glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT, attenuations);
-	}
+	Com_Printf("GL_VENDOR: %s\n", glGetString(GL_VENDOR));
+	Com_Printf("GL_RENDERER: %s\n", glGetString(GL_RENDERER));
+	Com_Printf("GL_VERSION: %s\n", glGetString(GL_VERSION));
+	Com_Printf("GL_GLSL_VERSION: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
+//	Com_Printf("GL_EXTENSIONS: %s\n", gl_config.extensions_string );
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -133,24 +93,24 @@ void GL_SetDefaultState(void)
 //-------------------------------------------------------------------------------------------------
 void GL_ExtractWad_f( void )
 {
-	if ( RI_Cmd_Argc() < 3 )
+	if ( Cmd_Argc() < 3 )
 	{
-		RI_Com_Printf( "Usage: <file.wad> <palette.lmp>\n" );
+		Com_Printf( "Usage: <file.wad> <palette.lmp>\n" );
 		return;
 	}
 
 	char wadbase[MAX_QPATH];
-	COM_FileBase( RI_Cmd_Argv( 1 ), wadbase );
+	COM_FileBase( Cmd_Argv( 1 ), wadbase );
 
 	// Create the output folder if it doesn't exist
-	Sys_Mkdir( va( "%s/textures/%s", RI_FS_Gamedir(), wadbase ) );
+	Sys_Mkdir( va( "%s/textures/%s", FS_Gamedir(), wadbase ) );
 
 	FILE *wadhandle;
 
-	wadhandle = fopen( va( "%s/%s", RI_FS_Gamedir(), RI_Cmd_Argv( 2 ) ), "rb" );
+	wadhandle = fopen( va( "%s/%s", FS_Gamedir(), Cmd_Argv( 2 ) ), "rb" );
 	if ( !wadhandle )
 	{
-		RI_Com_Printf( "Couldn't open %s\n", RI_Cmd_Argv( 2 ) );
+		Com_Printf( "Couldn't open %s\n", Cmd_Argv( 2 ) );
 		return;
 	}
 
@@ -159,15 +119,15 @@ void GL_ExtractWad_f( void )
 	if ( fread( palette, 3, 256, wadhandle ) != 256 )
 	{
 		fclose( wadhandle );
-		RI_Com_Printf( "Malformed palette lump\n" );
+		Com_Printf( "Malformed palette lump\n" );
 	}
 
 	fclose( wadhandle );
 
-	wadhandle = fopen( va( "%s/%s", RI_FS_Gamedir(), RI_Cmd_Argv( 1 ) ), "rb" );
+	wadhandle = fopen( va( "%s/%s", FS_Gamedir(), Cmd_Argv( 1 ) ), "rb" );
 	if ( !wadhandle )
 	{
-		RI_Com_Printf( "Couldn't open %s\n", RI_Cmd_Argv( 1 ) );
+		Com_Printf( "Couldn't open %s\n", Cmd_Argv( 1 ) );
 		return;
 	}
 
@@ -176,7 +136,7 @@ void GL_ExtractWad_f( void )
 	if ( fread( &wadheader, sizeof( wadheader ), 1, wadhandle ) != 1 || wadheader.identification != wad2::IDWADHEADER )
 	{
 		fclose( wadhandle );
-		RI_Com_Printf( "Malformed wadfile\n" );
+		Com_Printf( "Malformed wadfile\n" );
 		return;
 	}
 
@@ -188,7 +148,7 @@ void GL_ExtractWad_f( void )
 	{
 		free( wadlumps );
 		fclose( wadhandle );
-		RI_Com_Printf( "Malformed wadfile\n" );
+		Com_Printf( "Malformed wadfile\n" );
 		return;
 	}
 
@@ -225,7 +185,7 @@ void GL_ExtractWad_f( void )
 		free( pic8 );
 
 		char outname[MAX_QPATH];
-		Q_sprintf_s( outname, "%s/textures/%s/%s.tga", RI_FS_Gamedir(), wadbase, wadlumps[i].name );
+		Q_sprintf_s( outname, "%s/textures/%s/%s.tga", FS_Gamedir(), wadbase, wadlumps[i].name );
 
 		char *asterisk;
 		while ( ( asterisk = strchr( outname, '*' ) ) )
@@ -236,12 +196,12 @@ void GL_ExtractWad_f( void )
 
 		if ( stbi_write_tga( outname, miptex.width, miptex.height, 3, pic32 ) == 0 )
 		{
-			RI_Com_Printf( "Failed to write %s\n", outname );
+			Com_Printf( "Failed to write %s\n", outname );
 		}
 
 		free( pic32 );
 
-		Q_sprintf_s( outname, "%s/textures/%s/%s.was", RI_FS_Gamedir(), wadbase, wadlumps[i].name );
+		Q_sprintf_s( outname, "%s/textures/%s/%s.was", FS_Gamedir(), wadbase, wadlumps[i].name );
 
 		while ( ( asterisk = strchr( outname, '*' ) ) )
 		{
@@ -275,20 +235,20 @@ void GL_ExtractWad_f( void )
 //-------------------------------------------------------------------------------------------------
 void GL_UpgradeWals_f( void )
 {
-	if ( RI_Cmd_Argc() < 2 )
+	if ( Cmd_Argc() < 2 )
 	{
-		RI_Com_Printf( "Usage: <folder>\n" );
+		Com_Printf( "Usage: <folder>\n" );
 		return;
 	}
 
 	char		folder[MAX_OSPATH];
 	const char	*str;
 
-	Q_sprintf_s( folder, "%s/%s/*", RI_FS_Gamedir(), RI_Cmd_Argv( 1 ) );
+	Q_sprintf_s( folder, "%s/%s/*", FS_Gamedir(), Cmd_Argv( 1 ) );
 
 	str = Sys_FindFirst( folder, 0, 0 );
 	if ( !str ) {
-		RI_Com_Printf( "No files found in folder\n" );
+		Com_Printf( "No files found in folder\n" );
 		Sys_FindClose();
 		return;
 	}
@@ -297,7 +257,7 @@ void GL_UpgradeWals_f( void )
 	{
 		if ( strstr( str, ".wal" ) == NULL )
 			continue;
-		RI_Com_Printf( "Upgrading %s\n", str );
+		Com_Printf( "Upgrading %s\n", str );
 
 		FILE *handle = fopen( str, "rb" );
 

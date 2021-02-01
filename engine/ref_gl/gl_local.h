@@ -1,12 +1,7 @@
 
 #pragma once
 
-#ifndef REF_HARD_LINKED
-#include "../../common/q_shared.h"
-#include "../shared/q_formats.h"
-#else
 #include "../shared/engine.h"
-#endif
 
 #include "../ref_shared/ref_public.h"
 
@@ -42,8 +37,6 @@ enum rserr_t
 
 #include "gl_model.h"
 
-#define	MAX_LBM_HEIGHT		480		// Unused
-
 #define BACKFACE_EPSILON	0.01f
 
 //-------------------------------------------------------------------------------------------------
@@ -52,8 +45,6 @@ enum rserr_t
 
 void GL_ScreenShot_f(void);
 void GL_Strings_f(void);
-
-void GL_SetDefaultState(void);
 
 void GL_ExtractWad_f( void );
 void GL_UpgradeWals_f( void );
@@ -77,11 +68,9 @@ extern unsigned		d_8to24table[256];
 
 void		GL_ImageList_f(void);
 
-//image_t	*GL_FindImage(const char *name, imagetype_t type, byte *pic = nullptr, int width = 0, int height = 0);
 material_t	*GL_FindMaterial( const char *name, byte *pic = nullptr, int width = 0, int height = 0 );
 material_t	*R_RegisterSkin(const char *name);
 
-//void		GL_FreeUnusedImages(void);
 void		GL_FreeUnusedMaterials(void);
 
 void		GL_InitImages(void);
@@ -215,7 +204,7 @@ extern	int			c_brush_polys, c_alias_polys;
 extern	vec3_t	vup;
 extern	vec3_t	vpn;
 extern	vec3_t	vright;
-extern	vec3_t	r_origin;
+extern	vec3_t	r_origin; // same as vec3_origin
 
 //
 // screen size info
@@ -334,18 +323,6 @@ void	Draw_FadeScreen (void);
 void	Draw_StretchRaw (int x, int y, int w, int h, int cols, int rows, byte *data);
 
 //-------------------------------------------------------------------------------------------------
-// TODO
-//-------------------------------------------------------------------------------------------------
-
-void	R_BeginFrame( void );
-void	R_SetPalette ( const unsigned char *palette);
-
-//-------------------------------------------------------------------------------------------------
-// GL extension emulation functions
-//-------------------------------------------------------------------------------------------------
-void GL_DrawParticles( int num_particles, const particle_t particles[], const unsigned colortable[768] );
-
-//-------------------------------------------------------------------------------------------------
 
 struct glconfig_t
 {
@@ -371,16 +348,6 @@ extern glconfig_t	gl_config;
 extern glstate_t	gl_state;
 
 //-------------------------------------------------------------------------------------------------
-// Imported functions
-//-------------------------------------------------------------------------------------------------
-
-#ifndef REF_HARD_LINKED
-
-extern refimport_t ri;		// gl_main.cpp
-
-#endif
-
-//-------------------------------------------------------------------------------------------------
 // Implementation specific functions
 //-------------------------------------------------------------------------------------------------
 
@@ -402,43 +369,7 @@ void		GLimp_AppActivate( bool active );
 // This allows us to use the same names for both static links and dynamic links
 // We could also use forceinline functions
 //-------------------------------------------------------------------------------------------------
-#ifndef REF_HARD_LINKED
-
-#define RI_Com_Error			ri.Sys_Error
-#define RI_Cmd_AddCommand		ri.Cmd_AddCommand
-#define RI_Cmd_RemoveCommand	ri.Cmd_RemoveCommand
-#define RI_Cmd_Argc				ri.Cmd_Argc
-#define RI_Cmd_Argv				ri.Cmd_Argv
-#define RI_Con_Printf			ri.Con_Printf
-#define RI_FS_LoadFile			ri.FS_LoadFile
-#define RI_FS_FreeFile			ri.FS_FreeFile
-#define RI_FS_Gamedir			ri.FS_Gamedir
-#define RI_Cvar_Get				ri.Cvar_Get
-#define RI_Cvar_Set				ri.Cvar_Set
-#define RI_Cvar_SetValue		ri.Cvar_SetValue
-#define RI_Vid_GetModeInfo		ri.Vid_GetModeInfo
-#define RI_Vid_NewWindow		ri.Vid_NewWindow
-
-#else
 
 // Client functions
 extern bool VID_GetModeInfo( int *width, int *height, int mode );
 extern void VID_NewWindow( int width, int height );
-
-#define RI_Com_Error			Com_Error
-#define RI_Cmd_AddCommand		Cmd_AddCommand
-#define RI_Cmd_RemoveCommand	Cmd_RemoveCommand
-#define RI_Cmd_Argc				Cmd_Argc
-#define RI_Cmd_Argv				Cmd_Argv
-#define RI_Com_Printf			Com_Printf
-#define RI_Com_DPrintf			Com_DPrintf
-#define RI_FS_LoadFile			FS_LoadFile
-#define RI_FS_FreeFile			FS_FreeFile
-#define RI_FS_Gamedir			FS_Gamedir
-#define RI_Cvar_Get				Cvar_Get
-#define RI_Cvar_Set				Cvar_Set
-#define RI_Cvar_SetValue		Cvar_SetValue
-#define RI_Vid_GetModeInfo		VID_GetModeInfo
-#define RI_Vid_NewWindow		VID_NewWindow
-
-#endif

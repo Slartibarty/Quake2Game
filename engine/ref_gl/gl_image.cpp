@@ -48,7 +48,7 @@ namespace ImageLoaders
 			|| xmax >= 1023
 			|| ymax >= 1023)
 		{
-			RI_Com_Printf("Bad pcx file (%i x %i) (%i x %i)\n", xmax + 1, ymax + 1, pcx->xmax, pcx->ymax);
+			Com_Printf("Bad pcx file (%i x %i) (%i x %i)\n", xmax + 1, ymax + 1, pcx->xmax, pcx->ymax);
 			return nullptr;
 		}
 
@@ -157,7 +157,7 @@ namespace ImageLoaders
 			|| xmax >= 1024
 			|| ymax >= 1024)
 		{
-			RI_Com_Printf("Bad pcx file (%i x %i) (%i x %i)\n", xmax + 1, ymax + 1, pcx->xmax, pcx->ymax);
+			Com_Printf("Bad pcx file (%i x %i) (%i x %i)\n", xmax + 1, ymax + 1, pcx->xmax, pcx->ymax);
 			return;
 		}
 
@@ -193,7 +193,7 @@ namespace ImageLoaders
 
 		if (raw - (byte *)pcx > rawlen)
 		{
-			RI_Com_DPrintf("PCX file was malformed");
+			Com_DPrintf("PCX file was malformed");
 			free(*pic);
 			*pic = NULL;
 		}
@@ -284,6 +284,9 @@ byte		g_gammatable[256];
 
 unsigned	d_8to24table[256];
 
+// Are we initialised?
+static bool g_imagesInitialised;
+
 //-------------------------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------------------------
@@ -296,7 +299,7 @@ void GL_ImageList_f( void )
 	image_t *image;
 	size_t texels;
 
-	RI_Com_Printf( "------------------\n" );
+	Com_Printf( "------------------\n" );
 	texels = 0;
 
 	for ( i = 0, image = gltextures; i < numgltextures; i++, image++ )
@@ -308,31 +311,31 @@ void GL_ImageList_f( void )
 		switch ( image->type )
 		{
 		case it_skin:
-			RI_Com_Printf( "M" );
+			Com_Printf( "M" );
 			break;
 		case it_sprite:
-			RI_Com_Printf( "S" );
+			Com_Printf( "S" );
 			break;
 		case it_wall:
-			RI_Com_Printf( "W" );
+			Com_Printf( "W" );
 			break;
 		case it_pic:
-			RI_Com_Printf( "P" );
+			Com_Printf( "P" );
 			break;
 		case it_sky:
-			RI_Com_Printf( "E" );
+			Com_Printf( "E" );
 			break;
 		default:
-			RI_Com_Printf( " " );
+			Com_Printf( " " );
 			break;
 		}
 
-		RI_Com_Printf( " %3d %3d RGBA: %s\n", image->width, image->height, image->name );
+		Com_Printf( " %3d %3d RGBA: %s\n", image->width, image->height, image->name );
 	}
 
-	RI_Com_Printf( "Total texel count (not counting mipmaps): %zu\n", texels );
+	Com_Printf( "Total texel count (not counting mipmaps): %zu\n", texels );
 #else
-	RI_Com_Printf( "NOT IMPLEMENTED!\n" );
+	Com_Printf( "NOT IMPLEMENTED!\n" );
 #endif
 }
 
@@ -344,11 +347,11 @@ void GL_ImageList_f( void )
 	int i;
 	material_t *material;
 
-	RI_Com_Printf( "------------------\n" );
+	Com_Printf( "------------------\n" );
 
 	for ( i = 0, material = glmaterials; i < numgltextures; ++i, ++material )
 	{
-		RI_Com_Printf( "%3d %3d RGB: %s\n", image->width, image->height, material->name );
+		Com_Printf( "%3d %3d RGB: %s\n", image->width, image->height, material->name );
 	}
 }*/
 
@@ -463,7 +466,7 @@ static image_t *GL_CreateImage(const char *name, const byte *pic, int width, int
 	if (i == numgltextures)
 	{
 		if (numgltextures == MAX_GLTEXTURES)
-			RI_Com_Error(ERR_DROP, "MAX_GLTEXTURES");
+			Com_Error(ERR_DROP, "MAX_GLTEXTURES");
 		numgltextures++;
 	}
 	image = &gltextures[i];
@@ -495,7 +498,7 @@ static byte *GL_LoadImage(const char *pName, int &width, int &height)
 	byte *pBuffer;
 	int nBufLen;
 
-	nBufLen = RI_FS_LoadFile(pName, (void **)&pBuffer);
+	nBufLen = FS_LoadFile(pName, (void **)&pBuffer);
 	if (!pBuffer)
 	{
 		return nullptr;
@@ -520,12 +523,12 @@ static byte *GL_LoadImage(const char *pName, int &width, int &height)
 	}
 	else
 	{
-		RI_FS_FreeFile(pBuffer);
-		RI_Com_Printf("GL_LoadImage - %s is an unsupported image format!", pName);
+		FS_FreeFile(pBuffer);
+		Com_Printf("GL_LoadImage - %s is an unsupported image format!", pName);
 		return nullptr;
 	}
 
-	RI_FS_FreeFile( pBuffer );
+	FS_FreeFile( pBuffer );
 
 	if (!pPic)
 	{
@@ -690,7 +693,7 @@ bool ParseMaterial( char *data, material_t *material )
 	if ( token[0] != '{' )
 	{
 		// Malformed
-		RI_Com_Printf( "Malformed material %s\n", material->name );
+		Com_Printf( "Malformed material %s\n", material->name );
 		return false;
 	}
 
@@ -801,7 +804,7 @@ static material_t *GL_CreateMaterialFromData( const char *name, image_t *image )
 	if ( i == numglmaterials )
 	{
 		if ( numglmaterials == MAX_GLMATERIALS )
-			RI_Com_Error( ERR_DROP, "MAX_GLMATERIALS" );
+			Com_Error( ERR_DROP, "MAX_GLMATERIALS" );
 		++numglmaterials;
 	}
 	material = &glmaterials[i];
@@ -829,7 +832,7 @@ static material_t *GL_CreateMaterial( const char *name )
 	strcat( newname, ".mat" );
 #endif
 
-	nBufLen = RI_FS_LoadFile( name, (void **)&pBuffer, 1 );
+	nBufLen = FS_LoadFile( name, (void **)&pBuffer, 1 );
 	if ( !pBuffer )
 	{
 		return mat_notexture;
@@ -844,7 +847,7 @@ static material_t *GL_CreateMaterial( const char *name )
 	if ( i == numglmaterials )
 	{
 		if ( numglmaterials == MAX_GLMATERIALS )
-			RI_Com_Error( ERR_DROP, "MAX_GLMATERIALS" ); // This can probably just return mat_notexture
+			Com_Error( ERR_DROP, "MAX_GLMATERIALS" ); // This can probably just return mat_notexture
 		++numglmaterials;
 	}
 	material = &glmaterials[i];
@@ -948,19 +951,19 @@ static void GL_GetPalette (void)
 	byte	*pBuffer;
 	int		nBufLen;
 
-	nBufLen = RI_FS_LoadFile("pics/colormap.pcx", (void**)&pBuffer);
+	nBufLen = FS_LoadFile("pics/colormap.pcx", (void**)&pBuffer);
 	if (!pBuffer)
 	{
-		RI_Com_Error(ERR_FATAL, "Couldn't load pics/colormap.pcx");
+		Com_Error(ERR_FATAL, "Couldn't load pics/colormap.pcx");
 	}
 
 	if (!ImageLoaders::CreateColormapFromPCX(pBuffer, nBufLen, d_8to24table))
 	{
-		RI_FS_FreeFile(pBuffer);
-		RI_Com_Error(ERR_FATAL, "pics/colormap.pcx is not a valid PCX!");
+		FS_FreeFile(pBuffer);
+		Com_Error(ERR_FATAL, "pics/colormap.pcx is not a valid PCX!");
 	}
 
-	RI_FS_FreeFile(pBuffer);
+	FS_FreeFile(pBuffer);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -1058,7 +1061,7 @@ static void R_InitParticleTexture(void)
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-void GL_InitImages(void)
+void GL_InitImages( void )
 {
 	registration_sequence = 1;
 
@@ -1067,15 +1070,21 @@ void GL_InitImages(void)
 	GL_BuildGammaTable( vid_gamma->value, 2 );
 
 	R_InitParticleTexture();
+
+	g_imagesInitialised = true;
 }
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-void GL_ShutdownImages (void)
+void GL_ShutdownImages( void )
 {
 	int i;
 	material_t *material;
 	image_t *image;
+
+	if ( !g_imagesInitialised ) {
+		return;
+	}
 
 	// Clear our generated materials
 	extern material_t *draw_chars;

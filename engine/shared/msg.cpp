@@ -18,7 +18,7 @@ void MSG_WriteChar (sizebuf_t *sb, int c)
 	
 #ifdef PARANOID
 	if (c < -128 || c > 127)
-		Com_DPrintf ("MSG_WriteChar: range error");
+		Com_DPrintf ("MSG_WriteChar: range error, %d\n", c);
 #endif
 
 	buf = (byte*)SZ_GetSpace (sb, 1);
@@ -31,7 +31,7 @@ void MSG_WriteByte (sizebuf_t *sb, int c)
 	
 #ifdef PARANOID
 	if (c < 0 || c > 255)
-		Com_DPrintf ("MSG_WriteByte: range error");
+		Com_DPrintf ("MSG_WriteByte: range error, %d\n", c);
 #endif
 
 	buf = (byte*)SZ_GetSpace (sb, 1);
@@ -44,7 +44,7 @@ void MSG_WriteShort (sizebuf_t *sb, int c)
 	
 #ifdef PARANOID
 	if (c < ((short)0x8000) || c > (short)0x7fff)
-		Com_DPrintf ("MSG_WriteShort: range error");
+		Com_DPrintf ("MSG_WriteShort: range error, %d\n", c);
 #endif
 
 	buf = (byte*)SZ_GetSpace (sb, 2);

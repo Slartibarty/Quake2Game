@@ -7,11 +7,6 @@
 #include <Windows.h>
 #include "winquake.h"
 
-#ifndef REF_HARD_LINKED
-// Structure containing functions exported from refresh DLL
-refexport_t re;
-#endif
-
 // Console variables that we need to access from this module
 cvar_t		*vid_gamma;
 cvar_t		*vid_ref;			// Name of Refresh DLL loaded
@@ -23,49 +18,6 @@ HINSTANCE	reflib_library;		// Handle to refresh DLL
 bool		reflib_active;
 
 HWND        cl_hwnd;            // Main window handle for life of program
-
-extern	unsigned	sys_msg_time;
-
-/*
-==========================================================================
-
-DLL GLUE
-
-==========================================================================
-*/
-
-#ifndef REF_HARD_LINKED
-void VID_Printf (int print_level, const char *fmt, ...)
-{
-	va_list		argptr;
-	char		msg[MAX_PRINT_MSG];
-	
-	va_start (argptr,fmt);
-	Q_vsprintf_s (msg,fmt,argptr);
-	va_end (argptr);
-
-	if (print_level == PRINT_ALL)
-	{
-		Com_Printf ("%s", msg);
-	}
-	else // if ( print_level == PRINT_DEVELOPER )
-	{
-		Com_DPrintf ("%s", msg);
-	}
-}
-
-void VID_Error (int err_level, const char *fmt, ...)
-{
-	va_list		argptr;
-	char		msg[MAX_PRINT_MSG];
-	
-	va_start (argptr,fmt);
-	Q_vsprintf_s (msg,fmt,argptr);
-	va_end (argptr);
-
-	Com_Error (err_level,"%s", msg);
-}
-#endif
 
 //==========================================================================
 
@@ -186,145 +138,6 @@ void VID_NewWindow ( int width, int height)
 	cl.force_refdef = true;		// can't use a paused refdef
 }
 
-#ifndef REF_HARD_LINKED
-
-static void VID_FreeReflib (void)
-{
-	if ( !FreeLibrary( reflib_library ) )
-		Com_Error( ERR_FATAL, "Reflib FreeLibrary failed" );
-	memset (&re, 0, sizeof(re));
-	reflib_library = NULL;
-	reflib_active  = false;
-}
-
-/*
-==============
-VID_LoadRefresh
-==============
-*/
-static bool VID_LoadRefresh( const char *name )
-{
-	refimport_t	ri;
-	GetRefAPI_t	GetRefAPI;
-	
-	if ( reflib_active )
-	{
-		R_Shutdown();
-		VID_FreeReflib ();
-	}
-
-	Com_Printf( "------- Loading %s -------\n", name );
-
-	if ( ( reflib_library = LoadLibrary( name ) ) == 0 )
-	{
-		Com_Printf( "LoadLibrary(\"%s\") failed\n", name );
-
-		return false;
-	}
-
-	ri.Cmd_AddCommand = Cmd_AddCommand;
-	ri.Cmd_RemoveCommand = Cmd_RemoveCommand;
-	ri.Cmd_Argc = Cmd_Argc;
-	ri.Cmd_Argv = Cmd_Argv;
-	ri.Cmd_ExecuteText = Cbuf_ExecuteText;
-	ri.Con_Printf = VID_Printf;
-	ri.Sys_Error = VID_Error;
-	ri.FS_LoadFile = FS_LoadFile;
-	ri.FS_FreeFile = FS_FreeFile;
-	ri.FS_Gamedir = FS_Gamedir;
-	ri.Cvar_Get = Cvar_Get;
-	ri.Cvar_Set = Cvar_Set;
-	ri.Cvar_SetValue = Cvar_SetValue;
-	ri.Vid_GetModeInfo = VID_GetModeInfo;
-	ri.Vid_NewWindow = VID_NewWindow;
-
-	if ( ( GetRefAPI = (GetRefAPI_t) GetProcAddress( reflib_library, "GetRefAPI" ) ) == 0 )
-		Com_Error( ERR_FATAL, "GetProcAddress failed on %s", name );
-
-	re = GetRefAPI( ri );
-
-	if (re.api_version != API_VERSION)
-	{
-		VID_FreeReflib ();
-		Com_Error (ERR_FATAL, "%s has incompatible api_version", name);
-	}
-
-	extern LRESULT CALLBACK MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
-	if ( R_Init( g_hInstance, MainWndProc ) == false )
-	{
-		R_Shutdown();
-		VID_FreeReflib ();
-		return false;
-	}
-
-	Com_Printf( "------------------------------------\n");
-	reflib_active = true;
-
-//======
-//PGM
-	vidref_val = VIDREF_OTHER;
-	if(vid_ref)
-	{
-		if(!strcmp (vid_ref->string, "gl"))
-			vidref_val = VIDREF_GL;
-		else if(!strcmp(vid_ref->string, "soft"))
-			vidref_val = VIDREF_SOFT;
-	}
-//PGM
-//======
-
-	return true;
-}
-
-/*
-============
-VID_CheckChanges
-
-This function gets called once just before drawing each frame, and it's sole purpose in life
-is to check to see if any of the video mode parameters have changed, and if they have to 
-update the rendering DLL and/or video mode to match.
-============
-*/
-void VID_CheckChanges (void)
-{
-	char name[64];
-
-	if ( vid_ref->modified )
-	{
-		cl.force_refdef = true;		// can't use a paused refdef
-		S_StopAllSounds();
-	}
-	while (vid_ref->modified)
-	{
-		/*
-		** refresh has changed
-		*/
-		vid_ref->modified = false;
-		vid_fullscreen->modified = true;
-		cl.refresh_prepped = false;
-		cls.disable_screen = true;
-
-		Q_sprintf_s( name, "ref_%s.dll", vid_ref->string );
-		if ( !VID_LoadRefresh( name ) )
-		{
-			if ( strcmp (vid_ref->string, "soft") == 0 )
-				Com_Error (ERR_FATAL, "Couldn't fall back to software refresh!");
-			Cvar_Set( "vid_ref", "soft" );
-
-			/*
-			** drop the console if we fail to load a refresh
-			*/
-			if ( cls.key_dest != key_console )
-			{
-				Con_ToggleConsole_f();
-			}
-		}
-		cls.disable_screen = false;
-	}
-}
-
-#else
-
 static bool VID_LoadRefresh()
 {
 	if ( reflib_active )
@@ -383,8 +196,6 @@ void VID_CheckChanges( void )
 	}
 }
 
-#endif
-
 /*
 ============
 VID_Init
@@ -421,11 +232,7 @@ void VID_Shutdown (void)
 	if ( reflib_active )
 	{
 		R_Shutdown ();
-#ifndef REF_HARD_LINKED
-		VID_FreeReflib ();
-#else
 		reflib_active = false;
-#endif
 	}
 }
 
