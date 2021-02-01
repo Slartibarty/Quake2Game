@@ -42,9 +42,6 @@ floatingpoint "Fast"
 characterset "ASCII"
 exceptionhandling "Off"
 
--- Global defines
-defines { "REF_HARD_LINKED" }
-
 -- Config for all 32-bit projects
 filter( filter_32bit )
 	vectorextensions "SSE2"

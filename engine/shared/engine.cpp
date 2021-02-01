@@ -161,11 +161,11 @@ Both client and server can use this, and it will
 do the apropriate things.
 =============
 */
-void Com_Error (int code, _Printf_format_string_ const char *fmt, ...)
+[[noreturn]] void Com_Error (int code, _Printf_format_string_ const char *fmt, ...)
 {
-	va_list				argptr;
-	static char			msg[MAX_PRINT_MSG];
-	static qboolean		recursive;
+	va_list			argptr;
+	char			msg[MAX_PRINT_MSG];
+	static bool		recursive;
 
 	if (recursive)
 		Sys_Error ("recursive error after: %s", msg);

@@ -30,7 +30,7 @@ SYSTEM IO
 */
 
 [[noreturn]]
-void Sys_Error (const char *error, ...)
+void Sys_Error (_Printf_format_string_ const char *error, ...)
 {
 	va_list		argptr;
 	char		text[MAX_PRINT_MSG];

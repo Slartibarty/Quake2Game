@@ -86,6 +86,7 @@ void		Com_BeginRedirect (int target, char *buffer, int buffersize, rd_flush_t fl
 void		Com_EndRedirect (void);
 void		Com_Printf( _Printf_format_string_ const char *fmt, ... );
 void		Com_DPrintf( _Printf_format_string_ const char *fmt, ... );
+[[noreturn]]
 void		Com_Error( int code, _Printf_format_string_ const char *fmt, ... );
 [[noreturn]]
 void		Com_Quit( void );
