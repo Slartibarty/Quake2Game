@@ -105,6 +105,7 @@ void MSG_WriteAngle (sizebuf_t *sb, float f)
 
 void MSG_WriteAngle16 (sizebuf_t *sb, float f)
 {
+	// SlartTodo: f can sometimes be negative, which throws off the ANGLE2SHORT macro, what to do?
 	MSG_WriteShort (sb, ANGLE2SHORT(f));
 }
 
