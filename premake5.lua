@@ -38,7 +38,7 @@ flags { "MultiProcessorCompile", "NoBufferSecurityCheck" }
 staticruntime "On"
 cppdialect "C++20"
 warnings "Default"
-floatingpoint "Default" -- Fast
+floatingpoint "Fast"
 characterset "ASCII"
 exceptionhandling "Off"
 
