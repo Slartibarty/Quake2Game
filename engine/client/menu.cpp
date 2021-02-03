@@ -1344,7 +1344,7 @@ static void ApplyChanges( void *unused )
 
 	// UPDATE RESOLUTION HERE
 
-	M_ForceMenuOff();
+	//M_ForceMenuOff();
 }
 
 static void CancelChanges( void *unused )
@@ -1535,39 +1535,20 @@ VID_MenuKey
 const char *VID_MenuKey( int key )
 {
 	menuframework_s *m = &s_vid_menu;
-	const char *sound = "misc/menu1.wav";
 
 	switch ( key )
 	{
 	case K_ESCAPE:
-		ApplyChanges( 0 );
-		return NULL;
-	case K_KP_UPARROW:
-	case K_UPARROW:
-		m->cursor--;
-		Menu_AdjustCursor( m, -1 );
-		break;
-	case K_KP_DOWNARROW:
-	case K_DOWNARROW:
-		m->cursor++;
-		Menu_AdjustCursor( m, 1 );
-		break;
-	case K_KP_LEFTARROW:
-	case K_LEFTARROW:
-		Menu_SlideItem( m, -1 );
-		break;
-	case K_KP_RIGHTARROW:
-	case K_RIGHTARROW:
-		Menu_SlideItem( m, 1 );
+		ApplyChanges( nullptr );
 		break;
 	case K_KP_ENTER:
 	case K_ENTER:
 		if ( !Menu_SelectItem( m ) )
-			ApplyChanges( NULL );
+			ApplyChanges( nullptr );
 		break;
 	}
 
-	return sound;
+	return Default_MenuKey( m, key );
 }
 
 void M_Menu_Video_f (void)
