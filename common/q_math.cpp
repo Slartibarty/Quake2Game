@@ -1,6 +1,9 @@
 // q_math.c -- math primitives
 
 #include "q_shared.h"	// cplane_t
+
+#include <cfloat> // FLT_EPSILON
+
 #include "q_math.h"
 
 vec3_t vec3_origin;
