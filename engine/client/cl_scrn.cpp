@@ -938,45 +938,45 @@ void SCR_ExecuteLayoutString (char *s)
 	while (s)
 	{
 		token = COM_Parse (&s);
-		if (!strcmp(token, "xl"))
+		if (!Q_strcmp(token, "xl"))
 		{
 			token = COM_Parse (&s);
 			x = atoi(token);
 			continue;
 		}
-		if (!strcmp(token, "xr"))
+		if (!Q_strcmp(token, "xr"))
 		{
 			token = COM_Parse (&s);
 			x = viddef.width + atoi(token);
 			continue;
 		}
-		if (!strcmp(token, "xv"))
+		if (!Q_strcmp(token, "xv"))
 		{
 			token = COM_Parse (&s);
 			x = viddef.width/2 - 160 + atoi(token);
 			continue;
 		}
 
-		if (!strcmp(token, "yt"))
+		if (!Q_strcmp(token, "yt"))
 		{
 			token = COM_Parse (&s);
 			y = atoi(token);
 			continue;
 		}
-		if (!strcmp(token, "yb"))
+		if (!Q_strcmp(token, "yb"))
 		{
 			token = COM_Parse (&s);
 			y = viddef.height + atoi(token);
 			continue;
 		}
-		if (!strcmp(token, "yv"))
+		if (!Q_strcmp(token, "yv"))
 		{
 			token = COM_Parse (&s);
 			y = viddef.height/2 - 120 + atoi(token);
 			continue;
 		}
 
-		if (!strcmp(token, "pic"))
+		if (!Q_strcmp(token, "pic"))
 		{	// draw a pic from a stat number
 			token = COM_Parse (&s);
 			value = cl.frame.playerstate.stats[atoi(token)];
@@ -991,7 +991,7 @@ void SCR_ExecuteLayoutString (char *s)
 			continue;
 		}
 
-		if (!strcmp(token, "client"))
+		if (!Q_strcmp(token, "client"))
 		{	// draw a deathmatch client block
 			int		score, ping, time;
 
@@ -1029,7 +1029,7 @@ void SCR_ExecuteLayoutString (char *s)
 			continue;
 		}
 
-		if (!strcmp(token, "ctf"))
+		if (!Q_strcmp(token, "ctf"))
 		{	// draw a ctf client block
 			int		score, ping;
 			char	block[80];
@@ -1064,7 +1064,7 @@ void SCR_ExecuteLayoutString (char *s)
 			continue;
 		}
 
-		if (!strcmp(token, "picn"))
+		if (!Q_strcmp(token, "picn"))
 		{	// draw a pic from a name
 			token = COM_Parse (&s);
 			SCR_AddDirtyPoint (x, y);
@@ -1073,7 +1073,7 @@ void SCR_ExecuteLayoutString (char *s)
 			continue;
 		}
 
-		if (!strcmp(token, "num"))
+		if (!Q_strcmp(token, "num"))
 		{	// draw a number
 			token = COM_Parse (&s);
 			width = atoi(token);
@@ -1083,7 +1083,7 @@ void SCR_ExecuteLayoutString (char *s)
 			continue;
 		}
 
-		if (!strcmp(token, "hnum"))
+		if (!Q_strcmp(token, "hnum"))
 		{	// health number
 			int		color;
 
@@ -1103,7 +1103,7 @@ void SCR_ExecuteLayoutString (char *s)
 			continue;
 		}
 
-		if (!strcmp(token, "anum"))
+		if (!Q_strcmp(token, "anum"))
 		{	// ammo number
 			int		color;
 
@@ -1123,7 +1123,7 @@ void SCR_ExecuteLayoutString (char *s)
 			continue;
 		}
 
-		if (!strcmp(token, "rnum"))
+		if (!Q_strcmp(token, "rnum"))
 		{	// armor number
 			int		color;
 
@@ -1142,7 +1142,7 @@ void SCR_ExecuteLayoutString (char *s)
 		}
 
 
-		if (!strcmp(token, "stat_string"))
+		if (!Q_strcmp(token, "stat_string"))
 		{
 			token = COM_Parse (&s);
 			index = atoi(token);
@@ -1155,41 +1155,41 @@ void SCR_ExecuteLayoutString (char *s)
 			continue;
 		}
 
-		if (!strcmp(token, "cstring"))
+		if (!Q_strcmp(token, "cstring"))
 		{
 			token = COM_Parse (&s);
 			DrawHUDString (token, x, y, 320, 0);
 			continue;
 		}
 
-		if (!strcmp(token, "string"))
+		if (!Q_strcmp(token, "string"))
 		{
 			token = COM_Parse (&s);
 			DrawString (x, y, token);
 			continue;
 		}
 
-		if (!strcmp(token, "cstring2"))
+		if (!Q_strcmp(token, "cstring2"))
 		{
 			token = COM_Parse (&s);
 			DrawHUDString (token, x, y, 320,0x80);
 			continue;
 		}
 
-		if (!strcmp(token, "string2"))
+		if (!Q_strcmp(token, "string2"))
 		{
 			token = COM_Parse (&s);
 			DrawAltString (x, y, token);
 			continue;
 		}
 
-		if (!strcmp(token, "if"))
+		if (!Q_strcmp(token, "if"))
 		{	// draw a number
 			token = COM_Parse (&s);
 			value = cl.frame.playerstate.stats[atoi(token)];
 			if (!value)
 			{	// skip to endif
-				while (s && strcmp(token, "endif") )
+				while (s && Q_strcmp(token, "endif") )
 				{
 					token = COM_Parse (&s);
 				}

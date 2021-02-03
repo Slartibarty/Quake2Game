@@ -826,7 +826,7 @@ void CL_ConnectionlessPacket (void)
 	Com_Printf ("%s: %s\n", NET_AdrToString (net_from), c);
 
 	// server connection
-	if (!strcmp(c, "client_connect"))
+	if (!Q_strcmp(c, "client_connect"))
 	{
 		if (cls.state == ca_connected)
 		{
@@ -841,14 +841,14 @@ void CL_ConnectionlessPacket (void)
 	}
 
 	// server responding to a status broadcast
-	if (!strcmp(c, "info"))
+	if (!Q_strcmp(c, "info"))
 	{
 		CL_ParseStatusMessage ();
 		return;
 	}
 
 	// remote command from gui front end
-	if (!strcmp(c, "cmd"))
+	if (!Q_strcmp(c, "cmd"))
 	{
 		if (!NET_IsLocalAddress(net_from))
 		{
@@ -862,7 +862,7 @@ void CL_ConnectionlessPacket (void)
 		return;
 	}
 	// print command from somewhere
-	if (!strcmp(c, "print"))
+	if (!Q_strcmp(c, "print"))
 	{
 		s = MSG_ReadString (&net_message);
 		Com_Printf ("%s", s);
@@ -870,14 +870,14 @@ void CL_ConnectionlessPacket (void)
 	}
 
 	// ping from somewhere
-	if (!strcmp(c, "ping"))
+	if (!Q_strcmp(c, "ping"))
 	{
 		Netchan_OutOfBandPrint (NS_CLIENT, net_from, "ack");
 		return;
 	}
 
 	// challenge from the server we are connecting to
-	if (!strcmp(c, "challenge"))
+	if (!Q_strcmp(c, "challenge"))
 	{
 		cls.challenge = atoi(Cmd_Argv(1));
 		CL_SendConnectPacket ();
@@ -885,7 +885,7 @@ void CL_ConnectionlessPacket (void)
 	}
 
 	// echo request from server
-	if (!strcmp(c, "echo"))
+	if (!Q_strcmp(c, "echo"))
 	{
 		Netchan_OutOfBandPrint (NS_CLIENT, net_from, "%s", Cmd_Argv(1) );
 		return;
@@ -1537,7 +1537,7 @@ void CL_FixCvarCheats (void)
 	int			i;
 	cheatvar_t	*var;
 
-	if ( !strcmp(cl.configstrings[CS_MAXCLIENTS], "1") 
+	if ( !Q_strcmp(cl.configstrings[CS_MAXCLIENTS], "1")
 		|| !cl.configstrings[CS_MAXCLIENTS][0] )
 		return;		// single player can cheat
 
@@ -1555,7 +1555,7 @@ void CL_FixCvarCheats (void)
 	// make sure they are all set to the proper values
 	for (i=0, var = cheatvars ; i<numcheatvars ; i++, var++)
 	{
-		if ( strcmp (var->var->string, var->value) )
+		if ( Q_strcmp (var->var->string, var->value) )
 		{
 			Cvar_Set (var->name, var->value);
 		}

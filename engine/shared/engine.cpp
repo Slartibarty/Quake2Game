@@ -265,7 +265,7 @@ int COM_CheckParm (char *parm)
 	
 	for (i=1 ; i<com_argc ; i++)
 	{
-		if (!strcmp (parm,com_argv[i]))
+		if (!Q_strcmp (parm,com_argv[i]))
 			return i;
 	}
 		

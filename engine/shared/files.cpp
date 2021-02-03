@@ -247,7 +247,7 @@ static void FS_Dir_f()
 
 	if ( Cmd_Argc() != 1 )
 	{
-		strcpy( wildcard, Cmd_Argv( 1 ) );
+		Q_strcpy_s( wildcard, Cmd_Argv( 1 ) );
 	}
 
 	while ( ( path = FS_NextPath( path ) ) != NULL )
@@ -533,7 +533,7 @@ void FS_SetGamedir( const char *dir, bool flush )
 
 	Q_sprintf_s( fs_gamedir, "%s/%s", fs_basedir->string, dir );
 
-	if ( strcmp( dir, BASEDIRNAME ) == 0 || *dir == '\0' )
+	if ( Q_strcmp( dir, BASEDIRNAME ) == 0 || *dir == '\0' )
 	{
 		Cvar_FullSet( "gamedir", "", CVAR_SERVERINFO | CVAR_NOSET );
 		Cvar_FullSet( "game", "", CVAR_LATCH | CVAR_SERVERINFO );

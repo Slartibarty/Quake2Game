@@ -182,7 +182,7 @@ model_t *Mod_ForName (const char *name, qboolean crash)
 	{
 		if (!mod->name[0])
 			continue;
-		if (!strcmp (mod->name, name) )
+		if (!Q_strcmp (mod->name, name) )
 			return mod;
 	}
 	
@@ -1137,7 +1137,7 @@ void R_BeginRegistration (const char *model)
 	// explicitly free the old map if different
 	// this guarantees that mod_known[0] is the world map
 	flushmap = Cvar_Get ("flushmap", "0", 0);
-	if ( strcmp(mod_known[0].name, fullname) || flushmap->value)
+	if ( Q_strcmp(mod_known[0].name, fullname) || flushmap->value)
 		Mod_Free (&mod_known[0]);
 	r_worldmodel = Mod_ForName(fullname, true);
 

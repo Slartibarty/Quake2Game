@@ -540,7 +540,7 @@ cmodel_t *CM_LoadMap (const char *name, bool clientload, unsigned *checksum)
 
 	map_noareas = Cvar_Get ("map_noareas", "0", 0);
 
-	if ( !strcmp (map_name, name) && (clientload || !Cvar_VariableValue ("flushmap")) )
+	if ( !Q_strcmp (map_name, name) && (clientload || !Cvar_VariableValue ("flushmap")) )
 	{
 		*checksum = last_checksum;
 		if (!clientload)
@@ -611,7 +611,7 @@ cmodel_t *CM_LoadMap (const char *name, bool clientload, unsigned *checksum)
 	memset (portalopen, 0, sizeof(portalopen));
 	FloodAreaConnections ();
 
-	strcpy (map_name, name);
+	Q_strcpy_s (map_name, name);
 
 	return &map_cmodels[0];
 }

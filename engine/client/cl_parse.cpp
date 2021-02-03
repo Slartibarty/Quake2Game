@@ -307,7 +307,7 @@ void CL_ParseServerData (void)
 	str = MSG_ReadString (&net_message);
 	assert( fs_gamedirvar->string && *fs_gamedirvar->string );
 	// set gamedir
-	if ( ( str && *str ) && strcmp( str, fs_gamedirvar->string ) != 0 )
+	if ( ( str && *str ) && Q_strcmp( str, fs_gamedirvar->string ) != 0 )
 	{
 		Q_strcpy_s( cl.gamedir, str );
 		Cvar_Set( "game", str );
@@ -453,7 +453,7 @@ void CL_LoadClientinfo (clientinfo_t *ci, char *s)
 		for (i = 0; i < num_cl_weaponmodels; i++) {
 			Q_sprintf_s (weapon_filename, "players/%s/%s", model_name, cl_weaponmodels[i]);
 			ci->weaponmodel[i] = R_RegisterModel(weapon_filename);
-			if (!ci->weaponmodel[i] && strcmp(model_name, "cyborg") == 0) {
+			if (!ci->weaponmodel[i] && Q_strcmp(model_name, "cyborg") == 0) {
 				// try male
 				Q_sprintf_s (weapon_filename, "players/male/%s", cl_weaponmodels[i]);
 				ci->weaponmodel[i] = R_RegisterModel(weapon_filename);
@@ -551,7 +551,7 @@ void CL_ParseConfigString (void)
 	}
 	else if (i >= CS_PLAYERSKINS && i < CS_PLAYERSKINS+MAX_CLIENTS)
 	{
-		if (cl.refresh_prepped && strcmp(olds, s))
+		if (cl.refresh_prepped && Q_strcmp(olds, s))
 			CL_ParseClientinfo (i-CS_PLAYERSKINS);
 	}
 }

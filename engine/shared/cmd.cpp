@@ -251,7 +251,7 @@ void Cbuf_AddEarlyCommands (bool clear)
 	for (i=0 ; i<COM_Argc() ; i++)
 	{
 		s = COM_Argv(i);
-		if (strcmp (s, "+set"))
+		if (Q_strcmp (s, "+set"))
 			continue;
 		Cbuf_AddText (va("set %s %s\n", COM_Argv(i+1), COM_Argv(i+2)));
 		if (clear)
@@ -427,7 +427,7 @@ void Cmd_Alias_f (void)
 	// if the alias already exists, reuse it
 	for (a = cmd_alias ; a ; a=a->next)
 	{
-		if (!strcmp(s, a->name))
+		if (!Q_strcmp(s, a->name))
 		{
 			Z_Free (a->value);
 			break;
@@ -680,7 +680,7 @@ void	Cmd_AddCommand (const char *cmd_name, xcommand_t function)
 // fail if the command already exists
 	for (cmd=cmd_functions ; cmd ; cmd=cmd->next)
 	{
-		if (!strcmp (cmd_name, cmd->name))
+		if (!Q_strcmp (cmd_name, cmd->name))
 		{
 			Com_Printf ("Cmd_AddCommand: %s already defined\n", cmd_name);
 			return;
@@ -712,7 +712,7 @@ void	Cmd_RemoveCommand (const char *cmd_name)
 			Com_Printf ("Cmd_RemoveCommand: %s not added\n", cmd_name);
 			return;
 		}
-		if (!strcmp (cmd_name, cmd->name))
+		if (!Q_strcmp (cmd_name, cmd->name))
 		{
 			*back = cmd->next;
 			Z_Free (cmd);
@@ -733,7 +733,7 @@ bool Cmd_Exists (const char *cmd_name)
 
 	for (cmd=cmd_functions ; cmd ; cmd=cmd->next)
 	{
-		if (!strcmp (cmd_name,cmd->name))
+		if (!Q_strcmp (cmd_name,cmd->name))
 			return true;
 	}
 
@@ -760,10 +760,10 @@ const char *Cmd_CompleteCommand (const char *partial)
 		
 // check for exact match
 	for (cmd=cmd_functions ; cmd ; cmd=cmd->next)
-		if (!strcmp (partial,cmd->name))
+		if (!Q_strcmp (partial,cmd->name))
 			return cmd->name;
 	for (a=cmd_alias ; a ; a=a->next)
-		if (!strcmp (partial, a->name))
+		if (!Q_strcmp (partial, a->name))
 			return a->name;
 
 // check for partial match

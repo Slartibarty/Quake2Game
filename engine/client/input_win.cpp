@@ -309,9 +309,9 @@ LRESULT CALLBACK MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 	}
 	return 0;
 
-	case WM_PAINT:
-		SCR_DirtyScreen();	// force entire screen to update next frame
-		break;
+//	case WM_PAINT:
+//		SCR_DirtyScreen();	// force entire screen to update next frame
+//		break;
 
 	case WM_ACTIVATE:
 	{

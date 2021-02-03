@@ -2405,7 +2405,7 @@ void M_AddToServerList (netadr_t adr, char *info)
 
 	// ignore if duplicated
 	for (i=0 ; i<m_num_servers ; i++)
-		if (!strcmp(info, local_server_names[i]))
+		if (!Q_strcmp(info, local_server_names[i]))
 			return;
 
 	local_server_netadr[m_num_servers] = adr;
@@ -3595,7 +3595,7 @@ static qboolean IconOfSkinExists( char *skin, char **pcxfiles, int npcxfiles )
 
 	for ( i = 0; i < npcxfiles; i++ )
 	{
-		if ( strcmp( pcxfiles[i], scratch ) == 0 )
+		if ( Q_strcmp( pcxfiles[i], scratch ) == 0 )
 			return true;
 	}
 
@@ -3752,17 +3752,17 @@ static int pmicmpfnc( const void *_a, const void *_b )
 	/*
 	** sort by male, female, then alphabetical
 	*/
-	if ( strcmp( a->directory, "male" ) == 0 )
+	if ( Q_strcmp( a->directory, "male" ) == 0 )
 		return -1;
-	else if ( strcmp( b->directory, "male" ) == 0 )
+	else if ( Q_strcmp( b->directory, "male" ) == 0 )
 		return 1;
 
-	if ( strcmp( a->directory, "female" ) == 0 )
+	if ( Q_strcmp( a->directory, "female" ) == 0 )
 		return -1;
-	else if ( strcmp( b->directory, "female" ) == 0 )
+	else if ( Q_strcmp( b->directory, "female" ) == 0 )
 		return 1;
 
-	return strcmp( a->directory, b->directory );
+	return Q_strcmp( a->directory, b->directory );
 }
 
 

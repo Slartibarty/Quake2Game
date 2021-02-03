@@ -18,7 +18,7 @@ static int SV_FindIndex (const char *name, int start, int max, qboolean create)
 		return 0;
 
 	for (i=1 ; i<max && sv.configstrings[start+i][0] ; i++)
-		if (!strcmp(sv.configstrings[start+i], name))
+		if (!Q_strcmp(sv.configstrings[start+i], name))
 			return i;
 
 	if (!create)
@@ -415,19 +415,19 @@ void SV_Map (qboolean attractloop, char *levelstring, qboolean loadgame)
 		strcpy (level, level+1);
 
 	l = strlen(level);
-	if (l > 4 && !strcmp (level+l-4, ".cin") )
+	if (l > 4 && !Q_strcmp (level+l-4, ".cin") )
 	{
 		SCR_BeginLoadingPlaque ();			// for local system
 		SV_BroadcastCommand ("changing\n");
 		SV_SpawnServer (level, spawnpoint, ss_cinematic, attractloop, loadgame);
 	}
-	else if (l > 4 && !strcmp (level+l-4, ".dm2") )
+	else if (l > 4 && !Q_strcmp (level+l-4, ".dm2") )
 	{
 		SCR_BeginLoadingPlaque ();			// for local system
 		SV_BroadcastCommand ("changing\n");
 		SV_SpawnServer (level, spawnpoint, ss_demo, attractloop, loadgame);
 	}
-	else if (l > 4 && !strcmp (level+l-4, ".pcx") )
+	else if (l > 4 && !Q_strcmp (level+l-4, ".pcx") )
 	{
 		SCR_BeginLoadingPlaque ();			// for local system
 		SV_BroadcastCommand ("changing\n");

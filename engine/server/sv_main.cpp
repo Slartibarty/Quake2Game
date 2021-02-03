@@ -394,7 +394,7 @@ static int Rcon_Validate (void)
 	if (!strlen (rcon_password->string))
 		return 0;
 
-	if (strcmp (Cmd_Argv(1), rcon_password->string) )
+	if (Q_strcmp (Cmd_Argv(1), rcon_password->string) )
 		return 0;
 
 	return 1;
@@ -468,19 +468,19 @@ static void SV_ConnectionlessPacket (void)
 	c = Cmd_Argv(0);
 	Com_DPrintf ("Packet %s : %s\n", NET_AdrToString(net_from), c);
 
-	if (!strcmp(c, "ping"))
+	if (!Q_strcmp(c, "ping"))
 		SVC_Ping ();
-	else if (!strcmp(c, "ack"))
+	else if (!Q_strcmp(c, "ack"))
 		SVC_Ack ();
-	else if (!strcmp(c,"status"))
+	else if (!Q_strcmp(c,"status"))
 		SVC_Status ();
-	else if (!strcmp(c,"info"))
+	else if (!Q_strcmp(c,"info"))
 		SVC_Info ();
-	else if (!strcmp(c,"getchallenge"))
+	else if (!Q_strcmp(c,"getchallenge"))
 		SVC_GetChallenge ();
-	else if (!strcmp(c,"connect"))
+	else if (!Q_strcmp(c,"connect"))
 		SVC_DirectConnect ();
-	else if (!strcmp(c, "rcon"))
+	else if (!Q_strcmp(c, "rcon"))
 		SVC_RemoteCommand ();
 	else
 		Com_Printf ("bad connectionless packet from %s:\n%s\n"

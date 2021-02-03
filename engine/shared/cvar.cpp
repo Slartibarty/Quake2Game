@@ -32,7 +32,7 @@ static cvar_t *Cvar_FindVar (const char *var_name)
 	cvar_t	*var;
 	
 	for (var=cvar_vars ; var ; var=var->next)
-		if (!strcmp (var_name, var->name))
+		if (!Q_strcmp (var_name, var->name))
 			return var;
 
 	return NULL;
@@ -87,7 +87,7 @@ char *Cvar_CompleteVariable (const char *partial)
 		
 	// check exact match
 	for (cvar=cvar_vars ; cvar ; cvar=cvar->next)
-		if (!strcmp (partial,cvar->name))
+		if (!Q_strcmp (partial,cvar->name))
 			return cvar->name;
 
 	// check partial match
@@ -190,13 +190,13 @@ cvar_t *Cvar_Set2 (const char *var_name, const char *value, qboolean force)
 		{
 			if (var->latched_string)
 			{
-				if (strcmp(value, var->latched_string) == 0)
+				if (Q_strcmp(value, var->latched_string) == 0)
 					return var;
 				Z_Free (var->latched_string);
 			}
 			else
 			{
-				if (strcmp(value, var->string) == 0)
+				if (Q_strcmp(value, var->string) == 0)
 					return var;
 			}
 
@@ -209,7 +209,7 @@ cvar_t *Cvar_Set2 (const char *var_name, const char *value, qboolean force)
 			{
 				var->string = Z_CopyString(value);
 				var->value = (float)atof (var->string);
-				if (strcmp(var->name, "game") == 0)
+				if (Q_strcmp(var->name, "game") == 0)
 				{
 					FS_SetGamedir (var->string, true);
 					FS_ExecAutoexec ();
@@ -227,7 +227,7 @@ cvar_t *Cvar_Set2 (const char *var_name, const char *value, qboolean force)
 		}
 	}
 
-	if (!strcmp(value, var->string))
+	if (!Q_strcmp(value, var->string))
 		return var;		// not changed
 
 	var->modified = true;
@@ -328,7 +328,7 @@ void Cvar_GetLatchedVars (void)
 		var->string = var->latched_string;
 		var->latched_string = NULL;
 		var->value = (float)atof(var->string);
-		if (strcmp(var->name, "game") == 0)
+		if (Q_strcmp(var->name, "game") == 0)
 		{
 			FS_SetGamedir (var->string, true);
 			FS_ExecAutoexec ();
@@ -385,9 +385,9 @@ void Cvar_Set_f (void)
 
 	if (c == 4)
 	{
-		if (!strcmp(Cmd_Argv(3), "u"))
+		if (!Q_strcmp(Cmd_Argv(3), "u"))
 			flags = CVAR_USERINFO;
-		else if (!strcmp(Cmd_Argv(3), "s"))
+		else if (!Q_strcmp(Cmd_Argv(3), "s"))
 			flags = CVAR_SERVERINFO;
 		else
 		{

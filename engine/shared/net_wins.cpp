@@ -209,7 +209,7 @@ bool NET_StringToAdr( const char *s, netadr_t &a )
 {
 	sockaddr sadr;
 
-	if ( strcmp( s, "localhost" ) == 0 )
+	if ( Q_strcmp( s, "localhost" ) == 0 )
 	{
 		memset( &a, 0, sizeof( a ) );
 		a.type = NA_LOOPBACK;
