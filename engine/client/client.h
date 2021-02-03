@@ -516,6 +516,7 @@ void CL_TrapParticles (entity_t *ent);
 // menus
 //
 void M_Init (void);
+void M_Shutdown (void);
 void M_Keydown (int key);
 void M_Draw (void);
 void M_Menu_Main_f (void);

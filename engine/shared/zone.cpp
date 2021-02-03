@@ -9,7 +9,7 @@
 #include "zone.h"
 
 #ifndef Q_RETAIL
-//#define Q_MEM_DEBUG
+#define Q_MEM_DEBUG
 #endif
 
 //=================================================================================================
@@ -194,7 +194,7 @@ void Z_Shutdown()
 	// Make sure by the time we get here, we don't have any memory still in use...
 #ifdef Q_MEM_DEBUG
 	// TODO: Figure out why this is always at 16kb or so
-	//assert( z_basicbytes == 0 );
+//	assert( z_basicbytes == 0 );
 #endif
 	assert( z_tagbytes == 0 );
 	assert( z_tagcount == 0 );

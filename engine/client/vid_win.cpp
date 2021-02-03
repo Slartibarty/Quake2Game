@@ -226,8 +226,6 @@ VID_Shutdown
 void VID_Shutdown (void)
 {
 	// vid_menu
-	extern void DeleteResolutions();
-	DeleteResolutions();
 	VID_FreeModes();
 	if ( reflib_active )
 	{

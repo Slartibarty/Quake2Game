@@ -342,7 +342,7 @@ LRESULT CALLBACK MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 	case WM_DESTROY:
 		// let sound and input know about this?
 		cl_hwnd = NULL;
-		PostQuitMessage( 0 );
+	//	PostQuitMessage( 0 );
 		return 0;
 	}
 

@@ -130,7 +130,7 @@ inline int Q_strncmp( const char *s1, const char *s2, strlen_t maxcount )
 // portable case insensitive compare
 int Q_strcasecmp( const char *s1, const char *s2 );
 int Q_strncasecmp( const char *s1, const char *s2, strlen_t n );
-#define Q_stricmp Q_strcasecmp // FIXME: replace all Q_stricmp with Q_strcasecmp
+inline int Q_stricmp( const char *s1, const char *s2 ) { return Q_strcasecmp( s1, s2 ); } // FIXME: replace all Q_stricmp with Q_strcasecmp
 
 void Q_vsprintf_s(char *pDest, strlen_t nDestSize, _Printf_format_string_ const char *pFmt, va_list args);
 

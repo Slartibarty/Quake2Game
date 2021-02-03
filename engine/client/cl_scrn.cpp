@@ -28,7 +28,6 @@ vrect_t		scr_vrect;		// position of render window on screen
 cvar_t		*scr_viewsize;
 cvar_t		*scr_conspeed;
 cvar_t		*scr_centertime;
-cvar_t		*scr_showturtle;
 cvar_t		*scr_showpause;
 cvar_t		*scr_printspeed;
 
@@ -389,7 +388,6 @@ void SCR_Init (void)
 {
 	scr_viewsize = Cvar_Get ("viewsize", "100", CVAR_ARCHIVE);
 	scr_conspeed = Cvar_Get ("scr_conspeed", "3", 0);
-	scr_showturtle = Cvar_Get ("scr_showturtle", "0", 0);
 	scr_showpause = Cvar_Get ("scr_showpause", "1", 0);
 	scr_centertime = Cvar_Get ("scr_centertime", "2.5", 0);
 	scr_printspeed = Cvar_Get ("scr_printspeed", "8", 0);
@@ -477,9 +475,9 @@ void SCR_RunConsole (void)
 {
 // decide on the height of the console
 	if (cls.key_dest == key_console)
-		scr_conlines = 0.5;		// half screen
+		scr_conlines = 0.5f;		// half screen
 	else
-		scr_conlines = 0;				// none visible
+		scr_conlines = 0;			// none visible
 	
 	if (scr_conlines < scr_con_current)
 	{

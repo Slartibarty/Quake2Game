@@ -86,10 +86,6 @@ cvar_t  *gl_overbright;
 cvar_t	*gl_swapinterval;
 cvar_t	*gl_lockpvs;
 
-extern cvar_t	*vid_fullscreen;
-extern cvar_t	*vid_gamma;
-extern cvar_t	*vid_ref;
-
 //-------------------------------------------------------------------------------------------------
 // Returns true if the box is completely outside the frustom
 //-------------------------------------------------------------------------------------------------
@@ -873,10 +869,6 @@ static void R_Register()
 	gl_swapinterval = Cvar_Get( "gl_swapinterval", "0", CVAR_ARCHIVE );
 
 	gl_overbright = Cvar_Get( "gl_overbright", "1", 0 );
-
-	vid_fullscreen = Cvar_Get( "vid_fullscreen", "0", CVAR_ARCHIVE );
-	vid_gamma = Cvar_Get( "vid_gamma", "1.0", CVAR_ARCHIVE );
-	vid_ref = Cvar_Get( "vid_ref", "gl", CVAR_ARCHIVE );
 
 	Cmd_AddCommand( "imagelist", GL_ImageList_f );
 	Cmd_AddCommand( "screenshot", GL_ScreenShot_f );

@@ -140,11 +140,11 @@ A Com_Printf that only shows up if the "developer" cvar is set
 */
 void Com_DPrintf( _Printf_format_string_ const char *fmt, ... )
 {
-	va_list		argptr;
-	char		msg[MAX_PRINT_MSG];
-
 	if ( !developer || !developer->value )
 		return;			// don't confuse non-developers with techie stuff...
+
+	va_list		argptr;
+	char		msg[MAX_PRINT_MSG];
 
 	va_start( argptr, fmt );
 	Q_vsprintf_s( msg, fmt, argptr );
@@ -512,7 +512,11 @@ test error shutdown procedures
 */
 static void Com_Error_f (void)
 {
-	Com_Error (ERR_FATAL, "%s", Cmd_Argv(1));
+	if ( Cmd_Argc() == 2 )
+	{
+		Com_Error( ERR_FATAL, Cmd_Argv( 1 ) );
+	}
+	Com_Error( ERR_FATAL, "Error test" );
 }
 
 /*

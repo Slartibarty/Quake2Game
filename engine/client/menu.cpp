@@ -1278,6 +1278,298 @@ VIDEO MENU
 =======================================================================
 */
 
+extern cvar_t *vid_fullscreen;
+extern cvar_t *vid_gamma;
+extern cvar_t *scr_viewsize;
+
+static cvar_t *gl_mode;
+static cvar_t *gl_picmip;
+static cvar_t *gl_finish;
+
+static menuframework_s	s_vid_menu;
+
+static menulist_s		s_mode_list;
+static menuslider_s		s_tq_slider;
+static menuslider_s		s_screensize_slider;
+static menuslider_s		s_brightness_slider;
+static menulist_s  		s_fs_box;
+static menulist_s  		s_finish_box;
+static menuaction_s		s_cancel_action;
+static menuaction_s		s_defaults_action;
+
+static void DriverCallback( void *unused )
+{
+}
+
+static void ScreenSizeCallback( void *s )
+{
+	menuslider_s *slider = (menuslider_s *)s;
+
+	Cvar_SetValue( "viewsize", slider->curvalue * 10 );
+}
+
+static void BrightnessCallback( void *s )
+{
+}
+
+static void ResetDefaults( void *unused )
+{
+	VID_MenuInit();
+}
+
+static void ApplyChanges( void *unused )
+{
+	float gamma;
+
+	/*
+	** invert sense so greater = brighter, and scale to a range of 0.5 to 1.3
+	*/
+	gamma = ( 0.8f - ( s_brightness_slider.curvalue / 10.0f - 0.5f ) ) + 0.5f;
+
+	Cvar_SetValue( "vid_gamma", gamma );
+	Cvar_SetValue( "gl_picmip", 3 - s_tq_slider.curvalue );
+	Cvar_SetValue( "vid_fullscreen", s_fs_box.curvalue );
+	Cvar_SetValue( "gl_finish", s_finish_box.curvalue );
+	Cvar_SetValue( "gl_mode", s_mode_list.curvalue );
+
+	/*
+	** update appropriate stuff if we're running OpenGL and gamma
+	** has been modified
+	*/
+	if ( vid_gamma->modified )
+	{
+		// SLARTTODO
+		//vid_ref->modified = true;
+	}
+
+	// UPDATE RESOLUTION HERE
+
+	M_ForceMenuOff();
+}
+
+static void CancelChanges( void *unused )
+{
+	M_PopMenu();
+}
+
+// A list of resolutions
+static char **resolutions;
+static bool resolutions_initialised;
+
+static void InitResolutions()
+{
+	if ( !resolutions_initialised )
+	{
+		int width = 0, height = 0;
+		int mode = 0;
+
+		int numModes = VID_GetNumModes();
+
+		resolutions = (char **)Z_Malloc( ( numModes + 1 ) * sizeof( resolutions ) );
+
+		while ( VID_GetModeInfo( &width, &height, mode ) != false )
+		{
+			resolutions[mode] = (char *)Z_Malloc( 32 );
+			Q_sprintf_s( resolutions[mode], 32, "[%dx%d]", width, height );
+
+			++mode;
+		}
+
+		resolutions[numModes] = nullptr;
+
+		resolutions_initialised = true;
+	}
+}
+
+// Due to how the vid menu is set up, this must be deleted when the game's closing
+static void DeleteResolutions()
+{
+	if ( resolutions_initialised ) // We might not have entered the video menu
+	{
+		for ( int i = 0; ; ++i )
+		{
+			if ( resolutions[i] == nullptr )
+			{
+				Z_Free( resolutions[i] );
+				break;
+			}
+			Z_Free( resolutions[i] );
+		}
+		Z_Free( resolutions );
+	}
+}
+
+/*
+** VID_MenuInit
+*/
+void VID_MenuInit( void )
+{
+	static const char *yesno_names[] =
+	{
+		"no",
+		"yes",
+		nullptr
+	};
+
+	InitResolutions();
+
+	if ( !gl_picmip )
+		gl_picmip = Cvar_Get( "gl_picmip", "0", 0 );
+	if ( !gl_mode )
+		gl_mode = Cvar_Get( "gl_mode", "0", 0 );
+	if ( !gl_finish )
+		gl_finish = Cvar_Get( "gl_finish", "0", CVAR_ARCHIVE );
+
+	s_mode_list.curvalue = gl_mode->value;
+
+	if ( !scr_viewsize )
+		scr_viewsize = Cvar_Get ("viewsize", "100", CVAR_ARCHIVE);
+
+	s_screensize_slider.curvalue = scr_viewsize->value/10;
+
+	s_vid_menu.x = viddef.width * 0.50f;
+	s_vid_menu.nitems = 0;
+
+	s_mode_list.generic.type = MTYPE_SPINCONTROL;
+	s_mode_list.generic.name = "video mode";
+	s_mode_list.generic.x = 0;
+	s_mode_list.generic.y = 10;
+	s_mode_list.itemnames = (const char**)resolutions;
+
+	s_screensize_slider.generic.type	= MTYPE_SLIDER;
+	s_screensize_slider.generic.x		= 0;
+	s_screensize_slider.generic.y		= 20;
+	s_screensize_slider.generic.name	= "screen size";
+	s_screensize_slider.minvalue = 3;
+	s_screensize_slider.maxvalue = 12;
+	s_screensize_slider.generic.callback = ScreenSizeCallback;
+
+	s_brightness_slider.generic.type	= MTYPE_SLIDER;
+	s_brightness_slider.generic.x	= 0;
+	s_brightness_slider.generic.y	= 30;
+	s_brightness_slider.generic.name	= "brightness";
+	s_brightness_slider.generic.callback = BrightnessCallback;
+	s_brightness_slider.minvalue = 5;
+	s_brightness_slider.maxvalue = 13;
+	s_brightness_slider.curvalue = ( 1.3f - vid_gamma->value + 0.5f ) * 10;
+
+	s_fs_box.generic.type = MTYPE_SPINCONTROL;
+	s_fs_box.generic.x	= 0;
+	s_fs_box.generic.y	= 40;
+	s_fs_box.generic.name	= "fullscreen";
+	s_fs_box.itemnames = yesno_names;
+	s_fs_box.curvalue = vid_fullscreen->value;
+
+	s_defaults_action.generic.type = MTYPE_ACTION;
+	s_defaults_action.generic.name = "reset to defaults";
+	s_defaults_action.generic.x    = 0;
+	s_defaults_action.generic.y    = 90;
+	s_defaults_action.generic.callback = ResetDefaults;
+
+	s_cancel_action.generic.type = MTYPE_ACTION;
+	s_cancel_action.generic.name = "cancel";
+	s_cancel_action.generic.x    = 0;
+	s_cancel_action.generic.y    = 100;
+	s_cancel_action.generic.callback = CancelChanges;
+
+	s_tq_slider.generic.type	= MTYPE_SLIDER;
+	s_tq_slider.generic.x		= 0;
+	s_tq_slider.generic.y		= 60;
+	s_tq_slider.generic.name	= "texture quality";
+	s_tq_slider.minvalue = 0;
+	s_tq_slider.maxvalue = 3;
+	s_tq_slider.curvalue = 3-gl_picmip->value;
+
+	s_finish_box.generic.type = MTYPE_SPINCONTROL;
+	s_finish_box.generic.x	= 0;
+	s_finish_box.generic.y	= 80;
+	s_finish_box.generic.name	= "sync every frame";
+	s_finish_box.curvalue = gl_finish->value;
+	s_finish_box.itemnames = yesno_names;
+
+	Menu_AddItem( &s_vid_menu, ( void * ) &s_mode_list );
+	Menu_AddItem( &s_vid_menu, ( void * ) &s_screensize_slider );
+	Menu_AddItem( &s_vid_menu, ( void * ) &s_brightness_slider );
+	Menu_AddItem( &s_vid_menu, ( void * ) &s_fs_box );
+	Menu_AddItem( &s_vid_menu, ( void * ) &s_tq_slider );
+	Menu_AddItem( &s_vid_menu, ( void * ) &s_finish_box );
+
+	Menu_AddItem( &s_vid_menu, ( void * ) &s_defaults_action );
+	Menu_AddItem( &s_vid_menu, ( void * ) &s_cancel_action );
+
+	Menu_Center( &s_vid_menu );
+	s_vid_menu.x -= 8;
+}
+
+/*
+================
+VID_MenuDraw
+================
+*/
+void VID_MenuDraw (void)
+{
+	int w, h;
+
+	/*
+	** draw the banner
+	*/
+	R_DrawGetPicSize( &w, &h, "m_banner_video" );
+	R_DrawPic( viddef.width / 2 - w / 2, viddef.height / 2 - 110, "m_banner_video" );
+
+	/*
+	** move cursor to a reasonable starting position
+	*/
+	Menu_AdjustCursor( &s_vid_menu, 1 );
+
+	/*
+	** draw the menu
+	*/
+	Menu_Draw( &s_vid_menu );
+}
+
+/*
+================
+VID_MenuKey
+================
+*/
+const char *VID_MenuKey( int key )
+{
+	menuframework_s *m = &s_vid_menu;
+	const char *sound = "misc/menu1.wav";
+
+	switch ( key )
+	{
+	case K_ESCAPE:
+		ApplyChanges( 0 );
+		return NULL;
+	case K_KP_UPARROW:
+	case K_UPARROW:
+		m->cursor--;
+		Menu_AdjustCursor( m, -1 );
+		break;
+	case K_KP_DOWNARROW:
+	case K_DOWNARROW:
+		m->cursor++;
+		Menu_AdjustCursor( m, 1 );
+		break;
+	case K_KP_LEFTARROW:
+	case K_LEFTARROW:
+		Menu_SlideItem( m, -1 );
+		break;
+	case K_KP_RIGHTARROW:
+	case K_RIGHTARROW:
+		Menu_SlideItem( m, 1 );
+		break;
+	case K_KP_ENTER:
+	case K_ENTER:
+		if ( !Menu_SelectItem( m ) )
+			ApplyChanges( NULL );
+		break;
+	}
+
+	return sound;
+}
+
 void M_Menu_Video_f (void)
 {
 	VID_MenuInit();
@@ -3837,6 +4129,18 @@ void M_Init (void)
 	Cmd_AddCommand ("menu_options", M_Menu_Options_f);
 		Cmd_AddCommand ("menu_keys", M_Menu_Keys_f);
 	Cmd_AddCommand ("menu_quit", M_Menu_Quit_f);
+}
+
+
+/*
+=================
+M_Shutdown
+=================
+*/
+void M_Shutdown (void)
+{
+	// We need to shutdown the resolutions here
+	DeleteResolutions();
 }
 
 
