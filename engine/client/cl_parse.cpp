@@ -392,7 +392,7 @@ void CL_LoadClientinfo (clientinfo_t *ci, char *s)
 		strcpy (model_filename, "players/male/tris.md2");
 		strcpy (weapon_filename, "players/male/weapon.md2");
 		strcpy (skin_filename, "players/male/grunt.pcx");
-		strcpy (ci->iconname, "/players/male/grunt_i.pcx");
+		strcpy (ci->iconname, "players/male/grunt_i.pcx");
 		ci->model = R_RegisterModel (model_filename);
 		memset(ci->weaponmodel, 0, sizeof(ci->weaponmodel));
 		ci->weaponmodel[0] = R_RegisterModel (weapon_filename);
@@ -463,7 +463,7 @@ void CL_LoadClientinfo (clientinfo_t *ci, char *s)
 		}
 
 		// icon file
-		Q_sprintf_s (ci->iconname, "/players/%s/%s_i.pcx", model_name, skin_name);
+		Q_sprintf_s (ci->iconname, "players/%s/%s_i.pcx", model_name, skin_name);
 		ci->icon = R_RegisterPic (ci->iconname);
 	}
 

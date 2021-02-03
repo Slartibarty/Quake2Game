@@ -191,6 +191,10 @@ void COM_FileBase( const char *in, char *out );
 // Returns the path up to, but not including the last /
 void COM_FilePath( const char *in, char *out );
 
+// Set a filename's extension
+// extension should have the period
+void Com_FileSetExtension( const char *in, char *out, const char *extension );
+
 // Parse a token out of a string
 // data is an in/out parm, returns a parsed out token
 char *COM_Parse( char **data_p );

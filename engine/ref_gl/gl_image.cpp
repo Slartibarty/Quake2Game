@@ -824,6 +824,8 @@ static material_t *GL_CreateMaterial( const char *name )
 	int i;
 	material_t *material;
 
+	assert( !strstr( name, "pcx" ) );
+
 	// Horrible hack, clean this up
 #if 0
 	char newname[MAX_QPATH];
@@ -868,25 +870,36 @@ material_t *GL_FindMaterial( const char *name, byte *pic, int width, int height 
 {
 	int i;
 	material_t *material;
+	char newname[MAX_QPATH];
 
-	assert( name && name[0] );
-
-	if ( !strstr( name, ".mat" ) )
+	if ( strstr( name, "players/" ) )
 	{
+		// No, no screw you
 		return mat_notexture;
+	}
+
+	if ( !strstr( name, MAT_EXT ) )
+	{
+		// This is a legacy path, we'll need to prepend materials/ and append with .mat
+		strcpy( newname, "materials/" );
+		Com_FileSetExtension( name, newname + sizeof( "materials/" ) - 1, MAT_EXT );
+	}
+	else
+	{
+		Q_strcpy_s( newname, name );
 	}
 
 	// look for it
 	for ( i = 0, material = glmaterials; i < numglmaterials; ++i, ++material )
 	{
-		if ( Q_strcmp( name, material->name ) == 0 )
+		if ( Q_strcmp( newname, material->name ) == 0 )
 		{
 			material->registration_sequence = registration_sequence;
 			return material;
 		}
 	}
 
-	material = GL_CreateMaterial( name );
+	material = GL_CreateMaterial( newname );
 
 	return material;
 }
@@ -895,7 +908,7 @@ material_t *GL_FindMaterial( const char *name, byte *pic, int width, int height 
 //-------------------------------------------------------------------------------------------------
 material_t *R_RegisterSkin( const char *name )
 {
-	// No
+	// This is only used by the terrible post-release multiplayer code
 	return mat_notexture;
 }
 

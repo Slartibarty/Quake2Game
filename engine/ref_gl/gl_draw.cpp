@@ -67,6 +67,8 @@ material_t *Draw_FindPic( const char *name )
 {
 	char fullname[MAX_QPATH];
 	Q_sprintf_s( fullname, "materials/pics/%s.mat", name );
+	assert( !strstr( fullname, "//" ) ); // Check for double slashes
+
 	return GL_FindMaterial( fullname );
 }
 

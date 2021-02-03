@@ -67,6 +67,31 @@ void COM_FilePath (const char *in, char *out)
 }
 
 //-------------------------------------------------------------------------------------------------
+// Set a filename's extension
+// extension should have the period
+//-------------------------------------------------------------------------------------------------
+void Com_FileSetExtension( const char *in, char *out, const char *extension )
+{
+	const char *ext;
+	strlen_t difference;
+
+	ext = strrchr( in, '.' );
+	if ( !ext ) {
+		// No extension, just strcpy and strcat
+		difference = Q_strlen( in );
+		memcpy( out, in, difference );
+		strcpy( out + difference, extension );
+		return;
+	}
+
+	difference = ext - in;
+
+	memcpy( out, in, difference );
+
+	strcpy( out + difference, extension );
+}
+
+//-------------------------------------------------------------------------------------------------
 // Parse a token out of a string
 //-------------------------------------------------------------------------------------------------
 char *COM_Parse (char **data_p)
