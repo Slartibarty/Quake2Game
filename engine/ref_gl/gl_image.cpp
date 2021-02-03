@@ -1052,9 +1052,6 @@ static void R_InitParticleTexture(void)
 	}
 	img = GL_CreateImage("***r_notexture***", (byte *)data, 8, 8, IF_NONE);
 	mat_notexture = GL_CreateMaterialFromData( "***r_notexture***", img );
-	// We upload as a pic, but we don't want clamping! Set it here
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 }
 
 //-------------------------------------------------------------------------------------------------
