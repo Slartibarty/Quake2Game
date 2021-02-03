@@ -435,10 +435,10 @@ void SCR_DrawPause (void)
 {
 	int		w, h;
 
-	if (!scr_showpause->value)		// turn off for screenshots
+	if ( !cl_paused->value )
 		return;
 
-	if (!cl_paused->value)
+	if (!scr_showpause->value)		// turn off for screenshots
 		return;
 
 	R_DrawGetPicSize (&w, &h, "pause");

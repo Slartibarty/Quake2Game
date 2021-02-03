@@ -135,30 +135,7 @@ namespace input
 
 	static void HandleMouseInput( RAWMOUSE &raw )
 	{
-		if ( mouseactive == false ) {
-			return;
-		}
-
-		RECT r;
-		GetClientRect( cl_hwnd, &r );
-
-		float xpos = float( raw.lLastX + last_xpos );
-		float ypos = float( raw.lLastY + last_ypos );
-		last_xpos = raw.lLastX;
-		last_ypos = raw.lLastY;
-
-		xpos *= sensitivity->value;
-		ypos *= sensitivity->value;
-
-#if 0
-		// force the mouse to the center, so there's room to move
-		if ( mx || my )
-			SetCursorPos( window_center_x, window_center_y );
-#endif
-
-		cl.viewangles[YAW] -= xpos; // m_yaw->value *
-		cl.viewangles[PITCH] += ypos; // m_pitch->value *
-
+		// Always process BUTTONS!
 		switch ( raw.usButtonFlags )
 		{
 		case RI_MOUSE_LEFT_BUTTON_DOWN:
@@ -184,6 +161,30 @@ namespace input
 			Key_Event( ( (short)raw.usButtonData > 0 ) ? K_MWHEELUP : K_MWHEELDOWN, false, sys_msg_time );
 			break;
 		}
+
+		if ( mouseactive == false ) {
+			return;
+		}
+
+		RECT r;
+		GetClientRect( cl_hwnd, &r );
+
+		float xpos = float( raw.lLastX + last_xpos );
+		float ypos = float( raw.lLastY + last_ypos );
+		last_xpos = raw.lLastX;
+		last_ypos = raw.lLastY;
+
+		xpos *= sensitivity->value;
+		ypos *= sensitivity->value;
+
+#if 0
+		// force the mouse to the center, so there's room to move
+		if ( mx || my )
+			SetCursorPos( window_center_x, window_center_y );
+#endif
+
+		cl.viewangles[YAW] -= xpos; // m_yaw->value *
+		cl.viewangles[PITCH] += ypos; // m_pitch->value *
 	}
 
 	//-------------------------------------------------------------------------------------------------

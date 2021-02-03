@@ -643,4 +643,34 @@ void Con_DrawConsole (float frac)
 	Con_DrawInput ();
 }
 
+void Con_PageUp( void )
+{
+	con.display -= 2;
+	if ( con.current - con.display >= con.totallines )
+	{
+		con.display = con.current - con.totallines + 1;
+	}
+}
 
+void Con_PageDown( void )
+{
+	con.display += 2;
+	if ( con.display > con.current )
+	{
+		con.display = con.current;
+	}
+}
+
+void Con_Top( void )
+{
+	con.display = con.totallines;
+	if ( con.current - con.display >= con.totallines )
+	{
+		con.display = con.current - con.totallines + 1;
+	}
+}
+
+void Con_Bottom( void )
+{
+	con.display = con.current;
+}

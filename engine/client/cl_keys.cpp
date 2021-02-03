@@ -328,29 +328,49 @@ void Key_Console (int key)
 		return;
 	}
 
-	if (key == K_PGUP || key == K_KP_PGUP )
+	if ( key == K_PGUP || key == K_KP_PGUP )
 	{
-		con.display -= 2;
+		Con_PageUp();
 		return;
 	}
 
-	if (key == K_PGDN || key == K_KP_PGDN ) 
+	if ( key == K_PGDN || key == K_KP_PGDN ) 
 	{
-		con.display += 2;
-		if (con.display > con.current)
-			con.display = con.current;
+		Con_PageDown();
 		return;
 	}
 
-	if (key == K_HOME || key == K_KP_HOME )
+	if ( key == K_MWHEELUP ) //----(SA)	added some mousewheel functionality to the console
 	{
-		con.display = con.current - con.totallines + 10;
+		Con_PageUp();
+		if ( keydown[K_CTRL] ) // hold <ctrl> to accelerate scrolling
+		{
+			Con_PageUp();
+			Con_PageUp();
+		}
 		return;
 	}
 
-	if (key == K_END || key == K_KP_END )
+	if ( key == K_MWHEELDOWN ) //----(SA)	added some mousewheel functionality to the console
 	{
-		con.display = con.current;
+		Con_PageDown();
+		if ( keydown[K_CTRL] ) // hold <ctrl> to accelerate scrolling
+		{
+			Con_PageDown();
+			Con_PageDown();
+		}
+		return;
+	}
+
+	if ( key == K_HOME || key == K_KP_HOME )
+	{
+		Con_Top();
+		return;
+	}
+
+	if ( key == K_END || key == K_KP_END )
+	{
+		Con_Bottom();
 		return;
 	}
 	
@@ -668,6 +688,10 @@ void Key_Init (void)
 	consolekeys[K_KP_MINUS] = true;
 	consolekeys[K_KP_5] = true;
 
+	// The mousewheel can be a conkey
+	consolekeys[K_MWHEELUP] = true;
+	consolekeys[K_MWHEELDOWN] = true;
+
 	consolekeys['`'] = false;
 	consolekeys['~'] = false;
 
@@ -744,7 +768,8 @@ void Key_Event (int key, bool down, unsigned time)
 			&& key_repeats[key] > 1)
 			return;	// ignore most autorepeats
 			
-		if (key >= 200 && !keybindings[key])
+		// Don't warn if we're a console key (mwheel)
+		if (key >= 200 && !keybindings[key] && !consolekeys[key])
 			Com_Printf ("%s is unbound, hit F4 to set.\n", Key_KeynumToString (key) );
 	}
 	else

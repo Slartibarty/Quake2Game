@@ -38,3 +38,9 @@ void Con_Clear_f (void);
 void Con_DrawNotify (void);
 void Con_ClearNotify (void);
 void Con_ToggleConsole_f (void);
+
+// Q3 added
+void Con_PageUp( void );
+void Con_PageDown( void );
+void Con_Top( void );
+void Con_Bottom( void );
