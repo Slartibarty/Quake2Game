@@ -106,12 +106,6 @@ void Draw_StretchPic( int x, int y, int w, int h, const char *pic )
 
 	mat->Bind();
 
-	// SlartTodo: This is called every single frame a stretchpic needs to be drawn,
-	// surely this must be a bad thing
-	// Linear filter stretched pics, otherwise they look awful
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
 	glBegin( GL_QUADS );
 	glTexCoord2f( img->sl, img->tl );
 	glVertex2i( x, y );

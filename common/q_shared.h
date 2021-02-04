@@ -320,8 +320,8 @@ struct cvar_t
 	char		*name;
 	char		*string;
 	char		*latched_string;	// for CVAR_LATCH vars
-	int			flags;
-	qboolean	modified;	// set each time the cvar is changed
+	uint32		flags;
+	bool		modified;			// set each time the cvar is changed
 	float		value;
 	cvar_t		*next;
 };

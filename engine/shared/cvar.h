@@ -1,5 +1,5 @@
 //=================================================================================================
-// Console variables, aka convars
+// Console variables
 //=================================================================================================
 
 #pragma once
@@ -22,7 +22,7 @@ interface from being ambiguous.
 
 extern cvar_t *cvar_vars;
 
-cvar_t		*Cvar_Get( const char *var_name, const char *value, int flags );
+cvar_t		*Cvar_Get( const char *var_name, const char *value, uint32 flags );
 // creates the variable if it doesn't exist, or returns the existing one
 // if it exists, the value will not be changed, but flags will be ORed in
 // that allows variables to be unarchived without needing bitflags
@@ -33,7 +33,7 @@ cvar_t		*Cvar_Set( const char *var_name, const char *value );
 cvar_t		*Cvar_ForceSet( const char *var_name, const char *value );
 // will set the variable even if NOSET or LATCH
 
-cvar_t		*Cvar_FullSet( const char *var_name, const char *value, int flags );
+cvar_t		*Cvar_FullSet( const char *var_name, const char *value, uint32 flags );
 
 void		Cvar_SetValue( const char *var_name, float value );
 // expands value to a string and calls Cvar_Set
@@ -48,10 +48,10 @@ char		*Cvar_CompleteVariable( const char *partial );
 // attempts to match a partial variable name for command line completion
 // returns NULL if nothing fits
 
-void		Cvar_GetLatchedVars( void );
+void		Cvar_GetLatchedVars();
 // any CVAR_LATCHED variables that have been set will now take effect
 
-qboolean	Cvar_Command( void );
+bool		Cvar_Command();
 // called by Cmd_ExecuteString when Cmd_Argv(0) doesn't match a known
 // command.  Returns true if the command was a variable reference that
 // was handled. (print or change)
@@ -60,12 +60,12 @@ void 		Cvar_WriteVariables( const char *path );
 // appends lines containing "set variable value" for all variables
 // with the archive flag set to true.
 
-void		Cvar_Init( void );
+void		Cvar_Init();
 
-char		*Cvar_Userinfo( void );
+char		*Cvar_Userinfo();
 // returns an info string containing all the CVAR_USERINFO cvars
 
-char		*Cvar_Serverinfo( void );
+char		*Cvar_Serverinfo();
 // returns an info string containing all the CVAR_SERVERINFO cvars
 
 extern qboolean userinfo_modified;
