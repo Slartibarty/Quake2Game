@@ -1354,49 +1354,42 @@ static void CancelChanges( void *unused )
 
 // A list of resolutions
 static char **resolutions;
-static bool resolutions_initialised;
+static int num_resolutions;
 
 static void InitResolutions()
 {
-	if ( !resolutions_initialised )
+	assert( !resolutions && num_resolutions == 0 );
+
+	int width = 0, height = 0;
+	int mode = 0;
+
+	num_resolutions = VID_GetNumModes();
+
+	resolutions = (char **)Z_Malloc( num_resolutions * sizeof( resolutions ) );
+
+	while ( VID_GetModeInfo( &width, &height, mode ) != false )
 	{
-		int width = 0, height = 0;
-		int mode = 0;
+		resolutions[mode] = (char *)Z_Malloc( 32 );
+		Q_sprintf_s( resolutions[mode], 32, "[%dx%d]", width, height );
 
-		int numModes = VID_GetNumModes();
-
-		resolutions = (char **)Z_Malloc( ( numModes + 1 ) * sizeof( resolutions ) );
-
-		while ( VID_GetModeInfo( &width, &height, mode ) != false )
-		{
-			resolutions[mode] = (char *)Z_Malloc( 32 );
-			Q_sprintf_s( resolutions[mode], 32, "[%dx%d]", width, height );
-
-			++mode;
-		}
-
-		resolutions[numModes] = nullptr;
-
-		resolutions_initialised = true;
+		++mode;
 	}
+
+	//resolutions[numModes] = nullptr;
 }
 
-// Due to how the vid menu is set up, this must be deleted when the game's closing
 static void DeleteResolutions()
 {
-	if ( resolutions_initialised ) // We might not have entered the video menu
+	assert( resolutions && num_resolutions > 0 );
+
+	for ( int i = 0; i < num_resolutions; ++i )
 	{
-		for ( int i = 0; ; ++i )
-		{
-			if ( resolutions[i] == nullptr )
-			{
-				Z_Free( resolutions[i] );
-				break;
-			}
-			Z_Free( resolutions[i] );
-		}
-		Z_Free( resolutions );
+		Z_Free( resolutions[i] );
 	}
+	Z_Free( resolutions );
+
+	resolutions = nullptr;
+	num_resolutions = 0;
 }
 
 /*
@@ -1539,6 +1532,7 @@ const char *VID_MenuKey( int key )
 	switch ( key )
 	{
 	case K_ESCAPE:
+		DeleteResolutions();
 		ApplyChanges( nullptr );
 		break;
 	case K_KP_ENTER:
@@ -1973,7 +1967,7 @@ const char *M_Credits_Key( int key )
 
 }
 
-extern int Developer_searchpath (int who);
+extern int Developer_searchpath ();
 
 void M_Menu_Credits_f( void )
 {
@@ -2011,7 +2005,7 @@ void M_Menu_Credits_f( void )
 	}
 	else
 	{
-		isdeveloper = Developer_searchpath (1);
+		isdeveloper = Developer_searchpath ();
 		
 		if (isdeveloper == 1)			// xatrix
 			credits = xatcredits;
@@ -2562,7 +2556,7 @@ void RulesChangeFunc ( void *self )
 //=====
 //PGM
 	// ROGUE GAMES
-	else if(Developer_searchpath(2) == 2)
+	else if(Developer_searchpath() == 2)
 	{
 		if (s_rules_box.curvalue == 2)			// tag	
 		{
@@ -2603,7 +2597,7 @@ void StartServerActionFunc( void *self )
 //	Cvar_SetValue ("coop", s_rules_box.curvalue );
 
 //PGM
-	if((s_rules_box.curvalue < 2) || (Developer_searchpath(2) != 2))
+	if((s_rules_box.curvalue < 2) || (Developer_searchpath() != 2))
 	{
 		Cvar_SetValue ("deathmatch", !s_rules_box.curvalue );
 		Cvar_SetValue ("coop", (float)s_rules_box.curvalue );
@@ -2762,7 +2756,7 @@ void StartServer_MenuInit( void )
 	s_rules_box.generic.name	= "rules";
 	
 //PGM - rogue games only available with rogue DLL.
-	if(Developer_searchpath(2) == 2)
+	if(Developer_searchpath() == 2)
 		s_rules_box.itemnames = dm_coop_names_rogue;
 	else
 		s_rules_box.itemnames = dm_coop_names;
@@ -3023,7 +3017,7 @@ static void DMFlagCallback( void *self )
 
 //=======
 //ROGUE
-	else if (Developer_searchpath(2) == 2)
+	else if (Developer_searchpath() == 2)
 	{
 		if ( f == &s_no_mines_box)
 		{
@@ -3197,7 +3191,7 @@ void DMOptions_MenuInit( void )
 
 //============
 //ROGUE
-	if(Developer_searchpath(2) == 2)
+	if(Developer_searchpath() == 2)
 	{
 		s_no_mines_box.generic.type = MTYPE_SPINCONTROL;
 		s_no_mines_box.generic.x	= 0;
@@ -3253,7 +3247,7 @@ void DMOptions_MenuInit( void )
 
 //=======
 //ROGUE
-	if(Developer_searchpath(2) == 2)
+	if(Developer_searchpath() == 2)
 	{
 		Menu_AddItem( &s_dmoptions_menu, &s_no_mines_box );
 		Menu_AddItem( &s_dmoptions_menu, &s_no_nukes_box );

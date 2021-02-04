@@ -630,8 +630,6 @@ void SpinControl_DoSlide( menulist_s *s, int dir )
 
 void SpinControl_Draw( menulist_s *s )
 {
-	char buffer[100];
-
 	if ( s->generic.name )
 	{
 		Menu_DrawStringR2LDark( s->generic.x + s->generic.parent->x + LCOLUMN_OFFSET, 
@@ -644,6 +642,7 @@ void SpinControl_Draw( menulist_s *s )
 	}
 	else
 	{
+		char buffer[128];
 		strcpy( buffer, s->itemnames[s->curvalue] );
 		*strchr( buffer, '\n' ) = 0;
 		Menu_DrawString( RCOLUMN_OFFSET + s->generic.x + s->generic.parent->x, s->generic.y + s->generic.parent->y, buffer );

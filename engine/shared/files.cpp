@@ -77,7 +77,7 @@ static int FS_FileLength( FILE *f )
 // zoid's download stuff is horrible too, damn
 // This function is called somewhere
 //-------------------------------------------------------------------------------------------------
-int	Developer_searchpath( [[maybe_unused]] int who )
+int	Developer_searchpath()
 {
 	searchpath_t *search;
 

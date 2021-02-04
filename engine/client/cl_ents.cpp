@@ -648,7 +648,7 @@ model_t *S_RegisterSexedModel (entity_state_t *ent, char *base)
 }
 
 // PMM - used in shell code 
-extern int Developer_searchpath (int who);
+extern int Developer_searchpath ();
 // pmm
 /*
 ===============
@@ -903,13 +903,13 @@ void CL_AddPacketEntities (frame_t *frame)
 			// PMM - at this point, all of the shells have been handled
 			// if we're in the rogue pack, set up the custom mixing, otherwise just
 			// keep going
-//			if(Developer_searchpath(2) == 2)
+//			if(Developer_searchpath() == 2)
 //			{
 				// all of the solo colors are fine.  we need to catch any of the combinations that look bad
 				// (double & half) and turn them into the appropriate color, and make double/quad something special
 				if (renderfx & RF_SHELL_HALF_DAM)
 				{
-					if(Developer_searchpath(2) == 2)
+					if(Developer_searchpath() == 2)
 					{
 						// ditch the half damage shell if any of red, blue, or double are on
 						if (renderfx & (RF_SHELL_RED|RF_SHELL_BLUE|RF_SHELL_DOUBLE))
@@ -919,7 +919,7 @@ void CL_AddPacketEntities (frame_t *frame)
 
 				if (renderfx & RF_SHELL_DOUBLE)
 				{
-					if(Developer_searchpath(2) == 2)
+					if(Developer_searchpath() == 2)
 					{
 						// lose the yellow shell if we have a red, blue, or green shell
 						if (renderfx & (RF_SHELL_RED|RF_SHELL_BLUE|RF_SHELL_GREEN))
