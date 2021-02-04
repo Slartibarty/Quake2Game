@@ -30,7 +30,7 @@
 #define QMF_GRAYED			0x00000002
 #define QMF_NUMBERSONLY		0x00000004
 
-typedef struct _tag_menuframework
+struct menuframework_s
 {
 	int x, y;
 	int	cursor;
@@ -41,11 +41,11 @@ typedef struct _tag_menuframework
 
 	const char *statusbar;
 
-	void (*cursordraw)( struct _tag_menuframework *m );
+	void (*cursordraw)( menuframework_s *m );
 	
-} menuframework_s;
+};
 
-typedef struct
+struct menucommon_s
 {
 	int type;
 	const char *name;
@@ -61,9 +61,9 @@ typedef struct
 	void (*statusbarfunc)( void *self );
 	void (*ownerdraw)( void *self );
 	void (*cursordraw)( void *self );
-} menucommon_s;
+};
 
-typedef struct
+struct menufield_s
 {
 	menucommon_s generic;
 
@@ -72,9 +72,9 @@ typedef struct
 	int			length;
 	int			visible_length;
 	int			visible_offset;
-} menufield_s;
+};
 
-typedef struct 
+struct menuslider_s
 {
 	menucommon_s generic;
 
@@ -83,26 +83,26 @@ typedef struct
 	float curvalue;
 
 	float range;
-} menuslider_s;
+};
 
-typedef struct
+struct menulist_s
 {
 	menucommon_s generic;
 
 	int curvalue;
 
 	const char **itemnames;
-} menulist_s;
+};
 
-typedef struct
+struct menuaction_s
 {
 	menucommon_s generic;
-} menuaction_s;
+};
 
-typedef struct
+struct menuseparator_s
 {
 	menucommon_s generic;
-} menuseparator_s;
+};
 
 qboolean Field_Key( menufield_s *field, int key );
 
