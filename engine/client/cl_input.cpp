@@ -35,7 +35,6 @@ Key_Event (int key, qboolean down, unsigned time);
 */
 
 
-kbutton_t	in_klook;
 kbutton_t	in_left, in_right, in_forward, in_back;
 kbutton_t	in_lookup, in_lookdown, in_moveleft, in_moveright;
 kbutton_t	in_speed, in_use, in_attack;
@@ -120,8 +119,6 @@ void KeyUp (kbutton_t *b)
 	b->state |= 4; 		// impulse up
 }
 
-void IN_KLookDown (void) {KeyDown(&in_klook);}
-void IN_KLookUp (void) {KeyUp(&in_klook);}
 void IN_UpDown(void) {KeyDown(&in_up);}
 void IN_UpUp(void) {KeyUp(&in_up);}
 void IN_DownDown(void) {KeyDown(&in_down);}
@@ -226,12 +223,6 @@ void CL_AdjustAngles (void)
 		speed = cls.frametime * cl_anglespeedkey->value;
 	else
 		speed = cls.frametime;
-
-	if (in_klook.state & 1)
-	{
-		cl.viewangles[PITCH] -= speed*cl_pitchspeed->value * CL_KeyState (&in_forward);
-		cl.viewangles[PITCH] += speed*cl_pitchspeed->value * CL_KeyState (&in_back);
-	}
 	
 	up = CL_KeyState (&in_lookup);
 	down = CL_KeyState(&in_lookdown);
@@ -261,11 +252,8 @@ void CL_BaseMove (usercmd_t *cmd)
 	cmd->upmove += cl_upspeed->value * CL_KeyState (&in_up);
 	cmd->upmove -= cl_upspeed->value * CL_KeyState (&in_down);
 
-	if (! (in_klook.state & 1) )
-	{	
-		cmd->forwardmove += cl_forwardspeed->value * CL_KeyState (&in_forward);
-		cmd->forwardmove -= cl_forwardspeed->value * CL_KeyState (&in_back);
-	}	
+	cmd->forwardmove += cl_forwardspeed->value * CL_KeyState (&in_forward);
+	cmd->forwardmove -= cl_forwardspeed->value * CL_KeyState (&in_back);
 
 //
 // adjust for speed key / running
@@ -410,8 +398,6 @@ void CL_InitInput (void)
 	Cmd_AddCommand ("+use", IN_UseDown);
 	Cmd_AddCommand ("-use", IN_UseUp);
 	Cmd_AddCommand ("impulse", IN_Impulse);
-	Cmd_AddCommand ("+klook", IN_KLookDown);
-	Cmd_AddCommand ("-klook", IN_KLookUp);
 
 	cl_nodelta = Cvar_Get ("cl_nodelta", "0", 0);
 }

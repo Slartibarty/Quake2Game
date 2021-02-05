@@ -429,16 +429,15 @@ void CL_RequestNextDownload (void);
 //
 // cl_input
 //
-typedef struct
+struct kbutton_t
 {
 	int			down[2];		// key nums holding it down
 	unsigned	downtime;		// msec timestamp
 	unsigned	msec;			// msec down this frame
 	int			state;
-} kbutton_t;
+};
 
-extern	kbutton_t	in_klook;
-extern 	kbutton_t 	in_speed;
+extern kbutton_t in_speed;
 
 void CL_InitInput (void);
 void CL_SendCmd (void);

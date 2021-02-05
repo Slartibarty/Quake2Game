@@ -573,7 +573,6 @@ const char *bindnames[][2]
 {"+lookup", 		"look up"},
 {"+lookdown", 		"look down"},
 {"centerview", 		"center view"},
-{"+klook", 			"keyboard look"},
 {"+moveup",			"up / jump"},
 {"+movedown",		"down / crouch"},
 
@@ -600,12 +599,9 @@ static menuaction_s		s_keys_turn_right_action;
 static menuaction_s		s_keys_run_action;
 static menuaction_s		s_keys_step_left_action;
 static menuaction_s		s_keys_step_right_action;
-static menuaction_s		s_keys_sidestep_action;
 static menuaction_s		s_keys_look_up_action;
 static menuaction_s		s_keys_look_down_action;
 static menuaction_s		s_keys_center_view_action;
-static menuaction_s		s_keys_mouse_look_action;
-static menuaction_s		s_keys_keyboard_look_action;
 static menuaction_s		s_keys_move_up_action;
 static menuaction_s		s_keys_move_down_action;
 static menuaction_s		s_keys_inventory_action;
@@ -794,14 +790,6 @@ static void Keys_MenuInit( void )
 	s_keys_step_right_action.generic.localdata[0] = ++i;
 	s_keys_step_right_action.generic.name	= bindnames[s_keys_step_right_action.generic.localdata[0]][1];
 
-	s_keys_sidestep_action.generic.type	= MTYPE_ACTION;
-	s_keys_sidestep_action.generic.flags  = QMF_GRAYED;
-	s_keys_sidestep_action.generic.x		= 0;
-	s_keys_sidestep_action.generic.y		= y += 9;
-	s_keys_sidestep_action.generic.ownerdraw = DrawKeyBindingFunc;
-	s_keys_sidestep_action.generic.localdata[0] = ++i;
-	s_keys_sidestep_action.generic.name	= bindnames[s_keys_sidestep_action.generic.localdata[0]][1];
-
 	s_keys_look_up_action.generic.type	= MTYPE_ACTION;
 	s_keys_look_up_action.generic.flags  = QMF_GRAYED;
 	s_keys_look_up_action.generic.x		= 0;
@@ -825,22 +813,6 @@ static void Keys_MenuInit( void )
 	s_keys_center_view_action.generic.ownerdraw = DrawKeyBindingFunc;
 	s_keys_center_view_action.generic.localdata[0] = ++i;
 	s_keys_center_view_action.generic.name	= bindnames[s_keys_center_view_action.generic.localdata[0]][1];
-
-	s_keys_mouse_look_action.generic.type	= MTYPE_ACTION;
-	s_keys_mouse_look_action.generic.flags  = QMF_GRAYED;
-	s_keys_mouse_look_action.generic.x		= 0;
-	s_keys_mouse_look_action.generic.y		= y += 9;
-	s_keys_mouse_look_action.generic.ownerdraw = DrawKeyBindingFunc;
-	s_keys_mouse_look_action.generic.localdata[0] = ++i;
-	s_keys_mouse_look_action.generic.name	= bindnames[s_keys_mouse_look_action.generic.localdata[0]][1];
-
-	s_keys_keyboard_look_action.generic.type	= MTYPE_ACTION;
-	s_keys_keyboard_look_action.generic.flags  = QMF_GRAYED;
-	s_keys_keyboard_look_action.generic.x		= 0;
-	s_keys_keyboard_look_action.generic.y		= y += 9;
-	s_keys_keyboard_look_action.generic.ownerdraw = DrawKeyBindingFunc;
-	s_keys_keyboard_look_action.generic.localdata[0] = ++i;
-	s_keys_keyboard_look_action.generic.name	= bindnames[s_keys_keyboard_look_action.generic.localdata[0]][1];
 
 	s_keys_move_up_action.generic.type	= MTYPE_ACTION;
 	s_keys_move_up_action.generic.flags  = QMF_GRAYED;
@@ -915,12 +887,9 @@ static void Keys_MenuInit( void )
 	Menu_AddItem( &s_keys_menu, ( void * ) &s_keys_run_action );
 	Menu_AddItem( &s_keys_menu, ( void * ) &s_keys_step_left_action );
 	Menu_AddItem( &s_keys_menu, ( void * ) &s_keys_step_right_action );
-	Menu_AddItem( &s_keys_menu, ( void * ) &s_keys_sidestep_action );
 	Menu_AddItem( &s_keys_menu, ( void * ) &s_keys_look_up_action );
 	Menu_AddItem( &s_keys_menu, ( void * ) &s_keys_look_down_action );
 	Menu_AddItem( &s_keys_menu, ( void * ) &s_keys_center_view_action );
-	Menu_AddItem( &s_keys_menu, ( void * ) &s_keys_mouse_look_action );
-	Menu_AddItem( &s_keys_menu, ( void * ) &s_keys_keyboard_look_action );
 	Menu_AddItem( &s_keys_menu, ( void * ) &s_keys_move_up_action );
 	Menu_AddItem( &s_keys_menu, ( void * ) &s_keys_move_down_action );
 
