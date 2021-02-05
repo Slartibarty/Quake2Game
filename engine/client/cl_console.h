@@ -22,6 +22,8 @@ struct console_t
 	int 	linewidth;		// characters across screen
 	int		totallines;		// total lines in console scrollback
 
+	int		xadjust;		// for wide aspect screens
+
 	int		vislines;
 
 	float	times[NUM_CON_TIMES];	// cls.realtime time the line was generated

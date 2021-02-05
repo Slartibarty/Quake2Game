@@ -4,6 +4,8 @@
 
 #include "client.h"
 
+#define	DEFAULT_CONSOLE_WIDTH	78
+
 console_t	con;
 
 cvar_t		*con_notifytime;
@@ -20,7 +22,7 @@ void DrawString (int x, int y, const char *s)
 	while (*s)
 	{
 		R_DrawChar (x, y, *s);
-		x+=8;
+		x+=CONCHAR_WIDTH;
 		s++;
 	}
 }
@@ -30,7 +32,7 @@ void DrawAltString (int x, int y, const char *s)
 	while (*s)
 	{
 		R_DrawChar (x, y, *s ^ 0x80);
-		x+=8;
+		x+=CONCHAR_WIDTH;
 		s++;
 	}
 }
@@ -113,6 +115,8 @@ Con_Clear_f
 void Con_Clear_f (void)
 {
 	memset (con.text, ' ', CON_TEXTSIZE);
+
+	Con_Bottom();		// go to end
 }
 
 						
@@ -230,14 +234,14 @@ void Con_CheckResize (void)
 	int		i, j, width, oldwidth, oldtotallines, numlines, numchars;
 	char	tbuf[CON_TEXTSIZE];
 
-	width = (viddef.width >> 3) - 2;
+	width = (viddef.width/CONCHAR_WIDTH) - 2;
 
 	if (width == con.linewidth)
 		return;
 
 	if (width < 1)			// video hasn't been initialized yet
 	{
-		width = 38;
+		width = DEFAULT_CONSOLE_WIDTH;
 		con.linewidth = width;
 		con.totallines = CON_TEXTSIZE / con.linewidth;
 		memset (con.text, ' ', CON_TEXTSIZE);
@@ -420,7 +424,6 @@ The input line scrolls horizontally if typing goes beyond the right edge
 */
 void Con_DrawInput (void)
 {
-	int		y;
 	int		i;
 	char	*text;
 
@@ -430,12 +433,9 @@ void Con_DrawInput (void)
 		return;		// don't draw anything (always draw if not active)
 
 	text = key_lines[edit_line];
-	
-// add the cursor frame
-	text[key_linepos] = 10+((int)(cls.realtime>>8)&1);
-	
+		
 // fill out remainder with spaces
-	for (i=key_linepos+1 ; i< con.linewidth ; i++)
+	for (i=key_linepos ; i< con.linewidth ; i++)
 		text[i] = ' ';
 		
 //	prestep if horizontally scrolling
@@ -443,13 +443,12 @@ void Con_DrawInput (void)
 		text += 1 + key_linepos - con.linewidth;
 		
 // draw it
-	y = con.vislines-16;
-
 	for (i=0 ; i<con.linewidth ; i++)
-		R_DrawChar ( (i+1)<<3, con.vislines - 22, text[i]);
+		R_DrawChar ( con.xadjust + (i+1)*CONCHAR_WIDTH, con.vislines - (CONCHAR_HEIGHT*2), text[i]);
 
-// remove cursor
-	key_lines[edit_line][key_linepos] = 0;
+// add the cursor frame
+	if ( (int)( cls.realtime >> 8 ) & 1 )
+		R_DrawChar ( con.xadjust + (key_linepos+1)*CONCHAR_WIDTH, con.vislines - (CONCHAR_HEIGHT*2), 10);
 }
 
 
@@ -478,14 +477,14 @@ void Con_DrawNotify (void)
 		if (time == 0)
 			continue;
 		time = cls.realtime - time;
-		if (time > con_notifytime->value*1000)
+		if (time > con_notifytime->value * mathconst::SecondsToMilliseconds)
 			continue;
 		text = con.text + (i % con.totallines)*con.linewidth;
 		
 		for (x = 0 ; x < con.linewidth ; x++)
-			R_DrawChar ( (x+1)<<3, v, text[x]);
+			R_DrawChar ( con.xadjust + (x+1)*CONCHAR_WIDTH, v, text[x]);
 
-		v += 8;
+		v += CONCHAR_HEIGHT;
 	}
 
 
@@ -503,16 +502,16 @@ void Con_DrawNotify (void)
 		}
 
 		s = chat_buffer;
-		if (chat_bufferlen > (viddef.width>>3)-(skip+1))
-			s += chat_bufferlen - ((viddef.width>>3)-(skip+1));
+		if (chat_bufferlen > (viddef.width/CONCHAR_WIDTH)-(skip+1))
+			s += chat_bufferlen - ((viddef.width/CONCHAR_WIDTH)-(skip+1));
 		x = 0;
 		while(s[x])
 		{
-			R_DrawChar ( (x+skip)<<3, v, s[x]);
+			R_DrawChar ( con.xadjust + (x+skip)*CONCHAR_WIDTH, v, s[x]);
 			x++;
 		}
-		R_DrawChar ( (x+skip)<<3, v, 10+((cls.realtime>>8)&1));
-		v += 8;
+		R_DrawChar ( con.xadjust + (x+skip)*CONCHAR_WIDTH, v, 10+((cls.realtime>>8)&1));
+		v += CONCHAR_HEIGHT;
 	}
 	
 	if (v)
@@ -531,7 +530,7 @@ Draws the console with the solid background
 */
 void Con_DrawConsole (float frac)
 {
-	int				i, j, x, y, n;
+	int				i, x, y, n;
 	int				rows;
 	char			*text;
 	int				row;
@@ -546,6 +545,8 @@ void Con_DrawConsole (float frac)
 	if (lines > viddef.height)
 		lines = viddef.height;
 
+	con.xadjust = 0.0f;
+
 // draw the background
 	R_DrawStretchPic (0, -viddef.height+lines, viddef.width, viddef.height, "conback");
 	SCR_AddDirtyPoint (0,0);
@@ -559,42 +560,38 @@ void Con_DrawConsole (float frac)
 // draw the text
 	con.vislines = lines;
 	
-#if 0
-	rows = (lines-8)>>3;		// rows of text to draw
+	rows = (lines-CONCHAR_WIDTH)/CONCHAR_WIDTH;		// rows of text to draw
 
-	y = lines - 24;
-#else
-	rows = (lines-22)>>3;		// rows of text to draw
-
-	y = lines - 30;
-#endif
+	y = lines - (CONCHAR_HEIGHT*3);
 
 // draw from the bottom up
 	if (con.display != con.current)
 	{
 	// draw arrows to show the buffer is backscrolled
 		for (x=0 ; x<con.linewidth ; x+=4)
-			R_DrawChar ( (x+1)<<3, y, '^');
+			R_DrawChar ( con.xadjust + (x+1)*CONCHAR_WIDTH, y, '^');
 	
-		y -= 8;
+		y -= CONCHAR_HEIGHT;
 		rows--;
 	}
 	
 	row = con.display;
-	for (i=0 ; i<rows ; i++, y-=8, row--)
+
+	for (i=0 ; i<rows ; i++, y-=CONCHAR_HEIGHT, row--)
 	{
 		if (row < 0)
 			break;
 		if (con.current - row >= con.totallines)
-			break;		// past scrollback wrap point
+			continue;	// past scrollback wrap point
 			
 		text = con.text + (row % con.totallines)*con.linewidth;
 
 		for (x=0 ; x<con.linewidth ; x++)
-			R_DrawChar ( (x+1)<<3, y, text[x]);
+			R_DrawChar ( con.xadjust + (x+1)*CONCHAR_WIDTH, y, text[x]);
 	}
 
 //ZOID
+#if 0
 	// draw the download bar
 	// figure out width
 	if (cls.download) {
@@ -635,8 +632,9 @@ void Con_DrawConsole (float frac)
 		// draw it
 		y = con.vislines-12;
 		for (i = 0; i < (int)strlen(dlbar); i++)
-			R_DrawChar ( (i+1)<<3, y, dlbar[i]);
+			R_DrawChar ( con.xadjust + (i+1)*CONCHAR_WIDTH, y, dlbar[i]);
 	}
+#endif
 //ZOID
 
 // draw the input prompt, user text, and cursor if desired

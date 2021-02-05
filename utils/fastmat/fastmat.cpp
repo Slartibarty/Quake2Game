@@ -8,7 +8,7 @@
 
 #include <filesystem>
 
-static constexpr auto MatFormat = "{\n\t$basetexture %s\n\t$clamps 1\n\t$clampt 1\n}\n";
+static constexpr auto MatFormat = "{\n\t$basetexture %s\n}\n";
 
 namespace filesys = std::filesystem;
 
@@ -36,7 +36,7 @@ int wmain( int argc, wchar_t** argv )
 		if ( entry.is_regular_file() )
 		{
 			// If we end with .cpp or .h
-			if ( entry.path().extension().compare( L".pcx" ) == 0 ) //||
+			if ( entry.path().extension().compare( L".png" ) == 0 ) //||
 			//	 entry.path().extension().compare( L".tga" ) == 0 )
 			{
 				wprintf( L"Working on %s\n", entry.path().c_str() );

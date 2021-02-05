@@ -391,19 +391,16 @@ void Menu_Draw( menuframework_s *menu )
 
 void Menu_DrawStatusBar( const char *string )
 {
+	R_DrawFill( 0, VID_HEIGHT - CONCHAR_HEIGHT, VID_WIDTH, CONCHAR_HEIGHT, 4 );
+
 	if ( string )
 	{
 		int l = (int)strlen( string );
-	//	int maxrow = VID_HEIGHT / 8;
-		int maxcol = VID_WIDTH / 8;
+	//	int maxrow = VID_HEIGHT / CONCHAR_HEIGHT;
+		int maxcol = VID_WIDTH / CONCHAR_WIDTH;
 		int col = maxcol / 2 - l / 2;
 
-		R_DrawFill( 0, VID_HEIGHT-8, VID_WIDTH, 8, 4 );
-		Menu_DrawString( col*8, VID_HEIGHT - 8, string );
-	}
-	else
-	{
-		R_DrawFill( 0, VID_HEIGHT-8, VID_WIDTH, 8, 0 );
+		Menu_DrawString( col*CONCHAR_WIDTH, VID_HEIGHT-CONCHAR_HEIGHT, string );
 	}
 }
 
@@ -414,7 +411,7 @@ void Menu_DrawString( int x, int y, const char *string )
 
 	for ( i = 0; i < len; i++ )
 	{
-		R_DrawChar( ( x + i*8 ), y, string[i] );
+		R_DrawChar( ( x + i*CONCHAR_WIDTH ), y, string[i] );
 	}
 }
 
@@ -425,7 +422,7 @@ void Menu_DrawStringDark( int x, int y, const char *string )
 
 	for ( i = 0; i < len; i++ )
 	{
-		R_DrawChar( ( x + i*8 ), y, string[i] + 128 );
+		R_DrawChar( ( x + i*CONCHAR_WIDTH ), y, string[i] + 128 );
 	}
 }
 
@@ -436,7 +433,7 @@ void Menu_DrawStringR2L( int x, int y, const char *string )
 
 	for ( i = 0; i < len; i++ )
 	{
-		R_DrawChar( ( x - i*8 ), y, string[strlen(string)-i-1] );
+		R_DrawChar( ( x - i*CONCHAR_WIDTH ), y, string[len-i-1] );
 	}
 }
 
@@ -447,7 +444,7 @@ void Menu_DrawStringR2LDark( int x, int y, const char *string )
 
 	for ( i = 0; i < len; i++ )
 	{
-		R_DrawChar( ( x - i*8 ), y, string[strlen(string)-i-1]+128 );
+		R_DrawChar( ( x - i*CONCHAR_WIDTH ), y, string[len-i-1]+128 );
 	}
 }
 
@@ -553,7 +550,7 @@ void MenuList_Draw( menulist_s *l )
 
 	n = l->itemnames;
 
-  	R_DrawFill( l->generic.x - 112 + l->generic.parent->x, l->generic.parent->y + l->generic.y + l->curvalue*10 + 10, 128, 10, 16 );
+  	R_DrawFill( l->generic.x - 112 + l->generic.parent->x, l->generic.parent->y + l->generic.y + l->curvalue*CONCHAR_HEIGHT + CONCHAR_HEIGHT, 128, 10, 16 );
 	while ( *n )
 	{
 		Menu_DrawStringR2LDark( l->generic.x + l->generic.parent->x + LCOLUMN_OFFSET, l->generic.y + l->generic.parent->y + y + 10, *n );

@@ -25,21 +25,22 @@ void Draw_InitLocal( void )
 // It can be clipped to the top of the screen to allow the console to be
 // smoothly scrolled off.
 //-------------------------------------------------------------------------------------------------
-void Draw_Char( int x, int y, int num )
+void Draw_Char( int x, int y, int ch )
 {
 	int row, col;
-	float frow, fcol, size;
+	float frow, fcol;
+	float size;
 
-	num &= 255;
+	ch &= 255;
 
-	if ( ( num & 127 ) == 32 )
+	if ( ( ch & 127 ) == 32 )
 		return;		// space
 
-	if ( y <= -8 )
+	if ( y < -CONCHAR_HEIGHT )
 		return;		// totally off screen
 
-	row = num >> 4;
-	col = num & 15;
+	row = ch >> 4;
+	col = ch & 15;
 
 	frow = row * 0.0625f;
 	fcol = col * 0.0625f;
@@ -47,16 +48,22 @@ void Draw_Char( int x, int y, int num )
 
 	draw_chars->Bind();
 
+	glDisable( GL_ALPHA_TEST );
+	glEnable( GL_BLEND );
+
 	glBegin( GL_QUADS );
 	glTexCoord2f( fcol, frow );
 	glVertex2i( x, y );
 	glTexCoord2f( fcol + size, frow );
-	glVertex2i( x + 8, y );
+	glVertex2i( x + CONCHAR_WIDTH, y );
 	glTexCoord2f( fcol + size, frow + size );
-	glVertex2i( x + 8, y + 8 );
+	glVertex2i( x + CONCHAR_WIDTH, y + CONCHAR_HEIGHT );
 	glTexCoord2f( fcol, frow + size );
-	glVertex2i( x, y + 8 );
+	glVertex2i( x, y + CONCHAR_HEIGHT );
 	glEnd();
+
+	glDisable( GL_BLEND );
+	glEnable( GL_ALPHA_TEST );
 }
 
 //-------------------------------------------------------------------------------------------------
