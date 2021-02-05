@@ -1,4 +1,11 @@
 //-------------------------------------------------------------------------------------------------
+// Image and material handling
+// 
+// Images are ref-counted and can be shared amongst many materials
+// Materials are managed like images used to be, with the registration_sequence
+// A registration_sequence of -1 means the material is managed manually, rather than being cleared at
+// every R_EndRegistration, this allows for mats/imgs like the conback and conchars to be loaded at all times
+// without being re-loaded constantly
 //-------------------------------------------------------------------------------------------------
 
 #include "gl_local.h"
@@ -12,8 +19,6 @@
 #define STBI_ONLY_PNG
 #define STBI_NO_FAILURE_STRINGS
 #include "stb_image.h"
-
-#include "stb_image_write.h"
 
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include "stb_image_resize.h"
@@ -342,18 +347,20 @@ void GL_ImageList_f( void )
 //-------------------------------------------------------------------------------------------------
 // List materials
 //-------------------------------------------------------------------------------------------------
-/*void GL_MaterialList_f()
+void GL_MaterialList_f()
 {
 	int i;
 	material_t *material;
 
 	Com_Printf( "------------------\n" );
 
-	for ( i = 0, material = glmaterials; i < numgltextures; ++i, ++material )
+	for ( i = 0, material = glmaterials; i < numglmaterials; ++i, ++material )
 	{
-		Com_Printf( "%3d %3d RGB: %s\n", image->width, image->height, material->name );
+		Com_Printf( "Material: %s\nregistration_sequence = %d\n", material->name, material->registration_sequence );
 	}
-}*/
+
+	Com_Printf( "------------------\n" );
+}
 
 //-------------------------------------------------------------------------------------------------
 
@@ -538,21 +545,18 @@ static byte *GL_LoadImage(const char *pName, int &width, int &height)
 	return pPic;
 }
 
-struct rgb_t
-{
-	byte r, g, b;
-};
-
 //-------------------------------------------------------------------------------------------------
 // Finds or loads the given image
 //
 // THIS CHOKES ON TEXTURES WITH THE SAME NAME, STUDIOMODELS CAN HAVE IDENTICAL TEXTURE NAMES THAT ARE
 // DIFFERENT!!! THIS IS BAD!
 //-------------------------------------------------------------------------------------------------
-image_t	*GL_FindImage (const char *name, imageflags_t flags, byte *pic = nullptr, int width = 0, int height = 0)
+static image_t *GL_FindImage (const char *name, imageflags_t flags)
 {
-	int i, j;
+	int i;
 	image_t *image;
+	int width, height;
+	byte *pic;
 
 	assert( name && name[0] );
 
@@ -566,6 +570,7 @@ image_t	*GL_FindImage (const char *name, imageflags_t flags, byte *pic = nullptr
 		}
 	}
 
+#if 0
 	//
 	// load the pic from an 8-bit buffer (studiomodels)
 	//
@@ -590,6 +595,7 @@ image_t	*GL_FindImage (const char *name, imageflags_t flags, byte *pic = nullptr
 		++image->refcount;
 		return image;
 	}
+#endif
 
 	//
 	// load the pic from disk
@@ -814,6 +820,8 @@ static material_t *GL_CreateMaterialFromData( const char *name, image_t *image )
 	material->image = image;
 	++material->image->refcount;
 
+	material->registration_sequence = -1; // Data materials are always managed
+
 	return material;
 }
 
@@ -860,13 +868,16 @@ static material_t *GL_CreateMaterial( const char *name )
 
 	if ( !ParseMaterial( pBuffer, material ) )
 	{
+		FS_FreeFile( pBuffer );
+		memset( material, 0, sizeof( *material ) );
 		return mat_notexture;
 	}
 
+	FS_FreeFile( pBuffer );
 	return material;
 }
 
-material_t *GL_FindMaterial( const char *name, byte *pic, int width, int height )
+material_t *GL_FindMaterial( const char *name, bool managed /*= false*/ )
 {
 	int i;
 	material_t *material;
@@ -894,12 +905,13 @@ material_t *GL_FindMaterial( const char *name, byte *pic, int width, int height 
 	{
 		if ( Q_strcmp( newname, material->name ) == 0 )
 		{
-			material->registration_sequence = registration_sequence;
+			material->registration_sequence = managed ? -1 : registration_sequence;
 			return material;
 		}
 	}
 
 	material = GL_CreateMaterial( newname );
+	material->registration_sequence = managed ? -1 : registration_sequence;
 
 	return material;
 }
@@ -950,8 +962,10 @@ void GL_FreeUnusedMaterials( void )
 			continue;		// generated material, delete only at shutdown
 		if ( material->registration_sequence == registration_sequence )
 			continue;		// used this sequence
-		if ( material->registration_sequence == 0 )
-			continue;		// free image_t slot
+		if ( material->registration_sequence <= 0 )
+			continue;		// free slot or managed
+
+		Com_DPrintf( "Clearing %s\n", material->name );
 
 		material->Delete();
 	}
@@ -1073,8 +1087,6 @@ static void R_InitParticleTexture(void)
 //-------------------------------------------------------------------------------------------------
 void GL_InitImages( void )
 {
-	registration_sequence = 1;
-
 	GL_GetPalette();
 
 	GL_BuildGammaTable( vid_gamma->value, 2 );
@@ -1097,15 +1109,15 @@ void GL_ShutdownImages( void )
 	}
 
 	// Clear our generated materials
-	extern material_t *draw_chars;
-	draw_chars->Delete();
-	mat_particletexture->Delete();
-	mat_notexture->Delete();
+//	extern material_t *draw_chars;
+//	draw_chars->Delete();
+//	mat_particletexture->Delete();
+//	mat_notexture->Delete();
 
-	// Clear materials
+	// Clear materials, images are cleared automatically
 	for ( i = 0, material = glmaterials; i < numglmaterials; ++i, ++material )
 	{
-		if ( material->image == nullptr )
+		if ( material->registration_sequence == 0 )
 			continue; // Free slot
 
 		// Decrement refcount
@@ -1113,7 +1125,7 @@ void GL_ShutdownImages( void )
 	}
 
 	// Images are dereferenced by the material when their refcount reaches 0
-	// Go through every single material for security
+	// Go through every single image for security
 #ifdef Q_DEBUG
 	for ( i = 0, image = gltextures; i < MAX_GLTEXTURES; ++i, ++image )
 	{

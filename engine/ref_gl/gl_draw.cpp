@@ -13,7 +13,7 @@ material_t *draw_chars;
 void Draw_InitLocal( void )
 {
 	// load console characters
-	draw_chars = GL_FindMaterial( ConChars_Name );
+	draw_chars = GL_FindMaterial( ConChars_Name, true );
 	if ( !draw_chars->IsOkay() ) {
 		// This is super aggressive, but it easily warns about bad game folders
 		Com_Printf( "Could not get console font: %s", ConChars_Name );

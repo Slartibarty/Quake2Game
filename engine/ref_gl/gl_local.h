@@ -67,8 +67,9 @@ extern material_t	*mat_particletexture;
 extern unsigned		d_8to24table[256];
 
 void		GL_ImageList_f(void);
+void		GL_MaterialList_f(void);
 
-material_t	*GL_FindMaterial( const char *name, byte *pic = nullptr, int width = 0, int height = 0 );
+material_t	*GL_FindMaterial( const char *name, bool managed = false );
 material_t	*R_RegisterSkin(const char *name);
 
 void		GL_FreeUnusedMaterials(void);
@@ -143,7 +144,7 @@ struct material_t
 	msurface_t			*texturechain;				// for sort-by-texture world drawing
 	image_t				*image;						// the only image, may extend to more in the future
 	material_t			*nextframe;					// the next frame
-	int					registration_sequence;		// 0 = free
+	int					registration_sequence;		// 0 = free, -1 = managed
 	int					contentflags;				// legacy
 	int					surfaceflags;				// legacy
 	int					value;						// legacy
@@ -226,7 +227,6 @@ extern	cvar_t	*r_lightlevel;	// FIXME: This is a HACK to get the client's light 
 
 extern	cvar_t	*gl_vertex_arrays;
 
-extern	cvar_t	*gl_ext_swapinterval;
 extern	cvar_t	*gl_ext_multitexture;
 extern	cvar_t	*gl_ext_pointparameters;
 extern	cvar_t	*gl_ext_compiled_vertex_array;
@@ -238,22 +238,17 @@ extern	cvar_t	*gl_particle_att_a;
 extern	cvar_t	*gl_particle_att_b;
 extern	cvar_t	*gl_particle_att_c;
 
-extern	cvar_t	*gl_nosubimage;
 extern	cvar_t	*gl_mode;
 extern	cvar_t	*gl_lightmap;
 extern	cvar_t	*gl_shadows;
 extern	cvar_t	*gl_dynamic;
 extern	cvar_t	*gl_picmip;
-extern	cvar_t	*gl_skymip;
 extern	cvar_t	*gl_showtris;
 extern	cvar_t	*gl_finish;
 extern	cvar_t	*gl_clear;
-extern	cvar_t	*gl_cull;
-extern	cvar_t	*gl_poly;
-extern	cvar_t	*gl_texsort;
+extern	cvar_t	*gl_cullfaces;
 extern	cvar_t	*gl_polyblend;
 extern	cvar_t	*gl_flashblend;
-extern	cvar_t	*gl_lightmaptype;
 extern	cvar_t	*gl_modulate;
 extern	cvar_t	*gl_swapinterval;
 extern  cvar_t  *gl_overbright;
@@ -300,7 +295,7 @@ void	R_DrawAlphaSurfaces (void);
 void	R_RenderBrushPoly (msurface_t *fa);
 void	Draw_InitLocal (void);
 void	GL_SubdivideSurface (msurface_t *fa);
-qboolean	R_CullBox (vec3_t mins, vec3_t maxs);
+bool	R_CullBox (vec3_t mins, vec3_t maxs);
 void	R_RotateForEntity (entity_t *e);
 void	R_MarkLeaves (void);
 

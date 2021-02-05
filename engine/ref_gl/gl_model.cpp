@@ -1057,7 +1057,7 @@ void Mod_LoadStudioModel( model_t *mod, void *buffer )
 		{
 			// strcpy( name, mod->name );
 			// strcpy( name, ptexture[i].name );
-			mod->skins[i] = GL_FindMaterial( ptexture[i].name, (byte *)phdr + ptexture[i].index, ptexture[i].width, ptexture[i].height );
+			mod->skins[i] = mat_notexture;
 			ptexture[i].index = mod->skins[i]->image->texnum;
 		}
 	}

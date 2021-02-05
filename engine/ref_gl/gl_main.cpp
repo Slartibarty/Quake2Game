@@ -52,9 +52,6 @@ cvar_t	*r_lefthand;
 
 cvar_t	*r_lightlevel;	// FIXME: This is a HACK to get the client's light level
 
-cvar_t	*gl_nosubimage;
-cvar_t	*gl_allow_software;
-
 cvar_t	*gl_vertex_arrays;
 
 cvar_t	*gl_particle_min_size;
@@ -64,7 +61,6 @@ cvar_t	*gl_particle_att_a;
 cvar_t	*gl_particle_att_b;
 cvar_t	*gl_particle_att_c;
 
-cvar_t	*gl_ext_swapinterval;
 cvar_t	*gl_ext_multitexture;
 cvar_t	*gl_ext_pointparameters;
 cvar_t	*gl_ext_compiled_vertex_array;
@@ -75,11 +71,10 @@ cvar_t	*gl_mode;
 cvar_t	*gl_dynamic;
 cvar_t	*gl_modulate;
 cvar_t	*gl_picmip;
-cvar_t	*gl_skymip;
 cvar_t	*gl_showtris;
 cvar_t	*gl_finish;
 cvar_t	*gl_clear;
-cvar_t	*gl_cull;
+cvar_t	*gl_cullfaces;
 cvar_t	*gl_polyblend;
 cvar_t	*gl_flashblend;
 cvar_t  *gl_overbright;
@@ -89,7 +84,7 @@ cvar_t	*gl_lockpvs;
 //-------------------------------------------------------------------------------------------------
 // Returns true if the box is completely outside the frustom
 //-------------------------------------------------------------------------------------------------
-qboolean R_CullBox( vec3_t mins, vec3_t maxs )
+bool R_CullBox( vec3_t mins, vec3_t maxs )
 {
 	int i;
 
@@ -649,7 +644,7 @@ void R_SetupGL()
 	//
 	// set drawing parms
 	//
-	if ( gl_cull->value )
+	if ( gl_cullfaces->value )
 		glEnable( GL_CULL_FACE );
 	else
 		glDisable( GL_CULL_FACE );
@@ -834,9 +829,6 @@ static void R_Register()
 
 	r_lightlevel = Cvar_Get ("r_lightlevel", "0", 0);
 
-	gl_nosubimage = Cvar_Get( "gl_nosubimage", "0", 0 );
-	gl_allow_software = Cvar_Get( "gl_allow_software", "0", 0 );
-
 	gl_particle_min_size = Cvar_Get( "gl_particle_min_size", "2", CVAR_ARCHIVE );
 	gl_particle_max_size = Cvar_Get( "gl_particle_max_size", "40", CVAR_ARCHIVE );
 	gl_particle_size = Cvar_Get( "gl_particle_size", "40", CVAR_ARCHIVE );
@@ -850,18 +842,16 @@ static void R_Register()
 	gl_shadows = Cvar_Get ("gl_shadows", "0", CVAR_ARCHIVE );
 	gl_dynamic = Cvar_Get ("gl_dynamic", "1", 0);
 	gl_picmip = Cvar_Get ("gl_picmip", "0", 0);
-	gl_skymip = Cvar_Get ("gl_skymip", "0", 0);
 	gl_showtris = Cvar_Get ("gl_showtris", "0", 0);
 	gl_finish = Cvar_Get ("gl_finish", "0", CVAR_ARCHIVE);
 	gl_clear = Cvar_Get ("gl_clear", "1", 0);
-	gl_cull = Cvar_Get ("gl_cull", "1", 0);
+	gl_cullfaces = Cvar_Get ("gl_cullfaces", "1", 0);
 	gl_polyblend = Cvar_Get ("gl_polyblend", "1", 0);
 	gl_flashblend = Cvar_Get ("gl_flashblend", "0", 0);
 	gl_lockpvs = Cvar_Get( "gl_lockpvs", "0", 0 );
 
 	gl_vertex_arrays = Cvar_Get( "gl_vertex_arrays", "0", CVAR_ARCHIVE );
 
-	gl_ext_swapinterval = Cvar_Get( "gl_ext_swapinterval", "1", CVAR_ARCHIVE );
 	gl_ext_multitexture = Cvar_Get( "gl_ext_multitexture", "1", CVAR_ARCHIVE );
 	gl_ext_pointparameters = Cvar_Get( "gl_ext_pointparameters", "1", CVAR_ARCHIVE );
 	gl_ext_compiled_vertex_array = Cvar_Get( "gl_ext_compiled_vertex_array", "1", CVAR_ARCHIVE );
@@ -871,6 +861,7 @@ static void R_Register()
 	gl_overbright = Cvar_Get( "gl_overbright", "1", 0 );
 
 	Cmd_AddCommand( "imagelist", GL_ImageList_f );
+	Cmd_AddCommand( "materiallist", GL_MaterialList_f );
 	Cmd_AddCommand( "screenshot", GL_ScreenShot_f );
 	Cmd_AddCommand( "modellist", Mod_Modellist_f );
 	Cmd_AddCommand( "gl_strings", GL_Strings_f );
@@ -884,6 +875,7 @@ static void R_Register()
 static void R_Unregister()
 {
 	Cmd_RemoveCommand( "imagelist" );
+	Cmd_RemoveCommand( "materiallist" );
 	Cmd_RemoveCommand( "screenshot" );
 	Cmd_RemoveCommand( "modellist" );
 	Cmd_RemoveCommand( "gl_strings" );
@@ -983,6 +975,8 @@ bool R_Init( void *hinstance, void *hWnd )
 	Cvar_Set( "scr_drawall", "0" );
 
 	GL_SetDefaultState();
+
+	registration_sequence = 1;
 
 	GL_InitImages();
 	//GLimp_SetGamma( g_gammatable, g_gammatable, g_gammatable );
