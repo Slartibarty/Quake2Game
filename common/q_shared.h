@@ -18,24 +18,18 @@
 #include "q_types.h"
 #include "q_math.h"
 
-#ifdef _WIN32
-#ifdef _PREFAST_
-#include <sal.h>
-#else
-//#include <no_sal2.h>
-#endif
-#else
+#ifndef _WIN32
 #define _Printf_format_string_
 #endif
 
-//#define OLD_TRACE_T					// Uncomment to support old mods
+//#define OLD_TRACE_T				// Uncomment to support old mods
 
 #define	MAX_STRING_CHARS	1024	// max length of a string passed to Cmd_TokenizeString
 #define	MAX_STRING_TOKENS	80		// max tokens resulting from Cmd_TokenizeString
 #define	MAX_TOKEN_CHARS		128		// max length of an individual token
 
-#define CONCHAR_WIDTH		12
-#define CONCHAR_HEIGHT		16
+#define CONCHAR_WIDTH		8
+#define CONCHAR_HEIGHT		8
 
 //
 // per-level limits

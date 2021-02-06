@@ -321,10 +321,7 @@ void	Draw_StretchRaw (int x, int y, int w, int h, int cols, int rows, byte *data
 
 struct glconfig_t
 {
-	const char *renderer_string;
-	const char *vendor_string;
-	const char *version_string;
-	const char *extensions_string;
+	int unused;
 };
 
 struct glstate_t

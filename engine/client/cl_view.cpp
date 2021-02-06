@@ -228,7 +228,7 @@ Call before entering a new level, or after changing dlls
 */
 void CL_PrepRefresh (void)
 {
-	char		mapname[32];
+	char		mapname[MAX_QPATH];
 	int			i;
 	char		name[MAX_QPATH];
 	float		rotate;

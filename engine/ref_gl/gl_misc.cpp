@@ -17,25 +17,25 @@ Misc functions that don't fit anywhere else
 void GL_ScreenShot_f(void)
 {
 	byte		*buffer;
-	char		picname[80]; 
+	char		picname[64]; 
 	char		checkname[MAX_OSPATH];
 	int			i, c, temp;
 	FILE		*f;
 
-	// create the scrnshots directory if it doesn't exist
-	Q_sprintf_s (checkname, "%s/scrnshot", FS_Gamedir());
+	// create the screenshots directory if it doesn't exist
+	Q_sprintf_s (checkname, "%s/screenshots", FS_Gamedir());
 	Sys_Mkdir (checkname);
 
-// 
+//
 // find a file name to save it to 
-// 
+//
 	strcpy(picname,"quake00.tga");
 
 	for (i=0 ; i<=99 ; i++) 
 	{ 
 		picname[5] = i/10 + '0'; 
 		picname[6] = i%10 + '0'; 
-		Q_sprintf_s (checkname, "%s/scrnshot/%s", FS_Gamedir(), picname);
+		Q_sprintf_s (checkname, "%s/screenshots/%s", FS_Gamedir(), picname);
 		f = fopen (checkname, "rb");
 		if (!f)
 			break;	// file doesn't exist
@@ -81,11 +81,11 @@ void GL_ScreenShot_f(void)
 //-------------------------------------------------------------------------------------------------
 void GL_Strings_f(void)
 {
-	Com_Printf("GL_VENDOR: %s\n", glGetString(GL_VENDOR));
-	Com_Printf("GL_RENDERER: %s\n", glGetString(GL_RENDERER));
-	Com_Printf("GL_VERSION: %s\n", glGetString(GL_VERSION));
-	Com_Printf("GL_GLSL_VERSION: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
-//	Com_Printf("GL_EXTENSIONS: %s\n", gl_config.extensions_string );
+	Com_Printf( "GL_VENDOR: %s\n", glGetString( GL_VENDOR ) );
+	Com_Printf( "GL_RENDERER: %s\n", glGetString( GL_RENDERER ) );
+	Com_Printf( "GL_VERSION: %s\n", glGetString( GL_VERSION ) );
+	Com_Printf( "GL_SHADING_LANGUAGE_VERSION: %s\n", glGetString( GL_SHADING_LANGUAGE_VERSION ) );
+//	Com_Printf( "GL_EXTENSIONS: %s\n", glGetString( GL_EXTENSIONS ) );
 }
 
 //-------------------------------------------------------------------------------------------------

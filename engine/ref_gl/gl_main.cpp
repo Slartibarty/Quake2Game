@@ -957,20 +957,11 @@ bool R_Init( void *hinstance, void *hWnd )
 		return false;
 	}
 
-	// set our "safe" modes
+	// Set our "safe" mode in case our current mode is bad
 	gl_state.prev_mode = 3;
 
-	/*
-	** get our various GL strings
-	*/
-	gl_config.vendor_string = (const char *)glGetString( GL_VENDOR );
-	Com_Printf( "GL_VENDOR: %s\n", gl_config.vendor_string );
-	gl_config.renderer_string = (const char *)glGetString( GL_RENDERER );
-	Com_Printf( "GL_RENDERER: %s\n", gl_config.renderer_string );
-	gl_config.version_string = (const char *)glGetString( GL_VERSION );
-	Com_Printf( "GL_VERSION: %s\n", gl_config.version_string );
-	gl_config.extensions_string = (const char *)glGetString( GL_EXTENSIONS );
-	//Com_Printf( "GL_EXTENSIONS: %s\n", gl_config.extensions_string );
+	// Print our GL strings
+	GL_Strings_f();
 
 	Cvar_Set( "scr_drawall", "0" );
 

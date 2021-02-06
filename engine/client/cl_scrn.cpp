@@ -1269,8 +1269,6 @@ void SCR_UpdateScreen (void)
 		scr_draw_loading = false;
 		R_DrawGetPicSize (&w, &h, "loading");
 		R_DrawPic ((viddef.width-w)/2, (viddef.height-h)/2, "loading");
-//			R_EndFrame();
-//			return;
 	} 
 	// if a cinematic is supposed to be running, handle menus
 	// and console specially
@@ -1284,8 +1282,6 @@ void SCR_UpdateScreen (void)
 				cl.cinematicpalette_active = false;
 			}
 			M_Draw ();
-//				R_EndFrame();
-//				return;
 		}
 		else if (cls.key_dest == key_console)
 		{
@@ -1295,14 +1291,10 @@ void SCR_UpdateScreen (void)
 				cl.cinematicpalette_active = false;
 			}
 			SCR_DrawConsole ();
-//				R_EndFrame();
-//				return;
 		}
 		else
 		{
 			SCR_DrawCinematic();
-//				R_EndFrame();
-//				return;
 		}
 	}
 	else 
