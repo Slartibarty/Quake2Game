@@ -357,99 +357,6 @@ static image_t *GL_FindImage (const char *name, imageflags_t flags)
 	return image;
 }
 
-#define FLAGCHECK(flag) if ( Q_strcmp( data, #flag ) == 0 ) { return flag; }
-
-int StringToContentFlag( const char *data )
-{
-	FLAGCHECK( CONTENTS_SOLID );
-	FLAGCHECK( CONTENTS_WINDOW );
-	FLAGCHECK( CONTENTS_AUX );
-	FLAGCHECK( CONTENTS_LAVA );
-	FLAGCHECK( CONTENTS_SLIME );
-	FLAGCHECK( CONTENTS_WATER );
-	FLAGCHECK( CONTENTS_MIST );
-	// last visible
-	FLAGCHECK( CONTENTS_AREAPORTAL );
-	FLAGCHECK( CONTENTS_PLAYERCLIP );
-	FLAGCHECK( CONTENTS_MONSTERCLIP );
-	FLAGCHECK( CONTENTS_CURRENT_0 );
-	FLAGCHECK( CONTENTS_CURRENT_90 );
-	FLAGCHECK( CONTENTS_CURRENT_180 );
-	FLAGCHECK( CONTENTS_CURRENT_270 );
-	FLAGCHECK( CONTENTS_CURRENT_UP );
-	FLAGCHECK( CONTENTS_CURRENT_DOWN );
-	FLAGCHECK( CONTENTS_ORIGIN );
-	FLAGCHECK( CONTENTS_MONSTER );
-	FLAGCHECK( CONTENTS_DEADMONSTER );
-	FLAGCHECK( CONTENTS_DETAIL );
-	FLAGCHECK( CONTENTS_TRANSLUCENT );
-	FLAGCHECK( CONTENTS_LADDER );
-
-	return 0;
-}
-
-int StringToSurfaceFlag( const char *data )
-{
-	FLAGCHECK( SURF_LIGHT );
-	FLAGCHECK( SURF_SLICK );
-	FLAGCHECK( SURF_SKY );
-	FLAGCHECK( SURF_WARP );
-	FLAGCHECK( SURF_TRANS33 );
-	FLAGCHECK( SURF_TRANS66 );
-	FLAGCHECK( SURF_FLOWING );
-	FLAGCHECK( SURF_NODRAW );
-	FLAGCHECK( SURF_HINT );
-	FLAGCHECK( SURF_SKIP );
-
-	return 0;
-}
-
-#undef FLAGCHECK
-
-int ParseSurfaceFlags( char *data, int type )
-{
-	char tokenhack[MAX_TOKEN_CHARS];
-	char *token = tokenhack;
-	int flags = 0;
-
-	COM_Parse2( &data, &token, sizeof( tokenhack ) );
-
-	// Parse until the end baby
-	while ( data )
-	{
-		if ( type == 1 )
-			flags |= StringToContentFlag( token );
-		else
-			flags |= StringToSurfaceFlag( token );
-
-		COM_Parse2( &data, &token, sizeof( tokenhack ) );
-	}
-
-	return flags;
-}
-
-surfacetype_t ParseSurfaceType( char *data )
-{
-	if ( Q_strcmp( data, "concrete" ) == 0 )
-	{
-		return SURFTYPE_CONCRETE;
-	}
-	if ( Q_strcmp( data, "metal" ) == 0 )
-	{
-		return SURFTYPE_METAL;
-	}
-	if ( Q_strcmp( data, "wood" ) == 0 )
-	{
-		return SURFTYPE_WOOD;
-	}
-	if ( Q_strcmp( data, "glass" ) == 0 )
-	{
-		return SURFTYPE_GLASS;
-	}
-
-	return SURFTYPE_CONCRETE;
-}
-
 bool ParseMaterial( char *data, material_t *material )
 {
 	char tokenhack[MAX_TOKEN_CHARS];
@@ -531,30 +438,6 @@ bool ParseMaterial( char *data, material_t *material )
 			{
 				flags |= IF_CLAMPT;
 			}
-			continue;
-		}
-		if ( Q_strcmp( token, "$contentflags" ) == 0 )
-		{
-			COM_Parse2( &data, &token, sizeof( tokenhack ) );
-			material->contentflags = ParseSurfaceFlags( token, 1 );
-			continue;
-		}
-		if ( Q_strcmp( token, "$surfaceflags" ) == 0 )
-		{
-			COM_Parse2( &data, &token, sizeof( tokenhack ) );
-			material->surfaceflags = ParseSurfaceFlags( token, 0 );
-			continue;
-		}
-		if ( Q_strcmp( token, "$surfacetype" ) == 0 )
-		{
-			COM_Parse2( &data, &token, sizeof( tokenhack ) );
-			material->surfacetype = ParseSurfaceType( token );
-			continue;
-		}
-		if ( Q_strcmp( token, "$value" ) == 0 )
-		{
-			COM_Parse2( &data, &token, sizeof( tokenhack ) );
-			material->value = atoi( token );
 			continue;
 		}
 	}
