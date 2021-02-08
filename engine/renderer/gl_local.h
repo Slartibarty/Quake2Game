@@ -3,7 +3,7 @@
 
 #include "../shared/engine.h"
 
-#include "../ref_shared/ref_public.h"
+#include "ref_public.h"
 
 #ifdef _WIN32
 #include <Windows.h>

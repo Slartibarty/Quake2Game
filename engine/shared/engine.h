@@ -28,7 +28,7 @@
 #include "sys.h"
 #include "zone.h"
 
-#include "q_formats.h" // File formats
+#include "../../common/q_formats.h" // File formats
 
 //-------------------------------------------------------------------------------------------------
 

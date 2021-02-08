@@ -187,6 +187,11 @@ extern vec3_t vec3_origin;
 #define	YAW			1		// left / right
 #define	ROLL		2		// fall over
 
+#define	SIDE_FRONT		0
+#define	SIDE_ON			2
+#define	SIDE_BACK		1
+#define	SIDE_CROSS		-2
+
 #ifndef M_PI
 #define M_PI		3.14159265358979323846	// matches value in gcc v2 math.h
 #endif
@@ -194,6 +199,9 @@ extern vec3_t vec3_origin;
 #ifndef M_PI_F
 #define M_PI_F		3.14159265358979323846f
 #endif
+
+// Utils glue
+#define EQUAL_EPSILON	0.001f
 
 // These suck, the namespace name also sucks
 namespace mathconst
@@ -231,7 +239,7 @@ inline void CrossProduct(const vec3_t v1, const vec3_t v2, vec3_t cross)
 
 inline float VectorLength(vec3_t v)
 {
-	return sqrtf(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+	return sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
 }
 
 inline void VectorSubtract(const vec3_t veca, const vec3_t vecb, vec3_t out)
@@ -349,6 +357,12 @@ inline float LerpAngle(float a2, float a1, float frac)
 inline float anglemod(float a)
 {
 	return (360.0f / 65536.0f) * ((int)(a * (65536.0f / 360.0f)) & 65535);
+}
+
+// Utils glue
+inline int Q_rint( float a )
+{
+	return (int)a;
 }
 
 inline float DegreesToRadians( float degrees )

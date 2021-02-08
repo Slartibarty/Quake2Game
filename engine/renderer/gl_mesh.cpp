@@ -13,7 +13,7 @@
 #define NUMVERTEXNORMALS	162
 
 static float	r_avertexnormals[NUMVERTEXNORMALS][3]{
-#include "../ref_shared/anorms.inl"
+#include "anorms.inl"
 };
 
 static vec4_t	s_lerped[MAX_VERTS];

@@ -1,5 +1,5 @@
 
-#include "engine.h"
+#include "q_shared.h"
 
 #include <io.h>
 #define WIN32_LEAN_AND_MEAN

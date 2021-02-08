@@ -499,7 +499,7 @@ float	crand(void)
 // Compressed vertex normals
 vec3_t bytedirs[NUMVERTEXNORMALS]
 {
-#include "../ref_shared/anorms.inl"
+#include "../renderer/anorms.inl"
 };
 
 //========================================================

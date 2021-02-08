@@ -3,7 +3,7 @@
 #pragma once
 
 #include "../shared/engine.h"
-#include "../ref_shared/ref_public.h"
+#include "../renderer/ref_public.h"
 
 #include "vid.h"
 #include "screen.h"

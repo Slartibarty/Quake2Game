@@ -247,6 +247,17 @@ project "game_q2"
 		"game_shared/*"
 	}
 	
+	filter "system:windows"
+		removefiles {
+			"**/*_linux.*"
+		}
+	filter {}
+	filter "system:linux"
+		removefiles {
+			"**/*_win.*"
+		}
+	filter {}
+	
 	removefiles {
 		"**.manifest",
 	}
@@ -257,28 +268,43 @@ filter "system:windows"
 
 group "utilities"
 
-project "qbsp3"
+project "qbsp4"
 	kind "ConsoleApp"
-	targetname "qbsp3"
-	language "C"
+	targetname "qbsp4"
+	language "C++"
 	floatingpoint "Default"
 	targetdir "../game"
-	includedirs "utils/common"
+	includedirs { "utils/common2", "common" }
 	
 	files {
 		"common/windows_default.manifest",
 		
-		"utils/common/cmdlib.*",
-		"utils/common/mathlib.*",
-		"utils/common/scriplib.*",
-		"utils/common/polylib.*",
-		"utils/common/threads.*",
-		"utils/common/bspfile.*",
+		"common/*.cpp",
+		"common/*.h",
 		
-		"utils/common/qfiles.h",
+		"utils/common2/cmdlib.*",
+		"utils/common2/mathlib.*",
+		"utils/common2/scriplib.*",
+		"utils/common2/polylib.*",
+		"utils/common2/threads.*",
+		"utils/common2/bspfile.*",
+		
+		"utils/common2/qfiles.h",
 	
-		"utils/qbsp3/*"
+		"utils/qbsp4/*"
 	}
+	
+	filter "system:windows"
+		removefiles {
+			"**/*_linux.*"
+		}
+	filter {}
+	filter "system:linux"
+		removefiles {
+			"**/*_win.*"
+		}
+	filter {}
+
 	
 project "qvis3"
 	kind "ConsoleApp"
