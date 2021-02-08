@@ -187,8 +187,7 @@ project "engine"
 		"engine/res/*",
 		"engine/shared/*",
 		
-		"engine/ref_gl/*",
-		"engine/ref_shared/*",
+		"engine/renderer/*",
 		
 		"game_shared/game_public.h",
 		"game_shared/m_flash.cpp",
