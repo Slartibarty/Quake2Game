@@ -2,6 +2,8 @@
 
 #include "client.h"
 
+#include "../../common/bspflags.h"
+
 void CL_LogoutEffect (vec3_t org, int type);
 void CL_ItemRespawnParticles (vec3_t org);
 
@@ -2236,7 +2238,11 @@ An entity has just been parsed that has an event value
 the female events are there for backwards compatability
 ==============
 */
-extern sfx_t *cl_sfx_footsteps[4];
+extern sfx_t *cl_sfx_footsteps_concrete[4];
+extern sfx_t *cl_sfx_footsteps_metal[4];
+extern sfx_t *cl_sfx_footsteps_sand[4];
+extern sfx_t *cl_sfx_footsteps_tile[4];
+extern sfx_t *cl_sfx_footsteps_flesh[4];
 
 void CL_EntityEvent (entity_state_t *ent)
 {
@@ -2251,8 +2257,40 @@ void CL_EntityEvent (entity_state_t *ent)
 		CL_TeleportParticles (ent->origin);
 		break;
 	case EV_FOOTSTEP:
-		if (cl_footsteps->value)
-			S_StartSound (NULL, ent->number, CHAN_BODY, cl_sfx_footsteps[rand()&3], 1, ATTN_NORM, 0);
+		if ( cl_footsteps->value )
+		{
+			trace_t tr;
+			vec3_t end;
+			vec3_t mins;
+			vec3_t maxs;
+			VectorSet( end, ent->origin[0], ent->origin[1], ent->origin[2] - 64.0f );
+			VectorSet( mins, -8, -8, -16 );
+			VectorSet( maxs, 8, 8, 16 );
+			tr = CM_BoxTrace( ent->origin, end, mins, maxs, 0, MASK_PLAYERSOLID );
+			surfaceTypes_t type = (surfaceTypes_t)( tr.surface->flags & SURF_TYPE_MASK );
+			sfx_t *footstep;
+
+			switch ( type )
+			{
+			case SURFTYPE_METAL:
+				footstep = cl_sfx_footsteps_metal[rand() & 3];
+				break;
+			case SURFTYPE_SAND:
+				footstep = cl_sfx_footsteps_sand[rand() & 3];
+				break;
+			case SURFTYPE_TILE:
+				footstep = cl_sfx_footsteps_tile[rand() & 3];
+				break;
+			case SURFTYPE_FLESH:
+				footstep = cl_sfx_footsteps_flesh[rand() & 3];
+				break;
+			default:
+				footstep = cl_sfx_footsteps_concrete[rand() & 3];
+				break;
+			}
+
+			S_StartSound( NULL, ent->number, CHAN_BODY, footstep, 1, ATTN_NORM, 0 );
+		}
 		break;
 	case EV_FALLSHORT:
 		S_StartSound (NULL, ent->number, CHAN_AUTO, S_RegisterSound ("player/land1.wav"), 1, ATTN_NORM, 0);

@@ -308,20 +308,6 @@ textureref_t *FindMiptex( const char *name )
 		Q_strcpy_s( ref->name, name );
 		ParseMaterial( data, ref );
 	}
-	else // No WAL
-	{
-		miptex_t *mt;
-
-		Q_sprintf_s( path, "%stextures/%s.wal", gamedir, name );
-		if ( TryLoadFile( path, (void **)&mt ) != -1 )
-		{
-			ref->value = LittleLong( mt->value );
-			ref->flags = LittleLong( mt->flags );
-			ref->contents = LittleLong( mt->contents );
-			strcpy( ref->animname, mt->animname );
-			free( mt );
-		}
-	}
 
 	++nummiptex;
 
@@ -482,6 +468,8 @@ skip:;
 
 	// load the next animation
 	mt = FindMiptex (bt->name);
+	// SLARTTODO: WTF?? This is a problem
+	bt->flags = tc->flags = mt->flags; // This didn't used to be here!!!
 	if (mt->animname[0])
 	{
 		anim = *bt;
