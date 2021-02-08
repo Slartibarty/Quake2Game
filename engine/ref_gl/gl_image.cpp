@@ -428,6 +428,28 @@ int ParseSurfaceFlags( char *data, int type )
 	return flags;
 }
 
+surfacetype_t ParseSurfaceType( char *data )
+{
+	if ( Q_strcmp( data, "concrete" ) == 0 )
+	{
+		return SURFTYPE_CONCRETE;
+	}
+	if ( Q_strcmp( data, "metal" ) == 0 )
+	{
+		return SURFTYPE_METAL;
+	}
+	if ( Q_strcmp( data, "wood" ) == 0 )
+	{
+		return SURFTYPE_WOOD;
+	}
+	if ( Q_strcmp( data, "glass" ) == 0 )
+	{
+		return SURFTYPE_GLASS;
+	}
+
+	return SURFTYPE_CONCRETE;
+}
+
 bool ParseMaterial( char *data, material_t *material )
 {
 	char tokenhack[MAX_TOKEN_CHARS];
@@ -521,6 +543,12 @@ bool ParseMaterial( char *data, material_t *material )
 		{
 			COM_Parse2( &data, &token, sizeof( tokenhack ) );
 			material->surfaceflags = ParseSurfaceFlags( token, 0 );
+			continue;
+		}
+		if ( Q_strcmp( token, "$surfacetype" ) == 0 )
+		{
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
+			material->surfacetype = ParseSurfaceType( token );
 			continue;
 		}
 		if ( Q_strcmp( token, "$value" ) == 0 )

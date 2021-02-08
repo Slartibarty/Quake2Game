@@ -137,6 +137,15 @@ struct image_t
 	}
 };
 
+// 256 surfaces should be enough for anyone
+enum surfacetype_t : byte
+{
+	SURFTYPE_CONCRETE,		// Default
+	SURFTYPE_METAL,
+	SURFTYPE_WOOD,
+	SURFTYPE_GLASS
+};
+
 struct msurface_t;
 
 struct material_t
@@ -145,10 +154,11 @@ struct material_t
 	msurface_t			*texturechain;				// for sort-by-texture world drawing
 	image_t				*image;						// the only image, may extend to more in the future
 	material_t			*nextframe;					// the next frame
+	int32				contentflags;				// legacy
+	int32				surfaceflags;				// legacy
+	int32				value;						// legacy
 	int					registration_sequence;		// 0 = free, -1 = managed
-	int					contentflags;				// legacy
-	int					surfaceflags;				// legacy
-	int					value;						// legacy
+	surfacetype_t		surfacetype;				// Stone, metal, etc
 
 	// Returns true if this material is the missing texture
 	bool IsMissing() { return this == mat_notexture; }
