@@ -306,25 +306,39 @@ project "qbsp4"
 	filter {}
 
 	
-project "qvis3"
+project "qvis4"
 	kind "ConsoleApp"
-	targetname "qvis3"
+	targetname "qvis4"
 	language "C"
 	floatingpoint "Default"
 	targetdir "../game"
-	includedirs "utils/common"
+	includedirs { "utils/common2", "common" }
 	
 	files {
 		"common/windows_default.manifest",
+		
+		"common/*.cpp",
+		"common/*.h",
 
-		"utils/common/cmdlib.*",
-		"utils/common/mathlib.*",
-		"utils/common/threads.*",
-		"utils/common/scriplib.*",
-		"utils/common/bspfile.*",
+		"utils/common2/cmdlib.*",
+		"utils/common2/mathlib.*",
+		"utils/common2/threads.*",
+		"utils/common2/scriplib.*",
+		"utils/common2/bspfile.*",
 	
-		"utils/qvis3/*"
+		"utils/qvis4/*"
 	}
+	
+	filter "system:windows"
+		removefiles {
+			"**/*_linux.*"
+		}
+	filter {}
+	filter "system:linux"
+		removefiles {
+			"**/*_win.*"
+		}
+	filter {}
 	
 project "qrad3"
 	kind "ConsoleApp"
