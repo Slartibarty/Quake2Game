@@ -683,7 +683,7 @@ struct dplane_t
 };
 
 
-#include "../../common/bspflags.h"
+#include "bspflags.h"
 
 
 struct dnode_t

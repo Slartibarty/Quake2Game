@@ -98,7 +98,8 @@ skipwhite:
 	*data_p = data;
 }
 
-#define FLAGCHECK(flag) if ( Q_strcmp( data, #flag ) == 0 ) { return flag; }
+#define FLAGCHECK(flag) if ( Q_strcmp( data, #flag ) == 0 ) return flag;
+#define FLAGCHECK2(flag, name) if ( Q_strcmp( data, name ) == 0 ) return flag;
 
 /*
 ===================
@@ -109,29 +110,54 @@ Parse a content flag from a string
 */
 int StringToContentFlag( const char *data )
 {
-	FLAGCHECK( CONTENTS_SOLID );
-	FLAGCHECK( CONTENTS_WINDOW );
-	FLAGCHECK( CONTENTS_AUX );
-	FLAGCHECK( CONTENTS_LAVA );
-	FLAGCHECK( CONTENTS_SLIME );
-	FLAGCHECK( CONTENTS_WATER );
-	FLAGCHECK( CONTENTS_MIST );
+	FLAGCHECK( CONTENTS_SOLID )
+	FLAGCHECK( CONTENTS_WINDOW )
+	FLAGCHECK( CONTENTS_AUX )
+	FLAGCHECK( CONTENTS_LAVA )
+	FLAGCHECK( CONTENTS_SLIME )
+	FLAGCHECK( CONTENTS_WATER )
+	FLAGCHECK( CONTENTS_MIST )
 	// last visible
-	FLAGCHECK( CONTENTS_AREAPORTAL );
-	FLAGCHECK( CONTENTS_PLAYERCLIP );
-	FLAGCHECK( CONTENTS_MONSTERCLIP );
-	FLAGCHECK( CONTENTS_CURRENT_0 );
-	FLAGCHECK( CONTENTS_CURRENT_90 );
-	FLAGCHECK( CONTENTS_CURRENT_180 );
-	FLAGCHECK( CONTENTS_CURRENT_270 );
-	FLAGCHECK( CONTENTS_CURRENT_UP );
-	FLAGCHECK( CONTENTS_CURRENT_DOWN );
-	FLAGCHECK( CONTENTS_ORIGIN );
-	FLAGCHECK( CONTENTS_MONSTER );
-	FLAGCHECK( CONTENTS_DEADMONSTER );
-	FLAGCHECK( CONTENTS_DETAIL );
-	FLAGCHECK( CONTENTS_TRANSLUCENT );
-	FLAGCHECK( CONTENTS_LADDER );
+	FLAGCHECK( CONTENTS_AREAPORTAL )
+	FLAGCHECK( CONTENTS_PLAYERCLIP )
+	FLAGCHECK( CONTENTS_MONSTERCLIP )
+	FLAGCHECK( CONTENTS_CURRENT_0 )
+	FLAGCHECK( CONTENTS_CURRENT_90 )
+	FLAGCHECK( CONTENTS_CURRENT_180 )
+	FLAGCHECK( CONTENTS_CURRENT_270 )
+	FLAGCHECK( CONTENTS_CURRENT_UP )
+	FLAGCHECK( CONTENTS_CURRENT_DOWN )
+	FLAGCHECK( CONTENTS_ORIGIN )
+	FLAGCHECK( CONTENTS_MONSTER )
+	FLAGCHECK( CONTENTS_DEADMONSTER )
+	FLAGCHECK( CONTENTS_DETAIL )
+	FLAGCHECK( CONTENTS_TRANSLUCENT )
+	FLAGCHECK( CONTENTS_LADDER )
+
+	return 0;
+}
+
+/*
+===================
+StringToSurfaceType
+
+Parse a surface type from a string
+===================
+*/
+int StringToSurfaceType( const char *data )
+{
+	FLAGCHECK2( SURFTYPE_CONCRETE, "concrete" )
+	FLAGCHECK2( SURFTYPE_METAL, "metal" )
+	FLAGCHECK2( SURFTYPE_VENT, "vent" )
+	FLAGCHECK2( SURFTYPE_DIRT, "dirt" )
+	FLAGCHECK2( SURFTYPE_GRASS, "grass" )
+	FLAGCHECK2( SURFTYPE_SAND, "sand" )
+	FLAGCHECK2( SURFTYPE_ROCK, "rock" )
+	FLAGCHECK2( SURFTYPE_WOOD, "wood" )
+	FLAGCHECK2( SURFTYPE_TILE, "tile" )
+	FLAGCHECK2( SURFTYPE_COMPUTER, "computer" )
+	FLAGCHECK2( SURFTYPE_GLASS, "glass" )
+	FLAGCHECK2( SURFTYPE_FLESH, "flesh" )
 
 	return 0;
 }
@@ -145,16 +171,16 @@ Parse a surface flag from a string
 */
 int StringToSurfaceFlag( const char *data )
 {
-	FLAGCHECK( SURF_LIGHT );
-	FLAGCHECK( SURF_SLICK );
-	FLAGCHECK( SURF_SKY );
-	FLAGCHECK( SURF_WARP );
-	FLAGCHECK( SURF_TRANS33 );
-	FLAGCHECK( SURF_TRANS66 );
-	FLAGCHECK( SURF_FLOWING );
-	FLAGCHECK( SURF_NODRAW );
-	FLAGCHECK( SURF_HINT );
-	FLAGCHECK( SURF_SKIP );
+	FLAGCHECK( SURF_LIGHT )
+	FLAGCHECK( SURF_SLICK )
+	FLAGCHECK( SURF_SKY )
+	FLAGCHECK( SURF_WARP )
+	FLAGCHECK( SURF_TRANS33 )
+	FLAGCHECK( SURF_TRANS66 )
+	FLAGCHECK( SURF_FLOWING )
+	FLAGCHECK( SURF_NODRAW )
+	FLAGCHECK( SURF_HINT )
+	FLAGCHECK( SURF_SKIP )
 
 	return 0;
 }
@@ -164,6 +190,10 @@ int StringToSurfaceFlag( const char *data )
 /*
 ===================
 ParseSurfaceFlags
+
+1 == contents
+2 == surface types
+3 == surface flags
 ===================
 */
 int ParseSurfaceFlags( char *data, int type )
@@ -179,6 +209,8 @@ int ParseSurfaceFlags( char *data, int type )
 	{
 		if ( type == 1 )
 			flags |= StringToContentFlag( token );
+		else if ( type == 2 )
+			flags |= StringToSurfaceType( token );
 		else
 			flags |= StringToSurfaceFlag( token );
 
@@ -209,25 +241,31 @@ void ParseMaterial( char *data, textureref_t *ref )
 
 	for ( ; token[0] != '}'; Com_Parse2( &data, &token, sizeof( tokenhack ) ) )
 	{
-		if ( strcmp( token, "$nextframe" ) == 0 )
+		if ( Q_strcmp( token, "$nextframe" ) == 0 )
 		{
 			Com_Parse2( &data, &token, sizeof( tokenhack ) );
 			strcpy( ref->animname, token );
 			continue;
 		}
-		if ( strcmp( token, "$contentflags" ) == 0 )
+		if ( Q_strcmp( token, "$contentflags" ) == 0 )
 		{
 			Com_Parse2( &data, &token, sizeof( tokenhack ) );
 			ref->contents = ParseSurfaceFlags( token, 1 );
 			continue;
 		}
-		if ( strcmp( token, "$surfaceflags" ) == 0 )
+		if ( Q_strcmp( token, "$surfacetype" ) == 0 )
 		{
 			Com_Parse2( &data, &token, sizeof( tokenhack ) );
-			ref->flags = ParseSurfaceFlags( token, 0 );
+			ref->flags = ParseSurfaceFlags( token, 2 );
 			continue;
 		}
-		if ( strcmp( token, "$value" ) == 0 )
+		if ( Q_strcmp( token, "$surfaceflags" ) == 0 )
+		{
+			Com_Parse2( &data, &token, sizeof( tokenhack ) );
+			ref->flags = ParseSurfaceFlags( token, 3 );
+			continue;
+		}
+		if ( Q_strcmp( token, "$value" ) == 0 )
 		{
 			Com_Parse2( &data, &token, sizeof( tokenhack ) );
 			ref->value = atoi( token );

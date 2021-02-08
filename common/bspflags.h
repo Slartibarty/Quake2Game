@@ -11,13 +11,13 @@
 enum contentFlags_t
 {
 	// lower bits are stronger, and will eat weaker brushes completely
-	CONTENTS_SOLID			= 1,			// an eye is never valid in a solid
-	CONTENTS_WINDOW			= 2,			// translucent, but not watery
-	CONTENTS_AUX			= 4,
-	CONTENTS_LAVA			= 8,
-	CONTENTS_SLIME			= 16,
-	CONTENTS_WATER			= 32,
-	CONTENTS_MIST			= 64,
+	CONTENTS_SOLID			= 0x1,			// an eye is never valid in a solid
+	CONTENTS_WINDOW			= 0x2,			// translucent, but not watery
+	CONTENTS_AUX			= 0x4,
+	CONTENTS_LAVA			= 0x8,
+	CONTENTS_SLIME			= 0x10,
+	CONTENTS_WATER			= 0x20,
+	CONTENTS_MIST			= 0x40,
 	LAST_VISIBLE_CONTENTS	= CONTENTS_MIST,
 
 // remaining contents are non-visible, and don't eat brushes
