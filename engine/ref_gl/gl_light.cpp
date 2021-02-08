@@ -436,7 +436,7 @@ void R_BuildLightMap(msurface_t *surf, byte *dest, int stride)
 	float *bl;
 	lightstyle_t *style;
 
-	if (surf->texinfo->flags & (SURF_SKY | SURF_TRANS33 | SURF_TRANS66 | SURF_WARP))
+	if (surf->texinfo->flags & SURFMASK_UNLIT)
 		Com_Error(ERR_DROP, "R_BuildLightMap called for non-lit surface");
 
 	smax = (surf->extents[0] >> 4) + 1;

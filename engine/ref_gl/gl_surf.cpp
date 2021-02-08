@@ -417,7 +417,7 @@ void R_RenderBrushPoly (msurface_t *fa)
 dynamic:
 		if ( gl_dynamic->value )
 		{
-			if (!( fa->texinfo->flags & (SURF_SKY|SURF_TRANS33|SURF_TRANS66|SURF_WARP ) ) )
+			if (!( fa->texinfo->flags & (SURFMASK_UNLIT ) ) )
 			{
 				is_dynamic = true;
 			}
@@ -604,7 +604,7 @@ static void GL_RenderLightmappedPoly( msurface_t *surf )
 dynamic:
 		if ( gl_dynamic->value )
 		{
-			if ( !(surf->texinfo->flags & (SURF_SKY|SURF_TRANS33|SURF_TRANS66|SURF_WARP ) ) )
+			if ( !(surf->texinfo->flags & (SURFMASK_UNLIT ) ) )
 			{
 				is_dynamic = true;
 			}
