@@ -11,269 +11,18 @@
 #include "gl_local.h"
 #include "../shared/imageloaders.h"
 
+#include "png.h"
+
 #define STB_IMAGE_IMPLEMENTATION
 #define STBI_NO_STDIO
 #define STBI_NO_LINEAR
 #define STBI_NO_HDR
 #define STBI_ONLY_TGA
-#define STBI_ONLY_PNG
 #define STBI_NO_FAILURE_STRINGS
 #include "stb_image.h"
 
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include "stb_image_resize.h"
-
-// Add to the ImageLoaders namespace
-namespace ImageLoaders
-{
-	//------------------------------------------------------------------------------------------------
-	// Loads a PCX file into an 8-bit buffer
-	//------------------------------------------------------------------------------------------------
-	static byte *Legacy_LoadPCX8(byte* raw, int rawlen, int& width, int& height)
-	{
-		pcx_t	*pcx;
-		int		x, y;
-		int		dataByte, runLength;
-		byte	*out, *pix;
-		int		xmax, ymax;
-
-		//
-		// parse the PCX file
-		//
-		pcx = (pcx_t*)raw;
-		raw = &pcx->data;
-
-		xmax = LittleShort(pcx->xmax);
-		ymax = LittleShort(pcx->ymax);
-
-		if (pcx->manufacturer != 0x0a
-			|| pcx->version != 5
-			|| pcx->encoding != 1
-			|| pcx->bits_per_pixel != 8
-			|| xmax >= 1023
-			|| ymax >= 1023)
-		{
-			Com_Printf("Bad pcx file (%i x %i) (%i x %i)\n", xmax + 1, ymax + 1, pcx->xmax, pcx->ymax);
-			return nullptr;
-		}
-
-		width = xmax + 1;
-		height = ymax + 1;
-
-		out = (byte*)malloc(width * height);
-
-		pix = out;
-
-		// FIXME: use bytes_per_line here?
-		for (y = 0; y <= ymax; y++, pix += xmax + 1)
-		{
-			for (x = 0; x <= xmax; )
-			{
-				dataByte = *raw++;
-
-				if ((dataByte & 0xC0) == 0xC0)
-				{
-					runLength = dataByte & 0x3F;
-					dataByte = *raw++;
-				}
-				else
-					runLength = 1;
-
-				while (runLength-- > 0)
-					pix[x++] = dataByte;
-			}
-
-		}
-
-		return out;
-	}
-
-	//------------------------------------------------------------------------------------------------
-	// Loads an 8-bit PCX and converts it to 32-bit
-	//------------------------------------------------------------------------------------------------
-	static byte *Legacy_LoadPCX32(byte* raw, int rawlen, int& width, int& height)
-	{
-		byte* palette;
-		byte* pic8;
-		byte* pic32;
-
-		pic8 = Legacy_LoadPCX8(raw, rawlen, width, height);
-		if (!pic8) {
-			return nullptr;
-		}
-
-		palette = raw + rawlen - 768;
-
-		int c = width * height;
-		pic32 = (byte*)malloc(c * 4);
-		for (int i = 0; i < c; i++)
-		{
-			int p = pic8[i];
-			pic32[0] = palette[p * 3];
-			pic32[1] = palette[p * 3 + 1];
-			pic32[2] = palette[p * 3 + 2];
-			if (p == 255) {
-				pic32[3] = 0;
-			}
-			else {
-				pic32[3] = 255;
-			}
-
-			pic32 += 4;
-		}
-
-		free(pic8);
-
-		return pic32;
-	}
-
-	/*
-	==============
-	R_LoadPCX
-
-	Loads a PCX file
-	==============
-	*/
-	static void R_LoadPCX(byte *raw, int rawlen, byte **pic, int &width, int &height)
-	{
-		pcx_t *pcx;
-		int		x, y;
-		int		dataByte, runLength;
-		byte *out, *pix;
-		int		xmax, ymax;
-
-		*pic = NULL;
-		width = 0;
-		height = 0;
-
-		//
-		// parse the PCX file
-		//
-		pcx = (pcx_t *)raw;
-		raw = &pcx->data;
-
-		xmax = LittleShort(pcx->xmax);
-		ymax = LittleShort(pcx->ymax);
-
-		if (pcx->manufacturer != 0x0a
-			|| pcx->version != 5
-			|| pcx->encoding != 1
-			|| pcx->bits_per_pixel != 8
-			|| xmax >= 1024
-			|| ymax >= 1024)
-		{
-			Com_Printf("Bad pcx file (%i x %i) (%i x %i)\n", xmax + 1, ymax + 1, pcx->xmax, pcx->ymax);
-			return;
-		}
-
-		width = xmax + 1;
-		height = ymax + 1;
-
-		out = (byte *)malloc(width * height);
-
-		*pic = out;
-
-		pix = out;
-
-		// FIXME: use bytes_per_line here?
-		for (y = 0; y <= ymax; y++, pix += xmax + 1)
-		{
-			for (x = 0; x <= xmax; )
-			{
-				dataByte = *raw++;
-
-				if ((dataByte & 0xC0) == 0xC0)
-				{
-					runLength = dataByte & 0x3F;
-					dataByte = *raw++;
-				}
-				else
-					runLength = 1;
-
-				while (runLength-- > 0)
-					pix[x++] = dataByte;
-			}
-
-		}
-
-		if (raw - (byte *)pcx > rawlen)
-		{
-			Com_DPrintf("PCX file was malformed");
-			free(*pic);
-			*pic = NULL;
-		}
-	}
-
-	/*
-	==============
-	LoadPCX32
-
-	Loads an 8-bit PCX and converts it to 32-bit
-	==============
-	*/
-	static void R_LoadPCX32(byte *raw, int rawlen, byte **pic, int &width, int &height)
-	{
-		byte *palette;
-		byte *pic8;
-		byte *pic32;
-
-		R_LoadPCX(raw, rawlen, &pic8, width, height);
-		if (!pic8) {
-			*pic = NULL;
-			return;
-		}
-
-		palette = raw + rawlen - 768;
-
-		int c = width * height;
-		pic32 = *pic = (byte *)malloc(4 * c);
-		for (int i = 0; i < c; i++)
-		{
-			int p = pic8[i];
-			pic32[0] = palette[p * 3];
-			pic32[1] = palette[p * 3 + 1];
-			pic32[2] = palette[p * 3 + 2];
-			if (p == 255) {
-				pic32[3] = 0;
-			}
-			else {
-				pic32[3] = 255;
-			}
-
-			pic32 += 4;
-		}
-
-		free(pic8);
-	}
-
-	//-------------------------------------------------------------------------------------------------
-	// Loads a WAL
-	//-------------------------------------------------------------------------------------------------
-	byte *LoadWAL(const byte *pBuffer, int nBufLen, int &width, int &height)
-	{
-		const miptex_t *pMipTex = (const miptex_t *)pBuffer;
-
-		if (nBufLen <= sizeof(*pMipTex))
-		{
-			return nullptr;
-		}
-
-		width = (int)pMipTex->width;
-		height = (int)pMipTex->height;
-
-		int c = width * height;
-
-		byte *pPic8 = (byte *)pMipTex + pMipTex->offsets[0];
-		uint *pPic32 = (uint *)malloc(c * 4);
-
-		for (int i = 0; i < c; ++i)
-		{
-			pPic32[i] = d_8to24table[pPic8[i]];
-		}
-
-		return (byte *)pPic32;
-	}
-}
 
 //-------------------------------------------------------------------------------------------------
 
@@ -500,44 +249,38 @@ static image_t *GL_CreateImage(const char *name, const byte *pic, int width, int
 //-------------------------------------------------------------------------------------------------
 // Loads any of the supported image types into a cannonical 32 bit format.
 //-------------------------------------------------------------------------------------------------
-static byte *GL_LoadImage(const char *pName, int &width, int &height)
+static byte *GL_LoadImage( const char *pName, int &width, int &height )
 {
 	byte *pBuffer;
 	int nBufLen;
 
-	nBufLen = FS_LoadFile(pName, (void **)&pBuffer);
-	if (!pBuffer)
+	nBufLen = FS_LoadFile( pName, (void **)&pBuffer );
+	if ( !pBuffer )
 	{
 		return nullptr;
 	}
 
-	byte *pPic;
+	assert( nBufLen > 16 ); // Sanity check
 
-	const char *pExt = strrchr(pName, '.') + 1;
+	byte *pPic = nullptr;
 
-	if (Q_stricmp(pExt, "png") == 0 || Q_stricmp(pExt, "tga") == 0)
+	if ( img::TestPNG( pBuffer ) )
 	{
-		pPic = stbi_load_from_memory(pBuffer, nBufLen, &width, &height, nullptr, 4);
-	}
-	else if (Q_stricmp(pExt, "pcx") == 0)
-	{
-		// Fixme
-		ImageLoaders::R_LoadPCX32(pBuffer, nBufLen, &pPic, width, height);
-	}
-	else if (Q_stricmp(pExt, "wal") == 0)
-	{
-		pPic = ImageLoaders::LoadWAL(pBuffer, nBufLen, width, height);
+		pPic = img::LoadPNG( pBuffer, width, height );
 	}
 	else
 	{
-		FS_FreeFile(pBuffer);
-		Com_Printf("GL_LoadImage - %s is an unsupported image format!", pName);
-		return nullptr;
+		pPic = stbi_load_from_memory( pBuffer, nBufLen, &width, &height, nullptr, 4 );
+	}
+	
+	if ( !pPic )
+	{
+		Com_Printf( "GL_LoadImage - %s is an unsupported image format!", pName );
 	}
 
 	FS_FreeFile( pBuffer );
 
-	if (!pPic)
+	if ( !pPic )
 	{
 		return nullptr;
 	}
@@ -984,7 +727,7 @@ static void GL_GetPalette (void)
 		Com_Error(ERR_FATAL, "Couldn't load pics/colormap.pcx");
 	}
 
-	if (!ImageLoaders::CreateColormapFromPCX(pBuffer, nBufLen, d_8to24table))
+	if (!img::CreateColormapFromPCX(pBuffer, nBufLen, d_8to24table))
 	{
 		FS_FreeFile(pBuffer);
 		Com_Error(ERR_FATAL, "pics/colormap.pcx is not a valid PCX!");

@@ -150,6 +150,8 @@ void Com_DPrintf( _Printf_format_string_ const char *fmt, ... )
 	Q_vsprintf_s( msg, fmt, argptr );
 	va_end( argptr );
 
+	Sys_OutputDebugString( msg ); // Mirror to the debugger
+
 	Com_Print_Internal( msg );
 }
 

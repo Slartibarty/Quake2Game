@@ -29,6 +29,14 @@ SYSTEM IO
 ===============================================================================
 */
 
+void Sys_OutputDebugString( const char *msg )
+{
+	if ( IsDebuggerPresent() )
+	{
+		OutputDebugStringA( msg );
+	}
+}
+
 [[noreturn]]
 void Sys_Error (_Printf_format_string_ const char *error, ...)
 {

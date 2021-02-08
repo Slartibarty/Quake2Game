@@ -17,10 +17,6 @@
 #define STRINGIFY(a) #a
 #define XSTRINGIFY(a) STRINGIFY(a)
 
-#ifdef _DEBUG
-#define Q_DEBUG
-#endif
-
 #ifdef _WIN32	// MSVC / Clang-CL
 
 #define MAX_OSPATH			260		// max length of a filesystem pathname

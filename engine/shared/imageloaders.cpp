@@ -2,13 +2,11 @@
 // Image loading routines
 //-------------------------------------------------------------------------------------------------
 
-#include <cstdlib>
-#include <cstdint>
-#include <cassert>
+#include "engine.h"
 
-#include "../../common/q_types.h"
+#include "png.h"
 
-namespace ImageLoaders
+namespace img
 {
 	struct bgr_t
 	{
@@ -214,37 +212,172 @@ namespace ImageLoaders
 		return pPixels;
 	}
 
-#if 0
-
-	typedef byte *(*LoadFunc)(const byte *pBuffer, int nBufLen, int &width, int &height);
-
-	static const LoadFunc s_ImageLoaders[]
+	// Return true if the first 8 bytes of the buffer match the fixed PNG ID
+	bool TestPNG( const byte *buf )
 	{
-		LoadTGA,
-		LoadPCX
-	};
-
-#undef LoadImage	// Windows.h
-
-	//-------------------------------------------------------------------------------------------------
-	// Goes through all image loaders until something works
-	//-------------------------------------------------------------------------------------------------
-	byte *LoadImage(const byte *pBuffer, int nBufLen, int &width, int &height)
-	{
-		byte *result;
-
-		for (int i = 0; i < countof(s_ImageLoaders); ++i)
-		{
-			result = s_ImageLoaders[i](pBuffer, nBufLen, width, height);
-			if (result)
-			{
-				return result;
-			}
-		}
-
-		return nullptr;
+		return *( (const int64 *)buf ) == 727905341920923785;
 	}
 
-#endif
+	struct LoadPNG_UserData_t
+	{
+		byte *buffer;
+		size_t offset;
+	};
+
+	// This callback wants us to read "length" amount of bytes into "data"
+	// There must be a better way!
+	static void LoadPNG_ReadCallback( png_structp png_ptr, png_bytep data, size_t length )
+	{
+		LoadPNG_UserData_t *userdata = (LoadPNG_UserData_t *)png_get_io_ptr( png_ptr );
+
+		memcpy( data, userdata->buffer + userdata->offset, length );
+
+		userdata->offset += length;
+	}
+
+	static void LoadPNG_ErrorCallback( png_structp png_ptr, png_const_charp msg )
+	{
+		// Load failures are bad and should be seen by everyone
+		Com_Error( ERR_FATAL, "PNG load error: %s\n", msg );
+	}
+
+	static void LoadPNG_WarningCallback( png_structp png_ptr, png_const_charp msg )
+	{
+		// Warnings are not so bad and should only be seen by devs
+		Com_DPrintf( "PNG load warning: %s\n", msg );
+	}
+
+	byte *LoadPNG( byte *buf, int &width, int &height )
+	{
+		png_structp png_ptr;
+		png_infop info_ptr;
+
+		png_ptr = png_create_read_struct( PNG_LIBPNG_VER_STRING, nullptr, LoadPNG_ErrorCallback, LoadPNG_WarningCallback );
+		assert( png_ptr );
+
+		info_ptr = png_create_info_struct( png_ptr );
+		assert( info_ptr );
+
+		LoadPNG_UserData_t userdata;
+		userdata.buffer = buf;
+		userdata.offset = 8;
+
+		png_set_read_fn( png_ptr, &userdata, LoadPNG_ReadCallback );
+		png_set_sig_bytes( png_ptr, 8 );
+
+		png_read_info( png_ptr, info_ptr );
+
+		width = (int)png_get_image_width( png_ptr, info_ptr );
+		height = (int)png_get_image_height( png_ptr, info_ptr );
+		int color_type = png_get_color_type( png_ptr, info_ptr );
+		int bit_depth = png_get_bit_depth( png_ptr, info_ptr );
+
+		if ( color_type == PNG_COLOR_TYPE_PALETTE )
+			png_set_expand( png_ptr );
+		if ( color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8 )
+			png_set_expand( png_ptr );
+		if ( png_get_valid( png_ptr, info_ptr, PNG_INFO_tRNS ) )
+			png_set_expand( png_ptr );
+		if ( bit_depth == 16 )
+			png_set_strip_16( png_ptr );
+		if ( color_type == PNG_COLOR_TYPE_GRAY ||
+			color_type == PNG_COLOR_TYPE_GRAY_ALPHA )
+			png_set_gray_to_rgb( png_ptr );
+
+		int channels = png_get_channels( png_ptr, info_ptr );
+
+		if ( channels < 4 )
+		{
+			png_set_filler( png_ptr, 0xFF, PNG_FILLER_AFTER );
+		}
+
+		png_read_update_info( png_ptr, info_ptr );
+
+		size_t rowbytes = png_get_rowbytes( png_ptr, info_ptr );
+
+		png_bytepp row_pointers = (png_bytepp)Z_Malloc( sizeof( png_bytep ) * height );	// Row pointers
+		png_bytep rows = (png_bytep)Z_Malloc( rowbytes * height );						// Rows
+
+		for ( int i = 0; i < height; ++i )
+		{
+			row_pointers[i] = rows + i * rowbytes;
+		}
+
+		png_read_image( png_ptr, row_pointers );
+
+		Z_Free( row_pointers ); // Don't need these anymore
+
+		// TODO: Do we need this?
+		png_read_end( png_ptr, nullptr );
+
+		png_destroy_read_struct( &png_ptr, &info_ptr, nullptr );
+
+		return rows;
+	}
+
+	// Write a 24-bit PNG using STDIO
+	bool WritePNG24( int width, int height, byte *buffer, FILE *handle )
+	{
+		png_structp png_ptr;
+		png_infop info_ptr;
+
+		png_ptr = png_create_write_struct( PNG_LIBPNG_VER_STRING, nullptr, LoadPNG_ErrorCallback, LoadPNG_WarningCallback );
+		assert( png_ptr );
+
+		info_ptr = png_create_info_struct( png_ptr );
+		assert( info_ptr );
+
+		png_set_write_fn( png_ptr, handle, nullptr, nullptr );
+
+		png_set_IHDR( png_ptr, info_ptr, width, height, 8, PNG_COLOR_TYPE_RGB,
+			PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT );
+
+		png_write_info( png_ptr, info_ptr );
+
+		size_t rowbytes = png_get_rowbytes( png_ptr, info_ptr );
+
+		png_bytepp row_pointers = (png_bytepp)Z_Malloc( sizeof( png_bytep ) * height );	// Row pointers
+
+		for ( int i = 0; i < height; ++i )
+		{
+			row_pointers[i] = buffer + i * rowbytes;
+		}
+
+		png_write_image( png_ptr, row_pointers );
+
+		Z_Free( row_pointers );
+
+		png_write_end( png_ptr, nullptr );
+
+		png_destroy_write_struct( &png_ptr, &info_ptr );
+
+		return true;
+	}
+
+	// stbi__vertical_flip
+	void VerticalFlip( byte *image, int w, int h, int bytes_per_pixel )
+	{
+		int row;
+		size_t bytes_per_row = (size_t)w * bytes_per_pixel;
+		byte temp[2048];
+
+		for ( row = 0; row < ( h >> 1 ); row++ )
+		{
+			byte *row0 = image + row * bytes_per_row;
+			byte *row1 = image + ( h - row - 1 ) * bytes_per_row;
+			// swap row0 with row1
+			size_t bytes_left = bytes_per_row;
+			while ( bytes_left )
+			{
+				size_t bytes_copy = ( bytes_left < sizeof( temp ) ) ? bytes_left : sizeof( temp );
+				memcpy( temp, row0, bytes_copy );
+				memcpy( row0, row1, bytes_copy );
+				memcpy( row1, temp, bytes_copy );
+				row0 += bytes_copy;
+				row1 += bytes_copy;
+				bytes_left -= bytes_copy;
+			}
+		}
+	}
 
 }

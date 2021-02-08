@@ -66,13 +66,13 @@ filter {}
 
 -- Config for all projects in debug, _DEBUG is defined for library-compatibility
 filter( filter_dbg )
-	defines { "_DEBUG" }
+	defines { "_DEBUG", "Q_DEBUG" }
 	symbols "FastLink"
 filter {}
 
 -- Config for all projects in release or retail, NDEBUG is defined for cstd compatibility (assert)
 filter( filter_rel_or_rtl )
-	defines { "NDEBUG" }
+	defines { "NDEBUG", "Q_RELEASE" }
 	symbols "Full"
 	optimize "Speed"
 filter {}
@@ -91,6 +91,76 @@ filter {}
 
 -- Project definitions --------------------------------------------------------
 
+local zlib_public = {
+	"external/zlib/zconf.h",
+	"external/zlib/zlib.h"
+}
+
+local zlib_sources = {
+	"external/zlib/adler32.c",
+	"external/zlib/compress.c",
+	"external/zlib/crc32.c",
+	"external/zlib/crc32.h",
+	"external/zlib/deflate.c",
+	"external/zlib/deflate.h",
+	"external/zlib/gzclose.c",
+	"external/zlib/gzguts.h",
+	"external/zlib/gzlib.c",
+	"external/zlib/gzread.c",
+	"external/zlib/gzwrite.c",
+	"external/zlib/infback.c",
+	"external/zlib/inffast.c",
+	"external/zlib/inffast.h",
+	"external/zlib/inffixed.h",
+	"external/zlib/inflate.c",
+	"external/zlib/inflate.h",
+	"external/zlib/inftrees.c",
+	"external/zlib/inftrees.h",
+	"external/zlib/trees.c",
+	"external/zlib/trees.h",
+	"external/zlib/uncompr.c",
+	"external/zlib/zutil.c",
+	"external/zlib/zutil.h"
+}
+
+local libpng_public = {
+	"external/libpng/png.h",
+	"external/libpng/pngconf.h"
+}
+
+local libpng_sources = {
+	"external/libpng/png.c",
+	"external/libpng/pngpriv.h",
+	"external/libpng/pngstruct.h",
+	"external/libpng/pnginfo.h",
+	"external/libpng/pngdebug.h",
+	"external/libpng/pngerror.c",
+	"external/libpng/pngget.c",
+	"external/libpng/pngmem.c",
+	"external/libpng/pngpread.c",
+	"external/libpng/pngread.c",
+	"external/libpng/pngrio.c",
+	"external/libpng/pngrtran.c",
+	"external/libpng/pngrutil.c",
+	"external/libpng/pngset.c",
+	"external/libpng/pngtrans.c",
+	"external/libpng/pngwio.c",
+	"external/libpng/pngwrite.c",
+	"external/libpng/pngwtran.c",
+	"external/libpng/pngwutil.c"
+}
+
+local glew_public = {
+	"external/glew/include/GL/glew.h",
+	"external/glew/include/GL/wglew.h"
+}
+
+local glew_sources = {
+	"external/glew/src/glew.c"
+}
+	
+-------------------------------------------------------------------------------
+
 group "game"
 	
 project "engine"
@@ -98,7 +168,7 @@ project "engine"
 	targetname "q2game"
 	language "C++"
 	targetdir "../game"
-	includedirs { "external/glew/include" }
+	includedirs { "external/glew/include", "external/zlib", "external/libpng", "external/libpng_config" }
 	defines { "GLEW_STATIC", "GLEW_NO_GLU" }
 	filter "system:windows"
 		linkoptions { "/ENTRY:mainCRTStartup" }
@@ -123,7 +193,14 @@ project "engine"
 		"game_shared/game_public.h",
 		"game_shared/m_flash.cpp",
 		
-		"external/glew/src/glew.c"
+		zlib_public,
+		zlib_sources,
+		
+		libpng_public,
+		libpng_sources,
+		
+		glew_public,
+		glew_sources
 	}
 	
 	filter "system:windows"
@@ -145,39 +222,6 @@ project "engine"
 		"**/*sv_null.*",
 		"**_pch.cpp"
 	}
-	
---[[
-project "ref_gl"
-	kind "StaticLib"
-	targetname "ref_gl"
-	language "C++"
-	targetdir "../game"
-	includedirs { "external/glew/include" }
-	defines { "GLEW_STATIC", "GLEW_NO_GLU" }
-	links { "opengl32" }
-	
-	disablewarnings { "4244" }
-	
-	pchsource( "engine/ref_gl/gl_pch.cpp" )
-	pchheader( "gl_local.h" )
-	filter( "files:not engine/ref_gl/**" )
-		flags( { "NoPCH" } )
-	filter( {} )
-
-	files {
-		"common/*.h",
-		"engine/res/resource.h",
-		
-		"engine/ref_gl/*",
-		"engine/ref_shared/*",
-		
-		"external/glew/src/glew.c"
-	}
-	
-	removefiles {
-		"**.manifest",
-	}
---]]
 	
 project "game_q2"
 	kind "SharedLib"

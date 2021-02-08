@@ -7,13 +7,71 @@ Misc functions that don't fit anywhere else
 */
 
 #include "gl_local.h"
+#include "../shared/imageloaders.h"
 
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
+#define STBI_NO_STDIO
+#define STBI_NO_LINEAR
+#define STBI_NO_HDR
+#define STBI_ONLY_TGA
+#define STBI_NO_FAILURE_STRINGS
+#include "stb_image.h"
+
+#include "png.h"
 
 //-------------------------------------------------------------------------------------------------
-// Captures a screenshot
+// Captures a 24-bit PNG screenshot
 //-------------------------------------------------------------------------------------------------
+#if 1
+void GL_ScreenShot_f( void )
+{
+	int i;
+	char checkname[MAX_OSPATH];
+	char picname[64];
+	FILE *handle;
+	byte *pixbuffer;
+	
+// create the screenshots directory if it doesn't exist
+	Q_sprintf_s( checkname, "%s/screenshots", FS_Gamedir() );
+	Sys_Mkdir( checkname );
+
+// find a file name to save it to 
+	strcpy( picname, "quake00.png" );
+
+	for ( i = 0; i <= 99; ++i )
+	{
+		picname[5] = i / 10 + '0';
+		picname[6] = i % 10 + '0';
+		Q_sprintf_s( checkname, "%s/screenshots/%s", FS_Gamedir(), picname );
+		handle = fopen( checkname, "rb" );
+		if ( !handle )
+			break;	// file doesn't exist
+		fclose( handle );
+	}
+	if ( i == 100 )
+	{
+		Com_Printf( "GL_ScreenShot_f: Couldn't create a file\n" );
+		return;
+	}
+
+	const int c = vid.width * vid.height * 3;
+	pixbuffer = (byte *)malloc( c );
+
+	glReadPixels( 0, 0, vid.width, vid.height, GL_RGB, GL_UNSIGNED_BYTE, pixbuffer );
+
+	img::VerticalFlip( pixbuffer, vid.width, vid.height, 3 );
+
+	handle = fopen( checkname, "wb" );
+	assert( handle );
+
+	img::WritePNG24( vid.width, vid.height, pixbuffer, handle );
+
+	fclose( handle );
+
+	free( pixbuffer );
+
+	Com_Printf( "Wrote %s\n", picname );
+}
+#else
 void GL_ScreenShot_f(void)
 {
 	byte		*buffer;
@@ -75,6 +133,7 @@ void GL_ScreenShot_f(void)
 	free (buffer);
 	Com_Printf("Wrote %s\n", picname);
 }
+#endif
 
 //-------------------------------------------------------------------------------------------------
 // Prints some OpenGL strings
@@ -194,7 +253,7 @@ void GL_ExtractWad_f( void )
 			*asterisk = '!';
 		}
 
-		if ( stbi_write_tga( outname, miptex.width, miptex.height, 3, pic32 ) == 0 )
+	//	if ( stbi_write_tga( outname, miptex.width, miptex.height, 3, pic32 ) == 0 )
 		{
 			Com_Printf( "Failed to write %s\n", outname );
 		}
@@ -228,6 +287,34 @@ void GL_ExtractWad_f( void )
 
 	free( wadlumps );
 	fclose( wadhandle );
+}
+
+//-------------------------------------------------------------------------------------------------
+// Loads a WAL
+//-------------------------------------------------------------------------------------------------
+byte *LoadWAL(const byte *pBuffer, int nBufLen, int &width, int &height)
+{
+	const miptex_t *pMipTex = (const miptex_t *)pBuffer;
+
+	if (nBufLen <= sizeof(*pMipTex))
+	{
+		return nullptr;
+	}
+
+	width = (int)pMipTex->width;
+	height = (int)pMipTex->height;
+
+	int c = width * height;
+
+	byte *pPic8 = (byte *)pMipTex + pMipTex->offsets[0];
+	uint *pPic32 = (uint *)malloc(c * 4);
+
+	for (int i = 0; i < c; ++i)
+	{
+		pPic32[i] = d_8to24table[pPic8[i]];
+	}
+
+	return (byte *)pPic32;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -272,14 +359,14 @@ void GL_UpgradeWals_f( void )
 		fclose( handle );
 
 		int width, height;
-		byte *data = ImageLoaders::LoadWAL( file, length, width, height );
+		byte *data = LoadWAL( file, length, width, height );
 		free( file );
 
 		char tempname[MAX_QPATH];
 		Q_strcpy_s( tempname, str );
 		strcpy( strstr( tempname, ".wal" ), ".tga" );
 
-		stbi_write_tga( tempname, width, height, 4, data );
+	//	stbi_write_tga( tempname, width, height, 4, data );
 
 		free( data );
 	}
