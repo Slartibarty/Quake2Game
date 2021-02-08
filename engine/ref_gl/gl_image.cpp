@@ -721,16 +721,16 @@ static void GL_GetPalette (void)
 	byte	*pBuffer;
 	int		nBufLen;
 
-	nBufLen = FS_LoadFile("pics/colormap.pcx", (void**)&pBuffer);
+	nBufLen = FS_LoadFile("textures/colormap.pcx", (void**)&pBuffer);
 	if (!pBuffer)
 	{
-		Com_Error(ERR_FATAL, "Couldn't load pics/colormap.pcx");
+		Com_Error(ERR_FATAL, "Couldn't load textures/colormap.pcx");
 	}
 
 	if (!img::CreateColormapFromPCX(pBuffer, nBufLen, d_8to24table))
 	{
 		FS_FreeFile(pBuffer);
-		Com_Error(ERR_FATAL, "pics/colormap.pcx is not a valid PCX!");
+		Com_Error(ERR_FATAL, "textures/colormap.pcx is not a valid PCX!");
 	}
 
 	FS_FreeFile(pBuffer);

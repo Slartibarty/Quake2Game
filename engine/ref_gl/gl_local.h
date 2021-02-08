@@ -43,11 +43,12 @@ enum rserr_t
 // gl_misc.cpp
 //-------------------------------------------------------------------------------------------------
 
-void GL_ScreenShot_f(void);
-void GL_Strings_f(void);
+void GL_ScreenShot_PNG_f();
+void GL_ScreenShot_TGA_f();
+void GL_Strings_f();
 
-void GL_ExtractWad_f( void );
-void GL_UpgradeWals_f( void );
+void GL_ExtractWad_f();
+void GL_UpgradeWals_f();
 
 //-------------------------------------------------------------------------------------------------
 // gl_image.cpp

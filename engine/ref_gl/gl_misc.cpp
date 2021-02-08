@@ -21,10 +21,9 @@ Misc functions that don't fit anywhere else
 //-------------------------------------------------------------------------------------------------
 // Captures a 24-bit PNG screenshot
 //-------------------------------------------------------------------------------------------------
-#if 1
-void GL_ScreenShot_f( void )
+static void GL_ScreenShot_Internal( bool png )
 {
-	int i;
+	size_t i;
 	char checkname[MAX_OSPATH];
 	char picname[64];
 	FILE *handle;
@@ -35,7 +34,7 @@ void GL_ScreenShot_f( void )
 	Sys_Mkdir( checkname );
 
 // find a file name to save it to 
-	strcpy( picname, "quake00.png" );
+	Q_sprintf_s( picname, "quake00.%s", png ? "png" : "tga" );
 
 	for ( i = 0; i <= 99; ++i )
 	{
@@ -53,92 +52,68 @@ void GL_ScreenShot_f( void )
 		return;
 	}
 
-	const int c = vid.width * vid.height * 3;
-	pixbuffer = (byte *)malloc( c );
+	size_t c = (size_t)vid.width * (size_t)vid.height * 3;
+	size_t addsize = 0;
+	if ( !png )
+	{
+		addsize = 18; // TGA Header
+		c += addsize;
+	}
+	pixbuffer = (byte *)Z_Malloc( c );
 
-	glReadPixels( 0, 0, vid.width, vid.height, GL_RGB, GL_UNSIGNED_BYTE, pixbuffer );
-
-	img::VerticalFlip( pixbuffer, vid.width, vid.height, 3 );
+	glReadPixels( 0, 0, vid.width, vid.height, GL_RGB, GL_UNSIGNED_BYTE, pixbuffer + addsize );
 
 	handle = fopen( checkname, "wb" );
 	assert( handle );
 
-	img::WritePNG24( vid.width, vid.height, pixbuffer, handle );
+	if ( png )
+	{
+		img::VerticalFlip( pixbuffer, vid.width, vid.height, 3 );
+		img::WritePNG24( vid.width, vid.height, pixbuffer, handle );
+	}
+	else
+	{
+		memset( pixbuffer, 0, 18 );
+		pixbuffer[2] = 2; // uncompressed type
+		pixbuffer[12] = vid.width & 255;
+		pixbuffer[13] = vid.width >> 8;
+		pixbuffer[14] = vid.height & 255;
+		pixbuffer[15] = vid.height >> 8;
+		pixbuffer[16] = 24; // pixel size
+
+		byte temp;
+		// swap rgb to bgr
+		for ( i = 18; i < c; i += 3 )
+		{
+			temp = pixbuffer[i];
+			pixbuffer[i] = pixbuffer[i + 2];
+			pixbuffer[i + 2] = temp;
+		}
+
+		fwrite( pixbuffer, 1, c, handle );
+	}
 
 	fclose( handle );
 
-	free( pixbuffer );
+	Z_Free( pixbuffer );
 
 	Com_Printf( "Wrote %s\n", picname );
 }
-#else
-void GL_ScreenShot_f(void)
+
+void GL_ScreenShot_PNG_f()
 {
-	byte		*buffer;
-	char		picname[64]; 
-	char		checkname[MAX_OSPATH];
-	int			i, c, temp;
-	FILE		*f;
-
-	// create the screenshots directory if it doesn't exist
-	Q_sprintf_s (checkname, "%s/screenshots", FS_Gamedir());
-	Sys_Mkdir (checkname);
-
-//
-// find a file name to save it to 
-//
-	strcpy(picname,"quake00.tga");
-
-	for (i=0 ; i<=99 ; i++) 
-	{ 
-		picname[5] = i/10 + '0'; 
-		picname[6] = i%10 + '0'; 
-		Q_sprintf_s (checkname, "%s/screenshots/%s", FS_Gamedir(), picname);
-		f = fopen (checkname, "rb");
-		if (!f)
-			break;	// file doesn't exist
-		fclose (f);
-	} 
-	if (i==100) 
-	{
-		Com_Printf("SCR_ScreenShot_f: Couldn't create a file\n"); 
-		return;
- 	}
-
-
-	buffer = (byte*)malloc(vid.width*vid.height*3 + 18);
-	memset (buffer, 0, 18);
-	buffer[2] = 2;		// uncompressed type
-	buffer[12] = vid.width&255;
-	buffer[13] = vid.width>>8;
-	buffer[14] = vid.height&255;
-	buffer[15] = vid.height>>8;
-	buffer[16] = 24;	// pixel size
-
-	glReadPixels (0, 0, vid.width, vid.height, GL_RGB, GL_UNSIGNED_BYTE, buffer+18 ); 
-
-	// swap rgb to bgr
-	c = 18+vid.width*vid.height*3;
-	for (i=18 ; i<c ; i+=3)
-	{
-		temp = buffer[i];
-		buffer[i] = buffer[i+2];
-		buffer[i+2] = temp;
-	}
-
-	f = fopen (checkname, "wb");
-	fwrite (buffer, 1, c, f);
-	fclose (f);
-
-	free (buffer);
-	Com_Printf("Wrote %s\n", picname);
+	GL_ScreenShot_Internal( true );
 }
-#endif
+
+void GL_ScreenShot_TGA_f()
+{
+	GL_ScreenShot_Internal( false );
+}
 
 //-------------------------------------------------------------------------------------------------
 // Prints some OpenGL strings
 //-------------------------------------------------------------------------------------------------
-void GL_Strings_f(void)
+void GL_Strings_f()
 {
 	Com_Printf( "GL_VENDOR: %s\n", glGetString( GL_VENDOR ) );
 	Com_Printf( "GL_RENDERER: %s\n", glGetString( GL_RENDERER ) );
@@ -150,7 +125,7 @@ void GL_Strings_f(void)
 //-------------------------------------------------------------------------------------------------
 // Extract a WAD file to 24-bit TGA files
 //-------------------------------------------------------------------------------------------------
-void GL_ExtractWad_f( void )
+void GL_ExtractWad_f()
 {
 	if ( Cmd_Argc() < 3 )
 	{
@@ -320,7 +295,7 @@ byte *LoadWAL(const byte *pBuffer, int nBufLen, int &width, int &height)
 //-------------------------------------------------------------------------------------------------
 // Upgrade all WALs in a specified folder to TGAs and WAScripts
 //-------------------------------------------------------------------------------------------------
-void GL_UpgradeWals_f( void )
+void GL_UpgradeWals_f()
 {
 	if ( Cmd_Argc() < 2 )
 	{

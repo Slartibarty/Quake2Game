@@ -862,7 +862,8 @@ static void R_Register()
 
 	Cmd_AddCommand( "imagelist", GL_ImageList_f );
 	Cmd_AddCommand( "materiallist", GL_MaterialList_f );
-	Cmd_AddCommand( "screenshot", GL_ScreenShot_f );
+	Cmd_AddCommand( "screenshot", GL_ScreenShot_PNG_f );
+	Cmd_AddCommand( "screenshot_tga", GL_ScreenShot_TGA_f );
 	Cmd_AddCommand( "modellist", Mod_Modellist_f );
 	Cmd_AddCommand( "gl_strings", GL_Strings_f );
 
@@ -877,6 +878,7 @@ static void R_Unregister()
 	Cmd_RemoveCommand( "imagelist" );
 	Cmd_RemoveCommand( "materiallist" );
 	Cmd_RemoveCommand( "screenshot" );
+	Cmd_RemoveCommand( "screenshot_tga" );
 	Cmd_RemoveCommand( "modellist" );
 	Cmd_RemoveCommand( "gl_strings" );
 

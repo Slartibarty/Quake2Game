@@ -35,7 +35,7 @@ static void R_RenderDlight (dlight_t *light)
 	{
 		a = i/16.0f * M_PI_F*2;
 		for (j=0 ; j<3 ; j++)
-			v[j] = light->origin[j] + vright[j]*cosf(a)*rad
+			v[j] = light->origin[j] + vright[j]*cos(a)*rad
 				+ vup[j]*sin(a)*rad;
 		glVertex3fv (v);
 	}
