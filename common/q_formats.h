@@ -580,18 +580,18 @@ namespace wad2
 
 constexpr int IDBSPHEADER = MakeID('I', 'B', 'S', 'P');
 
-#define BSPVERSION	38
+#define BSPVERSION	39
 
 // upper design bounds
 // leaffaces, leafbrushes, planes, and verts are still bounded by
 // 16 bit short limits
-#define	MAX_MAP_MODELS		1024
-#define	MAX_MAP_BRUSHES		8192
-#define	MAX_MAP_ENTITIES	2048
+#define	MAX_MAP_MODELS		2048	// 1024
+#define	MAX_MAP_BRUSHES		16384	// 8192
+#define	MAX_MAP_ENTITIES	4096	// 2048
 #define	MAX_MAP_ENTSTRING	0x40000
 #define	MAX_MAP_TEXINFO		8192
 
-#define	MAX_MAP_AREAS		256
+#define	MAX_MAP_AREAS		512		// 256
 #define	MAX_MAP_AREAPORTALS	1024
 #define	MAX_MAP_PLANES		65536
 #define	MAX_MAP_NODES		65536
