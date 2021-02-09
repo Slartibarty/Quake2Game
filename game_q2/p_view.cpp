@@ -20,7 +20,7 @@ SV_CalcRoll
 
 ===============
 */
-float SV_CalcRoll (vec3_t angles, vec3_t velocity)
+static float SV_CalcRoll (vec3_t angles, vec3_t velocity)
 {
 	float	sign;
 	float	side;
@@ -985,7 +985,7 @@ void ClientEndServerFrame (edict_t *ent)
 		ent->s.angles[PITCH] = ent->client->v_angle[PITCH]/3;
 	ent->s.angles[YAW] = ent->client->v_angle[YAW];
 	ent->s.angles[ROLL] = 0;
-	ent->s.angles[ROLL] = SV_CalcRoll (ent->s.angles, ent->velocity)*4;
+	ent->s.angles[ROLL] = SV_CalcRoll (ent->s.angles, ent->velocity) * 4; // Multiplied x4
 
 	//
 	// calculate speed and cycle to be used for
@@ -1023,17 +1023,21 @@ void ClientEndServerFrame (edict_t *ent)
 	P_DamageFeedback (ent);
 
 	// determine the view offsets
-	SV_CalcViewOffset (ent);
+//	SV_CalcViewOffset (ent);
+
+	VectorClear( ent->client->ps.viewoffset );
+	static float addtemp = 29.0f;
+	ent->client->ps.viewoffset[2] = addtemp;
 
 	// determine the gun offsets
-	SV_CalcGunOffset (ent);
+//	SV_CalcGunOffset (ent);
 
 	// determine the full screen color blend
 	// must be after viewoffset, so eye contents can be
 	// accurately determined
 	// FIXME: with client prediction, the contents
 	// should be determined by the client
-	SV_CalcBlend (ent);
+//	SV_CalcBlend (ent);
 
 	// chase cam stuff
 	if (ent->client->resp.spectator)

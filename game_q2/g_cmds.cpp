@@ -667,8 +667,9 @@ Cmd_Kill_f
 */
 void Cmd_Kill_f (edict_t *ent)
 {
-	if((level.time - ent->client->respawn_time) < 5)
-		return;
+	// Don't let the player kill themselves constantly
+	//if((level.time - ent->client->respawn_time) < 5)
+	//	return;
 	ent->flags &= ~FL_GODMODE;
 	ent->health = 0;
 	meansOfDeath = MOD_SUICIDE;

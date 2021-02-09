@@ -1147,7 +1147,7 @@ void PutClientInServer (edict_t *ent)
 	ent->client = &game.clients[index];
 	ent->takedamage = DAMAGE_AIM;
 	ent->movetype = MOVETYPE_WALK;
-	ent->viewheight = 22;
+	ent->viewheight = 28; // STAND_VIEWHEIGHT
 	ent->inuse = true;
 	ent->classname = "player";
 	ent->mass = 200;

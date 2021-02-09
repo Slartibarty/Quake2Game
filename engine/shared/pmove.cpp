@@ -4,9 +4,9 @@
 #include "pmove.h"
 
 #define	STEPSIZE			16
-#define GIB_VIEWHEIGHT		8
-#define CROUCH_VIEWHEIGHT	-2
-#define STAND_VIEWHEIGHT	22
+#define GIB_VIEWHEIGHT		-8
+#define CROUCH_VIEWHEIGHT	12
+#define STAND_VIEWHEIGHT	28
 
 // all of the locals will be zeroed before each
 // pmove, just to make damn sure we don't have
