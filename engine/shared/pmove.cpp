@@ -948,7 +948,7 @@ void PM_CatagorizePosition (void)
 		pml.groundsurface = trace.surface;
 		pml.groundcontents = trace.contents;
 
-		if (!trace.ent || (trace.plane.normal[2] < 0.7f && !trace.startsolid) )
+		if (!trace.ent || (trace.plane.normal[2] < MIN_STEP_NORMAL && !trace.startsolid) )
 		{
 			pm->groundentity = NULL;
 			pm->s.pm_flags &= ~PMF_ON_GROUND;
