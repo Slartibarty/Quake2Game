@@ -1023,21 +1023,17 @@ void ClientEndServerFrame (edict_t *ent)
 	P_DamageFeedback (ent);
 
 	// determine the view offsets
-//	SV_CalcViewOffset (ent);
-
-	VectorClear( ent->client->ps.viewoffset );
-	static float addtemp = 29.0f;
-	ent->client->ps.viewoffset[2] = addtemp;
+	SV_CalcViewOffset (ent);
 
 	// determine the gun offsets
-//	SV_CalcGunOffset (ent);
+	SV_CalcGunOffset (ent);
 
 	// determine the full screen color blend
 	// must be after viewoffset, so eye contents can be
 	// accurately determined
 	// FIXME: with client prediction, the contents
 	// should be determined by the client
-//	SV_CalcBlend (ent);
+	SV_CalcBlend (ent);
 
 	// chase cam stuff
 	if (ent->client->resp.spectator)
