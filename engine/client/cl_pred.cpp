@@ -10,9 +10,9 @@ CL_CheckPredictionError
 void CL_CheckPredictionError (void)
 {
 	int		frame;
-	int		delta[3];
+	vec3_t	delta;
 	int		i;
-	int		len;
+	float	len;
 
 	if (!cl_predict->value || (cl.frame.playerstate.pmove.pm_flags & PMF_NO_PREDICTION))
 		return;
@@ -22,10 +22,10 @@ void CL_CheckPredictionError (void)
 	frame &= (CMD_BACKUP-1);
 
 	// compare what the server returned with what we had predicted it to be
-	_VectorSubtract (cl.frame.playerstate.pmove.origin, cl.predicted_origins[frame], delta);
+	VectorSubtract (cl.frame.playerstate.pmove.origin, cl.predicted_origins[frame], delta);
 
 	// save the prediction error for interpolation
-	len = abs(delta[0]) + abs(delta[1]) + abs(delta[2]);
+	len = fabs(delta[0]) + fabs(delta[1]) + fabs(delta[2]);
 	if (len > 640)	// 80 world units
 	{	// a teleport or something
 		VectorClear (cl.prediction_error);
@@ -33,10 +33,10 @@ void CL_CheckPredictionError (void)
 	else
 	{
 		if (cl_showmiss->value && (delta[0] || delta[1] || delta[2]) )
-			Com_Printf ("prediction miss on %i: %i\n", cl.frame.serverframe, 
+			Com_Printf ("prediction miss on %i: %f\n", cl.frame.serverframe, 
 			delta[0] + delta[1] + delta[2]);
 
-		_VectorCopy (cl.frame.playerstate.pmove.origin, cl.predicted_origins[frame]);
+		VectorCopy (cl.frame.playerstate.pmove.origin, cl.predicted_origins[frame]);
 
 		// save for error itnerpolation
 		for (i=0 ; i<3 ; i++)

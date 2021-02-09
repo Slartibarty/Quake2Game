@@ -81,7 +81,7 @@ struct client_state_t
 	usercmd_t	cmd;
 	usercmd_t	cmds[CMD_BACKUP];	// each mesage will send several old cmds
 	int			cmd_time[CMD_BACKUP];	// time sent, for calculating pings
-	short		predicted_origins[CMD_BACKUP][3];	// for debug comparing against server
+	vec3_t		predicted_origins[CMD_BACKUP];	// for debug comparing against server
 
 	float		predicted_step;				// for stair up smoothing
 	unsigned	predicted_step_time;
