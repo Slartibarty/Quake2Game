@@ -441,12 +441,12 @@ struct pmove_state_t
 {
 	pmtype_t	pm_type;
 
-	short		origin[3];		// 12.3
-	short		velocity[3];	// 12.3
+	vec3_t		origin;			// 12.3
+	vec3_t		velocity;		// 12.3
 	byte		pm_flags;		// ducked, jump_held, etc
 	byte		pm_time;		// each unit = 8 ms
 	short		gravity;
-	short		delta_angles[3];	// add to command angles to get view direction
+	vec3_t		delta_angles;		// add to command angles to get view direction
 									// changed by spawns, rotating objects, and teleporters
 
 	int			time_step_sound;	// In milliseconds, the time until we can play another footstep
@@ -465,8 +465,8 @@ struct usercmd_t
 {
 	byte	msec;
 	byte	buttons;
-	short	angles[3];
-	short	forwardmove, sidemove, upmove;
+	vec3_t	angles;
+	float	forwardmove, sidemove, upmove;
 	byte	impulse;		// remove?
 	byte	lightlevel;		// light level the player is standing on
 };
@@ -1046,8 +1046,8 @@ ROGUE - VERSIONS
 // ELEMENTS COMMUNICATED ACROSS THE NET
 //-------------------------------------------------------------------------------------------------
 
-#define	ANGLE2SHORT(x)	((int)((x)*65536/360) & 65535)
-#define	SHORT2ANGLE(x)	((x)*(360.0f/65536))
+#define	ANGLE2SHORT(x)	x
+#define	SHORT2ANGLE(x)	x
 
 //-------------------------------------------------------------------------------------------------
 // config strings are a general means of communication from

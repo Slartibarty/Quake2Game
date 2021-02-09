@@ -1319,7 +1319,7 @@ qboolean	PM_GoodPosition (void)
 		return true;
 
 	for (i=0 ; i<3 ; i++)
-		origin[i] = end[i] = pm->s.origin[i]*0.125f;
+		origin[i] = end[i] = pm->s.origin[i];
 	trace = pm->trace (origin, pm->mins, pm->maxs, end);
 
 	return !trace.allsolid;
@@ -1337,13 +1337,13 @@ void PM_SnapPosition (void)
 {
 	int		sign[3];
 	int		i, j, bits;
-	short	base[3];
+	float	base[3];
 	// try all single bits first
 	static int jitterbits[8] = {0,4,1,2,3,5,6,7};
 
 	// snap velocity to eigths
 	for (i=0 ; i<3 ; i++)
-		pm->s.velocity[i] = (int)(pml.velocity[i]*8);
+		pm->s.velocity[i] = pml.velocity[i];
 
 	for (i=0 ; i<3 ; i++)
 	{
@@ -1351,8 +1351,8 @@ void PM_SnapPosition (void)
 			sign[i] = 1;
 		else 
 			sign[i] = -1;
-		pm->s.origin[i] = (int)(pml.origin[i]*8);
-		if (pm->s.origin[i]*0.125f == pml.origin[i])
+		pm->s.origin[i] = pml.origin[i];
+		if (pm->s.origin[i] == pml.origin[i])
 			sign[i] = 0;
 	}
 	_VectorCopy (pm->s.origin, base);
@@ -1435,9 +1435,9 @@ void PM_InitialSnapPosition(void)
 			for ( x = 0; x < 3; x++ ) {
 				pm->s.origin[0] = base[0] + offset[ x ];
 				if (PM_GoodPosition ()) {
-					pml.origin[0] = pm->s.origin[0]*0.125f;
-					pml.origin[1] = pm->s.origin[1]*0.125f;
-					pml.origin[2] = pm->s.origin[2]*0.125f;
+					pml.origin[0] = pm->s.origin[0];
+					pml.origin[1] = pm->s.origin[1];
+					pml.origin[2] = pm->s.origin[2];
 					_VectorCopy (pm->s.origin, pml.previous_origin);
 					return;
 				}
@@ -1458,12 +1458,12 @@ PM_ClampAngles
 */
 void PM_ClampAngles (void)
 {
-	short	temp;
+	float	temp;
 	int		i;
 
 	if (pm->s.pm_flags & PMF_TIME_TELEPORT)
 	{
-		pm->viewangles[YAW] = SHORT2ANGLE(pm->cmd.angles[YAW] + pm->s.delta_angles[YAW]);
+		pm->viewangles[YAW] = pm->cmd.angles[YAW] + pm->s.delta_angles[YAW];
 		pm->viewangles[PITCH] = 0;
 		pm->viewangles[ROLL] = 0;
 	}
@@ -1473,7 +1473,7 @@ void PM_ClampAngles (void)
 		for (i=0 ; i<3 ; i++)
 		{
 			temp = pm->cmd.angles[i] + pm->s.delta_angles[i];
-			pm->viewangles[i] = SHORT2ANGLE(temp);
+			pm->viewangles[i] = temp;
 		}
 
 		// don't let the player look up or down more than 90 degrees
@@ -1520,13 +1520,13 @@ void Pmove (pmove_t *pmove)
 	memset (&pml, 0, sizeof(pml));
 
 	// convert origin and velocity to float values
-	pml.origin[0] = pm->s.origin[0]*0.125f;
-	pml.origin[1] = pm->s.origin[1]*0.125f;
-	pml.origin[2] = pm->s.origin[2]*0.125f;
+	pml.origin[0] = pm->s.origin[0];
+	pml.origin[1] = pm->s.origin[1];
+	pml.origin[2] = pm->s.origin[2];
 
-	pml.velocity[0] = pm->s.velocity[0]*0.125f;
-	pml.velocity[1] = pm->s.velocity[1]*0.125f;
-	pml.velocity[2] = pm->s.velocity[2]*0.125f;
+	pml.velocity[0] = pm->s.velocity[0];
+	pml.velocity[1] = pm->s.velocity[1];
+	pml.velocity[2] = pm->s.velocity[2];
 
 	// save old org in case we get stuck
 	_VectorCopy (pm->s.origin, pml.previous_origin);

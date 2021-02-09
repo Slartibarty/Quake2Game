@@ -40,7 +40,7 @@ void CL_CheckPredictionError (void)
 
 		// save for error itnerpolation
 		for (i=0 ; i<3 ; i++)
-			cl.prediction_error[i] = delta[i]*0.125f;
+			cl.prediction_error[i] = delta[i];
 	}
 }
 
@@ -204,7 +204,7 @@ void CL_PredictMovement (void)
 	{	// just set angles
 		for (i=0 ; i<3 ; i++)
 		{
-			cl.predicted_angles[i] = cl.viewangles[i] + SHORT2ANGLE(cl.frame.playerstate.pmove.delta_angles[i]);
+			cl.predicted_angles[i] = cl.viewangles[i] + cl.frame.playerstate.pmove.delta_angles[i];
 		}
 		return;
 	}
@@ -252,15 +252,15 @@ void CL_PredictMovement (void)
 	step = pm.s.origin[2] - oldz;
 	if (step > 63 && step < 160 && (pm.s.pm_flags & PMF_ON_GROUND) )
 	{
-		cl.predicted_step = step * 0.125f;
+		cl.predicted_step = step;
 		cl.predicted_step_time = cls.realtime - cls.frametime * 500;
 	}
 
 
 	// copy results out for rendering
-	cl.predicted_origin[0] = pm.s.origin[0]*0.125f;
-	cl.predicted_origin[1] = pm.s.origin[1]*0.125f;
-	cl.predicted_origin[2] = pm.s.origin[2]*0.125f;
+	cl.predicted_origin[0] = pm.s.origin[0];
+	cl.predicted_origin[1] = pm.s.origin[1];
+	cl.predicted_origin[2] = pm.s.origin[2];
 
 	VectorCopy (pm.viewangles, cl.predicted_angles);
 }

@@ -953,8 +953,8 @@ void ClientEndServerFrame (edict_t *ent)
 	//
 	for (i=0 ; i<3 ; i++)
 	{
-		current_client->ps.pmove.origin[i] = ent->s.origin[i]*8.0f;
-		current_client->ps.pmove.velocity[i] = ent->velocity[i]*8.0f;
+		current_client->ps.pmove.origin[i] = ent->s.origin[i];
+		current_client->ps.pmove.velocity[i] = ent->velocity[i];
 	}
 
 	//
