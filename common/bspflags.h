@@ -95,6 +95,11 @@ enum surfaceFlags_t
 	SURF_SKIP		= 0x2000,	// completely ignore, allowing non-closed brushes
 };
 
+inline surfaceTypes_t SurfaceTypeFromFlags( int flags )
+{
+	return (surfaceTypes_t)( flags & SURF_TYPE_MASK );
+}
+
 // Content masks
 
 #define MASK_ALL				(-1)

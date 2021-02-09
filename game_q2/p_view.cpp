@@ -513,7 +513,7 @@ void P_FallingDamage (edict_t *ent)
 
 	if (delta < 15)
 	{
-		ent->s.event = EV_FOOTSTEP;
+		//ent->s.event = EV_FOOTSTEP;
 		return;
 	}
 
@@ -775,6 +775,7 @@ G_SetClientEvent
 */
 void G_SetClientEvent (edict_t *ent)
 {
+#if 0
 	if (ent->s.event)
 		return;
 
@@ -783,6 +784,7 @@ void G_SetClientEvent (edict_t *ent)
 		if ( (int)(current_client->bobtime+bobmove) != bobcycle )
 			ent->s.event = EV_FOOTSTEP;
 	}
+#endif
 }
 
 /*

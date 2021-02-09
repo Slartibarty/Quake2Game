@@ -580,7 +580,7 @@ namespace wad2
 
 constexpr int IDBSPHEADER = MakeID('I', 'B', 'S', 'P');
 
-#define BSPVERSION	39
+#define BSPVERSION	39	// 38
 
 // upper design bounds
 // leaffaces, leafbrushes, planes, and verts are still bounded by

@@ -170,6 +170,12 @@ int		CL_PMpointcontents (vec3_t point)
 }
 
 
+//static edict_t *enthack;
+
+static void PM_PlaySound( const char *sample, float volume )
+{
+}
+
 /*
 =================
 CL_PredictMovement
@@ -218,8 +224,9 @@ void CL_PredictMovement (void)
 	memset (&pm, 0, sizeof(pm));
 	pm.trace = CL_PMTrace;
 	pm.pointcontents = CL_PMpointcontents;
+	pm.playsound = PM_PlaySound;
 
-	pm_airaccelerate = (float)atof(cl.configstrings[CS_AIRACCEL]);
+	//pm_airaccelerate = (float)atof(cl.configstrings[CS_AIRACCEL]);
 
 	pm.s = cl.frame.playerstate.pmove;
 

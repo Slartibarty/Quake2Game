@@ -448,6 +448,9 @@ struct pmove_state_t
 	short		gravity;
 	short		delta_angles[3];	// add to command angles to get view direction
 									// changed by spawns, rotating objects, and teleporters
+
+	int			time_step_sound;	// In milliseconds, the time until we can play another footstep
+	int			step_left;			// > 0 if the next footstep is the left foot
 };
 
 //
@@ -494,6 +497,7 @@ struct pmove_t
 	// callbacks to test the world
 	trace_t		(*trace) (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end);
 	int			(*pointcontents) (vec3_t point);
+	void		(*playsound) (const char *sample, float volume);
 };
 
 //-------------------------------------------------------------------------------------------------
@@ -1058,7 +1062,7 @@ ROGUE - VERSIONS
 #define	CS_SKYROTATE		4
 #define	CS_STATUSBAR		5		// display program string
 
-#define CS_AIRACCEL			29		// air acceleration control
+//#define CS_AIRACCEL		29		// air acceleration control
 #define	CS_MAXCLIENTS		30
 #define	CS_MAPCHECKSUM		31		// for catching cheater maps
 
@@ -1082,7 +1086,6 @@ enum entity_event_t
 {
 	EV_NONE,
 	EV_ITEM_RESPAWN,
-	EV_FOOTSTEP,
 	EV_FALLSHORT,
 	EV_FALL,
 	EV_FALLFAR,

@@ -74,18 +74,6 @@ sfx_t	*cl_sfx_grenexp;
 sfx_t	*cl_sfx_watrexp;
 // RAFAEL
 sfx_t	*cl_sfx_plasexp;
-sfx_t	*cl_sfx_footsteps_concrete[4];
-sfx_t	*cl_sfx_footsteps_metal[4];
-sfx_t	*cl_sfx_footsteps_vent[4];
-sfx_t	*cl_sfx_footsteps_dirt[4];
-sfx_t	*cl_sfx_footsteps_grass[4];
-sfx_t	*cl_sfx_footsteps_sand[4];
-sfx_t	*cl_sfx_footsteps_rock[4];
-sfx_t	*cl_sfx_footsteps_wood[4];
-sfx_t	*cl_sfx_footsteps_tile[4];
-sfx_t	*cl_sfx_footsteps_computer[4];
-sfx_t	*cl_sfx_footsteps_glass[4];
-sfx_t	*cl_sfx_footsteps_flesh[4];
 
 model_t	*cl_mod_explode;
 model_t	*cl_mod_smoke;
@@ -135,31 +123,6 @@ void CL_RegisterTEntSounds (void)
 
 	S_RegisterSound ("player/fall2.wav");
 	S_RegisterSound ("player/fall1.wav");
-
-	cl_sfx_footsteps_concrete[0] = S_RegisterSound ("player/footsteps/concrete1.wav");
-	cl_sfx_footsteps_concrete[1] = S_RegisterSound ("player/footsteps/concrete2.wav");
-	cl_sfx_footsteps_concrete[2] = S_RegisterSound ("player/footsteps/concrete3.wav");
-	cl_sfx_footsteps_concrete[3] = S_RegisterSound ("player/footsteps/concrete4.wav");
-
-	cl_sfx_footsteps_metal[0] = S_RegisterSound ("player/footsteps/metal1.wav");
-	cl_sfx_footsteps_metal[1] = S_RegisterSound ("player/footsteps/metal2.wav");
-	cl_sfx_footsteps_metal[2] = S_RegisterSound ("player/footsteps/metal3.wav");
-	cl_sfx_footsteps_metal[3] = S_RegisterSound ("player/footsteps/metal4.wav");
-
-	cl_sfx_footsteps_sand[0] = S_RegisterSound( "player/footsteps/sand1.wav" );
-	cl_sfx_footsteps_sand[1] = S_RegisterSound( "player/footsteps/sand2.wav" );
-	cl_sfx_footsteps_sand[2] = S_RegisterSound( "player/footsteps/sand3.wav" );
-	cl_sfx_footsteps_sand[3] = S_RegisterSound( "player/footsteps/sand4.wav" );
-
-	cl_sfx_footsteps_tile[0] = S_RegisterSound( "player/footsteps/tile1.wav" );
-	cl_sfx_footsteps_tile[1] = S_RegisterSound( "player/footsteps/tile2.wav" );
-	cl_sfx_footsteps_tile[2] = S_RegisterSound( "player/footsteps/tile3.wav" );
-	cl_sfx_footsteps_tile[3] = S_RegisterSound( "player/footsteps/tile4.wav" );
-
-	cl_sfx_footsteps_flesh[0] = S_RegisterSound( "player/footsteps/flesh1.wav" );
-	cl_sfx_footsteps_flesh[1] = S_RegisterSound( "player/footsteps/flesh2.wav" );
-	cl_sfx_footsteps_flesh[2] = S_RegisterSound( "player/footsteps/flesh3.wav" );
-	cl_sfx_footsteps_flesh[3] = S_RegisterSound( "player/footsteps/flesh4.wav" );
 
 //PGM
 	cl_sfx_lightning = S_RegisterSound ("weapons/tesla.wav");

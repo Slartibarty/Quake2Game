@@ -8,6 +8,4 @@
 
 #include "../../common/q_shared.h" // pmove_t
 
-extern float pm_airaccelerate;
-
 void Pmove( pmove_t *pmove );
