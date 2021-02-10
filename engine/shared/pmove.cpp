@@ -39,7 +39,7 @@ static constexpr float	pm_duckspeed = 100;
 static constexpr float	pm_accelerate = 10;
 static constexpr float	pm_airaccelerate = 10;
 static constexpr float	pm_wateraccelerate = 10;
-static constexpr float	pm_friction = 6;
+static constexpr float	pm_friction = 4;
 static constexpr float	pm_waterfriction = 1;
 static constexpr float	pm_waterspeed = 400;
 
