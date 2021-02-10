@@ -22,8 +22,6 @@
 #define _Printf_format_string_
 #endif
 
-//#define OLD_TRACE_T				// Uncomment to support old mods
-
 #define	MAX_STRING_CHARS	1024	// max length of a string passed to Cmd_TokenizeString
 #define	MAX_STRING_TOKENS	80		// max tokens resulting from Cmd_TokenizeString
 #define	MAX_TOKEN_CHARS		128		// max length of an individual token
@@ -373,23 +371,6 @@ struct mapsurface_t  // used internally due to name len probs //ZOID
 
 struct edict_t;
 
-#ifdef OLD_TRACE_T // Legacy trace_t
-
-// a trace is returned when a box is swept through the world
-struct trace_t
-{
-	qboolean	allsolid;	// if true, plane is not valid
-	qboolean	startsolid;	// if true, the initial point was in a solid area
-	float		fraction;	// time completed, 1.0 = didn't hit anything
-	vec3_t		endpos;		// final position
-	cplane_t	plane;		// surface normal at impact
-	csurface_t	*surface;	// surface hit
-	int			contents;	// contents on other side of surface hit
-	edict_t		*ent;		// not set by CM_*() functions
-};
-
-#else
-
 // a trace is returned when a box is swept through the world
 // this packed version of trace_t is 64 bytes, while the old one was 72
 struct trace_t
@@ -403,8 +384,6 @@ struct trace_t
 	bool		allsolid;	// if true, plane is not valid
 	bool		startsolid;	// if true, the initial point was in a solid area
 };
-
-#endif
 
 //-------------------------------------------------------------------------------------------------
 // Player movement
