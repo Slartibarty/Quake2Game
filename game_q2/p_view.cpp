@@ -951,11 +951,8 @@ void ClientEndServerFrame (edict_t *ent)
 	// If it wasn't updated here, the view position would lag a frame
 	// behind the body position when pushed -- "sinking into plats"
 	//
-	for (i=0 ; i<3 ; i++)
-	{
-		current_client->ps.pmove.origin[i] = ent->s.origin[i];
-		current_client->ps.pmove.velocity[i] = ent->velocity[i];
-	}
+	VectorCopy( ent->s.origin, current_client->ps.pmove.origin );
+	VectorCopy( ent->velocity, current_client->ps.pmove.velocity );
 
 	//
 	// If the end of unit layout is displayed, don't give

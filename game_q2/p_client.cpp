@@ -1170,9 +1170,7 @@ void PutClientInServer (edict_t *ent)
 	// clear playerstate values
 	memset (&ent->client->ps, 0, sizeof(client->ps));
 
-	client->ps.pmove.origin[0] = spawn_origin[0];
-	client->ps.pmove.origin[1] = spawn_origin[1];
-	client->ps.pmove.origin[2] = spawn_origin[2];
+	VectorCopy( spawn_origin, client->ps.pmove.origin );
 
 	if (deathmatch->value && ((int)dmflags->value & DF_FIXED_FOV))
 	{
@@ -1592,9 +1590,7 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 
 	if (ent->client->chase_target) {
 
-		client->resp.cmd_angles[0] = ucmd->angles[0];
-		client->resp.cmd_angles[1] = ucmd->angles[1];
-		client->resp.cmd_angles[2] = ucmd->angles[2];
+		VectorCopy( ucmd->angles, client->resp.cmd_angles );
 
 	} else {
 
@@ -1613,11 +1609,8 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 		client->ps.pmove.gravity = sv_gravity->value;
 		pm.s = client->ps.pmove;
 
-		for (i=0 ; i<3 ; i++)
-		{
-			pm.s.origin[i] = ent->s.origin[i];
-			pm.s.velocity[i] = ent->velocity[i];
-		}
+		VectorCopy( ent->s.origin, pm.s.origin );
+		VectorCopy( ent->velocity, pm.s.velocity );
 
 		if (memcmp(&client->old_pmove, &pm.s, sizeof(pm.s)))
 		{
@@ -1639,18 +1632,13 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 		client->ps.pmove = pm.s;
 		client->old_pmove = pm.s;
 
-		for (i=0 ; i<3 ; i++)
-		{
-			ent->s.origin[i] = pm.s.origin[i];
-			ent->velocity[i] = pm.s.velocity[i];
-		}
+		VectorCopy( pm.s.origin, ent->s.origin );
+		VectorCopy( pm.s.velocity, ent->velocity );
 
 		VectorCopy (pm.mins, ent->mins);
 		VectorCopy (pm.maxs, ent->maxs);
 
-		client->resp.cmd_angles[0] = ucmd->angles[0];
-		client->resp.cmd_angles[1] = ucmd->angles[1];
-		client->resp.cmd_angles[2] = ucmd->angles[2];
+		VectorCopy( ucmd->angles, client->resp.cmd_angles );
 
 #if 0
 		if (ent->groundentity && !pm.groundentity && (pm.cmd.upmove >= 10) && (pm.waterlevel == 0))

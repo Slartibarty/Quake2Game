@@ -389,6 +389,7 @@ qboolean SV_Push (edict_t *pusher, vec3_t move, vec3_t amove)
 	pushed_t	*p;
 	vec3_t		org, org2, move2, forward, right, up;
 
+#if 0
 	// clamp the move to 1/8 units, so the position will
 	// be accurate for client side prediction
 	for (i=0 ; i<3 ; i++)
@@ -401,6 +402,7 @@ qboolean SV_Push (edict_t *pusher, vec3_t move, vec3_t amove)
 			temp -= 0.5f;
 		move[i] = 0.125f * (int)temp;
 	}
+#endif
 
 	// find the bounding box
 	for (i=0 ; i<3 ; i++)

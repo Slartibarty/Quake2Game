@@ -322,7 +322,7 @@ void PM_StepSlideMove_ (void)
 	vec3_t		primal_velocity, original_velocity;
 	vec3_t      new_velocity;
 	int			i, j;
-	trace_t	trace;
+	trace_t		trace;
 	vec3_t		end;
 	float		time_left, allFraction;
 	
@@ -836,7 +836,7 @@ void PM_AirMove (void)
 	smove = pm->cmd.sidemove;
 	
 //!!!!! pitch should be 1/3 so this isn't needed??!
-#if 1
+#if 0
 	// Zero out z components of movement vectors
 	pml.forward[2] = 0;
 	pml.right[2] = 0;
@@ -1309,7 +1309,7 @@ void PM_DeadMove (void)
 }
 
 
-qboolean	PM_GoodPosition (void)
+static qboolean PM_GoodPosition (void)
 {
 	trace_t	trace;
 	vec3_t	origin, end;
@@ -1333,8 +1333,9 @@ On exit, the origin will have a value that is pre-quantized to the 0.125
 precision of the network channel and in a valid position.
 ================
 */
-void PM_SnapPosition (void)
+static void PM_SnapPosition (void)
 {
+#if 0
 	int		sign[3];
 	int		i, j, bits;
 	float	base[3];
@@ -1355,13 +1356,13 @@ void PM_SnapPosition (void)
 		if (pm->s.origin[i] == pml.origin[i])
 			sign[i] = 0;
 	}
-	_VectorCopy (pm->s.origin, base);
+	VectorCopy (pm->s.origin, base);
 
 	// try all combinations
 	for (j=0 ; j<8 ; j++)
 	{
 		bits = jitterbits[j];
-		_VectorCopy (base, pm->s.origin);
+		VectorCopy (base, pm->s.origin);
 		for (i=0 ; i<3 ; i++)
 			if (bits & (1<<i) )
 				pm->s.origin[i] += sign[i];
@@ -1371,39 +1372,37 @@ void PM_SnapPosition (void)
 	}
 
 	// go back to the last position
-	_VectorCopy (pml.previous_origin, pm->s.origin);
+	VectorCopy (pml.previous_origin, pm->s.origin);
 //	Com_DPrintf ("using previous_origin\n");
+#endif
+
+	// SlartHack: Fix this later
+	VectorCopy( pml.velocity, pm->s.velocity );
+	VectorCopy( pml.origin, pm->s.origin );
 }
 
-#if 0
-//NO LONGER USED
 /*
 ================
 PM_InitialSnapPosition
 
 ================
 */
-void PM_InitialSnapPosition (void)
+static void PM_InitialSnapPosition(void)
 {
-	int		x, y, z;
-	short	base[3];
+	int x, y, z;
+	float base[3];
+	static float offset[3] = { 0.0f, -1.0f, 1.0f };
 
 	VectorCopy (pm->s.origin, base);
 
-	for (z=1 ; z>=-1 ; z--)
-	{
-		pm->s.origin[2] = base[2] + z;
-		for (y=1 ; y>=-1 ; y--)
-		{
-			pm->s.origin[1] = base[1] + y;
-			for (x=1 ; x>=-1 ; x--)
-			{
-				pm->s.origin[0] = base[0] + x;
-				if (PM_GoodPosition ())
-				{
-					pml.origin[0] = pm->s.origin[0]*0.125;
-					pml.origin[1] = pm->s.origin[1]*0.125;
-					pml.origin[2] = pm->s.origin[2]*0.125;
+	for ( z = 0; z < 3; z++ ) {
+		pm->s.origin[2] = base[2] + offset[ z ];
+		for ( y = 0; y < 3; y++ ) {
+			pm->s.origin[1] = base[1] + offset[ y ];
+			for ( x = 0; x < 3; x++ ) {
+				pm->s.origin[0] = base[0] + offset[ x ];
+				if (PM_GoodPosition ()) {
+					VectorCopy (pm->s.origin, pml.origin);
 					VectorCopy (pm->s.origin, pml.previous_origin);
 					return;
 				}
@@ -1413,42 +1412,7 @@ void PM_InitialSnapPosition (void)
 
 	Com_DPrintf ("Bad InitialSnapPosition\n");
 }
-#else
-/*
-================
-PM_InitialSnapPosition
 
-================
-*/
-void PM_InitialSnapPosition(void)
-{
-	int        x, y, z;
-	short      base[3];
-	static int offset[3] = { 0, -1, 1 };
-
-	_VectorCopy (pm->s.origin, base);
-
-	for ( z = 0; z < 3; z++ ) {
-		pm->s.origin[2] = base[2] + offset[ z ];
-		for ( y = 0; y < 3; y++ ) {
-			pm->s.origin[1] = base[1] + offset[ y ];
-			for ( x = 0; x < 3; x++ ) {
-				pm->s.origin[0] = base[0] + offset[ x ];
-				if (PM_GoodPosition ()) {
-					pml.origin[0] = pm->s.origin[0];
-					pml.origin[1] = pm->s.origin[1];
-					pml.origin[2] = pm->s.origin[2];
-					_VectorCopy (pm->s.origin, pml.previous_origin);
-					return;
-				}
-			}
-		}
-	}
-
-	Com_DPrintf ("Bad InitialSnapPosition\n");
-}
-
-#endif
 
 /*
 ================
@@ -1456,7 +1420,7 @@ PM_ClampAngles
 
 ================
 */
-void PM_ClampAngles (void)
+static void PM_ClampAngles (void)
 {
 	float	temp;
 	int		i;
@@ -1520,16 +1484,11 @@ void Pmove (pmove_t *pmove)
 	memset (&pml, 0, sizeof(pml));
 
 	// convert origin and velocity to float values
-	pml.origin[0] = pm->s.origin[0];
-	pml.origin[1] = pm->s.origin[1];
-	pml.origin[2] = pm->s.origin[2];
-
-	pml.velocity[0] = pm->s.velocity[0];
-	pml.velocity[1] = pm->s.velocity[1];
-	pml.velocity[2] = pm->s.velocity[2];
+	VectorCopy( pm->s.origin, pml.origin );
+	VectorCopy( pm->s.velocity, pml.velocity );
 
 	// save old org in case we get stuck
-	_VectorCopy (pm->s.origin, pml.previous_origin);
+	VectorCopy (pm->s.origin, pml.previous_origin);
 
 	pml.frametime = pm->cmd.msec * mathconst::MillisecondsToSeconds;
 

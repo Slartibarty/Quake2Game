@@ -575,10 +575,8 @@ void CL_ParseFrame (void)
 		{
 			cls.state = ca_active;
 			cl.force_refdef = true;
-			cl.predicted_origin[0] = cl.frame.playerstate.pmove.origin[0];
-			cl.predicted_origin[1] = cl.frame.playerstate.pmove.origin[1];
-			cl.predicted_origin[2] = cl.frame.playerstate.pmove.origin[2];
-			VectorCopy (cl.frame.playerstate.viewangles, cl.predicted_angles);
+			VectorCopy( cl.frame.playerstate.pmove.origin, cl.predicted_origin );
+			VectorCopy( cl.frame.playerstate.viewangles, cl.predicted_angles );
 			if (cls.disable_servercount != cl.servercount
 				&& cl.refresh_prepped)
 				SCR_EndLoadingPlaque ();	// get rid of loading plaque
@@ -1236,9 +1234,9 @@ void CL_CalcViewValues (void)
 	ops = &oldframe->playerstate;
 
 	// see if the player entity was teleported this frame
-	if ( abs(ops->pmove.origin[0] - ps->pmove.origin[0]) > 256
-		|| abs(ops->pmove.origin[1] - ps->pmove.origin[1]) > 256
-		|| abs(ops->pmove.origin[2] - ps->pmove.origin[2]) > 256)
+	if ( fabs(ops->pmove.origin[0] - ps->pmove.origin[0]) > 256.0f
+		|| fabs(ops->pmove.origin[1] - ps->pmove.origin[1]) > 256.0f
+		|| fabs(ops->pmove.origin[2] - ps->pmove.origin[2]) > 256.0f)
 		ops = ps;		// don't interpolate
 
 	ent = &cl_entities[cl.playernum+1];

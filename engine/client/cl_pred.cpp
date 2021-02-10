@@ -11,7 +11,6 @@ void CL_CheckPredictionError (void)
 {
 	int		frame;
 	vec3_t	delta;
-	int		i;
 	float	len;
 
 	if (!cl_predict->value || (cl.frame.playerstate.pmove.pm_flags & PMF_NO_PREDICTION))
@@ -26,7 +25,7 @@ void CL_CheckPredictionError (void)
 
 	// save the prediction error for interpolation
 	len = fabs(delta[0]) + fabs(delta[1]) + fabs(delta[2]);
-	if (len > 640)	// 80 world units
+	if (len > 640.0f)	// 80 world units
 	{	// a teleport or something
 		VectorClear (cl.prediction_error);
 	}
@@ -38,9 +37,8 @@ void CL_CheckPredictionError (void)
 
 		VectorCopy (cl.frame.playerstate.pmove.origin, cl.predicted_origins[frame]);
 
-		// save for error itnerpolation
-		for (i=0 ; i<3 ; i++)
-			cl.prediction_error[i] = delta[i];
+		// save for error interpolation
+		VectorCopy( delta, cl.prediction_error );
 	}
 }
 
@@ -258,9 +256,6 @@ void CL_PredictMovement (void)
 
 
 	// copy results out for rendering
-	cl.predicted_origin[0] = pm.s.origin[0];
-	cl.predicted_origin[1] = pm.s.origin[1];
-	cl.predicted_origin[2] = pm.s.origin[2];
-
-	VectorCopy (pm.viewangles, cl.predicted_angles);
+	VectorCopy( pm.s.origin, cl.predicted_origin );
+	VectorCopy( pm.viewangles, cl.predicted_angles );
 }

@@ -17,12 +17,16 @@ void AnglesNormalize(vec3_t vec)
 
 float SnapToEights(float x)
 {
+#if 0
 	x *= 8.0f;
 	if (x > 0.0f)
 		x += 0.5f;
 	else
 		x -= 0.5f;
 	return 0.125f * (int)x;
+#else
+	return x;
+#endif
 }
 
 
