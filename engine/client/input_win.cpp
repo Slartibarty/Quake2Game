@@ -7,7 +7,8 @@
 #include <Windows.h>
 #include "winquake.h"
 
-extern cvar_t *vid_fullscreen;
+HWND cl_hwnd;
+
 extern bool	reflib_active;
 extern unsigned sys_msg_time;
 
@@ -42,6 +43,11 @@ namespace input
 
 	//-------------------------------------------------------------------------------------------------
 	// Map from windows to quake keynums
+	// TODO: This doesn't properly cover all keys
+	// It also chokes on localised keys (My UK keyboard prints US characters)
+	// Perhaps using the key scancode isn't the best idea
+	// Really need to research how Microsoft considers the old keyinputs "legacy", do they really mean it?
+	// Could also just go back to using the old regular window messages instead of raw input
 	//-------------------------------------------------------------------------------------------------
 	static int MapKey( int scancode, bool extended )
 	{

@@ -506,13 +506,13 @@ void SCR_DrawConsole (void)
 	
 	if (cls.state == ca_disconnected || cls.state == ca_connecting)
 	{	// forced full screen console
-		Con_DrawConsole (1.0);
+		Con_DrawConsole (1.0f);
 		return;
 	}
 
 	if (cls.state != ca_active || !cl.refresh_prepped)
 	{	// connected, but can't render
-		Con_DrawConsole (0.5);
+		Con_DrawConsole (0.5f);
 		R_DrawFill (0, viddef.height/2, viddef.width, viddef.height/2, 0);
 		return;
 	}

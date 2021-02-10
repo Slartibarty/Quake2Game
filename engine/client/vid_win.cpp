@@ -1,6 +1,8 @@
+//=================================================================================================
 // Main windowed and fullscreen graphics interface module. This module
 // is used for both the software and OpenGL rendering versions of the
 // Quake refresh engine.
+//=================================================================================================
 
 #include "client.h"
 #define WIN32_LEAN_AND_MEAN
@@ -14,36 +16,24 @@ cvar_t		*vid_fullscreen;
 
 // Global variables used internally by this module
 viddef_t	viddef;				// global video state; used by other modules
-HINSTANCE	reflib_library;		// Handle to refresh DLL 
 bool		reflib_active;
 
-HWND        cl_hwnd;            // Main window handle for life of program
+//=================================================================================================
 
-//==========================================================================
-
-/*
-============
-VID_Restart_f
-
-Console command to re-start the video mode and refresh DLL. We do this
-simply by setting the modified flag for the vid_ref variable, which will
-cause the entire video mode and refresh DLL to be reset on the next frame.
-============
-*/
-static void VID_Restart_f (void)
+//-------------------------------------------------------------------------------------------------
+// Console command to re-start the video mode and refresh DLL. We do this
+// simply by setting the modified flag for the vid_ref variable, which will
+// cause the entire video mode and refresh DLL to be reset on the next frame.
+//-------------------------------------------------------------------------------------------------
+static void VID_Restart_f()
 {
 	vid_ref->modified = true;
 }
 
-static void VID_Front_f( void )
-{
-	SetWindowLongW( cl_hwnd, GWL_EXSTYLE, WS_EX_TOPMOST );
-	SetForegroundWindow( cl_hwnd );
-}
+//=================================================================================================
+// Vidmodes
+//=================================================================================================
 
-/*
-** VID_GetModeInfo
-*/
 struct vidmode_t
 {
 	char	description[32];
@@ -55,12 +45,12 @@ static int			s_num_modes;
 
 // Allocate space for 16 modes by default, 32, 64, etc
 static constexpr int DefaultNumModes = 16;
-static constexpr int DefaultAlloc = DefaultNumModes * sizeof(vidmode_t);
+static constexpr int DefaultAlloc = DefaultNumModes * sizeof( vidmode_t );
 
 static void VID_InitModes()
 {
 	DEVMODEW dm;
-	dm.dmSize = sizeof(dm);
+	dm.dmSize = sizeof( dm );
 	dm.dmDriverExtra = 0;
 
 	DWORD lastWidth = 0, lastHeight = 0;
@@ -70,11 +60,11 @@ static void VID_InitModes()
 	int numModes = 0;					// Same as s_num_modes
 	int lastAlloc = DefaultNumModes;	// The last count we allocated
 
-	s_vid_modes = (vidmode_t*)Z_Malloc(DefaultAlloc);
+	s_vid_modes = (vidmode_t *)Z_Malloc( DefaultAlloc );
 
-	while (EnumDisplaySettingsW(nullptr, internalNum, &dm) != FALSE)
+	while ( EnumDisplaySettingsW( nullptr, internalNum, &dm ) != FALSE )
 	{
-		if (dm.dmPelsWidth == lastWidth && dm.dmPelsHeight == lastHeight)
+		if ( dm.dmPelsWidth == lastWidth && dm.dmPelsHeight == lastHeight )
 		{
 			++internalNum;
 			continue;
@@ -83,16 +73,16 @@ static void VID_InitModes()
 		lastWidth = dm.dmPelsWidth;
 		lastHeight = dm.dmPelsHeight;
 
-		if (numModes+1 > lastAlloc)
+		if ( numModes + 1 > lastAlloc )
 		{
-			s_vid_modes = (vidmode_t*)Z_Realloc(s_vid_modes, DefaultAlloc * allocMultiplier);
+			s_vid_modes = (vidmode_t *)Z_Realloc( s_vid_modes, DefaultAlloc * allocMultiplier );
 			lastAlloc = DefaultNumModes * allocMultiplier;
 			allocMultiplier += 2;
 		}
 
 		vidmode_t &mode = s_vid_modes[numModes];
 
-		Q_sprintf_s(mode.description, "Mode %d:\t%dx%d", numModes, dm.dmPelsWidth, dm.dmPelsHeight);
+		Q_sprintf_s( mode.description, "Mode %d:\t%dx%d", numModes, dm.dmPelsWidth, dm.dmPelsHeight );
 		mode.width = dm.dmPelsWidth;
 		mode.height = dm.dmPelsHeight;
 		mode.mode = numModes;
@@ -106,17 +96,19 @@ static void VID_InitModes()
 
 static void VID_FreeModes()
 {
-	Z_Free(s_vid_modes);
+	Z_Free( s_vid_modes );
 	s_vid_modes = nullptr;
 	s_num_modes = 0;
 }
 
 bool VID_GetModeInfo( int *width, int *height, int mode )
 {
-	if ( mode < 0 || mode >= s_num_modes)
+	if ( mode < 0 || mode >= s_num_modes ) {
+		assert( 0 );
 		return false;
+	}
 
-	*width  = s_vid_modes[mode].width;
+	*width = s_vid_modes[mode].width;
 	*height = s_vid_modes[mode].height;
 
 	return true;
@@ -127,9 +119,10 @@ int VID_GetNumModes()
 	return s_num_modes;
 }
 
-/*
-** VID_NewWindow
-*/
+//=================================================================================================
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
 void VID_NewWindow ( int width, int height)
 {
 	viddef.width  = width;
@@ -210,7 +203,6 @@ void VID_Init (void)
 
 	/* Add some console commands that we want to handle */
 	Cmd_AddCommand ("vid_restart", VID_Restart_f);
-	Cmd_AddCommand ("vid_front", VID_Front_f);
 
 	VID_InitModes();
 		
@@ -233,5 +225,3 @@ void VID_Shutdown (void)
 		reflib_active = false;
 	}
 }
-
-
