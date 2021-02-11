@@ -10,12 +10,16 @@
 #include "threads.h"
 #include "bspfile.h"
 
-#define	MAX_BRUSH_SIDES	128
-#define	CLIP_EPSILON	0.1
+// Default settings
 
-#define	BOGUS_RANGE	8192
+#define DEFAULT_SUBDIVIDE_SIZE 256		// Was 240
 
-#define	TEXINFO_NODE		-1		// side is allready on a node
+#define	MAX_BRUSH_SIDES		128
+#define	CLIP_EPSILON		0.1f
+
+#define	BOGUS_RANGE		8192
+
+#define	TEXINFO_NODE	-1		// side is allready on a node
 
 typedef struct plane_s
 {
@@ -32,7 +36,7 @@ typedef struct
 	vec_t	shift[2];
 	vec_t	rotate;
 	vec_t	scale[2];
-	char	name[32];
+	char	name[MAX_QPATH];
 	int		flags;
 	int		value;
 } brush_texture_t;
@@ -190,11 +194,11 @@ int		FindFloatPlane (vec3_t normal, vec_t dist);
 
 typedef struct
 {
-	char	name[64];
+	char	name[MAX_QPATH];
 	int		flags;
 	int		value;
 	int		contents;
-	char	animname[64];
+	char	animname[MAX_QPATH];
 } textureref_t;
 
 textureref_t *FindMiptex( const char *name );

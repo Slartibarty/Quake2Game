@@ -15,7 +15,7 @@
 #define	USE_HASHING
 
 #define	INTEGRAL_EPSILON	0.01f
-#define	POINT_EPSILON		0.5f
+#define	POINT_EPSILON		0.1f	//qb: was 0.5. fix by tapir to 0.1 via jdolan on insideqc.
 #define	OFF_EPSILON			0.5f
 
 int	c_merge;
@@ -47,7 +47,7 @@ int		num_edge_verts;
 int		edge_verts[MAX_MAP_VERTS];
 
 
-float	subdivide_size = 240;
+float	subdivide_size = DEFAULT_SUBDIVIDE_SIZE;
 
 
 face_t *NewFaceFromFace (face_t *f);
