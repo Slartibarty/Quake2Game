@@ -32,7 +32,6 @@ void CalcTextureReflectivity (void)
 	byte		*image;
 	int			width, height, texels;
 
-	int			texel;
 	int			color[3];
 	float		scale;
 
