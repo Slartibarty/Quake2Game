@@ -309,7 +309,7 @@ project "qbsp4"
 project "qvis4"
 	kind "ConsoleApp"
 	targetname "qvis4"
-	language "C"
+	language "C++"
 	floatingpoint "Default"
 	targetdir "../game"
 	includedirs { "utils/common2", "common" }
@@ -340,28 +340,28 @@ project "qvis4"
 		}
 	filter {}
 	
-project "qrad3"
+project "qrad4"
 	kind "ConsoleApp"
-	targetname "qrad3"
-	language "C"
+	targetname "qrad4"
+	language "C++"
 	floatingpoint "Default"
 	targetdir "../game"
-	includedirs { "utils/common", "external/stb" }
+	includedirs { "utils/common2", "common", "external/stb" }
 	
 	files {
 		"common/windows_default.manifest",
 	
-		"utils/common/cmdlib.*",
-		"utils/common/mathlib.*",
-		"utils/common/threads.*",
-		"utils/common/polylib.*",
-		"utils/common/scriplib.*",
-		"utils/common/bspfile.*",
-		"utils/common/lbmlib.*",
+		"utils/common2/cmdlib.*",
+		"utils/common2/mathlib.*",
+		"utils/common2/threads.*",
+		"utils/common2/polylib.*",
+		"utils/common2/scriplib.*",
+		"utils/common2/bspfile.*",
 	
-		"utils/qrad3/*"
+		"utils/qrad4/*"
 	}
 	
+--[[
 project "light"
 	kind "ConsoleApp"
 	targetname "light"
@@ -431,3 +431,4 @@ project "qe4"
 	}
 
 filter {}
+--]]
