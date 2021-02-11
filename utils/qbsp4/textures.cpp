@@ -7,97 +7,6 @@ textureref_t	textureref[MAX_MAP_TEXTURES];
 
 //=============================================================================
 
-#define	MAX_TOKEN_CHARS		128		// max length of an individual token
-
-/*
-===================
-Com_Parse2
-
-NEEDS REPLACING!!!!
-===================
-*/
-void Com_Parse2( char **data_p, char **token_p, int tokenlen )
-{
-	int		c;
-	int		len;
-	char	*data;
-	char	*token;
-
-	data = *data_p;
-	token = *token_p;
-	len = 0;
-
-	if ( !data )
-	{
-		*data_p = NULL;
-		token[0] = '\0';
-		return;
-	}
-
-// skip whitespace
-skipwhite:
-	while ( ( c = *data ) <= ' ' )
-	{
-		if ( c == 0 )
-		{
-			*data_p = NULL;
-			token[0] = '\0';
-			return;
-		}
-		data++;
-	}
-
-// skip // comments
-	if ( c == '/' && data[1] == '/' )
-	{
-		while ( *data && *data != '\n' )
-			data++;
-		goto skipwhite;
-	}
-
-// handle quoted strings specially
-	if ( c == '\"' )
-	{
-		data++;
-		while ( 1 )
-		{
-			c = *data++;
-			if ( c == '\"' || !c )
-			{
-				token[len] = 0;
-				*data_p = data;
-				return;
-			}
-			if ( len < tokenlen )
-			{
-				token[len] = c;
-				len++;
-			}
-		}
-	}
-
-// parse a regular word
-	do
-	{
-		if ( len < tokenlen )
-		{
-			token[len] = c;
-			len++;
-		}
-		data++;
-		c = *data;
-	} while ( c > 32 );
-
-	if ( len == tokenlen )
-	{
-	//	Com_Printf ("Token exceeded %i chars, discarded.\n", MAX_TOKEN_CHARS);
-		len = 0;
-	}
-	token[len] = 0;
-
-	*data_p = data;
-}
-
 #define FLAGCHECK(flag) if ( Q_strcmp( data, #flag ) == 0 ) return flag;
 #define FLAGCHECK2(flag, name) if ( Q_strcmp( data, name ) == 0 ) return flag;
 
@@ -202,7 +111,7 @@ int ParseSurfaceFlags( char *data, int type )
 	char *token = tokenhack;
 	int flags = 0;
 
-	Com_Parse2( &data, &token, sizeof( tokenhack ) );
+	COM_Parse2( &data, &token, sizeof( tokenhack ) );
 
 	// Parse until the end baby
 	while ( data )
@@ -214,7 +123,7 @@ int ParseSurfaceFlags( char *data, int type )
 		else
 			flags |= StringToSurfaceFlag( token );
 
-		Com_Parse2( &data, &token, sizeof( tokenhack ) );
+		COM_Parse2( &data, &token, sizeof( tokenhack ) );
 	}
 
 	return flags;
@@ -230,44 +139,44 @@ void ParseMaterial( char *data, textureref_t *ref )
 	char tokenhack[MAX_TOKEN_CHARS];
 	char *token = tokenhack;
 
-	Com_Parse2( &data, &token, sizeof( tokenhack ) );
+	COM_Parse2( &data, &token, sizeof( tokenhack ) );
 	if ( token[0] != '{' )
 	{
 		// Malformed
 		Error( "Malformed material %s\n", ref->name );
 	}
 
-	Com_Parse2( &data, &token, sizeof( tokenhack ) );
+	COM_Parse2( &data, &token, sizeof( tokenhack ) );
 
-	for ( ; token[0] != '}'; Com_Parse2( &data, &token, sizeof( tokenhack ) ) )
+	for ( ; token[0] != '}'; COM_Parse2( &data, &token, sizeof( tokenhack ) ) )
 	{
 		if ( Q_strcmp( token, "$nextframe" ) == 0 )
 		{
-			Com_Parse2( &data, &token, sizeof( tokenhack ) );
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
 			strcpy( ref->animname, token );
 			continue;
 		}
 		if ( Q_strcmp( token, "$contentflags" ) == 0 )
 		{
-			Com_Parse2( &data, &token, sizeof( tokenhack ) );
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
 			ref->contents = ParseSurfaceFlags( token, 1 );
 			continue;
 		}
 		if ( Q_strcmp( token, "$surfacetype" ) == 0 )
 		{
-			Com_Parse2( &data, &token, sizeof( tokenhack ) );
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
 			ref->flags = ParseSurfaceFlags( token, 2 );
 			continue;
 		}
 		if ( Q_strcmp( token, "$surfaceflags" ) == 0 )
 		{
-			Com_Parse2( &data, &token, sizeof( tokenhack ) );
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
 			ref->flags = ParseSurfaceFlags( token, 3 );
 			continue;
 		}
 		if ( Q_strcmp( token, "$value" ) == 0 )
 		{
-			Com_Parse2( &data, &token, sizeof( tokenhack ) );
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
 			ref->value = atoi( token );
 			continue;
 		}
@@ -372,7 +281,6 @@ int TexinfoForBrushTexture (plane_t *plane, brush_texture_t *bt, vec3_t origin)
 	vec_t	ns, nt;
 	texinfo_t	tx, *tc;
 	int		i, j, k;
-	float	shift[2];
 	brush_texture_t		anim;
 	textureref_t		*mt;
 
@@ -382,10 +290,10 @@ int TexinfoForBrushTexture (plane_t *plane, brush_texture_t *bt, vec3_t origin)
 	memset (&tx, 0, sizeof(tx));
 	strcpy (tx.texture, bt->name);
 
-	TextureAxisFromPlane(plane, vecs[0], vecs[1]);
-
-	shift[0] = DotProduct (origin, vecs[0]);
-	shift[1] = DotProduct (origin, vecs[1]);
+	if (g_nMapFileVersion < 220)
+	{
+		TextureAxisFromPlane(plane, vecs[0], vecs[1]);
+	}
 
 	if (!bt->scale[0])
 		bt->scale[0] = 1;
@@ -393,50 +301,67 @@ int TexinfoForBrushTexture (plane_t *plane, brush_texture_t *bt, vec3_t origin)
 		bt->scale[1] = 1;
 
 
-// rotate axis
-	if (bt->rotate == 0)
-		{ sinv = 0 ; cosv = 1; }
-	else if (bt->rotate == 90)
-		{ sinv = 1 ; cosv = 0; }
-	else if (bt->rotate == 180)
-		{ sinv = 0 ; cosv = -1; }
-	else if (bt->rotate == 270)
-		{ sinv = -1 ; cosv = 0; }
-	else
-	{	
-		ang = bt->rotate / 180.0f * M_PI_F;
-		sinv = sin(ang);
-		cosv = cos(ang);
-	}
-
-	if (vecs[0][0])
-		sv = 0;
-	else if (vecs[0][1])
-		sv = 1;
-	else
-		sv = 2;
-				
-	if (vecs[1][0])
-		tv = 0;
-	else if (vecs[1][1])
-		tv = 1;
-	else
-		tv = 2;
-					
-	for (i=0 ; i<2 ; i++)
+	if ( g_nMapFileVersion < 220 )
 	{
-		ns = cosv * vecs[i][sv] - sinv * vecs[i][tv];
-		nt = sinv * vecs[i][sv] +  cosv * vecs[i][tv];
-		vecs[i][sv] = ns;
-		vecs[i][tv] = nt;
+	// rotate axis
+		if (bt->rotate == 0)
+			{ sinv = 0 ; cosv = 1; }
+		else if (bt->rotate == 90)
+			{ sinv = 1 ; cosv = 0; }
+		else if (bt->rotate == 180)
+			{ sinv = 0 ; cosv = -1; }
+		else if (bt->rotate == 270)
+			{ sinv = -1 ; cosv = 0; }
+		else
+		{	
+			ang = RAD2DEG(bt->rotate);
+			sinv = sin(ang);
+			cosv = cos(ang);
+		}
+
+		if (vecs[0][0])
+			sv = 0;
+		else if (vecs[0][1])
+			sv = 1;
+		else
+			sv = 2;
+				
+		if (vecs[1][0])
+			tv = 0;
+		else if (vecs[1][1])
+			tv = 1;
+		else
+			tv = 2;
+					
+		for (i=0 ; i<2 ; i++)
+		{
+			ns = cosv * vecs[i][sv] - sinv * vecs[i][tv];
+			nt = sinv * vecs[i][sv] +  cosv * vecs[i][tv];
+			vecs[i][sv] = ns;
+			vecs[i][tv] = nt;
+		}
+
+		for (i=0 ; i<2 ; i++)
+			for (j=0 ; j<3 ; j++)
+				tx.vecs[i][j] = vecs[i][j] / bt->scale[i];
+
+		tx.vecs[0][3] = bt->shift[0] + DotProduct (origin, vecs[0]);
+		tx.vecs[1][3] = bt->shift[1] + DotProduct (origin, vecs[1]);
+	}
+	else
+	{
+		tx.vecs[0][0] = bt->UAxis[0] / bt->scale[0];
+		tx.vecs[0][1] = bt->UAxis[1] / bt->scale[0];
+		tx.vecs[0][2] = bt->UAxis[2] / bt->scale[0];
+
+		tx.vecs[1][0] = bt->VAxis[0] / bt->scale[1];
+		tx.vecs[1][1] = bt->VAxis[1] / bt->scale[1];
+		tx.vecs[1][2] = bt->VAxis[2] / bt->scale[1];
+
+		tx.vecs[0][3] = bt->shift[0];
+		tx.vecs[1][3] = bt->shift[1];
 	}
 
-	for (i=0 ; i<2 ; i++)
-		for (j=0 ; j<3 ; j++)
-			tx.vecs[i][j] = vecs[i][j] / bt->scale[i];
-
-	tx.vecs[0][3] = bt->shift[0] + shift[0];
-	tx.vecs[1][3] = bt->shift[1] + shift[1];
 	tx.flags = bt->flags;
 	tx.value = bt->value;
 

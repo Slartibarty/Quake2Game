@@ -27,6 +27,8 @@ typedef struct plane_s
 
 typedef struct
 {
+	vec3_t	UAxis;
+	vec3_t	VAxis;
 	vec_t	shift[2];
 	vec_t	rotate;
 	vec_t	scale[2];
@@ -155,6 +157,8 @@ extern	mapbrush_t	mapbrushes[MAX_MAP_BRUSHES];
 
 extern	vec3_t		map_mins, map_maxs;
 
+extern	int			g_nMapFileVersion;	// map file version * 100 (ie 201), zero for pre-Worldcraft 2.0.1 maps
+
 #define	MAX_MAP_SIDES		(MAX_MAP_BRUSHES*6)
 
 extern	int			nummapbrushsides;
@@ -169,6 +173,7 @@ extern	qboolean	nowater;
 extern	qboolean	noweld;
 extern	qboolean	noshare;
 extern	qboolean	notjunc;
+extern	bool		g_slarthack;	// If true, will append all texture names with halflife/
 
 extern	vec_t		microvolume;
 

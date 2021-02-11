@@ -29,6 +29,8 @@ int		c_areaportals;
 
 int		c_clipbrushes;
 
+int		g_nMapFileVersion;
+
 /*
 =============================================================================
 
@@ -571,14 +573,77 @@ void ParseBrush (entity_t *mapent)
 		// read the texturedef
 		//
 		GetToken (false);
-		strcpy (td.name, token);
+		if ( !g_slarthack || strstr( token, "/" ) ) {
+			strcpy( td.name, token );
+		}
+		else {
+			constexpr int lengthhack = sizeof( "halflife/" ) - 1;
+			strcpy( td.name, "halflife/" );
+			strcpy( td.name + lengthhack, token );
+			Q_strlwr( td.name );
+		}
 
-		GetToken (false);
-		td.shift[0] = atoi(token);
-		GetToken (false);
-		td.shift[1] = atoi(token);
-		GetToken (false);
-		td.rotate = atoi(token);	
+		if (g_nMapFileVersion < 220)
+		{
+			GetToken (false);
+			td.shift[0] = atof(token);
+			GetToken (false);
+			td.shift[1] = atof(token);
+			GetToken (false);
+			td.rotate = atof(token);
+		}
+		else
+		{
+			// texture U axis
+			GetToken (false);
+			if (strcmp (token, "["))
+			{
+				Error("missing '[ in texturedef");
+			}
+
+			GetToken (false);
+			td.UAxis[0] = atof(token);
+			GetToken (false);
+			td.UAxis[1] = atof(token);
+			GetToken (false);
+			td.UAxis[2] = atof(token);
+			GetToken (false);
+			td.shift[0] = atof(token);
+
+			GetToken (false);
+			if (strcmp (token, "]"))
+			{
+				Error("missing ']' in texturedef");
+			}
+
+			// texture V axis
+			GetToken (false);
+			if (strcmp (token, "["))
+			{
+				Error("missing '[ in texturedef");
+			}
+
+			GetToken (false);
+			td.VAxis[0] = atof(token);
+			GetToken (false);
+			td.VAxis[1] = atof(token);
+			GetToken (false);
+			td.VAxis[2] = atof(token);
+			GetToken (false);
+			td.shift[1] = atof(token);
+
+			GetToken (false);
+			if (strcmp (token, "]"))
+			{
+				Error("missing ']' in texturedef");
+			}
+
+			// Texture rotation is implicit in U/V axes.
+			GetToken(false);
+			td.rotate = 0;
+		}
+
+		// texture scale
 		GetToken (false);
 		td.scale[0] = (float)atof(token);
 		GetToken (false);
@@ -832,6 +897,12 @@ qboolean	ParseMapEntity (void)
 		else
 		{
 			e = ParseEpair ();
+
+			if (Q_strcmp(e->key, "mapversion") == 0)
+			{
+				g_nMapFileVersion = atoi(e->value);
+			}
+
 			e->next = mapent->epairs;
 			mapent->epairs = e;
 		}

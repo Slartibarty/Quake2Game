@@ -23,6 +23,7 @@ qboolean	notjunc;
 qboolean	noopt;
 qboolean	leaktest;
 qboolean	verboseentities;
+bool		g_slarthack;
 
 char		outbase[32];
 
@@ -317,7 +318,9 @@ int main (int argc, char **argv)
 	double		start, end;
 	char		path[1024];
 
-	printf ("---- Lunar qbsp4 ----\n");
+	printf ("---- lunar qbsp4 ----\n");
+
+	Time_Init();
 
 	for (i=1 ; i<argc ; i++)
 	{
@@ -412,6 +415,11 @@ int main (int argc, char **argv)
 			printf ("verboseentities = true\n");
 			verboseentities = true;
 		}
+		else if (!strcmp(argv[i], "-slarthack"))
+		{
+			printf ("slarthack = true\n");
+			g_slarthack = true;
+		}
 		else if (!strcmp(argv[i], "-chop"))
 		{
 			subdivide_size = (float)atof(argv[i+1]);
@@ -498,7 +506,7 @@ numthreads = 1;		// multiple threads aren't helping...
 	}
 
 	end = Time_FloatSeconds ();
-	printf ("%5.0f seconds elapsed\n", end-start);
+	printf ("%5.1f seconds elapsed\n", end-start);
 
 	return 0;
 }

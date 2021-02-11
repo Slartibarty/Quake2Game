@@ -508,7 +508,9 @@ int main (int argc, char **argv)
 	int		i;
 	double		start, end;
 		
-	printf ("---- vis ----\n");
+	printf ("---- lunar vis ----\n");
+
+	Time_Init();
 
 	verbose = false;
 	for (i=1 ; i<argc ; i++)
