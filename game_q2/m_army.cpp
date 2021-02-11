@@ -212,7 +212,7 @@ void army_fire( edict_t *self )
 
 	// fire somewhat behind the player, so a dodging player is harder to hit
 
-	VectorMultiply( self->enemy->velocity, 0.2f, dir );
+	VectorScale( self->enemy->velocity, 0.2f, dir );
 	VectorSubtract( self->enemy->s.origin, dir, dir );
 	VectorSubtract( dir, self->s.origin, dir );
 	VectorNormalize( dir );

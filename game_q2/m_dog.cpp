@@ -98,7 +98,7 @@ void dog_onleap( edict_t *self )
 
 	// Launch ourselves
 	self->s.origin[2] += 1;
-	VectorMultiply( forward, 300, self->velocity );
+	VectorScale( forward, 300, self->velocity );
 	self->velocity[2] = 200;
 	self->groundentity = NULL;
 
