@@ -250,6 +250,7 @@ inline float MS2SEC( float milliseconds )
 
 void AddPointToBounds (vec3_t v, vec3_t mins, vec3_t maxs);
 vec_t VectorNormalize (vec3_t v);		// returns vector length
+vec_t ColorNormalize (vec3_t in, vec3_t out);
 
 void R_ConcatRotations (float in1[3][3], float in2[3][3], float out[3][3]);
 void R_ConcatTransforms (float in1[3][4], float in2[3][4], float out[3][4]);

@@ -350,6 +350,9 @@ project "qrad4"
 	
 	files {
 		"common/windows_default.manifest",
+		
+		"common/*.cpp",
+		"common/*.h",
 	
 		"utils/common2/cmdlib.*",
 		"utils/common2/mathlib.*",
@@ -360,6 +363,17 @@ project "qrad4"
 	
 		"utils/qrad4/*"
 	}
+	
+	filter "system:windows"
+		removefiles {
+			"**/*_linux.*"
+		}
+	filter {}
+	filter "system:linux"
+		removefiles {
+			"**/*_win.*"
+		}
+	filter {}
 	
 --[[
 project "light"

@@ -1,10 +1,8 @@
 // trace.c
 
-#include "cmdlib.h"
-#include "mathlib.h"
-#include "bspfile.h"
-
-#define	ON_EPSILON	0.1
+#include "qrad.h"
+// This file doesn't make use of any private qrad definitions
+// (mostly because it's largely the same as light.exe's)
 
 typedef struct tnode_s
 {
@@ -64,16 +62,14 @@ Loads the node structure out of a .bsp file to be used for light occlusion
 void MakeTnodes (dmodel_t *bm)
 {
 	// 32 byte align the structs
-	tnodes = malloc( (numnodes+1) * sizeof(tnode_t));
+	tnodes = (tnode_t *)malloc( (numnodes+1) * sizeof(tnode_t));
 	tnodes = (tnode_t *)(((intptr_t)tnodes + 31)&~31);
 	tnode_p = tnodes;
 
 	MakeTnode (0);
 }
 
-
 //==========================================================
-
 
 int TestLine_r (int node, vec3_t start, vec3_t stop)
 {

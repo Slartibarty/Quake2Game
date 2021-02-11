@@ -11,6 +11,8 @@
 #define	BASEDIRNAME		"game"
 #define PATHSEPERATOR	'/'
 
+bool verbose;
+
 /*
 ===================
 Com_Printf
@@ -31,7 +33,6 @@ Com_DPrintf
 A Com_Printf that only printf if verbose is true
 ===================
 */
-bool verbose;
 void Com_DPrintf( _Printf_format_string_ const char *fmt, ... )
 {
 	if ( !verbose )

@@ -214,7 +214,7 @@ void MakeTransfers (int i)
 
 		// calculate vector
 		VectorSubtract (patch2->origin, origin, delta);
-		dist = VectorNormalize (delta, delta);
+		dist = VectorNormalize (delta);
 		if (!dist)
 			continue;	// should never happen
 
@@ -253,7 +253,7 @@ void MakeTransfers (int i)
 		if (patch->numtransfers < 0 || patch->numtransfers > MAX_PATCHES)
 			Error ("Weird numtransfers");
 		s = patch->numtransfers * sizeof(transfer_t);
-		patch->transfers = malloc (s);
+		patch->transfers = (transfer_t *)malloc (s);
 		if (!patch->transfers)
 			Error ("Memory allocation failure");
 
@@ -555,7 +555,7 @@ int main (int argc, char **argv)
 	if (i != argc - 1)
 		Error ("usage: qrad [-v] [-chop num] [-scale num] [-ambient num] [-maxlight num] [-threads num] bspfile");
 
-	start = I_FloatTime ();
+	start = Time_FloatSeconds ();
 
 	SetQdirFromPath (argv[i]);	
 	strcpy (source, ExpandArg(argv[i]));
@@ -583,8 +583,8 @@ int main (int argc, char **argv)
 	printf ("writing %s\n", name);
 	WriteBSPFile (name);
 
-	end = I_FloatTime ();
-	printf ("%5.0f seconds elapsed\n", end-start);
+	end = Time_FloatSeconds ();
+	printf ("%5.1f seconds elapsed\n", end-start);
 	
 	return 0;
 }

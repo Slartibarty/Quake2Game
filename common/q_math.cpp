@@ -405,3 +405,25 @@ vec_t VectorNormalize (vec3_t v)
 
 	return length;
 }
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+vec_t ColorNormalize( vec3_t in, vec3_t out )
+{
+	float max, scale;
+
+	max = in[0];
+	if ( in[1] > max )
+		max = in[1];
+	if ( in[2] > max )
+		max = in[2];
+
+	if ( max == 0.0f )
+		return 0;
+
+	scale = 1.0f / max;
+
+	VectorScale( in, scale, out );
+
+	return max;
+}
