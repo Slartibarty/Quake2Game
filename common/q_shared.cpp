@@ -73,12 +73,12 @@ void COM_FilePath (const char *in, char *out)
 void Com_FileSetExtension( const char *in, char *out, const char *extension )
 {
 	const char *ext;
-	strlen_t difference;
+	size_t difference;
 
 	ext = strrchr( in, '.' );
 	if ( !ext ) {
 		// No extension, just strcpy and strcat
-		difference = Q_strlen( in );
+		difference = strlen( in );
 		memcpy( out, in, difference );
 		strcpy( out + difference, extension );
 		return;

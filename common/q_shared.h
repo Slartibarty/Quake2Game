@@ -166,6 +166,35 @@ inline void Q_sprintf( char *pDest, _Printf_format_string_ const char *pFmt, ...
 	va_end( args );
 }
 
+// SlartTodo: Operate with int like std::tolower?
+inline char Q_tolower( char ch )
+{
+	return ( ch <= 'Z' && ch >= 'A' ) ? ( ch + ( 'a' - 'A' ) ) : ch;
+}
+
+inline char Q_toupper( char ch )
+{
+	return ( ch >= 'a' && ch <= 'z' ) ? ( ch - ( 'a' - 'A' ) ) : ch;
+}
+
+inline void Q_strlwr( char *dest )
+{
+	while ( *dest )
+	{
+		*dest = Q_tolower( *dest );
+		++dest;
+	}
+}
+
+inline void Q_strupr( char *dest )
+{
+	while ( *dest )
+	{
+		*dest = Q_toupper( *dest );
+		++dest;
+	}
+}
+
 //-------------------------------------------------------------------------------------------------
 // Misc - q_shared.cpp
 //-------------------------------------------------------------------------------------------------
