@@ -1,10 +1,8 @@
 
 #include "cmdlib.h"
-#include "mathlib.h"
 #include "bspfile.h"
 #include "polylib.h"
 #include "threads.h"
-#include "lbmlib.h"
 
 typedef enum
 {
