@@ -129,7 +129,7 @@ static GLuint GL_Upload32( const byte *pData, int nWidth, int nHeight, imageflag
 	// Mips
 	if ( !( flags & IF_NOMIPS ) )
 	{
-		if ( GLEW_ARB_framebuffer_object && 0 )
+		if ( GLEW_ARB_framebuffer_object )
 		{
 			// This sucks
 			glGenerateMipmap( GL_TEXTURE_2D );
