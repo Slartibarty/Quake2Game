@@ -26,8 +26,6 @@ int		portalbytes, portallongs;
 qboolean		fastvis;
 qboolean		nosort;
 
-int			testlevel = 2;
-
 int		totalvis;
 
 portal_t	*sorted_portals[MAX_MAP_PORTALS*2];
@@ -333,6 +331,11 @@ void LoadPortals (char *name)
 	printf ("%4i portalclusters\n", portalclusters);
 	printf ("%4i numportals\n", numportals);
 
+	if (numportals*2 >= MAX_PORTALS)
+	{
+		Error( "The map overflows the max portal count (%d of max %d)!\n", numportals, MAX_PORTALS / 2 );
+	}
+
 	// these counts should take advantage of 64 bit systems automatically
 	leafbytes = ((portalclusters+63)&~63)>>3;
 	leaflongs = leafbytes/sizeof(long);
@@ -363,8 +366,8 @@ void LoadPortals (char *name)
 			Error ("LoadPortals: reading portal %i", i);
 		if (numpoints > MAX_POINTS_ON_WINDING)
 			Error ("LoadPortals: portal %i has too many points", i);
-		if ( (unsigned)leafnums[0] > portalclusters
-		|| (unsigned)leafnums[1] > portalclusters)
+		if ( leafnums[0] > portalclusters
+		|| leafnums[1] > portalclusters)
 			Error ("LoadPortals: reading portal %i", i);
 		
 		w = p->winding = NewWinding (numpoints);
@@ -373,16 +376,8 @@ void LoadPortals (char *name)
 		
 		for (j=0 ; j<numpoints ; j++)
 		{
-			double	v[3];
-			int		k;
-
-			// scanf into double, then assign to vec_t
-			// so we don't care what size vec_t is
-			if (fscanf (f, "(%lf %lf %lf ) "
-			, &v[0], &v[1], &v[2]) != 3)
+			if (fscanf (f, "(%f %f %f ) ", &w->points[j][0], &w->points[j][1], &w->points[j][2]) != 3)
 				Error ("LoadPortals: reading portal %i", i);
-			for (k=0 ; k<3 ; k++)
-				w->points[j][k] = v[k];
 		}
 		fscanf (f, "\n");
 		
@@ -502,13 +497,13 @@ main
 */
 int main (int argc, char **argv)
 {
-	char	portalfile[1024];
+	char		portalfile[1024];
 	char		source[1024];
 	char		name[1024];
-	int		i;
+	int			i;
 	double		start, end;
 		
-	printf ("---- lunar vis ----\n");
+	printf ("---- lunar visibility ----\n");
 
 	Time_Init();
 
@@ -524,12 +519,6 @@ int main (int argc, char **argv)
 		{
 			printf ("fastvis = true\n");
 			fastvis = true;
-		}
-		else if (!strcmp(argv[i], "-level"))
-		{
-			testlevel = atoi(argv[i+1]);
-			printf ("testlevel = %i\n", testlevel);
-			i++;
 		}
 		else if (!strcmp(argv[i], "-v"))
 		{
@@ -552,7 +541,7 @@ int main (int argc, char **argv)
 	}
 
 	if (i != argc - 1)
-		Error ("usage: vis [-threads #] [-level 0-4] [-fast] [-v] bspfile");
+		Error ("usage: qvis4 [-threads #] [-fast] [-v] bspfile");
 
 	start = Time_FloatSeconds ();
 	
@@ -563,13 +552,13 @@ int main (int argc, char **argv)
 	StripExtension (source);
 	DefaultExtension (source, ".bsp");
 
-	sprintf (name, "%s%s", inbase, source);
+	Q_sprintf_s (name, "%s%s", inbase, source);
 	printf ("reading %s\n", name);
 	LoadBSPFile (name);
 	if (numnodes == 0 || numfaces == 0)
 		Error ("Empty map");
 
-	sprintf (portalfile, "%s%s", inbase, ExpandArg(argv[i]));
+	Q_sprintf_s (portalfile, "%s%s", inbase, ExpandArg(argv[i]));
 	StripExtension (portalfile);
 	strcat (portalfile, ".prt");
 	
@@ -583,7 +572,7 @@ int main (int argc, char **argv)
 	visdatasize = vismap_p - dvisdata;	
 	printf ("visdatasize:%i  compressed from %i\n", visdatasize, originalvismapsize*2);
 
-	sprintf (name, "%s%s", outbase, source);
+	Q_sprintf_s (name, "%s%s", outbase, source);
 	printf ("writing %s\n", name);
 	WriteBSPFile (name);	
 	

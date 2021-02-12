@@ -252,7 +252,7 @@ winding_t	*ClipToSeperators (winding_t *source, winding_t *pass, winding_t *targ
 			if (length < ON_EPSILON)
 				continue;
 
-			length = 1/sqrt(length);
+			length = 1.0f/sqrt(length);
 			
 			plane.normal[0] *= length;
 			plane.normal[1] *= length;
@@ -264,7 +264,6 @@ winding_t	*ClipToSeperators (winding_t *source, winding_t *pass, winding_t *targ
 		// find out which side of the generated seperating plane has the
 		// source portal
 		//
-#if 1
 			fliptest = false;
 			for (k=0 ; k<source->numpoints ; k++)
 			{
@@ -286,9 +285,7 @@ winding_t	*ClipToSeperators (winding_t *source, winding_t *pass, winding_t *targ
 			}
 			if (k == source->numpoints)
 				continue;		// planar with source portal
-#else
-			fliptest = flipclip;
-#endif
+
 		//
 		// flip the normal if the source portal is backwards
 		//
@@ -297,7 +294,7 @@ winding_t	*ClipToSeperators (winding_t *source, winding_t *pass, winding_t *targ
 				VectorSubtract (vec3_origin, plane.normal, plane.normal);
 				plane.dist = -plane.dist;
 			}
-#if 1
+
 		//
 		// if all of the pass portal points are now on the positive side,
 		// this is the seperating plane
@@ -320,16 +317,7 @@ winding_t	*ClipToSeperators (winding_t *source, winding_t *pass, winding_t *targ
 				
 			if (!counts[0])
 				continue;	// planar with seperating plane
-#else
-			k = (j+1)%pass->numpoints;
-			d = DotProduct (pass->points[k], plane.normal) - plane.dist;
-			if (d < -ON_EPSILON)
-				continue;
-			k = (j+pass->numpoints-1)%pass->numpoints;
-			d = DotProduct (pass->points[k], plane.normal) - plane.dist;
-			if (d < -ON_EPSILON)
-				continue;			
-#endif
+
 		//
 		// flip the normal if we want the back side
 		//
@@ -370,6 +358,7 @@ void RecursiveLeafFlow (int leafnum, threaddata_t *thread, pstack_t *prevstack)
 	int			i, j;
 	long		*test, *might, *vis, more;
 	int			pnum;
+	float		d;
 
 	thread->c_chains++;
 
@@ -432,60 +421,39 @@ void RecursiveLeafFlow (int leafnum, threaddata_t *thread, pstack_t *prevstack)
 		stack.freewindings[1] = 1;
 		stack.freewindings[2] = 1;
 		
-#if 1
-{
-float d;
-
-	d = DotProduct (p->origin, thread->pstack_head.portalplane.normal);
-	d -= thread->pstack_head.portalplane.dist;
-	if (d < -p->radius)
-	{
-		continue;
-	}
-	else if (d > p->radius)
-	{
-		stack.pass = p->winding;
-	}
-	else	
-	{
-		stack.pass = ChopWinding (p->winding, &stack, &thread->pstack_head.portalplane);
-		if (!stack.pass)
+		d = DotProduct (p->origin, thread->pstack_head.portalplane.normal);
+		d -= thread->pstack_head.portalplane.dist;
+		if (d < -p->radius)
+		{
 			continue;
-	}
-}
-#else
-		stack.pass = ChopWinding (p->winding, &stack, &thread->pstack_head.portalplane);
-		if (!stack.pass)
-			continue;
-#endif
-
+		}
+		else if (d > p->radius)
+		{
+			stack.pass = p->winding;
+		}
+		else	
+		{
+			stack.pass = ChopWinding (p->winding, &stack, &thread->pstack_head.portalplane);
+			if (!stack.pass)
+				continue;
+		}
 	
-#if 1
-{
-float d;
-
-	d = DotProduct (thread->base->origin, p->plane.normal);
-	d -= p->plane.dist;
-	if (d > p->radius)
-	{
-		continue;
-	}
-	else if (d < -p->radius)
-	{
-		stack.source = prevstack->source;
-	}
-	else	
-	{
-		stack.source = ChopWinding (prevstack->source, &stack, &backplane);
-		if (!stack.source)
+		d = DotProduct (thread->base->origin, p->plane.normal);
+		d -= p->plane.dist;
+		if (d > p->radius)
+		{
 			continue;
-	}
-}
-#else
-		stack.source = ChopWinding (prevstack->source, &stack, &backplane);
-		if (!stack.source)
-			continue;
-#endif
+		}
+		else if (d < -p->radius)
+		{
+			stack.source = prevstack->source;
+		}
+		else	
+		{
+			stack.source = ChopWinding (prevstack->source, &stack, &backplane);
+			if (!stack.source)
+				continue;
+		}
 
 		if (!prevstack->pass)
 		{	// the second leaf can only be blocked if coplanar

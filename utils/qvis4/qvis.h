@@ -8,7 +8,7 @@
 
 #define	PORTALFILE	"PRT1"
 
-#define	ON_EPSILON	0.1f
+#define	ON_EPSILON	0.01f
 
 typedef struct
 {
@@ -21,9 +21,9 @@ typedef struct
 
 typedef struct
 {
-	qboolean	original;			// don't free, it's part of the portal
-	int		numpoints;
-	vec3_t	points[MAX_POINTS_ON_FIXED_WINDING];			// variable sized
+	int			numpoints;
+	bool		original;			// don't free, it's part of the portal
+	vec3_t		points[MAX_POINTS_ON_FIXED_WINDING];			// variable sized
 } winding_t;
 
 winding_t	*NewWinding (int points);
@@ -108,8 +108,6 @@ extern	int			c_vistest, c_mighttest;
 extern	int			c_chains;
 
 extern	byte	*vismap, *vismap_p, *vismap_end;	// past visfile
-
-extern	int			testlevel;
 
 extern	byte		*uncompressed;
 

@@ -477,7 +477,7 @@ int main (int argc, char **argv)
 	double	start, end;
 	char	name[1024];
 
-	printf ("----- lunar qrad ----\n");	
+	printf ("----- lunar radiosity ----\n");	
 
 	Time_Init();
 

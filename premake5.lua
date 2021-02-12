@@ -288,9 +288,7 @@ project "qbsp4"
 		"utils/common2/polylib.*",
 		"utils/common2/threads.*",
 		"utils/common2/bspfile.*",
-		
-		"utils/common2/qfiles.h",
-	
+			
 		"utils/qbsp4/*"
 	}
 	

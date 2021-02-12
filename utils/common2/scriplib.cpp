@@ -38,12 +38,12 @@ void AddScriptToStack (char *filename)
 
 	script++;
 	if (script == &scriptstack[MAX_INCLUDES])
-		Error ("script file exceeded MAX_INCLUDES");
+		Com_Error (ERR_FATAL, "script file exceeded MAX_INCLUDES");
 	strcpy (script->filename, ExpandPath (filename) );
 
 	size = LoadFile (script->filename, (void **)&script->buffer);
 
-	printf ("entering %s\n", script->filename);
+	Com_Printf ("entering %s\n", script->filename);
 
 	script->line = 1;
 
@@ -77,7 +77,7 @@ void ParseFromMemory (char *buffer, int size)
 	script = scriptstack;
 	script++;
 	if (script == &scriptstack[MAX_INCLUDES])
-		Error ("script file exceeded MAX_INCLUDES");
+		Com_Error (ERR_FATAL, "script file exceeded MAX_INCLUDES");
 	strcpy (script->filename, "memory buffer" );
 
 	script->buffer = buffer;
@@ -113,7 +113,7 @@ void UnGetToken (void)
 qboolean EndOfScript (qboolean crossline)
 {
 	if (!crossline)
-		Error ("Line %i is incomplete\n",scriptline);
+		Com_Error (ERR_FATAL, "Line %i is incomplete\n",scriptline);
 
 	if (!strcmp (script->filename, "memory buffer"))
 	{
@@ -129,7 +129,7 @@ qboolean EndOfScript (qboolean crossline)
 	}
 	script--;
 	scriptline = script->line;
-	printf ("returning to %s\n", script->filename);
+	Com_Printf ("returning to %s\n", script->filename);
 	return GetToken (crossline);
 }
 
@@ -162,7 +162,7 @@ skipspace:
 		if (*script->script_p++ == '\n')
 		{
 			if (!crossline)
-				Error ("Line %i is incomplete\n",scriptline);
+				Com_Error (ERR_FATAL, "Line %i is incomplete\n",scriptline);
 			scriptline = script->line++;
 		}
 	}
@@ -175,7 +175,7 @@ skipspace:
 		|| ( script->script_p[0] == '/' && script->script_p[1] == '/') )
 	{
 		if (!crossline)
-			Error ("Line %i is incomplete\n",scriptline);
+			Com_Error (ERR_FATAL, "Line %i is incomplete\n",scriptline);
 		while (*script->script_p++ != '\n')
 			if (script->script_p >= script->end_p)
 				return EndOfScript (crossline);
@@ -186,7 +186,7 @@ skipspace:
 	if (script->script_p[0] == '/' && script->script_p[1] == '*')
 	{
 		if (!crossline)
-			Error ("Line %i is incomplete\n",scriptline);
+			Com_Error (ERR_FATAL, "Line %i is incomplete\n",scriptline);
 		script->script_p+=2;
 		while (script->script_p[0] != '*' && script->script_p[1] != '/')
 		{
@@ -213,7 +213,7 @@ skipspace:
 			if (script->script_p == script->end_p)
 				break;
 			if (token_p == &token[MAXTOKEN])
-				Error ("Token too large on line %i\n",scriptline);
+				Com_Error (ERR_FATAL, "Token too large on line %i\n",scriptline);
 		}
 		script->script_p++;
 	}
@@ -224,7 +224,7 @@ skipspace:
 		if (script->script_p == script->end_p)
 			break;
 		if (token_p == &token[MAXTOKEN])
-			Error ("Token too large on line %i\n",scriptline);
+			Com_Error (ERR_FATAL, "Token too large on line %i\n",scriptline);
 	}
 
 	*token_p = 0;

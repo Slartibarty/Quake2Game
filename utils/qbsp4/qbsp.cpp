@@ -312,202 +312,226 @@ void ProcessModels (void)
 main
 ============
 */
-int main (int argc, char **argv)
+int main( int argc, char **argv )
 {
 	int			i;
-	double		start, end;
 	char		path[1024];
+	double		start, end;
 
-	printf ("---- lunar qbsp4 ----\n");
+	printf( "---- lunar bsp ----\n" );
 
 	Time_Init();
 
-	for (i=1 ; i<argc ; i++)
+	for ( i = 1; i < argc; i++ )
 	{
-		if (!strcmp(argv[i],"-threads"))
+		if ( !Q_strcmp( argv[i], "-threads" ) )
 		{
-			numthreads = atoi (argv[i+1]);
+			numthreads = atoi( argv[i + 1] );
 			i++;
+			continue;
 		}
-		else if (!strcmp(argv[i], "-v"))
+		if ( !Q_strcmp( argv[i], "-v" ) )
 		{
-			printf ("verbose = true\n");
+			printf( "verbose = true\n" );
 			verbose = true;
+			continue;
 		}
-		else if (!strcmp(argv[i], "-noweld"))
+		if ( !Q_strcmp( argv[i], "-noweld" ) )
 		{
-			printf ("noweld = true\n");
+			printf( "noweld = true\n" );
 			noweld = true;
+			continue;
 		}
-		else if (!strcmp(argv[i], "-nocsg"))
+		if ( !Q_strcmp( argv[i], "-nocsg" ) )
 		{
-			printf ("nocsg = true\n");
+			printf( "nocsg = true\n" );
 			nocsg = true;
+			continue;
 		}
-		else if (!strcmp(argv[i], "-noshare"))
+		if ( !Q_strcmp( argv[i], "-noshare" ) )
 		{
-			printf ("noshare = true\n");
+			printf( "noshare = true\n" );
 			noshare = true;
+			continue;
 		}
-		else if (!strcmp(argv[i], "-notjunc"))
+		if ( !Q_strcmp( argv[i], "-notjunc" ) )
 		{
-			printf ("notjunc = true\n");
+			printf( "notjunc = true\n" );
 			notjunc = true;
+			continue;
 		}
-		else if (!strcmp(argv[i], "-nowater"))
+		if ( !Q_strcmp( argv[i], "-nowater" ) )
 		{
-			printf ("nowater = true\n");
+			printf( "nowater = true\n" );
 			nowater = true;
+			continue;
 		}
-		else if (!strcmp(argv[i], "-noopt"))
+		if ( !Q_strcmp( argv[i], "-noopt" ) )
 		{
-			printf ("noopt = true\n");
+			printf( "noopt = true\n" );
 			noopt = true;
+			continue;
 		}
-		else if (!strcmp(argv[i], "-noprune"))
+		if ( !Q_strcmp( argv[i], "-noprune" ) )
 		{
-			printf ("noprune = true\n");
+			printf( "noprune = true\n" );
 			noprune = true;
+			continue;
 		}
-		else if (!strcmp(argv[i], "-nofill"))
+		if ( !Q_strcmp( argv[i], "-nofill" ) )
 		{
-			printf ("nofill = true\n");
+			printf( "nofill = true\n" );
 			nofill = true;
+			continue;
 		}
-		else if (!strcmp(argv[i], "-nomerge"))
+		if ( !Q_strcmp( argv[i], "-nomerge" ) )
 		{
-			printf ("nomerge = true\n");
+			printf( "nomerge = true\n" );
 			nomerge = true;
+			continue;
 		}
-		else if (!strcmp(argv[i], "-nosubdiv"))
+		if ( !Q_strcmp( argv[i], "-nosubdiv" ) )
 		{
-			printf ("nosubdiv = true\n");
+			printf( "nosubdiv = true\n" );
 			nosubdiv = true;
+			continue;
 		}
-		else if (!strcmp(argv[i], "-nodetail"))
+		if ( !Q_strcmp( argv[i], "-nodetail" ) )
 		{
-			printf ("nodetail = true\n");
+			printf( "nodetail = true\n" );
 			nodetail = true;
+			continue;
 		}
-		else if (!strcmp(argv[i], "-fulldetail"))
+		if ( !Q_strcmp( argv[i], "-fulldetail" ) )
 		{
-			printf ("fulldetail = true\n");
+			printf( "fulldetail = true\n" );
 			fulldetail = true;
+			continue;
 		}
-		else if (!strcmp(argv[i], "-onlyents"))
+		if ( !Q_strcmp( argv[i], "-onlyents" ) )
 		{
-			printf ("onlyents = true\n");
+			printf( "onlyents = true\n" );
 			onlyents = true;
+			continue;
 		}
-		else if (!strcmp(argv[i], "-micro"))
+		if ( !Q_strcmp( argv[i], "-micro" ) )
 		{
-			microvolume = (float)atof(argv[i+1]);
-			printf ("microvolume = %f\n", microvolume);
+			microvolume = (float)atof( argv[i + 1] );
+			printf( "microvolume = %f\n", microvolume );
 			i++;
+			continue;
 		}
-		else if (!strcmp(argv[i], "-leaktest"))
+		if ( !Q_strcmp( argv[i], "-leaktest" ) )
 		{
-			printf ("leaktest = true\n");
+			printf( "leaktest = true\n" );
 			leaktest = true;
+			continue;
 		}
-		else if (!strcmp(argv[i], "-verboseentities"))
+		if ( !Q_strcmp( argv[i], "-verboseentities" ) )
 		{
-			printf ("verboseentities = true\n");
+			printf( "verboseentities = true\n" );
 			verboseentities = true;
+			continue;
 		}
-		else if (!strcmp(argv[i], "-slarthack"))
+		if ( !Q_strcmp( argv[i], "-slarthack" ) )
 		{
-			printf ("slarthack = true\n");
+			printf( "slarthack = true\n" );
 			g_slarthack = true;
+			continue;
 		}
-		else if (!strcmp(argv[i], "-chop"))
+		if ( !Q_strcmp( argv[i], "-chop" ) )
 		{
-			subdivide_size = (float)atof(argv[i+1]);
-			printf ("subdivide_size = %f\n", subdivide_size);
+			subdivide_size = (float)atof( argv[i + 1] );
+			printf( "subdivide_size = %f\n", subdivide_size );
 			i++;
+			continue;
 		}
-		else if (!strcmp(argv[i], "-block"))
+		if ( !Q_strcmp( argv[i], "-block" ) )
 		{
-			block_xl = block_xh = atoi(argv[i+1]);
-			block_yl = block_yh = atoi(argv[i+2]);
-			printf ("block: %i,%i\n", block_xl, block_yl);
-			i+=2;
+			block_xl = block_xh = atoi( argv[i + 1] );
+			block_yl = block_yh = atoi( argv[i + 2] );
+			printf( "block: %i,%i\n", block_xl, block_yl );
+			i += 2;
+			continue;
 		}
-		else if (!strcmp(argv[i], "-blocks"))
+		if ( !Q_strcmp( argv[i], "-blocks" ) )
 		{
-			block_xl = atoi(argv[i+1]);
-			block_yl = atoi(argv[i+2]);
-			block_xh = atoi(argv[i+3]);
-			block_yh = atoi(argv[i+4]);
-			printf ("blocks: %i,%i to %i,%i\n", 
-				block_xl, block_yl, block_xh, block_yh);
-			i+=4;
+			block_xl = atoi( argv[i + 1] );
+			block_yl = atoi( argv[i + 2] );
+			block_xh = atoi( argv[i + 3] );
+			block_yh = atoi( argv[i + 4] );
+			printf( "blocks: %i,%i to %i,%i\n",
+				block_xl, block_yl, block_xh, block_yh );
+			i += 4;
+			continue;
 		}
-		else if (!strcmp (argv[i],"-tmpout"))
+		if ( !Q_strcmp( argv[i], "-tmpout" ) )
 		{
-			strcpy (outbase, "/tmp");
+			strcpy( outbase, "/tmp" );
+			continue;
 		}
-		else if (argv[i][0] == '-')
-			Error ("Unknown option \"%s\"", argv[i]);
-		else
-			break;
+		if ( argv[i][0] == '-' )
+		{
+			Com_Error( ERR_FATAL, "Unknown option \"%s\"", argv[i] );
+		}
+
+		break;
 	}
 
-	if (i != argc - 1)
-		Error ("usage: qbsp4 [options] mapfile");
+	if ( i != argc - 1 )
+		Error( "usage: qbsp4 [options] mapfile" );
 
-	start = Time_FloatSeconds ();
+	start = Time_FloatSeconds();
 
-	ThreadSetDefault ();
-numthreads = 1;		// multiple threads aren't helping...
-	SetQdirFromPath (argv[i]);
+	ThreadSetDefault();
+	numthreads = 1;		// multiple threads aren't helping because of heavy malloc use
+	SetQdirFromPath( argv[i] );
 
-	strcpy (source, ExpandArg (argv[i]));
-	StripExtension (source);
+	strcpy( source, ExpandArg( argv[i] ) );
+	StripExtension( source );
 
 	// delete portal and line files
-	sprintf (path, "%s.prt", source);
-	remove (path);
-	sprintf (path, "%s.lin", source);
-	remove (path);
+	Q_sprintf_s( path, "%s.prt", source );
+	remove( path );
+	Q_sprintf_s( path, "%s.lin", source );
+	remove( path );
 
-	strcpy (name, ExpandArg (argv[i]));	
-	DefaultExtension (name, ".map");	// might be .reg
+	strcpy( name, ExpandArg( argv[i] ) );
+	DefaultExtension( name, ".map" );	// might be .reg
 
 	//
 	// if onlyents, just grab the entites and resave
 	//
-	if (onlyents)
+	if ( onlyents )
 	{
 		char out[1024];
 
-		sprintf (out, "%s.bsp", source);
-		LoadBSPFile (out);
+		Q_sprintf_s( out, "%s.bsp", source );
+		LoadBSPFile( out );
 		num_entities = 0;
 
-		LoadMapFile (name);
-		SetModelNumbers ();
-		SetLightStyles ();
+		LoadMapFile( name );
+		SetModelNumbers();
+		SetLightStyles();
 
-		UnparseEntities ();
+		UnparseEntities();
 
-		WriteBSPFile (out);
+		WriteBSPFile( out );
 	}
 	else
 	{
 		//
 		// start from scratch
 		//
-		LoadMapFile (name);
-		SetModelNumbers ();
-		SetLightStyles ();
+		LoadMapFile( name );
+		SetModelNumbers();
+		SetLightStyles();
 
-		ProcessModels ();
+		ProcessModels();
 	}
 
-	end = Time_FloatSeconds ();
-	printf ("%5.1f seconds elapsed\n", end-start);
+	end = Time_FloatSeconds();
+	printf( "%5.1f seconds elapsed\n", end - start );
 
 	return 0;
 }
-

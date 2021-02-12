@@ -241,7 +241,7 @@ void WritePortalFile (tree_t *tree)
 	NumberLeafs_r (headnode);
 	
 // write the file
-	sprintf (filename, "%s.prt", source);
+	Q_sprintf_s (filename, "%s.prt", source);
 	printf ("writing %s\n", filename);
 	pf = fopen (filename, "w");
 	if (!pf)

@@ -784,9 +784,9 @@ void ParseBrush (entity_t *mapent)
 		}
 
 		VectorAdd (b->mins, b->maxs, origin);
-		VectorScale (origin, 0.5, origin);
+		VectorScale (origin, 0.5f, origin);
 
-		sprintf (string, "%i %i %i", (int)origin[0], (int)origin[1], (int)origin[2]);
+		Q_sprintf (string, "%i %i %i", (int)origin[0], (int)origin[1], (int)origin[2]);
 		SetKeyValue (&entities[b->entitynum], "origin", string);
 
 		VectorCopy (origin, entities[b->entitynum].origin);
@@ -954,7 +954,7 @@ qboolean	ParseMapEntity (void)
 		c_areaportals++;
 		mapent->areaportalnum = c_areaportals;
 		// set the portal number as "style"
-		sprintf (str, "%i", c_areaportals);
+		Q_sprintf (str, "%i", c_areaportals);
 		SetKeyValue (mapent, "style", str);
 		MoveBrushesToWorld (mapent);
 		return true;

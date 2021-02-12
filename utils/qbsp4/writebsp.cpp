@@ -305,14 +305,14 @@ void SetModelNumbers (void)
 {
 	int		i;
 	int		models;
-	char	value[10];
+	char	value[16];
 
 	models = 1;
 	for (i=1 ; i<num_entities ; i++)
 	{
 		if (entities[i].numbrushes)
 		{
-			sprintf (value, "*%i", models);
+			Q_sprintf (value, "*%i", models);
 			models++;
 			SetKeyValue (&entities[i], "model", value);
 		}
@@ -332,7 +332,7 @@ void SetLightStyles (void)
 	char	*t;
 	entity_t	*e;
 	int		i, j;
-	char	value[10];
+	char	value[16];
 	char	lighttargets[MAX_SWITCHED_LIGHTS][64];
 
 
@@ -362,7 +362,7 @@ void SetLightStyles (void)
 			strcpy (lighttargets[j], t);
 			stylenum++;
 		}
-		sprintf (value, "%i", 32 + j);
+		Q_sprintf (value, "%i", 32 + j);
 		SetKeyValue (e, "style", value);
 	}
 
@@ -484,7 +484,7 @@ void EndBSPFile (void)
 	UnparseEntities ();
 
 	// write the map
-	sprintf (path, "%s.bsp", source);
+	Q_sprintf_s (path, "%s.bsp", source);
 	printf ("Writing %s\n", path);
 	WriteBSPFile (path);
 }

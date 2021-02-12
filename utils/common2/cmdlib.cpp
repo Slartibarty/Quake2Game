@@ -131,22 +131,22 @@ void SetQdirFromPath (char *path)
 		if (!Q_strncasecmp (c, BASEDIRNAME, len))
 		{
 			strncpy (qdir, path, c+len+1-path);
-			qprintf ("qdir: %s\n", qdir);
+			Com_DPrintf ("qdir: %s\n", qdir);
 			c += len+1;
 			while (*c)
 			{
 				if (*c == '/' || *c == '\\')
 				{
 					strncpy (gamedir, path, c+1-path);
-					qprintf ("gamedir: %s\n", gamedir);
+					Com_DPrintf ("gamedir: %s\n", gamedir);
 					return;
 				}
 				c++;
 			}
-			Error ("No gamedir in %s", path);
+			Com_Error (ERR_FATAL, "No gamedir in %s", path);
 			return;
 		}
-	Error ("SetQdirFromPath: no '%s' in %s", BASEDIRNAME, path);
+	Com_Error (ERR_FATAL, "SetQdirFromPath: no '%s' in %s", BASEDIRNAME, path);
 }
 
 /*
@@ -183,7 +183,7 @@ FILE *SafeOpenWrite (char *filename)
 	f = fopen(filename, "wb");
 
 	if (!f)
-		Error ("Error opening %s: %s",filename,strerror(errno));
+		Com_Error (ERR_FATAL, "Error opening %s: %s",filename,strerror(errno));
 
 	return f;
 }
@@ -195,7 +195,7 @@ FILE *SafeOpenRead (char *filename)
 	f = fopen(filename, "rb");
 
 	if (!f)
-		Error ("Error opening %s: %s",filename,strerror(errno));
+		Com_Error (ERR_FATAL, "Error opening %s: %s",filename,strerror(errno));
 
 	return f;
 }
@@ -204,14 +204,14 @@ FILE *SafeOpenRead (char *filename)
 void SafeRead (FILE *f, void *buffer, int count)
 {
 	if ( fread (buffer, 1, count, f) != (size_t)count)
-		Error ("File read failure");
+		Com_Error (ERR_FATAL, "File read failure");
 }
 
 
 void SafeWrite (FILE *f, void *buffer, int count)
 {
 	if (fwrite (buffer, 1, count, f) != (size_t)count)
-		Error ("File write failure");
+		Com_Error (ERR_FATAL, "File write failure");
 }
 
 
@@ -300,10 +300,10 @@ char *ExpandPath( char *path )
 {
 	static char full[1024];
 	if ( !qdir )
-		Error( "ExpandPath called without qdir set" );
+		Com_Error( ERR_FATAL, "ExpandPath called without qdir set" );
 	if ( path[0] == '/' || path[0] == '\\' || path[1] == ':' )
 		return path;
-	sprintf( full, "%s%s", qdir, path );
+	Q_sprintf_s( full, "%s%s", qdir, path );
 	return full;
 }
 

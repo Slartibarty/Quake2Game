@@ -122,7 +122,7 @@ void DecompressVis (byte *in, byte *decompressed)
 	
 		c = in[1];
 		if (!c)
-			Error ("DecompressVis: 0 repeat");
+			Com_Error (ERR_FATAL, "DecompressVis: 0 repeat");
 		in += 2;
 		while (c)
 		{
@@ -336,7 +336,7 @@ int CopyLump (int lump, void *dest, int size)
 	ofs = header->lumps[lump].fileofs;
 	
 	if (length % size)
-		Error ("LoadBSPFile: odd lump size");
+		Com_Error (ERR_FATAL, "LoadBSPFile: odd lump size");
 	
 	memcpy (dest, (byte *)header + ofs, length);
 
@@ -362,9 +362,9 @@ void	LoadBSPFile (char *filename)
 		((int *)header)[i] = LittleLong ( ((int *)header)[i]);
 
 	if (header->ident != IDBSPHEADER)
-		Error ("%s is not a IBSP file", filename);
+		Com_Error (ERR_FATAL, "%s is not a IBSP file", filename);
 	if (header->version != BSPVERSION)
-		Error ("%s is version %i, not %i", filename, header->version, BSPVERSION);
+		Com_Error (ERR_FATAL, "%s is version %i, not %i", filename, header->version, BSPVERSION);
 
 	nummodels = CopyLump (LUMP_MODELS, dmodels, sizeof(dmodel_t));
 	numvertexes = CopyLump (LUMP_VERTEXES, dvertexes, sizeof(dvertex_t));
@@ -418,9 +418,9 @@ void	LoadBSPFileTexinfo (char *filename)
 		((int *)header)[i] = LittleLong ( ((int *)header)[i]);
 
 	if (header->ident != IDBSPHEADER)
-		Error ("%s is not a IBSP file", filename);
+		Com_Error (ERR_FATAL, "%s is not a IBSP file", filename);
 	if (header->version != BSPVERSION)
-		Error ("%s is version %i, not %i", filename, header->version, BSPVERSION);
+		Com_Error (ERR_FATAL, "%s is version %i, not %i", filename, header->version, BSPVERSION);
 
 
 	length = header->lumps[LUMP_TEXINFO].filelen;
@@ -513,38 +513,38 @@ void PrintBSPFileSizes (void)
 	if (!num_entities)
 		ParseEntities ();
 
-	printf ("%5i models       %7i\n"
+	Com_Printf ("%5i models       %7i\n"
 		,nummodels, (int)(nummodels*sizeof(dmodel_t)));
-	printf ("%5i brushes      %7i\n"
+	Com_Printf ("%5i brushes      %7i\n"
 		,numbrushes, (int)(numbrushes*sizeof(dbrush_t)));
-	printf ("%5i brushsides   %7i\n"
+	Com_Printf ("%5i brushsides   %7i\n"
 		,numbrushsides, (int)(numbrushsides*sizeof(dbrushside_t)));
-	printf ("%5i planes       %7i\n"
+	Com_Printf ("%5i planes       %7i\n"
 		,numplanes, (int)(numplanes*sizeof(dplane_t)));
-	printf ("%5i texinfo      %7i\n"
+	Com_Printf ("%5i texinfo      %7i\n"
 		,numtexinfo, (int)(numtexinfo*sizeof(texinfo_t)));
-	printf ("%5i entdata      %7i\n", num_entities, entdatasize);
+	Com_Printf ("%5i entdata      %7i\n", num_entities, entdatasize);
 
-	printf ("\n");
+	Com_Printf ("\n");
 
-	printf ("%5i vertexes     %7i\n"
+	Com_Printf ("%5i vertexes     %7i\n"
 		,numvertexes, (int)(numvertexes*sizeof(dvertex_t)));
-	printf ("%5i nodes        %7i\n"
+	Com_Printf ("%5i nodes        %7i\n"
 		,numnodes, (int)(numnodes*sizeof(dnode_t)));
-	printf ("%5i faces        %7i\n"
+	Com_Printf ("%5i faces        %7i\n"
 		,numfaces, (int)(numfaces*sizeof(dface_t)));
-	printf ("%5i leafs        %7i\n"
+	Com_Printf ("%5i leafs        %7i\n"
 		,numleafs, (int)(numleafs*sizeof(dleaf_t)));
-	printf ("%5i leaffaces    %7i\n"
+	Com_Printf ("%5i leaffaces    %7i\n"
 		,numleaffaces, (int)(numleaffaces*sizeof(dleaffaces[0])));
-	printf ("%5i leafbrushes  %7i\n"
+	Com_Printf ("%5i leafbrushes  %7i\n"
 		,numleafbrushes, (int)(numleafbrushes*sizeof(dleafbrushes[0])));
-	printf ("%5i surfedges    %7i\n"
+	Com_Printf ("%5i surfedges    %7i\n"
 		,numsurfedges, (int)(numsurfedges*sizeof(dsurfedges[0])));
-	printf ("%5i edges        %7i\n"
+	Com_Printf ("%5i edges        %7i\n"
 		,numedges, (int)(numedges*sizeof(dedge_t)));
-	printf ("      lightdata    %7i\n", lightdatasize);
-	printf ("      visdata      %7i\n", visdatasize);
+	Com_Printf ("      lightdata    %7i\n", lightdatasize);
+	Com_Printf ("      visdata      %7i\n", visdatasize);
 }
 
 
@@ -578,11 +578,11 @@ epair_t *ParseEpair (void)
 	memset (e, 0, sizeof(epair_t));
 	
 	if (strlen(token) >= MAX_KEY-1)
-		Error ("ParseEpar: token too long");
+		Com_Error (ERR_FATAL, "ParseEpar: token too long");
 	e->key = copystring(token);
 	GetToken (false);
 	if (strlen(token) >= MAX_VALUE-1)
-		Error ("ParseEpar: token too long");
+		Com_Error (ERR_FATAL, "ParseEpar: token too long");
 	e->value = copystring(token);
 
 	// strip trailing spaces
@@ -607,10 +607,10 @@ qboolean	ParseEntity (void)
 		return false;
 
 	if (strcmp (token, "{") )
-		Error ("ParseEntity: { not found");
+		Com_Error (ERR_FATAL, "ParseEntity: { not found");
 	
 	if (num_entities == MAX_MAP_ENTITIES)
-		Error ("num_entities == MAX_MAP_ENTITIES");
+		Com_Error (ERR_FATAL, "num_entities == MAX_MAP_ENTITIES");
 
 	mapent = &entities[num_entities];
 	num_entities++;
@@ -618,7 +618,7 @@ qboolean	ParseEntity (void)
 	do
 	{
 		if (!GetToken (true))
-			Error ("ParseEntity: EOF without closing brace");
+			Com_Error (ERR_FATAL, "ParseEntity: EOF without closing brace");
 		if (!strcmp (token, "}") )
 			break;
 		e = ParseEpair ();
@@ -682,7 +682,7 @@ void UnparseEntities (void)
 			strcpy (value, ep->value);
 			StripTrailing (value);
 				
-			sprintf (line, "\"%s\" \"%s\"\n", key, value);
+			Q_sprintf_s (line, "\"%s\" \"%s\"\n", key, value);
 			strcat (end, line);
 			end += strlen(line);
 		}
@@ -690,7 +690,7 @@ void UnparseEntities (void)
 		end += 2;
 
 		if (end > buf + MAX_MAP_ENTSTRING)
-			Error ("Entity text too long");
+			Com_Error (ERR_FATAL, "Entity text too long");
 	}
 	entdatasize = end - buf + 1;
 }
@@ -699,10 +699,10 @@ void PrintEntity (entity_t *ent)
 {
 	epair_t	*ep;
 	
-	printf ("------- entity %p -------\n", ent);
+	Com_Printf ("------- entity %p -------\n", ent);
 	for (ep=ent->epairs ; ep ; ep=ep->next)
 	{
-		printf ("%s = %s\n", ep->key, ep->value);
+		Com_Printf ("%s = %s\n", ep->key, ep->value);
 	}
 
 }

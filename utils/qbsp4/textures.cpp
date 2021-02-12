@@ -1,3 +1,7 @@
+//=============================================================================
+// Textures!
+//=============================================================================
+
 #include "qbsp.h"
 
 #define	MAX_MAP_TEXTURES	1024
@@ -17,7 +21,7 @@ StringToContentFlag
 Parse a content flag from a string
 ===================
 */
-int StringToContentFlag( const char *data )
+static int StringToContentFlag( const char *data )
 {
 	FLAGCHECK( CONTENTS_SOLID )
 	FLAGCHECK( CONTENTS_WINDOW )
@@ -53,7 +57,7 @@ StringToSurfaceType
 Parse a surface type from a string
 ===================
 */
-int StringToSurfaceType( const char *data )
+static int StringToSurfaceType( const char *data )
 {
 	FLAGCHECK2( SURFTYPE_CONCRETE, "concrete" )
 	FLAGCHECK2( SURFTYPE_METAL, "metal" )
@@ -78,7 +82,7 @@ StringToSurfaceFlag
 Parse a surface flag from a string
 ===================
 */
-int StringToSurfaceFlag( const char *data )
+static int StringToSurfaceFlag( const char *data )
 {
 	FLAGCHECK( SURF_LIGHT )
 	FLAGCHECK( SURF_SLICK )
@@ -105,7 +109,7 @@ ParseSurfaceFlags
 3 == surface flags
 ===================
 */
-int ParseSurfaceFlags( char *data, int type )
+static int ParseSurfaceFlags( char *data, int type )
 {
 	char tokenhack[MAX_TOKEN_CHARS];
 	char *token = tokenhack;
@@ -134,7 +138,7 @@ int ParseSurfaceFlags( char *data, int type )
 ParseMaterial
 ===================
 */
-void ParseMaterial( char *data, textureref_t *ref )
+static void ParseMaterial( char *data, textureref_t *ref )
 {
 	char tokenhack[MAX_TOKEN_CHARS];
 	char *token = tokenhack;
@@ -192,7 +196,7 @@ FindMiptex
 textureref_t *FindMiptex( const char *name )
 {
 	int			i;
-	char		path[_MAX_PATH];
+	char		path[MAX_OSPATH];
 	char		*data;
 	textureref_t	*ref;
 
@@ -243,7 +247,7 @@ static const vec3_t baseaxis[18]
 	{0,-1,0}, {1,0,0}, {0,0,-1}			// north wall
 };
 
-void TextureAxisFromPlane(plane_t *pln, vec3_t xv, vec3_t yv)
+static void TextureAxisFromPlane(plane_t *pln, vec3_t xv, vec3_t yv)
 {
 	int		bestaxis;
 	vec_t	dot,best;

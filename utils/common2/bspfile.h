@@ -1,6 +1,7 @@
 
-#include "q_formats.h"
+#pragma once
 
+#include "q_formats.h"
 
 extern	int			nummodels;
 extern	dmodel_t	dmodels[MAX_MAP_MODELS];
