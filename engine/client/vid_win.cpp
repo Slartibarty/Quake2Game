@@ -104,7 +104,6 @@ static void VID_FreeModes()
 bool VID_GetModeInfo( int *width, int *height, int mode )
 {
 	if ( mode < 0 || mode >= s_num_modes ) {
-		assert( 0 );
 		return false;
 	}
 

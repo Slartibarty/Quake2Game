@@ -13,15 +13,10 @@
 
 #include "png.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#define STBI_NO_STDIO
-#define STBI_NO_LINEAR
-#define STBI_NO_HDR
-#define STBI_ONLY_TGA
-#define STBI_NO_FAILURE_STRINGS
-#include "stb_image.h"
-
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
+#define STBIR_MAX_CHANNELS 32
+#define STBIR_MALLOC(size,c) ((void)(c), Z_Malloc(size))
+#define STBIR_FREE(ptr,c) ((void)(c), Z_Free(ptr))
 #include "stb_image_resize.h"
 
 //-------------------------------------------------------------------------------------------------
@@ -134,7 +129,7 @@ static GLuint GL_Upload32( const byte *pData, int nWidth, int nHeight, imageflag
 	// Mips
 	if ( !( flags & IF_NOMIPS ) )
 	{
-		if ( GLEW_ARB_framebuffer_object )
+		if ( GLEW_ARB_framebuffer_object && 0 )
 		{
 			// This sucks
 			glGenerateMipmap( GL_TEXTURE_2D );
@@ -146,7 +141,7 @@ static GLuint GL_Upload32( const byte *pData, int nWidth, int nHeight, imageflag
 			int nOutHeight = nHeight / 2;
 			int nLevel = 1;
 
-			byte *pNewData = (byte *)malloc( ( nOutWidth * nOutHeight ) * 4 );
+			byte *pNewData = (byte *)Z_Malloc( ( nOutWidth * nOutHeight ) * 4 );
 
 			while ( nOutWidth > 1 && nOutHeight > 1 )
 			{
@@ -158,7 +153,7 @@ static GLuint GL_Upload32( const byte *pData, int nWidth, int nHeight, imageflag
 				nOutHeight /= 2;
 			}
 
-			free( pNewData );
+			Z_Free( pNewData );
 		}
 
 		if ( flags & IF_NEAREST )
@@ -260,7 +255,7 @@ static byte *GL_LoadImage( const char *pName, int &width, int &height )
 		return nullptr;
 	}
 
-	assert( nBufLen > 16 ); // Sanity check
+	assert( nBufLen > 32 ); // Sanity check
 
 	byte *pPic = nullptr;
 
@@ -270,7 +265,8 @@ static byte *GL_LoadImage( const char *pName, int &width, int &height )
 	}
 	else
 	{
-		pPic = stbi_load_from_memory( pBuffer, nBufLen, &width, &height, nullptr, 4 );
+		// There is no real test for TGA
+		pPic = img::LoadTGA( pBuffer, nBufLen, width, height );
 	}
 	
 	if ( !pPic )
@@ -320,7 +316,7 @@ static image_t *GL_FindImage (const char *name, imageflags_t flags)
 	if ( pic )
 	{
 		int outsize = width * height * 4;
-		byte *pic32 = (byte *)malloc( outsize );
+		byte *pic32 = (byte *)Z_Malloc( outsize );
 		rgb_t *palette = (rgb_t *)( pic + width * height );
 
 		for ( i = 0, j = 0; i < outsize; i += 4, ++j )
@@ -333,7 +329,7 @@ static image_t *GL_FindImage (const char *name, imageflags_t flags)
 		
 		image = GL_CreateImage( name, pic32, width, height, flags );
 
-		free( pic32 );
+		Z_Free( pic32 );
 
 		++image->refcount;
 		return image;
@@ -351,7 +347,7 @@ static image_t *GL_FindImage (const char *name, imageflags_t flags)
 
 	image = GL_CreateImage( name, pic, width, height, flags );
 
-	free( pic );
+	Z_Free( pic );
 
 	++image->refcount;
 	return image;

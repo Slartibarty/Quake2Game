@@ -28,6 +28,32 @@ namespace img
 		byte r, g, b, a;
 	};
 
+	// stbi__vertical_flip
+	void VerticalFlip( byte *image, int w, int h, int bytes_per_pixel )
+	{
+		int row;
+		size_t bytes_per_row = (size_t)w * bytes_per_pixel;
+		byte temp[2048];
+
+		for ( row = 0; row < ( h >> 1 ); row++ )
+		{
+			byte *row0 = image + row * bytes_per_row;
+			byte *row1 = image + ( h - row - 1 ) * bytes_per_row;
+			// swap row0 with row1
+			size_t bytes_left = bytes_per_row;
+			while ( bytes_left )
+			{
+				size_t bytes_copy = ( bytes_left < sizeof( temp ) ) ? bytes_left : sizeof( temp );
+				memcpy( temp, row0, bytes_copy );
+				memcpy( row0, row1, bytes_copy );
+				memcpy( row1, temp, bytes_copy );
+				row0 += bytes_copy;
+				row1 += bytes_copy;
+				bytes_left -= bytes_copy;
+			}
+		}
+	}
+
 	//-------------------------------------------------------------------------------------------------
 
 	struct PcxHeader
@@ -70,7 +96,7 @@ namespace img
 
 		int nNumPixels = width * height;
 		int nSize = nNumPixels * 4;
-		byte *pRGBA = (byte *)malloc(nSize);				// Final RGBA image
+		byte *pRGBA = (byte *)Z_Malloc(nSize);				// Final RGBA image
 
 		const byte *pData = pBuffer + sizeof(*pHeader);		// Indexes
 		const byte *pPalette = pBuffer + nBufLen - 768;		// Palette map
@@ -139,6 +165,8 @@ namespace img
 		return true;
 	}
 
+	//-------------------------------------------------------------------------------------------------
+
 #pragma pack(push, 1)
 	struct TgaHeader
 	{
@@ -180,7 +208,7 @@ namespace img
 
 		uint nNumPixels = (uint)width * (uint)height;
 		uint nSize = nNumPixels * 4;
-		byte *pPixels = (byte *)malloc(nSize);
+		byte *pPixels = (byte *)Z_Malloc(nSize);
 
 		byte* pPixelIter = pPixels;
 		const byte* pDataIter = pData;
@@ -211,6 +239,8 @@ namespace img
 
 		return pPixels;
 	}
+
+	//-------------------------------------------------------------------------------------------------
 
 	// Return true if the first 8 bytes of the buffer match the fixed PNG ID
 	bool TestPNG( const byte *buf )
@@ -307,16 +337,16 @@ namespace img
 
 		Z_Free( row_pointers ); // Don't need these anymore
 
-		// TODO: Do we need this?
-		png_read_end( png_ptr, nullptr );
+		// This is optional, but calling it means we touch all data in the buffer
+		//png_read_end( png_ptr, nullptr );
 
 		png_destroy_read_struct( &png_ptr, &info_ptr, nullptr );
 
 		return rows;
 	}
 
-	// Write a 24-bit PNG using STDIO
-	bool WritePNG24( int width, int height, byte *buffer, FILE *handle )
+	// Write a PNG using STDIO
+	bool WritePNG( int width, int height, bool b32bit, byte *buffer, FILE *handle )
 	{
 		png_structp png_ptr;
 		png_infop info_ptr;
@@ -329,7 +359,7 @@ namespace img
 
 		png_set_write_fn( png_ptr, handle, nullptr, nullptr );
 
-		png_set_IHDR( png_ptr, info_ptr, width, height, 8, PNG_COLOR_TYPE_RGB,
+		png_set_IHDR( png_ptr, info_ptr, width, height, 8, b32bit ? PNG_COLOR_TYPE_RGBA : PNG_COLOR_TYPE_RGB,
 			PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT );
 
 		png_write_info( png_ptr, info_ptr );
@@ -352,32 +382,6 @@ namespace img
 		png_destroy_write_struct( &png_ptr, &info_ptr );
 
 		return true;
-	}
-
-	// stbi__vertical_flip
-	void VerticalFlip( byte *image, int w, int h, int bytes_per_pixel )
-	{
-		int row;
-		size_t bytes_per_row = (size_t)w * bytes_per_pixel;
-		byte temp[2048];
-
-		for ( row = 0; row < ( h >> 1 ); row++ )
-		{
-			byte *row0 = image + row * bytes_per_row;
-			byte *row1 = image + ( h - row - 1 ) * bytes_per_row;
-			// swap row0 with row1
-			size_t bytes_left = bytes_per_row;
-			while ( bytes_left )
-			{
-				size_t bytes_copy = ( bytes_left < sizeof( temp ) ) ? bytes_left : sizeof( temp );
-				memcpy( temp, row0, bytes_copy );
-				memcpy( row0, row1, bytes_copy );
-				memcpy( row1, temp, bytes_copy );
-				row0 += bytes_copy;
-				row1 += bytes_copy;
-				bytes_left -= bytes_copy;
-			}
-		}
 	}
 
 }

@@ -50,6 +50,8 @@ void Sys_Error (_Printf_format_string_ const char *error, ...)
 	Q_vsprintf_s (text, error, argptr);
 	va_end (argptr);
 
+	Sys_OutputDebugString( text ); // Mirror to the debugger
+
 	// We won't have a window by now
 	MessageBoxA( nullptr, text, "Engine Error", MB_OK | MB_ICONERROR );
 

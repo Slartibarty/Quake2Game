@@ -8,6 +8,8 @@
 
 namespace img
 {
+	void VerticalFlip( byte *image, int w, int h, int bytes_per_pixel );
+
 	// Returns a 32-bit buffer (8-bit PCX only, 24/32-bit TGA only)
 	byte		*LoadPCX(const byte *pBuffer, int nBufLen, int &width, int &height);
 	byte		*LoadTGA(const byte *pBuffer, int nBufLen, int &width, int &height);
@@ -21,7 +23,5 @@ namespace img
 	byte *LoadPNG( byte *buf, int &width, int &height );
 
 	// Write a 24-bit PNG using stdio
-	bool WritePNG24( int width, int height, byte *buffer, FILE *handle );
-
-	void VerticalFlip( byte *image, int w, int h, int bytes_per_pixel );
+	bool WritePNG( int width, int height, bool b32bit, byte *buffer, FILE *handle );
 }

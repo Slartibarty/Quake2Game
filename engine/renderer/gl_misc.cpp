@@ -9,13 +9,6 @@ Misc functions that don't fit anywhere else
 #include "gl_local.h"
 #include "../shared/imageloaders.h"
 
-#define STBI_NO_STDIO
-#define STBI_NO_LINEAR
-#define STBI_NO_HDR
-#define STBI_ONLY_TGA
-#define STBI_NO_FAILURE_STRINGS
-#include "stb_image.h"
-
 #include "png.h"
 
 //-------------------------------------------------------------------------------------------------
@@ -69,7 +62,7 @@ static void GL_ScreenShot_Internal( bool png )
 	if ( png )
 	{
 		img::VerticalFlip( pixbuffer, vid.width, vid.height, 3 );
-		img::WritePNG24( vid.width, vid.height, pixbuffer, handle );
+		img::WritePNG( vid.width, vid.height, false, pixbuffer, handle );
 	}
 	else
 	{
@@ -176,11 +169,11 @@ void GL_ExtractWad_f()
 
 	fseek( wadhandle, wadheader.infotableofs, SEEK_SET );
 
-	wad2::lumpinfo_t *wadlumps = (wad2::lumpinfo_t *)malloc( sizeof( wad2::lumpinfo_t ) * wadheader.numlumps );
+	wad2::lumpinfo_t *wadlumps = (wad2::lumpinfo_t *)Z_Malloc( sizeof( wad2::lumpinfo_t ) * wadheader.numlumps );
 
 	if ( fread( wadlumps, sizeof( wad2::lumpinfo_t ), wadheader.numlumps, wadhandle ) != wadheader.numlumps )
 	{
-		free( wadlumps );
+		Z_Free( wadlumps );
 		fclose( wadhandle );
 		Com_Printf( "Malformed wadfile\n" );
 		return;
@@ -203,11 +196,11 @@ void GL_ExtractWad_f()
 
 		c = miptex.width * miptex.height;
 
-		pic8 = (byte *)malloc( c );
+		pic8 = (byte *)Z_Malloc( c );
 
 		fread( pic8, 1, c, wadhandle );
 
-		pic32 = (byte *)malloc( c * 3 );
+		pic32 = (byte *)Z_Malloc( c * 3 );
 
 		for ( int32 pixel = 0; pixel < ( c * 3 ); pixel += 3 )
 		{
@@ -216,7 +209,7 @@ void GL_ExtractWad_f()
 			pic32[pixel + 2] = palette[pic8[pixel + 2]];
 		}
 
-		free( pic8 );
+		Z_Free( pic8 );
 
 		char outname[MAX_QPATH];
 		Q_sprintf_s( outname, "%s/textures/%s/%s.tga", FS_Gamedir(), wadbase, wadlumps[i].name );
@@ -233,7 +226,7 @@ void GL_ExtractWad_f()
 			Com_Printf( "Failed to write %s\n", outname );
 		}
 
-		free( pic32 );
+		Z_Free( pic32 );
 
 		Q_sprintf_s( outname, "%s/textures/%s/%s.was", FS_Gamedir(), wadbase, wadlumps[i].name );
 
@@ -260,7 +253,7 @@ void GL_ExtractWad_f()
 
 	}
 
-	free( wadlumps );
+	Z_Free( wadlumps );
 	fclose( wadhandle );
 }
 
@@ -282,7 +275,7 @@ byte *LoadWAL(const byte *pBuffer, int nBufLen, int &width, int &height)
 	int c = width * height;
 
 	byte *pPic8 = (byte *)pMipTex + pMipTex->offsets[0];
-	uint *pPic32 = (uint *)malloc(c * 4);
+	uint *pPic32 = (uint *)Z_Malloc(c * 4);
 
 	for (int i = 0; i < c; ++i)
 	{
@@ -327,7 +320,7 @@ void GL_UpgradeWals_f()
 		int length = ftell( handle );
 		fseek( handle, 0, SEEK_SET );
 
-		byte *file = (byte *)malloc( length );
+		byte *file = (byte *)Z_Malloc( length );
 
 		fread( file, 1, length, handle );
 
@@ -335,15 +328,18 @@ void GL_UpgradeWals_f()
 
 		int width, height;
 		byte *data = LoadWAL( file, length, width, height );
-		free( file );
+		Z_Free( file );
 
 		char tempname[MAX_QPATH];
 		Q_strcpy_s( tempname, str );
-		strcpy( strstr( tempname, ".wal" ), ".tga" );
+		strcpy( strstr( tempname, ".wal" ), ".png" );
 
-	//	stbi_write_tga( tempname, width, height, 4, data );
+		handle = fopen( tempname, "wb" );
+		assert( handle );
+		img::WritePNG( width, height, true, data, handle );
+		fclose( handle );
 
-		free( data );
+		Z_Free( data );
 	}
 
 	Sys_FindClose();
