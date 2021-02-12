@@ -172,11 +172,11 @@ Called for important messages that should stay in the center of the screen
 for a few moments
 ==============
 */
-void SCR_CenterPrint (char *str)
+void SCR_CenterPrint (const char *str)
 {
-	char	*s;
-	char	line[64];
-	int		i, j, l;
+	const char	*s;
+	char		line[64];
+	int			i, j, l;
 
 	Q_strcpy_s (scr_centerstring, str);
 	scr_centertime_off = scr_centertime->value;

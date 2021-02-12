@@ -938,7 +938,6 @@ and right after spawning
 void ClientEndServerFrame (edict_t *ent)
 {
 	float	bobtime;
-	int		i;
 
 	current_player = ent;
 	current_client = ent->client;

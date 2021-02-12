@@ -413,8 +413,13 @@ void SV_Map (qboolean attractloop, char *levelstring, qboolean loadgame)
 		spawnpoint[0] = 0;
 
 	// skip the end-of-unit flag if necessary
-	if (level[0] == '*')
-		strcpy (level, level+1);
+	if ( level[0] == '*' ) {
+		// Slart: This was pointed out by Address Sanitizer
+		// level overlaps, which should be fine? Right?
+		// Doing this for now
+		memmove( level, level + 1, strlen( level ) );
+	//	strcpy( level, level + 1 );
+	}
 
 	l = strlen(level);
 	if (l > 4 && !Q_strcmp (level+l-4, ".cin") )

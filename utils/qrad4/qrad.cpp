@@ -28,7 +28,7 @@ char		inbase[32], outbase[32];
 
 int			fakeplanes;					// created planes for origin offset 
 
-int			numbounce = 8;
+int			numbounce = 64;
 qboolean	extrasamples;
 
 float	subdiv = 64;
@@ -36,14 +36,14 @@ float	subdiv = 64;
 float	ambient = 0;
 float	maxlight = 196;
 
-float	lightscale = 1.0;
+float	lightscale = 1.0f;
 
 qboolean	nopvs;
 
 char		source[1024];
 
-float	direct_scale =	0.4;
-float	entity_scale =	1.0;
+float	direct_scale =	0.4f;
+float	entity_scale =	1.0f;
 
 /*
 ===================================================================
@@ -474,12 +474,12 @@ light modelfile
 int main (int argc, char **argv)
 {
 	int		i;
-	double		start, end;
-	char		name[1024];
+	double	start, end;
+	char	name[1024];
 
-	printf ("----- Radiosity ----\n");
+	printf ("----- lunar qrad ----\n");	
 
-	verbose = false;
+	Time_Init();
 
 	for (i=1 ; i<argc ; i++)
 	{
@@ -509,18 +509,18 @@ int main (int argc, char **argv)
 		}
 		else if (!strcmp(argv[i],"-scale"))
 		{
-			lightscale = atof (argv[i+1]);
+			lightscale = (float)atof (argv[i+1]);
 			i++;
 		}
 		else if (!strcmp(argv[i],"-direct"))
 		{
-			direct_scale *= atof(argv[i+1]);
+			direct_scale *= (float)atof(argv[i+1]);
 			printf ("direct light scaling at %f\n", direct_scale);
 			i++;
 		}
 		else if (!strcmp(argv[i],"-entity"))
 		{
-			entity_scale *= atof(argv[i+1]);
+			entity_scale *= (float)atof(argv[i+1]);
 			printf ("entity light scaling at %f\n", entity_scale);
 			i++;
 		}
@@ -531,12 +531,12 @@ int main (int argc, char **argv)
 		}
 		else if (!strcmp(argv[i],"-ambient"))
 		{
-			ambient = atof (argv[i+1]) * 128;
+			ambient = (float)(atof (argv[i+1]) * 128);
 			i++;
 		}
 		else if (!strcmp(argv[i],"-maxlight"))
 		{
-			maxlight = atof (argv[i+1]) * 128;
+			maxlight = (float)(atof (argv[i+1]) * 128);
 			i++;
 		}
 		else if (!strcmp (argv[i],"-tmpin"))
@@ -574,7 +574,7 @@ int main (int argc, char **argv)
 	{
 		printf ("No vis information, direct lighting only.\n");
 		numbounce = 0;
-		ambient = 0.1;
+		ambient = 0.1f;
 	}
 
 	RadWorld ();

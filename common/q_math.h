@@ -133,6 +133,13 @@ inline void VectorSet(vec3_t v, float x, float y, float z)
 	v[2] = z;
 }
 
+inline void VectorSetAll(vec3_t v, float f)
+{
+	v[0] = f;
+	v[1] = f;
+	v[2] = f;
+}
+
 inline void VectorMA(const vec3_t veca, float scale, const vec3_t vecb, vec3_t vecc)
 {
 	vecc[0] = veca[0] + scale * vecb[0];

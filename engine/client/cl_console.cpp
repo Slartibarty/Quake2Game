@@ -422,6 +422,8 @@ Con_DrawInput
 The input line scrolls horizontally if typing goes beyond the right edge
 ================
 */
+#if 0
+// New WIP version
 void Con_DrawInput (void)
 {
 	int		i;
@@ -448,8 +450,43 @@ void Con_DrawInput (void)
 
 // add the cursor frame
 	if ( (int)( cls.realtime >> 8 ) & 1 )
-		R_DrawChar ( con.xadjust + (key_linepos+1)*CONCHAR_WIDTH, con.vislines - (CONCHAR_HEIGHT*2), 10);
+		R_DrawChar ( con.xadjust + (key_linepos+1)*CONCHAR_WIDTH, con.vislines - (CONCHAR_HEIGHT*2), 11);
 }
+#else
+void Con_DrawInput (void)
+{
+	int		y;
+	int		i;
+	char	*text;
+
+	if (cls.key_dest == key_menu)
+		return;
+	if (cls.key_dest != key_console && cls.state == ca_active)
+		return;		// don't draw anything (always draw if not active)
+
+	text = key_lines[edit_line];
+	
+// add the cursor frame
+	text[key_linepos] = 10+((int)(cls.realtime>>8)&1);
+	
+// fill out remainder with spaces
+	for (i=key_linepos+1 ; i< con.linewidth ; i++)
+		text[i] = ' ';
+		
+//	prestep if horizontally scrolling
+	if (key_linepos >= con.linewidth)
+		text += 1 + key_linepos - con.linewidth;
+		
+// draw it
+	y = con.vislines-16;
+
+	for (i=0 ; i<con.linewidth ; i++)
+		R_DrawChar ( con.xadjust + (i+1)*CONCHAR_WIDTH, con.vislines - (CONCHAR_HEIGHT*2), text[i]);
+
+// remove cursor
+	key_lines[edit_line][key_linepos] = 0;
+}
+#endif
 
 
 /*
@@ -530,13 +567,12 @@ Draws the console with the solid background
 */
 void Con_DrawConsole (float frac)
 {
-	int				i, x, y, n;
+	int				i, x, y;
 	int				rows;
 	char			*text;
 	int				row;
 	int				lines;
 	char			version[64];
-	char			dlbar[1024];
 
 	lines = (int)(viddef.height * frac);
 	if (lines <= 0)
@@ -592,6 +628,8 @@ void Con_DrawConsole (float frac)
 
 //ZOID
 #if 0
+	int n;
+	char dlbar[1024];
 	// draw the download bar
 	// figure out width
 	if (cls.download) {

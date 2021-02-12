@@ -209,7 +209,7 @@ void TriEdge_r (triangulation_t *trian, triedge_t *e)
 	// find the point with the best angle
 	p0 = trian->points[e->p0]->origin;
 	p1 = trian->points[e->p1]->origin;
-	best = 1.1;
+	best = 1.1f;
 	for (i=0 ; i< trian->numpoints ; i++)
 	{
 		p = trian->points[i]->origin;
@@ -846,7 +846,7 @@ void CreateDirectLights (void)
 			dl->stopdot = FloatForKey (e, "_cone");
 			if (!dl->stopdot)
 				dl->stopdot = 10;
-			dl->stopdot = cos(dl->stopdot/180*3.14159);
+			dl->stopdot = cos(RAD2DEG(dl->stopdot));
 			if (target[0])
 			{	// point towards target
 				e2 = FindTargetEntity (target);
@@ -876,8 +876,8 @@ void CreateDirectLights (void)
 				else
 				{
 					dl->normal[2] = 0;
-					dl->normal[0] = cos (angle/180*3.14159);
-					dl->normal[1] = sin (angle/180*3.14159);
+					dl->normal[0] = cos (RAD2DEG(angle));
+					dl->normal[1] = sin (RAD2DEG(angle));
 				}
 			}
 		}
@@ -1084,7 +1084,7 @@ void BuildFacelights (int facenum)
 		for (j=0 ; j<numsamples ; j++)
 		{
 			GatherSampleLight (l[j].surfpt[i], l[0].facenormal, styletable,
-				i*3, tablesize, 1.0/numsamples);
+				i*3, tablesize, 1.0f/numsamples);
 		}
 
 		// contribute the sample to one or more patches
@@ -1096,7 +1096,7 @@ void BuildFacelights (int facenum)
 	{
 		if (patch->samples)
 		{
-			VectorScale (patch->samplelight, 1.0/patch->samples, patch->samplelight);
+			VectorScale (patch->samplelight, 1.0f/patch->samples, patch->samplelight);
 		}
 		else
 		{

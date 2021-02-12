@@ -581,8 +581,10 @@ cmodel_t *CM_LoadMap (const char *name, bool clientload, unsigned *checksum)
 	*checksum = last_checksum;
 
 	header = (dheader_t *)buf;
+#if 0 // Address Sanitizer aborts at this line
 	for (i=0 ; i<sizeof(dheader_t)/4 ; i++)
 		((int *)&header)[i] = LittleLong ( ((int *)&header)[i]);
+#endif
 
 	if (header->version != BSPVERSION)
 		Com_Error (ERR_DROP, "CMod_LoadBrushModel: %s has wrong version number (%i should be %i)"

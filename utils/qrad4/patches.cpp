@@ -9,7 +9,16 @@
 #define STBI_NO_FAILURE_STRINGS
 #include "stb_image.h"
 
-vec3_t texture_reflectivity[MAX_MAP_TEXINFO];
+// A binary material
+struct materialref_t
+{
+	texinfo_t	*ltexinfo;
+	vec3_t		reflectivity;
+	vec3_t		color;
+	int			intensity;
+};
+
+materialref_t *g_materialrefs;
 
 /*
 ===================================================================
@@ -20,49 +29,126 @@ vec3_t texture_reflectivity[MAX_MAP_TEXINFO];
 */
 
 /*
+===================
+ParseColorVector
+===================
+*/
+void ParseColorVector( char *data, vec3_t color )
+{
+	char tokenhack[MAX_TOKEN_CHARS];
+	char *token = tokenhack;
+	int i;
+
+	COM_Parse2( &data, &token, sizeof( tokenhack ) );
+
+	// Parse until the end baby
+	for ( i = 0; i < 3 && data; ++i )
+	{
+		color[i] = atoi( token );
+
+		COM_Parse2( &data, &token, sizeof( tokenhack ) );
+	}
+}
+
+/*
+===================
+ParseMaterial
+===================
+*/
+void ParseMaterial( char *data, materialref_t &matref, char *basetexture, strlen_t len, bool &hascolor )
+{
+	char tokenhack[MAX_TOKEN_CHARS];
+	char *token = tokenhack;
+
+	COM_Parse2( &data, &token, sizeof( tokenhack ) );
+	if ( token[0] != '{' )
+	{
+		// Malformed
+		Error( "Malformed material %s\n", matref.ltexinfo->texture );
+	}
+
+	COM_Parse2( &data, &token, sizeof( tokenhack ) );
+
+	for ( ; token[0] != '}'; COM_Parse2( &data, &token, sizeof( tokenhack ) ) )
+	{
+		if ( Q_strcmp( token, "$basetexture" ) == 0 )
+		{
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
+			Q_sprintf_s( basetexture, len, "%s%s", gamedir, token );
+			continue;
+		}
+		if ( Q_strcmp( token, "%rad_color" ) == 0 )
+		{
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
+			ParseColorVector( token, matref.color );
+			hascolor = true;
+			continue;
+		}
+		if ( Q_strcmp( token, "%rad_intensity" ) == 0 )
+		{
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
+			matref.intensity = atoi( token );
+			continue;
+		}
+	}
+}
+
+/*
 ======================
 CalcTextureReflectivity
+
+Loads all materials and fills out g_materialrefs
 ======================
 */
-void CalcTextureReflectivity (void)
+void CalcTextureReflectivity()
 {
-#if 1
-	int			i, j;
-	char		path[1024];
-	byte		*image;
-	int			width, height, texels;
+	int i, j;
+	char basetexture[MAX_OSPATH];
+	char materialpath[MAX_OSPATH];
+	char *matdata;
+	byte *imagedata;
+	int width, height;
+	bool hascolor = false;	// True if the material has %rad_color set
 
-	int			color[3];
-	float		scale;
+	int texels;
+	int color[3];
 
-	// always set index 0 even if no textures
-	texture_reflectivity[0][0] = 0.5f;
-	texture_reflectivity[0][1] = 0.5f;
-	texture_reflectivity[0][2] = 0.5f;
+	// NEVER FREED!!!
+	g_materialrefs = (materialref_t *)malloc( sizeof( materialref_t ) * numtexinfo );
 
 	for ( i = 0; i < numtexinfo; ++i )
 	{
-		// see if an earlier texinfo allready got the value
-		for ( j = 0; j < i; j++ )
-		{
-			if ( !strcmp( texinfo[i].texture, texinfo[j].texture ) )
-			{
-				VectorCopy( texture_reflectivity[j], texture_reflectivity[i] );
-				break;
-			}
-		}
-		if ( j != i )
-			continue;
+		materialref_t &matref = g_materialrefs[i];
 
-		// load the wal file
-		sprintf( path, "%stextures/%s.tga", gamedir, texinfo[i].texture );
-		image = stbi_load( path, &width, &height, NULL, 3 );
-		if ( !image )
+		matref.ltexinfo = &texinfo[i];
+		// Set up defaults
+		VectorSetAll( matref.reflectivity, 0.5f );
+		VectorSetAll( matref.color, 1.0f );
+		matref.intensity = 0;
+		// Intensity of 0 means no light
+
+		// Load the material
+		Q_sprintf_s( materialpath, "%smaterials/%s.mat", gamedir, matref.ltexinfo->texture );
+		if ( !TryLoadFile( materialpath, (void **)&matdata ) )
 		{
-			printf( "Couldn't load %s\n", texinfo[i].texture );
-			texture_reflectivity[i][0] = 0.5f;
-			texture_reflectivity[i][1] = 0.5f;
-			texture_reflectivity[i][2] = 0.5f;
+			printf( "Couldn't load material %s\n", matref.ltexinfo->texture );
+			continue;
+		}
+
+		ParseMaterial( matdata, matref, basetexture, sizeof( basetexture ), hascolor );
+		free( matdata );
+
+		// No basetexture entry
+		if ( !basetexture[0] )
+		{
+			printf( "%s has no basetexture!\n", matref.ltexinfo->texture );
+			continue;
+		}
+
+		imagedata = stbi_load( basetexture, &width, &height, NULL, 3 );
+		if ( !imagedata )
+		{
+			printf( "Couldn't load basetexture for %s\n", matref.ltexinfo->texture );
 			continue;
 		}
 
@@ -71,16 +157,25 @@ void CalcTextureReflectivity (void)
 
 		for ( j = 0; j < texels; ++j )
 		{
-			color[0] += image[j+0];
-			color[1] += image[j+1];
-			color[2] += image[j+2];
+			color[0] += imagedata[j + 0];
+			color[1] += imagedata[j + 1];
+			color[2] += imagedata[j + 2];
 		}
 
-		texture_reflectivity[i][0] = color[0] / texels / 255.0f;
-		texture_reflectivity[i][1] = color[1] / texels / 255.0f;
-		texture_reflectivity[i][2] = color[2] / texels / 255.0f;
+		free( imagedata );
 
-#if 1
+		// Convert to 0.0 - 1.0
+		matref.reflectivity[0] = (float)( color[0] / texels ) / 255.0f;
+		matref.reflectivity[1] = (float)( color[1] / texels ) / 255.0f;
+		matref.reflectivity[2] = (float)( color[2] / texels ) / 255.0f;
+
+		// No color and we're lighting the world? Make the colour the reflectivity
+		if ( !hascolor && matref.intensity != 0 )
+		{
+			VectorCopy( matref.reflectivity, matref.color );
+		}
+
+#if 0
 		// scale the reflectivity up, because the textures are
 		// so dim
 		scale = ColorNormalize( texture_reflectivity[i], texture_reflectivity[i] );
@@ -90,15 +185,11 @@ void CalcTextureReflectivity (void)
 			VectorScale( texture_reflectivity[i], scale, texture_reflectivity[i] );
 		}
 #endif
+
+		Com_DPrintf( "matref %d (%s) avg rgb [ %f, %f, %f ]\n",
+			i, matref.ltexinfo->texture, matref.reflectivity[0],
+			matref.reflectivity[1], matref.reflectivity[2] );
 	}
-#else
-	for ( int i = 0; i < numtexinfo; ++i )
-	{
-		texture_reflectivity[i][0] = 0.5f;
-		texture_reflectivity[i][1] = 0.5f;
-		texture_reflectivity[i][2] = 0.5f;
-	}
-#endif
 }
 
 /*
@@ -147,21 +238,20 @@ winding_t	*WindingFromFace (dface_t *f)
 BaseLightForFace
 =============
 */
-void BaseLightForFace (dface_t *f, vec3_t color)
+void BaseLightForFace( dface_t *f, vec3_t color )
 {
-	texinfo_t	*tx;
-
 	//
 	// check for light emited by texture
 	//
-	tx = &texinfo[f->texinfo];
-	if (!(tx->flags & SURF_LIGHT) || tx->value == 0)
+	materialref_t &matref = g_materialrefs[f->texinfo];
+	if ( matref.intensity == 0 )
 	{
-		VectorClear (color);
+		// No light
+		VectorClear( color );
 		return;
 	}
 
-	VectorScale (texture_reflectivity[f->texinfo], tx->value, color);
+	VectorScale( matref.color, matref.intensity, color );
 }
 
 qboolean IsSky (dface_t *f)
@@ -231,7 +321,7 @@ void MakePatchForFace (int fn, winding_t *w)
 		patch->area = 1;
 	patch->sky = IsSky (f);
 
-	VectorCopy (texture_reflectivity[f->texinfo], patch->reflectivity);
+	VectorCopy (g_materialrefs[f->texinfo].reflectivity, patch->reflectivity);
 
 	// non-bmodel patches can emit light
 	if (fn < dmodels[0].numfaces)
@@ -255,12 +345,12 @@ entity_t *EntityForModel (int modnum)
 	char	*s;
 	char	name[16];
 
-	sprintf (name, "*%i", modnum);
+	Q_sprintf (name, "*%d", modnum);
 	// search the entities for one using modnum
 	for (i=0 ; i<num_entities ; i++)
 	{
 		s = ValueForKey (&entities[i], "model");
-		if (!strcmp (s, name))
+		if (Q_strcmp (s, name) == 0)
 			return &entities[i];
 	}
 
@@ -398,7 +488,7 @@ void	SubdividePatch (patch_t *patch)
 	//
 	VectorCopy (vec3_origin, split);
 	split[i] = 1;
-	dist = (mins[i] + maxs[i])*0.5;
+	dist = (mins[i] + maxs[i])*0.5f;
 	ClipWindingEpsilon (w, split, dist, ON_EPSILON, &o1, &o2);
 
 	//
