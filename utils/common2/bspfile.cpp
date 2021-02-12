@@ -60,8 +60,6 @@ darea_t		dareas[MAX_MAP_AREAS];
 int			numareaportals;
 dareaportal_t	dareaportals[MAX_MAP_AREAPORTALS];
 
-byte		dpop[256];
-
 /*
 ===============
 CompressVis
@@ -388,8 +386,6 @@ void	LoadBSPFile (char *filename)
 	lightdatasize = CopyLump (LUMP_LIGHTING, dlightdata, 1);
 	entdatasize = CopyLump (LUMP_ENTITIES, dentdata, 1);
 
-	CopyLump (LUMP_POP, dpop, 1);
-
 	free (header);		// everything has been copied out
 		
 //
@@ -497,7 +493,6 @@ void	WriteBSPFile (char *filename)
 	AddLump (LUMP_LIGHTING, dlightdata, lightdatasize);
 	AddLump (LUMP_VISIBILITY, dvisdata, visdatasize);
 	AddLump (LUMP_ENTITIES, dentdata, entdatasize);
-	AddLump (LUMP_POP, dpop, sizeof(dpop));
 	
 	fseek (wadfile, 0, SEEK_SET);
 	SafeWrite (wadfile, header, sizeof(dheader_t));

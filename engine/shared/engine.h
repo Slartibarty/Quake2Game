@@ -69,10 +69,6 @@
 // Misc
 //-------------------------------------------------------------------------------------------------
 
-#define	ERR_FATAL	0		// exit the entire game with a popup window
-#define	ERR_DROP	1		// print to console and disconnect from game
-#define	ERR_QUIT	2		// not an error, just a normal exit
-
 #define	EXEC_NOW	0		// don't return until completed
 #define	EXEC_INSERT	1		// insert at current position, but don't run yet
 #define	EXEC_APPEND	2		// add to end of the command buffer

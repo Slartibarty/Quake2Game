@@ -57,8 +57,6 @@ extern	dbrush_t	dbrushes[MAX_MAP_BRUSHES];
 extern	int			numbrushsides;
 extern	dbrushside_t	dbrushsides[MAX_MAP_BRUSHSIDES];
 
-extern	byte		dpop[256];
-
 void DecompressVis (byte *in, byte *decompressed);
 int CompressVis (byte *vis, byte *dest);
 
