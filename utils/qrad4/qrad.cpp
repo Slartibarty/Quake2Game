@@ -37,6 +37,7 @@ float	ambient = 0;
 float	maxlight = 196;
 
 float	lightscale = 1.0f;
+float	g_smoothing_threshold;
 
 qboolean	nopvs;
 
@@ -477,7 +478,9 @@ int main (int argc, char **argv)
 	double	start, end;
 	char	name[1024];
 
-	printf ("----- lunar radiosity ----\n");	
+	printf ("----- lunar radiosity ----\n");
+
+	g_smoothing_threshold = cos( DEG2RAD( 50.0f ) );
 
 	Time_Init();
 
@@ -538,6 +541,11 @@ int main (int argc, char **argv)
 		{
 			maxlight = (float)(atof (argv[i+1]) * 128);
 			i++;
+		}
+		else if (!strcmp( argv[i], "-smooth"))
+		{
+			++i;
+			g_smoothing_threshold = cos( DEG2RAD( (float)atof( argv[i] ) ) );
 		}
 		else if (!strcmp (argv[i],"-tmpin"))
 			strcpy (inbase, "/tmp");

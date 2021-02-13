@@ -2,11 +2,11 @@
 
 #define	MAX_LSTYLES	256
 
-typedef struct
+struct edgeshare_t
 {
 	dface_t		*faces[2];
-	qboolean	coplanar;
-} edgeshare_t;
+	bool		coplanar;
+};
 
 edgeshare_t	edgeshare[MAX_MAP_EDGES];
 
@@ -138,7 +138,7 @@ void FreeTriangulation (triangulation_t *tr)
 }
 
 
-triedge_t	*FindEdge (triangulation_t *trian, int p0, int p1)
+triedge_t *FindEdge (triangulation_t *trian, int p0, int p1)
 {
 	triedge_t	*e, *be;
 	vec3_t		v1;
@@ -177,7 +177,7 @@ triedge_t	*FindEdge (triangulation_t *trian, int p0, int p1)
 	return e;
 }
 
-triangle_t	*AllocTriangle (triangulation_t *trian)
+triangle_t *AllocTriangle (triangulation_t *trian)
 {
 	triangle_t	*t;
 
@@ -305,7 +305,7 @@ void AddPointToTriangulation (patch_t *patch, triangulation_t *trian)
 LerpTriangle
 ===============
 */
-void	LerpTriangle (triangulation_t *trian, triangle_t *t, vec3_t point, vec3_t color)
+void LerpTriangle (triangulation_t *trian, triangle_t *t, vec3_t point, vec3_t color)
 {
 	patch_t		*p1, *p2, *p3;
 	vec3_t		base, d1, d2;
@@ -490,8 +490,7 @@ void CalcFaceExtents (lightinfo_t *l)
 
 	s = l->face;
 
-	mins[0] = mins[1] = 999999;
-	maxs[0] = maxs[1] = -99999;
+	ClearBounds( mins, maxs );
 
 	tex = &texinfo[s->texinfo];
 	
@@ -527,7 +526,7 @@ void CalcFaceExtents (lightinfo_t *l)
 		l->texmins[i] = mins[i];
 		l->texsize[i] = maxs[i] - mins[i];
 		if (l->texsize[0] * l->texsize[1] > SINGLEMAP/4)	// div 4 for extrasamples
-			Error ("Surface to large to map");
+			Error ("Surface too large to map");
 	}
 }
 
@@ -921,7 +920,7 @@ void GatherSampleLight (vec3_t pos, vec3_t normal,
 			VectorSubtract (l->origin, pos, delta);
 			dist = VectorNormalize (delta);
 			dot = DotProduct (delta, normal);
-			if (dot <= 0.001)
+			if (dot <= 0.001f)
 				continue;	// behind sample surface
 
 			switch (l->type)
@@ -1022,7 +1021,7 @@ nextpatch:;
 BuildFacelights
 =============
 */
-float	sampleofs[5][2] = 
+static const float sampleofs[5][2] = 
 {  {0,0}, {-0.25, -0.25}, {0.25, -0.25}, {0.25, 0.25}, {-0.25, 0.25} };
 
 

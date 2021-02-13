@@ -77,6 +77,7 @@ extern	int		leafparents[MAX_MAP_LEAFS];
 extern	int		nodeparents[MAX_MAP_NODES];
 
 extern	float	lightscale;
+extern	float	g_smoothing_threshold;
 
 //==============================================
 
