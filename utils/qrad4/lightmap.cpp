@@ -90,7 +90,7 @@ typedef struct triangle_s
 	triedge_t	*edges[3];
 } triangle_t;
 
-#define	MAX_TRI_POINTS		1024
+#define	MAX_TRI_POINTS		2048
 #define	MAX_TRI_EDGES		(MAX_TRI_POINTS*6)
 #define	MAX_TRI_TRIS		(MAX_TRI_POINTS*2)
 
@@ -490,7 +490,8 @@ void CalcFaceExtents (lightinfo_t *l)
 
 	s = l->face;
 
-	ClearBounds( mins, maxs );
+	mins[0] = mins[1] = 99999.0f;
+	maxs[0] = maxs[1] = -99999.0f;
 
 	tex = &texinfo[s->texinfo];
 	
@@ -742,8 +743,7 @@ entity_t *FindTargetEntity (char *target)
 	return NULL;
 }
 
-//#define	DIRECT_LIGHT	3000
-#define	DIRECT_LIGHT	3
+#define	DIRECT_LIGHT	1.0f	// 3 // 3000
 
 /*
 =============
@@ -768,8 +768,10 @@ void CreateDirectLights (void)
 	//
 	// surfaces
 	//
-	for (i=0, p=patches ; i<num_patches ; i++, p++)
+	for (i=0 ; i<(int)g_patches.size() ; i++)
 	{
+		p = &g_patches[i];
+
 		if (p->totallight[0] < DIRECT_LIGHT
 			&& p->totallight[1] < DIRECT_LIGHT
 			&& p->totallight[2] < DIRECT_LIGHT)

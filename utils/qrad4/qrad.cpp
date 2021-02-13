@@ -13,13 +13,23 @@ every surface must be divided into at least two patches each axis
 
 */
 
+// Yeah, okay, cool, thanks
+struct vec3hack_t
+{
+	vec3_t data;
+
+	float operator[]( int i )
+	{
+		return data[i];
+	}
+};
+
+std::vector<patch_t> g_patches;
 patch_t		*face_patches[MAX_MAP_FACES];
 entity_t	*face_entity[MAX_MAP_FACES];
-patch_t		patches[MAX_PATCHES];
-unsigned	num_patches;
 
-vec3_t		radiosity[MAX_PATCHES];		// light leaving a patch
-vec3_t		illumination[MAX_PATCHES];	// light arriving at a patch
+std::vector<vec3hack_t> g_radiosity;		// light leaving a patch
+std::vector<vec3hack_t> g_illumination;		// light arriving at a patch
 
 vec3_t		face_offset[MAX_MAP_FACES];		// for rotating bmodels
 dplane_t	backplanes[MAX_MAP_PLANES];
@@ -34,7 +44,7 @@ qboolean	extrasamples;
 float	subdiv = 64;
 
 float	ambient = 0;
-float	maxlight = 196;
+float	maxlight = 255;
 
 float	lightscale = 1.0f;
 float	g_smoothing_threshold;
@@ -176,13 +186,13 @@ void MakeTransfers (int i)
 	float		total;
 	dplane_t	plane;
 	vec3_t		origin;
-	float		transfers[MAX_PATCHES], *all_transfers;
+	float		*transfers, *all_transfers;
 	int			s;
 	int			itotal;
 	byte		pvs[(MAX_MAP_LEAFS+7)/8];
 	int			cluster;
 
-	patch = patches + i;
+	patch = &g_patches[i];
 	total = 0;
 
 	VectorCopy (patch->origin, origin);
@@ -194,10 +204,16 @@ void MakeTransfers (int i)
 	// find out which patch2s will collect light
 	// from patch
 
+	transfers = (float *)malloc( g_patches.size() * sizeof( float ) );
+	if ( !transfers )
+		Error( "Memory allocation failure" );
+
 	all_transfers = transfers;
 	patch->numtransfers = 0;
-	for (j=0, patch2 = patches ; j<num_patches ; j++, patch2++)
+	for (j=0; j<(int)g_patches.size(); j++)
 	{
+		patch2 = &g_patches[j];
+
 		transfers[j] = 0;
 
 		if (j == i)
@@ -264,7 +280,7 @@ void MakeTransfers (int i)
 		//
 		t = patch->transfers;
 		itotal = 0;
-		for (j=0 ; j<num_patches ; j++)
+		for (j=0 ; j<(int)g_patches.size() ; j++)
 		{
 			if (transfers[j] <= 0)
 				continue;
@@ -275,6 +291,8 @@ void MakeTransfers (int i)
 			t++;
 		}
 	}
+
+	free( transfers );
 
 	// don't bother locking around this.  not that important.
 	total_transfer += patch->numtransfers;
@@ -290,10 +308,10 @@ void FreeTransfers (void)
 {
 	int		i;
 
-	for (i=0 ; i<num_patches ; i++)
+	for (i=0 ; i<g_patches.size() ; i++)
 	{
-		free (patches[i].transfers);
-		patches[i].transfers = NULL;
+		free (g_patches[i].transfers);
+		g_patches[i].transfers = NULL;
 	}
 }
 
@@ -306,29 +324,31 @@ CollectLight
 */
 static void CollectLight( vec3_t &added )
 {
-	int		i, j;
-	patch_t *patch;
+	size_t i;
+	int j;
 
 	VectorClear( added );
 
-	for ( i = 0, patch = patches; i < num_patches; i++, patch++ )
+	for ( i = 0; i < g_patches.size(); i++ )
 	{
+		patch_t *patch = &g_patches[i];
+
 		// skys never collect light, it is just dropped
 		if ( patch->sky )
 		{
-			VectorClear( radiosity[i] );
-			VectorClear( illumination[i] );
+			VectorClear( g_radiosity[i].data );
+			VectorClear( g_illumination[i].data );
 			continue;
 		}
 
 		for ( j = 0; j < 3; j++ )
 		{
-			patch->totallight[j] += illumination[i][j] / patch->area;
-			radiosity[i][j] = illumination[i][j] * patch->reflectivity[j];
+			patch->totallight[j] += g_illumination[i][j] / patch->area;
+			g_radiosity[i].data[j] = g_illumination[i].data[j] * patch->reflectivity[j];
 		}
 		
-		VectorAdd( added, radiosity[i], added );
-		VectorClear( illumination[i] );
+		VectorAdd( added, g_radiosity[i].data, added );
+		VectorClear( g_illumination[i].data );
 	}
 }
 
@@ -352,8 +372,8 @@ static void ShootLight( int patchnum )
 	// prescale it so that multiplying by the 16 bit
 	// transfer values gives a proper output value
 	for ( k = 0; k < 3; k++ )
-		send[k] = radiosity[patchnum][k] / 0x10000;
-	patch = &patches[patchnum];
+		send[k] = g_radiosity[patchnum][k] / 0x10000;
+	patch = &g_patches[patchnum];
 
 	trans = patch->transfers;
 	num = patch->numtransfers;
@@ -361,7 +381,7 @@ static void ShootLight( int patchnum )
 	for ( k = 0; k < num; k++, trans++ )
 	{
 		for ( l = 0; l < 3; l++ )
-			illumination[trans->patch][l] += send[l] * trans->transfer;
+			g_illumination[trans->patch].data[l] += send[l] * trans->transfer;
 	}
 }
 
@@ -377,21 +397,21 @@ static void BounceLight()
 	patch_t *p;
 	bool	bouncing = numbounce > 0;
 
-	for ( i = 0; i < num_patches; i++ )
+	for ( i = 0; i < (int)g_patches.size(); i++ )
 	{
-		p = &patches[i];
+		p = &g_patches[i];
 		for ( j = 0; j < 3; j++ )
 		{
-			radiosity[i][j] = p->samplelight[j] * p->reflectivity[j] * p->area;
+			g_radiosity[i].data[j] = p->samplelight[j] * p->reflectivity[j] * p->area;
 		}
 	}
 
 	for ( i = 0; bouncing; i++ )
 	{
-		RunThreadsOnIndividual( num_patches, false, ShootLight );
+		RunThreadsOnIndividual( (int)g_patches.size(), false, ShootLight );
 		CollectLight( added );
 
-		qprintf( "\tBounce #%d added RGB(%.0f, %.0f, %.0f)\n", i + 1, added[0], added[1], added[2] );
+		qprintf( "\tBounce #%d added RGB(%.0f, %.0f, %.0f)\n", i + 1, added[0], added[1], added[2] ); // DIRECT_LIGHT
 
 		if ( i + 1 == numbounce || ( added[0] < 1.0f && added[1] < 1.0f && added[2] < 1.0f ) )
 			bouncing = false;
@@ -402,12 +422,12 @@ static void BounceLight()
 
 void CheckPatches (void)
 {
-	int		i;
-	patch_t	*patch;
+	size_t i;
+	patch_t *patch;
 
-	for (i=0 ; i<num_patches ; i++)
+	for (i=0 ; i<g_patches.size() ; i++)
 	{
-		patch = &patches[i];
+		patch = &g_patches[i];
 		if (patch->totallight[0] < 0 || patch->totallight[1] < 0 || patch->totallight[2] < 0)
 			Error ("negative patch totallight\n");
 	}
@@ -441,9 +461,13 @@ void RadWorld (void)
 	if (numbounce > 0)
 	{
 		// build transfer lists
-		RunThreadsOnIndividual (num_patches, true, MakeTransfers);
+		RunThreadsOnIndividual ((int)g_patches.size(), true, MakeTransfers);
 		qprintf ("transfer lists: %5.1f megs\n"
 		, (float)total_transfer * sizeof(transfer_t) / (1024*1024));
+
+		// allocate memory for g_radiosity/g_illumination
+		g_radiosity.resize( g_patches.size() );
+		g_illumination.resize( g_patches.size() );
 
 		// spread light around
 		BounceLight ();
@@ -477,7 +501,9 @@ int main (int argc, char **argv)
 
 	printf ("----- lunar radiosity ----\n");
 
-	g_smoothing_threshold = cos( DEG2RAD( 50.0f ) );
+	g_smoothing_threshold = cos( DEG2RAD( 45.0f ) );
+
+	g_patches.reserve( MIN_PATCHES );
 
 	Time_Init();
 

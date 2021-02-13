@@ -9,8 +9,6 @@
 #define STBI_NO_FAILURE_STRINGS
 #include "stb_image.h"
 
-#include <vector>
-
 // A binary material
 struct materialref_t
 {
@@ -298,14 +296,10 @@ MakePatchForFace
 float	totalarea;
 void MakePatchForFace (int fn, winding_t *w)
 {
-	dface_t *f;
-	float	area;
+	dface_t		*f;
+	float		area;
 	patch_t		*patch;
 	dplane_t	*pl;
-#if 0
-	int			i;
-	vec3_t		color;
-#endif
 	dleaf_t		*leaf;
 	materialref_t *matref;
 
@@ -314,9 +308,8 @@ void MakePatchForFace (int fn, winding_t *w)
 	area = WindingArea (w);
 	totalarea += area;
 
-	patch = &patches[num_patches];
-	if (num_patches == MAX_PATCHES)
-		Error ("num_patches == MAX_PATCHES");
+	patch = &g_patches.emplace_back();
+
 	patch->next = face_patches[fn];
 	face_patches[fn] = patch;
 
@@ -360,7 +353,10 @@ void MakePatchForFace (int fn, winding_t *w)
 		BaseLightForFace (matref, patch->baselight);
 
 #if 0 // We might want this? It has a neat effect? Maybe, need to test
-		ColorNormalize (patch->reflectivity, color);
+		int			i;
+		vec3_t		color;
+
+		ColorNormalize (patch.reflectivity, color);
 
 		for (i=0 ; i<3 ; i++)
 			patch->baselight[i] *= color[i];
@@ -368,7 +364,6 @@ void MakePatchForFace (int fn, winding_t *w)
 
 		VectorCopy (patch->baselight, patch->totallight);
 	}
-	num_patches++;
 }
 
 
@@ -526,10 +521,7 @@ void	SubdividePatch (patch_t *patch)
 	//
 	// create a new patch
 	//
-	if (num_patches == MAX_PATCHES)
-		Error ("MAX_PATCHES");
-	newp = &patches[num_patches];
-	num_patches++;
+	newp = &g_patches.emplace_back();
 
 	newp->next = patch->next;
 	patch->next = newp;
@@ -574,7 +566,7 @@ void	DicePatch (patch_t *patch)
 	//
 	// split the winding
 	//
-	VectorCopy (vec3_origin, split);
+	VectorClear( split );
 	split[i] = 1;
 	dist = subdiv*(1+floor((mins[i]+1)/subdiv));
 	ClipWindingEpsilon (w, split, dist, ON_EPSILON, &o1, &o2);
@@ -582,10 +574,7 @@ void	DicePatch (patch_t *patch)
 	//
 	// create a new patch
 	//
-	if (num_patches == MAX_PATCHES)
-		Error ("MAX_PATCHES");
-	newp = &patches[num_patches];
-	num_patches++;
+	newp = &g_patches.emplace_back();
 
 	newp->next = patch->next;
 	patch->next = newp;
@@ -607,18 +596,20 @@ SubdividePatches
 */
 void SubdividePatches (void)
 {
-	int		i, num;
+	size_t	i;
+	size_t	num;
 
 	if (subdiv < 1)
 		return;
 
-	num = num_patches;	// because the list will grow
+	num = g_patches.size(); // because the list will grow
 	for (i=0 ; i<num ; i++)
 	{
 //		SubdividePatch (&patches[i]);
-		DicePatch (&patches[i]);
+		DicePatch (&g_patches[i]);
 	}
-	qprintf ("%i patches after subdivision\n", num_patches);
+
+	qprintf ("%zu patches after subdivision\n", g_patches.size());
 }
 
 //=====================================================================

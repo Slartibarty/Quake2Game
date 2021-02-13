@@ -4,6 +4,9 @@
 #include "polylib.h"
 #include "threads.h"
 
+#include <vector>
+#include <climits>
+
 typedef enum
 {
 	emit_surface,
@@ -32,12 +35,13 @@ typedef struct directlight_s
 // reaches other patches
 typedef struct
 {
-	unsigned short	patch;
-	unsigned short	transfer;
+	int32	patch;
+	int32	transfer;
 } transfer_t;
 
 
-#define	MAX_PATCHES	65536			// larger will cause 32 bit overflows
+#define	MIN_PATCHES	65536			// we reserve this in main()
+#define	MAX_PATCHES	INT32_MAX
 
 typedef struct patch_s
 {
@@ -70,8 +74,8 @@ typedef struct patch_s
 extern	patch_t		*face_patches[MAX_MAP_FACES];
 extern	entity_t	*face_entity[MAX_MAP_FACES];
 extern	vec3_t		face_offset[MAX_MAP_FACES];		// for rotating bmodels
-extern	patch_t		patches[MAX_PATCHES];
-extern	unsigned	num_patches;
+
+extern	std::vector<patch_t> g_patches;
 
 extern	int		leafparents[MAX_MAP_LEAFS];
 extern	int		nodeparents[MAX_MAP_NODES];
