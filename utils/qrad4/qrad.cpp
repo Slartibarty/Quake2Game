@@ -564,11 +564,11 @@ int main (int argc, char **argv)
 
 //	ReadLightFile ();
 
-	sprintf (name, "%s%s", inbase, source);
+	Q_sprintf_s (name, "%s%s", inbase, source);
 	printf ("reading %s\n", name);
 	LoadBSPFile (name);
 	ParseEntities ();
-	CalcTextureReflectivity ();
+	LoadMaterials ();
 
 	if (!visdatasize)
 	{
@@ -579,7 +579,7 @@ int main (int argc, char **argv)
 
 	RadWorld ();
 
-	sprintf (name, "%s%s", outbase, source);
+	Q_sprintf_s (name, "%s%s", outbase, source);
 	printf ("writing %s\n", name);
 	WriteBSPFile (name);
 

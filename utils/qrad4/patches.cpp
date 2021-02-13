@@ -9,6 +9,8 @@
 #define STBI_NO_FAILURE_STRINGS
 #include "stb_image.h"
 
+#include <vector>
+
 // A binary material
 struct materialref_t
 {
@@ -18,7 +20,7 @@ struct materialref_t
 	int			intensity;
 };
 
-materialref_t *g_materialrefs;
+static std::vector<materialref_t> g_materialrefs;
 
 /*
 ===================================================================
@@ -33,20 +35,21 @@ materialref_t *g_materialrefs;
 ParseColorVector
 ===================
 */
-void ParseColorVector( char *data, vec3_t color )
+void ParseColorVector( char **data, vec3_t color )
 {
 	char tokenhack[MAX_TOKEN_CHARS];
 	char *token = tokenhack;
 	int i;
 
-	COM_Parse2( &data, &token, sizeof( tokenhack ) );
+	COM_Parse2( data, &token, sizeof( tokenhack ) );
 
 	// Parse until the end baby
-	for ( i = 0; i < 3 && data; ++i )
+	for ( i = 0; i < 3 && *data; ++i )
 	{
-		color[i] = atoi( token );
+		color[i] = (float)atoi( token ) / 255.0f;
 
-		COM_Parse2( &data, &token, sizeof( tokenhack ) );
+		if ( i != 2 ) // hack
+			COM_Parse2( data, &token, sizeof( tokenhack ) );
 	}
 }
 
@@ -79,8 +82,7 @@ void ParseMaterial( char *data, materialref_t &matref, char *basetexture, strlen
 		}
 		if ( Q_strcmp( token, "%rad_color" ) == 0 )
 		{
-			COM_Parse2( &data, &token, sizeof( tokenhack ) );
-			ParseColorVector( token, matref.color );
+			ParseColorVector( &data, matref.color );
 			hascolor = true;
 			continue;
 		}
@@ -100,7 +102,7 @@ CalcTextureReflectivity
 Loads all materials and fills out g_materialrefs
 ======================
 */
-void CalcTextureReflectivity()
+void LoadMaterials()
 {
 	int i, j;
 	char basetexture[MAX_OSPATH];
@@ -108,17 +110,26 @@ void CalcTextureReflectivity()
 	char *matdata;
 	byte *imagedata;
 	int width, height;
-	bool hascolor = false;	// True if the material has %rad_color set
+	bool hascolor;		// True if the material has %rad_color set
 
 	int texels;
-	int color[3];
 
-	// NEVER FREED!!!
-	g_materialrefs = (materialref_t *)malloc( sizeof( materialref_t ) * numtexinfo );
+	materialref_t matref;
 
 	for ( i = 0; i < numtexinfo; ++i )
 	{
-		materialref_t &matref = g_materialrefs[i];
+		// Check to see if we've already got this material
+		for ( j = 0; j < i; j++ )
+		{
+			if ( Q_strcmp( texinfo[i].texture, texinfo[j].texture ) == 0 )
+			{
+				break;
+			}
+		}
+		if ( j != i )
+			continue;
+
+		hascolor = false;
 
 		matref.ltexinfo = &texinfo[i];
 		// Set up defaults
@@ -152,22 +163,21 @@ void CalcTextureReflectivity()
 			continue;
 		}
 
-		texels = width * height;
-		color[0] = color[1] = color[2] = 0;
-
-		for ( j = 0; j < texels; ++j )
+		texels = width * height * 3;
+		VectorClear( matref.reflectivity );
+		for ( int j = 0; j < texels; j += 3 )
 		{
-			color[0] += imagedata[j + 0];
-			color[1] += imagedata[j + 1];
-			color[2] += imagedata[j + 2];
+			matref.reflectivity[0] += imagedata[j+0] / 255.0f;
+			matref.reflectivity[1] += imagedata[j+1] / 255.0f;
+			matref.reflectivity[2] += imagedata[j+2] / 255.0f;
 		}
 
-		free( imagedata );
+		VectorScale( matref.reflectivity, 1.0f / (float)( width * height ), matref.reflectivity );
 
-		// Convert to 0.0 - 1.0
-		matref.reflectivity[0] = (float)( color[0] / texels ) / 255.0f;
-		matref.reflectivity[1] = (float)( color[1] / texels ) / 255.0f;
-		matref.reflectivity[2] = (float)( color[2] / texels ) / 255.0f;
+		// No epsilon, but we shouldn't get above this anyway, hopefully? whatever
+		assert( matref.reflectivity[0] > 0.0f && matref.reflectivity[0] <= 1.0f );
+		assert( matref.reflectivity[1] > 0.0f && matref.reflectivity[1] <= 1.0f );
+		assert( matref.reflectivity[2] > 0.0f && matref.reflectivity[2] <= 1.0f );
 
 		// No color and we're lighting the world? Make the colour the reflectivity
 		if ( !hascolor && matref.intensity != 0 )
@@ -186,10 +196,27 @@ void CalcTextureReflectivity()
 		}
 #endif
 
+		g_materialrefs.push_back( matref );
+
 		Com_DPrintf( "matref %d (%s) avg rgb [ %f, %f, %f ]\n",
 			i, matref.ltexinfo->texture, matref.reflectivity[0],
 			matref.reflectivity[1], matref.reflectivity[2] );
 	}
+}
+
+static materialref_t *MaterialForTexinfo( texinfo_t *tex )
+{
+	int i;
+
+	for ( i = 0; i < (int)g_materialrefs.size(); ++i )
+	{
+		if ( Q_strcmp( tex->texture, g_materialrefs[i].ltexinfo->texture ) == 0 )
+		{
+			return &g_materialrefs[i];
+		}
+	}
+
+	Com_Error( ERR_FATAL, "Couldn't get material entry for %s", tex->texture );
 }
 
 /*
@@ -238,20 +265,19 @@ winding_t	*WindingFromFace (dface_t *f)
 BaseLightForFace
 =============
 */
-void BaseLightForFace( dface_t *f, vec3_t color )
+void BaseLightForFace( materialref_t *matref, vec3_t color )
 {
 	//
 	// check for light emited by texture
 	//
-	materialref_t &matref = g_materialrefs[f->texinfo];
-	if ( matref.intensity == 0 )
+	if ( matref->intensity == 0 )
 	{
 		// No light
 		VectorClear( color );
 		return;
 	}
 
-	VectorScale( matref.color, matref.intensity, color );
+	VectorScale( matref->color, (float)matref->intensity, color );
 }
 
 qboolean IsSky (dface_t *f)
@@ -276,9 +302,12 @@ void MakePatchForFace (int fn, winding_t *w)
 	float	area;
 	patch_t		*patch;
 	dplane_t	*pl;
+#if 0
 	int			i;
 	vec3_t		color;
+#endif
 	dleaf_t		*leaf;
+	materialref_t *matref;
 
 	f = &dfaces[fn];
 
@@ -321,17 +350,21 @@ void MakePatchForFace (int fn, winding_t *w)
 		patch->area = 1;
 	patch->sky = IsSky (f);
 
-	VectorCopy (g_materialrefs[f->texinfo].reflectivity, patch->reflectivity);
+	matref = MaterialForTexinfo( &texinfo[f->texinfo] );
+
+	VectorCopy( matref->reflectivity, patch->reflectivity );
 
 	// non-bmodel patches can emit light
 	if (fn < dmodels[0].numfaces)
 	{
-		BaseLightForFace (f, patch->baselight);
+		BaseLightForFace (matref, patch->baselight);
 
+#if 0 // We might want this? It has a neat effect? Maybe, need to test
 		ColorNormalize (patch->reflectivity, color);
 
 		for (i=0 ; i<3 ; i++)
 			patch->baselight[i] *= color[i];
+#endif
 
 		VectorCopy (patch->baselight, patch->totallight);
 	}
@@ -398,7 +431,7 @@ void MakePatches (void)
 		}
 	}
 
-	qprintf ("%i sqaure feet\n", (int)(totalarea/64));
+	qprintf ("%i square feet\n", (int)(totalarea/64));
 }
 
 /*
@@ -460,8 +493,7 @@ void	SubdividePatch (patch_t *patch)
 	patch_t	*newp;
 
 	w = patch->winding;
-	mins[0] = mins[1] = mins[2] = 99999;
-	maxs[0] = maxs[1] = maxs[2] = -99999;
+	ClearBounds( mins, maxs );
 	for (i=0 ; i<w->numpoints ; i++)
 	{
 		for (j=0 ; j<3 ; j++)
