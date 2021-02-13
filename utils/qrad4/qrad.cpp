@@ -28,7 +28,7 @@ char		inbase[32], outbase[32];
 
 int			fakeplanes;					// created planes for origin offset 
 
-int			numbounce = 64;
+int			numbounce = 128;
 qboolean	extrasamples;
 
 float	subdiv = 64;
@@ -304,37 +304,33 @@ void FreeTransfers (void)
 CollectLight
 =============
 */
-float CollectLight (void)
+static void CollectLight( vec3_t &added )
 {
 	int		i, j;
-	patch_t	*patch;
-	vec_t	total;
+	patch_t *patch;
 
-	total = 0;
+	VectorClear( added );
 
-	for (i=0, patch=patches ; i<num_patches ; i++, patch++)
+	for ( i = 0, patch = patches; i < num_patches; i++, patch++ )
 	{
 		// skys never collect light, it is just dropped
-		if (patch->sky)
+		if ( patch->sky )
 		{
-			VectorClear (radiosity[i]);
-			VectorClear (illumination[i]);
+			VectorClear( radiosity[i] );
+			VectorClear( illumination[i] );
 			continue;
 		}
 
-		for (j=0 ; j<3 ; j++)
+		for ( j = 0; j < 3; j++ )
 		{
 			patch->totallight[j] += illumination[i][j] / patch->area;
 			radiosity[i][j] = illumination[i][j] * patch->reflectivity[j];
 		}
-
-		total += radiosity[i][0] + radiosity[i][1] + radiosity[i][2];
-		VectorClear (illumination[i]);
+		
+		VectorAdd( added, radiosity[i], added );
+		VectorClear( illumination[i] );
 	}
-
-	return total;
 }
-
 
 /*
 =============
@@ -344,7 +340,7 @@ Send light out to other patches
   Run multi-threaded
 =============
 */
-void ShootLight (int patchnum)
+static void ShootLight( int patchnum )
 {
 	int			k, l;
 	transfer_t	*trans;
@@ -355,17 +351,17 @@ void ShootLight (int patchnum)
 	// this is the amount of light we are distributing
 	// prescale it so that multiplying by the 16 bit
 	// transfer values gives a proper output value
-	for (k=0 ; k<3 ; k++)
+	for ( k = 0; k < 3; k++ )
 		send[k] = radiosity[patchnum][k] / 0x10000;
 	patch = &patches[patchnum];
 
 	trans = patch->transfers;
 	num = patch->numtransfers;
 
-	for (k=0 ; k<num ; k++, trans++)
+	for ( k = 0; k < num; k++, trans++ )
 	{
-		for (l=0 ; l<3 ; l++)
-			illumination[trans->patch][l] += send[l]*trans->transfer;
+		for ( l = 0; l < 3; l++ )
+			illumination[trans->patch][l] += send[l] * trans->transfer;
 	}
 }
 
@@ -374,32 +370,33 @@ void ShootLight (int patchnum)
 BounceLight
 =============
 */
-void BounceLight (void)
+static void BounceLight()
 {
 	int		i, j;
-	float	added;
-	patch_t	*p;
+	vec3_t	added;
+	patch_t *p;
+	bool	bouncing = numbounce > 0;
 
-	for (i=0 ; i<num_patches ; i++)
+	for ( i = 0; i < num_patches; i++ )
 	{
 		p = &patches[i];
-		for (j=0 ; j<3 ; j++)
+		for ( j = 0; j < 3; j++ )
 		{
-//			p->totallight[j] = p->samplelight[j];
 			radiosity[i][j] = p->samplelight[j] * p->reflectivity[j] * p->area;
 		}
 	}
 
-	for (i=0 ; i<numbounce ; i++)
+	for ( i = 0; bouncing; i++ )
 	{
-		RunThreadsOnIndividual (num_patches, false, ShootLight);
-		added = CollectLight ();
+		RunThreadsOnIndividual( num_patches, false, ShootLight );
+		CollectLight( added );
 
-		qprintf ("bounce:%i added:%f\n", i, added);
+		qprintf( "\tBounce #%d added RGB(%.0f, %.0f, %.0f)\n", i + 1, added[0], added[1], added[2] );
+
+		if ( i + 1 == numbounce || ( added[0] < 1.0f && added[1] < 1.0f && added[2] < 1.0f ) )
+			bouncing = false;
 	}
 }
-
-
 
 //==============================================================
 
