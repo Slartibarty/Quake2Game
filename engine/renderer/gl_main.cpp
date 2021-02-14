@@ -813,6 +813,8 @@ static void R_SetLightLevel()
 
 }
 
+extern void R_FillOutShit_f();
+
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 static void R_Register()
@@ -869,6 +871,8 @@ static void R_Register()
 
 	Cmd_AddCommand( "extractwad", GL_ExtractWad_f );
 	Cmd_AddCommand( "upgradewals", GL_UpgradeWals_f );
+
+	Cmd_AddCommand( "filloutshit", R_FillOutShit_f );
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -884,6 +888,8 @@ static void R_Unregister()
 
 	Cmd_RemoveCommand( "extractwad" );
 	Cmd_RemoveCommand( "upgradewals" );
+
+	Cmd_RemoveCommand( "filloutshit" );
 }
 
 //-------------------------------------------------------------------------------------------------

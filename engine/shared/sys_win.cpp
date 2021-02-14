@@ -38,41 +38,41 @@ void Sys_OutputDebugString( const char *msg )
 }
 
 [[noreturn]]
-void Sys_Error (_Printf_format_string_ const char *error, ...)
+void Sys_Error( _Printf_format_string_ const char *fmt, ... )
 {
 	va_list		argptr;
 	char		text[MAX_PRINT_MSG];
 
-	CL_Shutdown ();
-	Engine_Shutdown ();
+	CL_Shutdown();
+	Engine_Shutdown();
 
-	va_start (argptr, error);
-	Q_vsprintf_s (text, error, argptr);
-	va_end (argptr);
+	va_start( argptr, fmt );
+	Q_vsprintf_s( text, fmt, argptr );
+	va_end( argptr );
 
 	Sys_OutputDebugString( text ); // Mirror to the debugger
 
 	// We won't have a window by now
 	MessageBoxA( nullptr, text, "Engine Error", MB_OK | MB_ICONERROR );
 
-// shut down QHOST hooks if necessary
-	DeinitConProc ();
+	// shut down QHOST hooks if necessary
+	DeinitConProc();
 
-	exit (1);
+	exit( 1 );
 }
 
 [[noreturn]]
-void Sys_Quit (void)
+void Sys_Quit()
 {
 	CL_Shutdown();
-	Engine_Shutdown ();
-	if (dedicated && dedicated->value)
-		FreeConsole ();
+	Engine_Shutdown();
+	if ( dedicated && dedicated->value )
+		FreeConsole();
 
-// shut down QHOST hooks if necessary
-	DeinitConProc ();
+	// shut down QHOST hooks if necessary
+	DeinitConProc();
 
-	exit (0);
+	exit( 0 );
 }
 
 //================================================================

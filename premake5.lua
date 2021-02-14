@@ -158,7 +158,15 @@ local glew_public = {
 local glew_sources = {
 	"external/glew/src/glew.c"
 }
-	
+
+local xatlas_public = {
+	"external/xatlas/xatlas.h",
+}
+
+local xatlas_source = {
+	"external/xatlas/xatlas.cpp",
+}
+
 -------------------------------------------------------------------------------
 
 group "game"
@@ -168,7 +176,7 @@ project "engine"
 	targetname "q2game"
 	language "C++"
 	targetdir "../game"
-	includedirs { "external/glew/include", "external/zlib", "external/libpng", "external/libpng_config" }
+	includedirs { "external/xatlas", "external/glew/include", "external/zlib", "external/libpng", "external/libpng_config" }
 	defines { "GLEW_STATIC", "GLEW_NO_GLU" }
 	filter "system:windows"
 		linkoptions { "/ENTRY:mainCRTStartup" }
@@ -199,7 +207,10 @@ project "engine"
 		libpng_sources,
 		
 		glew_public,
-		glew_sources
+		glew_sources,
+		
+		xatlas_public,
+		xatlas_source
 	}
 	
 	filter "system:windows"

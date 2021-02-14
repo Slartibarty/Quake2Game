@@ -113,12 +113,17 @@ static void Com_Print_Internal( const char *msg )
 
 /*
 =============
-Com_Printf
+Com_Print
 
 Both client and server can use this, and it will output
 to the apropriate place.
 =============
 */
+void Com_Print( const char *msg )
+{
+	Com_Print_Internal( msg );
+}
+
 void Com_Printf( _Printf_format_string_ const char *fmt, ... )
 {
 	va_list		argptr;
@@ -133,15 +138,25 @@ void Com_Printf( _Printf_format_string_ const char *fmt, ... )
 
 /*
 ================
-Com_DPrintf
+Com_DPrint
 
-A Com_Printf that only shows up if the "developer" cvar is set
+A Com_Print that only shows up if the "developer" cvar is set
 ================
 */
+void Com_DPrint( const char *msg )
+{
+	if ( !developer || !developer->value )
+		return;
+
+	Sys_OutputDebugString( msg );
+
+	Com_Print_Internal( msg );
+}
+
 void Com_DPrintf( _Printf_format_string_ const char *fmt, ... )
 {
 	if ( !developer || !developer->value )
-		return;			// don't confuse non-developers with techie stuff...
+		return;
 
 	va_list		argptr;
 	char		msg[MAX_PRINT_MSG];
@@ -150,7 +165,7 @@ void Com_DPrintf( _Printf_format_string_ const char *fmt, ... )
 	Q_vsprintf_s( msg, fmt, argptr );
 	va_end( argptr );
 
-	Sys_OutputDebugString( msg ); // Mirror to the debugger
+	Sys_OutputDebugString( msg );
 
 	Com_Print_Internal( msg );
 }
@@ -215,18 +230,18 @@ Both client and server can use this, and it will
 do the apropriate things.
 =============
 */
-[[noreturn]] void Com_Quit (void)
+[[noreturn]] void Com_Quit()
 {
-	SV_Shutdown ("Server quit\n", false);
-	CL_Shutdown ();
+	SV_Shutdown( "Server quit\n", false );
+	CL_Shutdown();
 
-	if (logfile)
+	if ( logfile )
 	{
-		fclose (logfile);
+		fclose( logfile );
 		logfile = NULL;
 	}
 
-	Sys_Quit ();
+	Sys_Quit();
 }
 
 
