@@ -1612,7 +1612,7 @@ int XAtlas_PrintCallback( const char *fmt, ... )
 	Q_vsprintf_s( msg, fmt, argptr );
 	va_end( argptr );
 
-	Com_Printf( "XAtlas: %s\n", msg );
+	Com_Printf( "%s", msg );
 
 	return 0;
 }
@@ -1646,6 +1646,7 @@ void R_BuildAtlasForModel( model_t *mod )
 	Com_Printf( "Building atlas for %s\n", mod->name );
 
 #if 1
+	uint32 totalVertices = 0;
 	std::vector<vertexSigCompact_t> polyData;
 	std::vector<uint8> faceCountData;
 	for ( int i = 0; i < mod->numsurfaces; ++i )
@@ -1658,7 +1659,7 @@ void R_BuildAtlasForModel( model_t *mod )
 
 		uint8 &count = faceCountData.emplace_back();
 		count = p->numverts;
-		assert( count != 3 );
+		totalVertices += p->numverts;
 
 		for ( ; p != nullptr; p = p->next )
 		{
@@ -1678,6 +1679,9 @@ void R_BuildAtlasForModel( model_t *mod )
 
 	xatlas::SetPrint( XAtlas_PrintCallback, true );
 	xatlas::Atlas *pAtlas = xatlas::Create();
+
+	assert( mod->numsurfaces == faceCountData.size() );
+	assert( totalVertices == polyData.size() );
 
 	const xatlas::MeshDecl meshDecl
 	{
@@ -1701,12 +1705,13 @@ void R_BuildAtlasForModel( model_t *mod )
 
 	xatlas::ChartOptions chartOptions
 	{
-	//	.fixWinding = true
+		.useInputMeshUvs = true,
+		.fixWinding = true
 	};
 
 	xatlas::PackOptions packOptions
 	{
-	//	.rotateCharts = false
+		.rotateCharts = false
 	};
 
 	xatlas::Generate( pAtlas, chartOptions, packOptions );
@@ -1720,25 +1725,7 @@ void R_BuildAtlasForModel( model_t *mod )
 
 #ifdef GARBAGE
 
-	for ( int i = 0; i < mod->numsurfaces; ++i )
-	{
-		msurface_t *surf = &mod->surfaces[i];
-		if ( surf->texinfo->flags & SURFMASK_UNLIT )
-			continue;
-
-		glpoly_t *p = surf->polys;
-
-		for ( ; p != nullptr; p = p->next )
-		{
-			float *v = p->verts[0];
-			for ( int j = 0; j < p->numverts; j++, v += VERTEXSIZE )
-			{
-				v[5] = ;
-				v[6];
-			}
-		}
-	}
-
+#if 1
 	// Write meshes.
 	const char *modelFilename = "example_output.obj";
 	printf("Writing '%s'...\n", modelFilename);
@@ -1774,7 +1761,9 @@ void R_BuildAtlasForModel( model_t *mod )
 		}
 		fclose(file);
 	}
+#endif
 
+#if 0
 	if (pAtlas->width > 0 && pAtlas->height > 0) {
 		printf("Rasterizing result...\n");
 		// Dump images.
@@ -1862,6 +1851,7 @@ void R_BuildAtlasForModel( model_t *mod )
 			fclose( handle );
 		}
 	}
+#endif
 
 #endif
 

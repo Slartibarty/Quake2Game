@@ -91,6 +91,8 @@ static void Com_Print_Internal( const char *msg )
 	// also echo to debugging console
 	Sys_ConsoleOutput( msg );
 
+	Sys_OutputDebugString( msg );
+
 	// logfile
 	if ( logfile_active && logfile_active->value )
 	{
@@ -148,7 +150,7 @@ void Com_DPrint( const char *msg )
 	if ( !developer || !developer->value )
 		return;
 
-	Sys_OutputDebugString( msg );
+//	Sys_OutputDebugString( msg );
 
 	Com_Print_Internal( msg );
 }
@@ -165,7 +167,7 @@ void Com_DPrintf( _Printf_format_string_ const char *fmt, ... )
 	Q_vsprintf_s( msg, fmt, argptr );
 	va_end( argptr );
 
-	Sys_OutputDebugString( msg );
+//	Sys_OutputDebugString( msg );
 
 	Com_Print_Internal( msg );
 }
