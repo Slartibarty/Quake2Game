@@ -1631,13 +1631,6 @@ struct vertexSigCompact_t
 	float s, t;
 };
 
-extern void R_BuildAtlasForModel( model_t *mod );
-
-void R_FillOutShit_f()
-{
-	R_BuildAtlasForModel( r_worldmodel );
-}
-
 void R_BuildAtlasForModel( model_t *mod )
 {
 	if ( !mod )
@@ -1732,28 +1725,29 @@ void R_BuildAtlasForModel( model_t *mod )
 	FILE *file = fopen( modelFilename, "wb" );
 	if (file)
 	{
-		uint32_t firstVertex = 0;
-		for (uint32_t i = 0; i < pAtlas->meshCount; i++)
+		uint32 firstVertex = 0;
+		for (uint32 i = 0; i < pAtlas->meshCount; i++)
 		{
 			const xatlas::Mesh &mesh = pAtlas->meshes[i];
-			for (uint32_t v = 0; v < mesh.vertexCount; v++)
+			for (uint32 v = 0; v < mesh.vertexCount; v++)
 			{
 				const xatlas::Vertex &vertex = mesh.vertexArray[v];
 				const float *pos = (float *)&polyData[vertex.xref];
 				fprintf(file, "v %g %g %g\n", pos[0], pos[1], pos[2]);
 				fprintf(file, "vt %g %g\n", vertex.uv[0] / pAtlas->width, 1.0f - (vertex.uv[1] / pAtlas->height));
 			}
+
 			fprintf(file, "o %s\n", mod->name);
 			fprintf(file, "s off\n");
 
-			uint32_t faceCount = faceCountData.size();
-			uint32_t currentIndex = 0;
-			for (uint32_t f = 0; f < faceCount; f++) {
+			uint32 faceCount = faceCountData.size();
+			uint32 currentIndex = 0;
+			for (uint32 f = 0; f < faceCount; f++) {
 				fprintf(file, "f ");
 				uint32 faceVertexCount = faceCountData[f];
-				for (uint32_t j = 0; j < faceVertexCount; j++) {
-					const uint32_t index = firstVertex + mesh.indexArray[currentIndex++] + 1; // 1-indexed
-					fprintf(file, "%d/%d/%d%c", index, index, index, j == (faceVertexCount - 1) ? '\n' : ' ');
+				for (uint32 j = 0; j < faceVertexCount; j++) {
+					const uint32 index = firstVertex + mesh.indexArray[currentIndex++] + 1; // 1-indexed
+					fprintf(file, "%d/%d%c", index, index, j == (faceVertexCount - 1) ? '\n' : ' ');
 				}
 			}
 
@@ -1856,4 +1850,9 @@ void R_BuildAtlasForModel( model_t *mod )
 #endif
 
 	xatlas::Destroy( pAtlas );
+}
+
+void R_BuildAtlas_f()
+{
+	R_BuildAtlasForModel( r_worldmodel );
 }
