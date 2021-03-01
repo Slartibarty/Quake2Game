@@ -7,6 +7,7 @@
 #include "../shared/imageloaders.h"
 #include <vector>
 
+//#include "UVAtlas.h"
 #include "xatlas.h"
 
 #define DYNAMIC_LIGHT_WIDTH		128
@@ -1621,7 +1622,7 @@ int XAtlas_PrintCallback( const char *fmt, ... )
 struct vertexSig_t
 {
 	float x, y, z;
-	float s1, t1, s2, t2; // s1 and s2 for warps?
+	float s1, t1, s2, t2;
 };
 
 // For export

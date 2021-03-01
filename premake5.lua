@@ -163,24 +163,35 @@ local xatlas_public = {
 	"external/xatlas/xatlas.h",
 }
 
-local xatlas_source = {
+local xatlas_sources = {
 	"external/xatlas/xatlas.cpp",
+}
+
+local uvatlas_public = {
+	"external/UVAtlas/UVAtlas/inc/UVAtlas.h",
+}
+
+local uvatlas_sources = {
+	"external/UVAtlas/UVAtlas/geodesics/*.cpp",
+	"external/UVAtlas/UVAtlas/geodesics/*.h",
+	"external/UVAtlas/UVAtlas/isochart/*.cpp",
+	"external/UVAtlas/UVAtlas/isochart/*.h"
 }
 
 -------------------------------------------------------------------------------
 
 group "game"
-	
+
 project "engine"
 	kind "WindowedApp"
 	targetname "q2game"
 	language "C++"
 	targetdir "../game"
-	includedirs { "external/xatlas", "external/glew/include", "external/zlib", "external/libpng", "external/libpng_config" }
+	includedirs { "external/UVAtlas/UVAtlas/inc", "external/xatlas", "external/glew/include", "external/zlib", "external/libpng", "external/libpng_config" }
 	defines { "GLEW_STATIC", "GLEW_NO_GLU" }
 	filter "system:windows"
 		linkoptions { "/ENTRY:mainCRTStartup" }
-		links { "ws2_32", "dsound", "dxguid", "opengl32", "noenv.obj" }
+		links { "ws2_32", "dsound", "dxguid", "opengl32", "noenv.obj", "zlib", "libpng", "uvatlas" }
 	filter {}
 	filter "system:linux"
 		links { "sdl2" }
@@ -201,16 +212,14 @@ project "engine"
 		"game_shared/m_flash.cpp",
 		
 		zlib_public,
-		zlib_sources,
 		
 		libpng_public,
-		libpng_sources,
+		
+		xatlas_public,
+		xatlas_sources,
 		
 		glew_public,
 		glew_sources,
-		
-		xatlas_public,
-		xatlas_source
 	}
 	
 	filter "system:windows"
@@ -455,3 +464,49 @@ project "qe4"
 
 filter {}
 --]]
+
+filter {}
+
+-- External
+
+group "external"
+
+project "zlib"
+	kind "StaticLib"
+	targetname "zlib"
+	language "C"
+	defines { "_CRT_NONSTDC_NO_WARNINGS" }
+	
+	disablewarnings { "4267" }
+	
+	files {
+		zlib_public,
+		zlib_sources
+	}
+	
+project "libpng"
+	kind "StaticLib"
+	targetname "libpng"
+	language "C"
+	includedirs { "external/libpng_config", "external/zlib" }
+	
+	files {
+		libpng_public,
+		libpng_sources,
+		
+		"external/libpng_config/pnglibconf.h"
+	}
+
+
+project "uvatlas"
+	kind "StaticLib"
+	targetname "uvatlas"
+	language "C++"
+	includedirs { "external/UVAtlas/UVAtlas", "external/UVAtlas/UVAtlas/inc", "external/UVAtlas/UVAtlas/geodesics" }
+	
+	disablewarnings { "4530" }
+	
+	files {
+		uvatlas_public,
+		uvatlas_sources
+	}
