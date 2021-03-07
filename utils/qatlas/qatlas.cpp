@@ -13,13 +13,6 @@ std::vector<dface_t>	g_faces;
 std::vector<dedge_t>	g_edges;
 std::vector<int>		g_surfedges;
 
-struct exportST_t
-{
-	float s, t;
-};
-
-std::vector<exportST_t>	g_outST;
-
 
 static void LoadPlanes( byte *bspBuffer, lump_t *lump )
 {
@@ -105,7 +98,21 @@ static void LoadSurfedges( byte *bspBuffer, lump_t *lump )
 	}
 }
 
-#if 0
+#if 1
+
+int XAtlas_PrintCallback( const char *fmt, ... )
+{
+	va_list		argptr;
+	char		msg[MAX_PRINT_MSG];
+
+	va_start( argptr, fmt );
+	Q_vsprintf_s( msg, fmt, argptr );
+	va_end( argptr );
+
+	printf( "%s", msg );
+
+	return 0;
+}
 
 int main( int argc, char **argv )
 {
@@ -165,21 +172,15 @@ int main( int argc, char **argv )
 	}
 #endif
 
-	// For every face, and each vertex used by that face, create new vertices for it
-	// we export the raw vertices in the OBJ, but we need these for texture coordinates
+	std::vector<uint> triangulated_indices;
+	std::vector<uint> face_indices;
 
-	int cloneVerticesCount = 0;
-	for ( size_t i = 0; i < g_faces.size(); ++i )
-	{
-		dface_t &face = g_faces[i];
-
-		cloneVerticesCount += face.numedges;
-	}
-
-	g_outST.reserve( cloneVerticesCount );
-	for ( size_t iter1 = 0; iter1 < g_faces.size(); ++iter1 )
+	// For each face
+	for ( size_t iter1 = 0; iter1 < g_faces.size(); ++iter1, face_indices.clear() )
 	{
 		dface_t &face = g_faces[iter1];
+
+		// face.numedges == number of vertices
 
 		int currentEdge = face.firstedge;
 
@@ -191,25 +192,84 @@ int main( int argc, char **argv )
 			currentSurfedge = abs( currentSurfedge );
 			dedge_t &edge = g_edges[currentSurfedge];
 
-			dvertex_t &vert = g_vertices[edge.v[start]];
-			texinfo_t &info = g_texinfos[face.texinfo];
-
-			exportST_t &out = g_outST.emplace_back();
-
-#if 1
-			out.s = DotProduct( vert.point, info.vecs[0] ) + info.vecs[0][3];
-			out.s /= 128;
-
-			out.t = DotProduct( vert.point, info.vecs[1] ) + info.vecs[1][3];
-			out.t /= 160;
-#else
-			out.s = vert.point[0] * info.vecs[0][0] + vert.point[1] * info.vecs[0][1] + vert.point[2] * info.vecs[0][2] + info.vecs[0][3];
-			out.t = vert.point[0] * info.vecs[1][0] + vert.point[1] * info.vecs[1][1] + vert.point[2] * info.vecs[1][2] + info.vecs[1][3];
-#endif
+			face_indices.push_back( edge.v[start] );
 		}
+
+	//	assert( face.numedges % 3 == 0 );
+
+		int numTriangles = face.numedges - 2;
+
+		if ( face.numedges == 3 )
+		{
+			triangulated_indices.push_back( face_indices[0] );
+			triangulated_indices.push_back( face_indices[1] );
+			triangulated_indices.push_back( face_indices[2] );
+			continue;
+		}
+
+		// Triangulate it
+
+		int i;
+		int middle;
+
+		// For every triangle
+		for ( i = 0, middle = 1; i < numTriangles; ++i, ++middle )
+		{
+			triangulated_indices.push_back( face_indices[0] );
+			triangulated_indices.push_back( face_indices[middle] );
+			triangulated_indices.push_back( face_indices[middle+1] );
+		}
+
 	}
 
+#if 1
+	xatlas::SetPrint( XAtlas_PrintCallback, true );
+	xatlas::Atlas *pAtlas = xatlas::Create();
+
+	const xatlas::MeshDecl meshDecl
+	{
+		.vertexPositionData = (void *)g_vertices.data(),
+		.indexData = (void *)triangulated_indices.data(),
+
+		.vertexCount = (uint32)g_vertices.size(),
+		.vertexPositionStride = sizeof( dvertex_t ),
+		.indexCount = (uint32)triangulated_indices.size(),
+		.indexFormat = xatlas::IndexFormat::UInt32
+	};
+
+	xatlas::AddMeshError meshError = xatlas::AddMesh( pAtlas, meshDecl, 1 );
+	if ( meshError != xatlas::AddMeshError::Success ) {
+		xatlas::Destroy( pAtlas );
+		printf( "XAtlas failed: %s\n", xatlas::StringForEnum( meshError ) );
+		return 1;
+	}
+
+	xatlas::ChartOptions chartOptions
+	{
+	//	.useInputMeshUvs = true,
+		.fixWinding = true
+	};
+
+	xatlas::PackOptions packOptions
+	{
+		.rotateCharts = false
+	};
+
+	xatlas::Generate( pAtlas/*, chartOptions, packOptions*/ );
+
+	printf( "%d charts\n", pAtlas->chartCount );
+	printf( "%d atlases\n", pAtlas->atlasCount );
+
+	for ( uint32 i = 0; i < pAtlas->atlasCount; ++i )
+		printf( "%u: %0.2f%% utilization\n", i, pAtlas->utilization[i] * 100.0f );
+	printf( "%ux%u resolution\n", pAtlas->width, pAtlas->height );
+#endif
+
+	// For every face, and each vertex used by that face, create new vertices for it
+	// we export the raw vertices in the OBJ, but we need these for texture coordinates
+
 	FILE *objHandle = fopen( "data.obj", "wb" );
+#if 0
 	if ( objHandle )
 	{
 		// Write vertices, skip 0
@@ -219,29 +279,20 @@ int main( int argc, char **argv )
 			fprintf( objHandle, "v %g %g %g\n", vert[0], vert[1], vert[2] );
 		}
 
-		// Write UVs
-		for ( size_t i = 0; i < g_outST.size(); ++i )
-		{
-			exportST_t &out = g_outST[i];
-
-			fprintf( objHandle, "vt %g %g\n", out.s, out.t );
-		}
-
-		char *bspFilename = strrchr( argv[1], '/' ) + 1;
+		const char *bspFilename = strrchr( argv[1], '/' ) + 1;
 		if ( !( bspFilename - 1 ) )
 		{
 			bspFilename = strrchr( argv[1], '\\' ) + 1;
 			if ( !( bspFilename - 1 ) )
 			{
-				bspFilename = nullptr;
+				bspFilename = "null";
 			}
 		}
 
 		fprintf( objHandle, "o %s\n", bspFilename );
 		fprintf( objHandle, "s off\n" );
 
-		int iterwhat = 0;
-
+#if 0
 		// For each face
 		for ( size_t iter1 = 0; iter1 < g_faces.size(); ++iter1 )
 		{
@@ -259,13 +310,61 @@ int main( int argc, char **argv )
 				currentSurfedge = abs( currentSurfedge );
 				dedge_t &edge = g_edges[currentSurfedge];
 
-				fprintf( objHandle, "%d/%d%c", edge.v[start], iterwhat, ( iter2 == face.numedges - 1 ) ? '\n' : ' ' );
-				++iterwhat;
+				fprintf( objHandle, "%d%c", edge.v[start], ( iter2 == face.numedges - 1 ) ? '\n' : ' ' );
 			}
+		}
+#else
+		for ( size_t i = 0; i < triangulated_indices.size(); i += 3 )
+		{
+			fprintf( objHandle, "f %d %d %d\n", triangulated_indices[i]+1, triangulated_indices[i+1]+1, triangulated_indices[i+2]+1 );
+		}
+#endif
+
+		fclose( objHandle );
+	}
+#else
+	if ( objHandle )
+	{
+		uint32 firstVertex = 0;
+		for ( uint32 i = 0; i < pAtlas->meshCount; i++ )
+		{
+			const xatlas::Mesh &mesh = pAtlas->meshes[i];
+			for ( uint32 v = 0; v < mesh.vertexCount; v++ )
+			{
+				const xatlas::Vertex &vertex = mesh.vertexArray[v];
+				const float *pos = (float *)&g_vertices[vertex.xref];
+				fprintf( objHandle, "v %g %g %g\n", pos[0], pos[1], pos[2] );
+				//fprintf( objHandle, "vt %g %g\n", vertex.uv[0] / pAtlas->width, 1.0f - ( vertex.uv[1] / pAtlas->height ) );
+				fprintf( objHandle, "vt %g %g\n", vertex.uv[0] / pAtlas->width, vertex.uv[1] / pAtlas->height );
+			}
+
+			const char *bspFilename = strrchr( argv[1], '/' ) + 1;
+			if ( !( bspFilename - 1 ) )
+			{
+				bspFilename = strrchr( argv[1], '\\' ) + 1;
+				if ( !( bspFilename - 1 ) )
+				{
+					bspFilename = "null";
+				}
+			}
+
+			fprintf( objHandle, "o %s\n", bspFilename );
+			fprintf( objHandle, "s off\n" );
+
+			for ( uint32_t f = 0; f < mesh.indexCount; f += 3 )
+			{
+				const uint32_t index1 = firstVertex + mesh.indexArray[f] + 1; // 1-indexed
+				const uint32_t index2 = firstVertex + mesh.indexArray[f+1] + 1; // 1-indexed
+				const uint32_t index3 = firstVertex + mesh.indexArray[f+2] + 1; // 1-indexed
+				fprintf( objHandle, "f %d/%d %d/%d %d/%d\n", index1, index1, index2, index2, index3, index3 );
+			}
+
+			firstVertex += mesh.vertexCount;
 		}
 
 		fclose( objHandle );
 	}
+#endif
 	
 	return 0;
 }
@@ -383,7 +482,7 @@ int main( int argc, char **argv )
 		.vertexPositionStride = sizeof( dvertex_t ),
 	//	.vertexUvStride = sizeof( vertexSigCompact_t ),
 		.indexCount = (uint32)faceIndexData.size(),
-		.indexOffset = 1,
+		.indexOffset = 0,
 		.faceCount = (uint32)faceCountData.size()
 	};
 
