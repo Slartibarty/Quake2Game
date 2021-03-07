@@ -131,7 +131,7 @@ void GL_DrawAliasFrameLerp (dmdl_t *paliashdr, float backlerp)
 
 	if ( gl_vertex_arrays->value )
 	{
-		float colorArray[MAX_VERTS*4];
+		static float colorArray[MAX_VERTS*4];
 
 		glEnableClientState( GL_VERTEX_ARRAY );
 		glVertexPointer( 3, GL_FLOAT, 16, s_lerped );	// padded for SIMD
