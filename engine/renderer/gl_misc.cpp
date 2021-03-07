@@ -344,3 +344,92 @@ void GL_UpgradeWals_f()
 
 	Sys_FindClose();
 }
+
+//-------------------------------------------------------------------------------------------------
+// Helpers
+//-------------------------------------------------------------------------------------------------
+
+void GL_EnableMultitexture(qboolean enable)
+{
+	if (!GLEW_ARB_multitexture || !gl_ext_multitexture->value)
+		return;
+
+	if (enable)
+	{
+		GL_SelectTexture(GL_TEXTURE1);
+		glEnable(GL_TEXTURE_2D);
+		GL_TexEnv(GL_REPLACE);
+	}
+	else
+	{
+		GL_SelectTexture(GL_TEXTURE1);
+		glDisable(GL_TEXTURE_2D);
+		GL_TexEnv(GL_REPLACE);
+	}
+	GL_SelectTexture(GL_TEXTURE0);
+	GL_TexEnv(GL_REPLACE);
+}
+
+void GL_SelectTexture(GLenum texture)
+{
+	if (!GLEW_ARB_multitexture || !gl_ext_multitexture->value)
+		return;
+
+	int tmu;
+
+	if (texture == GL_TEXTURE0)
+	{
+		tmu = 0;
+	}
+	else
+	{
+		tmu = 1;
+	}
+
+	if (tmu == gl_state.currenttmu)
+	{
+		return;
+	}
+
+	gl_state.currenttmu = tmu;
+
+	glActiveTextureARB(texture);
+	glClientActiveTextureARB(texture);
+}
+
+void GL_TexEnv(GLint mode)
+{
+	static GLint lastmodes[2] = { -1, -1 };
+
+	if (mode != lastmodes[gl_state.currenttmu])
+	{
+		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, mode);
+		lastmodes[gl_state.currenttmu] = mode;
+	}
+}
+
+void GL_Bind( GLuint texnum )
+{
+	// Are we already bound?
+	if ( gl_state.currenttextures[gl_state.currenttmu] == texnum )
+		return;
+
+	gl_state.currenttextures[gl_state.currenttmu] = texnum;
+	glBindTexture( GL_TEXTURE_2D, texnum );
+}
+
+void GL_MBind(GLenum target, GLuint texnum)
+{
+	GL_SelectTexture(target);
+	if (target == GL_TEXTURE0)
+	{
+		if (gl_state.currenttextures[0] == texnum)
+			return;
+	}
+	else
+	{
+		if (gl_state.currenttextures[1] == texnum)
+			return;
+	}
+	GL_Bind(texnum);
+}

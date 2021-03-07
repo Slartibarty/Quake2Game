@@ -50,6 +50,16 @@ void GL_Strings_f();
 void GL_ExtractWad_f();
 void GL_UpgradeWals_f();
 
+// Helpers
+
+void		GL_EnableMultitexture(qboolean enable);
+void		GL_SelectTexture(GLenum texture);
+// Use this instead of glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, mode);
+void		GL_TexEnv(GLint value);
+// Use this instead of glBindTexture
+void		GL_Bind(GLuint texnum);
+void		GL_MBind(GLenum target, GLuint texnum);
+
 //-------------------------------------------------------------------------------------------------
 // gl_image.cpp
 //-------------------------------------------------------------------------------------------------
@@ -77,16 +87,6 @@ void		GL_FreeUnusedMaterials(void);
 
 void		GL_InitImages(void);
 void		GL_ShutdownImages(void);
-
-// Helpers
-
-void		GL_EnableMultitexture(qboolean enable);
-void		GL_SelectTexture(GLenum texture);
-			// Use this instead of glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, mode);
-void		GL_TexEnv(GLint value);
-			// Use this instead of glBindTexture
-void		GL_Bind(GLuint texnum);
-void		GL_MBind(GLenum target, GLuint texnum);
 
 // Image flags
 // Mipmaps are opt-out
