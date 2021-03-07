@@ -393,6 +393,27 @@ project "qrad4"
 		}
 	filter {}
 	
+project "qatlas"
+	kind "ConsoleApp"
+	targetname "qatlas"
+	language "C++"
+	floatingpoint "Default"
+	targetdir "../game"
+	includedirs { "utils/common2", "common", "external/xatlas" }
+	
+	files {
+		"common/windows_default.manifest",
+		"common/q_shared.*",
+		"common/q_formats.h",
+	
+		"utils/common2/cmdlib.*",
+		
+		"utils/qatlas/*",
+		
+		xatlas_public,
+		xatlas_sources
+	}
+	
 --[[
 project "light"
 	kind "ConsoleApp"
