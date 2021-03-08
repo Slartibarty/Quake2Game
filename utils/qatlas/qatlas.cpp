@@ -153,7 +153,7 @@ int main( int argc, char **argv )
 	free( bspBuffer );
 
 	// Cross ref every vertex
-#if 1
+#if 0
 	for ( size_t iter1 = 0; iter1 < g_vertices.size(); ++iter1 )
 	{
 		dvertex_t &vertex = g_vertices[iter1];
