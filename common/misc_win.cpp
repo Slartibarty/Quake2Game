@@ -178,7 +178,7 @@ void Sys_CopyFile (const char *src, const char *dst)
 	CopyFileA (src, dst, FALSE);
 }
 
-void Sys_Mkdir (const char *path)
+void Sys_CreateDirectory (const char *path)
 {
 	CreateDirectoryA (path, NULL);
 }

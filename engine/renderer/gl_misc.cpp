@@ -24,7 +24,7 @@ static void GL_ScreenShot_Internal( bool png )
 	
 // create the screenshots directory if it doesn't exist
 	Q_sprintf_s( checkname, "%s/screenshots", FS_Gamedir() );
-	Sys_Mkdir( checkname );
+	Sys_CreateDirectory( checkname );
 
 // find a file name to save it to 
 	Q_sprintf_s( picname, "quake00.%s", png ? "png" : "tga" );
@@ -130,7 +130,7 @@ void GL_ExtractWad_f()
 	COM_FileBase( Cmd_Argv( 1 ), wadbase );
 
 	// Create the output folder if it doesn't exist
-	Sys_Mkdir( va( "%s/textures/%s", FS_Gamedir(), wadbase ) );
+	Sys_CreateDirectory( va( "%s/textures/%s", FS_Gamedir(), wadbase ) );
 
 	FILE *wadhandle;
 

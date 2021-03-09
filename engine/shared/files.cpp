@@ -565,7 +565,7 @@ void FS_CreatePath( char *path )
 		if ( *ofs == '/' )
 		{	// create the directory
 			*ofs = 0;
-			Sys_Mkdir( path );
+			Sys_CreateDirectory( path );
 			*ofs = '/';
 		}
 	}

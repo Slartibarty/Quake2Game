@@ -303,7 +303,7 @@ int64	Time_Microseconds();
 int		Sys_Milliseconds();
 
 void	Sys_CopyFile (const char *src, const char *dst);
-void	Sys_Mkdir (const char *path);
+void	Sys_CreateDirectory (const char *path);
 
 // large block stack allocation routines
 void	*Hunk_Begin (int maxsize);
