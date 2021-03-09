@@ -1278,13 +1278,13 @@ void CL_RequestNextDownload (void)
 	if (precache_check == TEXTURE_CNT+1) {
 		// from qcommon/cmodel.c
 		extern int			numtexinfo;
-		extern mapsurface_t	map_surfaces[];
+		extern csurface_t	map_surfaces[];
 
 		if (allow_download->value && allow_download_maps->value) {
 			while (precache_tex < numtexinfo) {
 				char fn[MAX_OSPATH];
 
-				Q_sprintf_s(fn, "textures/%s.wal", map_surfaces[precache_tex++].rname);
+				Q_sprintf_s(fn, "textures/%s.wal", map_surfaces[precache_tex++].name);
 				if (!CL_CheckOrDownloadFile(fn))
 					return; // started a download
 			}

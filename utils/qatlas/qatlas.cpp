@@ -246,16 +246,15 @@ int main( int argc, char **argv )
 
 	xatlas::ChartOptions chartOptions
 	{
-	//	.useInputMeshUvs = true,
-		.fixWinding = true
+		.maxIterations = 512
 	};
 
 	xatlas::PackOptions packOptions
 	{
-		.rotateCharts = false
+		.bruteForce = true
 	};
 
-	xatlas::Generate( pAtlas/*, chartOptions, packOptions*/ );
+	xatlas::Generate( pAtlas, chartOptions, packOptions );
 
 	printf( "%d charts\n", pAtlas->chartCount );
 	printf( "%d atlases\n", pAtlas->atlasCount );
@@ -316,7 +315,7 @@ int main( int argc, char **argv )
 #else
 		for ( size_t i = 0; i < triangulated_indices.size(); i += 3 )
 		{
-			fprintf( objHandle, "f %d %d %d\n", triangulated_indices[i]+1, triangulated_indices[i+1]+1, triangulated_indices[i+2]+1 );
+			fprintf( objHandle, "f %d %d %d\n", triangulated_indices[i], triangulated_indices[i+1], triangulated_indices[i+2] );
 		}
 #endif
 

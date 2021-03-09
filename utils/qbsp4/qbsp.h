@@ -38,7 +38,6 @@ typedef struct
 	vec_t	scale[2];
 	char	name[MAX_QPATH];
 	int		flags;
-	int		value;
 } brush_texture_t;
 
 typedef struct side_s
@@ -196,7 +195,6 @@ typedef struct
 {
 	char	name[MAX_QPATH];
 	int		flags;
-	int		value;
 	int		contents;
 	char	animname[MAX_QPATH];
 } textureref_t;

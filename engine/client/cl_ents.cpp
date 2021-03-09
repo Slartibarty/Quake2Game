@@ -5,9 +5,6 @@
 
 extern	model_t			*cl_mod_powerscreen;
 
-//PGM
-int	vidref_val;
-//PGM
 
 /*
 =========================================================================
@@ -1097,12 +1094,8 @@ void CL_AddPacketEntities (frame_t *frame)
 					float intensity;
 
 					intensity = 50 + (500 * (sinf(cl.time/500.0f) + 1.0f));
-					// FIXME - check out this effect in rendition
-					if(vidref_val == VIDREF_GL)
-						V_AddLight (ent.origin, intensity, -1.0f, -1.0f, -1.0f);
-					else
-						V_AddLight (ent.origin, -1.0f * intensity, 1.0f, 1.0f, 1.0f);
-					}
+					V_AddLight (ent.origin, intensity, -1.0f, -1.0f, -1.0f);
+				}
 				else
 				{
 					CL_Tracker_Shell (cent->lerp_origin);
@@ -1112,11 +1105,7 @@ void CL_AddPacketEntities (frame_t *frame)
 			else if (effects & EF_TRACKER)
 			{
 				CL_TrackerTrail (cent->lerp_origin, ent.origin, 0);
-				// FIXME - check out this effect in rendition
-				if(vidref_val == VIDREF_GL)
-					V_AddLight (ent.origin, 200, -1, -1, -1);
-				else
-					V_AddLight (ent.origin, -200, 1, 1, 1);
+				V_AddLight (ent.origin, 200, -1, -1, -1);
 			}
 //ROGUE
 //======

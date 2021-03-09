@@ -76,14 +76,6 @@ void CL_ColorFlash (vec3_t pos, int ent, int intensity, float r, float g, float 
 {
 	cdlight_t	*dl;
 
-	if((vidref_val == VIDREF_SOFT) && ((r < 0) || (g<0) || (b<0)))
-	{
-		intensity = -intensity;
-		r = -r;
-		g = -g;
-		b = -b;
-	}
-
 	dl = CL_AllocDlight (ent);
 	VectorCopy (pos,  dl->origin);
 	dl->radius = (float)intensity;
@@ -530,11 +522,9 @@ void CL_Heatbeam (vec3_t start, vec3_t forward)
 //	MakeNormalVectors (vec, right, up);
 	VectorCopy (cl.v_right, right);
 	VectorCopy (cl.v_up, up);
-	if (vidref_val == VIDREF_GL)
-	{ // GL mode
-		VectorMA (move, -0.5f, right, move);
-		VectorMA (move, -0.5f, up, move);
-	}
+	// GL mode
+	VectorMA (move, -0.5f, right, move);
+	VectorMA (move, -0.5f, up, move);
 	// otherwise assume SOFT
 
 	ltime = (float)cl.time/1000.0f;

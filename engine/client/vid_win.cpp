@@ -149,8 +149,6 @@ static bool VID_LoadRefresh()
 	Com_Printf( "------------------------------------\n" );
 	reflib_active = true;
 
-	vidref_val = VIDREF_GL; // PGM
-
 	return true;
 }
 

@@ -652,7 +652,6 @@ void ParseBrush (entity_t *mapent)
 		// find default flags and values
 		mt = FindMiptex (td.name);
 		td.flags = mt->flags;
-		td.value = mt->value;
 		side->contents = mt->contents;
 		side->surf = td.flags = mt->flags;
 
@@ -662,8 +661,6 @@ void ParseBrush (entity_t *mapent)
 			side->contents = atoi(token);
 			GetToken (false);
 			side->surf = td.flags = atoi(token);
-			GetToken (false);
-			td.value = atoi(token);
 		}
 
 		// translucent objects are automatically classified as detail

@@ -15,7 +15,7 @@ struct cnode_t
 struct cbrushside_t
 {
 	cplane_t	*plane;
-	mapsurface_t	*surface;
+	csurface_t	*surface;
 };
 
 struct cleaf_t
@@ -51,7 +51,7 @@ int			numbrushsides;
 cbrushside_t map_brushsides[MAX_MAP_BRUSHSIDES];
 
 int			numtexinfo;
-mapsurface_t	map_surfaces[MAX_MAP_TEXINFO];
+csurface_t	map_surfaces[MAX_MAP_TEXINFO];
 
 int			numplanes;
 cplane_t	map_planes[MAX_MAP_PLANES+6];		// extra for box hull
@@ -87,7 +87,7 @@ dareaportal_t map_areaportals[MAX_MAP_AREAPORTALS];
 
 int			numclusters = 1;
 
-mapsurface_t	nullsurface;
+csurface_t	nullsurface;
 
 int			floodvalid;
 
@@ -160,7 +160,7 @@ CMod_LoadSurfaces
 void CMod_LoadSurfaces (lump_t *l)
 {
 	texinfo_t	*in;
-	mapsurface_t	*out;
+	csurface_t	*out;
 	int			i, count;
 
 	in = (texinfo_t*)(cmod_base + l->fileofs);
@@ -177,10 +177,8 @@ void CMod_LoadSurfaces (lump_t *l)
 
 	for ( i=0 ; i<count ; i++, in++, out++)
 	{
-		Q_strcpy_s (out->c.name, in->texture);
-		Q_strcpy_s (out->rname, in->texture);
-		out->c.flags = LittleLong (in->flags);
-		out->c.value = LittleLong (in->value);
+		Q_strcpy_s (out->name, in->texture);
+		out->flags = LittleLong (in->flags);
 	}
 }
 
@@ -1075,7 +1073,7 @@ void CM_ClipBoxToBrush (vec3_t mins, vec3_t maxs, vec3_t p1, vec3_t p2,
 				enterfrac = 0.0f;
 			trace->fraction = enterfrac;
 			trace->plane = *clipplane;
-			trace->surface = &(leadside->surface->c);
+			trace->surface = leadside->surface;
 			trace->contents = brush->contents;
 		}
 	}
@@ -1346,7 +1344,7 @@ trace_t		CM_BoxTrace (vec3_t start, vec3_t end,
 	// fill in a default trace
 	memset (&trace_trace, 0, sizeof(trace_trace));
 	trace_trace.fraction = 1;
-	trace_trace.surface = &(nullsurface.c);
+	trace_trace.surface = &nullsurface;
 
 	if (!numnodes)	// map not loaded
 		return trace_trace;

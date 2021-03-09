@@ -385,17 +385,8 @@ struct cmodel_t
 
 struct csurface_t
 {
-	char		name[16];
+	char		name[MAX_QPATH];
 	int			flags;
-	int			value;
-};
-
-// SlartTodo: This structure can go away when we drop support for old Q2 game DLLs
-//
-struct mapsurface_t  // used internally due to name len probs //ZOID
-{
-	csurface_t	c;
-	char		rname[32];
 };
 
 struct edict_t;
@@ -1160,14 +1151,3 @@ struct player_state_t
 
 	short		stats[MAX_STATS];		// fast status bar updates
 };
-
-
-// ==================
-// PGM
-#define VIDREF_GL		1
-#define VIDREF_SOFT		2
-#define VIDREF_OTHER	3
-
-extern int vidref_val;
-// PGM
-// ==================

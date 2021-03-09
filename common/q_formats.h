@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include "q_shared.h"
+#include "q_types.h"
+#include "q_math.h"
 
 //-------------------------------------------------------------------------------------------------
 // PAK files
@@ -700,7 +701,6 @@ struct texinfo_t
 {
 	float		vecs[2][4];		// [s/t][xyz offset]
 	int			flags;			// miptex flags + overrides
-	int			value;			// light emission, etc
 	char		texture[32];	// texture name (textures/*.wal)
 	int			nexttexinfo;	// for animations, -1 = end of chain
 };

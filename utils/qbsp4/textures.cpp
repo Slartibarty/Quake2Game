@@ -178,12 +178,6 @@ static void ParseMaterial( char *data, textureref_t *ref )
 			ref->flags = ParseSurfaceFlags( token, 3 );
 			continue;
 		}
-		if ( Q_strcmp( token, "$value" ) == 0 )
-		{
-			COM_Parse2( &data, &token, sizeof( tokenhack ) );
-			ref->value = atoi( token );
-			continue;
-		}
 	}
 
 }
@@ -367,7 +361,6 @@ int TexinfoForBrushTexture (plane_t *plane, brush_texture_t *bt, vec3_t origin)
 	}
 
 	tx.flags = bt->flags;
-	tx.value = bt->value;
 
 	//
 	// find the texinfo
@@ -376,8 +369,6 @@ int TexinfoForBrushTexture (plane_t *plane, brush_texture_t *bt, vec3_t origin)
 	for (i=0 ; i<numtexinfo ; i++, tc++)
 	{
 		if (tc->flags != tx.flags)
-			continue;
-		if (tc->value != tx.value)
 			continue;
 		for (j=0 ; j<2 ; j++)
 		{
