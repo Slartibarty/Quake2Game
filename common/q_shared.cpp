@@ -271,6 +271,16 @@ void Com_PageInMemory (byte *buffer, int size)
 		paged_total += buffer[i];
 }
 
+float frand()
+{
+	return (rand()&32767) * (1.0f/32767.0f);
+}
+
+float crand()
+{
+	return (rand()&32767) * (2.0f/32767.0f) - 1.0f;
+}
+
 //-------------------------------------------------------------------------------------------------
 // does a varargs printf into a temp buffer, so I don't need to have
 // varargs versions of all text functions.

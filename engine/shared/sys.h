@@ -9,7 +9,9 @@ void	Sys_Init( void );
 void	Sys_AppActivate( void );
 
 void	Sys_UnloadGame( void );
+void	Sys_UnloadCGame( void );
 void	*Sys_GetGameAPI( void *parms );
+void	*Sys_GetCGameAPI( void *parms );
 // loads the game dll and calls the api init function
 
 char	*Sys_ConsoleInput( void );

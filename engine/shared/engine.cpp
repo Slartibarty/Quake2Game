@@ -503,16 +503,6 @@ byte	COM_BlockSequenceCRCByte (byte *base, int length, int sequence)
 
 //========================================================
 
-float	frand(void)
-{
-	return (rand()&32767)* (1.0f/32767.0f);
-}
-
-float	crand(void)
-{
-	return (rand()&32767)* (2.0f/32767.0f) - 1.0f;
-}
-
 // Compressed vertex normals
 vec3_t bytedirs[NUMVERTEXNORMALS]
 {

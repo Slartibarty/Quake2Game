@@ -107,9 +107,6 @@ void		Com_SetServerState (int state);
 unsigned	Com_BlockChecksum (void *buffer, int length); // md4.c
 byte		COM_BlockSequenceCRCByte (byte *base, int length, int sequence);
 
-float	frand(void);	// 0 to 1
-float	crand(void);	// -1 to 1
-
 // Compressed vertex normals
 #define NUMVERTEXNORMALS 162
 extern vec3_t bytedirs[NUMVERTEXNORMALS];

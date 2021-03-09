@@ -1,5 +1,7 @@
 // g_local.h -- local definitions for game module
 
+#pragma once
+
 #include "../common/q_shared.h"
 
 #ifdef _WIN32

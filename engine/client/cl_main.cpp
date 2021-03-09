@@ -1733,6 +1733,8 @@ void CL_Init (void)
 	CL_InitLocal ();
 	input::Init ();
 
+	CL_InitCGame();
+
 //	Cbuf_AddText ("exec autoexec.cfg\n");
 	FS_ExecAutoexec ();
 	Cbuf_Execute ();
@@ -1760,6 +1762,8 @@ void CL_Shutdown(void)
 	isdown = true;
 
 	CL_WriteConfiguration (); 
+
+	CL_ShutdownCGame();
 
 	CDAudio_Shutdown ();
 	S_Shutdown();

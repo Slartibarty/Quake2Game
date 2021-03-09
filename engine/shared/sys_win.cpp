@@ -302,13 +302,9 @@ GAME DLL
 */
 
 static HINSTANCE game_library;
+static HINSTANCE cgame_library;
 
-/*
-=================
-Sys_UnloadGame
-=================
-*/
-void Sys_UnloadGame( void )
+void Sys_UnloadGame()
 {
 	if ( !FreeLibrary( game_library ) ) {
 		Com_Error( ERR_FATAL, "FreeLibrary failed for game library" );
@@ -316,23 +312,22 @@ void Sys_UnloadGame( void )
 	game_library = nullptr;
 }
 
-typedef void *( *GetGameAPI_t ) ( void * );
+void Sys_UnloadCGame()
+{
+	if ( !FreeLibrary( cgame_library ) ) {
+		Com_Error( ERR_FATAL, "FreeLibrary failed for cgame library" );
+	}
+	cgame_library = nullptr;
+}
 
-/*
-=================
-Sys_GetGameAPI
+typedef void *( *GetAPI_t ) ( void * );
 
-Loads the game dll
-=================
-*/
-void *Sys_GetGameAPI( void *parms )
+static void *Sys_GetAPI( void *parms, HINSTANCE instance, const char *gamename )
 {
 	char name[MAX_OSPATH];
 
-	const char *gamename = "game" BLD_ARCHITECTURE ".dll";
-
-	if ( game_library ) {
-		Com_Error( ERR_FATAL, "Sys_GetGameAPI without Sys_UnloadingGame" );
+	if ( instance ) {
+		Com_Error( ERR_FATAL, "Sys_GetAPI without Sys_Unload(C)Game" );
 	}
 
 	// now run through the search paths
@@ -344,15 +339,15 @@ void *Sys_GetGameAPI( void *parms )
 			return nullptr;		// couldn't find one anywhere
 		}
 		Q_sprintf_s( name, "%s/%s", path, gamename );
-		game_library = LoadLibraryA( name );
-		if ( game_library )
+		instance = LoadLibraryA( name );
+		if ( instance )
 		{
 			Com_DPrintf( "LoadLibrary (%s)\n", name );
 			break;
 		}
 	}
 
-	GetGameAPI_t GetGameAPI = (GetGameAPI_t)GetProcAddress( game_library, "GetGameAPI" );
+	GetAPI_t GetGameAPI = (GetAPI_t)GetProcAddress( instance, "GetGameAPI" );
 	if ( !GetGameAPI )
 	{
 		Sys_UnloadGame();
@@ -360,6 +355,16 @@ void *Sys_GetGameAPI( void *parms )
 	}
 
 	return GetGameAPI( parms );
+}
+
+void *Sys_GetGameAPI( void *parms )
+{
+	return Sys_GetAPI( parms, game_library, "game" BLD_ARCHITECTURE ".dll" );
+}
+
+void *Sys_GetCGameAPI( void *parms )
+{
+	return Sys_GetAPI( parms, cgame_library, "cgame" BLD_ARCHITECTURE ".dll" );
 }
 
 //=======================================================================

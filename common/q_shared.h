@@ -230,6 +230,9 @@ void COM_Parse2( char **data_p, char **token_p, int tokenlen );
 
 void Com_PageInMemory( byte *buffer, int size );
 
+float	frand(void);	// 0 to 1
+float	crand(void);	// -1 to 1
+
 char *va( _Printf_format_string_ const char *format, ... );
 
 //-------------------------------------------------------------------------------------------------

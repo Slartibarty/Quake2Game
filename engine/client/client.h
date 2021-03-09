@@ -4,6 +4,7 @@
 
 #include "../shared/engine.h"
 #include "../renderer/ref_public.h"
+#include "../../cgame_shared/cg_public.h"
 
 #include "vid.h"
 #include "screen.h"
@@ -262,6 +263,7 @@ extern	cvar_t	*cl_timedemo;
 
 extern	cvar_t	*cl_vwep;
 
+#ifdef OBSOLETE
 struct cdlight_t
 {
 	int		key;				// so entities can reuse same entry
@@ -275,6 +277,7 @@ struct cdlight_t
 
 extern	centity_t	cl_entities[MAX_EDICTS];
 extern	cdlight_t	cl_dlights[MAX_DLIGHTS];
+#endif
 
 // the cl_parse_entities must be large enough to hold UPDATE_BACKUP frames of
 // entities, so that when a delta compressed message arives from the server
@@ -413,6 +416,14 @@ void CL_RegisterSounds (void);
 
 void CL_Quit_f (void);
 
+
+//
+// cl_cgame
+//
+extern cgame_export_t	*cge;
+
+void CL_InitCGame();
+void CL_ShutdownCGame();
 
 //
 // cl_main

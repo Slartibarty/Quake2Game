@@ -245,10 +245,10 @@ project "engine"
 project "cgame_q2"
 	kind "SharedLib"
 	filter( filter_32bit )
-		targetname "gamex86"
+		targetname "cgamex86"
 	filter {}
 	filter( filter_64bit )
-		targetname "gamex64"
+		targetname "cgamex64"
 	filter {}
 	language "C++"
 	targetdir "../game/baseq2"
@@ -262,7 +262,9 @@ project "cgame_q2"
 	files {
 		"common/*",
 		"cgame_q2/*",
-		"cgame_shared/*"
+		"cgame_shared/*",
+		
+		"game_shared/m_flash.cpp"
 	}
 	
 	filter "system:windows"
