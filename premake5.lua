@@ -242,6 +242,44 @@ project "engine"
 		"**_pch.cpp"
 	}
 	
+project "cgame_q2"
+	kind "SharedLib"
+	filter( filter_32bit )
+		targetname "gamex86"
+	filter {}
+	filter( filter_64bit )
+		targetname "gamex64"
+	filter {}
+	language "C++"
+	targetdir "../game/baseq2"
+		
+	pchsource( "cgame_q2/cg_pch.cpp" )
+	pchheader( "cg_local.h" )
+	filter( "files:not cgame_q2/**" )
+		flags( { "NoPCH" } )
+	filter( {} )
+
+	files {
+		"common/*",
+		"cgame_q2/*",
+		"cgame_shared/*"
+	}
+	
+	filter "system:windows"
+		removefiles {
+			"**/*_linux.*"
+		}
+	filter {}
+	filter "system:linux"
+		removefiles {
+			"**/*_win.*"
+		}
+	filter {}
+	
+	removefiles {
+		"**.manifest",
+	}
+	
 project "game_q2"
 	kind "SharedLib"
 	filter( filter_32bit )
