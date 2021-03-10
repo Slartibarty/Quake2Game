@@ -1303,7 +1303,7 @@ void CM_RecursiveHullCheck (int num, float p1f, float p2f, vec3_t p1, vec3_t p2)
 		idist = 1.0f/(t1-t2);
 		side = 1;
 		frac2 = (t1 + offset + DIST_EPSILON)*idist;
-		frac = (t1 - offset + DIST_EPSILON)*idist;
+		frac = (t1 - offset - DIST_EPSILON)*idist;
 	}
 	else if (t1 > t2)
 	{
