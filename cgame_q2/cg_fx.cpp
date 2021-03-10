@@ -70,12 +70,9 @@ void CL_RunLightStyles (void)
 }
 
 
-void CL_SetLightstyle( int i )
+void CL_SetLightstyle( int i, const char *s )
 {
-	const char *s;
 	strlen_t j, k;
-
-	s = (cgi.configstrings())[i + CS_LIGHTS];
 
 	j = Q_strlen( s );
 	if ( j >= MAX_QPATH ) {

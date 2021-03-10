@@ -256,7 +256,7 @@ void CL_PrepRefresh (void)
 	SCR_TouchPics ();
 	Com_Printf ("                                     \r");
 
-	CL_RegisterTEntModels ();
+	cge->RegisterTEntModels();
 
 	num_cl_weaponmodels = 1;
 	strcpy(cl_weaponmodels[0], "weapon.md2");
@@ -448,7 +448,7 @@ void V_RenderView (void)
 		// build a refresh entity list and calc cl.sim*
 		// this also calls CL_CalcViewValues which loads
 		// v_forward, etc.
-		CL_AddEntities ();
+		CL_AddEntities();
 
 		if (cl_testparticles->value)
 			V_TestParticles ();

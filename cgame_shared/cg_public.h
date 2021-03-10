@@ -27,67 +27,6 @@ struct centity_t
 	int			fly_stoptime;
 };
 
-// STUFF WE MIGHT BE ABLE TO MOVE OUT OF PUBLIC
-
-struct cdlight_t
-{
-	int		key;				// so entities can reuse same entry
-	vec3_t	color;
-	vec3_t	origin;
-	float	radius;
-	float	die;				// stop lighting after this time
-	float	decay;				// drop this each second
-	float	minlight;			// don't add when contributing less
-};
-
-extern centity_t	cl_entities[MAX_EDICTS];
-extern cdlight_t	cl_dlights[MAX_DLIGHTS];
-
-//ROGUE
-struct cl_sustain_t
-{
-	int			id;
-	int			type;
-	int			endtime;
-	int			nextthink;
-	int			thinkinterval;
-	vec3_t		org;
-	vec3_t		dir;
-	int			color;
-	int			count;
-	int			magnitude;
-	void		(*think)(cl_sustain_t *self);
-};
-
-#define MAX_SUSTAINS		32
-
-// ========
-// PGM
-typedef struct particle_s
-{
-	struct particle_s	*next;
-
-	float		time;
-
-	vec3_t		org;
-	vec3_t		vel;
-	vec3_t		accel;
-	float		color;
-	float		colorvel;
-	float		alpha;
-	float		alphavel;
-} cparticle_t;
-
-
-#define	PARTICLE_GRAVITY	40
-#define BLASTER_PARTICLE_COLOR		0xe0
-// PMM
-#define INSTANT_PARTICLE	-10000.0f
-// PGM
-// ========
-
-// END STUFF WE MIGHT BE ABLE TO MOVE OUT OF PUBLIC
-
 //=============================================================================
 
 struct cgame_import_t
@@ -122,7 +61,7 @@ struct cgame_import_t
 	int				( *time ) ( void );				// cl
 	int				( *servertime ) ( void );		// cl.frame
 	int				( *serverframe ) ( void );		// cl.frame
-	int				( *frametime ) ( void );		// cl
+	int				( *frametime ) ( void );		// cls
 	float			( *lerpfrac ) ( void );			// cl
 	int				( *playernum ) ( void );		// cl
 	player_state_t	*( *playerstate ) ( void );		// cl.frame
@@ -130,7 +69,6 @@ struct cgame_import_t
 	vec3_t			*( *v_forward ) ( void );		// cl
 	vec3_t			*( *v_right ) ( void );			// cl
 	vec3_t			*( *v_up ) ( void );			// cl
-	const char **	( *configstrings ) ( void );	// cl
 
 	vec3_t		*bytedirs;
 	sizebuf_t	*net_message;
@@ -143,6 +81,25 @@ struct cgame_export_t
 	// the init function will only be called when a game starts,
 	// not each time a level is loaded.  Persistant data for clients
 	// and the server can be allocated in init
-	void		(*Init) (void);
-	void		(*Shutdown) (void);
+	void		( *Init ) ( void );
+	void		( *Shutdown ) ( void );
+
+	void		( *RegisterTEntSounds ) ( void );
+	void		( *RegisterTEntModels ) ( void );
+
+	void		( *AddEntities ) ( void );
+	void		( *Frame ) ( void );
+	void		( *ClearState ) ( void );
+
+	void		( *EntityEvent ) ( entity_state_t *ent );
+	void		( *TeleporterParticles ) ( entity_state_t *ent );
+	void		( *RunParticles ) ( int &i, uint effects, centity_t *cent, entity_t *ent, entity_state_t *s1 );
+
+	void		( *ParseTEnt ) ( void );
+	void		( *ParseMuzzleFlash ) ( void );
+	void		( *ParseMuzzleFlash2 ) ( void );
+
+	void		( *SetLightstyle ) ( int i, const char *s );
+
+
 };

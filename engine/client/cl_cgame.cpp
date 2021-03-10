@@ -6,6 +6,71 @@ cgame_export_t	*cge;
 
 extern void CL_ShutdownCGame();
 
+static centity_t *Wrap_EntityAtIndex( int index )
+{
+	return &cl_entities[index];
+}
+
+static int Wrap_time()
+{
+	return cl.time;
+}
+
+static int Wrap_servertime()
+{
+	return cl.frame.servertime;
+}
+
+static int Wrap_serverframe()
+{
+	return cl.frame.serverframe;
+}
+
+static int Wrap_frametime()
+{
+	return cls.frametime;
+}
+
+static float Wrap_lerpfrac()
+{
+	return cl.lerpfrac;
+}
+
+static int Wrap_playernum()
+{
+	return cl.playernum;
+}
+
+static player_state_t *Wrap_playerstate()
+{
+	return &cl.frame.playerstate;
+}
+
+static vec3_t *Wrap_vieworg()
+{
+	return &cl.refdef.vieworg;
+}
+
+static vec3_t *Wrap_v_forward()
+{
+	return &cl.v_forward;
+}
+
+static vec3_t *Wrap_v_right()
+{
+	return &cl.v_right;
+}
+
+static vec3_t *Wrap_v_up()
+{
+	return &cl.v_up;
+}
+
+static const char **Wrap_configstrings()
+{
+	return (const char **)cl.configstrings;
+}
+
 void CL_InitCGame()
 {
 	cgame_import_t cgi;
@@ -13,9 +78,43 @@ void CL_InitCGame()
 	if ( cge )
 		CL_ShutdownCGame();
 
-	cgi.printf = Com_Printf;
-	cgi.dprintf = Com_DPrintf;
-	cgi.errorf = Com_Error;
+	cgi.Printf = Com_Printf;
+	cgi.DPrintf = Com_DPrintf;
+	cgi.Errorf = Com_Error;
+
+	cgi.StartSound = S_StartSound;
+
+	cgi.RegisterSound = S_RegisterSound;
+	cgi.RegisterPic = R_RegisterPic;
+	cgi.RegisterModel = R_RegisterModel;
+
+	cgi.AddEntity = V_AddEntity;
+	cgi.AddParticle = V_AddParticle;
+	cgi.AddLight = V_AddLight;
+	cgi.AddLightStyle = V_AddLightStyle;
+
+	cgi.ReadByte = MSG_ReadByte;
+	cgi.ReadShort = MSG_ReadShort;
+	cgi.ReadLong = MSG_ReadLong;
+	cgi.ReadPos = MSG_ReadPos;
+	cgi.ReadDir = MSG_ReadDir;
+
+	cgi.EntityAtIndex = Wrap_EntityAtIndex;
+
+	cgi.time = Wrap_time;
+	cgi.servertime = Wrap_servertime;
+	cgi.serverframe = Wrap_serverframe;
+	cgi.frametime = Wrap_frametime;
+	cgi.lerpfrac = Wrap_lerpfrac;
+	cgi.playernum = Wrap_playernum;
+	cgi.playerstate = Wrap_playerstate;
+	cgi.vieworg = Wrap_vieworg;
+	cgi.v_forward = Wrap_v_forward;
+	cgi.v_right = Wrap_v_right;
+	cgi.v_up = Wrap_v_up;
+
+	cgi.bytedirs = bytedirs;
+	cgi.net_message = &net_message;
 
 	cge = (cgame_export_t *)Sys_GetCGameAPI( &cgi );
 

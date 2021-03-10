@@ -209,7 +209,6 @@ project "engine"
 		"engine/renderer/*",
 		
 		"game_shared/game_public.h",
-		"game_shared/m_flash.cpp",
 		
 		zlib_public,
 		

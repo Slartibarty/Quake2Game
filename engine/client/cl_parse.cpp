@@ -159,7 +159,7 @@ void CL_RegisterSounds (void)
 	int		i;
 
 	S_BeginRegistration ();
-	CL_RegisterTEntSounds ();
+	cge->RegisterTEntSounds ();
 	for (i=1 ; i<MAX_SOUNDS ; i++)
 	{
 		if (!cl.configstrings[CS_SOUNDS+i][0])
@@ -522,7 +522,7 @@ void CL_ParseConfigString (void)
 	// do something apropriate 
 
 	if (i >= CS_LIGHTS && i < CS_LIGHTS+MAX_LIGHTSTYLES)
-		CL_SetLightstyle (i - CS_LIGHTS);
+		cge->SetLightstyle (i - CS_LIGHTS, cl.configstrings[i + CS_LIGHTS]);
 	else if (i == CS_CDTRACK)
 	{
 		if (cl.refresh_prepped)
@@ -748,15 +748,15 @@ void CL_ParseServerMessage (void)
 			break;
 
 		case svc_temp_entity:
-			CL_ParseTEnt ();
+			cge->ParseTEnt ();
 			break;
 
 		case svc_muzzleflash:
-			CL_ParseMuzzleFlash ();
+			cge->ParseMuzzleFlash ();
 			break;
 
 		case svc_muzzleflash2:
-			CL_ParseMuzzleFlash2 ();
+			cge->ParseMuzzleFlash2 ();
 			break;
 
 		case svc_download:

@@ -9,6 +9,62 @@
 
 extern cgame_import_t	cgi;
 
+struct cdlight_t
+{
+	int		key;				// so entities can reuse same entry
+	vec3_t	color;
+	vec3_t	origin;
+	float	radius;
+	float	die;				// stop lighting after this time
+	float	decay;				// drop this each second
+	float	minlight;			// don't add when contributing less
+};
+
+extern cdlight_t	cl_dlights[MAX_DLIGHTS];
+
+//ROGUE
+struct cl_sustain_t
+{
+	int			id;
+	int			type;
+	int			endtime;
+	int			nextthink;
+	int			thinkinterval;
+	vec3_t		org;
+	vec3_t		dir;
+	int			color;
+	int			count;
+	int			magnitude;
+	void		(*think)(cl_sustain_t *self);
+};
+
+#define MAX_SUSTAINS	32
+
+// ========
+// PGM
+struct cparticle_t
+{
+	cparticle_t	*next;
+
+	float		time;
+
+	vec3_t		org;
+	vec3_t		vel;
+	vec3_t		accel;
+	float		color;
+	float		colorvel;
+	float		alpha;
+	float		alphavel;
+};
+
+
+#define	PARTICLE_GRAVITY	40
+#define BLASTER_PARTICLE_COLOR		0xe0
+// PMM
+#define INSTANT_PARTICLE	-10000.0f
+// PGM
+// ========
+
 struct frame_t
 {
 	qboolean		valid;			// cleared if delta parsing was invalid

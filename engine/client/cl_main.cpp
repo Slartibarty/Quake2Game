@@ -531,8 +531,8 @@ CL_ClearState
 void CL_ClearState (void)
 {
 	S_StopAllSounds ();
-	CL_ClearEffects ();
-	CL_ClearTEnts ();
+
+	cge->ClearState();
 
 // wipe the entire cl structure
 	memset (&cl, 0, sizeof(cl));
@@ -1664,8 +1664,8 @@ void CL_Frame (int msec)
 	CDAudio_Update();
 
 	// advance local effects for next frame
-	CL_RunDLights ();
-	CL_RunLightStyles ();
+	cge->Frame();
+
 	SCR_RunCinematic ();
 	SCR_RunConsole ();
 

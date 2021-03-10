@@ -561,6 +561,7 @@ struct pmove_t
 #define	RF_SHELL_GREEN		2048
 #define RF_SHELL_BLUE		4096
 
+// SlartMissionPack
 //ROGUE
 #define RF_IR_VISIBLE		0x00008000		// 32768
 #define	RF_SHELL_DOUBLE		0x00010000		// 65536

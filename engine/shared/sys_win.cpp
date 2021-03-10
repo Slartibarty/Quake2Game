@@ -322,7 +322,7 @@ void Sys_UnloadCGame()
 
 typedef void *( *GetAPI_t ) ( void * );
 
-static void *Sys_GetAPI( void *parms, HINSTANCE instance, const char *gamename )
+static void *Sys_GetAPI( void *parms, HINSTANCE &instance, const char *gamename, const char *procname )
 {
 	char name[MAX_OSPATH];
 
@@ -347,7 +347,7 @@ static void *Sys_GetAPI( void *parms, HINSTANCE instance, const char *gamename )
 		}
 	}
 
-	GetAPI_t GetGameAPI = (GetAPI_t)GetProcAddress( instance, "GetGameAPI" );
+	GetAPI_t GetGameAPI = (GetAPI_t)GetProcAddress( instance, procname );
 	if ( !GetGameAPI )
 	{
 		Sys_UnloadGame();
@@ -359,12 +359,12 @@ static void *Sys_GetAPI( void *parms, HINSTANCE instance, const char *gamename )
 
 void *Sys_GetGameAPI( void *parms )
 {
-	return Sys_GetAPI( parms, game_library, "game" BLD_ARCHITECTURE ".dll" );
+	return Sys_GetAPI( parms, game_library, "game" BLD_ARCHITECTURE ".dll", "GetGameAPI" );
 }
 
 void *Sys_GetCGameAPI( void *parms )
 {
-	return Sys_GetAPI( parms, cgame_library, "cgame" BLD_ARCHITECTURE ".dll" );
+	return Sys_GetAPI( parms, cgame_library, "cgame" BLD_ARCHITECTURE ".dll", "GetCGameAPI" );
 }
 
 //=======================================================================

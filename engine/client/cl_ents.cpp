@@ -469,11 +469,11 @@ void CL_FireEntityEvents (frame_t *frame)
 		num = (frame->parse_entities + pnum)&(MAX_PARSE_ENTITIES-1);
 		s1 = &cl_parse_entities[num];
 		if (s1->event)
-			CL_EntityEvent (s1);
+			cge->EntityEvent (s1);
 
 		// EF_TELEPORTER acts like an event, but is not cleared each frame
 		if (s1->effects & EF_TELEPORTER)
-			CL_TeleporterParticles (s1);
+			cge->TeleporterParticles (s1);
 	}
 }
 
@@ -764,32 +764,6 @@ void CL_AddPacketEntities (frame_t *frame)
 					ent.skin = cl.baseclientinfo.skin;
 					ent.model = cl.baseclientinfo.model;
 				}
-
-//============
-//PGM
-// 				// SlartMissionpack
-				// SlartTodo: This code sucks, it casts the image_t to a char*
-				// to get access to the name variable at the beginning of the struct
-				if (renderfx & RF_USE_DISGUISE)
-				{
-					if(!Q_strncmp((char *)ent.skin, "players/male", 12))
-					{
-						ent.skin = R_RegisterSkin ("players/male/disguise.pcx");
-						ent.model = R_RegisterModel ("players/male/tris.md2");
-					}
-					else if(!Q_strncmp((char *)ent.skin, "players/female", 14))
-					{
-						ent.skin = R_RegisterSkin ("players/female/disguise.pcx");
-						ent.model = R_RegisterModel ("players/female/tris.md2");
-					}
-					else if(!Q_strncmp((char *)ent.skin, "players/cyborg", 14))
-					{
-						ent.skin = R_RegisterSkin ("players/cyborg/disguise.pcx");
-						ent.model = R_RegisterModel ("players/cyborg/tris.md2");
-					}
-				}
-//PGM
-//============
 			}
 			else
 			{
@@ -965,15 +939,6 @@ void CL_AddPacketEntities (frame_t *frame)
 			else
 				ent.model = cl.model_draw[s1->modelindex2];
 
-			// PMM - check for the defender sphere shell .. make it translucent
-			// replaces the previous version which used the high bit on modelindex2 to determine transparency
-			if (!Q_strcasecmp (cl.configstrings[CS_MODELS+(s1->modelindex2)], "models/items/shell/tris.md2"))
-			{
-				ent.alpha = 0.32;
-				ent.flags = RF_TRANSLUCENT;
-			}
-			// pmm
-
 			V_AddEntity (&ent);
 
 			//PGM - make sure these get reset.
@@ -994,146 +959,20 @@ void CL_AddPacketEntities (frame_t *frame)
 
 		if ( effects & EF_POWERSCREEN )
 		{
+#if SLARTHACK
 			ent.model = cl_mod_powerscreen;
 			ent.oldframe = 0;
 			ent.frame = 0;
 			ent.flags |= (RF_TRANSLUCENT | RF_SHELL_GREEN);
 			ent.alpha = 0.30;
 			V_AddEntity (&ent);
+#endif
 		}
 
 		// add automatic particle trails
 		if ( (effects&~EF_ROTATE) )
 		{
-			if (effects & EF_ROCKET)
-			{
-				CL_RocketTrail (cent->lerp_origin, ent.origin, cent);
-				V_AddLight (ent.origin, 200, 1, 1, 0);
-			}
-			// PGM - Do not reorder EF_BLASTER and EF_HYPERBLASTER. 
-			// EF_BLASTER | EF_TRACKER is a special case for EF_BLASTER2... Cheese!
-			else if (effects & EF_BLASTER)
-			{
-//				CL_BlasterTrail (cent->lerp_origin, ent.origin);
-//PGM
-				if (effects & EF_TRACKER)	// lame... problematic?
-				{
-					CL_BlasterTrail2 (cent->lerp_origin, ent.origin);
-					V_AddLight (ent.origin, 200, 0, 1, 0);		
-				}
-				else
-				{
-					CL_BlasterTrail (cent->lerp_origin, ent.origin);
-					V_AddLight (ent.origin, 200, 1, 1, 0);
-				}
-//PGM
-			}
-			else if (effects & EF_HYPERBLASTER)
-			{
-				if (effects & EF_TRACKER)						// PGM	overloaded for blaster2.
-					V_AddLight (ent.origin, 200, 0, 1, 0);		// PGM
-				else											// PGM
-					V_AddLight (ent.origin, 200, 1, 1, 0);
-			}
-			else if (effects & EF_GIB)
-			{
-				CL_DiminishingTrail (cent->lerp_origin, ent.origin, cent, effects);
-			}
-			else if (effects & EF_GRENADE)
-			{
-				CL_DiminishingTrail (cent->lerp_origin, ent.origin, cent, effects);
-			}
-			else if (effects & EF_FLIES)
-			{
-				CL_FlyEffect (cent, ent.origin);
-			}
-			else if (effects & EF_BFG)
-			{
-				static int bfg_lightramp[6] = {300, 400, 600, 300, 150, 75};
-
-				if (effects & EF_ANIM_ALLFAST)
-				{
-					CL_BfgParticles (&ent);
-					i = 200;
-				}
-				else
-				{
-					i = bfg_lightramp[s1->frame];
-				}
-				V_AddLight (ent.origin, (float)i, 0, 1, 0);
-			}
-			// RAFAEL
-			else if (effects & EF_TRAP)
-			{
-				ent.origin[2] += 32;
-				CL_TrapParticles (&ent);
-				i = (rand()%100) + 100;
-				V_AddLight (ent.origin, (float)i, 1, 0.8f, 0.1f);
-			}
-			else if (effects & EF_FLAG1)
-			{
-				CL_FlagTrail (cent->lerp_origin, ent.origin, 242);
-				V_AddLight (ent.origin, 225, 1, 0.1, 0.1);
-			}
-			else if (effects & EF_FLAG2)
-			{
-				CL_FlagTrail (cent->lerp_origin, ent.origin, 115);
-				V_AddLight (ent.origin, 225, 0.1f, 0.1f, 1);
-			}
-//======
-//ROGUE
-			else if (effects & EF_TAGTRAIL)
-			{
-				CL_TagTrail (cent->lerp_origin, ent.origin, 220);
-				V_AddLight (ent.origin, 225, 1.0f, 1.0f, 0.0f);
-			}
-			else if (effects & EF_TRACKERTRAIL)
-			{
-				if (effects & EF_TRACKER)
-				{
-					float intensity;
-
-					intensity = 50 + (500 * (sinf(cl.time/500.0f) + 1.0f));
-					V_AddLight (ent.origin, intensity, -1.0f, -1.0f, -1.0f);
-				}
-				else
-				{
-					CL_Tracker_Shell (cent->lerp_origin);
-					V_AddLight (ent.origin, 155, -1.0f, -1.0f, -1.0f);
-				}
-			}
-			else if (effects & EF_TRACKER)
-			{
-				CL_TrackerTrail (cent->lerp_origin, ent.origin, 0);
-				V_AddLight (ent.origin, 200, -1, -1, -1);
-			}
-//ROGUE
-//======
-			// RAFAEL
-			else if (effects & EF_GREENGIB)
-			{
-				CL_DiminishingTrail (cent->lerp_origin, ent.origin, cent, effects);				
-			}
-			// RAFAEL
-			else if (effects & EF_IONRIPPER)
-			{
-				CL_IonripperTrail (cent->lerp_origin, ent.origin);
-				V_AddLight (ent.origin, 100, 1, 0.5, 0.5);
-			}
-			// RAFAEL
-			else if (effects & EF_BLUEHYPERBLASTER)
-			{
-				V_AddLight (ent.origin, 200, 0, 0, 1);
-			}
-			// RAFAEL
-			else if (effects & EF_PLASMA)
-			{
-				if (effects & EF_ANIM_ALLFAST)
-				{
-					CL_BlasterTrail (cent->lerp_origin, ent.origin);
-				}
-				V_AddLight (ent.origin, 130, 1, 0.5, 0.5);
-			}
+			cge->RunParticles( i, effects, cent, &ent, s1 );
 		}
 
 		VectorCopy (ent.origin, cent->lerp_origin);
@@ -1329,10 +1168,7 @@ void CL_AddEntities (void)
 #if 0
 	CL_AddProjectiles ();
 #endif
-	CL_AddTEnts ();
-	CL_AddParticles ();
-	CL_AddDLights ();
-	CL_AddLightStyles ();
+	cge->AddEntities();
 }
 
 
