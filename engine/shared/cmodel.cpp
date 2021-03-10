@@ -954,18 +954,18 @@ BOX TRACING
 ===============================================================================
 */
 
-// 1/32 epsilon to keep floating point happy
-#define	DIST_EPSILON	0.03125f
+// 1/8 epsilon to keep floating point happy
+#define	DIST_EPSILON	0.125f
 
 #define NEVER_UPDATED	-99999.0f
 
-vec3_t	trace_start, trace_end;
-vec3_t	trace_mins, trace_maxs;
-vec3_t	trace_extents;
+static vec3_t	trace_start, trace_end;
+static vec3_t	trace_mins, trace_maxs;
+static vec3_t	trace_extents;
 
-trace_t	trace_trace;
-int		trace_contents;
-bool	trace_ispoint;		// optimized case
+static trace_t	trace_trace;
+static int		trace_contents;
+static bool		trace_ispoint;		// optimized case
 
 /*
 ================
@@ -985,12 +985,12 @@ void CM_ClipBoxToBrush (vec3_t mins, vec3_t maxs, vec3_t p1, vec3_t p2,
 	float		f;
 	cbrushside_t	*side, *leadside;
 
+	if (!brush->numsides)
+		return;
+
 	enterfrac = NEVER_UPDATED;
 	leavefrac = 1.0f;
 	clipplane = NULL;
-
-	if (!brush->numsides)
-		return;
 
 	c_brush_traces++;
 
@@ -1015,8 +1015,7 @@ void CM_ClipBoxToBrush (vec3_t mins, vec3_t maxs, vec3_t p1, vec3_t p2,
 			ofs[1] = ( plane->normal[1] < 0.0f ) ? maxs[1] : mins[1];
 			ofs[2] = ( plane->normal[2] < 0.0f ) ? maxs[2] : mins[2];
 
-			dist = DotProductAbs (ofs, plane->normal);
-			dist = plane->dist - dist;
+			dist = plane->dist - DotProduct (ofs, plane->normal);
 		}
 		else
 		{	// special point case
@@ -1046,6 +1045,7 @@ void CM_ClipBoxToBrush (vec3_t mins, vec3_t maxs, vec3_t p1, vec3_t p2,
 		if (d1 > d2)
 		{	// enter
 			f = (d1-DIST_EPSILON) / (d1-d2);
+		//	assert( f >= 0.0f );
 			if (f < 0.0f)
 			{
 				f = 0.0f;
@@ -1060,6 +1060,7 @@ void CM_ClipBoxToBrush (vec3_t mins, vec3_t maxs, vec3_t p1, vec3_t p2,
 		else
 		{	// leave
 			f = (d1+DIST_EPSILON) / (d1-d2);
+			assert( f <= 1.0f );
 			// Quake 3 does this:
 			/*if ( f > 1.0f )
 			{
@@ -1079,9 +1080,12 @@ void CM_ClipBoxToBrush (vec3_t mins, vec3_t maxs, vec3_t p1, vec3_t p2,
 	if (!startout)
 	{	// original point was inside brush
 		trace->startsolid = true;
-
 		if (!getout)
+		{
 			trace->allsolid = true;
+			trace->fraction = 0.0f;
+			trace->contents = brush->contents;
+		}
 		return;
 	}
 
@@ -1107,7 +1111,7 @@ CM_TestBoxInBrush
 void CM_TestBoxInBrush (vec3_t mins, vec3_t maxs, vec3_t p1,
 					  trace_t *trace, cbrush_t *brush)
 {
-	int			i, j;
+	int			i;
 	cplane_t	*plane;
 	float		dist;
 	vec3_t		ofs;
@@ -1133,8 +1137,7 @@ void CM_TestBoxInBrush (vec3_t mins, vec3_t maxs, vec3_t p1,
 		ofs[1] = ( plane->normal[1] < 0.0f ) ? maxs[1] : mins[1];
 		ofs[2] = ( plane->normal[2] < 0.0f ) ? maxs[2] : mins[2];
 
-		dist = DotProductAbs (ofs, plane->normal);
-		dist = plane->dist - dist;
+		dist = plane->dist - DotProduct (ofs, plane->normal);
 
 		d1 = DotProduct (p1, plane->normal) - dist;
 
@@ -1231,7 +1234,6 @@ void CM_RecursiveHullCheck (int num, float p1f, float p2f, vec3_t p1, vec3_t p2)
 	float		t1, t2, offset;
 	float		frac, frac2;
 	float		idist;
-	int			i;
 	vec3_t		mid;
 	int			side;
 	float		midf;
@@ -1339,8 +1341,6 @@ trace_t CM_BoxTrace (vec3_t start, vec3_t end,
 					 vec3_t mins, vec3_t maxs,
 					 int headnode, int brushmask)
 {
-	int		i;
-
 	checkcount++;		// for multi-check avoidance
 
 	c_traces++;			// for statistics, may be zeroed
@@ -1416,8 +1416,7 @@ trace_t CM_BoxTrace (vec3_t start, vec3_t end,
 	}
 	else
 	{
-		for (i=0 ; i<3 ; i++)
-			trace_trace.endpos[i] = start[i] + trace_trace.fraction * (end[i] - start[i]);
+		VectorLerp( start, end, trace_trace.fraction, trace_trace.endpos );
 	}
 	return trace_trace;
 }
@@ -1431,12 +1430,12 @@ Handles offseting and rotation of the end points for moving and
 rotating entities
 ==================
 */
-trace_t		CM_TransformedBoxTrace (vec3_t start, vec3_t end,
-						  vec3_t mins, vec3_t maxs,
-						  int headnode, int brushmask,
-						  vec3_t origin, vec3_t angles)
+void CM_TransformedBoxTrace (vec3_t start, vec3_t end,
+							 vec3_t mins, vec3_t maxs,
+							 int headnode, int brushmask,
+							 vec3_t origin, vec3_t angles,
+							 trace_t &trace)
 {
-	trace_t		trace;
 	vec3_t		start_l, end_l;
 	vec3_t		a;
 	vec3_t		forward, right, up;
@@ -1480,11 +1479,7 @@ trace_t		CM_TransformedBoxTrace (vec3_t start, vec3_t end,
 		trace.plane.normal[2] = DotProduct (temp, up);
 	}
 
-	trace.endpos[0] = start[0] + trace.fraction * (end[0] - start[0]);
-	trace.endpos[1] = start[1] + trace.fraction * (end[1] - start[1]);
-	trace.endpos[2] = start[2] + trace.fraction * (end[2] - start[2]);
-
-	return trace;
+	VectorLerp( start, end, trace.fraction, trace.endpos );
 }
 
 

@@ -536,13 +536,13 @@ void SV_ClipMoveToEntities ( moveclip_t *clip )
 			angles = vec3_origin;	// boxes don't rotate
 
 		if (touch->svflags & SVF_MONSTER)
-			trace = CM_TransformedBoxTrace (clip->start, clip->end,
+			CM_TransformedBoxTrace (clip->start, clip->end,
 				clip->mins2, clip->maxs2, headnode, clip->contentmask,
-				touch->s.origin, angles);
+				touch->s.origin, angles, trace);
 		else
-			trace = CM_TransformedBoxTrace (clip->start, clip->end,
+			CM_TransformedBoxTrace (clip->start, clip->end,
 				clip->mins, clip->maxs, headnode,  clip->contentmask,
-				touch->s.origin, angles);
+				touch->s.origin, angles, trace);
 
 		if (trace.allsolid || trace.startsolid ||
 		trace.fraction < clip->trace.fraction)
