@@ -1045,7 +1045,7 @@ void CM_ClipBoxToBrush (vec3_t mins, vec3_t maxs, vec3_t p1, vec3_t p2,
 		if (d1 > d2)
 		{	// enter
 			f = (d1-DIST_EPSILON) / (d1-d2);
-		//	assert( f >= 0.0f );
+			// Quake 3 addition (verified needed):
 			if (f < 0.0f)
 			{
 				f = 0.0f;
@@ -1061,7 +1061,7 @@ void CM_ClipBoxToBrush (vec3_t mins, vec3_t maxs, vec3_t p1, vec3_t p2,
 		{	// leave
 			f = (d1+DIST_EPSILON) / (d1-d2);
 			assert( f <= 1.0f );
-			// Quake 3 does this:
+			// Quake 3 addition (not verified):
 			/*if ( f > 1.0f )
 			{
 				f = 1.0f;
