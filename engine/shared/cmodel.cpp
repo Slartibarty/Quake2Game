@@ -1268,6 +1268,8 @@ void CM_RecursiveHullCheck (int num, float p1f, float p2f, vec3_t p1, vec3_t p2)
 					fabs(trace_extents[1]*plane->normal[1]) +
 					fabs(trace_extents[2]*plane->normal[2]);
 #else
+				// Quake 3 does this instead?
+				// Q3 dev: "this is silly"
 				offset = 2048.0f;
 #endif
 		}
@@ -1317,15 +1319,15 @@ void CM_RecursiveHullCheck (int num, float p1f, float p2f, vec3_t p1, vec3_t p2)
 		frac2 = 0.0f;
 	}
 
-	// move up to the node		
+	// move up to the node
 	frac = Clamp( frac, 0.0f, 1.0f );
 	midf = p1f + (p2f - p1f)*frac;
 	VectorLerp( p1, p2, frac, mid );
 
 	CM_RecursiveHullCheck (node->children[side], p1f, midf, p1, mid);
 
-	// go past the node		
-	frac2 = Clamp( frac, 0.0f, 1.0f );
+	// go past the node
+	frac2 = Clamp( frac2, 0.0f, 1.0f );
 	midf = p1f + (p2f - p1f)*frac2;
 	VectorLerp( p1, p2, frac2, mid );
 

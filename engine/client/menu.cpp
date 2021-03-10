@@ -1000,12 +1000,12 @@ static void ControlsSetMenuItemValues( void )
 	s_options_quality_list.curvalue			= !Cvar_VariableValue( "s_loadas8bit" );
 	s_options_sensitivity_slider.curvalue	= ( sensitivity->value ) * 2;
 
-	Cvar_SetValue( "cl_run", Clamp( 0.0f, 1.0f, cl_run->value ) );
+	Cvar_SetValue( "cl_run", Clamp( cl_run->value, 0.0f, 1.0f ) );
 	s_options_alwaysrun_box.curvalue		= (int)cl_run->value;
 
 	s_options_invertmouse_box.curvalue		= m_pitch->value < 0;
 
-	Cvar_SetValue( "crosshair", Clamp( 0.0f, 3.0f, crosshair->value ) );
+	Cvar_SetValue( "crosshair", Clamp( crosshair->value, 0.0f, 3.0f ) );
 	s_options_crosshair_box.curvalue		= (int)crosshair->value;
 }
 
@@ -2558,9 +2558,9 @@ void StartServerActionFunc( void *self )
 	timelimit	= atoi( s_timelimit_field.buffer );
 	fraglimit	= atoi( s_fraglimit_field.buffer );
 
-	Cvar_SetValue( "maxclients", (float)Clamp( 0, maxclients, maxclients ) );
-	Cvar_SetValue ("timelimit", (float)Clamp( 0, timelimit, timelimit ) );
-	Cvar_SetValue ("fraglimit", (float)Clamp( 0, fraglimit, fraglimit ) );
+	Cvar_SetValue( "maxclients", (float)Max( 0, maxclients ) );
+	Cvar_SetValue ("timelimit", (float)Max( 0, timelimit ) );
+	Cvar_SetValue ("fraglimit", (float)Max( 0, fraglimit ) );
 	Cvar_Set("hostname", s_hostname_field.buffer );
 //	Cvar_SetValue ("deathmatch", !s_rules_box.curvalue );
 //	Cvar_SetValue ("coop", s_rules_box.curvalue );
