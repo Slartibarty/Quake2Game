@@ -1263,9 +1263,13 @@ void CM_RecursiveHullCheck (int num, float p1f, float p2f, vec3_t p1, vec3_t p2)
 			if (trace_ispoint)
 				offset = 0.0f;
 			else
+#if 1
 				offset = fabs(trace_extents[0]*plane->normal[0]) +
 					fabs(trace_extents[1]*plane->normal[1]) +
 					fabs(trace_extents[2]*plane->normal[2]);
+#else
+				offset = 2048.0f;
+#endif
 		}
 
 		// see which sides we need to consider
