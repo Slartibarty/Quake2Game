@@ -1073,9 +1073,8 @@ void CL_CalcViewValues (void)
 	// calculate the origin
 	if ((cl_predict->value) && !(cl.frame.playerstate.pmove.pm_flags & PMF_NO_PREDICTION))
 	{	// use predicted values
-		unsigned	delta;
-
 		backlerp = 1.0f - lerp;
+
 		for (i=0 ; i<3 ; i++)
 		{
 			cl.refdef.vieworg[i] = cl.predicted_origin[i] + ops->viewoffset[i] 
@@ -1084,9 +1083,10 @@ void CL_CalcViewValues (void)
 		}
 
 		// smooth out stair climbing
-		delta = cls.realtime - cl.predicted_step_time;
+		uint delta = cls.realtime - cl.predicted_step_time;
+
 		if (delta < 100)
-			cl.refdef.vieworg[2] -= cl.predicted_step * (100 - delta) * 0.01f;
+			cl.refdef.vieworg[2] -= cl.predicted_step /** float(100 - delta)*/;
 	}
 	else
 	{	// just use interpolated values

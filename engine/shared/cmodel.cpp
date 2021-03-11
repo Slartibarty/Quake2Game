@@ -1264,9 +1264,9 @@ void CM_RecursiveHullCheck (int num, float p1f, float p2f, vec3_t p1, vec3_t p2)
 				offset = 0.0f;
 			else
 #if 1
-				offset = fabs(trace_extents[0]*plane->normal[0]) +
+				offset = (fabs(trace_extents[0]*plane->normal[0]) +
 					fabs(trace_extents[1]*plane->normal[1]) +
-					fabs(trace_extents[2]*plane->normal[2]);
+					fabs(trace_extents[2]*plane->normal[2]) * 3.0f);
 #else
 				// Quake 3 does this instead?
 				// Q3 dev: "this is silly"
@@ -1276,7 +1276,6 @@ void CM_RecursiveHullCheck (int num, float p1f, float p2f, vec3_t p1, vec3_t p2)
 
 		// see which sides we need to consider
 		if (t1 > offset && t2 > offset )
-//		if (t1 >= offset && t2 >= offset)
 		{
 			num = node->children[0];
 			continue;

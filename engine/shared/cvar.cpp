@@ -23,7 +23,7 @@ static bool Cvar_InfoValidate( const char *s )
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-static cvar_t *Cvar_FindVar( const char *var_name )
+cvar_t *Cvar_FindVar( const char *var_name )
 {
 	cvar_t *var;
 

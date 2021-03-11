@@ -38,6 +38,9 @@ cvar_t		*Cvar_FullSet( const char *var_name, const char *value, uint32 flags );
 void		Cvar_SetValue( const char *var_name, float value );
 // expands value to a string and calls Cvar_Set
 
+cvar_t		*Cvar_FindVar( const char *var_name );
+// Finds and returns a cvar if it exists in the list, else returns nullptr
+
 float		Cvar_VariableValue( const char *var_name );
 // returns 0 if not defined or non numeric
 

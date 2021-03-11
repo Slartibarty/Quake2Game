@@ -34,7 +34,7 @@ next frame.  This allows commands like:
 bind g "impulse 5 ; +attack ; wait ; -attack ; impulse 2"
 ============
 */
-void Cmd_Wait_f (void)
+void Cmd_Wait_f()
 {
 	cmd_wait = true;
 }
@@ -457,6 +457,32 @@ void Cmd_Alias_f (void)
 }
 
 /*
+============
+Cmd_Toggle_f
+
+Toggles a convar as if it were a bool
+============
+*/
+void Cmd_Toggle_f()
+{
+	if ( Cmd_Argc() != 2 )
+	{
+		Com_Print( "Bad parameters\n" );
+		return;
+	}
+
+	const char *cmdName = Cmd_Argv( 1 );
+	cvar_t *var = Cvar_FindVar( cmdName );
+	if ( !var )
+	{
+		Com_Printf( "Cvar \"%s\" does not exist\n", cmdName );
+		return;
+	}
+
+	Cvar_SetValue( cmdName, ( var->value ) ? 0.0f : 1.0f );
+}
+
+/*
 =============================================================================
 
 					COMMAND EXECUTION
@@ -865,6 +891,7 @@ void Cmd_Init (void)
 	Cmd_AddCommand ("exec",Cmd_Exec_f);
 	Cmd_AddCommand ("echo",Cmd_Echo_f);
 	Cmd_AddCommand ("alias",Cmd_Alias_f);
+	Cmd_AddCommand ("toggle",Cmd_Toggle_f);
 	Cmd_AddCommand ("wait", Cmd_Wait_f);
 }
 

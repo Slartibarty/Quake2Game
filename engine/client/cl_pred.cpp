@@ -189,8 +189,8 @@ void CL_PredictMovement (void)
 	usercmd_t	*cmd;
 	pmove_t		pm;
 	int			i;
-	int			step;
-	int			oldz;
+	float		step;
+	float		oldz;
 
 	if (cls.state != ca_active)
 		return;
@@ -242,13 +242,13 @@ void CL_PredictMovement (void)
 		Pmove (&pm);
 
 		// save for debug checking
-		_VectorCopy (pm.s.origin, cl.predicted_origins[frame]);
+		VectorCopy (pm.s.origin, cl.predicted_origins[frame]);
 	}
 
 	oldframe = (ack-2) & (CMD_BACKUP-1);
 	oldz = cl.predicted_origins[oldframe][2];
 	step = pm.s.origin[2] - oldz;
-	if (step > 63 && step < 160 && (pm.s.pm_flags & PMF_ON_GROUND) )
+	if (step > 8.0f && step < 20.0f && (pm.s.pm_flags & PMF_ON_GROUND) )
 	{
 		cl.predicted_step = step;
 		cl.predicted_step_time = cls.realtime - cls.frametime * 500;

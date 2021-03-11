@@ -52,7 +52,7 @@ int	GetThreadWork()
 }
 
 
-static void ( *workfunction )( int );
+static threadworker_f workfunction;
 
 void ThreadWorkerFunction( int threadnum )
 {

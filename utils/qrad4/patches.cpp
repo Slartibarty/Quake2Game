@@ -173,9 +173,9 @@ void LoadMaterials()
 		VectorScale( matref.reflectivity, 1.0f / (float)( width * height ), matref.reflectivity );
 
 		// No epsilon, but we shouldn't get above this anyway, hopefully? whatever
-		assert( matref.reflectivity[0] > 0.0f && matref.reflectivity[0] <= 1.0f );
-		assert( matref.reflectivity[1] > 0.0f && matref.reflectivity[1] <= 1.0f );
-		assert( matref.reflectivity[2] > 0.0f && matref.reflectivity[2] <= 1.0f );
+		assert( matref.reflectivity[0] >= 0.0f && matref.reflectivity[0] <= 1.0f );
+		assert( matref.reflectivity[1] >= 0.0f && matref.reflectivity[1] <= 1.0f );
+		assert( matref.reflectivity[2] >= 0.0f && matref.reflectivity[2] <= 1.0f );
 
 		// No color and we're lighting the world? Make the colour the reflectivity
 		if ( !hascolor && matref.intensity != 0 )

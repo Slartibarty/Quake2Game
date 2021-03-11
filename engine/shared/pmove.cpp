@@ -3,10 +3,22 @@
 
 #include "pmove.h"
 
-#define	STEPSIZE			16
+#define	STEPSIZE			18
+
+#define PLAYER_HULLSIZE		16
+
 #define GIB_VIEWHEIGHT		-8
+#define GIB_HEIGHT			16
+
 #define CROUCH_VIEWHEIGHT	12
+#define CROUCH_HEIGHT		18
+
 #define STAND_VIEWHEIGHT	28
+#define STAND_HEIGHT		36
+
+#define PM_SURFTYPE_LADDER	1000
+#define PM_SURFTYPE_WADE	1001
+#define PM_SURFTYPE_SLOSH	1002
 
 // all of the locals will be zeroed before each
 // pmove, just to make damn sure we don't have
@@ -76,6 +88,7 @@ static int HackRandom( int low, int high )
 
 static void PM_PlayStepSound( int type, float fvol )
 {
+	static int iSkipStep;	// SlartTodo: This is the ultimate suck, move to player state
 	int irand;
 
 	pm->s.step_left = !pm->s.step_left;
@@ -151,12 +164,61 @@ static void PM_PlayStepSound( int type, float fvol )
 		case 4: pm->playsound( "player/footsteps/tile5.wav", fvol );	break;
 		}
 		break;
+
+		//
+		// Special fake PM step types
+		//
+
+	case PM_SURFTYPE_LADDER:
+		switch(irand)
+		{
+		// right foot
+		case 0:	pm->playsound( "player/footsteps/ladder1.wav", fvol );	break;
+		case 1:	pm->playsound( "player/footsteps/ladder3.wav", fvol );	break;
+		// left foot
+		case 2:	pm->playsound( "player/footsteps/ladder2.wav", fvol );	break;
+		case 3:	pm->playsound( "player/footsteps/ladder4.wav", fvol );	break;
+		}
+		break;
+	case PM_SURFTYPE_WADE:
+		if ( iSkipStep == 0 )
+		{
+			iSkipStep++;
+			break;
+		}
+
+		if ( iSkipStep++ == 3 )
+		{
+			iSkipStep = 0;
+		}
+
+		switch (irand)
+		{
+		// right foot
+		case 0:	pm->playsound( "player/footsteps/wade1.wav", fvol );	break;
+		case 1:	pm->playsound( "player/footsteps/wade2.wav", fvol );	break;
+		// left foot
+		case 2:	pm->playsound( "player/footsteps/wade3.wav", fvol );	break;
+		case 3:	pm->playsound( "player/footsteps/wade4.wav", fvol );	break;
+		}
+		break;
+	case PM_SURFTYPE_SLOSH:
+		switch(irand)
+		{
+		// right foot
+		case 0:	pm->playsound( "player/footsteps/slosh1.wav", fvol );	break;
+		case 1:	pm->playsound( "player/footsteps/slosh3.wav", fvol );	break;
+		// left foot
+		case 2:	pm->playsound( "player/footsteps/slosh2.wav", fvol );	break;
+		case 3:	pm->playsound( "player/footsteps/slosh4.wav", fvol );	break;
+		}
+		break;
 	}
 }	
 
 void PM_UpdateStepSound( void )
 {
-	int	fWalking;
+	bool walking;
 	float fvol;
 	vec3_t knee;
 	vec3_t feet;
@@ -176,7 +238,7 @@ void PM_UpdateStepSound( void )
 	speed = VectorLength( pml.velocity );
 
 	// UNDONE: need defined numbers for run, walk, crouch, crouch run velocities!!!!	
-	if ( pm->s.pm_flags & PMF_DUCKED )
+	if ( pm->s.pm_flags & PMF_DUCKED || pml.ladder )
 	{
 		velwalk = 60;		// These constants should be based on cl_movespeedkey * cl_forwardspeed somehow
 		velrun = 80;		// UNDONE: Move walking to server
@@ -192,22 +254,41 @@ void PM_UpdateStepSound( void )
 	// If we're on a ladder or on the ground, and we're moving fast enough,
 	//  play step sound.  Also, if pmove->flTimeStepSound is zero, get the new
 	//  sound right away - we just started moving in new level.
-	if ( pm->groundentity &&
+	if ( pml.ladder || ( pm->s.pm_flags & PMF_ON_GROUND ) &&
 		( speed > 0.0f ) &&
-		( speed >= velwalk || !pm->s.time_step_sound ) )
+		( speed >= velwalk || pm->s.time_step_sound == 0 ) )
 	{
-		fWalking = speed < velrun;
+		walking = speed < velrun;
 
 		VectorCopy( pml.origin, center );
 		VectorCopy( pml.origin, knee );
 		VectorCopy( pml.origin, feet );
 
-		height = 72;
+		height = pm->maxs[2] - pm->mins[2];
 
 		knee[2] = pml.origin[2] - 0.3f * height;
 		feet[2] = pml.origin[2] - 0.5f * height;
 
 		// find out what we're stepping in or on...
+		if ( pml.ladder )
+		{
+			step = PM_SURFTYPE_LADDER;
+			fvol = 0.35f;
+			pm->s.time_step_sound = 350;
+		}
+		else if ( pm->waterlevel == 2 )
+		{
+			step = PM_SURFTYPE_WADE;
+			fvol = 0.65f;
+			pm->s.time_step_sound = 600;
+		}
+		else if ( pm->waterlevel == 1 )
+		{
+			step = PM_SURFTYPE_SLOSH;
+			fvol = walking ? 0.2f : 0.5f;
+			pm->s.time_step_sound = walking ? 400 : 300;
+		}
+		else
 		{
 			// find texture under player, if different from current texture, 
 			// get material type
@@ -218,39 +299,39 @@ void PM_UpdateStepSound( void )
 			{
 			default:
 			case SURFTYPE_CONCRETE:
-				fvol = fWalking ? 0.2f : 0.5f;
-				pm->s.time_step_sound = fWalking ? 400 : 300;
+				fvol = walking ? 0.2f : 0.5f;
+				pm->s.time_step_sound = walking ? 400 : 300;
 				break;
 
 			case SURFTYPE_METAL:
-				fvol = fWalking ? 0.2f : 0.5f;
-				pm->s.time_step_sound = fWalking ? 400 : 300;
+				fvol = walking ? 0.2f : 0.5f;
+				pm->s.time_step_sound = walking ? 400 : 300;
 				break;
 
 			case SURFTYPE_VENT:
-				fvol = fWalking ? 0.4f : 0.7f;
-				pm->s.time_step_sound = fWalking ? 400 : 300;
+				fvol = walking ? 0.4f : 0.7f;
+				pm->s.time_step_sound = walking ? 400 : 300;
 				break;
 
 			case SURFTYPE_DIRT:
 			case SURFTYPE_GRASS:
 			case SURFTYPE_SAND:
 			case SURFTYPE_ROCK:
-				fvol = fWalking ? 0.25f : 0.55f;
-				pm->s.time_step_sound = fWalking ? 400 : 300;
+				fvol = walking ? 0.25f : 0.55f;
+				pm->s.time_step_sound = walking ? 400 : 300;
 				break;
 
 			case SURFTYPE_WOOD:
-				fvol = fWalking ? 0.25f : 0.55f;
-				pm->s.time_step_sound = fWalking ? 400 : 300;
+				fvol = walking ? 0.25f : 0.55f;
+				pm->s.time_step_sound = walking ? 400 : 300;
 				break;
 
 			case SURFTYPE_TILE:
 			case SURFTYPE_COMPUTER:
 			case SURFTYPE_GLASS:
 			case SURFTYPE_FLESH:
-				fvol = fWalking ? 0.2f : 0.5f;
-				pm->s.time_step_sound = fWalking ? 400 : 300;
+				fvol = walking ? 0.2f : 0.5f;
+				pm->s.time_step_sound = walking ? 400 : 300;
 				break;
 			}
 		}
@@ -359,7 +440,7 @@ void PM_StepSlideMove_ (void)
 		}
 
 		// If we moved some portion of the total distance, then
-		//  copy the end position into the pmove->origin and 
+		//  copy the end position into the pml.origin and 
 		//  zero the plane counter.
 		if (trace.fraction > 0)
 		{	// actually covered some distance
@@ -409,13 +490,13 @@ void PM_StepSlideMove_ (void)
 		{
 			for ( i = 0; i < numplanes; i++ )
 			{
-				if ( planes[i][2] > 0.7f  )
+				if ( planes[i][2] > MIN_STEP_NORMAL )
 				{// floor or slope
 					PM_ClipVelocity( original_velocity, planes[i], new_velocity, 1 );
 					VectorCopy( new_velocity, original_velocity );
 				}
 				else
-					PM_ClipVelocity( original_velocity, planes[i], new_velocity, 1.0 + /*pmove->movevars->bounce*/ 0 * (1-pm_friction) );
+					PM_ClipVelocity( original_velocity, planes[i], new_velocity, 1.0f + /*pmove->movevars->bounce*/ 0 * (1-pm_friction) );
 			}
 
 			VectorCopy( new_velocity, pml.velocity );
@@ -914,7 +995,72 @@ void PM_AirMove (void)
 	}
 }
 
+/*
+=============
+PM_CheckWater
 
+Sets pmove->waterlevel and pmove->watertype values.
+=============
+*/
+static void PM_CheckWater()
+{
+	vec3_t	point;
+	int		cont;
+
+	// Pick a spot just above the players feet.
+	point[0] = pml.origin[0] + (pm->mins[0] + pm->maxs[0]) * 0.5f;
+	point[1] = pml.origin[1] + (pm->mins[1] + pm->maxs[1]) * 0.5f;
+	point[2] = pml.origin[2] + pm->mins[2] + 1.0f;
+
+	// Assume that we are not in water at all.
+	pm->waterlevel = 0;
+	pm->watertype = 0;
+
+	// Grab point contents.
+	cont = pm->pointcontents (point);
+	// Are we under water? (not solid and not empty?)
+	if ( cont & MASK_WATER )
+	{
+		// Set water type
+		pm->watertype = cont;
+
+		// We are at least at level one
+		pm->waterlevel = 1;
+
+		// Now check a point that is at the player hull midpoint.
+		point[2] = pml.origin[2] + ( pm->mins[2] + pm->maxs[2] ) * 0.5f;
+		cont = pm->pointcontents (point);
+		// If that point is also under water...
+		if ( cont & MASK_WATER )
+		{
+			// Set a higher water level.
+			pm->waterlevel = 2;
+
+			// Now check the eye position.  (view_ofs is relative to the origin)
+			point[2] = pml.origin[2] + pm->viewheight;
+
+			cont = pm->pointcontents (point);
+			if ( cont & MASK_WATER ) 
+				pm->waterlevel = 3;  // In over our eyes
+		}
+
+#if 0
+		// Adjust velocity based on water current, if any.
+		if ( ( cont <= CONTENTS_CURRENT_0 ) &&
+			( cont >= CONTENTS_CURRENT_DOWN ) )
+		{
+			// The deeper we are, the stronger the current.
+			static vec3_t current_table[] =
+			{
+				{1, 0, 0}, {0, 1, 0}, {-1, 0, 0},
+				{0, -1, 0}, {0, 0, 1}, {0, 0, -1}
+			};
+
+			VectorMA (pml.velocity, 50.0*pm->waterlevel, current_table[CONTENTS_CURRENT_0 - cont], pml.velocity);
+		}
+#endif
+	}
+}
 
 /*
 =============
@@ -924,18 +1070,24 @@ PM_CatagorizePosition
 void PM_CatagorizePosition (void)
 {
 	vec3_t		point;
-	int			cont;
 	trace_t		trace;
-	int			sample1;
-	int			sample2;
 
 // if the player hull point one unit down is solid, the player
 // is on ground
 
-// see if standing on something solid	
+// see if standing on something solid
+
+	// Doing this before we move may introduce a potential latency in water detection, but
+	// doing it after can get us stuck on the bottom in water if the amount we move up
+	// is less than the 1 pixel 'threshold' we're about to snap to.	Also, we'll call
+	// this several times per frame, so we really need to avoid sticking to the bottom of
+	// water on each call, and the converse case will correct itself if called twice.
+	PM_CheckWater();
+
 	point[0] = pml.origin[0];
 	point[1] = pml.origin[1];
-	point[2] = pml.origin[2] - 0.25f;
+	point[2] = pml.origin[2] - 2.0f; // 0.25f
+
 	if (pml.velocity[2] > 180.0f)	// Shooting up really fast.  Definitely not on ground.
 	{
 		pm->s.pm_flags &= ~PMF_ON_GROUND;
@@ -960,30 +1112,26 @@ void PM_CatagorizePosition (void)
 			// hitting solid ground will end a waterjump
 			if (pm->s.pm_flags & PMF_TIME_WATERJUMP)
 			{
-				pm->s.pm_flags &= ~(PMF_TIME_WATERJUMP | PMF_TIME_LAND | PMF_TIME_TELEPORT);
+				pm->s.pm_flags &= ~(PMF_TIME_WATERJUMP | PMF_TIME_TELEPORT);
 				pm->s.pm_time = 0;
 			}
 
-			if (! (pm->s.pm_flags & PMF_ON_GROUND) )
-			{	// just hit the ground
-				pm->s.pm_flags |= PMF_ON_GROUND;
-				// don't do landing time if we were just going down a slope
-				if (pml.velocity[2] < -200.0f)
+			// If we hit a steep plane, we are not on ground
+			if ( trace.plane.normal[2] < MIN_STEP_NORMAL )
+			{
+				pm->s.pm_flags &= ~PMF_ON_GROUND;	// too steep
+			}
+			else
+			{
+				pm->s.pm_flags |= PMF_ON_GROUND;	// Otherwise, point to index of ent under us.
+
+				if ( pm->waterlevel < 2 &&
+					trace.fraction > 0.0f && trace.fraction < 1.0f )
 				{
-					pm->s.pm_flags |= PMF_TIME_LAND;
-					// don't allow another jump for a little while
-					if (pml.velocity[2] < -400.0f)
-						pm->s.pm_time = 25;	
-					else
-						pm->s.pm_time = 18;
+					VectorCopy( trace.endpos, pml.origin );
 				}
 			}
 		}
-
-#if 0
-		if (trace.fraction < 1.0 && trace.ent && pml.velocity[2] < 0)
-			pml.velocity[2] = 0;
-#endif
 
 		if (pm->numtouch < MAXTOUCH && trace.ent)
 		{
@@ -991,35 +1139,6 @@ void PM_CatagorizePosition (void)
 			pm->numtouch++;
 		}
 	}
-
-//
-// get waterlevel, accounting for ducking
-//
-	pm->waterlevel = 0;
-	pm->watertype = 0;
-
-	sample2 = pm->viewheight - pm->mins[2];
-	sample1 = sample2 / 2;
-
-	point[2] = pml.origin[2] + pm->mins[2] + 1.0f;
-	cont = pm->pointcontents (point);
-
-	if (cont & MASK_WATER)
-	{
-		pm->watertype = cont;
-		pm->waterlevel = 1;
-		point[2] = pml.origin[2] + pm->mins[2] + sample1;
-		cont = pm->pointcontents (point);
-		if (cont & MASK_WATER)
-		{
-			pm->waterlevel = 2;
-			point[2] = pml.origin[2] + pm->mins[2] + sample2;
-			cont = pm->pointcontents (point);
-			if (cont & MASK_WATER)
-				pm->waterlevel = 3;
-		}
-	}
-
 }
 
 
@@ -1030,11 +1149,6 @@ PM_CheckJump
 */
 void PM_CheckJump (void)
 {
-	if (pm->s.pm_flags & PMF_TIME_LAND)
-	{	// hasn't been long enough since landing to jump again
-		return;
-	}
-
 	if (pm->cmd.upmove < 10)
 	{	// not holding jump
 		pm->s.pm_flags &= ~PMF_JUMP_HELD;
@@ -1134,7 +1248,7 @@ void PM_CheckSpecialMovement (void)
 PM_FlyMove
 ===============
 */
-void PM_FlyMove (qboolean doclip)
+void PM_FlyMove (bool doclip)
 {
 	float	speed, drop, friction, control, newspeed;
 	float	currentspeed, addspeed, accelspeed;
@@ -1228,54 +1342,58 @@ PM_CheckDuck
 Sets mins, maxs, and pm->viewheight
 ==============
 */
-void PM_CheckDuck (void)
+static void PM_CheckDuck( void )
 {
 	trace_t	trace;
 
-	pm->mins[0] = -16;
-	pm->mins[1] = -16;
+	pm->mins[0] = -PLAYER_HULLSIZE;
+	pm->mins[1] = -PLAYER_HULLSIZE;
 
-	pm->maxs[0] = 16;
-	pm->maxs[1] = 16;
+	pm->maxs[0] = PLAYER_HULLSIZE;
+	pm->maxs[1] = PLAYER_HULLSIZE;
 
-	if (pm->s.pm_type == PM_GIB)
+	if ( pm->s.pm_type == PM_GIB )
 	{
 		pm->mins[2] = 0;
-		pm->maxs[2] = 16;
+		pm->maxs[2] = GIB_HEIGHT;
 		pm->viewheight = GIB_VIEWHEIGHT;
 		return;
 	}
 
-	pm->mins[2] = -24;
-
-	if (pm->s.pm_type == PM_DEAD)
+	// Are we trying to die?
+	if ( pm->s.pm_type == PM_DEAD )
 	{
 		pm->s.pm_flags |= PMF_DUCKED;
 	}
-	else if (pm->cmd.upmove < 0 && (pm->s.pm_flags & PMF_ON_GROUND) )
-	{	// duck
+	// Are we trying to duck?
+	else if ( pm->cmd.upmove < 0 )
+	{
 		pm->s.pm_flags |= PMF_DUCKED;
 	}
-	else
-	{	// stand up if possible
-		if (pm->s.pm_flags & PMF_DUCKED)
+	// Are we trying to stand up?
+	else if ( ( pm->s.pm_flags & PMF_DUCKED ) && !( pm->cmd.upmove > 0 ) )
+	{
+		pml.origin[2] += CROUCH_HEIGHT;
+		pm->mins[2] = -STAND_HEIGHT;
+		pm->maxs[2] = STAND_HEIGHT;
+		trace = pm->trace( pml.origin, pm->mins, pm->maxs, pml.origin );
+		if ( !trace.allsolid )
 		{
-			// try to stand up
-			pm->maxs[2] = 32;
-			trace = pm->trace (pml.origin, pm->mins, pm->maxs, pml.origin);
-			if (!trace.allsolid)
-				pm->s.pm_flags &= ~PMF_DUCKED;
+			pm->s.pm_flags &= ~PMF_DUCKED;
 		}
 	}
 
-	if (pm->s.pm_flags & PMF_DUCKED)
+	// Set mins, maxs and viewheight accordingly
+	if ( pm->s.pm_flags & PMF_DUCKED )
 	{
-		pm->maxs[2] = 4;
+		pm->mins[2] = -CROUCH_HEIGHT;
+		pm->maxs[2] = CROUCH_HEIGHT;
 		pm->viewheight = CROUCH_VIEWHEIGHT;
 	}
 	else
 	{
-		pm->maxs[2] = 32;
+		pm->mins[2] = -STAND_HEIGHT;
+		pm->maxs[2] = STAND_HEIGHT;
 		pm->viewheight = STAND_VIEWHEIGHT;
 	}
 }
@@ -1309,18 +1427,18 @@ void PM_DeadMove (void)
 }
 
 
-static qboolean PM_GoodPosition (void)
+static bool PM_GoodPosition (void)
 {
-	trace_t	trace;
-	vec3_t	origin, end;
-	int		i;
+	trace_t trace;
+	vec3_t start, end;
 
-	if (pm->s.pm_type == PM_SPECTATOR)
+	if ( pm->s.pm_type == PM_SPECTATOR )
 		return true;
 
-	for (i=0 ; i<3 ; i++)
-		origin[i] = end[i] = pm->s.origin[i];
-	trace = pm->trace (origin, pm->mins, pm->maxs, end);
+	VectorCopy( pm->s.origin, start );
+	VectorCopy( pm->s.origin, end );
+
+	trace = pm->trace (start, pm->mins, pm->maxs, end);
 
 	return !trace.allsolid;
 }
@@ -1374,11 +1492,17 @@ static void PM_SnapPosition (void)
 	// go back to the last position
 	VectorCopy (pml.previous_origin, pm->s.origin);
 //	Com_DPrintf ("using previous_origin\n");
-#endif
-
-	// SlartHack: Fix this later
+#else
+	// SlartHack: I think we want jitterbits
 	VectorCopy( pml.velocity, pm->s.velocity );
 	VectorCopy( pml.origin, pm->s.origin );
+
+	if ( PM_GoodPosition() )
+		return;
+
+	// go back to the last position
+	VectorCopy( pml.previous_origin, pm->s.origin );
+#endif
 }
 
 /*
@@ -1389,6 +1513,7 @@ PM_InitialSnapPosition
 */
 static void PM_InitialSnapPosition(void)
 {
+#if 0
 	int x, y, z;
 	float base[3];
 	static float offset[3] = { 0.0f, -1.0f, 1.0f };
@@ -1411,6 +1536,13 @@ static void PM_InitialSnapPosition(void)
 	}
 
 	Com_DPrintf ("Bad InitialSnapPosition\n");
+#else
+	if ( PM_GoodPosition() )
+	{
+		VectorCopy( pm->s.origin, pml.origin );
+		VectorCopy( pm->s.origin, pml.previous_origin );
+	}
+#endif
 }
 
 
@@ -1422,7 +1554,6 @@ PM_ClampAngles
 */
 static void PM_ClampAngles (void)
 {
-	float	temp;
 	int		i;
 
 	if (pm->s.pm_flags & PMF_TIME_TELEPORT)
@@ -1436,8 +1567,7 @@ static void PM_ClampAngles (void)
 		// circularly clamp the angles with deltas
 		for (i=0 ; i<3 ; i++)
 		{
-			temp = pm->cmd.angles[i] + pm->s.delta_angles[i];
-			pm->viewangles[i] = temp;
+			pm->viewangles[i] = pm->cmd.angles[i] + pm->s.delta_angles[i];
 		}
 
 		// don't let the player look up or down more than 90 degrees
@@ -1522,12 +1652,12 @@ void Pmove (pmove_t *pmove)
 	// set groundentity, watertype, and waterlevel
 	PM_CatagorizePosition ();
 
-	PM_UpdateStepSound();
-
 	if (pm->s.pm_type == PM_DEAD)
 		PM_DeadMove ();
 
 	PM_CheckSpecialMovement ();
+
+	PM_UpdateStepSound();
 
 	// drop timing counter
 	if (pm->s.pm_time)
@@ -1539,7 +1669,7 @@ void Pmove (pmove_t *pmove)
 			msec = 1;
 		if ( msec >= pm->s.pm_time) 
 		{
-			pm->s.pm_flags &= ~(PMF_TIME_WATERJUMP | PMF_TIME_LAND | PMF_TIME_TELEPORT);
+			pm->s.pm_flags &= ~(PMF_TIME_WATERJUMP | PMF_TIME_TELEPORT);
 			pm->s.pm_time = 0;
 		}
 		else
@@ -1554,7 +1684,7 @@ void Pmove (pmove_t *pmove)
 		pml.velocity[2] -= pm->s.gravity * pml.frametime;
 		if (pml.velocity[2] < 0)
 		{	// cancel as soon as we are falling down again
-			pm->s.pm_flags &= ~(PMF_TIME_WATERJUMP | PMF_TIME_LAND | PMF_TIME_TELEPORT);
+			pm->s.pm_flags &= ~(PMF_TIME_WATERJUMP | PMF_TIME_TELEPORT);
 			pm->s.pm_time = 0;
 		}
 

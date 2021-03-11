@@ -661,6 +661,8 @@ void ParseBrush (entity_t *mapent)
 			side->contents = atoi(token);
 			GetToken (false);
 			side->surf = td.flags = atoi(token);
+			// Skip the old obsolete "value"
+			GetToken (false);
 		}
 
 		// translucent objects are automatically classified as detail
