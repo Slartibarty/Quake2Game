@@ -16,6 +16,9 @@
 #define STAND_VIEWHEIGHT	28
 #define STAND_HEIGHT		36
 
+// SlartTodo: This should really be dependent on gravity
+#define JUMP_VELOCITY		268.3281573f	// sqrt(2 * 800 * 45.0)
+
 #define PM_SURFTYPE_LADDER	1000
 #define PM_SURFTYPE_WADE	1001
 #define PM_SURFTYPE_SLOSH	1002
@@ -1175,6 +1178,29 @@ void PM_CheckJump (void)
 			pml.velocity[2] = 80.0f;
 		else
 			pml.velocity[2] = 50.0f;
+
+		// play swiming sound
+		if ( pm->s.swim_time <= 0 )
+		{
+			// Don't play sound again for 1 second
+			pm->s.swim_time = 1000.0f;
+			switch ( HackRandom( 0, 3 ) )
+			{ 
+			case 0:
+				pm->playsound( "player/footsteps/wade1.wav", 1.0f );
+				break;
+			case 1:
+				pm->playsound( "player/footsteps/wade2.wav", 1.0f );
+				break;
+			case 2:
+				pm->playsound( "player/footsteps/wade3.wav", 1.0f );
+				break;
+			case 3:
+				pm->playsound( "player/footsteps/wade4.wav", 1.0f );
+				break;
+			}
+		}
+
 		return;
 	}
 
@@ -1186,9 +1212,7 @@ void PM_CheckJump (void)
 	pm->s.pm_flags |= PMF_JUMP_HELD;
 
 	pm->groundentity = NULL;
-	pml.velocity[2] += 270.0f;
-	if (pml.velocity[2] < 270.0f)
-		pml.velocity[2] = 270.0f;
+	pml.velocity[2] = JUMP_VELOCITY;
 }
 
 
@@ -1587,6 +1611,14 @@ static void PM_ReduceTimers()
 		if ( pm->s.time_step_sound < 0 )
 		{
 			pm->s.time_step_sound = 0;
+		}
+	}
+	if ( pm->s.swim_time > 0.0f )
+	{
+		pm->s.swim_time -= pm->cmd.msec;
+		if ( pm->s.swim_time < 0.0f )
+		{
+			pm->s.swim_time = 0.0f;
 		}
 	}
 }

@@ -452,6 +452,8 @@ struct pmove_state_t
 
 	int			time_step_sound;	// In milliseconds, the time until we can play another footstep
 	int			step_left;			// > 0 if the next footstep is the left foot
+
+	float		swim_time;
 };
 
 //
