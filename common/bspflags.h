@@ -11,6 +11,7 @@
 enum contentFlags_t
 {
 	// lower bits are stronger, and will eat weaker brushes completely
+	CONTENTS_EMPTY			= 0x0,			// for syntactical purposes
 	CONTENTS_SOLID			= 0x1,			// an eye is never valid in a solid
 	CONTENTS_WINDOW			= 0x2,			// translucent, but not watery
 	CONTENTS_AUX			= 0x4,

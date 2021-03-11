@@ -4,6 +4,9 @@
 
 #include "engine.h"
 
+#include <vector>
+#include <string>
+
 #include "cmodel.h"
 
 struct cnode_t
@@ -43,216 +46,323 @@ struct carea_t
 	int		floodvalid;
 };
 
-int			checkcount;
+template< typename T >
+struct cmArray_t
+{
+private:
 
-char		map_name[MAX_QPATH];
+	T *data;
+	size_t count;		// The amount of Ts in use
+	size_t reserved;	// The amount of Ts we have reserved
 
-int			numbrushsides;
-cbrushside_t map_brushsides[MAX_MAP_BRUSHSIDES];
+public:
 
-int			numtexinfo;
-csurface_t	map_surfaces[MAX_MAP_TEXINFO];
+	// Accessors
 
-int			numplanes;
-cplane_t	map_planes[MAX_MAP_PLANES+6];		// extra for box hull
+	// Return a reference to an element in this array
+	T &Data( int index )
+	{
+		assert( index < reserved );	// Kinda sucks, we need to do this for the secret box hull crap
+		return data[index];
+	}
 
-int			numnodes;
-cnode_t		map_nodes[MAX_MAP_NODES+6];		// extra for box hull
+	// Return the base of this array
+	T *Base()
+	{
+		return data;
+	}
 
-int			numleafs = 1;	// allow leaf funcs to be called without a map
-cleaf_t		map_leafs[MAX_MAP_LEAFS];
-int			emptyleaf, solidleaf;
+	// The amount of elements in this array
+	size_t Count()
+	{
+		return count;
+	}
 
-int			numleafbrushes;
-unsigned short	map_leafbrushes[MAX_MAP_LEAFBRUSHES];
+	size_t SizeInBytes()
+	{
+		return count * sizeof( T );
+	}
 
-int			numcmodels;
-cmodel_t	map_cmodels[MAX_MAP_MODELS];
+	// Set all used elements in this array to 0
+	void Clear()
+	{
+		memset( data, 0, SizeInBytes() );
+	}
 
-int			numbrushes;
-cbrush_t	map_brushes[MAX_MAP_BRUSHES];
+	// Management
 
-int			numvisibility;
-byte		map_visibility[MAX_MAP_VISIBILITY];
-dvis_t		*map_vis = (dvis_t *)map_visibility;
+	// Make clients forget about the data in here
+	void Forget()
+	{
+		count = 0;
+	}
 
-int			numentitychars;
-char		map_entitystring[MAX_MAP_ENTSTRING];
+	void PrepForNewData( size_t newcount, size_t extra = 0 )
+	{
+		count = newcount;
+		if ( newcount > reserved )
+		{
+			reserved = newcount + extra;
+			// SlartTodo: Is it more efficient to realloc here? We don't care about our data at this point
+			if ( data )
+			{
+				Z_Free( data );
+			}
+			data = (T *)Z_Malloc( reserved * sizeof( T ) );
+		}
+		// Don't bother clearing memory, it will be written over by clients
+	}
 
-int			numareas = 1;
-carea_t		map_areas[MAX_MAP_AREAS];
+	void Free()
+	{
+		if ( data )
+		{
+			free( data );
+			data = nullptr;
+			reserved = 0;
+			count = 0;
+		}
+	}
+};
 
-int			numareaportals;
-dareaportal_t map_areaportals[MAX_MAP_AREAPORTALS];
+//
+// Struct that stores data about a particular map
+// Really, this could be replaced with a class
+// But classes in C++ are a pain to maintain
+//
+struct cmMapData_t
+{
+	char		name[MAX_QPATH];	// Exists soley to prevent re-loading of the same map
 
-int			numclusters = 1;
+	cmArray_t<cbrushside_t>		brushsides;
+	cmArray_t<csurface_t>		surfaces;
+	cmArray_t<cplane_t>			planes;				// +6 extra for box hull
+	cmArray_t<cnode_t>			nodes;				// +6 extra for box hull
+	cmArray_t<cleaf_t>			leafs;				// Will always have size of 1, allows leaf funcs to be called without a map
+	int							emptyleaf, solidleaf;
+	cmArray_t<uint16>			leafbrushes;
+	cmArray_t<cmodel_t>			cmodels;
+	cmArray_t<cbrush_t>			brushes;
+	cmArray_t<byte>				vis;
+	cmArray_t<char>				entitystring;
+	cmArray_t<carea_t>			areas;
+	cmArray_t<dareaportal_t>	areaportals;
 
-csurface_t	nullsurface;
+	int			numclusters = 1;
 
-int			floodvalid;
+	int			floodvalid;
+	int			checkcount;
 
-bool		portalopen[MAX_MAP_AREAPORTALS];
+	cmArray_t<bool>		portalopen;
+
+	// Reset everything that matters
+	void Reset()
+	{
+		name[0] = 0;
+
+		brushsides.Forget();
+		surfaces.Forget();
+		planes.Forget();
+		nodes.Forget();
+		leafs.Forget();
+		leafbrushes.Forget();
+		cmodels.Forget();
+		brushes.Forget();
+		vis.Forget();
+		entitystring.Forget();
+		areas.Forget();
+		areaportals.Forget();
+
+		checkcount = 0;
+
+		portalopen.Forget();
+	}
+
+	// Clear all allocated memory
+	void Free()
+	{
+		brushsides.Free();
+		surfaces.Free();
+		planes.Free();
+		nodes.Free();
+		leafs.Free();
+		leafbrushes.Free();
+		cmodels.Free();
+		brushes.Free();
+		vis.Free();
+		entitystring.Free();
+		areas.Free();
+		areaportals.Free();
+
+		portalopen.Free();
+	}
+
+	// Create a fake map for servers running cinematics to call through to
+	// Slart: Isn't this really just a hack? There has to be a better way lol
+	void CreateCinematicMap()
+	{
+		leafs.PrepForNewData( 1 );
+		leafs.Clear();
+		numclusters = 1;
+		areas.PrepForNewData( 1 );
+		areas.Clear();
+
+		cmodels.PrepForNewData( 1 );
+		cmodels.Clear();
+	}
+};
+
+cmMapData_t cm;
+csurface_t	s_nullsurface;
 
 
-cvar_t		*map_noareas;
+cvar_t	*cm_noareas;
+
+
+// Counters
+int		c_pointcontents;
+int		c_traces, c_brush_traces;
+
 
 void	CM_InitBoxHull (void);
 void	FloodAreaConnections (void);
 
 
-int		c_pointcontents;
-int		c_traces, c_brush_traces;
-
-
 /*
 ===============================================================================
 
-					MAP LOADING
+							MAP LOADING
 
 ===============================================================================
 */
 
-byte	*cmod_base;
+inline void VectorCopy_ByteSwapLE( const vec3_t in, vec3_t out )
+{
+	out[0] = LittleFloat( in[0] );
+	out[1] = LittleFloat( in[1] );
+	out[2] = LittleFloat( in[2] );
+}
 
 /*
 =================
 CMod_LoadSubmodels
 =================
 */
-void CMod_LoadSubmodels (lump_t *l)
+static void CMod_LoadSubmodels( byte *cmod_base, lump_t *l )
 {
-	dmodel_t	*in;
-	cmodel_t	*out;
-	int			i, j, count;
-
-	in = (dmodel_t*)(cmod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		Com_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size");
-	count = l->filelen / sizeof(*in);
-
-	if (count < 1)
-		Com_Error (ERR_DROP, "Map with no models");
-	if (count > MAX_MAP_MODELS)
-		Com_Error (ERR_DROP, "Map has too many models");
-
-	numcmodels = count;
-
-	for ( i=0 ; i<count ; i++, in++, out++)
+	dmodel_t *in = (dmodel_t *)( cmod_base + l->fileofs );
+	if ( l->filelen % sizeof( *in ) )
 	{
-		out = &map_cmodels[i];
+		Com_Error( ERR_DROP, "CM_LoadMap: Funny lump size" );
+	}
+	int count = l->filelen / sizeof( *in );
+	if ( count < 1 )
+	{
+		Com_Error( ERR_DROP, "Map with no models" );
+	}
 
-		for (j=0 ; j<3 ; j++)
-		{	// spread the mins / maxs by a pixel
-			out->mins[j] = LittleFloat (in->mins[j]) - 1;
-			out->maxs[j] = LittleFloat (in->maxs[j]) + 1;
-			out->origin[j] = LittleFloat (in->origin[j]);
+	cm.cmodels.PrepForNewData( count );
+	cmodel_t *out = cm.cmodels.Base();
+
+	for ( int i = 0; i < count; i++, in++, out++ )
+	{
+		for ( int j = 0; j < 3; j++ )
+		{
+			// Spread the mins / maxs by a pixel
+			out->mins[j] = LittleFloat( in->mins[j] ) - 1.0f;
+			out->maxs[j] = LittleFloat( in->maxs[j] ) + 1.0f;
+			out->origin[j] = LittleFloat( in->origin[j] );
 		}
-		out->headnode = LittleLong (in->headnode);
+		out->headnode = LittleLong( in->headnode );
 	}
 }
-
 
 /*
 =================
 CMod_LoadSurfaces
 =================
 */
-void CMod_LoadSurfaces (lump_t *l)
+static void CMod_LoadSurfaces( byte *cmod_base, lump_t *l )
 {
-	texinfo_t	*in;
-	csurface_t	*out;
-	int			i, count;
-
-	in = (texinfo_t*)(cmod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		Com_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size");
-	count = l->filelen / sizeof(*in);
-	if (count < 1)
-		Com_Error (ERR_DROP, "Map with no surfaces");
-	if (count > MAX_MAP_TEXINFO)
-		Com_Error (ERR_DROP, "Map has too many surfaces");
-
-	numtexinfo = count;
-	out = map_surfaces;
-
-	for ( i=0 ; i<count ; i++, in++, out++)
+	texinfo_t *in = (texinfo_t *)( cmod_base + l->fileofs );
+	if ( l->filelen % sizeof( *in ) )
 	{
-		Q_strcpy_s (out->name, in->texture);
-		out->flags = LittleLong (in->flags);
+		Com_Error( ERR_DROP, "CM_LoadMap: Funny lump size" );
+	}
+	int count = l->filelen / sizeof( *in );
+	if ( count < 1 )
+	{
+		Com_Error( ERR_DROP, "Map with no surfaces" );
+	}
+
+	cm.surfaces.PrepForNewData( count );
+	csurface_t *out = cm.surfaces.Base();
+
+	for ( int i = 0; i < count; i++, in++, out++ )
+	{
+		strcpy( out->name, in->texture );
+		out->flags = LittleLong( in->flags );
 	}
 }
-
 
 /*
 =================
 CMod_LoadNodes
-
 =================
 */
-void CMod_LoadNodes (lump_t *l)
+static void CMod_LoadNodes( byte *cmod_base, lump_t *l )
 {
-	dnode_t		*in;
-	int			child;
-	cnode_t		*out;
-	int			i, j, count;
-	
-	in = (dnode_t*)(cmod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		Com_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size");
-	count = l->filelen / sizeof(*in);
-
-	if (count < 1)
-		Com_Error (ERR_DROP, "Map has no nodes");
-	if (count > MAX_MAP_NODES)
-		Com_Error (ERR_DROP, "Map has too many nodes");
-
-	out = map_nodes;
-
-	numnodes = count;
-
-	for (i=0 ; i<count ; i++, out++, in++)
+	dnode_t *in = (dnode_t *)( cmod_base + l->fileofs );
+	if ( l->filelen % sizeof( *in ) )
 	{
-		out->plane = map_planes + LittleLong(in->planenum);
-		for (j=0 ; j<2 ; j++)
-		{
-			child = LittleLong (in->children[j]);
-			out->children[j] = child;
-		}
+		Com_Error( ERR_DROP, "CM_LoadMap: Funny lump size" );
+	}
+	int count = l->filelen / sizeof( *in );
+	if ( count < 1 )
+	{
+		Com_Error( ERR_DROP, "Map with no nodes" );
 	}
 
+	cm.nodes.PrepForNewData( count, 6 );
+	cnode_t *out = cm.nodes.Base();
+
+	for ( int i = 0; i < count; i++, out++, in++ )
+	{
+		out->plane = &cm.planes.Data( LittleLong( in->planenum ) );
+		for ( int j = 0; j < 2; j++ )
+		{
+			out->children[j] = LittleLong( in->children[j] );
+		}
+	}
 }
 
 /*
 =================
 CMod_LoadBrushes
-
 =================
 */
-void CMod_LoadBrushes (lump_t *l)
+static void CMod_LoadBrushes( byte *cmod_base, lump_t *l )
 {
-	dbrush_t	*in;
-	cbrush_t	*out;
-	int			i, count;
-	
-	in = (dbrush_t*)(cmod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		Com_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size");
-	count = l->filelen / sizeof(*in);
-
-	if (count > MAX_MAP_BRUSHES)
-		Com_Error (ERR_DROP, "Map has too many brushes");
-
-	out = map_brushes;
-
-	numbrushes = count;
-
-	for (i=0 ; i<count ; i++, out++, in++)
+	dbrush_t *in = (dbrush_t *)( cmod_base + l->fileofs );
+	if ( l->filelen % sizeof( *in ) )
 	{
-		out->firstbrushside = LittleLong(in->firstside);
-		out->numsides = LittleLong(in->numsides);
-		out->contents = LittleLong(in->contents);
+		Com_Error( ERR_DROP, "CM_LoadMap: Funny lump size" );
+	}
+	int count = l->filelen / sizeof( *in );
+	if ( count < 1 )
+	{
+		Com_Error( ERR_DROP, "Map with no brushes" );
 	}
 
+	cm.brushes.PrepForNewData( count, 1 );
+	cbrush_t *out = cm.brushes.Base();
+
+	for ( int i = 0; i < count; i++, out++, in++ )
+	{
+		out->firstbrushside = LittleLong( in->firstside );
+		out->numsides = LittleLong( in->numsides );
+		out->contents = LittleLong( in->contents );
+	}
 }
 
 /*
@@ -260,54 +370,55 @@ void CMod_LoadBrushes (lump_t *l)
 CMod_LoadLeafs
 =================
 */
-void CMod_LoadLeafs (lump_t *l)
+static void CMod_LoadLeafs( byte *cmod_base, lump_t *l )
 {
-	int			i;
-	cleaf_t		*out;
-	dleaf_t 	*in;
-	int			count;
-	
-	in = (dleaf_t*)(cmod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		Com_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size");
-	count = l->filelen / sizeof(*in);
-
-	if (count < 1)
-		Com_Error (ERR_DROP, "Map with no leafs");
-	// need to save space for box planes
-	if (count > MAX_MAP_PLANES)
-		Com_Error (ERR_DROP, "Map has too many planes");
-
-	out = map_leafs;	
-	numleafs = count;
-	numclusters = 0;
-
-	for ( i=0 ; i<count ; i++, in++, out++)
+	dleaf_t *in = (dleaf_t *)( cmod_base + l->fileofs );
+	if ( l->filelen % sizeof( *in ) )
 	{
-		out->contents = LittleLong (in->contents);
-		out->cluster = LittleShort (in->cluster);
-		out->area = LittleShort (in->area);
-		out->firstleafbrush = LittleShort (in->firstleafbrush);
-		out->numleafbrushes = LittleShort (in->numleafbrushes);
-
-		if (out->cluster >= numclusters)
-			numclusters = out->cluster + 1;
+		Com_Error( ERR_DROP, "CM_LoadMap: Funny lump size" );
+	}
+	int count = l->filelen / sizeof( *in );
+	if ( count < 1 )
+	{
+		Com_Error( ERR_DROP, "Map with no leafs" );
 	}
 
-	if (map_leafs[0].contents != CONTENTS_SOLID)
-		Com_Error (ERR_DROP, "Map leaf 0 is not CONTENTS_SOLID");
-	solidleaf = 0;
-	emptyleaf = -1;
-	for (i=1 ; i<numleafs ; i++)
+	cm.leafs.PrepForNewData( count, 1 );
+	cm.numclusters = 0;
+	cleaf_t *out = cm.leafs.Base();
+
+	for ( int i = 0; i < count; i++, in++, out++ )
 	{
-		if (!map_leafs[i].contents)
+		out->contents = LittleLong( in->contents );
+		out->cluster = LittleShort( in->cluster );
+		out->area = LittleShort( in->area );
+		// SlartTodo: ushort > short uTruncation
+		out->firstleafbrush = LittleShort( in->firstleafbrush );
+		out->numleafbrushes = LittleShort( in->numleafbrushes );
+
+		if ( out->cluster >= cm.numclusters )
+			cm.numclusters = out->cluster + 1;
+	}
+
+	if ( cm.leafs.Data( 0 ).contents != CONTENTS_SOLID )
+	{
+		Com_Error( ERR_DROP, "Map leaf 0 is not CONTENTS_SOLID" );
+	}
+
+	cm.solidleaf = 0;
+	cm.emptyleaf = -1;
+	for ( int i = 1; i < cm.leafs.Count(); i++ )
+	{
+		if ( cm.leafs.Data( i ).contents == CONTENTS_EMPTY )
 		{
-			emptyleaf = i;
+			cm.emptyleaf = i;
 			break;
 		}
 	}
-	if (emptyleaf == -1)
-		Com_Error (ERR_DROP, "Map does not have an empty leaf");
+	if ( cm.emptyleaf == -1 )
+	{
+		Com_Error( ERR_DROP, "Map does not have an empty leaf" );
+	}
 }
 
 /*
@@ -315,40 +426,36 @@ void CMod_LoadLeafs (lump_t *l)
 CMod_LoadPlanes
 =================
 */
-void CMod_LoadPlanes (lump_t *l)
+static void CMod_LoadPlanes( byte *cmod_base, lump_t *l )
 {
-	int			i, j;
-	cplane_t	*out;
-	dplane_t 	*in;
-	int			count;
-	int			bits;
-	
-	in = (dplane_t*)(cmod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		Com_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size");
-	count = l->filelen / sizeof(*in);
-
-	if (count < 1)
-		Com_Error (ERR_DROP, "Map with no planes");
-	// need to save space for box planes
-	if (count > MAX_MAP_PLANES)
-		Com_Error (ERR_DROP, "Map has too many planes");
-
-	out = map_planes;	
-	numplanes = count;
-
-	for ( i=0 ; i<count ; i++, in++, out++)
+	dplane_t *in = (dplane_t *)( cmod_base + l->fileofs );
+	if ( l->filelen % sizeof( *in ) )
 	{
-		bits = 0;
-		for (j=0 ; j<3 ; j++)
+		Com_Error( ERR_DROP, "CM_LoadMap: Funny lump size" );
+	}
+	int count = l->filelen / sizeof( *in );
+	if ( count < 1 )
+	{
+		Com_Error( ERR_DROP, "Map with no planes" );
+	}
+
+	cm.planes.PrepForNewData( count, 12 );
+	cplane_t *out = cm.planes.Base();
+
+	for ( int i = 0; i < count; i++, in++, out++ )
+	{
+		int bits = 0;
+		for ( int j = 0; j < 3; j++ )
 		{
-			out->normal[j] = LittleFloat (in->normal[j]);
-			if (out->normal[j] < 0)
-				bits |= 1<<j;
+			out->normal[j] = LittleFloat( in->normal[j] );
+			if ( out->normal[j] < 0.0f )
+			{
+				bits |= 1 << j;
+			}
 		}
 
-		out->dist = LittleFloat (in->dist);
-		out->type = LittleLong (in->type);
+		out->dist = LittleFloat( in->dist );
+		out->type = LittleLong( in->type );
 		out->signbits = bits;
 	}
 }
@@ -358,29 +465,27 @@ void CMod_LoadPlanes (lump_t *l)
 CMod_LoadLeafBrushes
 =================
 */
-void CMod_LoadLeafBrushes (lump_t *l)
+static void CMod_LoadLeafBrushes( byte *cmod_base, lump_t *l )
 {
-	int			i;
-	unsigned short	*out;
-	unsigned short 	*in;
-	int			count;
-	
-	in = (unsigned short*)(cmod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		Com_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size");
-	count = l->filelen / sizeof(*in);
+	uint16 *in = (unsigned short *)( cmod_base + l->fileofs );
+	if ( l->filelen % sizeof( *in ) )
+	{
+		Com_Error( ERR_DROP, "CM_LoadMap: Funny lump size" );
+	}
+	int count = l->filelen / sizeof( *in );
+	if ( count < 1 )
+	{
+		Com_Error( ERR_DROP, "Map with no leaf brushes" );
+	}
 
-	if (count < 1)
-		Com_Error (ERR_DROP, "Map with no planes");
-	// need to save space for box planes
-	if (count > MAX_MAP_LEAFBRUSHES)
-		Com_Error (ERR_DROP, "Map has too many leafbrushes");
+	cm.leafbrushes.PrepForNewData( count, 1 );
+	uint16 *out = cm.leafbrushes.Base();
 
-	out = map_leafbrushes;
-	numleafbrushes = count;
-
-	for ( i=0 ; i<count ; i++, in++, out++)
-		*out = LittleShort (*in);
+	for ( int i = 0; i < count; i++, in++, out++ )
+	{
+		// SlartTodo: Truncation
+		*out = LittleShort( *in );
+	}
 }
 
 /*
@@ -388,34 +493,33 @@ void CMod_LoadLeafBrushes (lump_t *l)
 CMod_LoadBrushSides
 =================
 */
-void CMod_LoadBrushSides (lump_t *l)
+static void CMod_LoadBrushSides( byte *cmod_base, lump_t *l )
 {
-	int			i, j;
-	cbrushside_t	*out;
-	dbrushside_t 	*in;
-	int			count;
-	int			num;
-
-	in = (dbrushside_t*)(cmod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		Com_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size");
-	count = l->filelen / sizeof(*in);
-
-	// need to save space for box planes
-	if (count > MAX_MAP_BRUSHSIDES)
-		Com_Error (ERR_DROP, "Map has too many planes");
-
-	out = map_brushsides;	
-	numbrushsides = count;
-
-	for ( i=0 ; i<count ; i++, in++, out++)
+	dbrushside_t *in = (dbrushside_t *)( cmod_base + l->fileofs );
+	if ( l->filelen % sizeof( *in ) )
 	{
-		num = LittleShort (in->planenum);
-		out->plane = &map_planes[num];
-		j = LittleShort (in->texinfo);
-		if (j >= numtexinfo)
-			Com_Error (ERR_DROP, "Bad brushside texinfo");
-		out->surface = &map_surfaces[j];
+		Com_Error( ERR_DROP, "CM_LoadMap: Funny lump size" );
+	}
+	int count = l->filelen / sizeof( *in );
+	if ( count < 1 )
+	{
+		Com_Error( ERR_DROP, "Map with no brush sides" );
+	}
+
+	cm.brushsides.PrepForNewData( count, 6 );
+	cbrushside_t *out = cm.brushsides.Base();
+
+	for ( int i = 0; i < count; i++, in++, out++ )
+	{
+		// SlartTodo: 2x Truncation in here
+		int num = LittleShort( in->planenum );
+		out->plane = &cm.planes.Data( num );
+		int j = LittleShort( in->texinfo );
+		if ( j >= cm.surfaces.Count() )
+		{
+			Com_Error( ERR_DROP, "Bad brushside texinfo" );
+		}
+		out->surface = &cm.surfaces.Data( j );
 	}
 }
 
@@ -424,28 +528,27 @@ void CMod_LoadBrushSides (lump_t *l)
 CMod_LoadAreas
 =================
 */
-void CMod_LoadAreas (lump_t *l)
+static void CMod_LoadAreas( byte *cmod_base, lump_t *l )
 {
-	int			i;
-	carea_t		*out;
-	darea_t 	*in;
-	int			count;
-
-	in = (darea_t*)(cmod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		Com_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size");
-	count = l->filelen / sizeof(*in);
-
-	if (count > MAX_MAP_AREAS)
-		Com_Error (ERR_DROP, "Map has too many areas");
-
-	out = map_areas;
-	numareas = count;
-
-	for ( i=0 ; i<count ; i++, in++, out++)
+	darea_t *in = (darea_t *)( cmod_base + l->fileofs );
+	if ( l->filelen % sizeof( *in ) )
 	{
-		out->numareaportals = LittleLong (in->numareaportals);
-		out->firstareaportal = LittleLong (in->firstareaportal);
+		Com_Error( ERR_DROP, "CM_LoadMap: Funny lump size" );
+	}
+	int count = l->filelen / sizeof( *in );
+	if ( count < 1 )
+	{
+		cm.areas.Forget();
+		return;
+	}
+
+	cm.areas.PrepForNewData( count );
+	carea_t *out = cm.areas.Base();
+
+	for ( int i = 0; i < count; i++, in++, out++ )
+	{
+		out->numareaportals = LittleLong( in->numareaportals );
+		out->firstareaportal = LittleLong( in->firstareaportal );
 		out->floodvalid = 0;
 		out->floodnum = 0;
 	}
@@ -456,28 +559,30 @@ void CMod_LoadAreas (lump_t *l)
 CMod_LoadAreaPortals
 =================
 */
-void CMod_LoadAreaPortals (lump_t *l)
+static void CMod_LoadAreaPortals( byte *cmod_base, lump_t *l )
 {
-	int			i;
-	dareaportal_t		*out;
-	dareaportal_t 	*in;
-	int			count;
-
-	in = (dareaportal_t*)(cmod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		Com_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size");
-	count = l->filelen / sizeof(*in);
-
-	if (count > MAX_MAP_AREAS)
-		Com_Error (ERR_DROP, "Map has too many areas");
-
-	out = map_areaportals;
-	numareaportals = count;
-
-	for ( i=0 ; i<count ; i++, in++, out++)
+	dareaportal_t *in = (dareaportal_t *)( cmod_base + l->fileofs );
+	if ( l->filelen % sizeof( *in ) )
 	{
-		out->portalnum = LittleLong (in->portalnum);
-		out->otherarea = LittleLong (in->otherarea);
+		Com_Error( ERR_DROP, "CM_LoadMap: Funny lump size" );
+	}
+	int count = l->filelen / sizeof( *in );
+	if ( count < 1 )
+	{
+		cm.areaportals.Forget();
+		return;
+	}
+
+	cm.portalopen.PrepForNewData( count );
+	cm.portalopen.Clear();
+
+	cm.areaportals.PrepForNewData( count );
+	dareaportal_t *out = cm.areaportals.Base();
+
+	for ( int i = 0; i < count; i++, in++, out++ )
+	{
+		out->portalnum = LittleLong( in->portalnum );
+		out->otherarea = LittleLong( in->otherarea );
 	}
 }
 
@@ -486,133 +591,134 @@ void CMod_LoadAreaPortals (lump_t *l)
 CMod_LoadVisibility
 =================
 */
-void CMod_LoadVisibility (lump_t *l)
+static void CMod_LoadVisibility( byte *cmod_base, lump_t *l )
 {
-	int		i;
+	int count = l->filelen;
 
-	numvisibility = l->filelen;
-	if (l->filelen > MAX_MAP_VISIBILITY)
-		Com_Error (ERR_DROP, "Map has too large visibility lump");
-
-	memcpy (map_visibility, cmod_base + l->fileofs, l->filelen);
-
-	map_vis->numclusters = LittleLong (map_vis->numclusters);
-	for (i=0 ; i<map_vis->numclusters ; i++)
+	if ( count < 1 )
 	{
-		map_vis->bitofs[i][0] = LittleLong (map_vis->bitofs[i][0]);
-		map_vis->bitofs[i][1] = LittleLong (map_vis->bitofs[i][1]);
+		cm.vis.Forget();
+		return;
+	}
+
+	cm.vis.PrepForNewData( count );
+
+	memcpy( cm.vis.Base(), cmod_base + l->fileofs, count );
+
+	dvis_t *data = (dvis_t *)cm.vis.Base();
+
+	data->numclusters = LittleLong( data->numclusters );
+	for ( int i = 0; i < data->numclusters; i++ )
+	{
+		data->bitofs[i][0] = LittleLong( data->bitofs[i][0] );
+		data->bitofs[i][1] = LittleLong( data->bitofs[i][1] );
 	}
 }
-
 
 /*
 =================
 CMod_LoadEntityString
 =================
 */
-void CMod_LoadEntityString (lump_t *l)
+static void CMod_LoadEntityString( byte *cmod_base, lump_t *l )
 {
-	numentitychars = l->filelen;
-	if (l->filelen > MAX_MAP_ENTSTRING)
-		Com_Error (ERR_DROP, "Map has too large entity lump");
+	int count = l->filelen;
 
-	memcpy (map_entitystring, cmod_base + l->fileofs, l->filelen);
+	if ( count < 1 )
+	{
+		cm.entitystring.Forget();
+		return;
+	}
+
+	cm.entitystring.PrepForNewData( count );
+
+	memcpy( cm.entitystring.Base(), cmod_base + l->fileofs, count );
 }
 
 
-
 /*
-==================
+=================
 CM_LoadMap
 
 Loads in the map and all submodels
-==================
+=================
 */
-cmodel_t *CM_LoadMap (const char *name, bool clientload, unsigned *checksum)
+cmodel_t *CM_LoadMap( const char *name, bool clientload, unsigned *checksum )
 {
-	unsigned		*buf;
-	dheader_t		*header;
-	int				length;
 	static unsigned	last_checksum;
 
-	map_noareas = Cvar_Get ("map_noareas", "0", 0);
+	cm_noareas = Cvar_Get( "cm_noareas", "0", 0 );
 
-	if ( !Q_strcmp (map_name, name) && (clientload || !Cvar_VariableValue ("flushmap")) )
+	if ( Q_strcmp( cm.name, name ) == 0 && ( clientload || !Cvar_VariableValue( "flushmap" ) ) )
 	{
 		*checksum = last_checksum;
-		if (!clientload)
+		if ( !clientload )
 		{
-			memset (portalopen, 0, sizeof(portalopen));
-			FloodAreaConnections ();
+			cm.portalopen.Clear();
+			FloodAreaConnections();
 		}
-		return &map_cmodels[0];		// still have the right version
+		return cm.cmodels.Base();		// still have the right version
 	}
 
 	// free old stuff
-	numplanes = 0;
-	numnodes = 0;
-	numleafs = 0;
-	numcmodels = 0;
-	numvisibility = 0;
-	numentitychars = 0;
-	map_entitystring[0] = 0;
-	map_name[0] = 0;
+	cm.Reset();
 
-	if (!name || !name[0])
+	if ( !name || !name[0] )
 	{
-		numleafs = 1;
-		numclusters = 1;
-		numareas = 1;
+		cm.CreateCinematicMap();
 		*checksum = 0;
-		return &map_cmodels[0];			// cinematic servers won't have anything at all
+		return cm.cmodels.Base();		// cinematic servers won't have anything at all
 	}
 
 	//
 	// load the file
 	//
-	length = FS_LoadFile (name, (void **)&buf);
-	if (!buf)
-		Com_Error (ERR_DROP, "Couldn't load %s", name);
+	byte *buf;
+	int length = FS_LoadFile( name, (void **)&buf );
+	if ( !buf )
+	{
+		Com_Error( ERR_DROP, "Couldn't load %s", name );
+	}
 
-	last_checksum = LittleLong (Com_BlockChecksum (buf, length));
+	last_checksum = LittleLong( Com_BlockChecksum( buf, length ) );
 	*checksum = last_checksum;
 
-	header = (dheader_t *)buf;
+	dheader_t *header = (dheader_t *)buf;
 #if 0 // Address Sanitizer aborts at this line
-	for (i=0 ; i<sizeof(dheader_t)/4 ; i++)
-		((int *)&header)[i] = LittleLong ( ((int *)&header)[i]);
+	for ( i = 0; i < sizeof( dheader_t ) / 4; i++ )
+		( (int *)&header )[i] = LittleLong( ( (int *)&header )[i] );
 #endif
 
-	if (header->version != BSPVERSION)
-		Com_Error (ERR_DROP, "CMod_LoadBrushModel: %s has wrong version number (%i should be %i)"
-		, name, header->version, BSPVERSION);
-
-	cmod_base = (byte *)buf;
+	if ( header->version != BSPVERSION )
+	{
+		Com_Error( ERR_DROP, "CM_LoadMap: %s has wrong version number (%d should be %d)"
+			, name, header->version, BSPVERSION );
+	}
 
 	// load into heap
-	CMod_LoadSurfaces (&header->lumps[LUMP_TEXINFO]);
-	CMod_LoadLeafs (&header->lumps[LUMP_LEAFS]);
-	CMod_LoadLeafBrushes (&header->lumps[LUMP_LEAFBRUSHES]);
-	CMod_LoadPlanes (&header->lumps[LUMP_PLANES]);
-	CMod_LoadBrushes (&header->lumps[LUMP_BRUSHES]);
-	CMod_LoadBrushSides (&header->lumps[LUMP_BRUSHSIDES]);
-	CMod_LoadSubmodels (&header->lumps[LUMP_MODELS]);
-	CMod_LoadNodes (&header->lumps[LUMP_NODES]);
-	CMod_LoadAreas (&header->lumps[LUMP_AREAS]);
-	CMod_LoadAreaPortals (&header->lumps[LUMP_AREAPORTALS]);
-	CMod_LoadVisibility (&header->lumps[LUMP_VISIBILITY]);
-	CMod_LoadEntityString (&header->lumps[LUMP_ENTITIES]);
+	CMod_LoadSurfaces( buf, &header->lumps[LUMP_TEXINFO] );
+	CMod_LoadLeafs( buf, &header->lumps[LUMP_LEAFS] );
+	CMod_LoadLeafBrushes( buf, &header->lumps[LUMP_LEAFBRUSHES] );
+	CMod_LoadPlanes( buf, &header->lumps[LUMP_PLANES] );
+	CMod_LoadBrushes( buf, &header->lumps[LUMP_BRUSHES] );
+	CMod_LoadBrushSides( buf, &header->lumps[LUMP_BRUSHSIDES] );
+	CMod_LoadSubmodels( buf, &header->lumps[LUMP_MODELS] );
+	CMod_LoadNodes( buf, &header->lumps[LUMP_NODES] );
+	CMod_LoadAreas( buf, &header->lumps[LUMP_AREAS] );
+	CMod_LoadAreaPortals( buf, &header->lumps[LUMP_AREAPORTALS] );
+	CMod_LoadVisibility( buf, &header->lumps[LUMP_VISIBILITY] );
+	CMod_LoadEntityString( buf, &header->lumps[LUMP_ENTITIES] );
 
-	FS_FreeFile (buf);
+	FS_FreeFile( buf );
 
-	CM_InitBoxHull ();
+	CM_InitBoxHull();
 
-	memset (portalopen, 0, sizeof(portalopen));
-	FloodAreaConnections ();
+	cm.portalopen.Clear();
+	FloodAreaConnections();
 
-	Q_strcpy_s (map_name, name);
+	Q_strcpy_s( cm.name, name );
 
-	return &map_cmodels[0];
+	return cm.cmodels.Base();
 }
 
 /*
@@ -620,53 +726,61 @@ cmodel_t *CM_LoadMap (const char *name, bool clientload, unsigned *checksum)
 CM_InlineModel
 ==================
 */
-cmodel_t	*CM_InlineModel (const char *name)
+cmodel_t *CM_InlineModel( const char *name )
 {
-	int		num;
+	if ( !name || name[0] != '*' )
+	{
+		Com_Error( ERR_DROP, "CM_InlineModel: bad name" );
+	}
+	int num = atoi( name + 1 );
+	if ( num < 1 || num >= cm.cmodels.Count() )
+	{
+		Com_Error( ERR_DROP, "CM_InlineModel: bad number" );
+	}
 
-	if (!name || name[0] != '*')
-		Com_Error (ERR_DROP, "CM_InlineModel: bad name");
-	num = atoi (name+1);
-	if (num < 1 || num >= numcmodels)
-		Com_Error (ERR_DROP, "CM_InlineModel: bad number");
-
-	return &map_cmodels[num];
+	return &cm.cmodels.Data(num);
 }
 
-int		CM_NumClusters (void)
+int CM_NumClusters()
 {
-	return numclusters;
+	return cm.numclusters;
 }
 
-int		CM_NumInlineModels (void)
+int CM_NumInlineModels()
 {
-	return numcmodels;
+	return cm.cmodels.Count();
 }
 
-char	*CM_EntityString (void)
+char *CM_EntityString()
 {
-	return map_entitystring;
+	return cm.entitystring.Base();
 }
 
-int		CM_LeafContents (int leafnum)
+int CM_LeafContents( int leafnum )
 {
-	if (leafnum < 0 || leafnum >= numleafs)
-		Com_Error (ERR_DROP, "CM_LeafContents: bad number");
-	return map_leafs[leafnum].contents;
+	if ( leafnum < 0 || leafnum >= cm.leafs.Count() )
+	{
+		Com_Error( ERR_DROP, "CM_LeafContents: bad number" );
+	}
+	return cm.leafs.Data(leafnum).contents;
 }
 
-int		CM_LeafCluster (int leafnum)
+int CM_LeafCluster (int leafnum)
 {
-	if (leafnum < 0 || leafnum >= numleafs)
-		Com_Error (ERR_DROP, "CM_LeafCluster: bad number");
-	return map_leafs[leafnum].cluster;
+	if ( leafnum < 0 || leafnum >= cm.leafs.Count() )
+	{
+		Com_Error( ERR_DROP, "CM_LeafCluster: bad number" );
+	}
+	return cm.leafs.Data(leafnum).cluster;
 }
 
-int		CM_LeafArea (int leafnum)
+int CM_LeafArea( int leafnum )
 {
-	if (leafnum < 0 || leafnum >= numleafs)
-		Com_Error (ERR_DROP, "CM_LeafArea: bad number");
-	return map_leafs[leafnum].area;
+	if ( leafnum < 0 || leafnum >= cm.leafs.Count() )
+	{
+		Com_Error( ERR_DROP, "CM_LeafArea: bad number" );
+	}
+	return cm.leafs.Data(leafnum).area;
 }
 
 //=======================================================================
@@ -693,44 +807,49 @@ void CM_InitBoxHull (void)
 	cplane_t	*p;
 	cbrushside_t	*s;
 
-	box_headnode = numnodes;
-	box_planes = &map_planes[numplanes];
-	if (numnodes+6 > MAX_MAP_NODES
-		|| numbrushes+1 > MAX_MAP_BRUSHES
-		|| numleafbrushes+1 > MAX_MAP_LEAFBRUSHES
-		|| numbrushsides+6 > MAX_MAP_BRUSHSIDES
-		|| numplanes+12 > MAX_MAP_PLANES)
-		Com_Error (ERR_DROP, "Not enough room for box tree");
+#if 0
+	if ( cm.nodes.Count()+6 > MAX_MAP_NODES
+		|| cm.brushes.Count()+1 > MAX_MAP_BRUSHES
+		|| cm.leafbrushes.Count()+1 > MAX_MAP_LEAFBRUSHES
+		|| cm.brushsides.Count()+6 > MAX_MAP_BRUSHSIDES
+		|| cm.planes.Count()+12 > MAX_MAP_PLANES )
+		Com_Error( ERR_DROP, "Not enough room for box tree" );
+#endif
 
-	box_brush = &map_brushes[numbrushes];
+	// Slart: This code assumes a spoof of the count, evil
+
+	box_headnode = cm.nodes.Count();
+	box_planes = &cm.planes.Data( cm.planes.Count() );
+
+	box_brush = &cm.brushes.Data( cm.brushes.Count() );
 	box_brush->numsides = 6;
-	box_brush->firstbrushside = numbrushsides;
+	box_brush->firstbrushside = cm.brushsides.Count();
 	box_brush->contents = CONTENTS_MONSTER;
 
-	box_leaf = &map_leafs[numleafs];
+	box_leaf = &cm.leafs.Data( cm.leafs.Count() );
 	box_leaf->contents = CONTENTS_MONSTER;
-	box_leaf->firstleafbrush = numleafbrushes;
+	box_leaf->firstleafbrush = cm.leafbrushes.Count();
 	box_leaf->numleafbrushes = 1;
 
-	map_leafbrushes[numleafbrushes] = numbrushes;
+	cm.leafbrushes.Data( cm.leafbrushes.Count() ) = cm.brushes.Count();
 
 	for (i=0 ; i<6 ; i++)
 	{
 		side = i&1;
 
 		// brush sides
-		s = &map_brushsides[numbrushsides+i];
-		s->plane = 	map_planes + (numplanes+i*2+side);
-		s->surface = &nullsurface;
+		s = &cm.brushsides.Data(cm.brushsides.Count()+i);
+		s->plane = &cm.planes.Data(cm.planes.Count()+i*2+side);
+		s->surface = &s_nullsurface;
 
 		// nodes
-		c = &map_nodes[box_headnode+i];
-		c->plane = map_planes + (numplanes+i*2);
-		c->children[side] = -1 - emptyleaf;
+		c = &cm.nodes.Data(box_headnode+i);
+		c->plane = &cm.planes.Data(cm.planes.Count()+i*2);
+		c->children[side] = -1 - cm.emptyleaf;
 		if (i != 5)
 			c->children[side^1] = box_headnode+i + 1;
 		else
-			c->children[side^1] = -1 - numleafs;
+			c->children[side^1] = -1 - cm.leafs.Count();
 
 		// planes
 		p = &box_planes[i*2];
@@ -781,22 +900,22 @@ CM_PointLeafnum_r
 
 ==================
 */
-int CM_PointLeafnum_r (vec3_t p, int num)
+int CM_PointLeafnum_r( vec3_t p, int num )
 {
 	float		d;
 	cnode_t		*node;
 	cplane_t	*plane;
 
-	while (num >= 0)
+	while ( num >= 0 )
 	{
-		node = map_nodes + num;
+		node = &cm.nodes.Data( num );
 		plane = node->plane;
-		
-		if (plane->type < 3)
+
+		if ( plane->type < 3 )
 			d = p[plane->type] - plane->dist;
 		else
-			d = DotProduct (plane->normal, p) - plane->dist;
-		if (d < 0)
+			d = DotProduct( plane->normal, p ) - plane->dist;
+		if ( d < 0 )
 			num = node->children[1];
 		else
 			num = node->children[0];
@@ -807,13 +926,12 @@ int CM_PointLeafnum_r (vec3_t p, int num)
 	return -1 - num;
 }
 
-int CM_PointLeafnum (vec3_t p)
+int CM_PointLeafnum( vec3_t p )
 {
-	if (!numplanes)
+	if ( cm.planes.Count() == 0 )
 		return 0;		// sound may call this without map loaded
-	return CM_PointLeafnum_r (p, 0);
+	return CM_PointLeafnum_r( p, 0 );
 }
-
 
 
 /*
@@ -828,17 +946,17 @@ int		*leaf_list;
 float	*leaf_mins, *leaf_maxs;
 int		leaf_topnode;
 
-void CM_BoxLeafnums_r (int nodenum)
+void CM_BoxLeafnums_r( int nodenum )
 {
-	cplane_t	*plane;
-	cnode_t		*node;
-	int		s;
+	cplane_t *plane;
+	cnode_t *node;
+	int s;
 
-	while (1)
+	while ( 1 )
 	{
-		if (nodenum < 0)
+		if ( nodenum < 0 )
 		{
-			if (leaf_count >= leaf_maxcount)
+			if ( leaf_count >= leaf_maxcount )
 			{
 //				Com_Printf ("CM_BoxLeafnums_r: overflow\n");
 				return;
@@ -846,20 +964,20 @@ void CM_BoxLeafnums_r (int nodenum)
 			leaf_list[leaf_count++] = -1 - nodenum;
 			return;
 		}
-	
-		node = &map_nodes[nodenum];
+
+		node = &cm.nodes.Data( nodenum );
 		plane = node->plane;
 //		s = BoxOnPlaneSide (leaf_mins, leaf_maxs, plane);
-		s = BOX_ON_PLANE_SIDE(leaf_mins, leaf_maxs, plane);
-		if (s == 1)
+		s = BOX_ON_PLANE_SIDE( leaf_mins, leaf_maxs, plane );
+		if ( s == 1 )
 			nodenum = node->children[0];
-		else if (s == 2)
+		else if ( s == 2 )
 			nodenum = node->children[1];
 		else
 		{	// go down both
-			if (leaf_topnode == -1)
+			if ( leaf_topnode == -1 )
 				leaf_topnode = nodenum;
-			CM_BoxLeafnums_r (node->children[0]);
+			CM_BoxLeafnums_r( node->children[0] );
 			nodenum = node->children[1];
 		}
 
@@ -884,12 +1002,11 @@ int	CM_BoxLeafnums_headnode (vec3_t mins, vec3_t maxs, int *list, int listsize, 
 	return leaf_count;
 }
 
-int	CM_BoxLeafnums (vec3_t mins, vec3_t maxs, int *list, int listsize, int *topnode)
+int	CM_BoxLeafnums( vec3_t mins, vec3_t maxs, int *list, int listsize, int *topnode )
 {
-	return CM_BoxLeafnums_headnode (mins, maxs, list,
-		listsize, map_cmodels[0].headnode, topnode);
+	return CM_BoxLeafnums_headnode( mins, maxs, list,
+		listsize, cm.cmodels.Base()->headnode, topnode );
 }
-
 
 
 /*
@@ -898,16 +1015,16 @@ CM_PointContents
 
 ==================
 */
-int CM_PointContents (vec3_t p, int headnode)
+int CM_PointContents( vec3_t p, int headnode )
 {
-	int		l;
+	int l;
 
-	if (!numnodes)	// map not loaded
+	if ( cm.nodes.Count() == 0 )	// map not loaded
 		return 0;
 
-	l = CM_PointLeafnum_r (p, headnode);
+	l = CM_PointLeafnum_r( p, headnode );
 
-	return map_leafs[l].contents;
+	return cm.leafs.Data( l ).contents;
 }
 
 /*
@@ -918,31 +1035,31 @@ Handles offseting and rotation of the end points for moving and
 rotating entities
 ==================
 */
-int	CM_TransformedPointContents (vec3_t p, int headnode, vec3_t origin, vec3_t angles)
+int	CM_TransformedPointContents( vec3_t p, int headnode, vec3_t origin, vec3_t angles )
 {
-	vec3_t		p_l;
-	vec3_t		temp;
-	vec3_t		forward, right, up;
-	int			l;
+	vec3_t p_l;
+	vec3_t temp;
+	vec3_t forward, right, up;
+	int l;
 
 	// subtract origin offset
-	VectorSubtract (p, origin, p_l);
+	VectorSubtract( p, origin, p_l );
 
 	// rotate start and end into the models frame of reference
-	if (headnode != box_headnode && 
-	(angles[0] || angles[1] || angles[2]) )
+	if ( headnode != box_headnode &&
+		( angles[0] || angles[1] || angles[2] ) )
 	{
-		AngleVectors (angles, forward, right, up);
+		AngleVectors( angles, forward, right, up );
 
-		VectorCopy (p_l, temp);
-		p_l[0] = DotProduct (temp, forward);
-		p_l[1] = -DotProduct (temp, right);
-		p_l[2] = DotProduct (temp, up);
+		VectorCopy( p_l, temp );
+		p_l[0] = DotProduct( temp, forward );
+		p_l[1] = -DotProduct( temp, right );
+		p_l[2] = DotProduct( temp, up );
 	}
 
-	l = CM_PointLeafnum_r (p_l, headnode);
+	l = CM_PointLeafnum_r( p_l, headnode );
 
-	return map_leafs[l].contents;
+	return cm.leafs.Data( l ).contents;
 }
 
 
@@ -1000,7 +1117,7 @@ void CM_ClipBoxToBrush (vec3_t mins, vec3_t maxs, vec3_t p1, vec3_t p2,
 
 	for (i=0 ; i<brush->numsides ; i++)
 	{
-		side = &map_brushsides[brush->firstbrushside+i];
+		side = &cm.brushsides.Data(brush->firstbrushside+i);
 		plane = side->plane;
 
 		// FIXME: special case for axial
@@ -1123,7 +1240,7 @@ void CM_TestBoxInBrush (vec3_t mins, vec3_t maxs, vec3_t p1,
 
 	for (i=0 ; i<brush->numsides ; i++)
 	{
-		side = &map_brushsides[brush->firstbrushside+i];
+		side = &cm.brushsides.Data(brush->firstbrushside+i);
 		plane = side->plane;
 
 		// FIXME: special case for axial
@@ -1165,17 +1282,17 @@ void CM_TraceToLeaf (int leafnum)
 	cleaf_t		*leaf;
 	cbrush_t	*b;
 
-	leaf = &map_leafs[leafnum];
+	leaf = &cm.leafs.Data(leafnum);
 	if ( !(leaf->contents & trace_contents))
 		return;
 	// trace line against all brushes in the leaf
 	for (k=0 ; k<leaf->numleafbrushes ; k++)
 	{
-		brushnum = map_leafbrushes[leaf->firstleafbrush+k];
-		b = &map_brushes[brushnum];
-		if (b->checkcount == checkcount)
+		brushnum = cm.leafbrushes.Data(leaf->firstleafbrush+k);
+		b = &cm.brushes.Data(brushnum);
+		if (b->checkcount == cm.checkcount)
 			continue;	// already checked this brush in another leaf
-		b->checkcount = checkcount;
+		b->checkcount = cm.checkcount;
 
 		if ( !(b->contents & trace_contents))
 			continue;
@@ -1199,17 +1316,17 @@ void CM_TestInLeaf (int leafnum)
 	cleaf_t		*leaf;
 	cbrush_t	*b;
 
-	leaf = &map_leafs[leafnum];
+	leaf = &cm.leafs.Data(leafnum);
 	if ( !(leaf->contents & trace_contents))
 		return;
 	// trace line against all brushes in the leaf
 	for (k=0 ; k<leaf->numleafbrushes ; k++)
 	{
-		brushnum = map_leafbrushes[leaf->firstleafbrush+k];
-		b = &map_brushes[brushnum];
-		if (b->checkcount == checkcount)
+		brushnum = cm.leafbrushes.Data(leaf->firstleafbrush+k);
+		b = &cm.brushes.Data(brushnum);
+		if (b->checkcount == cm.checkcount)
 			continue;	// already checked this brush in another leaf
-		b->checkcount = checkcount;
+		b->checkcount = cm.checkcount;
 
 		if ( !(b->contents & trace_contents))
 			continue;
@@ -1247,7 +1364,7 @@ void CM_RecursiveHullCheck (int num, float p1f, float p2f, vec3_t p1, vec3_t p2)
 	//
 	while( num >= 0 )
 	{
-		node = map_nodes + num;
+		node = &cm.nodes.Data(num);
 		plane = node->plane;
 
 		if (plane->type < 3)
@@ -1346,16 +1463,16 @@ trace_t CM_BoxTrace (vec3_t start, vec3_t end,
 					 vec3_t mins, vec3_t maxs,
 					 int headnode, int brushmask)
 {
-	checkcount++;		// for multi-check avoidance
+	cm.checkcount++;	// for multi-check avoidance
 
 	c_traces++;			// for statistics, may be zeroed
 
 	// fill in a default trace
 	memset (&trace_trace, 0, sizeof(trace_trace));
 	trace_trace.fraction = 1;
-	trace_trace.surface = &nullsurface;
+	trace_trace.surface = &s_nullsurface;
 
-	if (!numnodes)	// map not loaded
+	if (cm.nodes.Count() == 0)	// map not loaded
 		return trace_trace;
 
 	trace_contents = brushmask;
@@ -1507,10 +1624,10 @@ void CM_DecompressVis (byte *in, byte *out)
 	byte	*out_p;
 	int		row;
 
-	row = (numclusters+7)>>3;	
+	row = (cm.numclusters+7)>>3;	
 	out_p = out;
 
-	if (!in || !numvisibility)
+	if (!in || cm.vis.Count() == 0)
 	{	// no vis info, so make all visible
 		while (row)
 		{
@@ -1546,21 +1663,21 @@ void CM_DecompressVis (byte *in, byte *out)
 byte	pvsrow[MAX_MAP_LEAFS/8];
 byte	phsrow[MAX_MAP_LEAFS/8];
 
-byte	*CM_ClusterPVS (int cluster)
+byte *CM_ClusterPVS (int cluster)
 {
 	if (cluster == -1)
-		memset (pvsrow, 0, (numclusters+7)>>3);
+		memset (pvsrow, 0, (cm.numclusters+7)>>3);
 	else
-		CM_DecompressVis (map_visibility + map_vis->bitofs[cluster][DVIS_PVS], pvsrow);
+		CM_DecompressVis (&cm.vis.Data(((dvis_t *)(cm.vis.Base()))->bitofs[cluster][DVIS_PVS]), pvsrow);
 	return pvsrow;
 }
 
-byte	*CM_ClusterPHS (int cluster)
+byte *CM_ClusterPHS (int cluster)
 {
 	if (cluster == -1)
-		memset (phsrow, 0, (numclusters+7)>>3);
+		memset (phsrow, 0, (cm.numclusters+7)>>3);
 	else
-		CM_DecompressVis (map_visibility + map_vis->bitofs[cluster][DVIS_PHS], phsrow);
+		CM_DecompressVis (&cm.vis.Data(((dvis_t *)(cm.vis.Base()))->bitofs[cluster][DVIS_PHS]), phsrow);
 	return phsrow;
 }
 
@@ -1578,7 +1695,7 @@ void FloodArea_r (carea_t *area, int floodnum)
 	int		i;
 	dareaportal_t	*p;
 
-	if (area->floodvalid == floodvalid)
+	if (area->floodvalid == cm.floodvalid)
 	{
 		if (area->floodnum == floodnum)
 			return;
@@ -1586,12 +1703,12 @@ void FloodArea_r (carea_t *area, int floodnum)
 	}
 
 	area->floodnum = floodnum;
-	area->floodvalid = floodvalid;
-	p = &map_areaportals[area->firstareaportal];
+	area->floodvalid = cm.floodvalid;
+	p = &cm.areaportals.Data(area->firstareaportal);
 	for (i=0 ; i<area->numareaportals ; i++, p++)
 	{
-		if (portalopen[p->portalnum])
-			FloodArea_r (&map_areas[p->otherarea], floodnum);
+		if (cm.portalopen.Data(p->portalnum))
+			FloodArea_r (&cm.areas.Data(p->otherarea), floodnum);
 	}
 }
 
@@ -1609,14 +1726,14 @@ void	FloodAreaConnections (void)
 	int		floodnum;
 
 	// all current floods are now invalid
-	floodvalid++;
+	cm.floodvalid++;
 	floodnum = 0;
 
 	// area 0 is not used
-	for (i=1 ; i<numareas ; i++)
+	for (i=1 ; i<cm.areas.Count() ; i++)
 	{
-		area = &map_areas[i];
-		if (area->floodvalid == floodvalid)
+		area = &cm.areas.Data(i);
+		if (area->floodvalid == cm.floodvalid)
 			continue;		// already flooded into
 		floodnum++;
 		FloodArea_r (area, floodnum);
@@ -1626,22 +1743,22 @@ void	FloodAreaConnections (void)
 
 void	CM_SetAreaPortalState (int portalnum, qboolean open)
 {
-	if (portalnum > numareaportals)
+	if (portalnum > cm.areaportals.Count())
 		Com_Error (ERR_DROP, "areaportal > numareaportals");
 
-	portalopen[portalnum] = open;
+	cm.portalopen.Data(portalnum) = open;
 	FloodAreaConnections ();
 }
 
 qboolean	CM_AreasConnected (int area1, int area2)
 {
-	if (map_noareas->value)
+	if (cm_noareas->value)
 		return true;
 
-	if (area1 > numareas || area2 > numareas)
+	if (area1 > cm.areas.Count() || area2 > cm.areas.Count())
 		Com_Error (ERR_DROP, "area > numareas");
 
-	if (map_areas[area1].floodnum == map_areas[area2].floodnum)
+	if (cm.areas.Data(area1).floodnum == cm.areas.Data(area2).floodnum)
 		return true;
 	return false;
 }
@@ -1663,9 +1780,9 @@ int CM_WriteAreaBits (byte *buffer, int area)
 	int		floodnum;
 	int		bytes;
 
-	bytes = (numareas+7)>>3;
+	bytes = (cm.areas.Count()+7)>>3;
 
-	if (map_noareas->value)
+	if (cm_noareas->value)
 	{	// for debugging, send everything
 		memset (buffer, 255, bytes);
 	}
@@ -1673,10 +1790,10 @@ int CM_WriteAreaBits (byte *buffer, int area)
 	{
 		memset (buffer, 0, bytes);
 
-		floodnum = map_areas[area].floodnum;
-		for (i=0 ; i<numareas ; i++)
+		floodnum = cm.areas.Data(area).floodnum;
+		for (i=0 ; i<cm.areas.Count() ; i++)
 		{
-			if (map_areas[i].floodnum == floodnum || !area)
+			if (cm.areas.Data(i).floodnum == floodnum || !area)
 				buffer[i>>3] |= 1<<(i&7);
 		}
 	}
@@ -1692,9 +1809,11 @@ CM_WritePortalState
 Writes the portal state to a savegame file
 ===================
 */
-void	CM_WritePortalState (FILE *f)
+void CM_WritePortalState( FILE *f )
 {
-	fwrite (portalopen, sizeof(portalopen), 1, f);
+	size_t count = cm.portalopen.Count();
+	fwrite( &count, sizeof( count ), 1, f );
+	fwrite( cm.portalopen.Base(), sizeof( bool ), count, f );
 }
 
 /*
@@ -1705,9 +1824,12 @@ Reads the portal state from a savegame file
 and recalculates the area connections
 ===================
 */
-void	CM_ReadPortalState (FILE *f)
+void CM_ReadPortalState (FILE *f)
 {
-	FS_Read (portalopen, sizeof(portalopen), f);
+	size_t count;
+	FS_Read( &count, sizeof( count ), f );
+	cm.portalopen.PrepForNewData( count );
+	FS_Read( cm.portalopen.Base(), count * sizeof( bool ), f );
 	FloodAreaConnections ();
 }
 
@@ -1728,7 +1850,7 @@ bool CM_HeadnodeVisible (int nodenum, byte *visbits)
 	if (nodenum < 0)
 	{
 		leafnum = -1-nodenum;
-		cluster = map_leafs[leafnum].cluster;
+		cluster = cm.leafs.Data(leafnum).cluster;
 		if (cluster == -1)
 			return false;
 		if (visbits[cluster>>3] & (1<<(cluster&7)))
@@ -1736,7 +1858,7 @@ bool CM_HeadnodeVisible (int nodenum, byte *visbits)
 		return false;
 	}
 
-	node = &map_nodes[nodenum];
+	node = &cm.nodes.Data(nodenum);
 	if (CM_HeadnodeVisible(node->children[0], visbits))
 		return true;
 	return CM_HeadnodeVisible(node->children[1], visbits);

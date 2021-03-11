@@ -1242,6 +1242,7 @@ void CL_RequestNextDownload (void)
 	if (precache_check == ENV_CNT) {
 		precache_check = ENV_CNT + 1;
 
+		// SlartTodo: This is putrid
 		CM_LoadMap (cl.configstrings[CS_MODELS+1], true, &map_checksum);
 
 		if (map_checksum != atoi(cl.configstrings[CS_MAPCHECKSUM])) {
@@ -1277,6 +1278,7 @@ void CL_RequestNextDownload (void)
 	// confirm existance of textures, download any that don't exist
 	if (precache_check == TEXTURE_CNT+1) {
 		// from qcommon/cmodel.c
+#if 0 // Slart: This code blows
 		extern int			numtexinfo;
 		extern csurface_t	map_surfaces[];
 
@@ -1289,6 +1291,7 @@ void CL_RequestNextDownload (void)
 					return; // started a download
 			}
 		}
+#endif
 		precache_check = TEXTURE_CNT+999;
 	}
 
