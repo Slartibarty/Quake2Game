@@ -117,7 +117,7 @@ public:
 	{
 		if ( data )
 		{
-			free( data );
+			Z_Free( data );
 			data = nullptr;
 			reserved = 0;
 			count = 0;
@@ -515,6 +515,7 @@ static void CMod_LoadBrushSides( byte *cmod_base, lump_t *l )
 		int num = LittleShort( in->planenum );
 		out->plane = &cm.planes.Data( num );
 		int j = LittleShort( in->texinfo );
+		assert( j != -1 );
 		if ( j >= cm.surfaces.Count() )
 		{
 			Com_Error( ERR_DROP, "Bad brushside texinfo" );
@@ -1864,3 +1865,8 @@ bool CM_HeadnodeVisible (int nodenum, byte *visbits)
 	return CM_HeadnodeVisible(node->children[1], visbits);
 }
 
+
+void CM_Shutdown()
+{
+	cm.Free();
+}

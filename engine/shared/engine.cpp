@@ -721,5 +721,8 @@ Engine_Shutdown
 */
 void Engine_Shutdown (void)
 {
+	// Clear our allocated globals
+	CM_Shutdown();
+
 	Z_Shutdown();
 }
