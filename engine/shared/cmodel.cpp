@@ -52,8 +52,8 @@ struct cmArray_t
 private:
 
 	T *data;
-	size_t count;		// The amount of Ts in use
-	size_t reserved;	// The amount of Ts we have reserved
+	int count;		// The amount of Ts in use
+	int reserved;	// The amount of Ts we have reserved
 
 public:
 
@@ -73,12 +73,12 @@ public:
 	}
 
 	// The amount of elements in this array
-	size_t Count()
+	int Count()
 	{
 		return count;
 	}
 
-	size_t SizeInBytes()
+	int SizeInBytes()
 	{
 		return count * sizeof( T );
 	}
@@ -97,7 +97,7 @@ public:
 		count = 0;
 	}
 
-	void PrepForNewData( size_t newcount, size_t extra = 0 )
+	void PrepForNewData( int newcount, int extra = 0 )
 	{
 		count = newcount;
 		if ( newcount > reserved )
@@ -515,7 +515,6 @@ static void CMod_LoadBrushSides( byte *cmod_base, lump_t *l )
 		int num = LittleShort( in->planenum );
 		out->plane = &cm.planes.Data( num );
 		int j = LittleShort( in->texinfo );
-		assert( j != -1 );
 		if ( j >= cm.surfaces.Count() )
 		{
 			Com_Error( ERR_DROP, "Bad brushside texinfo" );
