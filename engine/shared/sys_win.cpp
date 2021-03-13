@@ -43,9 +43,9 @@ void Sys_Error( const char *msg )
 	Sys_OutputDebugString( msg ); // Mirror to the debugger
 
 	// We won't have a window by now
-	MessageBoxA( nullptr, msg, nullptr, MB_OK | MB_ICONERROR );
+	MessageBoxA( nullptr, msg, "Engine Error", MB_OK | MB_ICONERROR | MB_TOPMOST );
 
-	Sys_Quit( 1 );
+	Sys_Quit( EXIT_FAILURE );
 }
 
 [[noreturn]]

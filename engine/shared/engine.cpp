@@ -96,7 +96,7 @@ static void Com_Print_Internal( const char *msg )
 	// logfile
 	if ( logfile_active && logfile_active->value )
 	{
-		char	name[MAX_QPATH];
+		char name[MAX_QPATH];
 
 		if ( !logfile )
 		{
