@@ -87,7 +87,7 @@ void		Com_DPrintf( _Printf_format_string_ const char *fmt, ... );
 [[noreturn]]
 void		Com_Error( int code, _Printf_format_string_ const char *fmt, ... );
 [[noreturn]]
-void		Com_Quit();
+void		Com_Quit( int code );
 
 // Our copy of the command line parameters
 int			COM_Argc( void );

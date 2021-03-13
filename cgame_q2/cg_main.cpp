@@ -249,7 +249,7 @@ cgame_export_t *GetCGameAPI( cgame_import_t *import )
 #ifndef GAME_HARD_LINKED
 
 // this is only here so the functions in q_shared.c and q_shwin.c can link
-void Sys_Error( _Printf_format_string_ const char *fmt, ... )
+void Com_Error( int code, _Printf_format_string_ const char *fmt, ... )
 {
 	va_list		argptr;
 	char		text[MAX_PRINT_MSG];
@@ -258,7 +258,7 @@ void Sys_Error( _Printf_format_string_ const char *fmt, ... )
 	Q_vsprintf_s( text, fmt, argptr );
 	va_end( argptr );
 
-	cgi.Errorf( ERR_FATAL, "%s", text );
+	cgi.Errorf( code, "%s", text );
 }
 
 void Com_Printf( _Printf_format_string_ const char *fmt, ... )

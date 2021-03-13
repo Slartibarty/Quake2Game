@@ -180,27 +180,37 @@ Both client and server can use this, and it will
 do the apropriate things.
 =============
 */
-[[noreturn]] void Com_Error (int code, _Printf_format_string_ const char *fmt, ...)
+[[noreturn]]
+void Com_Error (int code, _Printf_format_string_ const char *fmt, ...)
 {
 	va_list			argptr;
 	char			msg[MAX_PRINT_MSG];
 	static bool		recursive;
 
 	if (recursive)
-		Sys_Error ("recursive error after: %s", msg);
+	{
+		// This should never happen
+		SV_Shutdown ("Server experienced a recursive error\n", false);
+		CL_Shutdown ();
+		Engine_Shutdown ();
+
+		Sys_Error ("recursive error");
+	}
+
 	recursive = true;
 
-	va_start (argptr,fmt);
-	Q_vsprintf_s (msg,fmt,argptr);
-	va_end (argptr);
-	
 	if (code == ERR_DISCONNECT)
 	{
 		CL_Drop ();
 		recursive = false;
 		longjmp (abortframe, -1);
 	}
-	else if (code == ERR_DROP)
+
+	va_start (argptr,fmt);
+	Q_vsprintf_s (msg,fmt,argptr);
+	va_end (argptr);
+	
+	if (code == ERR_DROP)
 	{
 		Com_Printf ("********************\nERROR: %s\n********************\n", msg);
 		SV_Shutdown (va("Server crashed: %s\n", msg), false);
@@ -208,19 +218,13 @@ do the apropriate things.
 		recursive = false;
 		longjmp (abortframe, -1);
 	}
-	else
-	{
-		SV_Shutdown (va("Server fatal crashed: %s\n", msg), false);
-		CL_Shutdown ();
-	}
 
-	if (logfile)
-	{
-		fclose (logfile);
-		logfile = NULL;
-	}
+	// ERR_FATAL
+	SV_Shutdown (va("Server fatal crashed: %s\n", msg), false);
+	CL_Shutdown ();
+	Engine_Shutdown ();
 
-	Sys_Error ("%s", msg);
+	Sys_Error (msg);
 }
 
 
@@ -232,18 +236,14 @@ Both client and server can use this, and it will
 do the apropriate things.
 =============
 */
-[[noreturn]] void Com_Quit()
+[[noreturn]]
+void Com_Quit( int code )
 {
 	SV_Shutdown( "Server quit\n", false );
 	CL_Shutdown();
+	Engine_Shutdown();
 
-	if ( logfile )
-	{
-		fclose( logfile );
-		logfile = NULL;
-	}
-
-	Sys_Quit();
+	Sys_Quit( code );
 }
 
 
@@ -476,7 +476,7 @@ byte	COM_BlockSequenceCRCByte (byte *base, int length, int sequence)
 
 
 	if (sequence < 0)
-		Sys_Error("sequence < 0, this shouldn't happen\n");
+		Com_Error(ERR_FATAL, "sequence < 0, this shouldn't happen\n");
 
 	p = chktbl + (sequence % (sizeof(chktbl) - 4));
 
@@ -519,13 +519,26 @@ Just throw a fatal error to
 test error shutdown procedures
 =============
 */
-static void Com_Error_f (void)
+static void Com_Error_f()
 {
 	if ( Cmd_Argc() == 2 )
 	{
 		Com_Error( ERR_FATAL, Cmd_Argv( 1 ) );
 	}
 	Com_Error( ERR_FATAL, "Error test" );
+}
+
+/*
+=============
+Com_Quit_f
+
+A version of the quit command for dedicated servers
+the client uses the one in cl_main.cpp
+=============
+*/
+static void Com_Quit_f()
+{
+	Com_Quit( EXIT_SUCCESS );
 }
 
 /*
@@ -536,7 +549,7 @@ Engine_Init
 void Engine_Init (int argc, char **argv)
 {
 	if (setjmp (abortframe) )
-		Sys_Error ("Error during initialization");
+		Com_Error (ERR_FATAL, "Error during initialization");
 
 	Z_Init();
 
@@ -570,7 +583,7 @@ void Engine_Init (int argc, char **argv)
 	//
 	// init commands and vars
 	//
-    Cmd_AddCommand ("error", Com_Error_f);
+	Cmd_AddCommand ("error", Com_Error_f);
 
 	host_speeds = Cvar_Get ("host_speeds", "0", 0);
 	log_stats = Cvar_Get ("log_stats", "0", 0);
@@ -590,7 +603,7 @@ void Engine_Init (int argc, char **argv)
 	//Cvar_Get( "version", "WHATEVER", CVAR_SERVERINFO | CVAR_NOSET );
 
 	if (dedicated->value)
-		Cmd_AddCommand ("quit", Com_Quit);
+		Cmd_AddCommand ("quit", Com_Quit_f);
 
 	Sys_Init ();
 
@@ -725,4 +738,10 @@ void Engine_Shutdown (void)
 	CM_Shutdown();
 
 	Z_Shutdown();
+
+	if ( logfile )
+	{
+		fclose( logfile );
+		logfile = NULL;
+	}
 }

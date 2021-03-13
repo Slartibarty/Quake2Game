@@ -4,27 +4,27 @@
 
 #pragma once
 
-#define id386	0
-
 #define MAX_PRINT_MSG		1024	// max length of a printf string
 
 #define	MAX_QPATH			64		// max length of a quake game pathname
 
-#ifndef countof
-#define countof(a) (sizeof(a) / sizeof(*a))
+#ifdef countof
+#error
 #endif
+
+#define countof(a) (sizeof(a) / sizeof(*a))
 
 #define STRINGIFY(a) #a
 #define XSTRINGIFY(a) STRINGIFY(a)
 
-#ifdef _WIN32	// MSVC / Clang-CL
+#ifdef _WIN32
 
 #define MAX_OSPATH			260		// max length of a filesystem pathname
 
 #define DLLEXPORT __declspec(dllexport)
 #define FORCEINLINE __forceinline
 
-#else	// GCC / Clang
+#else
 
 #define MAX_OSPATH			1024	// max length of a filesystem pathname
 

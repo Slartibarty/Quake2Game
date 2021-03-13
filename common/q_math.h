@@ -201,16 +201,19 @@ inline void ClearBounds(vec3_t mins, vec3_t maxs)
 	maxs[0] = maxs[1] = maxs[2] = -99999.0f;
 }
 
+vec_t VectorNormalize (vec3_t v);		// returns vector length
+vec_t ColorNormalize (vec3_t in, vec3_t out);
+
 //=================================================================================================
 // Misc
 //=================================================================================================
 
 inline float LerpAngle(float a2, float a1, float frac)
 {
-	if (a1 - a2 > 180)
-		a1 -= 360;
-	if (a1 - a2 < -180)
-		a1 += 360;
+	if (a1 - a2 > 180.0f)
+		a1 -= 360.0f;
+	if (a1 - a2 < -180.0f)
+		a1 += 360.0f;
 	return a2 + frac * (a1 - a2);
 }
 
@@ -268,8 +271,6 @@ inline float MS2SEC( float milliseconds )
 //=================================================================================================
 
 void AddPointToBounds (vec3_t v, vec3_t mins, vec3_t maxs);
-vec_t VectorNormalize (vec3_t v);		// returns vector length
-vec_t ColorNormalize (vec3_t in, vec3_t out);
 
 void R_ConcatRotations (float in1[3][3], float in2[3][3], float out[3][3]);
 void R_ConcatTransforms (float in1[3][4], float in2[3][4], float out[3][4]);

@@ -64,26 +64,6 @@ Always fatal for tools
 	exit( 1 );
 }
 
-/*
-=============
-Com_Error
-
-To satisfy misc_win.cpp (TODO)
-=============
-*/
-[[noreturn]] void Sys_Error( _Printf_format_string_ const char *fmt, ... )
-{
-	printf( "\n************ ERROR ************\n" );
-
-	va_list argptr;
-	va_start( argptr, fmt );
-	vprintf( fmt, argptr );
-	va_end( argptr );
-	printf( "\n" );
-
-	exit( 1 );
-}
-
 //=============================================================================
 
 /*
@@ -350,7 +330,7 @@ void    StripFilename (char *path)
 {
 	int             length;
 
-	length = strlen(path)-1;
+	length = int(strlen(path)-1);
 	while (length > 0 && path[length] != PATHSEPERATOR)
 		length--;
 	path[length] = 0;
@@ -360,7 +340,7 @@ void    StripExtension (char *path)
 {
 	int             length;
 
-	length = strlen(path)-1;
+	length = int(strlen(path)-1);
 	while (length > 0 && path[length] != '.')
 	{
 		length--;

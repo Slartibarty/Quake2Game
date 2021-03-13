@@ -20,9 +20,9 @@ void	Sys_SendKeyEvents( void );
 
 void	Sys_OutputDebugString( const char *msg );
 [[noreturn]]
-void	Sys_Error( _Printf_format_string_ const char *error, ... );
+void	Sys_Error( const char *msg );
 [[noreturn]]
-void	Sys_Quit( void );
+void	Sys_Quit( int code );
 
 char	*Sys_GetClipboardData( void );
 void	Sys_CopyProtect( void );

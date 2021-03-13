@@ -331,7 +331,7 @@ void	Sys_FindClose (void);
 
 // this is only here so the functions in q_shared.c and q_shwin.c can link
 [[noreturn]]
-void Sys_Error( _Printf_format_string_ const char *fmt, ... );
+void Com_Error( int code, _Printf_format_string_ const char *fmt, ... );
 void Com_Printf( _Printf_format_string_ const char *fmt, ... );
 
 //-------------------------------------------------------------------------------------------------

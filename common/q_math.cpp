@@ -394,7 +394,7 @@ void AddPointToBounds (vec3_t v, vec3_t mins, vec3_t maxs)
 //-------------------------------------------------------------------------------------------------
 vec_t VectorNormalize (vec3_t v)
 {
-	float length = sqrtf( v[0]*v[0] + v[1]*v[1] + v[2]*v[2] );
+	float length = VectorLength( v );
 
 	// FLT_EPSILON is added to the radius to eliminate the possibility of divide by zero
 	float ilength = 1.0f / ( length + FLT_EPSILON );

@@ -458,7 +458,7 @@ void PM_StepSlideMove_ (void)
 			 break;		// moved the entire distance
 
 		//if (!trace.ent)
-		//	Sys_Error ("PM_PlayerTrace: !trace.ent");
+		//	Com_Error (ERR_FATAL, "PM_PlayerTrace: !trace.ent");
 
 		// Save entity that blocked us (since fraction was < 1.0)
 		//  for contact

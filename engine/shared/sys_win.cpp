@@ -38,41 +38,26 @@ void Sys_OutputDebugString( const char *msg )
 }
 
 [[noreturn]]
-void Sys_Error( _Printf_format_string_ const char *fmt, ... )
+void Sys_Error( const char *msg )
 {
-	va_list		argptr;
-	char		text[MAX_PRINT_MSG];
-
-	CL_Shutdown();
-	Engine_Shutdown();
-
-	va_start( argptr, fmt );
-	Q_vsprintf_s( text, fmt, argptr );
-	va_end( argptr );
-
-	Sys_OutputDebugString( text ); // Mirror to the debugger
+	Sys_OutputDebugString( msg ); // Mirror to the debugger
 
 	// We won't have a window by now
-	MessageBoxA( nullptr, text, "Engine Error", MB_OK | MB_ICONERROR );
+	MessageBoxA( nullptr, msg, nullptr, MB_OK | MB_ICONERROR );
 
-	// shut down QHOST hooks if necessary
-	DeinitConProc();
-
-	exit( 1 );
+	Sys_Quit( 1 );
 }
 
 [[noreturn]]
-void Sys_Quit()
+void Sys_Quit( int code )
 {
-	CL_Shutdown();
-	Engine_Shutdown();
 	if ( dedicated && dedicated->value )
 		FreeConsole();
 
 	// shut down QHOST hooks if necessary
 	DeinitConProc();
 
-	exit( 0 );
+	exit( code );
 }
 
 //================================================================
@@ -100,7 +85,7 @@ void Sys_Init (void)
 	if (dedicated->value)
 	{
 		if (!AllocConsole ())
-			Sys_Error ("Couldn't create dedicated server console");
+			Com_Error (ERR_FATAL, "Couldn't create dedicated server console");
 		hinput = GetStdHandle (STD_INPUT_HANDLE);
 		houtput = GetStdHandle (STD_OUTPUT_HANDLE);
 	
@@ -129,16 +114,16 @@ char *Sys_ConsoleInput (void)
 	for ( ;; )
 	{
 		if (!GetNumberOfConsoleInputEvents (hinput, &numevents))
-			Sys_Error ("Error getting # of console events");
+			Com_Error (ERR_FATAL, "Error getting # of console events");
 
 		if (numevents == 0)
 			break;
 
 		if (!ReadConsoleInput(hinput, &recs, 1, &numread))
-			Sys_Error ("Error reading console input");
+			Com_Error (ERR_FATAL, "Error reading console input");
 
 		if (numread != 1)
-			Sys_Error ("Couldn't read console input");
+			Com_Error (ERR_FATAL, "Couldn't read console input");
 
 		if (recs.EventType == KEY_EVENT)
 		{
@@ -234,7 +219,7 @@ void Sys_SendKeyEvents( void )
 	while ( PeekMessageW( &msg, NULL, 0, 0, PM_NOREMOVE ) )
 	{
 		if ( !GetMessageW( &msg, NULL, 0, 0 ) ) {
-			Com_Quit();
+			Com_Quit( EXIT_SUCCESS );
 		}
 		sys_msg_time = msg.time;
 		TranslateMessage( &msg );
