@@ -3,6 +3,7 @@
 
 #include "pmove.h"
 
+#define	MIN_STEP_NORMAL		0.7f	// can't step up onto very steep slopes
 #define	STEPSIZE			18
 
 #define PLAYER_HULLSIZE		16
@@ -385,18 +386,16 @@ void PM_ClipVelocity (vec3_t in, vec3_t normal, vec3_t out, float overbounce)
 
 /*
 ==================
-PM_StepSlideMove
+PM_SlideMove
 
 Each intersection will try to step over the obstruction instead of
 sliding along it.
 
-Returns a new origin, velocity, and contact entity
-Does not modify any world state?
+Returns true if the velocity was clipped in some way
 ==================
 */
-#define	MIN_STEP_NORMAL	0.7f	// can't step up onto very steep slopes
 #define	MAX_CLIP_PLANES	5
-void PM_StepSlideMove_ (void)
+bool PM_SlideMove (void)
 {
 	int			bumpcount, numbumps;
 	vec3_t		dir;
@@ -436,16 +435,15 @@ void PM_StepSlideMove_ (void)
 		//  the whole way, zero out our velocity and return that we
 		//  are blocked by floor and wall.
 		if (trace.allsolid)
-		{	// entity is trapped in another solid
-			//pml.velocity[2] = 0;	// don't build up falling damage
-			VectorClear (pml.velocity); // Zero out all velocity
-			return;
+		{	// entity is completely trapped in another solid
+			VectorClear (pml.velocity);		// Zero out all velocity
+			return true;
 		}
 
 		// If we moved some portion of the total distance, then
 		//  copy the end position into the pml.origin and 
 		//  zero the plane counter.
-		if (trace.fraction > 0)
+		if (trace.fraction > 0.0f)
 		{	// actually covered some distance
 			VectorCopy (trace.endpos, pml.origin);
 			VectorCopy (pml.velocity, original_velocity);
@@ -479,7 +477,7 @@ void PM_StepSlideMove_ (void)
 			//  Stop our movement if so.
 			VectorClear (pml.velocity);
 			assert (0);
-			break;
+			return true;
 		}
 
 		// Set up next clipping plane
@@ -539,7 +537,7 @@ void PM_StepSlideMove_ (void)
 					VectorClear( pml.velocity );
 					//Con_DPrintf("Trapped 4\n");
 
-					break;
+					return true;
 				}
 				CrossProduct (planes[0], planes[1], dir);
 				d = DotProduct (dir, pml.velocity);
@@ -554,7 +552,7 @@ void PM_StepSlideMove_ (void)
 			{
 				//Con_DPrintf("Back\n");
 				VectorClear( pml.velocity );
-				break;
+				return true;
 			}
 		}
 	}
@@ -563,12 +561,15 @@ void PM_StepSlideMove_ (void)
 	{
 		VectorClear (pml.velocity);
 		//Con_DPrintf( "Don't stick\n" );
+		return true;
 	}
 
 	/*if (pm->s.pm_time)
 	{
 		VectorCopy (primal_velocity, pml.velocity);
 	}*/
+
+	return ( bumpcount != 0 );
 }
 
 /*
@@ -589,7 +590,10 @@ void PM_StepSlideMove (void)
 	VectorCopy (pml.origin, start_o);
 	VectorCopy (pml.velocity, start_v);
 
-	PM_StepSlideMove_ ();
+	if ( !PM_SlideMove () )
+	{
+		return;		// we got exactly where we wanted to go first try
+	}
 
 	VectorCopy (pml.origin, down_o);
 	VectorCopy (pml.velocity, down_v);
@@ -605,7 +609,7 @@ void PM_StepSlideMove (void)
 	VectorCopy (up, pml.origin);
 	VectorCopy (start_v, pml.velocity);
 
-	PM_StepSlideMove_ ();
+	PM_SlideMove ();
 
 	// push down the final amount
 	VectorCopy (pml.origin, down);
