@@ -199,6 +199,7 @@ Auto pitching on slopes?
 */
 void SV_CalcViewOffset (edict_t *ent)
 {
+#if 0
 	float		*angles;
 	float		bob;
 	float		ratio;
@@ -313,6 +314,21 @@ void SV_CalcViewOffset (edict_t *ent)
 		v[2] = 30;
 
 	VectorCopy (v, ent->client->ps.viewoffset);
+#else
+	// Slart: For now, just do this, testing pmove
+
+	vec3_t v;
+
+	// base origin
+
+	VectorClear (v);
+
+	// add view height
+
+	v[2] += ent->viewheight;
+
+	VectorCopy (v, ent->client->ps.viewoffset);
+#endif
 }
 
 /*

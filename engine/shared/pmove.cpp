@@ -19,6 +19,11 @@
 
 // SlartTodo: This should really be dependent on gravity
 #define JUMP_VELOCITY		268.3281573f	// sqrt(2 * 800 * 45.0)
+#define NON_JUMP_VELOCITY	140.0f
+#define AIR_MAX_WISHSPEED	30.0f
+
+// This is 1.0 in Quake 2 and Half-Life 2, 1.001f in Quake 3
+#define OVERCLIP			1.0f
 
 #define PM_SURFTYPE_LADDER	1000
 #define PM_SURFTYPE_WADE	1001
@@ -49,6 +54,7 @@ pml_t		pml;
 
 
 // movement parameters
+#if 0		// Half-Life
 static constexpr float	pm_stopspeed = 100;
 static constexpr float	pm_maxspeed = 320;
 static constexpr float	pm_duckspeed = 100;
@@ -58,12 +64,27 @@ static constexpr float	pm_wateraccelerate = 10;
 static constexpr float	pm_friction = 4;
 static constexpr float	pm_waterfriction = 1;
 static constexpr float	pm_waterspeed = 400;
-
-/*
-
-  walking up a step should kill some velocity
-
-*/
+#elif 0		// Quake 3
+static constexpr float	pm_stopspeed = 100;
+static constexpr float	pm_maxspeed = 320;
+static constexpr float	pm_duckspeed = 100;
+static constexpr float	pm_accelerate = 10;
+static constexpr float	pm_airaccelerate = 1;
+static constexpr float	pm_wateraccelerate = 4;
+static constexpr float	pm_friction = 6;
+static constexpr float	pm_waterfriction = 1;
+static constexpr float	pm_waterspeed = 400;
+#else		// Half-Life 2 / Tuned settings for Moon
+static constexpr float	pm_stopspeed = 100;
+static constexpr float	pm_maxspeed = 320;
+static constexpr float	pm_duckspeed = 100;
+static constexpr float	pm_accelerate = 10;
+static constexpr float	pm_airaccelerate = 10;
+static constexpr float	pm_wateraccelerate = 10;
+static constexpr float	pm_friction = 4;
+static constexpr float	pm_waterfriction = 1;
+static constexpr float	pm_waterspeed = pm_maxspeed / 2;
+#endif
 
 
 //-----------------------------------------------------------------------------
@@ -360,26 +381,30 @@ void PM_UpdateStepSound( void )
 ==================
 PM_ClipVelocity
 
-Slide off of the impacting object
-returns the blocked flags (1 = floor, 2 = step / wall)
+Slide off of the impacting surface
 ==================
 */
-#define	STOP_EPSILON	0.1f
-
-void PM_ClipVelocity (vec3_t in, vec3_t normal, vec3_t out, float overbounce)
+static void PM_ClipVelocity( vec3_t in, vec3_t normal, vec3_t out, float overbounce )
 {
 	float	backoff;
 	float	change;
 	int		i;
-	
-	backoff = DotProduct (in, normal) * overbounce;
 
-	for (i=0 ; i<3 ; i++)
+	backoff = DotProduct( in, normal );
+
+	if ( backoff < 0.0f )
 	{
-		change = normal[i]*backoff;
+		backoff *= overbounce;
+	}
+	else
+	{
+		backoff /= overbounce;
+	}
+
+	for ( i = 0; i < 3; i++ )
+	{
+		change = normal[i] * backoff;
 		out[i] = in[i] - change;
-		if (out[i] > -STOP_EPSILON && out[i] < STOP_EPSILON)
-			out[i] = 0;
 	}
 }
 
@@ -493,11 +518,11 @@ bool PM_SlideMove (void)
 			{
 				if ( planes[i][2] > MIN_STEP_NORMAL )
 				{// floor or slope
-					PM_ClipVelocity( original_velocity, planes[i], new_velocity, 1 );
+					PM_ClipVelocity( original_velocity, planes[i], new_velocity, OVERCLIP );
 					VectorCopy( new_velocity, original_velocity );
 				}
 				else
-					PM_ClipVelocity( original_velocity, planes[i], new_velocity, 1.0f + /*pmove->movevars->bounce*/ 0 * (1-pm_friction) );
+					PM_ClipVelocity( original_velocity, planes[i], new_velocity, OVERCLIP + /*pmove->movevars->bounce*/ 0 * (1.0f-pm_friction) );
 			}
 
 			VectorCopy( new_velocity, pml.velocity );
@@ -511,7 +536,7 @@ bool PM_SlideMove (void)
 					original_velocity,
 					planes[i],
 					pml.velocity,
-					1);
+					OVERCLIP);
 				for (j=0 ; j<numplanes ; j++)
 					if (j != i)
 					{
@@ -655,55 +680,57 @@ PM_Friction
 Handles both ground friction and water friction
 ==================
 */
-void PM_Friction (void)
+static void PM_Friction()
 {
-	float	*vel;
 	float	speed, newspeed, control;
 	float	friction;
 	float	drop;
-	
-	// Get velocity
-	vel = pml.velocity;
-	
+
 	// Calculate speed
-	speed = VectorLength( vel );
+	speed = VectorLength( pml.velocity );
 
 	// If too slow, return
-	if (speed < 0.1f)
+	if ( speed < 0.1f )
 	{
-		vel[0] = 0;
-		vel[1] = 0;
 		return;
 	}
 
-	drop = 0;
+	drop = 0.0f;
 
-// apply ground friction
-	if ((pm->groundentity && pml.groundsurface && !(pml.groundsurface->flags & SURF_SLICK) ) || (pml.ladder) )
+	// apply ground friction
+	if ( pm->groundentity /*&& pml.groundsurface && !( pml.groundsurface->flags & SURF_SLICK )*/ )
 	{
 		friction = pm_friction;
+
+		// Bleed off some speed, but if we have less than the bleed
+		//  threshold, bleed the threshold amount
+
 		control = speed < pm_stopspeed ? pm_stopspeed : speed;
-		drop += control*friction*pml.frametime;
+
+		// Add the amount to the drop amount
+		drop += control * friction * pml.frametime;
 	}
 
-// apply water friction
-	if (pm->waterlevel && !pml.ladder)
-		drop += speed*pm_waterfriction*pm->waterlevel*pml.frametime;
-
-// scale the velocity
-	newspeed = speed - drop;
-	if (newspeed < 0)
+	// Apply water friction
+	if ( pm->waterlevel )
 	{
-		newspeed = 0;
+		drop += speed * pm_waterfriction * pm->waterlevel * pml.frametime;
 	}
 
-	// Determine proportion of old speed we are using.
-	newspeed /= speed;
+	// Scale the velocity
+	newspeed = speed - drop;
+	if ( newspeed < 0.0f )
+	{
+		newspeed = 0.0f;
+	}
 
-	// Adjust velocity according to proportion.
-	vel[0] *= newspeed;
-	vel[1] *= newspeed;
-	vel[2] *= newspeed;
+	if ( newspeed != speed )
+	{
+		// Determine proportion of old speed we are using
+		newspeed /= speed;
+		// Adjust velocity according to proportion
+		VectorScale( pml.velocity, newspeed, pml.velocity );
+	}
 }
 
 
@@ -714,58 +741,72 @@ PM_Accelerate
 Handles user intended acceleration
 ==============
 */
-void PM_Accelerate (vec3_t wishdir, float wishspeed, float accel)
+static void PM_Accelerate( vec3_t wishdir, float wishspeed, float accel )
 {
 	int			i;
 	float		addspeed, accelspeed, currentspeed;
 
-	// See if we are changing direction a bi
-	currentspeed = DotProduct (pml.velocity, wishdir);
+	// See if we are changing direction a bit
+	currentspeed = DotProduct( pml.velocity, wishdir );
 
-	// Reduce wishspeed by the amount of veer.
+	// Reduce wishspeed by the amount of veer
 	addspeed = wishspeed - currentspeed;
 
-	// If not going to add any speed, done.
-	if (addspeed <= 0)
+	// If not going to add any speed, done
+	if ( addspeed <= 0.0f )
 		return;
 
-	// Determine amount of accleration.
-	accelspeed = accel*pml.frametime*wishspeed;
+	// Determine amount of accleration
+	accelspeed = accel * pml.frametime * wishspeed;
 
 	// Cap at addspeed
-	if (accelspeed > addspeed)
+	if ( accelspeed > addspeed )
 		accelspeed = addspeed;
-	
-	// Adjust velocity.
-	for (i=0 ; i<3 ; i++)
-		pml.velocity[i] += accelspeed*wishdir[i];	
+
+	// Adjust velocity
+	for ( i = 0; i < 3; i++ )
+	{
+		pml.velocity[i] += accelspeed * wishdir[i];
+	}
 }
 
-void PM_AirAccelerate (vec3_t wishdir, float wishspeed, float accel)
+/*
+==============
+PM_AirAccelerate
+
+Handles user intended air acceleration
+==============
+*/
+static void PM_AirAccelerate( vec3_t wishdir, float wishspeed, float accel )
 {
 	int			i;
-	float		addspeed, accelspeed, currentspeed, wishspd = wishspeed;
-		
+	float		addspeed, accelspeed, currentspeed;
+	float		wishspd;
+
 	// Cap speed
-	if (wishspd > 30)
-		wishspd = 30;
+	wishspd = Min( wishspeed, AIR_MAX_WISHSPEED );
+
 	// Determine veer amount
-	currentspeed = DotProduct (pml.velocity, wishdir);
+	currentspeed = DotProduct( pml.velocity, wishdir );
+
 	// See how much to add
 	addspeed = wishspd - currentspeed;
-	// If not adding any, done.
-	if (addspeed <= 0)
+
+	// If not adding any, done
+	if ( addspeed <= 0.0f )
 		return;
 
 	// Determine acceleration speed after acceleration
 	accelspeed = accel * wishspeed * pml.frametime;
+
 	// Cap it
-	if (accelspeed > addspeed)
-		accelspeed = addspeed;
-	
-	// Adjust pmove vel.
-	for (i=0 ; i<3 ; i++)
-		pml.velocity[i] += accelspeed*wishdir[i];	
+	accelspeed = Min( accelspeed, addspeed );
+
+	// Adjust pmove vel
+	for ( i = 0; i < 3; i++ )
+	{
+		pml.velocity[i] += accelspeed * wishdir[i];
+	}
 }
 
 /*
@@ -1071,18 +1112,18 @@ static void PM_CheckWater()
 
 /*
 =============
-PM_CatagorizePosition
+PM_CategorizePosition
 =============
 */
-void PM_CatagorizePosition (void)
+void PM_CategorizePosition (void)
 {
 	vec3_t		point;
 	trace_t		trace;
 
-// if the player hull point one unit down is solid, the player
-// is on ground
+	// if the player hull point one unit down is solid, the player
+	// is on ground
 
-// see if standing on something solid
+	// see if standing on something solid
 
 	// Doing this before we move may introduce a potential latency in water detection, but
 	// doing it after can get us stuck on the bottom in water if the amount we move up
@@ -1095,7 +1136,7 @@ void PM_CatagorizePosition (void)
 	point[1] = pml.origin[1];
 	point[2] = pml.origin[2] - 2.0f; // 0.25f
 
-	if (pml.velocity[2] > 180.0f)	// Shooting up really fast.  Definitely not on ground.
+	if (pml.velocity[2] > NON_JUMP_VELOCITY)	// Shooting up really fast.  Definitely not on ground.
 	{
 		pm->s.pm_flags &= ~PMF_ON_GROUND;
 		pm->groundentity = NULL;
@@ -1455,7 +1496,7 @@ void PM_DeadMove (void)
 }
 
 
-static bool PM_GoodPosition (void)
+static bool PM_GoodPosition()
 {
 	trace_t trace;
 	vec3_t start, end;
@@ -1466,7 +1507,7 @@ static bool PM_GoodPosition (void)
 	VectorCopy( pm->s.origin, start );
 	VectorCopy( pm->s.origin, end );
 
-	trace = pm->trace (start, pm->mins, pm->maxs, end);
+	trace = pm->trace( start, pm->mins, pm->maxs, end );
 
 	return !trace.allsolid;
 }
@@ -1475,53 +1516,10 @@ static bool PM_GoodPosition (void)
 ================
 PM_SnapPosition
 
-On exit, the origin will have a value that is pre-quantized to the 0.125
-precision of the network channel and in a valid position.
 ================
 */
-static void PM_SnapPosition (void)
+static void PM_SnapPosition()
 {
-#if 0
-	int		sign[3];
-	int		i, j, bits;
-	float	base[3];
-	// try all single bits first
-	static int jitterbits[8] = {0,4,1,2,3,5,6,7};
-
-	// snap velocity to eigths
-	for (i=0 ; i<3 ; i++)
-		pm->s.velocity[i] = pml.velocity[i];
-
-	for (i=0 ; i<3 ; i++)
-	{
-		if (pml.origin[i] >= 0)
-			sign[i] = 1;
-		else 
-			sign[i] = -1;
-		pm->s.origin[i] = pml.origin[i];
-		if (pm->s.origin[i] == pml.origin[i])
-			sign[i] = 0;
-	}
-	VectorCopy (pm->s.origin, base);
-
-	// try all combinations
-	for (j=0 ; j<8 ; j++)
-	{
-		bits = jitterbits[j];
-		VectorCopy (base, pm->s.origin);
-		for (i=0 ; i<3 ; i++)
-			if (bits & (1<<i) )
-				pm->s.origin[i] += sign[i];
-
-		if (PM_GoodPosition ())
-			return;
-	}
-
-	// go back to the last position
-	VectorCopy (pml.previous_origin, pm->s.origin);
-//	Com_DPrintf ("using previous_origin\n");
-#else
-	// SlartHack: I think we want jitterbits
 	VectorCopy( pml.velocity, pm->s.velocity );
 	VectorCopy( pml.origin, pm->s.origin );
 
@@ -1530,47 +1528,24 @@ static void PM_SnapPosition (void)
 
 	// go back to the last position
 	VectorCopy( pml.previous_origin, pm->s.origin );
-#endif
 }
 
 /*
 ================
 PM_InitialSnapPosition
 
+If this is called, then pm->s has been changed outside of pmove
+we must update our locals
+This can be removed if we remove origin and vel from pml
 ================
 */
-static void PM_InitialSnapPosition(void)
+static void PM_InitialSnapPosition()
 {
-#if 0
-	int x, y, z;
-	float base[3];
-	static float offset[3] = { 0.0f, -1.0f, 1.0f };
-
-	VectorCopy (pm->s.origin, base);
-
-	for ( z = 0; z < 3; z++ ) {
-		pm->s.origin[2] = base[2] + offset[ z ];
-		for ( y = 0; y < 3; y++ ) {
-			pm->s.origin[1] = base[1] + offset[ y ];
-			for ( x = 0; x < 3; x++ ) {
-				pm->s.origin[0] = base[0] + offset[ x ];
-				if (PM_GoodPosition ()) {
-					VectorCopy (pm->s.origin, pml.origin);
-					VectorCopy (pm->s.origin, pml.previous_origin);
-					return;
-				}
-			}
-		}
-	}
-
-	Com_DPrintf ("Bad InitialSnapPosition\n");
-#else
 	if ( PM_GoodPosition() )
 	{
 		VectorCopy( pm->s.origin, pml.origin );
 		VectorCopy( pm->s.origin, pml.previous_origin );
 	}
-#endif
 }
 
 
@@ -1656,7 +1631,7 @@ void Pmove (pmove_t *pmove)
 	// save old org in case we get stuck
 	VectorCopy (pm->s.origin, pml.previous_origin);
 
-	pml.frametime = pm->cmd.msec * mathconst::MillisecondsToSeconds;
+	pml.frametime = MS2SEC(pm->cmd.msec);
 
 	PM_ReduceTimers();
 
@@ -1686,7 +1661,7 @@ void Pmove (pmove_t *pmove)
 		PM_InitialSnapPosition ();
 
 	// set groundentity, watertype, and waterlevel
-	PM_CatagorizePosition ();
+	PM_CategorizePosition ();
 
 	if (pm->s.pm_type == PM_DEAD)
 		PM_DeadMove ();
@@ -1749,7 +1724,7 @@ void Pmove (pmove_t *pmove)
 	}
 
 	// set groundentity, watertype, and waterlevel for final spot
-	PM_CatagorizePosition ();
+	PM_CategorizePosition ();
 
 	PM_SnapPosition ();
 }
