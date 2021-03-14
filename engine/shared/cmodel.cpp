@@ -647,7 +647,28 @@ cmodel_t *CM_LoadMap( const char *name, bool clientload, unsigned *checksum )
 {
 	static unsigned	last_checksum;
 
+	if ( !name || !name[0] )
+	{
+		Com_Error( ERR_DROP, "CM_LoadMap: NULL name" );
+	}
+
 	cm_noareas = Cvar_Get( "cm_noareas", "0", 0 );
+
+#if 0
+	// Create a dummy map
+	if ( !name )
+	{
+		cm.Reset();
+		cm.CreateCinematicMap();
+		*checksum = 0;
+		return cm.cmodels.Base();		// cinematic servers won't have anything at all
+	}
+
+	if ( name && name[0] == '\0' )
+	{
+		Com_Error( ERR_DROP, "CM_LoadMap: name was provided, but empty!" );
+	}
+#endif
 
 	if ( Q_strcmp( cm.name, name ) == 0 && ( clientload || !Cvar_VariableValue( "flushmap" ) ) )
 	{
@@ -662,13 +683,6 @@ cmodel_t *CM_LoadMap( const char *name, bool clientload, unsigned *checksum )
 
 	// free old stuff
 	cm.Reset();
-
-	if ( !name || !name[0] )
-	{
-		cm.CreateCinematicMap();
-		*checksum = 0;
-		return cm.cmodels.Base();		// cinematic servers won't have anything at all
-	}
 
 	//
 	// load the file

@@ -6,6 +6,6 @@
 
 #pragma once
 
-#include "../../common/q_shared.h" // pmove_t
+struct pmove_t;
 
 void Pmove( pmove_t *pmove );
