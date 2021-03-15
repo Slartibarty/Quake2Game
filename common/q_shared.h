@@ -418,20 +418,30 @@ enum pmtype_t
 {
 	// can accelerate and turn
 	PM_NORMAL,
-	PM_SPECTATOR,
+	PM_SPECTATOR,	// noclip movement
 	// no acceleration or turning
 	PM_DEAD,
-	PM_GIB,		// different bounding box
-	PM_FREEZE
+	PM_GIB,			// different bounding box
+	PM_FREEZE		// stuck in place with no control
+};
+
+// Identifies how submerged in water a player is
+enum waterlevel_t
+{
+	WL_NONE,		// Not underwater
+	WL_FEET,		// Feet are underwater
+	WL_WAIST,		// Waist is underwater
+	WL_EYES			// Eyes are underwater
 };
 
 // pmove->pm_flags
 #define	PMF_DUCKED			1
 #define	PMF_JUMP_HELD		2
-#define	PMF_ON_GROUND		4
-#define	PMF_TIME_WATERJUMP	8	// pm_time is waterjump
-#define	PMF_TIME_TELEPORT	16	// pm_time is non-moving time
-#define PMF_NO_PREDICTION	32	// temporarily disables prediction (used for grappling hook)
+#define	PMF_TIME_WATERJUMP	4	// pm_time is waterjump
+#define	PMF_TIME_TELEPORT	8	// pm_time is non-moving time
+#define PMF_NO_PREDICTION	16	// temporarily disables prediction (used for grappling hook)
+
+#define	PMF_ALL_TIMES	(PMF_TIME_WATERJUMP|PMF_TIME_TELEPORT)
 
 // this structure needs to be communicated bit-accurate
 // from the server to the client to guarantee that
@@ -442,8 +452,8 @@ struct pmove_state_t
 {
 	pmtype_t	pm_type;
 
-	vec3_t		origin;			// 12.3
-	vec3_t		velocity;		// 12.3
+	vec3_t		origin;
+	vec3_t		velocity;
 	byte		pm_flags;		// ducked, jump_held, etc
 	byte		pm_time;		// each unit = 8 ms
 	short		gravity;
@@ -453,7 +463,7 @@ struct pmove_state_t
 	int			time_step_sound;	// In milliseconds, the time until we can play another footstep
 	int			step_left;			// > 0 if the next footstep is the left foot
 
-	float		swim_time;
+	int			swim_time;
 };
 
 //
@@ -466,11 +476,10 @@ struct pmove_state_t
 // usercmd_t is sent to the server each client frame
 struct usercmd_t
 {
-	byte	msec;
-	byte	buttons;
 	vec3_t	angles;
 	float	forwardmove, sidemove, upmove;
-	byte	impulse;		// remove?
+	byte	buttons;
+	byte	msec;
 	byte	lightlevel;		// light level the player is standing on
 };
 
@@ -481,8 +490,7 @@ struct pmove_t
 	pmove_state_t	s;
 
 	// command (in)
-	usercmd_t		cmd;
-	qboolean		snapinitial;	// if s has been changed outside pmove
+	usercmd_t	cmd;
 
 	// results (out)
 	int			numtouch;
@@ -498,6 +506,7 @@ struct pmove_t
 	int			waterlevel;
 
 	// callbacks to test the world
+	// these will be different functions during game and cgame
 	trace_t		(*trace) (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end);
 	int			(*pointcontents) (vec3_t point);
 	void		(*playsound) (const char *sample, float volume);

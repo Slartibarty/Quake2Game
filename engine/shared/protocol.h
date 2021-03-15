@@ -102,7 +102,6 @@ enum clc_ops_e
 #define	CM_SIDE		(1<<4)
 #define	CM_UP		(1<<5)
 #define	CM_BUTTONS	(1<<6)
-#define	CM_IMPULSE	(1<<7)
 
 //==============================================
 

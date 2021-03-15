@@ -40,8 +40,6 @@ kbutton_t	in_lookup, in_lookdown, in_moveleft, in_moveright;
 kbutton_t	in_speed, in_use, in_attack;
 kbutton_t	in_up, in_down;
 
-int			in_impulse;
-
 
 void KeyDown (kbutton_t *b)
 {
@@ -149,8 +147,6 @@ void IN_AttackUp(void) {KeyUp(&in_attack);}
 void IN_UseDown (void) {KeyDown(&in_use);}
 void IN_UseUp (void) {KeyUp(&in_use);}
 
-void IN_Impulse (void) {in_impulse=atoi(Cmd_Argv(1));}
-
 /*
 ===============
 CL_KeyState
@@ -181,11 +177,7 @@ float CL_KeyState (kbutton_t *key)
 	}
 #endif
 
-	val = (float)msec / frame_msec;
-	if (val < 0)
-		val = 0;
-	if (val > 1)
-		val = 1;
+	val = Clamp( (float)msec / frame_msec, 0.0f, 1.0f );
 
 	return val;
 }
@@ -319,9 +311,6 @@ void CL_FinishMove (usercmd_t *cmd)
 	for (i=0 ; i<3 ; i++)
 		cmd->angles[i] = ANGLE2SHORT(cl.viewangles[i]);
 
-	cmd->impulse = in_impulse;
-	in_impulse = 0;
-
 // send the ambient light level at the player's current position
 	cmd->lightlevel = (byte)cl_lightlevel->value;
 }
@@ -350,8 +339,6 @@ usercmd_t CL_CreateCmd (void)
 	CL_FinishMove (&cmd);
 
 	old_sys_frame_time = sys_frame_time;
-
-//cmd.impulse = cls.framecount;
 
 	return cmd;
 }
@@ -397,7 +384,6 @@ void CL_InitInput (void)
 	Cmd_AddCommand ("-attack", IN_AttackUp);
 	Cmd_AddCommand ("+use", IN_UseDown);
 	Cmd_AddCommand ("-use", IN_UseUp);
-	Cmd_AddCommand ("impulse", IN_Impulse);
 
 	cl_nodelta = Cvar_Get ("cl_nodelta", "0", 0);
 }

@@ -132,29 +132,25 @@ void MSG_WriteDeltaUsercmd (sizebuf_t *buf, usercmd_t *from, usercmd_t *cmd)
 		bits |= CM_UP;
 	if (cmd->buttons != from->buttons)
 		bits |= CM_BUTTONS;
-	if (cmd->impulse != from->impulse)
-		bits |= CM_IMPULSE;
 
     MSG_WriteByte (buf, bits);
 
 	if (bits & CM_ANGLE1)
-		MSG_WriteShort (buf, cmd->angles[0]);
+		MSG_WriteFloat (buf, cmd->angles[0]);
 	if (bits & CM_ANGLE2)
-		MSG_WriteShort (buf, cmd->angles[1]);
+		MSG_WriteFloat (buf, cmd->angles[1]);
 	if (bits & CM_ANGLE3)
-		MSG_WriteShort (buf, cmd->angles[2]);
+		MSG_WriteFloat (buf, cmd->angles[2]);
 	
 	if (bits & CM_FORWARD)
-		MSG_WriteShort (buf, cmd->forwardmove);
+		MSG_WriteFloat (buf, cmd->forwardmove);
 	if (bits & CM_SIDE)
-	  	MSG_WriteShort (buf, cmd->sidemove);
+		MSG_WriteFloat (buf, cmd->sidemove);
 	if (bits & CM_UP)
-		MSG_WriteShort (buf, cmd->upmove);
+		MSG_WriteFloat (buf, cmd->upmove);
 
  	if (bits & CM_BUTTONS)
 	  	MSG_WriteByte (buf, cmd->buttons);
- 	if (bits & CM_IMPULSE)
-	    MSG_WriteByte (buf, cmd->impulse);
 
     MSG_WriteByte (buf, cmd->msec);
 	MSG_WriteByte (buf, cmd->lightlevel);
@@ -568,26 +564,23 @@ void MSG_ReadDeltaUsercmd (sizebuf_t *msg_read, usercmd_t *from, usercmd_t *move
 		
 // read current angles
 	if (bits & CM_ANGLE1)
-		move->angles[0] = MSG_ReadShort (msg_read);
+		move->angles[0] = MSG_ReadFloat (msg_read);
 	if (bits & CM_ANGLE2)
-		move->angles[1] = MSG_ReadShort (msg_read);
+		move->angles[1] = MSG_ReadFloat (msg_read);
 	if (bits & CM_ANGLE3)
-		move->angles[2] = MSG_ReadShort (msg_read);
+		move->angles[2] = MSG_ReadFloat (msg_read);
 		
 // read movement
 	if (bits & CM_FORWARD)
-		move->forwardmove = MSG_ReadShort (msg_read);
+		move->forwardmove = MSG_ReadFloat (msg_read);
 	if (bits & CM_SIDE)
-		move->sidemove = MSG_ReadShort (msg_read);
+		move->sidemove = MSG_ReadFloat (msg_read);
 	if (bits & CM_UP)
-		move->upmove = MSG_ReadShort (msg_read);
+		move->upmove = MSG_ReadFloat (msg_read);
 	
 // read buttons
 	if (bits & CM_BUTTONS)
 		move->buttons = MSG_ReadByte (msg_read);
-
-	if (bits & CM_IMPULSE)
-		move->impulse = MSG_ReadByte (msg_read);
 
 // read time to run command
 	move->msec = MSG_ReadByte (msg_read);

@@ -41,9 +41,7 @@ struct pml_t
 	vec3_t		forward, right, up;
 	float		frametime;
 
-	csurface_t	*groundsurface;
-	cplane_t	groundplane;
-	int			groundcontents;
+	trace_t		groundtrace;
 
 	vec3_t		previous_origin;
 	bool		ladder;
@@ -279,7 +277,7 @@ void PM_UpdateStepSound( void )
 	// If we're on a ladder or on the ground, and we're moving fast enough,
 	//  play step sound.  Also, if pmove->flTimeStepSound is zero, get the new
 	//  sound right away - we just started moving in new level.
-	if ( pml.ladder || ( pm->s.pm_flags & PMF_ON_GROUND ) &&
+	if ( pml.ladder || pm->groundentity &&
 		( speed > 0.0f ) &&
 		( speed >= velwalk || pm->s.time_step_sound == 0 ) )
 	{
@@ -317,8 +315,8 @@ void PM_UpdateStepSound( void )
 		{
 			// find texture under player, if different from current texture, 
 			// get material type
-			assert( pml.groundsurface );
-			step = SurfaceTypeFromFlags( pml.groundsurface->flags );
+			assert( pml.groundtrace.surface );
+			step = SurfaceTypeFromFlags( pml.groundtrace.surface->flags );
 
 			switch ( step )
 			{
@@ -810,6 +808,39 @@ static void PM_AirAccelerate( vec3_t wishdir, float wishspeed, float accel )
 }
 
 /*
+============
+PM_CmdScale
+
+Returns the scale factor to apply to cmd movements
+This allows the clients to use axial -127 to 127 values for all directions
+without getting a sqrt(2) distortion in speed.
+============
+*/
+static float PM_CmdScale( usercmd_t *cmd )
+{
+	float	max;
+	float	total;
+	float	scale;
+
+	max = fabs( cmd->forwardmove );
+	if ( fabs( cmd->sidemove ) > max ) {
+		max = fabs( cmd->sidemove );
+	}
+	if ( fabs( cmd->upmove ) > max ) {
+		max = fabs( cmd->upmove );
+	}
+	if ( !max ) {
+		return 0;
+	}
+
+	total = sqrt( cmd->forwardmove * cmd->forwardmove
+		+ cmd->sidemove * cmd->sidemove + cmd->upmove * cmd->upmove );
+	scale = pm_maxspeed * max / ( 127.0f * total );
+
+	return scale;
+}
+
+/*
 =============
 PM_AddCurrents
 =============
@@ -885,17 +916,17 @@ void PM_AddCurrents (vec3_t	wishvel)
 	{
 		VectorClear (v);
 
-		if (pml.groundcontents & CONTENTS_CURRENT_0)
+		if (pml.groundtrace.contents & CONTENTS_CURRENT_0)
 			v[0] += 1;
-		if (pml.groundcontents & CONTENTS_CURRENT_90)
+		if (pml.groundtrace.contents & CONTENTS_CURRENT_90)
 			v[1] += 1;
-		if (pml.groundcontents & CONTENTS_CURRENT_180)
+		if (pml.groundtrace.contents & CONTENTS_CURRENT_180)
 			v[0] -= 1;
-		if (pml.groundcontents & CONTENTS_CURRENT_270)
+		if (pml.groundtrace.contents & CONTENTS_CURRENT_270)
 			v[1] -= 1;
-		if (pml.groundcontents & CONTENTS_CURRENT_UP)
+		if (pml.groundtrace.contents & CONTENTS_CURRENT_UP)
 			v[2] += 1;
-		if (pml.groundcontents & CONTENTS_CURRENT_DOWN)
+		if (pml.groundtrace.contents & CONTENTS_CURRENT_DOWN)
 			v[2] -= 1;
 
 		VectorMA (wishvel, 100 /* pm->groundentity->speed */, v, wishvel);
@@ -959,16 +990,21 @@ void PM_AirMove (void)
 	vec3_t		wishdir;
 	float		wishspeed;
 	float		maxspeed;
+	float		scale;
 
 	// Copy movement amounts
 	fmove = pm->cmd.forwardmove;
 	smove = pm->cmd.sidemove;
+
+	scale = PM_CmdScale( &pm->cmd );
 	
-//!!!!! pitch should be 1/3 so this isn't needed??!
 #if 0
-	// Zero out z components of movement vectors
+	// Project moves down to flat plane
 	pml.forward[2] = 0;
 	pml.right[2] = 0;
+	// project the forward and right directions onto the ground plane
+	PM_ClipVelocity (pml.forward, pml.groundtrace.plane.normal, pml.forward, OVERCLIP );
+	PM_ClipVelocity (pml.right, pml.groundtrace.plane.normal, pml.right, OVERCLIP );
 	// Renormalize
 	VectorNormalize (pml.forward);
 	VectorNormalize (pml.right);
@@ -985,7 +1021,7 @@ void PM_AirMove (void)
 
 	// Determine maginitude of speed of move
 	VectorCopy (wishvel, wishdir);
-	wishspeed = VectorNormalize(wishdir);
+	wishspeed = VectorNormalize(wishdir) * scale;
 
 	// clamp to server defined max speed
 	maxspeed = (pm->s.pm_flags & PMF_DUCKED) ? pm_duckspeed : pm_maxspeed;
@@ -1056,16 +1092,16 @@ static void PM_CheckWater()
 	int		cont;
 
 	// Pick a spot just above the players feet.
-	point[0] = pml.origin[0] + (pm->mins[0] + pm->maxs[0]) * 0.5f;
-	point[1] = pml.origin[1] + (pm->mins[1] + pm->maxs[1]) * 0.5f;
+	point[0] = pml.origin[0] + ( pm->mins[0] + pm->maxs[0] ) * 0.5f;
+	point[1] = pml.origin[1] + ( pm->mins[1] + pm->maxs[1] ) * 0.5f;
 	point[2] = pml.origin[2] + pm->mins[2] + 1.0f;
 
 	// Assume that we are not in water at all.
-	pm->waterlevel = 0;
-	pm->watertype = 0;
+	pm->waterlevel = WL_NONE;
+	pm->watertype = CONTENTS_EMPTY;
 
 	// Grab point contents.
-	cont = pm->pointcontents (point);
+	cont = pm->pointcontents( point );
 	// Are we under water? (not solid and not empty?)
 	if ( cont & MASK_WATER )
 	{
@@ -1073,40 +1109,26 @@ static void PM_CheckWater()
 		pm->watertype = cont;
 
 		// We are at least at level one
-		pm->waterlevel = 1;
+		pm->waterlevel = WL_FEET;
 
 		// Now check a point that is at the player hull midpoint.
 		point[2] = pml.origin[2] + ( pm->mins[2] + pm->maxs[2] ) * 0.5f;
-		cont = pm->pointcontents (point);
+		cont = pm->pointcontents( point );
 		// If that point is also under water...
 		if ( cont & MASK_WATER )
 		{
 			// Set a higher water level.
-			pm->waterlevel = 2;
+			pm->waterlevel = WL_WAIST;
 
 			// Now check the eye position.  (view_ofs is relative to the origin)
 			point[2] = pml.origin[2] + pm->viewheight;
 
-			cont = pm->pointcontents (point);
-			if ( cont & MASK_WATER ) 
-				pm->waterlevel = 3;  // In over our eyes
-		}
-
-#if 0
-		// Adjust velocity based on water current, if any.
-		if ( ( cont <= CONTENTS_CURRENT_0 ) &&
-			( cont >= CONTENTS_CURRENT_DOWN ) )
-		{
-			// The deeper we are, the stronger the current.
-			static vec3_t current_table[] =
+			cont = pm->pointcontents( point );
+			if ( cont & MASK_WATER )
 			{
-				{1, 0, 0}, {0, 1, 0}, {-1, 0, 0},
-				{0, -1, 0}, {0, 0, 1}, {0, 0, -1}
-			};
-
-			VectorMA (pml.velocity, 50.0*pm->waterlevel, current_table[CONTENTS_CURRENT_0 - cont], pml.velocity);
+				pm->waterlevel = WL_EYES;	// In over our eyes
+			}
 		}
-#endif
 	}
 }
 
@@ -1115,11 +1137,8 @@ static void PM_CheckWater()
 PM_CategorizePosition
 =============
 */
-void PM_CategorizePosition (void)
+void PM_CategorizePosition( void )
 {
-	vec3_t		point;
-	trace_t		trace;
-
 	// if the player hull point one unit down is solid, the player
 	// is on ground
 
@@ -1132,60 +1151,68 @@ void PM_CategorizePosition (void)
 	// water on each call, and the converse case will correct itself if called twice.
 	PM_CheckWater();
 
+	// Spectators don't have a ground entity
+	// or shooting up really fast.  Definitely not on ground
+	if ( pml.ladder || pm->s.pm_type == PM_SPECTATOR || pml.velocity[2] > NON_JUMP_VELOCITY )
+	{
+		memset( &pml.groundtrace, 0, sizeof( pml.groundtrace ) );
+		pm->groundentity = NULL;
+		return;
+	}
+
+	vec3_t point;
+
 	point[0] = pml.origin[0];
 	point[1] = pml.origin[1];
 	point[2] = pml.origin[2] - 2.0f; // 0.25f
 
-	if (pml.velocity[2] > NON_JUMP_VELOCITY)	// Shooting up really fast.  Definitely not on ground.
+	bool moveToEndPos = false;
+
+	// If our last groundentity exists, and we're not submerged
+	if ( pm->groundentity && pm->waterlevel != WL_EYES )
 	{
-		pm->s.pm_flags &= ~PMF_ON_GROUND;
+		// if walking and still think we're on ground, we'll extend trace down by stepsize so we don't bounce down slopes
+		point[2] -= STEPSIZE;
+		moveToEndPos = true;
+	}
+
+	pml.groundtrace = pm->trace( pml.origin, pm->mins, pm->maxs, point );
+
+	if ( !pml.groundtrace.ent || ( pml.groundtrace.plane.normal[2] < MIN_STEP_NORMAL && !pml.groundtrace.startsolid ) )
+	{
 		pm->groundentity = NULL;
 	}
 	else
 	{
-		trace = pm->trace (pml.origin, pm->mins, pm->maxs, point);
-		pml.groundplane = trace.plane;
-		pml.groundsurface = trace.surface;
-		pml.groundcontents = trace.contents;
+		pm->groundentity = pml.groundtrace.ent;
 
-		if (!trace.ent || (trace.plane.normal[2] < MIN_STEP_NORMAL && !trace.startsolid) )
+		// hitting solid ground will end a waterjump
+		if ( pm->s.pm_flags & PMF_TIME_WATERJUMP )
 		{
-			pm->groundentity = NULL;
-			pm->s.pm_flags &= ~PMF_ON_GROUND;
+			pm->s.pm_flags &= ~( PMF_TIME_WATERJUMP | PMF_TIME_TELEPORT );
+			pm->s.pm_time = 0;
+		}
+
+		// If we hit a steep plane, we are not on ground
+		if ( pml.groundtrace.plane.normal[2] < MIN_STEP_NORMAL )
+		{
+			pm->groundentity = NULL;	// too steep
 		}
 		else
 		{
-			pm->groundentity = trace.ent;
-
-			// hitting solid ground will end a waterjump
-			if (pm->s.pm_flags & PMF_TIME_WATERJUMP)
-			{
-				pm->s.pm_flags &= ~(PMF_TIME_WATERJUMP | PMF_TIME_TELEPORT);
-				pm->s.pm_time = 0;
-			}
-
-			// If we hit a steep plane, we are not on ground
-			if ( trace.plane.normal[2] < MIN_STEP_NORMAL )
-			{
-				pm->s.pm_flags &= ~PMF_ON_GROUND;	// too steep
-			}
-			else
-			{
-				pm->s.pm_flags |= PMF_ON_GROUND;	// Otherwise, point to index of ent under us.
-
-				if ( pm->waterlevel < 2 &&
-					trace.fraction > 0.0f && trace.fraction < 1.0f )
-				{
-					VectorCopy( trace.endpos, pml.origin );
-				}
-			}
+			pm->groundentity = pml.groundtrace.ent;	// Otherwise, point to index of ent under us.
 		}
 
-		if (pm->numtouch < MAXTOUCH && trace.ent)
+		if ( moveToEndPos && pml.groundtrace.fraction > 0.0f && pml.groundtrace.fraction < 1.0f )
 		{
-			pm->touchents[pm->numtouch] = trace.ent;
-			pm->numtouch++;
+			VectorCopy( pml.groundtrace.endpos, pml.origin );
 		}
+	}
+
+	if ( pm->numtouch < MAXTOUCH && pml.groundtrace.ent )
+	{
+		pm->touchents[pm->numtouch] = pml.groundtrace.ent;
+		pm->numtouch++;
 	}
 }
 
@@ -1228,7 +1255,7 @@ void PM_CheckJump (void)
 		if ( pm->s.swim_time <= 0 )
 		{
 			// Don't play sound again for 1 second
-			pm->s.swim_time = 1000.0f;
+			pm->s.swim_time = 1000;
 			switch ( HackRandom( 0, 3 ) )
 			{ 
 			case 0:
@@ -1252,7 +1279,7 @@ void PM_CheckJump (void)
 	if (pm->groundentity == NULL)
 		return;		// in air, so no effect
 
-	PM_PlayStepSound( SurfaceTypeFromFlags( pml.groundsurface->flags ), 1.0f );
+	PM_PlayStepSound( SurfaceTypeFromFlags( pml.groundtrace.surface->flags ), 1.0f );
 
 	pm->s.pm_flags |= PMF_JUMP_HELD;
 
@@ -1411,7 +1438,7 @@ PM_CheckDuck
 Sets mins, maxs, and pm->viewheight
 ==============
 */
-static void PM_CheckDuck( void )
+static void PM_CheckDuck()
 {
 	trace_t	trace;
 
@@ -1430,19 +1457,17 @@ static void PM_CheckDuck( void )
 	}
 
 	// Are we trying to die?
-	if ( pm->s.pm_type == PM_DEAD )
+	/*if ( pm->s.pm_type == PM_DEAD )
 	{
 		pm->s.pm_flags |= PMF_DUCKED;
-	}
-	// Are we trying to duck?
-	else if ( pm->cmd.upmove < 0 )
-	{
+	}*/
+
+	if ( pm->cmd.upmove < 0 )
+	{	// duck
 		pm->s.pm_flags |= PMF_DUCKED;
 	}
-	// Are we trying to stand up?
-	else if ( ( pm->s.pm_flags & PMF_DUCKED ) && !( pm->cmd.upmove > 0 ) )
+	else if ( pm->s.pm_flags & PMF_DUCKED )
 	{
-		pml.origin[2] += CROUCH_HEIGHT;
 		pm->mins[2] = -STAND_HEIGHT;
 		pm->maxs[2] = STAND_HEIGHT;
 		trace = pm->trace( pml.origin, pm->mins, pm->maxs, pml.origin );
@@ -1452,7 +1477,6 @@ static void PM_CheckDuck( void )
 		}
 	}
 
-	// Set mins, maxs and viewheight accordingly
 	if ( pm->s.pm_flags & PMF_DUCKED )
 	{
 		pm->mins[2] = -CROUCH_HEIGHT;
@@ -1473,25 +1497,25 @@ static void PM_CheckDuck( void )
 PM_DeadMove
 ==============
 */
-void PM_DeadMove (void)
+static void PM_DeadMove()
 {
 	float	forward;
 
-	if (!pm->groundentity)
+	if ( !pm->groundentity )
 		return;
 
 	// extra friction
 
-	forward = VectorLength (pml.velocity);
-	forward -= 20;
-	if (forward <= 0)
+	forward = VectorLength( pml.velocity );
+	forward -= 20.0f;
+	if ( forward <= 0.0f )
 	{
-		VectorClear (pml.velocity);
+		VectorClear( pml.velocity );
 	}
 	else
 	{
-		VectorNormalize (pml.velocity);
-		VectorScale (pml.velocity, forward, pml.velocity);
+		VectorNormalize( pml.velocity );
+		VectorScale( pml.velocity, forward, pml.velocity );
 	}
 }
 
@@ -1530,36 +1554,20 @@ static void PM_SnapPosition()
 	VectorCopy( pml.previous_origin, pm->s.origin );
 }
 
-/*
-================
-PM_InitialSnapPosition
-
-If this is called, then pm->s has been changed outside of pmove
-we must update our locals
-This can be removed if we remove origin and vel from pml
-================
-*/
-static void PM_InitialSnapPosition()
-{
-	if ( PM_GoodPosition() )
-	{
-		VectorCopy( pm->s.origin, pml.origin );
-		VectorCopy( pm->s.origin, pml.previous_origin );
-	}
-}
-
 
 /*
 ================
-PM_ClampAngles
+PM_UpdateViewAngles
 
+This can be used as another entry point when only the viewangles
+are being updated isntead of a full move
 ================
 */
-static void PM_ClampAngles (void)
+static void PM_UpdateViewAngles()
 {
-	int		i;
+	int i;
 
-	if (pm->s.pm_flags & PMF_TIME_TELEPORT)
+	if ( pm->s.pm_flags & PMF_TIME_TELEPORT )
 	{
 		pm->viewangles[YAW] = pm->cmd.angles[YAW] + pm->s.delta_angles[YAW];
 		pm->viewangles[PITCH] = 0;
@@ -1568,36 +1576,55 @@ static void PM_ClampAngles (void)
 	else
 	{
 		// circularly clamp the angles with deltas
-		for (i=0 ; i<3 ; i++)
+		for ( i = 0; i < 3; i++ )
 		{
 			pm->viewangles[i] = pm->cmd.angles[i] + pm->s.delta_angles[i];
 		}
 
 		// don't let the player look up or down more than 90 degrees
-		if (pm->viewangles[PITCH] > 89 && pm->viewangles[PITCH] < 180)
+		if ( pm->viewangles[PITCH] > 89 && pm->viewangles[PITCH] < 180 )
 			pm->viewangles[PITCH] = 89;
-		else if (pm->viewangles[PITCH] < 271 && pm->viewangles[PITCH] >= 180)
+		else if ( pm->viewangles[PITCH] < 271 && pm->viewangles[PITCH] >= 180 )
 			pm->viewangles[PITCH] = 271;
 	}
-	AngleVectors (pm->viewangles, pml.forward, pml.right, pml.up);
 }
 
 static void PM_ReduceTimers()
 {
+	int msec;
+
+//	msec = Clamp( pm->cmd.msec >> 3, 1, 200 );
+	msec = pm->cmd.msec;
+
+	// drop misc timing counter
+	if ( pm->s.pm_time )
+	{
+		if ( msec >= pm->s.pm_time )
+		{
+			pm->s.pm_flags &= ~PMF_ALL_TIMES;
+			pm->s.pm_time = 0;
+		}
+		else
+		{
+			pm->s.pm_time -= msec;
+		}
+	}
+
 	if ( pm->s.time_step_sound > 0 )
 	{
-		pm->s.time_step_sound -= pm->cmd.msec;
+		pm->s.time_step_sound -= msec;
 		if ( pm->s.time_step_sound < 0 )
 		{
 			pm->s.time_step_sound = 0;
 		}
 	}
-	if ( pm->s.swim_time > 0.0f )
+
+	if ( pm->s.swim_time > 0 )
 	{
-		pm->s.swim_time -= pm->cmd.msec;
-		if ( pm->s.swim_time < 0.0f )
+		pm->s.swim_time -= msec;
+		if ( pm->s.swim_time < 0 )
 		{
-			pm->s.swim_time = 0.0f;
+			pm->s.swim_time = 0;
 		}
 	}
 }
@@ -1613,7 +1640,7 @@ void Pmove (pmove_t *pmove)
 {
 	pm = pmove;
 
-	// clear results
+	// Clear results
 	pm->numtouch = 0;
 	VectorClear (pm->viewangles);
 	pm->viewheight = 0;
@@ -1621,111 +1648,102 @@ void Pmove (pmove_t *pmove)
 	pm->watertype = 0;
 	pm->waterlevel = 0;
 
-	// clear all pmove local vars
+	// Clear all pmove local vars
 	memset (&pml, 0, sizeof(pml));
 
-	// convert origin and velocity to float values
+	// Convert origin and velocity to float values
 	VectorCopy( pm->s.origin, pml.origin );
 	VectorCopy( pm->s.velocity, pml.velocity );
 
-	// save old org in case we get stuck
+	// Save old org in case we get stuck
 	VectorCopy (pm->s.origin, pml.previous_origin);
 
 	pml.frametime = MS2SEC(pm->cmd.msec);
 
 	PM_ReduceTimers();
 
-	PM_ClampAngles ();
+	PM_UpdateViewAngles();
 
-	if (pm->s.pm_type == PM_SPECTATOR)
-	{
-		PM_FlyMove (false);
-		PM_SnapPosition ();
-		return;
-	}
+	AngleVectors( pm->viewangles, pml.forward, pml.right, pml.up );
 
-	if (pm->s.pm_type >= PM_DEAD)
+	// NOTE: Greater than PM_DEAD, so PM_FREEZE triggers this too
+	if ( pm->s.pm_type >= PM_DEAD )
 	{
 		pm->cmd.forwardmove = 0;
 		pm->cmd.sidemove = 0;
 		pm->cmd.upmove = 0;
 	}
 
-	if (pm->s.pm_type == PM_FREEZE)
+	if ( pm->s.pm_type == PM_SPECTATOR )
+	{
+		PM_CheckDuck();
+		PM_FlyMove( false );
+		PM_SnapPosition();
+		return;
+	}
+
+	if ( pm->s.pm_type == PM_FREEZE )
+	{
 		return;		// no movement at all
+	}
 
 	// set mins, maxs, and viewheight
-	PM_CheckDuck ();
-
-	if (pm->snapinitial)
-		PM_InitialSnapPosition ();
+	PM_CheckDuck();
 
 	// set groundentity, watertype, and waterlevel
-	PM_CategorizePosition ();
+	PM_CategorizePosition();
 
-	if (pm->s.pm_type == PM_DEAD)
-		PM_DeadMove ();
+	if ( pm->s.pm_type == PM_DEAD )
+	{
+		PM_DeadMove();
+	}
 
 	PM_CheckSpecialMovement ();
 
 	PM_UpdateStepSound();
 
-	// drop timing counter
-	if (pm->s.pm_time)
-	{
-		int		msec;
-
-		msec = pm->cmd.msec >> 3;
-		if (!msec)
-			msec = 1;
-		if ( msec >= pm->s.pm_time) 
-		{
-			pm->s.pm_flags &= ~(PMF_TIME_WATERJUMP | PMF_TIME_TELEPORT);
-			pm->s.pm_time = 0;
-		}
-		else
-			pm->s.pm_time -= msec;
-	}
-
-	if (pm->s.pm_flags & PMF_TIME_TELEPORT)
+	if ( pm->s.pm_flags & PMF_TIME_TELEPORT )
 	{	// teleport pause stays exactly in place
 	}
-	else if (pm->s.pm_flags & PMF_TIME_WATERJUMP)
+	else if ( pm->s.pm_flags & PMF_TIME_WATERJUMP )
 	{	// waterjump has no control, but falls
 		pml.velocity[2] -= pm->s.gravity * pml.frametime;
-		if (pml.velocity[2] < 0)
+		if ( pml.velocity[2] < 0 )
 		{	// cancel as soon as we are falling down again
-			pm->s.pm_flags &= ~(PMF_TIME_WATERJUMP | PMF_TIME_TELEPORT);
+			pm->s.pm_flags &= ~( PMF_TIME_WATERJUMP | PMF_TIME_TELEPORT );
 			pm->s.pm_time = 0;
 		}
 
-		PM_StepSlideMove ();
+		PM_StepSlideMove();
 	}
 	else
 	{
-		PM_CheckJump ();
+		PM_CheckJump();
 
-		PM_Friction ();
+		PM_Friction();
 
-		if (pm->waterlevel >= 2)
-			PM_WaterMove ();
-		else {
+		if ( pm->waterlevel >= 2 )
+		{
+			PM_WaterMove();
+		}
+		else
+		{
 			vec3_t	angles;
 
-			VectorCopy(pm->viewangles, angles);
-			if (angles[PITCH] > 180)
+			VectorCopy( pm->viewangles, angles );
+			if ( angles[PITCH] > 180 )
 				angles[PITCH] = angles[PITCH] - 360;
 			angles[PITCH] /= 3;
 
-			AngleVectors (angles, pml.forward, pml.right, pml.up);
+			AngleVectors( angles, pml.forward, pml.right, pml.up );
 
-			PM_AirMove ();
+			PM_AirMove();
 		}
 	}
 
 	// set groundentity, watertype, and waterlevel for final spot
-	PM_CategorizePosition ();
+	PM_CategorizePosition();
 
-	PM_SnapPosition ();
+	PM_SnapPosition();
 }
 

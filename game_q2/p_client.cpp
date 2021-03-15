@@ -1548,7 +1548,7 @@ void PrintPmove (pmove_t *pm)
 
 	c1 = CheckBlock (&pm->s, sizeof(pm->s));
 	c2 = CheckBlock (&pm->cmd, sizeof(pm->cmd));
-	Com_Printf ("sv %3i:%i %i\n", pm->cmd.impulse, c1, c2);
+	gi.dprintf ("sv %i %i\n", c1, c2);
 }
 
 static edict_t *enthack;
@@ -1611,12 +1611,6 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 
 		VectorCopy( ent->s.origin, pm.s.origin );
 		VectorCopy( ent->velocity, pm.s.velocity );
-
-		if (memcmp(&client->old_pmove, &pm.s, sizeof(pm.s)))
-		{
-			pm.snapinitial = true;
-	//		gi.dprintf ("pmove changed!\n");
-		}
 
 		pm.cmd = *ucmd;
 
