@@ -870,8 +870,10 @@ static void R_Register()
 	Cmd_AddCommand( "extractwad", GL_ExtractWad_f );
 	Cmd_AddCommand( "upgradewals", GL_UpgradeWals_f );
 
+#if 0
 	extern void R_BuildAtlas_f();
 	Cmd_AddCommand( "buildatlas", R_BuildAtlas_f );
+#endif
 }
 
 //-------------------------------------------------------------------------------------------------

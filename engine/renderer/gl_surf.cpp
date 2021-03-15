@@ -7,8 +7,10 @@
 #include "../shared/imageloaders.h"
 #include <vector>
 
+#if 0
 //#include "UVAtlas.h"
 #include "xatlas.h"
+#endif
 
 #define DYNAMIC_LIGHT_WIDTH		128
 #define DYNAMIC_LIGHT_HEIGHT	128
@@ -1474,6 +1476,8 @@ void GL_EndBuildingLightmaps (void)
 	GL_EnableMultitexture( false );
 }
 
+#if 0
+
 /*
 ===============================================================================
 
@@ -1857,3 +1861,5 @@ void R_BuildAtlas_f()
 {
 	R_BuildAtlasForModel( r_worldmodel );
 }
+
+#endif

@@ -187,11 +187,11 @@ project "engine"
 	targetname "q2game"
 	language "C++"
 	targetdir "../game"
-	includedirs { "thirdparty/UVAtlas/UVAtlas/inc", "thirdparty/xatlas", "thirdparty/glew/include", "thirdparty/zlib", "thirdparty/libpng", "thirdparty/libpng_config" }
+	includedirs { "thirdparty/glew/include", "thirdparty/zlib", "thirdparty/libpng", "thirdparty/libpng_config" }
 	defines { "GLEW_STATIC", "GLEW_NO_GLU" }
 	filter "system:windows"
 		linkoptions { "/ENTRY:mainCRTStartup" }
-		links { "ws2_32", "dsound", "dxguid", "opengl32", "noenv.obj", "zlib", "libpng", "uvatlas" }
+		links { "ws2_32", "dsound", "dxguid", "opengl32", "noenv.obj", "zlib", "libpng" }
 	filter {}
 	filter "system:linux"
 		links { "sdl2" }
@@ -208,14 +208,11 @@ project "engine"
 		
 		"engine/renderer/*",
 		
-		"game_shared/game_public.h",
+		"game/game_public.h",
 		
 		zlib_public,
 		
 		libpng_public,
-		
-		xatlas_public,
-		xatlas_sources,
 		
 		glew_public,
 		glew_sources,
@@ -241,7 +238,7 @@ project "engine"
 		"**_pch.cpp"
 	}
 	
-project "cgame_q2"
+project "cgame"
 	kind "SharedLib"
 	filter( filter_32bit )
 		targetname "cgamex86"
@@ -252,18 +249,17 @@ project "cgame_q2"
 	language "C++"
 	targetdir "../game/baseq2"
 		
-	pchsource( "cgame_q2/cg_pch.cpp" )
+	pchsource( "cgame/cg_pch.cpp" )
 	pchheader( "cg_local.h" )
-	filter( "files:not cgame_q2/**" )
+	filter( "files:not cgame/**" )
 		flags( { "NoPCH" } )
 	filter( {} )
 
 	files {
 		"common/*",
-		"cgame_q2/*",
-		"cgame_shared/*",
+		"cgame/*",
 		
-		"game_shared/m_flash.cpp"
+		"game/m_flash.cpp"
 	}
 	
 	filter "system:windows"
@@ -281,7 +277,7 @@ project "cgame_q2"
 		"**.manifest",
 	}
 	
-project "game_q2"
+project "game"
 	kind "SharedLib"
 	filter( filter_32bit )
 		targetname "gamex86"
@@ -294,16 +290,15 @@ project "game_q2"
 	
 	disablewarnings { "4244", "4311", "4302" }
 	
-	pchsource( "game_q2/g_pch.cpp" )
+	pchsource( "game/g_pch.cpp" )
 	pchheader( "g_local.h" )
-	filter( "files:not game_q2/**" )
+	filter( "files:not game/**" )
 		flags( { "NoPCH" } )
 	filter( {} )
 
 	files {
 		"common/*",
-		"game_q2/*",
-		"game_shared/*"
+		"game/*",
 	}
 	
 	filter "system:windows"
@@ -557,7 +552,7 @@ project "libpng"
 		"thirdparty/libpng_config/pnglibconf.h"
 	}
 
-
+--[[
 project "uvatlas"
 	kind "StaticLib"
 	targetname "uvatlas"
@@ -570,3 +565,4 @@ project "uvatlas"
 		uvatlas_public,
 		uvatlas_sources
 	}
+--]]
