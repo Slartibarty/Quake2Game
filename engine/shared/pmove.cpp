@@ -239,7 +239,7 @@ static void PM_PlayStepSound( int type, float fvol )
 	}
 }	
 
-void PM_UpdateStepSound( void )
+static void PM_UpdateStepSound( void )
 {
 	bool walking;
 	float fvol;
@@ -418,7 +418,7 @@ Returns true if the velocity was clipped in some way
 ==================
 */
 #define	MAX_CLIP_PLANES	5
-bool PM_SlideMove (void)
+static bool PM_SlideMove (void)
 {
 	int			bumpcount, numbumps;
 	vec3_t		dir;
@@ -601,7 +601,7 @@ PM_StepSlideMove
 
 ==================
 */
-void PM_StepSlideMove (void)
+static void PM_StepSlideMove (void)
 {
 	vec3_t		start_o, start_v;
 	vec3_t		down_o, down_v;
@@ -845,7 +845,7 @@ static float PM_CmdScale( usercmd_t *cmd )
 PM_AddCurrents
 =============
 */
-void PM_AddCurrents (vec3_t	wishvel)
+static void PM_AddCurrents (vec3_t	wishvel)
 {
 	vec3_t	v;
 	float	s;
@@ -940,7 +940,7 @@ PM_WaterMove
 
 ===================
 */
-void PM_WaterMove (void)
+static void PM_WaterMove (void)
 {
 	int		i;
 	vec3_t	wishvel;
@@ -982,7 +982,7 @@ PM_AirMove
 
 ===================
 */
-void PM_AirMove (void)
+static void PM_AirMove (void)
 {
 	int			i;
 	vec3_t		wishvel;
@@ -1137,7 +1137,7 @@ static void PM_CheckWater()
 PM_CategorizePosition
 =============
 */
-void PM_CategorizePosition( void )
+static void PM_CategorizePosition( void )
 {
 	// if the player hull point one unit down is solid, the player
 	// is on ground
@@ -1222,7 +1222,7 @@ void PM_CategorizePosition( void )
 PM_CheckJump
 =============
 */
-void PM_CheckJump (void)
+static void PM_CheckJump (void)
 {
 	if (pm->cmd.upmove < 10)
 	{	// not holding jump
@@ -1293,7 +1293,7 @@ void PM_CheckJump (void)
 PM_CheckSpecialMovement
 =============
 */
-void PM_CheckSpecialMovement (void)
+static void PM_CheckSpecialMovement (void)
 {
 	vec3_t	spot;
 	int		cont;
@@ -1344,7 +1344,7 @@ void PM_CheckSpecialMovement (void)
 PM_FlyMove
 ===============
 */
-void PM_FlyMove (bool doclip)
+static void PM_FlyMove (bool doclip)
 {
 	float	speed, drop, friction, control, newspeed;
 	float	currentspeed, addspeed, accelspeed;
