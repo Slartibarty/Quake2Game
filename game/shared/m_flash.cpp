@@ -1,6 +1,6 @@
 // m_flash.c
 
-#include "../common/q_math.h"
+#include "../../common/q_math.h"
 
 // this file is included in both the game dll and quake2,
 // the game needs it to source shot locations, the client

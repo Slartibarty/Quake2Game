@@ -4,7 +4,7 @@
 
 #include <vector>
 
-#include "../../external/xatlas/xatlas.h"
+#include "../../thirdparty/xatlas/xatlas.h"
 
 std::vector<dplane_t>	g_planes;
 std::vector<dvertex_t>	g_vertices;

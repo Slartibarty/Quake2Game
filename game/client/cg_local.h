@@ -1,11 +1,13 @@
 
 #pragma once
 
-#include "../common/q_shared.h"
+#include "../../common/q_shared.h"
 
-#include "../common/q_formats.h"
-#include "../engine/renderer/ref_public.h"
-#include "../cgame_shared/cg_public.h"
+#include "../../common/q_formats.h"
+#include "../../engine/renderer/ref_public.h"
+#include "cg_public.h"
+
+#define NUMVERTEXNORMALS	162
 
 extern cgame_import_t	cgi;
 

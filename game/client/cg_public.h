@@ -1,15 +1,13 @@
 
 #pragma once
 
-#include "../common/q_shared.h"
+#include "../../common/q_shared.h"
 
 struct material_t;
 struct model_t;
 struct sfx_t;
 
 struct sizebuf_t;
-
-#define NUMVERTEXNORMALS 162
 
 #define	CGAME_API_VERSION	1
 

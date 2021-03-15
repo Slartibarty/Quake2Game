@@ -5,7 +5,7 @@
 #include "q_shared.h"
 
 #define STB_SPRINTF_IMPLEMENTATION
-#include "../external/stb/stb_sprintf.h"
+#include "../thirdparty/stb/stb_sprintf.h"
 
 //-------------------------------------------------------------------------------------------------
 //

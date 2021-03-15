@@ -4,7 +4,7 @@
 
 #include "../shared/engine.h"
 #include "../renderer/ref_public.h"
-#include "../../cgame_shared/cg_public.h"
+#include "../../game/client/cg_public.h"
 
 #include "vid.h"
 #include "screen.h"

@@ -208,7 +208,8 @@ project "engine"
 		
 		"engine/renderer/*",
 		
-		"game/game_public.h",
+		"game/client/cgame_public.h",
+		"game/server/game_public.h",
 		
 		zlib_public,
 		
@@ -231,7 +232,6 @@ project "engine"
 	
 	removefiles {
 		"engine/client/cd_win.*",
-		"engine/res/rw_*",
 		"**/cd_vorbis.cpp",
 		"**.def",
 		"**/*sv_null.*",
@@ -248,18 +248,19 @@ project "cgame"
 	filter {}
 	language "C++"
 	targetdir "../game/baseq2"
+	
+	disablewarnings { "4244", "4267" }
 		
-	pchsource( "cgame/cg_pch.cpp" )
+	pchsource( "game/client/cg_pch.cpp" )
 	pchheader( "cg_local.h" )
-	filter( "files:not cgame/**" )
+	filter( "files:not game/client/**" )
 		flags( { "NoPCH" } )
 	filter( {} )
 
 	files {
 		"common/*",
-		"cgame/*",
-		
-		"game/m_flash.cpp"
+		"game/client/*",
+		"game/shared/*",
 	}
 	
 	filter "system:windows"
@@ -290,15 +291,16 @@ project "game"
 	
 	disablewarnings { "4244", "4311", "4302" }
 	
-	pchsource( "game/g_pch.cpp" )
+	pchsource( "game/server/g_pch.cpp" )
 	pchheader( "g_local.h" )
-	filter( "files:not game/**" )
+	filter( "files:not game/server/**" )
 		flags( { "NoPCH" } )
 	filter( {} )
 
 	files {
 		"common/*",
-		"game/*",
+		"game/server/*",
+		"game/shared/*",
 	}
 	
 	filter "system:windows"

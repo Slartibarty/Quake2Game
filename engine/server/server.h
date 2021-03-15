@@ -1,7 +1,7 @@
 // server.h
 
 #include "../shared/engine.h"
-#include "../../game_shared/game_public.h"
+#include "../../game/server/game_public.h"
 
 //=============================================================================
 
