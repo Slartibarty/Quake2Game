@@ -31,7 +31,6 @@ struct cgame_import_t
 {
 	// Logging
 	void	( *Printf ) ( _Printf_format_string_ const char *fmt, ... );
-	void	( *DPrintf ) ( _Printf_format_string_ const char *fmt, ... );
 	void	( *Errorf ) ( int code, _Printf_format_string_ const char *fmt, ... );
 
 	void	( *StartSound ) ( vec3_t origin, int entnum, int entchannel, sfx_t *sfx, float fvol, float attenuation, float timeofs );

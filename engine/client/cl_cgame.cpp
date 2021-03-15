@@ -79,7 +79,6 @@ void CL_InitCGame()
 		CL_ShutdownCGame();
 
 	cgi.Printf = Com_Printf;
-	cgi.DPrintf = Com_DPrintf;
 	cgi.Errorf = Com_Error;
 
 	cgi.StartSound = S_StartSound;

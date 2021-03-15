@@ -29,6 +29,7 @@ void CG_Shutdown()
 }
 
 extern void CL_AddTEnts();
+extern void CL_AddParticles();
 extern void CL_AddDLights();
 extern void CL_AddLightStyles();
 
@@ -208,7 +209,7 @@ void CG_RunParticles( int &i, uint effects, centity_t *cent, entity_t *ent, enti
 	}
 }
 
-extern void CL_SetLightstyle( int i, const char *s );
+extern void CL_SetLightstyle( int index, const char *s );
 
 /*
 ===================
@@ -246,7 +247,7 @@ cgame_export_t *GetCGameAPI( cgame_import_t *import )
 	return &cge;
 }
 
-#ifndef GAME_HARD_LINKED
+#ifndef CGAME_HARD_LINKED
 
 // this is only here so the functions in q_shared.c and q_shwin.c can link
 void Com_Error( int code, _Printf_format_string_ const char *fmt, ... )

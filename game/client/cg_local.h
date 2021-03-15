@@ -11,6 +11,9 @@
 
 extern cgame_import_t	cgi;
 
+//=============================================================================
+// FX dlights
+
 struct cdlight_t
 {
 	int		key;				// so entities can reuse same entry
@@ -23,6 +26,9 @@ struct cdlight_t
 };
 
 extern cdlight_t	cl_dlights[MAX_DLIGHTS];
+
+//=============================================================================
+// FX sustains
 
 //ROGUE
 struct cl_sustain_t
@@ -42,6 +48,8 @@ struct cl_sustain_t
 
 #define MAX_SUSTAINS	32
 
+// FX particles
+
 // ========
 // PGM
 struct cparticle_t
@@ -59,14 +67,18 @@ struct cparticle_t
 	float		alphavel;
 };
 
+extern cparticle_t	*active_particles, *free_particles;
+extern cparticle_t	particles[MAX_PARTICLES];
 
-#define	PARTICLE_GRAVITY	40
-#define BLASTER_PARTICLE_COLOR		0xe0
+#define	PARTICLE_GRAVITY			40
 // PMM
-#define INSTANT_PARTICLE	-10000.0f
+#define INSTANT_PARTICLE			-10000.0f
 // PGM
 // ========
 
+//=============================================================================
+
+#if SLARTHACK
 struct frame_t
 {
 	qboolean		valid;			// cleared if delta parsing was invalid
@@ -78,6 +90,7 @@ struct frame_t
 	int				num_entities;
 	int				parse_entities;	// non-masked index into cl_parse_entities array
 };
+#endif
 
 void CL_ClearEffects (void);
 void CL_ClearTEnts (void);
@@ -151,7 +164,6 @@ void CL_RocketTrail (vec3_t start, vec3_t end, centity_t *old);
 void CL_DiminishingTrail (vec3_t start, vec3_t end, centity_t *old, int flags);
 void CL_FlyEffect (centity_t *ent, vec3_t origin);
 void CL_BfgParticles (entity_t *ent);
-void CL_AddParticles (void);
 void CL_EntityEvent (entity_state_t *ent);
 // RAFAEL
 void CL_TrapParticles (entity_t *ent);
