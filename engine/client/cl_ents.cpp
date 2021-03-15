@@ -1061,11 +1061,13 @@ void CL_CalcViewValues (void)
 		oldframe = &cl.frame;		// previous frame was dropped or involid
 	ops = &oldframe->playerstate;
 
+#if 0	// SlartTodo: should be /= 8 right? This is fine at 256 but Q3 doesn't do this
 	// see if the player entity was teleported this frame
-	if ( fabs(ops->pmove.origin[0] - ps->pmove.origin[0]) > 32.0f		// SlartTodo: These were 256, what to do?
-		|| fabs(ops->pmove.origin[1] - ps->pmove.origin[1]) > 32.0f
-		|| fabs(ops->pmove.origin[2] - ps->pmove.origin[2]) > 32.0f)
+	if ( fabs(ops->pmove.origin[0] - ps->pmove.origin[0]) > 256.0f
+		|| fabs(ops->pmove.origin[1] - ps->pmove.origin[1]) > 256.0f
+		|| fabs(ops->pmove.origin[2] - ps->pmove.origin[2]) > 256.0f)
 		ops = ps;		// don't interpolate
+#endif
 
 	ent = &cl_entities[cl.playernum+1];
 	lerp = cl.lerpfrac;

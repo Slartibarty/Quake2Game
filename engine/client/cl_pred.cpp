@@ -25,7 +25,7 @@ void CL_CheckPredictionError (void)
 
 	// save the prediction error for interpolation
 	len = fabs(delta[0]) + fabs(delta[1]) + fabs(delta[2]);
-	if (len > 640.0f)	// 80 world units
+	if (len > 80.0f)
 	{	// a teleport or something
 		VectorClear (cl.prediction_error);
 	}

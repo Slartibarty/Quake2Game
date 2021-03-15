@@ -2224,11 +2224,9 @@ void CL_EntityEvent( entity_state_t *ent )
 		cgi.StartSound( NULL, ent->number, CHAN_AUTO, cgi.RegisterSound( "player/land1.wav" ), 1, ATTN_NORM, 0 );
 		break;
 	case EV_FALL:
-		assert( 0 );
 		cgi.StartSound( NULL, ent->number, CHAN_AUTO, cgi.RegisterSound( "*fall2.wav" ), 1, ATTN_NORM, 0 );
 		break;
 	case EV_FALLFAR:
-		assert( 0 );
 		cgi.StartSound( NULL, ent->number, CHAN_AUTO, cgi.RegisterSound( "*fall1.wav" ), 1, ATTN_NORM, 0 );
 		break;
 	}
