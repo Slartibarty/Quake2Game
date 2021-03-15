@@ -254,7 +254,7 @@ void CL_ParseMuzzleFlash()
 	silenced = weapon & MZ_SILENCED;
 	weapon &= ~MZ_SILENCED;
 
-	pl = cgi.EntityAtIndex( i );
+	pl = cgi.GetEntityAtIndex( i );
 
 	dl = CL_AllocDlight( i );
 	VectorCopy( pl->current.origin, dl->origin );
@@ -452,7 +452,7 @@ void CL_ParseMuzzleFlash2()
 
 	flash_number = cgi.ReadByte( cgi.net_message );
 
-	centity_t *self = cgi.EntityAtIndex( ent );
+	centity_t *self = cgi.GetEntityAtIndex( ent );
 
 	// locate the origin
 	AngleVectors( self->current.angles, forward, right, NULL );

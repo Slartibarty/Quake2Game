@@ -11,6 +11,8 @@ struct sizebuf_t;
 
 #define	CGAME_API_VERSION	1
 
+#define	CMD_BACKUP		64	// allow a lot of command backups for very fast systems
+
 struct centity_t
 {
 	entity_state_t	baseline;		// delta from this if not from a previous frame
@@ -33,6 +35,8 @@ struct cgame_import_t
 	void	( *Printf ) ( _Printf_format_string_ const char *fmt, ... );
 	void	( *Errorf ) ( int code, _Printf_format_string_ const char *fmt, ... );
 
+	cvar_t	*( *Cvar_Get ) ( const char *var_name, const char *value, uint32 flags );
+
 	void	( *StartSound ) ( vec3_t origin, int entnum, int entchannel, sfx_t *sfx, float fvol, float attenuation, float timeofs );
 
 	sfx_t		*( *RegisterSound ) ( const char *sample );
@@ -50,10 +54,18 @@ struct cgame_import_t
 	void	( *ReadPos ) ( sizebuf_t *sb, vec3_t pos );
 	void	( *ReadDir ) ( sizebuf_t *sb, vec3_t vector );
 
+	int		( *HeadnodeForBox ) ( vec3_t mins, vec3_t maxs );
+	int		( *TransformedPointContents ) ( vec3_t p, int headnode, vec3_t origin, vec3_t angles );
+	int		( *PointContents ) ( vec3_t p, int headnode );
+	trace_t ( *BoxTrace ) ( vec3_t start, vec3_t end,
+			vec3_t mins, vec3_t maxs, int headnode, int brushmask );
+	void	( *TransformedBoxTrace ) ( vec3_t start, vec3_t end,
+			vec3_t mins, vec3_t maxs, int headnode, int brushmask,
+			vec3_t origin, vec3_t angles, trace_t &trace );
+
 	// Client hooks
 
-	centity_t		*( *EntityAtIndex ) ( int index );
-//	sizebuf_t		*( *GetNetMessage ) ( void );
+	centity_t		*( *GetEntityAtIndex ) ( int index );
 
 	int				( *time ) ( void );				// cl
 	int				( *servertime ) ( void );		// cl.frame
@@ -97,6 +109,9 @@ struct cgame_export_t
 	void		( *ParseMuzzleFlash2 ) ( void );
 
 	void		( *SetLightstyle ) ( int i, const char *s );
+
+	// Slart: Try to write some code to prevent having to export this...
+	void		( *Pmove ) ( pmove_t *pm );
 
 
 };

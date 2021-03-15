@@ -5,11 +5,12 @@
 
 #include "../../common/q_formats.h"
 #include "../../engine/renderer/ref_public.h"
+#include "../shared/bg_public.h"
 #include "cg_public.h"
 
 #define NUMVERTEXNORMALS	162
 
-extern cgame_import_t	cgi;
+extern cgame_import_t cgi;
 
 //=============================================================================
 // FX dlights

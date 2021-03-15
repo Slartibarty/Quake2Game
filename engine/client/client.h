@@ -48,8 +48,6 @@ struct clientinfo_t
 extern char cl_weaponmodels[MAX_CLIENTWEAPONMODELS][MAX_QPATH];
 extern int num_cl_weaponmodels;
 
-#define	CMD_BACKUP		64	// allow a lot of command backups for very fast systems
-
 //
 // the client_state_t structure is wiped completely at every
 // server map change
@@ -254,7 +252,6 @@ extern	cvar_t	*cl_vwep;
 // the cl_parse_entities must be large enough to hold UPDATE_BACKUP frames of
 // entities, so that when a delta compressed message arives from the server
 // it can be un-deltad from the original 
-#define	MAX_PARSE_ENTITIES	1024
 extern	entity_state_t	cl_parse_entities[MAX_PARSE_ENTITIES];
 
 //=============================================================================
@@ -370,6 +367,7 @@ void V_AddLightStyle (int style, float r, float g, float b);
 // cl_pred.c
 //
 void CL_CheckPredictionError (void);
+void CL_PredictMovement (void);
 
 //
 // menus
@@ -387,11 +385,6 @@ void M_AddToServerList (netadr_t adr, char *info);
 //
 void CL_ParseInventory (void);
 void CL_DrawInventory (void);
-
-//
-// cl_pred.c
-//
-void CL_PredictMovement (void);
 
 //-------------------------------------------------------------------------------------------------
 // Use defines for all exported functions

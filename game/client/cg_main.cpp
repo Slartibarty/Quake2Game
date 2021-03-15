@@ -244,6 +244,8 @@ cgame_export_t *GetCGameAPI( cgame_import_t *import )
 
 	cge.SetLightstyle = CL_SetLightstyle;
 
+	cge.Pmove = Pmove;
+
 	return &cge;
 }
 

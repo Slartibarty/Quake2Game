@@ -253,7 +253,7 @@ cvar_t *Cvar_FullSet( const char *var_name, const char *value, uint32 flags )
 	var->modified = true;
 
 	if ( var->flags & CVAR_USERINFO )
-		userinfo_modified = true;	// transmit at next oportunity
+		userinfo_modified = true;	// transmit at next opportunity
 
 	Z_Free( var->string );	// free the old value string
 

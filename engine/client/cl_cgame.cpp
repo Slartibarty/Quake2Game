@@ -6,9 +6,19 @@ cgame_export_t	*cge;
 
 extern void CL_ShutdownCGame();
 
-static centity_t *Wrap_EntityAtIndex( int index )
+static centity_t *Wrap_GetEntityAtIndex( int index )
 {
 	return &cl_entities[index];
+}
+
+static entity_state_t *Wrap_GetParseEntityAtIndex( int index )
+{
+	return &cl_parse_entities[index];
+}
+
+static cmodel_t *Wrap_GetCModelAtIndex( int index )
+{
+	return cl.model_clip[index];
 }
 
 static int Wrap_time()
@@ -98,7 +108,7 @@ void CL_InitCGame()
 	cgi.ReadPos = MSG_ReadPos;
 	cgi.ReadDir = MSG_ReadDir;
 
-	cgi.EntityAtIndex = Wrap_EntityAtIndex;
+	cgi.GetEntityAtIndex = Wrap_GetEntityAtIndex;
 
 	cgi.time = Wrap_time;
 	cgi.servertime = Wrap_servertime;

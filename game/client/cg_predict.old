@@ -1,52 +1,60 @@
+/*
+===============================================================================
 
-#include "client.h"
+	I'm predicting
 
+===============================================================================
+*/
+
+#include "cg_local.h"
 
 /*
 ===================
 CL_CheckPredictionError
 ===================
 */
-void CL_CheckPredictionError (void)
+void CL_CheckPredictionError()
 {
 	int		frame;
 	vec3_t	delta;
 	float	len;
 
-	if (!cl_predict->value || (cl.frame.playerstate.pmove.pm_flags & PMF_NO_PREDICTION))
+	if ( !cl_predict->value || ( cl.frame.playerstate.pmove.pm_flags & PMF_NO_PREDICTION ) )
 		return;
 
 	// calculate the last usercmd_t we sent that the server has processed
 	frame = cls.netchan.incoming_acknowledged;
-	frame &= (CMD_BACKUP-1);
+	frame &= ( CMD_BACKUP - 1 );
 
 	// compare what the server returned with what we had predicted it to be
-	VectorSubtract (cl.frame.playerstate.pmove.origin, cl.predicted_origins[frame], delta);
+	VectorSubtract( cl.frame.playerstate.pmove.origin, cl.predicted_origins[frame], delta );
 
 	// save the prediction error for interpolation
-	len = fabs(delta[0]) + fabs(delta[1]) + fabs(delta[2]);
-	if (len > 640.0f)	// 80 world units
+	len = fabs( delta[0] ) + fabs( delta[1] ) + fabs( delta[2] );
+	if ( len > 640.0f )	// 80 world units
 	{	// a teleport or something
-		VectorClear (cl.prediction_error);
+		VectorClear( cl.prediction_error );
 	}
 	else
 	{
-		if (cl_showmiss->value && (delta[0] || delta[1] || delta[2]) )
-			Com_Printf ("prediction miss on %i: %f\n", cl.frame.serverframe, 
-			delta[0] + delta[1] + delta[2]);
+#if SLARTTODO
+		if ( cl_showmiss->value && ( delta[0] || delta[1] || delta[2] ) )
+		{
+			Com_Printf( "prediction miss on %i: %f\n", cl.frame.serverframe,
+				delta[0] + delta[1] + delta[2] );
+		}
+#endif
 
-		VectorCopy (cl.frame.playerstate.pmove.origin, cl.predicted_origins[frame]);
+		VectorCopy( cl.frame.playerstate.pmove.origin, cl.predicted_origins[frame] );
 
 		// save for error interpolation
 		VectorCopy( delta, cl.prediction_error );
 	}
 }
 
-
 /*
 ====================
 CL_ClipMoveToEntities
-
 ====================
 */
 void CL_ClipMoveToEntities ( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, trace_t *tr )
@@ -90,14 +98,14 @@ void CL_ClipMoveToEntities ( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end,
 			bmins[2] = -zd;
 			bmaxs[2] = zu;
 
-			headnode = CM_HeadnodeForBox (bmins, bmaxs);
+			headnode = cgi.HeadnodeForBox (bmins, bmaxs);
 			angles = vec3_origin;	// boxes don't rotate
 		}
 
 		if (tr->allsolid)
 			return;
 
-		CM_TransformedBoxTrace (start, end,
+		cgi.TransformedBoxTrace (start, end,
 			mins, maxs, headnode, MASK_PLAYERSOLID,
 			ent->origin, angles, trace);
 
@@ -118,70 +126,85 @@ void CL_ClipMoveToEntities ( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end,
 	}
 }
 
-
 /*
-================
+===================
 CL_PMTrace
-================
+===================
 */
-trace_t		CL_PMTrace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end)
+trace_t CL_PMTrace( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end )
 {
 	trace_t	t;
 
-	// check against world
-	t = CM_BoxTrace (start, end, mins, maxs, 0, MASK_PLAYERSOLID);
-	if (t.fraction < 1.0)
+	// Check against world
+	t = cgi.BoxTrace( start, end, mins, maxs, 0, MASK_PLAYERSOLID );
+	if ( t.fraction != 1.0f )
+	{
+		// Slart: wtf?
 		t.ent = (edict_t *)1;
+	}
 
-	// check all other solid models
-	CL_ClipMoveToEntities (start, mins, maxs, end, &t);
+	// Check all other solid models
+	CL_ClipMoveToEntities( start, mins, maxs, end, &t );
 
 	return t;
 }
 
-int		CL_PMpointcontents (vec3_t point)
+/*
+===================
+CL_PMpointcontents
+===================
+*/
+static int CL_PMpointcontents( vec3_t point )
 {
-	int			i;
 	entity_state_t	*ent;
-	int			num;
+	int				num;
 	cmodel_t		*cmodel;
-	int			contents;
+	int				contents;
 
-	contents = CM_PointContents (point, 0);
+	contents = cgi.PointContents( point, 0 );
 
-	for (i=0 ; i<cl.frame.num_entities ; i++)
+	int numEntities = cgi.GetFrameNumEntities();
+	int parseEntity = cgi.GetFrameParseEntities();
+
+	for ( int i = 0; i < numEntities; i++ )
 	{
-		num = (cl.frame.parse_entities + i)&(MAX_PARSE_ENTITIES-1);
-		ent = &cl_parse_entities[num];
+		num = ( parseEntity + i ) & ( MAX_PARSE_ENTITIES - 1 );
+		ent = cgi.GetParseEntityAtIndex( num );
 
-		if (ent->solid != 31) // special value for bmodel
+		if ( ent->solid != 31 ) // special value for bmodel
+		{
 			continue;
+		}
 
-		cmodel = cl.model_clip[ent->modelindex];
-		if (!cmodel)
+		cmodel = cgi.GetCModelAtIndex( ent->modelindex );
+		if ( !cmodel )
+		{
 			continue;
+		}
 
-		contents |= CM_TransformedPointContents (point, cmodel->headnode, ent->origin, ent->angles);
+		contents |= cgi.TransformedPointContents( point, cmodel->headnode, ent->origin, ent->angles );
 	}
 
 	return contents;
 }
 
-
-//static edict_t *enthack;
-
+/*
+===================
+PM_PlaySound
+===================
+*/
 static void PM_PlaySound( const char *sample, float volume )
 {
 }
 
 /*
 =================
-CL_PredictMovement
+CGE_PredictMovement
 
 Sets cl.predicted_origin and cl.predicted_angles
 =================
 */
-void CL_PredictMovement (void)
+void CGE_PredictMovement()
 {
 	int			ack, current;
 	int			frame;
@@ -192,34 +215,38 @@ void CL_PredictMovement (void)
 	float		step;
 	float		oldz;
 
-	if (cls.state != ca_active)
+	if ( cls.state != ca_active )
 		return;
 
-	if (cl_paused->value)
+	if ( cl_paused->value )
 		return;
 
-	if (!cl_predict->value || (cl.frame.playerstate.pmove.pm_flags & PMF_NO_PREDICTION))
+#if SLARTTODO
+	if ( !cl_predict->value || ( cl.frame.playerstate.pmove.pm_flags & PMF_NO_PREDICTION ) )
 	{	// just set angles
-		for (i=0 ; i<3 ; i++)
+		for ( i = 0; i < 3; i++ )
 		{
 			cl.predicted_angles[i] = cl.viewangles[i] + cl.frame.playerstate.pmove.delta_angles[i];
 		}
 		return;
 	}
+#endif
 
 	ack = cls.netchan.incoming_acknowledged;
 	current = cls.netchan.outgoing_sequence;
 
 	// if we are too far out of date, just freeze
-	if (current - ack >= CMD_BACKUP)
+	if ( current - ack >= CMD_BACKUP )
 	{
-		if (cl_showmiss->value)
-			Com_Printf ("exceeded CMD_BACKUP\n");
-		return;	
+#if SLARTTODO
+		if ( cl_showmiss->value )
+			Com_Printf( "exceeded CMD_BACKUP\n" );
+#endif
+		return;
 	}
 
 	// copy current state to pmove
-	memset (&pm, 0, sizeof(pm));
+	memset( &pm, 0, sizeof( pm ) );
 	pm.trace = CL_PMTrace;
 	pm.pointcontents = CL_PMpointcontents;
 	pm.playsound = PM_PlaySound;
@@ -233,22 +260,22 @@ void CL_PredictMovement (void)
 	frame = 0;
 
 	// run frames
-	while (++ack < current)
+	while ( ++ack < current )
 	{
-		frame = ack & (CMD_BACKUP-1);
+		frame = ack & ( CMD_BACKUP - 1 );
 		cmd = &cl.cmds[frame];
 
 		pm.cmd = *cmd;
-		cge->Pmove (&pm);
+		Pmove( &pm );
 
 		// save for debug checking
-		VectorCopy (pm.s.origin, cl.predicted_origins[frame]);
+		VectorCopy( pm.s.origin, cl.predicted_origins[frame] );
 	}
 
-	oldframe = (ack-2) & (CMD_BACKUP-1);
+	oldframe = ( ack - 2 ) & ( CMD_BACKUP - 1 );
 	oldz = cl.predicted_origins[oldframe][2];
 	step = pm.s.origin[2] - oldz;
-	if (step > 8.0f && step < 20.0f && pm.groundentity )
+	if ( step > 8.0f && step < 20.0f && pm.groundentity )
 	{
 		cl.predicted_step = step;
 		cl.predicted_step_time = cls.realtime - cls.frametime * 500;
