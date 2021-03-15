@@ -32,7 +32,7 @@ workspace "quake2"
 
 -- Misc flags for all projects
 
-includedirs { "external/stb" }
+includedirs { "thirdparty/stb" }
 
 flags { "MultiProcessorCompile", "NoBufferSecurityCheck" }
 staticruntime "On"
@@ -92,90 +92,90 @@ filter {}
 -- Project definitions --------------------------------------------------------
 
 local zlib_public = {
-	"external/zlib/zconf.h",
-	"external/zlib/zlib.h"
+	"thirdparty/zlib/zconf.h",
+	"thirdparty/zlib/zlib.h"
 }
 
 local zlib_sources = {
-	"external/zlib/adler32.c",
-	"external/zlib/compress.c",
-	"external/zlib/crc32.c",
-	"external/zlib/crc32.h",
-	"external/zlib/deflate.c",
-	"external/zlib/deflate.h",
-	"external/zlib/gzclose.c",
-	"external/zlib/gzguts.h",
-	"external/zlib/gzlib.c",
-	"external/zlib/gzread.c",
-	"external/zlib/gzwrite.c",
-	"external/zlib/infback.c",
-	"external/zlib/inffast.c",
-	"external/zlib/inffast.h",
-	"external/zlib/inffixed.h",
-	"external/zlib/inflate.c",
-	"external/zlib/inflate.h",
-	"external/zlib/inftrees.c",
-	"external/zlib/inftrees.h",
-	"external/zlib/trees.c",
-	"external/zlib/trees.h",
-	"external/zlib/uncompr.c",
-	"external/zlib/zutil.c",
-	"external/zlib/zutil.h"
+	"thirdparty/zlib/adler32.c",
+	"thirdparty/zlib/compress.c",
+	"thirdparty/zlib/crc32.c",
+	"thirdparty/zlib/crc32.h",
+	"thirdparty/zlib/deflate.c",
+	"thirdparty/zlib/deflate.h",
+	"thirdparty/zlib/gzclose.c",
+	"thirdparty/zlib/gzguts.h",
+	"thirdparty/zlib/gzlib.c",
+	"thirdparty/zlib/gzread.c",
+	"thirdparty/zlib/gzwrite.c",
+	"thirdparty/zlib/infback.c",
+	"thirdparty/zlib/inffast.c",
+	"thirdparty/zlib/inffast.h",
+	"thirdparty/zlib/inffixed.h",
+	"thirdparty/zlib/inflate.c",
+	"thirdparty/zlib/inflate.h",
+	"thirdparty/zlib/inftrees.c",
+	"thirdparty/zlib/inftrees.h",
+	"thirdparty/zlib/trees.c",
+	"thirdparty/zlib/trees.h",
+	"thirdparty/zlib/uncompr.c",
+	"thirdparty/zlib/zutil.c",
+	"thirdparty/zlib/zutil.h"
 }
 
 local libpng_public = {
-	"external/libpng/png.h",
-	"external/libpng/pngconf.h"
+	"thirdparty/libpng/png.h",
+	"thirdparty/libpng/pngconf.h"
 }
 
 local libpng_sources = {
-	"external/libpng/png.c",
-	"external/libpng/pngpriv.h",
-	"external/libpng/pngstruct.h",
-	"external/libpng/pnginfo.h",
-	"external/libpng/pngdebug.h",
-	"external/libpng/pngerror.c",
-	"external/libpng/pngget.c",
-	"external/libpng/pngmem.c",
-	"external/libpng/pngpread.c",
-	"external/libpng/pngread.c",
-	"external/libpng/pngrio.c",
-	"external/libpng/pngrtran.c",
-	"external/libpng/pngrutil.c",
-	"external/libpng/pngset.c",
-	"external/libpng/pngtrans.c",
-	"external/libpng/pngwio.c",
-	"external/libpng/pngwrite.c",
-	"external/libpng/pngwtran.c",
-	"external/libpng/pngwutil.c"
+	"thirdparty/libpng/png.c",
+	"thirdparty/libpng/pngpriv.h",
+	"thirdparty/libpng/pngstruct.h",
+	"thirdparty/libpng/pnginfo.h",
+	"thirdparty/libpng/pngdebug.h",
+	"thirdparty/libpng/pngerror.c",
+	"thirdparty/libpng/pngget.c",
+	"thirdparty/libpng/pngmem.c",
+	"thirdparty/libpng/pngpread.c",
+	"thirdparty/libpng/pngread.c",
+	"thirdparty/libpng/pngrio.c",
+	"thirdparty/libpng/pngrtran.c",
+	"thirdparty/libpng/pngrutil.c",
+	"thirdparty/libpng/pngset.c",
+	"thirdparty/libpng/pngtrans.c",
+	"thirdparty/libpng/pngwio.c",
+	"thirdparty/libpng/pngwrite.c",
+	"thirdparty/libpng/pngwtran.c",
+	"thirdparty/libpng/pngwutil.c"
 }
 
 local glew_public = {
-	"external/glew/include/GL/glew.h",
-	"external/glew/include/GL/wglew.h"
+	"thirdparty/glew/include/GL/glew.h",
+	"thirdparty/glew/include/GL/wglew.h"
 }
 
 local glew_sources = {
-	"external/glew/src/glew.c"
+	"thirdparty/glew/src/glew.c"
 }
 
 local xatlas_public = {
-	"external/xatlas/xatlas.h",
+	"thirdparty/xatlas/xatlas.h",
 }
 
 local xatlas_sources = {
-	"external/xatlas/xatlas.cpp",
+	"thirdparty/xatlas/xatlas.cpp",
 }
 
 local uvatlas_public = {
-	"external/UVAtlas/UVAtlas/inc/UVAtlas.h",
+	"thirdparty/UVAtlas/UVAtlas/inc/UVAtlas.h",
 }
 
 local uvatlas_sources = {
-	"external/UVAtlas/UVAtlas/geodesics/*.cpp",
-	"external/UVAtlas/UVAtlas/geodesics/*.h",
-	"external/UVAtlas/UVAtlas/isochart/*.cpp",
-	"external/UVAtlas/UVAtlas/isochart/*.h"
+	"thirdparty/UVAtlas/UVAtlas/geodesics/*.cpp",
+	"thirdparty/UVAtlas/UVAtlas/geodesics/*.h",
+	"thirdparty/UVAtlas/UVAtlas/isochart/*.cpp",
+	"thirdparty/UVAtlas/UVAtlas/isochart/*.h"
 }
 
 -------------------------------------------------------------------------------
@@ -187,7 +187,7 @@ project "engine"
 	targetname "q2game"
 	language "C++"
 	targetdir "../game"
-	includedirs { "external/UVAtlas/UVAtlas/inc", "external/xatlas", "external/glew/include", "external/zlib", "external/libpng", "external/libpng_config" }
+	includedirs { "thirdparty/UVAtlas/UVAtlas/inc", "thirdparty/xatlas", "thirdparty/glew/include", "thirdparty/zlib", "thirdparty/libpng", "thirdparty/libpng_config" }
 	defines { "GLEW_STATIC", "GLEW_NO_GLU" }
 	filter "system:windows"
 		linkoptions { "/ENTRY:mainCRTStartup" }
@@ -403,7 +403,7 @@ project "qrad4"
 	language "C++"
 	floatingpoint "Default"
 	targetdir "../game"
-	includedirs { "utils/common2", "common", "external/stb" }
+	includedirs { "utils/common2", "common", "thirdparty/stb" }
 	
 	files {
 		"common/windows_default.manifest",
@@ -438,7 +438,7 @@ project "qatlas"
 	language "C++"
 	floatingpoint "Default"
 	targetdir "../game"
-	includedirs { "utils/common2", "common", "external/xatlas" }
+	includedirs { "utils/common2", "common", "thirdparty/xatlas" }
 	
 	files {
 		"common/windows_default.manifest",
@@ -482,7 +482,7 @@ project "qdata"
 	language "C"
 	floatingpoint "Default"
 	targetdir "../game"
-	includedirs { "utils/common", "external/stb" }
+	includedirs { "utils/common", "thirdparty/stb" }
 	
 	files {
 		"common/windows_default.manifest",
@@ -507,7 +507,7 @@ project "qe4"
 	floatingpoint "Default"
 	targetdir "../game"
 	defines { "WIN_ERROR", "QE4" }
-	includedirs { "utils/common", "external/stb" }
+	includedirs { "utils/common", "thirdparty/stb" }
 	links { "opengl32", "glu32" }
 	
 	files {
@@ -527,9 +527,9 @@ filter {}
 
 filter {}
 
--- External
+-- Thirdparty
 
-group "external"
+group "thirdparty"
 
 project "zlib"
 	kind "StaticLib"
@@ -548,13 +548,13 @@ project "libpng"
 	kind "StaticLib"
 	targetname "libpng"
 	language "C"
-	includedirs { "external/libpng_config", "external/zlib" }
+	includedirs { "thirdparty/libpng_config", "thirdparty/zlib" }
 	
 	files {
 		libpng_public,
 		libpng_sources,
 		
-		"external/libpng_config/pnglibconf.h"
+		"thirdparty/libpng_config/pnglibconf.h"
 	}
 
 
@@ -562,7 +562,7 @@ project "uvatlas"
 	kind "StaticLib"
 	targetname "uvatlas"
 	language "C++"
-	includedirs { "external/UVAtlas/UVAtlas", "external/UVAtlas/UVAtlas/inc", "external/UVAtlas/UVAtlas/geodesics" }
+	includedirs { "thirdparty/UVAtlas/UVAtlas", "thirdparty/UVAtlas/UVAtlas/inc", "thirdparty/UVAtlas/UVAtlas/geodesics" }
 	
 	disablewarnings { "4530" }
 	

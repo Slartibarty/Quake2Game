@@ -1,12 +1,12 @@
 [submodule "external/zlib"]
-	path = external/zlib
+	path = thirdparty/zlib
 	url = https://github.com/madler/zlib
 [submodule "external/libpng"]
-	path = external/libpng
+	path = thirdparty/libpng
 	url = https://git.code.sf.net/p/libpng/code
 [submodule "external/stb"]
-	path = external/stb
+	path = thirdparty/stb
 	url = https://github.com/nothings/stb.git
 [submodule "external/UVAtlas"]
-	path = external/UVAtlas
+	path = thirdparty/UVAtlas
 	url = https://github.com/microsoft/UVAtlas.git
