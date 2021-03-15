@@ -22,7 +22,6 @@
 #include "files.h"
 #include "msg.h"
 #include "net.h"
-#include "pmove.h"
 #include "protocol.h"
 #include "sizebuf.h"
 #include "sys.h"

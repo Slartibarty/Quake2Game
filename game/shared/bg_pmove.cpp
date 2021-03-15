@@ -1,7 +1,5 @@
 
-#include "engine.h"
-
-#include "pmove.h"
+#include "bg_local.h"
 
 #define	MIN_STEP_NORMAL		0.7f	// can't step up onto very steep slopes
 #define	STEPSIZE			18

@@ -320,7 +320,6 @@ void SV_InitGameProgs (void)
 	gi.setmodel = PF_setmodel;
 	gi.inPVS = PF_inPVS;
 	gi.inPHS = PF_inPHS;
-	gi.Pmove = Pmove;
 
 	gi.modelindex = SV_ModelIndex;
 	gi.soundindex = SV_SoundIndex;

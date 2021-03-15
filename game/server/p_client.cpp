@@ -1620,7 +1620,7 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 		pm.playsound = PM_PlaySound;
 
 		// perform a pmove
-		gi.Pmove (&pm);
+		Pmove (&pm);
 
 		// save results of pmove
 		client->ps.pmove = pm.s;
