@@ -260,17 +260,6 @@ skipwhite:
 	*data_p = data;
 }
 
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-void Com_PageInMemory (byte *buffer, int size)
-{
-	static int paged_total;
-	int i;
-
-	for (i=size-1 ; i>0 ; i-=4096)
-		paged_total += buffer[i];
-}
-
 float frand()
 {
 	return (rand()&32767) * (1.0f/32767.0f);

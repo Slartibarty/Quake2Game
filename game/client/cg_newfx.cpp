@@ -59,7 +59,7 @@ static void vectoangles2( vec3_t value1, vec3_t angles )
 /*
 ===============================================================================
 
-Dynamic light extensions
+	Dynamic light extensions
 
 ===============================================================================
 */
@@ -107,7 +107,7 @@ void CL_ColorFlash( vec3_t pos, int ent, int intensity, float r, float g, float 
 /*
 ===============================================================================
 
-Particle extensions
+	Particle extensions
 
 ===============================================================================
 */

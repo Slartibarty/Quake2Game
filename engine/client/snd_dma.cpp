@@ -77,13 +77,13 @@ void S_SoundInfo_f(void)
 		return;
 	}
 	
-    Com_Printf("%5d channels\n", dma.channels);
-    Com_Printf("%5d samples\n", dma.samples);
-    Com_Printf("%5d samplepos\n", dma.samplepos);
-    Com_Printf("%5d samplebits\n", dma.samplebits);
-    Com_Printf("%5d submission_chunk\n", dma.submission_chunk);
-    Com_Printf("%5d speed\n", dma.speed);
-    Com_Printf("%p dma buffer\n", dma.buffer);
+	Com_Printf("%5d channels\n", dma.channels);
+	Com_Printf("%5d samples\n", dma.samples);
+	Com_Printf("%5d samplepos\n", dma.samplepos);
+	Com_Printf("%5d samplebits\n", dma.samplebits);
+	Com_Printf("%5d submission_chunk\n", dma.submission_chunk);
+	Com_Printf("%5d speed\n", dma.speed);
+	Com_Printf("%p dma buffer\n", dma.buffer);
 }
 
 
@@ -315,7 +315,6 @@ void S_EndRegistration (void)
 {
 	int		i;
 	sfx_t	*sfx;
-	int		size;
 
 	// free any sounds not from this registration sequence
 	for (i=0, sfx=known_sfx ; i < num_sfx ; i++,sfx++)
@@ -328,14 +327,16 @@ void S_EndRegistration (void)
 				Z_Free (sfx->cache);	// from a server that didn't finish loading
 			memset (sfx, 0, sizeof(*sfx));
 		}
+#if 0
 		else
 		{	// make sure it is paged in
 			if (sfx->cache)
 			{
 				size = sfx->cache->length*sfx->cache->width;
-				Com_PageInMemory ((byte *)sfx->cache, size);
+				S_PageInMemory ((byte *)sfx->cache, size);
 			}
 		}
+#endif
 
 	}
 
@@ -360,19 +361,19 @@ S_PickChannel
 */
 channel_t *S_PickChannel(int entnum, int entchannel)
 {
-    int			ch_idx;
-    int			first_to_die;
-    int			life_left;
+	int			ch_idx;
+	int			first_to_die;
+	int			life_left;
 	channel_t	*ch;
 
 	if (entchannel<0)
 		Com_Error (ERR_DROP, "S_PickChannel: entchannel<0");
 
 // Check for replacement sound, or find the best one to replace
-    first_to_die = -1;
-    life_left = 0x7fffffff;
-    for (ch_idx=0 ; ch_idx < MAX_CHANNELS ; ch_idx++)
-    {
+	first_to_die = -1;
+	life_left = 0x7fffffff;
+	for (ch_idx=0 ; ch_idx < MAX_CHANNELS ; ch_idx++)
+	{
 		if (entchannel != 0		// channel 0 never overrides
 		&& channels[ch_idx].entnum == entnum
 		&& channels[ch_idx].entchannel == entchannel)
@@ -398,7 +399,7 @@ channel_t *S_PickChannel(int entnum, int entchannel)
 	ch = &channels[first_to_die];
 	memset (ch, 0, sizeof(*ch));
 
-    return ch;
+	return ch;
 }       
 
 /*
@@ -410,10 +411,10 @@ Used for spatializing channels and autosounds
 */
 void S_SpatializeOrigin (vec3_t origin, float master_vol, float dist_mult, int *left_vol, int *right_vol)
 {
-    vec_t		dot;
-    vec_t		dist;
-    vec_t		lscale, rscale, scale;
-    vec3_t		source_vec;
+	vec_t		dot;
+	vec_t		dist;
+	vec_t		lscale, rscale, scale;
+	vec3_t		source_vec;
 
 	if (cls.state != ca_active)
 	{
@@ -564,7 +565,7 @@ void S_IssuePlaysound (playsound_t *ps)
 
 	ch->pos = 0;
 	sc = S_LoadSound (ch->sfx);
-    ch->end = paintedtime + sc->length;
+	ch->end = paintedtime + sc->length;
 
 	// free the playsound
 	S_FreePlaysound (ps);
@@ -916,9 +917,9 @@ void S_RawSamples (int samples, int rate, int width, int channels, byte *data)
 				dst = s_rawend&(MAX_RAW_SAMPLES-1);
 				s_rawend++;
 				s_rawsamples[dst].left =
-				    LittleShort(((short *)data)[i*2]) << 8;
+					LittleShort(((short *)data)[i*2]) << 8;
 				s_rawsamples[dst].right =
-				    LittleShort(((short *)data)[i*2+1]) << 8;
+					LittleShort(((short *)data)[i*2+1]) << 8;
 			}
 		}
 		else
@@ -931,9 +932,9 @@ void S_RawSamples (int samples, int rate, int width, int channels, byte *data)
 				dst = s_rawend&(MAX_RAW_SAMPLES-1);
 				s_rawend++;
 				s_rawsamples[dst].left =
-				    LittleShort(((short *)data)[src*2]) << 8;
+					LittleShort(((short *)data)[src*2]) << 8;
 				s_rawsamples[dst].right =
-				    LittleShort(((short *)data)[src*2+1]) << 8;
+					LittleShort(((short *)data)[src*2+1]) << 8;
 			}
 		}
 	}
@@ -947,9 +948,9 @@ void S_RawSamples (int samples, int rate, int width, int channels, byte *data)
 			dst = s_rawend&(MAX_RAW_SAMPLES-1);
 			s_rawend++;
 			s_rawsamples[dst].left =
-			    LittleShort(((short *)data)[src]) << 8;
+				LittleShort(((short *)data)[src]) << 8;
 			s_rawsamples[dst].right =
-			    LittleShort(((short *)data)[src]) << 8;
+				LittleShort(((short *)data)[src]) << 8;
 		}
 	}
 	else if (channels == 2 && width == 1)
@@ -962,9 +963,9 @@ void S_RawSamples (int samples, int rate, int width, int channels, byte *data)
 			dst = s_rawend&(MAX_RAW_SAMPLES-1);
 			s_rawend++;
 			s_rawsamples[dst].left =
-			    ((char *)data)[src*2] << 16;
+				((char *)data)[src*2] << 16;
 			s_rawsamples[dst].right =
-			    ((char *)data)[src*2+1] << 16;
+				((char *)data)[src*2+1] << 16;
 		}
 	}
 	else if (channels == 1 && width == 1)
@@ -977,7 +978,7 @@ void S_RawSamples (int samples, int rate, int width, int channels, byte *data)
 			dst = s_rawend&(MAX_RAW_SAMPLES-1);
 			s_rawend++;
 			s_rawsamples[dst].left =
-			    (((byte *)data)[src]-128) << 16;
+				(((byte *)data)[src]-128) << 16;
 			s_rawsamples[dst].right = (((byte *)data)[src]-128) << 16;
 		}
 	}
