@@ -11,8 +11,6 @@
 #include "gl_local.h"
 #include "../shared/imageloaders.h"
 
-#include "png.h"
-
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #define STBIR_MAX_CHANNELS 32
 #define STBIR_MALLOC(size,c) ((void)(c), Z_Malloc(size))
