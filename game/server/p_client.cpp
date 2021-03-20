@@ -1598,7 +1598,7 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 		memset (&pm, 0, sizeof(pm));
 
 		if (ent->movetype == MOVETYPE_NOCLIP)
-			client->ps.pmove.pm_type = PM_SPECTATOR;
+			client->ps.pmove.pm_type = PM_NOCLIP;
 		else if (ent->s.modelindex != 255)
 			client->ps.pmove.pm_type = PM_GIB;
 		else if (ent->deadflag)
@@ -1620,7 +1620,7 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 		pm.playsound = PM_PlaySound;
 
 		// perform a pmove
-		Pmove (&pm);
+		PM_Simulate (&pm);
 
 		// save results of pmove
 		client->ps.pmove = pm.s;

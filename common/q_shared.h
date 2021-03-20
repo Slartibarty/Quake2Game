@@ -414,22 +414,26 @@ struct trace_t
 // prediction
 enum pmtype_t
 {
-	// can accelerate and turn
+	// Can accelerate and turn:
+
 	PM_NORMAL,
-	PM_SPECTATOR,	// noclip movement
-	// no acceleration or turning
-	PM_DEAD,
-	PM_GIB,			// different bounding box
-	PM_FREEZE		// stuck in place with no control
+	PM_SPECTATOR,	// Flying without gravity but with collision detection
+	PM_NOCLIP,		// Flying without collision detection nor gravity
+
+	// No acceleration or turning:
+
+	PM_DEAD,		// No acceleration or turning, but free falling
+	PM_GIB,			// Same as dead but with a different bounding box (SlartTodo: REMOVE THIS)
+	PM_FREEZE		// Stuck in place with no control
 };
 
 // Identifies how submerged in water a player is
-enum waterlevel_t
+enum waterLevel_t
 {
-	WL_NONE,		// Not underwater
-	WL_FEET,		// Feet are underwater
-	WL_WAIST,		// Waist is underwater
-	WL_EYES			// Eyes are underwater
+	WL_NONE,		// Not in water
+	WL_FEET,		// Feet underwater
+	WL_WAIST,		// Waist underwater
+	WL_EYES			// Eyes underwater
 };
 
 // pmove->pm_flags

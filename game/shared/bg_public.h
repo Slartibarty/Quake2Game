@@ -13,16 +13,15 @@
 /*
 ===============================================================================
 
-	Pmove module
+	Player physics
 
-	The pmove code takes a player_state_t and a usercmd_t and generates a new player_state_t
-	and some other output data.  Used for local prediction on the client game and true
-	movement on the server game.
+	Simulates the motion of a player through the environment. Input from the
+	player is used to allow a certain degree of control over the motion.
 
 ===============================================================================
 */
 
-void Pmove( pmove_t *pmove );
+void PM_Simulate( pmove_t *pmove );
 
 /*
 ===============================================================================

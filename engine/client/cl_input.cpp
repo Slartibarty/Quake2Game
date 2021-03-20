@@ -238,14 +238,14 @@ void CL_BaseMove (usercmd_t *cmd)
 	
 	VectorCopy (cl.viewangles, cmd->angles);
 
+	cmd->forwardmove += cl_forwardspeed->value * CL_KeyState( &in_forward );
+	cmd->forwardmove -= cl_forwardspeed->value * CL_KeyState( &in_back );
+
 	cmd->sidemove += cl_sidespeed->value * CL_KeyState (&in_moveright);
 	cmd->sidemove -= cl_sidespeed->value * CL_KeyState (&in_moveleft);
 
 	cmd->upmove += cl_upspeed->value * CL_KeyState (&in_up);
 	cmd->upmove -= cl_upspeed->value * CL_KeyState (&in_down);
-
-	cmd->forwardmove += cl_forwardspeed->value * CL_KeyState (&in_forward);
-	cmd->forwardmove -= cl_forwardspeed->value * CL_KeyState (&in_back);
 
 //
 // adjust for speed key / running
