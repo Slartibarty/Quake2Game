@@ -370,30 +370,34 @@ static void PM_UpdateStepSound()
 ===================
 PM_ClipVelocity
 
+Identical to g_phys.cpp ClipVelocity
+
 Slide off of the impacting surface
 ===================
 */
-static void PM_ClipVelocity( vec3_t in, vec3_t normal, vec3_t out, float overbounce )
+static void PM_ClipVelocity( const vec3_t in, const vec3_t normal, vec3_t out, float overbounce )
 {
 	float	backoff;
-	float	change;
 	int		i;
 
+	// Determine how far along plane to slide based on incoming direction
 	backoff = DotProduct( in, normal );
 
-	if ( backoff < 0.0f )
+	if ( overbounce != 1.0f )
 	{
-		backoff *= overbounce;
-	}
-	else
-	{
-		backoff /= overbounce;
+		if ( backoff < 0.0f )
+		{
+			backoff *= overbounce;
+		}
+		else
+		{
+			backoff /= overbounce;
+		}
 	}
 
 	for ( i = 0; i < 3; i++ )
 	{
-		change = normal[i] * backoff;
-		out[i] = in[i] - change;
+		out[i] = in[i] - ( normal[i] * backoff );
 	}
 }
 
@@ -408,7 +412,8 @@ Returns true if the velocity was clipped in some way
 ==================
 */
 #define	MAX_CLIP_PLANES	5
-static bool PM_SlideMove()
+
+static bool PM_SlideMove( bool gravity )
 {
 	int			bumpcount, numbumps;
 	vec3_t		dir;
@@ -422,9 +427,10 @@ static bool PM_SlideMove()
 	vec3_t		end;
 	float		time_left, allFraction;
 
-	numbumps = 4; // Bump up to four times
+	numbumps = 4;		// Bump up to four times
 
-	numplanes = 0; // Assume not sliding along any planes
+	numplanes = 0;		// Assume not sliding along any planes
+
 	VectorCopy( pml.velocity, original_velocity );
 	VectorCopy( pml.velocity, primal_velocity );
 
@@ -433,31 +439,32 @@ static bool PM_SlideMove()
 
 	for ( bumpcount = 0; bumpcount < numbumps; bumpcount++ )
 	{
-		if ( !pml.velocity[0] && !pml.velocity[1] && !pml.velocity[2] )
+		if ( !pml.velocity[0] && !pml.velocity[1] && !pml.velocity[2] ) {
 			break;
+		}
 
-		// Assume we can move all the way from the current origin to the
-		//  end point.
-		for ( i = 0; i < 3; i++ )
-			end[i] = pml.origin[i] + time_left * pml.velocity[i];
+		// calculate position we are trying to move to
+		VectorMA( pml.origin, time_left, pml.velocity, end );
 
+		// see if we can make it there
 		trace = pm->trace( pml.origin, pm->mins, pm->maxs, end );
 
 		allFraction += trace.fraction;
+
 		// If we started in a solid object, or we were in solid space
 		//  the whole way, zero out our velocity and return that we
 		//  are blocked by floor and wall.
-		if ( trace.allsolid )
-		{	// entity is completely trapped in another solid
-			VectorClear( pml.velocity );		// Zero out all velocity
+		if ( trace.allsolid ) {
+			// entity is completely trapped in another solid
+			VectorClear( pml.velocity );
 			return true;
 		}
 
 		// If we moved some portion of the total distance, then
 		//  copy the end position into the pml.origin and 
 		//  zero the plane counter.
-		if ( trace.fraction > 0.0f )
-		{	// actually covered some distance
+		if ( trace.fraction > 0.0f ) {
+			// actually covered some distance
 			VectorCopy( trace.endpos, pml.origin );
 			VectorCopy( pml.velocity, original_velocity );
 			numplanes = 0;
@@ -465,28 +472,26 @@ static bool PM_SlideMove()
 
 		// If we covered the entire distance, we are done
 		//  and can return.
-		if ( trace.fraction == 1 )
-			break;		// moved the entire distance
-
-	   //if (!trace.ent)
-	   //	Com_Error (ERR_FATAL, "PM_PlayerTrace: !trace.ent");
+		if ( trace.fraction == 1 ) {
+			// moved the entire distance
+			break;
+		}
 
 		// Save entity that blocked us (since fraction was < 1.0)
 		//  for contact
 		// Add it if it's not already in the list!!!
-		if ( pm->numtouch < MAXTOUCH && trace.ent )
-		{
+		if ( pm->numtouch < MAXTOUCH && trace.ent ) {
 			pm->touchents[pm->numtouch] = trace.ent;
 			pm->numtouch++;
-		} // SlartTodo: This block differs
+		}
 
 		// Reduce amount of pmove->frametime left by total time left * fraction
 		//  that we covered.
 		time_left -= time_left * trace.fraction;
 
 		// Did we run out of planes to clip against?
-		if ( numplanes >= MAX_CLIP_PLANES )
-		{	// this shouldn't really happen
+		if ( numplanes >= MAX_CLIP_PLANES ) {
+			// this shouldn't really happen
 			//  Stop our movement if so.
 			VectorClear( pml.velocity );
 			assert( 0 );
@@ -500,17 +505,22 @@ static bool PM_SlideMove()
 		//
 		// modify original_velocity so it parallels all of the clip planes
 		//
-		if ( ( !pm->groundentity ) || ( pm_friction != 1 ) )	// relfect player velocity
+
+		// reflect player velocity (UNUSEDUNUSED: NOTE THE && 0!)
+		if ( !pm->groundentity || pm_friction != 1 && 0 )
 		{
 			for ( i = 0; i < numplanes; i++ )
 			{
 				if ( planes[i][2] > MIN_STEP_NORMAL )
-				{// floor or slope
+				{
+					// floor or slope
 					PM_ClipVelocity( original_velocity, planes[i], new_velocity, OVERCLIP );
 					VectorCopy( new_velocity, original_velocity );
 				}
 				else
-					PM_ClipVelocity( original_velocity, planes[i], new_velocity, OVERCLIP + /*pmove->movevars->bounce*/ 0 * ( 1.0f - pm_friction ) );
+				{
+					PM_ClipVelocity( original_velocity, planes[i], new_velocity, OVERCLIP + /*sv_bounce*/ 0 * ( 1.0f - pm_friction ) );
+				}
 			}
 
 			VectorCopy( new_velocity, pml.velocity );
@@ -520,36 +530,37 @@ static bool PM_SlideMove()
 		{
 			for ( i = 0; i < numplanes; i++ )
 			{
-				PM_ClipVelocity(
-					original_velocity,
-					planes[i],
-					pml.velocity,
-					OVERCLIP );
+				PM_ClipVelocity( original_velocity, planes[i], pml.velocity, OVERCLIP );
+
 				for ( j = 0; j < numplanes; j++ )
+				{
 					if ( j != i )
 					{
 						// Are we now moving against this plane?
-						if ( DotProduct( pml.velocity, planes[j] ) < 0 )
-							break;	// not ok
+						if ( DotProduct( pml.velocity, planes[j] ) < 0.0f ) {
+							// not ok
+							break;
+						}
 					}
-				if ( j == numplanes )  // Didn't have to clip, so we're ok
+				}
+				if ( j == numplanes ) {
+					// Didn't have to clip, so we're ok
 					break;
+				}
 			}
 
 			// Did we go all the way through plane set
 			if ( i != numplanes )
 			{
 				// go along this plane
-				// pmove->velocity is set in clipping call, no need to set again.
+				// velocity is set in clipping call, no need to set again.
 			}
 			else
-			{	// go along the crease
+			{
+				// go along the crease
 				if ( numplanes != 2 )
 				{
-					//Con_Printf ("clip velocity, numplanes == %i\n",numplanes);
 					VectorClear( pml.velocity );
-					//Con_DPrintf("Trapped 4\n");
-
 					return true;
 				}
 				CrossProduct( planes[0], planes[1], dir );
@@ -563,7 +574,6 @@ static bool PM_SlideMove()
 			//
 			if ( DotProduct( pml.velocity, primal_velocity ) <= 0 )
 			{
-				//Con_DPrintf("Back\n");
 				VectorClear( pml.velocity );
 				return true;
 			}
@@ -573,23 +583,16 @@ static bool PM_SlideMove()
 	if ( allFraction == 0 )
 	{
 		VectorClear( pml.velocity );
-		//Con_DPrintf( "Don't stick\n" );
 		return true;
 	}
-
-	/*if (pm->s.pm_time)
-	{
-		VectorCopy (primal_velocity, pml.velocity);
-	}*/
 
 	return ( bumpcount != 0 );
 }
 
 /*
-==================
+===================
 PM_StepSlideMove
-
-==================
+===================
 */
 static void PM_StepSlideMove()
 {
@@ -597,15 +600,16 @@ static void PM_StepSlideMove()
 	vec3_t		down_o, down_v;
 	trace_t		trace;
 	float		down_dist, up_dist;
-	//	vec3_t		delta;
+//	vec3_t		delta;
 	vec3_t		up, down;
 
 	VectorCopy( pml.origin, start_o );
 	VectorCopy( pml.velocity, start_v );
 
-	if ( !PM_SlideMove() )
+	if ( !PM_SlideMove( true ) )
 	{
-		return;		// we got exactly where we wanted to go first try
+		// we got exactly where we wanted to go first try
+		return;
 	}
 
 	VectorCopy( pml.origin, down_o );
@@ -622,7 +626,7 @@ static void PM_StepSlideMove()
 	VectorCopy( up, pml.origin );
 	VectorCopy( start_v, pml.velocity );
 
-	PM_SlideMove();
+	PM_SlideMove( true );
 
 	// push down the final amount
 	VectorCopy( pml.origin, down );
@@ -673,6 +677,11 @@ static void PM_Friction()
 	float	speed, newspeed, control;
 	float	friction;
 	float	drop;
+
+	// If we are in water jump cycle, don't apply friction
+	if ( pm->s.pm_flags & PMF_TIME_WATERJUMP ) {
+		return;
+	}
 
 	// Calculate speed
 	speed = VectorLength( pml.velocity );
@@ -941,7 +950,84 @@ PM_WaterJumpMove
 */
 static void PM_WaterJumpMove()
 {
+	pml.velocity[2] -= pm->s.gravity * pml.frameTime;
+	if ( pml.velocity[2] < 0 )
+	{	// cancel as soon as we are falling down again
+		pm->s.pm_flags &= ~( PMF_TIME_WATERJUMP | PMF_TIME_TELEPORT );
+		pm->s.pm_time = 0;
+	}
 
+	PM_StepSlideMove();
+}
+
+/*
+===================
+PM_CheckJump
+===================
+*/
+static void PM_CheckJump()
+{
+	if ( pm->cmd.upmove < 10 )
+	{	// not holding jump
+		pm->s.pm_flags &= ~PMF_JUMP_HELD;
+		return;
+	}
+
+	// must wait for jump to be released
+	if ( pm->s.pm_flags & PMF_JUMP_HELD )
+		return;
+
+	if ( pm->s.pm_type == PM_DEAD )
+		return;
+
+	if ( pm->waterlevel >= 2 )
+	{	// swimming, not jumping
+		pm->groundentity = NULL;
+
+		if ( pml.velocity[2] <= -300.0f )
+			return;
+
+		if ( pm->watertype == CONTENTS_WATER )
+			pml.velocity[2] = 100.0f;
+		else if ( pm->watertype == CONTENTS_SLIME )
+			pml.velocity[2] = 80.0f;
+		else
+			pml.velocity[2] = 50.0f;
+
+		// play swiming sound
+		if ( pm->s.swim_time <= 0 )
+		{
+			// Don't play sound again for 1 second
+			pm->s.swim_time = 1000;
+			switch ( HackRandom( 0, 3 ) )
+			{
+			case 0:
+				pm->playsound( "player/footsteps/wade1.wav", 1.0f );
+				break;
+			case 1:
+				pm->playsound( "player/footsteps/wade2.wav", 1.0f );
+				break;
+			case 2:
+				pm->playsound( "player/footsteps/wade3.wav", 1.0f );
+				break;
+			case 3:
+				pm->playsound( "player/footsteps/wade4.wav", 1.0f );
+				break;
+			}
+		}
+
+		return;
+	}
+
+	if ( pm->groundentity == NULL )
+		return;		// in air, so no effect
+
+	PM_PlayStepSound( SurfaceTypeFromFlags( pml.groundTrace.surface->flags ), 1.0f );
+
+	pm->s.pm_flags |= PMF_JUMP_HELD;
+
+	pm->groundentity = NULL;
+	pml.velocity[2] = JUMP_VELOCITY;
 }
 
 /*
@@ -955,6 +1041,9 @@ static void PM_WaterMove (void)
 	vec3_t	wishvel;
 	float	wishspeed;
 	vec3_t	wishdir;
+
+	PM_CheckJump();
+	PM_Friction();
 
 //
 // user intentions
@@ -988,7 +1077,6 @@ static void PM_WaterMove (void)
 /*
 ===================
 PM_AirMove
-
 ===================
 */
 static void PM_AirMove (void)
@@ -1000,6 +1088,9 @@ static void PM_AirMove (void)
 	float		wishspeed;
 	float		maxspeed;
 	float		scale;
+
+	PM_CheckJump();
+	PM_Friction();
 
 	// Copy movement amounts
 	fmove = pm->cmd.forwardmove;
@@ -1215,78 +1306,6 @@ static void PM_CategorizePosition( void )
 	}
 }
 
-
-/*
-=============
-PM_CheckJump
-=============
-*/
-static void PM_CheckJump (void)
-{
-	if (pm->cmd.upmove < 10)
-	{	// not holding jump
-		pm->s.pm_flags &= ~PMF_JUMP_HELD;
-		return;
-	}
-
-	// must wait for jump to be released
-	if (pm->s.pm_flags & PMF_JUMP_HELD)
-		return;
-
-	if (pm->s.pm_type == PM_DEAD)
-		return;
-
-	if (pm->waterlevel >= 2)
-	{	// swimming, not jumping
-		pm->groundentity = NULL;
-
-		if (pml.velocity[2] <= -300.0f)
-			return;
-
-		if (pm->watertype == CONTENTS_WATER)
-			pml.velocity[2] = 100.0f;
-		else if (pm->watertype == CONTENTS_SLIME)
-			pml.velocity[2] = 80.0f;
-		else
-			pml.velocity[2] = 50.0f;
-
-		// play swiming sound
-		if ( pm->s.swim_time <= 0 )
-		{
-			// Don't play sound again for 1 second
-			pm->s.swim_time = 1000;
-			switch ( HackRandom( 0, 3 ) )
-			{ 
-			case 0:
-				pm->playsound( "player/footsteps/wade1.wav", 1.0f );
-				break;
-			case 1:
-				pm->playsound( "player/footsteps/wade2.wav", 1.0f );
-				break;
-			case 2:
-				pm->playsound( "player/footsteps/wade3.wav", 1.0f );
-				break;
-			case 3:
-				pm->playsound( "player/footsteps/wade4.wav", 1.0f );
-				break;
-			}
-		}
-
-		return;
-	}
-
-	if (pm->groundentity == NULL)
-		return;		// in air, so no effect
-
-	PM_PlayStepSound( SurfaceTypeFromFlags( pml.groundTrace.surface->flags ), 1.0f );
-
-	pm->s.pm_flags |= PMF_JUMP_HELD;
-
-	pm->groundentity = NULL;
-	pml.velocity[2] = JUMP_VELOCITY;
-}
-
-
 /*
 =============
 PM_CheckSpecialMovement
@@ -1371,7 +1390,7 @@ static void PM_SpectatorMove()
 
 	PM_Accelerate( wishdir, wishspeed, pm_flyaccelerate );
 
-	PM_SlideMove();
+	PM_SlideMove( false );
 }
 
 /*
@@ -1442,8 +1461,7 @@ static void PM_DeadMove()
 	}
 
 	// extra friction
-	forward = VectorLength( pml.velocity );
-	forward -= 20.0f;
+	forward = VectorLength( pml.velocity ) - 20.0f;
 	if ( forward <= 0.0f ) {
 		VectorClear( pml.velocity );
 	}
@@ -1507,27 +1525,6 @@ static void PM_CheckDuck()
 		pm->maxs[2] = STAND_HEIGHT;
 		pm->viewheight = STAND_VIEWHEIGHT;
 	}
-}
-
-/*
-===================
-PM_GoodPosition
-===================
-*/
-static bool PM_GoodPosition()
-{
-	trace_t trace;
-	vec3_t start, end;
-
-	if ( pm->s.pm_type == PM_SPECTATOR )
-		return true;
-
-	VectorCopy( pm->s.origin, start );
-	VectorCopy( pm->s.origin, end );
-
-	trace = pm->trace( start, pm->mins, pm->maxs, end );
-
-	return !trace.allsolid;
 }
 
 /*
@@ -1709,43 +1706,26 @@ void PM_Simulate( pmove_t *pmove )
 	// handle timers
 	PM_ReduceTimers();
 
-	// Move
+	// move
 	if ( pm->s.pm_type == PM_DEAD ) {
+		// dead
 		PM_DeadMove();
 	}
 	else if ( pm->s.pm_flags & PMF_TIME_WATERJUMP ) {
 		// jumping out of water
-		pml.velocity[2] -= pm->s.gravity * pml.frameTime;
-		if ( pml.velocity[2] < 0 )
-		{	// cancel as soon as we are falling down again
-			pm->s.pm_flags &= ~( PMF_TIME_WATERJUMP | PMF_TIME_TELEPORT );
-			pm->s.pm_time = 0;
-		}
-
-		PM_StepSlideMove();
+		PM_WaterJumpMove();
+	}
+	else if ( pm->waterlevel > 1 ) {
+		// swimming
+		PM_WaterMove();
+	}
+	else if ( pm->groundentity ) {
+		// walking on ground
+		PM_AirMove();
 	}
 	else {
-		PM_CheckJump();
-
-		PM_Friction();
-
-		if ( pm->waterlevel >= 2 )
-		{
-			PM_WaterMove();
-		}
-		else
-		{
-			vec3_t	angles;
-
-			VectorCopy( pm->viewangles, angles );
-			if ( angles[PITCH] > 180 )
-				angles[PITCH] = angles[PITCH] - 360;
-			angles[PITCH] /= 3;
-
-			AngleVectors( angles, pml.forward, pml.right, pml.up );
-
-			PM_AirMove();
-		}
+		// airborne
+		PM_AirMove();
 	}
 
 	// set groundentity, watertype, and waterlevel for final spot

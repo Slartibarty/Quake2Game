@@ -412,7 +412,7 @@ struct trace_t
 
 // pmove_state_t is the information necessary for client side movement
 // prediction
-enum pmtype_t
+enum pmType_t
 {
 	// Can accelerate and turn:
 
@@ -452,7 +452,7 @@ enum waterLevel_t
 // will result in a prediction error of some degree.
 struct pmove_state_t
 {
-	pmtype_t	pm_type;
+	pmType_t	pm_type;
 
 	vec3_t		origin;
 	vec3_t		velocity;
