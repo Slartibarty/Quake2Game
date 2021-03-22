@@ -426,9 +426,9 @@ ed should be a properly initialized empty edict.
 */
 char *ED_ParseEdict (char *data, edict_t *ent)
 {
-	qboolean	init;
-	char		keyname[256];
-	char		*com_token;
+	bool	init;
+	char	keyname[256];
+	char	*com_token;
 
 	init = false;
 	memset (&st, 0, sizeof(st));
@@ -536,15 +536,13 @@ void SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 	int			inhibit;
 	char		*com_token;
 	int			i;
-	float		skill_level;
+	int			skill_level;
 
-	skill_level = floor (skill->value);
-	if (skill_level < 0)
-		skill_level = 0;
-	if (skill_level > 3)
-		skill_level = 3;
-	if (skill->value != skill_level)
-		gi.cvar_forceset("skill", va("%f", skill_level));
+	skill_level = Clamp( (int)skill->value, 0, 3 );
+	if ( skill->value != skill_level ) {
+		// intify it
+		gi.cvar_forceset( "skill", va( "%d", skill_level ) );
+	}
 
 	SaveClientData ();
 

@@ -800,10 +800,10 @@ void CL_ParseTEnt()
 
 		ex = CL_AllocExplosion();
 		VectorCopy( pos, ex->ent.origin );
-		ex->ent.angles[0] = RadiansToDegrees( acosf( dir[2] ) );
+		ex->ent.angles[0] = RAD2DEG( acosf( dir[2] ) );
 	// PMM - fixed to correct for pitch of 0
 		if ( dir[0] )
-			ex->ent.angles[1] = RadiansToDegrees( atan2f( dir[1], dir[0] ) );
+			ex->ent.angles[1] = RAD2DEG( atan2f( dir[1], dir[0] ) );
 		else if ( dir[1] > 0 )
 			ex->ent.angles[1] = 90;
 		else if ( dir[1] < 0 )
@@ -1008,10 +1008,10 @@ void CL_ParseTEnt()
 
 		ex = CL_AllocExplosion();
 		VectorCopy( pos, ex->ent.origin );
-		ex->ent.angles[0] = RadiansToDegrees( acosf( dir[2] ) );
+		ex->ent.angles[0] = RAD2DEG( acosf( dir[2] ) );
 	// PMM - fixed to correct for pitch of 0
 		if ( dir[0] )
-			ex->ent.angles[1] = RadiansToDegrees( atan2f( dir[1], dir[0] ) );
+			ex->ent.angles[1] = RAD2DEG( atan2f( dir[1], dir[0] ) );
 		else if ( dir[1] > 0 )
 			ex->ent.angles[1] = 90;
 		else if ( dir[1] < 0 )

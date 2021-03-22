@@ -900,7 +900,7 @@ static void Studio_CalcBoneAdj( studiohdr_t *phdr )
 		case STUDIO_XR:
 		case STUDIO_YR:
 		case STUDIO_ZR:
-			m_adj[j] = DegreesToRadians( value );
+			m_adj[j] = DEG2RAD( value );
 			break;
 		case STUDIO_X:
 		case STUDIO_Y:

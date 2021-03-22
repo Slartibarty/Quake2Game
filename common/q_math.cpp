@@ -51,10 +51,10 @@ void RotatePointAroundVector( vec3_t dst, const vec3_t dir, const vec3_t point, 
 	memset( zrot, 0, sizeof( zrot ) );
 	zrot[0][0] = zrot[1][1] = zrot[2][2] = 1.0f;
 
-	zrot[0][0] = cosf( DegreesToRadians( degrees ) );
-	zrot[0][1] = sinf( DegreesToRadians( degrees ) );
-	zrot[1][0] = -sinf( DegreesToRadians( degrees ) );
-	zrot[1][1] = cosf( DegreesToRadians( degrees ) );
+	zrot[0][0] = cosf( DEG2RAD( degrees ) );
+	zrot[0][1] = sinf( DEG2RAD( degrees ) );
+	zrot[1][0] = -sinf( DEG2RAD( degrees ) );
+	zrot[1][1] = cosf( DEG2RAD( degrees ) );
 
 	R_ConcatRotations( m, zrot, tmpmat );
 	R_ConcatRotations( tmpmat, im, rot );

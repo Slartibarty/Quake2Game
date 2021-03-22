@@ -197,25 +197,33 @@ Auto pitching on slopes?
 
 ===============
 */
-void SV_CalcViewOffset (edict_t *ent)
+
+static constexpr float DAMAGE_DEFLECT_TIME = MS2SEC( 100.0f );
+static constexpr float DAMAGE_RETURN_TIME = MS2SEC( 400.0f );
+
+static constexpr float LAND_DEFLECT_TIME = MS2SEC( 150.0f );
+static constexpr float LAND_RETURN_TIME = MS2SEC( 300.0f );
+
+void SV_CalcViewOffset( edict_t *ent )
 {
-#if 0
+	float		*origin;
 	float		*angles;
 	float		bob;
 	float		ratio;
 	float		delta;
-	vec3_t		v;
-
+	float		speed;
+	float		f;
 
 //===================================
 
 	// base angles
+
 	angles = ent->client->ps.kick_angles;
 
 	// if dead, fix the angle and don't add any kick
-	if (ent->deadflag)
+	if ( ent->deadflag )
 	{
-		VectorClear (angles);
+		VectorClear( angles );
 
 		ent->client->ps.viewangles[ROLL] = 40;
 		ent->client->ps.viewangles[PITCH] = -15;
@@ -225,46 +233,62 @@ void SV_CalcViewOffset (edict_t *ent)
 	{
 		// add angles based on weapon kick
 
-		VectorCopy (ent->client->kick_angles, angles);
+		VectorCopy( ent->client->kick_angles, angles );
 
 		// add angles based on damage kick
 
-		ratio = (ent->client->v_dmg_time - level.time) / DAMAGE_TIME;
-		if (ratio < 0)
-		{
-			ratio = 0;
-			ent->client->v_dmg_pitch = 0;
-			ent->client->v_dmg_roll = 0;
+		if ( ent->client->v_dmg_time ) {
+			ratio = level.time - ent->client->v_dmg_time;
+			if ( ratio < DAMAGE_DEFLECT_TIME ) {
+				ratio /= DAMAGE_DEFLECT_TIME;
+				angles[PITCH] += ratio * ent->client->v_dmg_pitch;
+				angles[ROLL] += ratio * ent->client->v_dmg_roll;
+			}
+			else {
+				ratio = 1.0f - ( ratio - DAMAGE_DEFLECT_TIME ) / DAMAGE_RETURN_TIME;
+				if ( ratio > 0.0f ) {
+					angles[PITCH] += ratio * ent->client->v_dmg_pitch;
+					angles[ROLL] += ratio * ent->client->v_dmg_roll;
+				}
+			}
 		}
-		angles[PITCH] += ratio * ent->client->v_dmg_pitch;
-		angles[ROLL] += ratio * ent->client->v_dmg_roll;
 
 		// add pitch based on fall kick
 
-		ratio = (ent->client->fall_time - level.time) / FALL_TIME;
-		if (ratio < 0)
+#if 0
+		ratio = ( ent->client->fall_time - level.time ) / FALL_TIME;
+		if ( ratio < 0 )
 			ratio = 0;
 		angles[PITCH] += ratio * ent->client->fall_value;
+#endif
 
 		// add angles based on velocity
 
-		delta = DotProduct (ent->velocity, forward);
-		angles[PITCH] += delta*run_pitch->value;
-		
-		delta = DotProduct (ent->velocity, right);
-		angles[ROLL] += delta*run_roll->value;
+		delta = DotProduct( ent->velocity, forward );
+		angles[PITCH] += delta * run_pitch->value;
+
+		delta = DotProduct( ent->velocity, right );
+		angles[ROLL] += delta * run_roll->value;
 
 		// add angles based on bob
 
-		delta = bobfracsin * bob_pitch->value * xyspeed;
-		if (ent->client->ps.pmove.pm_flags & PMF_DUCKED)
-			delta *= 6;		// crouching
+		// make sure the bob is visible even at low speeds
+		speed = xyspeed; // ( xyspeed > 200 ) ? xyspeed : 200
+
+		delta = bobfracsin * bob_pitch->value * speed;
+		if ( ent->client->ps.pmove.pm_flags & PMF_DUCKED ) {
+			// crouching
+			delta *= 3;
+		}
 		angles[PITCH] += delta;
-		delta = bobfracsin * bob_roll->value * xyspeed;
-		if (ent->client->ps.pmove.pm_flags & PMF_DUCKED)
-			delta *= 6;		// crouching
-		if (bobcycle & 1)
+		delta = bobfracsin * bob_roll->value * speed;
+		if ( ent->client->ps.pmove.pm_flags & PMF_DUCKED ) {
+			// crouching
+			delta *= 3;
+		}
+		if ( bobcycle & 1 ) {
 			delta = -delta;
+		}
 		angles[ROLL] += delta;
 	}
 
@@ -272,63 +296,36 @@ void SV_CalcViewOffset (edict_t *ent)
 
 	// base origin
 
-	VectorClear (v);
+	origin = ent->client->ps.viewoffset;
+	VectorClear( origin );
 
 	// add view height
 
-	v[2] += ent->viewheight;
-
-	// add fall height
-
-	ratio = (ent->client->fall_time - level.time) / FALL_TIME;
-	if (ratio < 0)
-		ratio = 0;
-	v[2] -= ratio * ent->client->fall_value * 0.4f;
+	origin[2] += ent->viewheight;
 
 	// add bob height
 
 	bob = bobfracsin * xyspeed * bob_up->value;
-	if (bob > 6)
+	if ( bob > 6 ) {
 		bob = 6;
-	//gi.DebugGraph (bob *2, 255);
-	v[2] += bob;
+	}
+	origin[2] += bob;
+
+	// add fall height
+
+	delta = level.time - ent->client->fall_time;
+	if ( delta < LAND_DEFLECT_TIME ) {
+		f = delta / LAND_DEFLECT_TIME;
+		origin[2] += ent->client->fall_value * f;
+	} else if ( delta < LAND_DEFLECT_TIME + LAND_RETURN_TIME ) {
+		delta -= LAND_DEFLECT_TIME;
+		f = 1.0f - ( delta / LAND_RETURN_TIME );
+		origin[2] += ent->client->fall_value * f;
+	}
 
 	// add kick offset
 
-	VectorAdd (v, ent->client->kick_origin, v);
-
-	// absolutely bound offsets
-	// so the view can never be outside the player box
-
-	if (v[0] < -14)
-		v[0] = -14;
-	else if (v[0] > 14)
-		v[0] = 14;
-	if (v[1] < -14)
-		v[1] = -14;
-	else if (v[1] > 14)
-		v[1] = 14;
-	if (v[2] < -22)
-		v[2] = -22;
-	else if (v[2] > 30)
-		v[2] = 30;
-
-	VectorCopy (v, ent->client->ps.viewoffset);
-#else
-	// Slart: For now, just do this, testing pmove
-
-	vec3_t v;
-
-	// base origin
-
-	VectorClear (v);
-
-	// add view height
-
-	v[2] += ent->viewheight;
-
-	VectorCopy (v, ent->client->ps.viewoffset);
-#endif
+	VectorAdd( origin, ent->client->kick_origin, origin );
 }
 
 /*
@@ -336,50 +333,55 @@ void SV_CalcViewOffset (edict_t *ent)
 SV_CalcGunOffset
 ==============
 */
-void SV_CalcGunOffset (edict_t *ent)
+void SV_CalcGunOffset( edict_t *ent )
 {
-	int		i;
+	float	scale;
 	float	delta;
+	float	fracsin;
+
+	vec3_t	&origin = ent->client->ps.gunoffset;
+	vec3_t	&angles = ent->client->ps.gunangles;
+
+	VectorClear( origin );
+	VectorClear( angles );
+
+	// on odd legs, invert some angles
+	if ( bobcycle & 1 ) {
+		scale = -xyspeed;
+	} else {
+		scale = xyspeed;
+	}
 
 	// gun angles from bobbing
-	ent->client->ps.gunangles[ROLL] = xyspeed * bobfracsin * 0.005f;
-	ent->client->ps.gunangles[YAW] = xyspeed * bobfracsin * 0.01f;
-	if (bobcycle & 1)
-	{
-		ent->client->ps.gunangles[ROLL] = -ent->client->ps.gunangles[ROLL];
-		ent->client->ps.gunangles[YAW] = -ent->client->ps.gunangles[YAW];
+	angles[PITCH]	+= xyspeed * bobfracsin * 0.005f;
+	angles[YAW]		+= scale * bobfracsin * 0.01f;
+	angles[ROLL]	+= scale * bobfracsin * 0.005f;
+
+	// drop the weapon when landing
+	delta = level.time - ent->client->fall_time;
+	if ( delta < LAND_DEFLECT_TIME ) {
+		origin[2] += ent->client->fall_value * 0.25f * delta / LAND_DEFLECT_TIME;
+	} else if ( delta < LAND_DEFLECT_TIME + LAND_RETURN_TIME ) {
+		origin[2] += ent->client->fall_value * 0.25f *
+			( LAND_DEFLECT_TIME + LAND_RETURN_TIME - delta ) / LAND_RETURN_TIME;
 	}
 
-	ent->client->ps.gunangles[PITCH] = xyspeed * bobfracsin * 0.005f;
-
-	// gun angles from delta movement
-	for (i=0 ; i<3 ; i++)
-	{
-		delta = ent->client->oldviewangles[i] - ent->client->ps.viewangles[i];
-		if (delta > 180)
-			delta -= 360;
-		if (delta < -180)
-			delta += 360;
-		if (delta > 45)
-			delta = 45;
-		if (delta < -45)
-			delta = -45;
-		if (i == YAW)
-			ent->client->ps.gunangles[ROLL] += 0.1f*delta;
-		ent->client->ps.gunangles[i] += 0.2f * delta;
-	}
-
-	// gun height
-	VectorClear (ent->client->ps.gunoffset);
-//	ent->ps->gunorigin[2] += bob;
+	// idle drift
+	scale = xyspeed + 40.0f;
+	fracsin = sin( level.time );
+	angles[PITCH]	+= scale * fracsin * 0.01f;
+	angles[YAW]		+= scale * fracsin * 0.01f;
+	angles[ROLL]	+= scale * fracsin * 0.01f;
 
 	// gun_x / gun_y / gun_z are development tools
+#if 0
 	for (i=0 ; i<3 ; i++)
 	{
-		ent->client->ps.gunoffset[i] += forward[i]*(gun_y->value);
-		ent->client->ps.gunoffset[i] += right[i]*gun_x->value;
-		ent->client->ps.gunoffset[i] += up[i]* (-gun_z->value);
+		origin[i] += forward[i]*(gun_y->value);
+		origin[i] += right[i]*gun_x->value;
+		origin[i] += up[i]* (-gun_z->value);
 	}
+#endif
 }
 
 
@@ -421,7 +423,7 @@ void SV_CalcBlend (edict_t *ent)
 	// add for contents
 	VectorAdd (ent->s.origin, ent->client->ps.viewoffset, vieworg);
 	contents = gi.pointcontents (vieworg);
-	if (contents & (CONTENTS_LAVA|CONTENTS_SLIME|CONTENTS_WATER) )
+	if (contents & MASK_WATER )
 		ent->client->ps.rdflags |= RDF_UNDERWATER;
 	else
 		ent->client->ps.rdflags &= ~RDF_UNDERWATER;
@@ -524,37 +526,34 @@ void P_FallingDamage (edict_t *ent)
 	if (ent->waterlevel == 1)
 		delta *= 0.5f;
 
-	if (delta < 1)
-		return;
-
 	if (delta < 15)
-	{
-		//ent->s.event = EV_FOOTSTEP;
 		return;
-	}
 
 	ent->client->fall_value = delta*0.5f;
-	if (ent->client->fall_value > 40)
+	if ( ent->client->fall_value > 40 ) {
 		ent->client->fall_value = 40;
-	ent->client->fall_time = level.time + FALL_TIME;
+	}
+	ent->client->fall_time = level.time + LAND_RETURN_TIME;
 
-	if (delta > 30)
-	{
-		if (ent->health > 0)
-		{
-			if (delta >= 55)
+	if (delta > 30) {
+		if (ent->health > 0) {
+			if ( delta >= 55 ) {
 				ent->s.event = EV_FALLFAR;
-			else
+			}
+			else {
 				ent->s.event = EV_FALL;
+			}
 		}
 		ent->pain_debounce_time = level.time;	// no normal pain sound
 		damage = (delta-30)/2;
-		if (damage < 1)
+		if ( damage < 1 ) {
 			damage = 1;
+		}
 		VectorSet (dir, 0, 0, 1);
 
-		if (!deathmatch->value || !((int)dmflags->value & DF_NO_FALLING) )
-			T_Damage (ent, world, world, dir, ent->s.origin, vec3_origin, damage, 0, 0, MOD_FALLING);
+		if ( !deathmatch->value || !( (int)dmflags->value & DF_NO_FALLING ) ) {
+			T_Damage( ent, world, world, dir, ent->s.origin, vec3_origin, damage, 0, 0, MOD_FALLING );
+		}
 	}
 	else
 	{

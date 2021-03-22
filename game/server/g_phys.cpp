@@ -2,6 +2,8 @@
 
 #include "g_local.h"
 
+#define	MIN_STEP_NORMAL		0.7f	// can't step up onto very steep slopes
+
 /*
 
 pushmove objects do not obey gravity, and do not interact with each other or trigger fields, but block normal movement and push normal objects when they move.
@@ -210,7 +212,7 @@ static int SV_FlyMove( edict_t *ent, float time, int mask )
 
 		hit = trace.ent;
 
-		if ( trace.plane.normal[2] > 0.7 )
+		if ( trace.plane.normal[2] > MIN_STEP_NORMAL )
 		{
 			blocked |= 1;		// floor
 			if ( hit->solid == SOLID_BSP )
@@ -705,7 +707,7 @@ static void SV_Physics_Toss( edict_t *ent )
 		ClipVelocity( ent->velocity, trace.plane.normal, ent->velocity, backoff );
 
 	// stop if on ground
-		if ( trace.plane.normal[2] > 0.7f )
+		if ( trace.plane.normal[2] > MIN_STEP_NORMAL )
 		{
 			if ( ent->velocity[2] < 60 || ent->movetype != MOVETYPE_BOUNCE )
 			{

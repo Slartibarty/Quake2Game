@@ -7,11 +7,11 @@ static int r_dlightframecount;
 #define	DLIGHT_CUTOFF	64
 
 /*
-=============================================================================
+===============================================================================
 
 DYNAMIC LIGHTS BLEND RENDERING
 
-=============================================================================
+===============================================================================
 */
 
 static void R_RenderDlight (dlight_t *light)
@@ -235,7 +235,7 @@ int RecursiveLightPoint (mnode_t *node, vec3_t start, vec3_t end)
 		dt >>= 4;
 
 		lightmap = surf->samples;
-		VectorCopy (vec3_origin, pointcolor);
+		VectorClear( pointcolor );
 		if (lightmap)
 		{
 			vec3_t scale;
@@ -278,7 +278,7 @@ void R_LightPoint (vec3_t p, vec3_t color)
 	vec3_t		dist;
 	float		add;
 	
-	if (!r_worldmodel->lightdata)
+	if (!r_worldmodel->lightdata || r_fullbright->value)
 	{
 		color[0] = color[1] = color[2] = 1.0f;
 		return;
@@ -292,11 +292,11 @@ void R_LightPoint (vec3_t p, vec3_t color)
 	
 	if (r == -1)
 	{
-		VectorCopy (vec3_origin, color);
+		VectorClear( color );
 	}
 	else
 	{
-		VectorCopy (pointcolor, color);
+		VectorCopy( pointcolor, color );
 	}
 
 	//
@@ -310,7 +310,7 @@ void R_LightPoint (vec3_t p, vec3_t color)
 						dl->origin,
 						dist);
 		add = dl->intensity - VectorLength(dist);
-		add *= (1.0/256);
+		add *= (1.0f/256);
 		if (add > 0)
 		{
 			VectorMA (color, add, dl->color, color);

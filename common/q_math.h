@@ -232,36 +232,22 @@ inline int Q_rint( float a )
 // Unit conversions
 //=================================================================================================
 
-// Legacy
-inline float DegreesToRadians( float degrees )
+inline constexpr float DEG2RAD( float degrees )
 {
 	return degrees * mconst::DegreesToRadians;
 }
 
-// Legacy
-inline float RadiansToDegrees( float radians )
+inline constexpr float RAD2DEG( float radians )
 {
 	return radians * mconst::RadiansToDegrees;
 }
 
-// Use these new macro-like functions
-
-inline float DEG2RAD( float degrees )
-{
-	return degrees * mconst::DegreesToRadians;
-}
-
-inline float RAD2DEG( float radians )
-{
-	return radians * mconst::RadiansToDegrees;
-}
-
-inline float SEC2MS( float seconds )
+inline constexpr float SEC2MS( float seconds )
 {
 	return seconds * mconst::SecondsToMilliseconds;
 }
 
-inline float MS2SEC( float milliseconds )
+inline constexpr float MS2SEC( float milliseconds )
 {
 	return milliseconds * mconst::MillisecondsToSeconds;
 }
