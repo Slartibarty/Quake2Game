@@ -279,7 +279,7 @@ void GL_DrawAliasFrameLerp (dmdl_t *paliashdr, float backlerp)
 GL_DrawAliasShadow
 =============
 */
-extern	vec3_t			lightspot;
+extern vec3_t	lightspot;
 
 void GL_DrawAliasShadow (dmdl_t *paliashdr, int posenum)
 {
@@ -681,7 +681,7 @@ void R_DrawAliasModel (entity_t *e)
 
 	shadedots = r_avertexnormal_dots[((int)(currententity->angles[1] * (SHADEDOT_QUANT / 360.0f))) & (SHADEDOT_QUANT - 1)];
 	
-	an = currententity->angles[1]/180*M_PI_F;
+	an = RAD2DEG( currententity->angles[1] );
 	shadevector[0] = cos(-an);
 	shadevector[1] = sin(-an);
 	shadevector[2] = 1;
