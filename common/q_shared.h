@@ -327,10 +327,11 @@ char	*Sys_FindNext (unsigned musthave, unsigned canthave);
 void	Sys_FindClose (void);
 
 
-// this is only here so the functions in q_shared.c and q_shwin.c can link
+// Log functions that must be implemented by the project
 [[noreturn]]
-void Com_Error( int code, _Printf_format_string_ const char *fmt, ... );
 void Com_Printf( _Printf_format_string_ const char *fmt, ... );
+void Com_DPrintf( _Printf_format_string_ const char *fmt, ... );
+void Com_Error( int code, _Printf_format_string_ const char *fmt, ... );
 
 //-------------------------------------------------------------------------------------------------
 // CVARS - cvars.cpp
@@ -573,7 +574,6 @@ struct pmove_t
 #define	RF_SHELL_GREEN		2048
 #define RF_SHELL_BLUE		4096
 
-// SlartMissionPack
 //ROGUE
 #define RF_IR_VISIBLE		0x00008000		// 32768
 #define	RF_SHELL_DOUBLE		0x00010000		// 65536

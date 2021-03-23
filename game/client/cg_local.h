@@ -4,7 +4,7 @@
 #include "../../common/q_shared.h"
 
 #include "../../common/q_formats.h"
-#include "../../engine/renderer/ref_public.h"
+#include "../../engine/renderer/ref_types.h"
 #include "../shared/bg_public.h"
 #include "cg_public.h"
 

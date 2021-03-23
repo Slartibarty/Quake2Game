@@ -192,31 +192,25 @@ void Draw_TileClear( int x, int y, int w, int h, const char *pic )
 //-------------------------------------------------------------------------------------------------
 void Draw_Fill( int x, int y, int w, int h, int c )
 {
-	union
-	{
-		uint	c;
-		byte	v[4];
-	} color;
-
-	if ( c > 255 )
+	assert( c >= 0 && c < 255 );
+	if ( c > 255 ) {
 		Com_Error( ERR_FATAL, "Draw_Fill: bad color" );
+	}
 
 	glDisable( GL_TEXTURE_2D );
 
-	color.c = d_8to24table[c];
-	glColor3f( color.v[0] / 255.0f,
-		color.v[1] / 255.0f,
-		color.v[2] / 255.0f );
+	byte *color = (byte *)d_8to24table[c];
+	glColor3f( color[0] / 255.0f, color[1] / 255.0f, color[2] / 255.0f );
 
 	glBegin( GL_QUADS );
-
 	glVertex2i( x, y );
 	glVertex2i( x + w, y );
 	glVertex2i( x + w, y + h );
 	glVertex2i( x, y + h );
-
 	glEnd();
+
 	glColor3f( 1.0f, 1.0f, 1.0f );
+
 	glEnable( GL_TEXTURE_2D );
 }
 
