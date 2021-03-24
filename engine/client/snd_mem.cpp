@@ -260,7 +260,7 @@ static void FindNextChunk(const char *name)
 			return;
 		}
 //		if (iff_chunk_len > 1024*1024)
-//			Com_Error (ERR_FATAL, "FindNextChunk: %i length is past the 1 meg sanity limit", iff_chunk_len);
+//			Com_FatalErrorf("FindNextChunk: %i length is past the 1 meg sanity limit", iff_chunk_len);
 		data_p -= 8;
 		last_chunk = data_p + 8 + ( (iff_chunk_len + 1) & ~1 );
 		if (!Q_strncmp((char*)data_p, name, 4))
@@ -363,7 +363,7 @@ wavinfo_t GetWavinfo (char *name, byte *wav, int wavlength)
 	if (info.samples)
 	{
 		if (samples < info.samples)
-			Com_Error (ERR_DROP, "Sound %s has a bad loop length", name);
+			Com_Errorf ("Sound %s has a bad loop length", name);
 	}
 	else
 		info.samples = samples;

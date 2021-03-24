@@ -192,7 +192,7 @@ void SV_Multicast (vec3_t origin, multicast_t to)
 
 	default:
 		mask = NULL;
-		Com_Error (ERR_FATAL, "SV_Multicast: bad to:%i", to);
+		Com_FatalErrorf("SV_Multicast: bad to:%i", to);
 	}
 
 	// send the data to all relevent clients
@@ -262,16 +262,16 @@ void SV_StartSound (vec3_t origin, edict_t *entity, int channel,
 	qboolean	use_phs;
 
 	if (volume < 0 || volume > 1.0)
-		Com_Error (ERR_FATAL, "SV_StartSound: volume = %f", volume);
+		Com_FatalErrorf("SV_StartSound: volume = %f", volume);
 
 	if (attenuation < 0 || attenuation > 4)
-		Com_Error (ERR_FATAL, "SV_StartSound: attenuation = %f", attenuation);
+		Com_FatalErrorf("SV_StartSound: attenuation = %f", attenuation);
 
 //	if (channel < 0 || channel > 15)
-//		Com_Error (ERR_FATAL, "SV_StartSound: channel = %i", channel);
+//		Com_FatalErrorf("SV_StartSound: channel = %i", channel);
 
 	if (timeofs < 0 || timeofs > 0.255)
-		Com_Error (ERR_FATAL, "SV_StartSound: timeofs = %f", timeofs);
+		Com_FatalErrorf("SV_StartSound: timeofs = %f", timeofs);
 
 	ent = NUM_FOR_EDICT(entity);
 
@@ -499,7 +499,7 @@ void SV_SendClientMessages (void)
 				return;
 			}
 			if (msglen > MAX_MSGLEN)
-				Com_Error (ERR_DROP, "SV_SendClientMessages: msglen > MAX_MSGLEN");
+				Com_Errorf ("SV_SendClientMessages: msglen > MAX_MSGLEN");
 			r = fread (msgbuf, msglen, 1, sv.demofile);
 			if (r != 1)
 			{

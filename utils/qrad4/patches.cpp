@@ -214,7 +214,7 @@ static materialref_t *MaterialForTexinfo( texinfo_t *tex )
 		}
 	}
 
-	Com_Error( ERR_FATAL, "Couldn't get material entry for %s", tex->texture );
+	Com_FatalErrorf("Couldn't get material entry for %s", tex->texture );
 }
 
 /*

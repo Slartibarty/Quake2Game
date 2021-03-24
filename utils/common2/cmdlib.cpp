@@ -123,10 +123,10 @@ void SetQdirFromPath (char *path)
 				}
 				c++;
 			}
-			Com_Error (ERR_FATAL, "No gamedir in %s", path);
+			Com_FatalErrorf("No gamedir in %s", path);
 			return;
 		}
-	Com_Error (ERR_FATAL, "SetQdirFromPath: no '%s' in %s", BASEDIRNAME, path);
+	Com_FatalErrorf("SetQdirFromPath: no '%s' in %s", BASEDIRNAME, path);
 }
 
 /*
@@ -163,7 +163,7 @@ FILE *SafeOpenWrite (char *filename)
 	f = fopen(filename, "wb");
 
 	if (!f)
-		Com_Error (ERR_FATAL, "Error opening %s: %s",filename,strerror(errno));
+		Com_FatalErrorf("Error opening %s: %s",filename,strerror(errno));
 
 	return f;
 }
@@ -175,7 +175,7 @@ FILE *SafeOpenRead (char *filename)
 	f = fopen(filename, "rb");
 
 	if (!f)
-		Com_Error (ERR_FATAL, "Error opening %s: %s",filename,strerror(errno));
+		Com_FatalErrorf("Error opening %s: %s",filename,strerror(errno));
 
 	return f;
 }
@@ -184,14 +184,14 @@ FILE *SafeOpenRead (char *filename)
 void SafeRead (FILE *f, void *buffer, int count)
 {
 	if ( fread (buffer, 1, count, f) != (size_t)count)
-		Com_Error (ERR_FATAL, "File read failure");
+		Com_FatalErrorf("File read failure");
 }
 
 
 void SafeWrite (FILE *f, void *buffer, int count)
 {
 	if (fwrite (buffer, 1, count, f) != (size_t)count)
-		Com_Error (ERR_FATAL, "File write failure");
+		Com_FatalErrorf("File write failure");
 }
 
 
@@ -280,7 +280,7 @@ char *ExpandPath( char *path )
 {
 	static char full[1024];
 	if ( !qdir )
-		Com_Error( ERR_FATAL, "ExpandPath called without qdir set" );
+		Com_FatalErrorf("ExpandPath called without qdir set" );
 	if ( path[0] == '/' || path[0] == '\\' || path[1] == ':' )
 		return path;
 	Q_sprintf_s( full, "%s%s", qdir, path );

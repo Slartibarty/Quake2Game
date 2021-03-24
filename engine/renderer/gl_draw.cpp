@@ -21,7 +21,7 @@ void Draw_InitLocal( void )
 }
 
 //-------------------------------------------------------------------------------------------------
-// Draws one 8*8 graphics character with 0 being transparent.
+// Draws one graphics character with 0 being transparent.
 // It can be clipped to the top of the screen to allow the console to be
 // smoothly scrolled off.
 //-------------------------------------------------------------------------------------------------
@@ -194,12 +194,12 @@ void Draw_Fill( int x, int y, int w, int h, int c )
 {
 	assert( c >= 0 && c < 255 );
 	if ( c > 255 ) {
-		Com_Error( ERR_FATAL, "Draw_Fill: bad color" );
+		Com_FatalErrorf("Draw_Fill: bad color" );
 	}
 
 	glDisable( GL_TEXTURE_2D );
 
-	byte *color = (byte *)d_8to24table[c];
+	byte *color = (byte *)&d_8to24table[c];
 	glColor3f( color[0] / 255.0f, color[1] / 255.0f, color[2] / 255.0f );
 
 	glBegin( GL_QUADS );
@@ -221,14 +221,14 @@ void Draw_FadeScreen( void )
 	glEnable( GL_BLEND );
 	glDisable( GL_TEXTURE_2D );
 	glColor4f( 0.0f, 0.0f, 0.0f, 0.8f );
-	glBegin( GL_QUADS );
 
+	glBegin( GL_QUADS );
 	glVertex2i( 0, 0 );
 	glVertex2i( r_newrefdef.width, 0 );
 	glVertex2i( r_newrefdef.width, r_newrefdef.height );
 	glVertex2i( 0, r_newrefdef.height );
-
 	glEnd();
+
 	glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
 	glEnable( GL_TEXTURE_2D );
 	glDisable( GL_BLEND );
@@ -243,7 +243,7 @@ extern unsigned	r_rawpalette[256];
 //-------------------------------------------------------------------------------------------------
 void Draw_StretchRaw( int x, int y, int w, int h, int cols, int rows, byte *data )
 {
-	uint		image32[256 * 256];
+	static uint	image32[256 * 256];
 	int			i, j, trows;
 	byte		*source;
 	int			frac, fracstep;

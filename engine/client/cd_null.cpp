@@ -1,4 +1,3 @@
-#include "../../common/q_types.h"
 
 bool CDAudio_Init()
 {

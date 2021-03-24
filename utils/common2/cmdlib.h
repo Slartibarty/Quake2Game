@@ -11,7 +11,7 @@ void Com_DPrintf( _Printf_format_string_ const char *fmt, ... );
 void Com_Error( int code, _Printf_format_string_ const char *fmt, ... );
 
 #define qprintf( ... ) Com_DPrintf( __VA_ARGS__ )
-#define Error( ... ) Com_Error( ERR_FATAL, __VA_ARGS__ )
+#define Error( ... ) Com_FatalErrorf(__VA_ARGS__ )
 
 // Game directory, replace with filesystem
 extern char qdir[1024];

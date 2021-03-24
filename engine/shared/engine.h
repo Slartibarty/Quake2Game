@@ -79,7 +79,6 @@ typedef void (*rd_flush_t)(int target, char *buffer);
 
 void		Com_BeginRedirect (int target, char *buffer, int buffersize, rd_flush_t flush);
 void		Com_EndRedirect (void);
-void		Com_Print_Internal( const char *msg );
 [[noreturn]]
 void		Com_Disconnect();
 [[noreturn]]

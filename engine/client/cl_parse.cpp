@@ -298,7 +298,7 @@ void CL_ParseServerData (void)
 	{
 	}
 	else if (i != PROTOCOL_VERSION)
-		Com_Error (ERR_DROP,"Server returned version %i, not %i", i, PROTOCOL_VERSION);
+		Com_Errorf ("Server returned version %i, not %i", i, PROTOCOL_VERSION);
 
 	cl.servercount = MSG_ReadLong (&net_message);
 	cl.attractloop = MSG_ReadByte (&net_message);
@@ -511,7 +511,7 @@ void CL_ParseConfigString (void)
 
 	i = MSG_ReadShort (&net_message);
 	if (i < 0 || i >= MAX_CONFIGSTRINGS)
-		Com_Error (ERR_DROP, "configstring > MAX_CONFIGSTRINGS");
+		Com_Errorf ("configstring > MAX_CONFIGSTRINGS");
 	s = MSG_ReadString(&net_message);
 
 	Q_strcpy_s (olds, cl.configstrings[i]);
@@ -606,7 +606,7 @@ void CL_ParseStartSoundPacket(void)
 		channel = MSG_ReadShort(&net_message); 
 		ent = channel>>3;
 		if (ent > MAX_EDICTS)
-			Com_Error (ERR_DROP,"CL_ParseStartSoundPacket: ent = %i", ent);
+			Com_Errorf ("CL_ParseStartSoundPacket: ent = %i", ent);
 
 		channel &= 7;
 	}
@@ -665,7 +665,7 @@ void CL_ParseServerMessage (void)
 	{
 		if (net_message.readcount > net_message.cursize)
 		{
-			Com_Error (ERR_DROP,"CL_ParseServerMessage: Bad server message");
+			Com_Errorf ("CL_ParseServerMessage: Bad server message");
 			break;
 		}
 
@@ -689,7 +689,7 @@ void CL_ParseServerMessage (void)
 		switch (cmd)
 		{
 		default:
-			Com_Error (ERR_DROP,"CL_ParseServerMessage: Illegible server message\n");
+			Com_Errorf ("CL_ParseServerMessage: Illegible server message\n");
 			break;
 			
 		case svc_nop:
@@ -697,7 +697,6 @@ void CL_ParseServerMessage (void)
 			break;
 			
 		case svc_disconnect:
-			Com_Print( "Server disconnected\n" );
 			Com_Disconnect();
 			break;
 
@@ -782,7 +781,7 @@ void CL_ParseServerMessage (void)
 		case svc_playerinfo:
 		case svc_packetentities:
 		case svc_deltapacketentities:
-			Com_Error (ERR_DROP, "Out of place frame data");
+			Com_Errorf ("Out of place frame data");
 			break;
 		}
 	}

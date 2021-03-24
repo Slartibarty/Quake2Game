@@ -13,7 +13,7 @@ Called just after the DLL is loaded
 */
 void CG_Init()
 {
-	cgi.Printf( "==== CG_Init ====\n" );
+	Com_Print( "==== CG_Init ====\n" );
 }
 
 /*
@@ -25,7 +25,7 @@ Called before the DLL is unloaded
 */
 void CG_Shutdown()
 {
-	cgi.Printf( "==== CG_Shutdown ====\n" );
+	Com_Print( "==== CG_Shutdown ====\n" );
 }
 
 extern void CL_AddTEnts();
@@ -251,29 +251,76 @@ cgame_export_t *GetCGameAPI( cgame_import_t *import )
 
 #ifndef CGAME_HARD_LINKED
 
-// this is only here so the functions in q_shared.c and q_shwin.c can link
-void Com_Error( int code, _Printf_format_string_ const char *fmt, ... )
+void Com_Print( const char *msg )
 {
-	va_list		argptr;
-	char		text[MAX_PRINT_MSG];
-
-	va_start( argptr, fmt );
-	Q_vsprintf_s( text, fmt, argptr );
-	va_end( argptr );
-
-	cgi.Errorf( code, "%s", text );
+	cgi.Print( msg );
 }
 
 void Com_Printf( _Printf_format_string_ const char *fmt, ... )
 {
 	va_list		argptr;
-	char		text[MAX_PRINT_MSG];
+	char		msg[MAX_PRINT_MSG];
 
 	va_start( argptr, fmt );
-	Q_vsprintf_s( text, fmt, argptr );
+	Q_vsprintf_s( msg, fmt, argptr );
 	va_end( argptr );
 
-	cgi.Printf( "%s", text );
+	Com_Print( msg );
+}
+
+void Com_DPrint( const char *msg )
+{
+	cgi.DPrint( msg );
+}
+
+void Com_DPrintf( _Printf_format_string_ const char *fmt, ... )
+{
+	va_list		argptr;
+	char		msg[MAX_PRINT_MSG];
+
+	va_start( argptr, fmt );
+	Q_vsprintf_s( msg, fmt, argptr );
+	va_end( argptr );
+
+	Com_DPrint( msg );
+}
+
+[[noreturn]]
+void Com_Error( const char *msg )
+{
+	cgi.Error( msg );
+}
+
+[[noreturn]]
+void Com_Errorf( _Printf_format_string_ const char *fmt, ... )
+{
+	va_list		argptr;
+	char		msg[MAX_PRINT_MSG];
+
+	va_start( argptr, fmt );
+	Q_vsprintf_s( msg, fmt, argptr );
+	va_end( argptr );
+
+	Com_Error( msg );
+}
+
+[[noreturn]]
+void Com_FatalError( const char *msg )
+{
+	cgi.FatalError( msg );
+}
+
+[[noreturn]]
+void Com_FatalErrorf( _Printf_format_string_ const char *fmt, ... )
+{
+	va_list		argptr;
+	char		msg[MAX_PRINT_MSG];
+
+	va_start( argptr, fmt );
+	Q_vsprintf_s( msg, fmt, argptr );
+	va_end( argptr );
+
+	Com_FatalError( msg );
 }
 
 #endif

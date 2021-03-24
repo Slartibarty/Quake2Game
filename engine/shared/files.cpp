@@ -115,14 +115,14 @@ static pack_t *FS_LoadPackFile( const char *packfile )
 
 	fread( &header, 1, sizeof( header ), packhandle );
 	if ( LittleLong( header.ident ) != IDPAKHEADER )
-		Com_Error( ERR_FATAL, "%s is not a packfile", packfile );
+		Com_FatalErrorf("%s is not a packfile", packfile );
 	header.dirofs = LittleLong( header.dirofs );
 	header.dirlen = LittleLong( header.dirlen );
 
 	numpackfiles = header.dirlen / sizeof( dpackfile_t );
 
 	if ( numpackfiles > MAX_FILES_IN_PACK )
-		Com_Error( ERR_FATAL, "%s has %d files, time for a new file format...", packfile, numpackfiles );
+		Com_FatalErrorf("%s has %d files, time for a new file format...", packfile, numpackfiles );
 
 	fseek( packhandle, header.dirofs, SEEK_SET );
 
@@ -368,7 +368,7 @@ int FS_FOpenFile( const char *filename, FILE **file )
 					// open a new file on the pakfile
 					*file = fopen( pak->filename, "rb" );
 					if ( !*file )
-						Com_Error( ERR_FATAL, "Couldn't reopen %s", pak->filename );
+						Com_FatalErrorf("Couldn't reopen %s", pak->filename );
 					fseek( *file, pak->files[i].filepos, SEEK_SET );
 					return pak->files[i].filelen;
 				}
@@ -418,7 +418,7 @@ void FS_Read( void *buffer, int len, FILE *f )
 	read = fread( buffer, len, 1, f );
 
 	if ( read == 0 ) {
-		Com_Error( ERR_FATAL, "FS_Read: 0 bytes read" );
+		Com_FatalErrorf("FS_Read: 0 bytes read" );
 	}
 }
 

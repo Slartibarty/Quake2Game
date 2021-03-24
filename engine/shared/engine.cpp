@@ -73,7 +73,16 @@ void Com_EndRedirect (void)
 	rd_flush = NULL;
 }
 
-void Com_Print_Internal( const char *msg )
+/*
+===================
+Com_Print
+
+Both client and server can use this, and it will output
+to the apropriate place.
+===================
+*/
+
+void Com_Print( const char *msg )
 {
 	if ( rd_target )
 	{
@@ -113,19 +122,6 @@ void Com_Print_Internal( const char *msg )
 	}
 }
 
-/*
-===================
-Com_Print
-
-Both client and server can use this, and it will output
-to the apropriate place.
-===================
-*/
-void Com_Print( const char *msg )
-{
-	Com_Print_Internal( msg );
-}
-
 void Com_Printf( _Printf_format_string_ const char *fmt, ... )
 {
 	va_list		argptr;
@@ -135,7 +131,7 @@ void Com_Printf( _Printf_format_string_ const char *fmt, ... )
 	Q_vsprintf_s( msg, fmt, argptr );
 	va_end( argptr );
 
-	Com_Print_Internal( msg );
+	Com_Print( msg );
 }
 
 /*
@@ -145,12 +141,13 @@ Com_DPrint
 A Com_Print that only shows up if the "developer" cvar is set
 ===================
 */
+
 void Com_DPrint( const char *msg )
 {
 	if ( !developer || !developer->value )
 		return;
 
-	Com_Print_Internal( msg );
+	Com_Print( msg );
 }
 
 void Com_DPrintf( _Printf_format_string_ const char *fmt, ... )
@@ -165,7 +162,7 @@ void Com_DPrintf( _Printf_format_string_ const char *fmt, ... )
 	Q_vsprintf_s( msg, fmt, argptr );
 	va_end( argptr );
 
-	Com_Print_Internal( msg );
+	Com_Print( msg );
 }
 
 /*
@@ -176,6 +173,7 @@ The peaceful option
 Equivalent to an old Com_Error( ERR_DROP )
 ===================
 */
+
 [[noreturn]]
 void Com_Error( const char *msg )
 {
@@ -221,6 +219,7 @@ Equivalent to an old Com_Error( ERR_FATAL )
 Kills the server, kills the client, shuts the engine down and quits the program
 ===================
 */
+
 [[noreturn]]
 void Com_FatalError( const char *msg )
 {
@@ -257,6 +256,7 @@ Drops the client from the server and returns to the beginning of the main loop
 [[noreturn]]
 void Com_Disconnect()
 {
+	Com_Print( "Server disconnected\n" );
 	CL_Drop();
 	longjmp( abortframe, -1 );
 }
@@ -354,7 +354,7 @@ void COM_InitArgv (int argc, char **argv)
 	int		i;
 
 	if (argc > MAX_NUM_ARGVS)
-		Com_Error (ERR_FATAL, "argc > MAX_NUM_ARGVS");
+		Com_FatalErrorf("argc > MAX_NUM_ARGVS");
 	com_argc = argc;
 	for (i=0 ; i<argc ; i++)
 	{
@@ -375,7 +375,7 @@ Adds the given string at the end of the current argument list
 void COM_AddParm (char *parm)
 {
 	if (com_argc == MAX_NUM_ARGVS)
-		Com_Error (ERR_FATAL, "COM_AddParm: MAX_NUM_ARGVS");
+		Com_FatalErrorf("COM_AddParm: MAX_NUM_ARGVS");
 	com_argv[com_argc++] = parm;
 }
 
@@ -509,7 +509,7 @@ byte	COM_BlockSequenceCRCByte (byte *base, int length, int sequence)
 
 
 	if (sequence < 0)
-		Com_Error(ERR_FATAL, "sequence < 0, this shouldn't happen\n");
+		Com_FatalError("sequence < 0, this shouldn't happen\n");
 
 	p = chktbl + (sequence % (sizeof(chktbl) - 4));
 
@@ -556,9 +556,9 @@ static void Com_Error_f()
 {
 	if ( Cmd_Argc() == 2 )
 	{
-		Com_Error( ERR_FATAL, Cmd_Argv( 1 ) );
+		Com_FatalErrorf(Cmd_Argv( 1 ) );
 	}
-	Com_Error( ERR_FATAL, "Error test" );
+	Com_FatalErrorf("Error test" );
 }
 
 /*
@@ -582,7 +582,7 @@ Engine_Init
 void Engine_Init (int argc, char **argv)
 {
 	if (setjmp (abortframe) )
-		Com_Error (ERR_FATAL, "Error during initialization");
+		Com_FatalErrorf("Error during initialization");
 
 	Z_Init();
 

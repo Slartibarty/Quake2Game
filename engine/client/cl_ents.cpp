@@ -237,10 +237,10 @@ void CL_ParsePacketEntities (frame_t *oldframe, frame_t *newframe)
 	{
 		newnum = CL_ParseEntityBits (&bits);
 		if (newnum >= MAX_EDICTS)
-			Com_Error (ERR_DROP,"CL_ParsePacketEntities: bad number:%i", newnum);
+			Com_Errorf ("CL_ParsePacketEntities: bad number:%i", newnum);
 
 		if (net_message.readcount > net_message.cursize)
-			Com_Error (ERR_DROP,"CL_ParsePacketEntities: end of message");
+			Com_Error ("CL_ParsePacketEntities: end of message");
 
 		if (!newnum)
 			break;
@@ -547,14 +547,14 @@ void CL_ParseFrame (void)
 	cmd = MSG_ReadByte (&net_message);
 	SHOWNET(svc_strings[cmd]);
 	if (cmd != svc_playerinfo)
-		Com_Error (ERR_DROP, "CL_ParseFrame: not playerinfo");
+		Com_Errorf ("CL_ParseFrame: not playerinfo");
 	CL_ParsePlayerstate (old, &cl.frame);
 
 	// read packet entities
 	cmd = MSG_ReadByte (&net_message);
 	SHOWNET(svc_strings[cmd]);
 	if (cmd != svc_packetentities)
-		Com_Error (ERR_DROP, "CL_ParseFrame: not packetentities");
+		Com_Errorf ("CL_ParseFrame: not packetentities");
 	CL_ParsePacketEntities (old, &cl.frame);
 
 #if 0
@@ -1187,7 +1187,7 @@ void CL_GetEntitySoundOrigin (int ent, vec3_t org)
 	centity_t	*old;
 
 	if (ent < 0 || ent >= MAX_EDICTS)
-		Com_Error (ERR_DROP, "CL_GetEntitySoundOrigin: bad ent");
+		Com_Errorf ("CL_GetEntitySoundOrigin: bad ent");
 	old = &cl_entities[ent];
 	VectorCopy (old->lerp_origin, org);
 

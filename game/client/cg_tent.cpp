@@ -1192,7 +1192,7 @@ void CL_ParseTEnt()
 //==============
 
 	default:
-		cgi.Errorf( ERR_DROP, "CL_ParseTEnt: bad type" );
+		Com_Error( "CL_ParseTEnt: bad type" );
 	}
 }
 

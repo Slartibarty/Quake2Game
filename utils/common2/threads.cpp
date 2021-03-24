@@ -113,7 +113,7 @@ void ThreadLock()
 		return;
 	EnterCriticalSection( &crit );
 	if ( enter )
-		Com_Error( ERR_FATAL, "Recursive ThreadLock\n" );
+		Com_FatalErrorf("Recursive ThreadLock\n" );
 	enter = 1;
 }
 
@@ -122,7 +122,7 @@ void ThreadUnlock()
 	if ( !threaded )
 		return;
 	if ( !enter )
-		Com_Error( ERR_FATAL, "ThreadUnlock without lock\n" );
+		Com_FatalErrorf("ThreadUnlock without lock\n" );
 	enter = 0;
 	LeaveCriticalSection( &crit );
 }

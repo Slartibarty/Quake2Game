@@ -601,7 +601,7 @@ void CL_Disconnect (void)
 
 void CL_Disconnect_f (void)
 {
-	Com_Error (ERR_DROP, "Disconnected from server");
+	Com_Errorf ("Disconnected from server");
 }
 
 
@@ -1246,7 +1246,7 @@ void CL_RequestNextDownload (void)
 		CM_LoadMap (cl.configstrings[CS_MODELS+1], true, &map_checksum);
 
 		if (map_checksum != atoi(cl.configstrings[CS_MAPCHECKSUM])) {
-			Com_Error (ERR_DROP, "Local map version differs from server: %i != '%s'\n",
+			Com_Errorf ("Local map version differs from server: %i != '%s'\n",
 				map_checksum, cl.configstrings[CS_MAPCHECKSUM]);
 			return;
 		}

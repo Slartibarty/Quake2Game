@@ -1,5 +1,7 @@
 // server.h
 
+#pragma once
+
 #include "../shared/engine.h"
 #include "../../game/server/game_public.h"
 

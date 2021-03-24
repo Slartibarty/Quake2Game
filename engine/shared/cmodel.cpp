@@ -253,12 +253,12 @@ static void CMod_LoadSubmodels( byte *cmod_base, lump_t *l )
 	dmodel_t *in = (dmodel_t *)( cmod_base + l->fileofs );
 	if ( l->filelen % sizeof( *in ) )
 	{
-		Com_Error( ERR_DROP, "CM_LoadMap: Funny lump size" );
+		Com_Errorf("CM_LoadMap: Funny lump size" );
 	}
 	int count = l->filelen / sizeof( *in );
 	if ( count < 1 )
 	{
-		Com_Error( ERR_DROP, "Map with no models" );
+		Com_Errorf("Map with no models" );
 	}
 
 	cm.cmodels.PrepForNewData( count );
@@ -287,12 +287,12 @@ static void CMod_LoadSurfaces( byte *cmod_base, lump_t *l )
 	texinfo_t *in = (texinfo_t *)( cmod_base + l->fileofs );
 	if ( l->filelen % sizeof( *in ) )
 	{
-		Com_Error( ERR_DROP, "CM_LoadMap: Funny lump size" );
+		Com_Errorf("CM_LoadMap: Funny lump size" );
 	}
 	int count = l->filelen / sizeof( *in );
 	if ( count < 1 )
 	{
-		Com_Error( ERR_DROP, "Map with no surfaces" );
+		Com_Errorf("Map with no surfaces" );
 	}
 
 	cm.surfaces.PrepForNewData( count );
@@ -315,12 +315,12 @@ static void CMod_LoadNodes( byte *cmod_base, lump_t *l )
 	dnode_t *in = (dnode_t *)( cmod_base + l->fileofs );
 	if ( l->filelen % sizeof( *in ) )
 	{
-		Com_Error( ERR_DROP, "CM_LoadMap: Funny lump size" );
+		Com_Errorf("CM_LoadMap: Funny lump size" );
 	}
 	int count = l->filelen / sizeof( *in );
 	if ( count < 1 )
 	{
-		Com_Error( ERR_DROP, "Map with no nodes" );
+		Com_Errorf("Map with no nodes" );
 	}
 
 	cm.nodes.PrepForNewData( count, 6 );
@@ -346,12 +346,12 @@ static void CMod_LoadBrushes( byte *cmod_base, lump_t *l )
 	dbrush_t *in = (dbrush_t *)( cmod_base + l->fileofs );
 	if ( l->filelen % sizeof( *in ) )
 	{
-		Com_Error( ERR_DROP, "CM_LoadMap: Funny lump size" );
+		Com_Errorf("CM_LoadMap: Funny lump size" );
 	}
 	int count = l->filelen / sizeof( *in );
 	if ( count < 1 )
 	{
-		Com_Error( ERR_DROP, "Map with no brushes" );
+		Com_Errorf("Map with no brushes" );
 	}
 
 	cm.brushes.PrepForNewData( count, 1 );
@@ -375,12 +375,12 @@ static void CMod_LoadLeafs( byte *cmod_base, lump_t *l )
 	dleaf_t *in = (dleaf_t *)( cmod_base + l->fileofs );
 	if ( l->filelen % sizeof( *in ) )
 	{
-		Com_Error( ERR_DROP, "CM_LoadMap: Funny lump size" );
+		Com_Errorf("CM_LoadMap: Funny lump size" );
 	}
 	int count = l->filelen / sizeof( *in );
 	if ( count < 1 )
 	{
-		Com_Error( ERR_DROP, "Map with no leafs" );
+		Com_Errorf("Map with no leafs" );
 	}
 
 	cm.leafs.PrepForNewData( count, 1 );
@@ -402,7 +402,7 @@ static void CMod_LoadLeafs( byte *cmod_base, lump_t *l )
 
 	if ( cm.leafs.Data( 0 ).contents != CONTENTS_SOLID )
 	{
-		Com_Error( ERR_DROP, "Map leaf 0 is not CONTENTS_SOLID" );
+		Com_Errorf("Map leaf 0 is not CONTENTS_SOLID" );
 	}
 
 	cm.solidleaf = 0;
@@ -417,7 +417,7 @@ static void CMod_LoadLeafs( byte *cmod_base, lump_t *l )
 	}
 	if ( cm.emptyleaf == -1 )
 	{
-		Com_Error( ERR_DROP, "Map does not have an empty leaf" );
+		Com_Errorf("Map does not have an empty leaf" );
 	}
 }
 
@@ -431,12 +431,12 @@ static void CMod_LoadPlanes( byte *cmod_base, lump_t *l )
 	dplane_t *in = (dplane_t *)( cmod_base + l->fileofs );
 	if ( l->filelen % sizeof( *in ) )
 	{
-		Com_Error( ERR_DROP, "CM_LoadMap: Funny lump size" );
+		Com_Errorf("CM_LoadMap: Funny lump size" );
 	}
 	int count = l->filelen / sizeof( *in );
 	if ( count < 1 )
 	{
-		Com_Error( ERR_DROP, "Map with no planes" );
+		Com_Errorf("Map with no planes" );
 	}
 
 	cm.planes.PrepForNewData( count, 12 );
@@ -470,12 +470,12 @@ static void CMod_LoadLeafBrushes( byte *cmod_base, lump_t *l )
 	uint16 *in = (unsigned short *)( cmod_base + l->fileofs );
 	if ( l->filelen % sizeof( *in ) )
 	{
-		Com_Error( ERR_DROP, "CM_LoadMap: Funny lump size" );
+		Com_Errorf("CM_LoadMap: Funny lump size" );
 	}
 	int count = l->filelen / sizeof( *in );
 	if ( count < 1 )
 	{
-		Com_Error( ERR_DROP, "Map with no leaf brushes" );
+		Com_Errorf("Map with no leaf brushes" );
 	}
 
 	cm.leafbrushes.PrepForNewData( count, 1 );
@@ -498,12 +498,12 @@ static void CMod_LoadBrushSides( byte *cmod_base, lump_t *l )
 	dbrushside_t *in = (dbrushside_t *)( cmod_base + l->fileofs );
 	if ( l->filelen % sizeof( *in ) )
 	{
-		Com_Error( ERR_DROP, "CM_LoadMap: Funny lump size" );
+		Com_Errorf("CM_LoadMap: Funny lump size" );
 	}
 	int count = l->filelen / sizeof( *in );
 	if ( count < 1 )
 	{
-		Com_Error( ERR_DROP, "Map with no brush sides" );
+		Com_Errorf("Map with no brush sides" );
 	}
 
 	cm.brushsides.PrepForNewData( count, 6 );
@@ -517,7 +517,7 @@ static void CMod_LoadBrushSides( byte *cmod_base, lump_t *l )
 		int j = LittleShort( in->texinfo );
 		if ( j >= cm.surfaces.Count() )
 		{
-			Com_Error( ERR_DROP, "Bad brushside texinfo" );
+			Com_Errorf("Bad brushside texinfo" );
 		}
 		out->surface = &cm.surfaces.Data( j );
 	}
@@ -533,7 +533,7 @@ static void CMod_LoadAreas( byte *cmod_base, lump_t *l )
 	darea_t *in = (darea_t *)( cmod_base + l->fileofs );
 	if ( l->filelen % sizeof( *in ) )
 	{
-		Com_Error( ERR_DROP, "CM_LoadMap: Funny lump size" );
+		Com_Errorf("CM_LoadMap: Funny lump size" );
 	}
 	int count = l->filelen / sizeof( *in );
 	if ( count < 1 )
@@ -564,7 +564,7 @@ static void CMod_LoadAreaPortals( byte *cmod_base, lump_t *l )
 	dareaportal_t *in = (dareaportal_t *)( cmod_base + l->fileofs );
 	if ( l->filelen % sizeof( *in ) )
 	{
-		Com_Error( ERR_DROP, "CM_LoadMap: Funny lump size" );
+		Com_Errorf("CM_LoadMap: Funny lump size" );
 	}
 	int count = l->filelen / sizeof( *in );
 	if ( count < 1 )
@@ -649,7 +649,7 @@ cmodel_t *CM_LoadMap( const char *name, bool clientload, unsigned *checksum )
 
 	if ( !name || !name[0] )
 	{
-		Com_Error( ERR_DROP, "CM_LoadMap: NULL name" );
+		Com_Errorf("CM_LoadMap: NULL name" );
 	}
 
 	cm_noareas = Cvar_Get( "cm_noareas", "0", 0 );
@@ -666,7 +666,7 @@ cmodel_t *CM_LoadMap( const char *name, bool clientload, unsigned *checksum )
 
 	if ( name && name[0] == '\0' )
 	{
-		Com_Error( ERR_DROP, "CM_LoadMap: name was provided, but empty!" );
+		Com_Errorf("CM_LoadMap: name was provided, but empty!" );
 	}
 #endif
 
@@ -691,7 +691,7 @@ cmodel_t *CM_LoadMap( const char *name, bool clientload, unsigned *checksum )
 	int length = FS_LoadFile( name, (void **)&buf );
 	if ( !buf )
 	{
-		Com_Error( ERR_DROP, "Couldn't load %s", name );
+		Com_Errorf("Couldn't load %s", name );
 	}
 
 	last_checksum = LittleLong( Com_BlockChecksum( buf, length ) );
@@ -705,7 +705,7 @@ cmodel_t *CM_LoadMap( const char *name, bool clientload, unsigned *checksum )
 
 	if ( header->version != BSPVERSION )
 	{
-		Com_Error( ERR_DROP, "CM_LoadMap: %s has wrong version number (%d should be %d)"
+		Com_Errorf("CM_LoadMap: %s has wrong version number (%d should be %d)"
 			, name, header->version, BSPVERSION );
 	}
 
@@ -744,12 +744,12 @@ cmodel_t *CM_InlineModel( const char *name )
 {
 	if ( !name || name[0] != '*' )
 	{
-		Com_Error( ERR_DROP, "CM_InlineModel: bad name" );
+		Com_Errorf("CM_InlineModel: bad name" );
 	}
 	int num = atoi( name + 1 );
 	if ( num < 1 || num >= cm.cmodels.Count() )
 	{
-		Com_Error( ERR_DROP, "CM_InlineModel: bad number" );
+		Com_Errorf("CM_InlineModel: bad number" );
 	}
 
 	return &cm.cmodels.Data(num);
@@ -774,7 +774,7 @@ int CM_LeafContents( int leafnum )
 {
 	if ( leafnum < 0 || leafnum >= cm.leafs.Count() )
 	{
-		Com_Error( ERR_DROP, "CM_LeafContents: bad number" );
+		Com_Errorf("CM_LeafContents: bad number" );
 	}
 	return cm.leafs.Data(leafnum).contents;
 }
@@ -783,7 +783,7 @@ int CM_LeafCluster (int leafnum)
 {
 	if ( leafnum < 0 || leafnum >= cm.leafs.Count() )
 	{
-		Com_Error( ERR_DROP, "CM_LeafCluster: bad number" );
+		Com_Errorf("CM_LeafCluster: bad number" );
 	}
 	return cm.leafs.Data(leafnum).cluster;
 }
@@ -792,7 +792,7 @@ int CM_LeafArea( int leafnum )
 {
 	if ( leafnum < 0 || leafnum >= cm.leafs.Count() )
 	{
-		Com_Error( ERR_DROP, "CM_LeafArea: bad number" );
+		Com_Errorf("CM_LeafArea: bad number" );
 	}
 	return cm.leafs.Data(leafnum).area;
 }
@@ -827,7 +827,7 @@ void CM_InitBoxHull (void)
 		|| cm.leafbrushes.Count()+1 > MAX_MAP_LEAFBRUSHES
 		|| cm.brushsides.Count()+6 > MAX_MAP_BRUSHSIDES
 		|| cm.planes.Count()+12 > MAX_MAP_PLANES )
-		Com_Error( ERR_DROP, "Not enough room for box tree" );
+		Com_Errorf("Not enough room for box tree" );
 #endif
 
 	// Slart: This code assumes a spoof of the count, evil
@@ -1713,7 +1713,7 @@ void FloodArea_r (carea_t *area, int floodnum)
 	{
 		if (area->floodnum == floodnum)
 			return;
-		Com_Error (ERR_DROP, "FloodArea_r: reflooded");
+		Com_Errorf ("FloodArea_r: reflooded");
 	}
 
 	area->floodnum = floodnum;
@@ -1758,7 +1758,7 @@ void	FloodAreaConnections (void)
 void	CM_SetAreaPortalState (int portalnum, qboolean open)
 {
 	if (portalnum > cm.areaportals.Count())
-		Com_Error (ERR_DROP, "areaportal > numareaportals");
+		Com_Errorf ("areaportal > numareaportals");
 
 	cm.portalopen.Data(portalnum) = open;
 	FloodAreaConnections ();
@@ -1770,7 +1770,7 @@ qboolean	CM_AreasConnected (int area1, int area2)
 		return true;
 
 	if (area1 > cm.areas.Count() || area2 > cm.areas.Count())
-		Com_Error (ERR_DROP, "area > numareas");
+		Com_Errorf ("area > numareas");
 
 	if (cm.areas.Data(area1).floodnum == cm.areas.Data(area2).floodnum)
 		return true;

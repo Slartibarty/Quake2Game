@@ -51,7 +51,7 @@ static void PF_dprintf (const char *fmt, ...)
 	Q_vsprintf_s (msg, fmt, argptr);
 	va_end (argptr);
 
-	Com_Printf ("%s", msg);
+	Com_Print (msg);
 }
 
 
@@ -72,7 +72,7 @@ static void PF_cprintf (edict_t *ent, int level, const char *fmt, ...)
 	{
 		n = NUM_FOR_EDICT(ent);
 		if (n < 1 || n > maxclients->value)
-			Com_Error (ERR_DROP, "cprintf to a non-client");
+			Com_Errorf ("cprintf to a non-client");
 	}
 
 	va_start (argptr,fmt);
@@ -82,7 +82,7 @@ static void PF_cprintf (edict_t *ent, int level, const char *fmt, ...)
 	if (ent)
 		SV_ClientPrintf (svs.clients+(n-1), level, "%s", msg);
 	else
-		Com_Printf ("%s", msg);
+		Com_Print (msg);
 }
 
 
@@ -101,7 +101,7 @@ static void PF_centerprintf (edict_t *ent, const char *fmt, ...)
 	
 	n = NUM_FOR_EDICT(ent);
 	if (n < 1 || n > maxclients->value)
-		return;	// Com_Error (ERR_DROP, "centerprintf to a non-client");
+		return;	// Com_Errorf ("centerprintf to a non-client");
 
 	va_start (argptr,fmt);
 	Q_vsprintf_s (msg, fmt, argptr);
@@ -129,7 +129,7 @@ static void PF_error (const char *fmt, ...)
 	Q_vsprintf_s (msg, fmt, argptr);
 	va_end (argptr);
 
-	Com_Error (ERR_DROP, "Game Error: %s", msg);
+	Com_Errorf ("Game Error: %s", msg);
 }
 
 
@@ -146,7 +146,7 @@ static void PF_setmodel (edict_t *ent, const char *name)
 	cmodel_t	*mod;
 
 	if (!name)
-		Com_Error (ERR_DROP, "PF_setmodel: NULL");
+		Com_Error ("PF_setmodel: NULL");
 
 	i = SV_ModelIndex (name);
 		
@@ -173,7 +173,7 @@ PF_Configstring
 static void PF_Configstring (int index, const char *val)
 {
 	if (index < 0 || index >= MAX_CONFIGSTRINGS)
-		Com_Error (ERR_DROP, "configstring: bad index %i\n", index);
+		Com_Errorf ("configstring: bad index %i\n", index);
 
 	if (!val)
 		val = "";
@@ -359,9 +359,9 @@ void SV_InitGameProgs (void)
 	ge = (game_export_t *)Sys_GetGameAPI (&gi);
 
 	if (!ge)
-		Com_Error (ERR_DROP, "failed to load game DLL");
+		Com_Error ("failed to load game DLL");
 	if (ge->apiversion != GAME_API_VERSION)
-		Com_Error (ERR_DROP, "game is version %i, not %i", ge->apiversion,
+		Com_Errorf ("game is version %i, not %i", ge->apiversion,
 		GAME_API_VERSION);
 
 	ge->Init ();

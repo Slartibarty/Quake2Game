@@ -818,7 +818,7 @@ void Key_Event (int key, bool down, unsigned time)
 			M_Menu_Main_f ();
 			break;
 		default:
-			Com_Error (ERR_FATAL, "Bad cls.key_dest");
+			Com_FatalErrorf("Bad cls.key_dest");
 		}
 		return;
 	}
@@ -908,7 +908,7 @@ void Key_Event (int key, bool down, unsigned time)
 		Key_Console (key);
 		break;
 	default:
-		Com_Error (ERR_FATAL, "Bad cls.key_dest");
+		Com_FatalErrorf("Bad cls.key_dest");
 	}
 }
 

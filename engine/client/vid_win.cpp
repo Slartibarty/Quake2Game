@@ -180,7 +180,7 @@ void VID_CheckChanges( void )
 
 		if ( !VID_LoadRefresh() )
 		{
-			Com_Error( ERR_FATAL, "Couldn't load renderer!" );
+			Com_FatalErrorf("Couldn't load renderer!" );
 		}
 		cls.disable_screen = false;
 	}

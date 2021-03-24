@@ -472,7 +472,7 @@ int main( int argc, char **argv )
 		}
 		if ( argv[i][0] == '-' )
 		{
-			Com_Error( ERR_FATAL, "Unknown option \"%s\"", argv[i] );
+			Com_FatalErrorf("Unknown option \"%s\"", argv[i] );
 		}
 
 		break;

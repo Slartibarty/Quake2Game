@@ -32,8 +32,10 @@ struct centity_t
 struct cgame_import_t
 {
 	// Logging
-	void	( *Printf ) ( _Printf_format_string_ const char *fmt, ... );
-	void	( *Errorf ) ( int code, _Printf_format_string_ const char *fmt, ... );
+	void	( *Print ) ( const char *msg );
+	void	( *DPrint ) ( const char *msg );
+	void	( *Error ) ( const char *msg );
+	void	( *FatalError ) ( const char *msg );
 
 	cvar_t	*( *Cvar_Get ) ( const char *var_name, const char *value, uint32 flags );
 

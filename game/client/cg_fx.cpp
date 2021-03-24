@@ -91,7 +91,7 @@ void CL_SetLightstyle( int index, const char *s )
 	j = Q_strlen( s );
 	if ( j >= MAX_QPATH )
 	{
-		cgi.Errorf( ERR_DROP, "svc_lightstyle length=%i", j );
+		Com_Errorf( "svc_lightstyle length=%i", j );
 	}
 
 	cl_lightstyle[index].length = j;
@@ -247,7 +247,7 @@ void CL_ParseMuzzleFlash()
 	i = cgi.ReadShort( cgi.net_message );
 	if ( i < 1 || i >= MAX_EDICTS )
 	{
-		cgi.Errorf( ERR_DROP, "CL_ParseMuzzleFlash: bad entity" );
+		Com_Error( "CL_ParseMuzzleFlash: bad entity" );
 	}
 
 	weapon = cgi.ReadByte( cgi.net_message );
@@ -447,7 +447,7 @@ void CL_ParseMuzzleFlash2()
 	ent = cgi.ReadShort( cgi.net_message );
 	if ( ent < 1 || ent >= MAX_EDICTS )
 	{
-		cgi.Errorf( ERR_DROP, "CL_ParseMuzzleFlash2: bad entity" );
+		Com_Error( "CL_ParseMuzzleFlash2: bad entity" );
 	}
 
 	flash_number = cgi.ReadByte( cgi.net_message );

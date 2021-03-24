@@ -215,7 +215,7 @@ static image_t *GL_CreateImage(const char *name, const byte *pic, int width, int
 	if (i == numgltextures)
 	{
 		if (numgltextures == MAX_GLTEXTURES)
-			Com_Error(ERR_DROP, "MAX_GLTEXTURES");
+			Com_Errorf("MAX_GLTEXTURES");
 		numgltextures++;
 	}
 	image = &gltextures[i];
@@ -458,7 +458,7 @@ static material_t *GL_CreateMaterialFromData( const char *name, image_t *image )
 	if ( i == numglmaterials )
 	{
 		if ( numglmaterials == MAX_GLMATERIALS )
-			Com_Error( ERR_DROP, "MAX_GLMATERIALS" );
+			Com_Errorf("MAX_GLMATERIALS" );
 		++numglmaterials;
 	}
 	material = &glmaterials[i];
@@ -505,7 +505,7 @@ static material_t *GL_CreateMaterial( const char *name )
 	if ( i == numglmaterials )
 	{
 		if ( numglmaterials == MAX_GLMATERIALS )
-			Com_Error( ERR_DROP, "MAX_GLMATERIALS" ); // This can probably just return mat_notexture
+			Com_Errorf("MAX_GLMATERIALS" ); // This can probably just return mat_notexture
 		++numglmaterials;
 	}
 	material = &glmaterials[i];
@@ -629,13 +629,13 @@ static void GL_GetPalette (void)
 	nBufLen = FS_LoadFile("textures/colormap.pcx", (void**)&pBuffer);
 	if (!pBuffer)
 	{
-		Com_Error(ERR_FATAL, "Couldn't load textures/colormap.pcx");
+		Com_FatalError("Couldn't load textures/colormap.pcx");
 	}
 
 	if (!img::CreateColormapFromPCX(pBuffer, nBufLen, d_8to24table))
 	{
 		FS_FreeFile(pBuffer);
-		Com_Error(ERR_FATAL, "textures/colormap.pcx is not a valid PCX!");
+		Com_FatalError("textures/colormap.pcx is not a valid PCX!");
 	}
 
 	FS_FreeFile(pBuffer);

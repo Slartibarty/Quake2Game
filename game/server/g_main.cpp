@@ -120,30 +120,77 @@ game_export_t *GetGameAPI (game_import_t *import)
 }
 
 #ifndef GAME_HARD_LINKED
-// this is only here so the functions in q_shared.c and q_shwin.c can link
-void Com_Error (int code, _Printf_format_string_ const char *error, ...)
+
+void Com_Print( const char *msg )
 {
-	va_list		argptr;
-	char		text[MAX_PRINT_MSG];
-
-	va_start (argptr, error);
-	Q_vsprintf_s (text, error, argptr);
-	va_end (argptr);
-
-	// SlartTodo: Game code always ERR_DROPs, q_shared funcs expect an ERR_FATAL
-	gi.error ("%s", text);
+	gi.dprintf( "%s", msg );
 }
 
-void Com_Printf (_Printf_format_string_ const char *msg, ...)
+void Com_Printf( _Printf_format_string_ const char *fmt, ... )
 {
 	va_list		argptr;
-	char		text[MAX_PRINT_MSG];
+	char		msg[MAX_PRINT_MSG];
 
-	va_start (argptr, msg);
-	Q_vsprintf_s (text, msg, argptr);
-	va_end (argptr);
+	va_start( argptr, fmt );
+	Q_vsprintf_s( msg, fmt, argptr );
+	va_end( argptr );
 
-	gi.dprintf ("%s", text);
+	Com_Print( msg );
+}
+
+void Com_DPrint( const char *msg )
+{
+	gi.dprintf( "%s", msg );
+}
+
+void Com_DPrintf( _Printf_format_string_ const char *fmt, ... )
+{
+	va_list		argptr;
+	char		msg[MAX_PRINT_MSG];
+
+	va_start( argptr, fmt );
+	Q_vsprintf_s( msg, fmt, argptr );
+	va_end( argptr );
+
+	Com_DPrint( msg );
+}
+
+[[noreturn]]
+void Com_Error( const char *msg )
+{
+	gi.error( "%s", msg );
+}
+
+[[noreturn]]
+void Com_Errorf( _Printf_format_string_ const char *fmt, ... )
+{
+	va_list		argptr;
+	char		msg[MAX_PRINT_MSG];
+
+	va_start( argptr, fmt );
+	Q_vsprintf_s( msg, fmt, argptr );
+	va_end( argptr );
+
+	Com_Error( msg );
+}
+
+[[noreturn]]
+void Com_FatalError( const char *msg )
+{
+	gi.error( "%s", msg );
+}
+
+[[noreturn]]
+void Com_FatalErrorf( _Printf_format_string_ const char *fmt, ... )
+{
+	va_list		argptr;
+	char		msg[MAX_PRINT_MSG];
+
+	va_start( argptr, fmt );
+	Q_vsprintf_s( msg, fmt, argptr );
+	va_end( argptr );
+
+	Com_FatalError( msg );
 }
 
 #endif

@@ -122,7 +122,7 @@ void DecompressVis (byte *in, byte *decompressed)
 	
 		c = in[1];
 		if (!c)
-			Com_Error (ERR_FATAL, "DecompressVis: 0 repeat");
+			Com_FatalErrorf("DecompressVis: 0 repeat");
 		in += 2;
 		while (c)
 		{
@@ -335,7 +335,7 @@ int CopyLump (int lump, void *dest, int size)
 	ofs = header->lumps[lump].fileofs;
 	
 	if (length % size)
-		Com_Error (ERR_FATAL, "LoadBSPFile: odd lump size");
+		Com_FatalErrorf("LoadBSPFile: odd lump size");
 	
 	memcpy (dest, (byte *)header + ofs, length);
 
@@ -361,9 +361,9 @@ void	LoadBSPFile (char *filename)
 		((int *)header)[i] = LittleLong ( ((int *)header)[i]);
 
 	if (header->ident != IDBSPHEADER)
-		Com_Error (ERR_FATAL, "%s is not a IBSP file", filename);
+		Com_FatalErrorf("%s is not a IBSP file", filename);
 	if (header->version != BSPVERSION)
-		Com_Error (ERR_FATAL, "%s is version %i, not %i", filename, header->version, BSPVERSION);
+		Com_FatalErrorf("%s is version %i, not %i", filename, header->version, BSPVERSION);
 
 	nummodels = CopyLump (LUMP_MODELS, dmodels, sizeof(dmodel_t));
 	numvertexes = CopyLump (LUMP_VERTEXES, dvertexes, sizeof(dvertex_t));
@@ -417,9 +417,9 @@ void	LoadBSPFileTexinfo (char *filename)
 		((int *)header)[i] = LittleLong ( ((int *)header)[i]);
 
 	if (header->ident != IDBSPHEADER)
-		Com_Error (ERR_FATAL, "%s is not a IBSP file", filename);
+		Com_FatalErrorf("%s is not a IBSP file", filename);
 	if (header->version != BSPVERSION)
-		Com_Error (ERR_FATAL, "%s is version %i, not %i", filename, header->version, BSPVERSION);
+		Com_FatalErrorf("%s is version %i, not %i", filename, header->version, BSPVERSION);
 
 
 	length = header->lumps[LUMP_TEXINFO].filelen;
@@ -577,11 +577,11 @@ epair_t *ParseEpair (void)
 	memset (e, 0, sizeof(epair_t));
 	
 	if (strlen(token) >= MAX_KEY-1)
-		Com_Error (ERR_FATAL, "ParseEpar: token too long");
+		Com_FatalErrorf("ParseEpar: token too long");
 	e->key = copystring(token);
 	GetToken (false);
 	if (strlen(token) >= MAX_VALUE-1)
-		Com_Error (ERR_FATAL, "ParseEpar: token too long");
+		Com_FatalErrorf("ParseEpar: token too long");
 	e->value = copystring(token);
 
 	// strip trailing spaces
@@ -606,10 +606,10 @@ qboolean	ParseEntity (void)
 		return false;
 
 	if (strcmp (token, "{") )
-		Com_Error (ERR_FATAL, "ParseEntity: { not found");
+		Com_FatalErrorf("ParseEntity: { not found");
 	
 	if (num_entities == MAX_MAP_ENTITIES)
-		Com_Error (ERR_FATAL, "num_entities == MAX_MAP_ENTITIES");
+		Com_FatalErrorf("num_entities == MAX_MAP_ENTITIES");
 
 	mapent = &entities[num_entities];
 	num_entities++;
@@ -617,7 +617,7 @@ qboolean	ParseEntity (void)
 	do
 	{
 		if (!GetToken (true))
-			Com_Error (ERR_FATAL, "ParseEntity: EOF without closing brace");
+			Com_FatalErrorf("ParseEntity: EOF without closing brace");
 		if (!strcmp (token, "}") )
 			break;
 		e = ParseEpair ();
@@ -689,7 +689,7 @@ void UnparseEntities (void)
 		end += 2;
 
 		if (end > buf + MAX_MAP_ENTSTRING)
-			Com_Error (ERR_FATAL, "Entity text too long");
+			Com_FatalErrorf("Entity text too long");
 	}
 	entdatasize = end - buf + 1;
 }

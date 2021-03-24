@@ -25,7 +25,7 @@ static int SV_FindIndex (const char *name, int start, int max, qboolean create)
 		return 0;
 
 	if (i == max)
-		Com_Error (ERR_DROP, "*Index: overflow");
+		Com_Errorf ("*Index: overflow");
 
 	Q_strcpy_s (sv.configstrings[start+i], name);
 

@@ -268,7 +268,7 @@ namespace img
 	static void LoadPNG_ErrorCallback( png_structp png_ptr, png_const_charp msg )
 	{
 		// Load failures are bad and should be seen by everyone
-		Com_Error( ERR_FATAL, "PNG load error: %s\n", msg );
+		Com_FatalErrorf("PNG load error: %s\n", msg );
 	}
 
 	static void LoadPNG_WarningCallback( png_structp png_ptr, png_const_charp msg )

@@ -436,7 +436,7 @@ byte *SCR_ReadNextFrame (void)
 	FS_Read (&size, 4, cl.cinematic_file);
 	size = LittleLong(size);
 	if (size > sizeof(compressed) || size < 1)
-		Com_Error (ERR_DROP, "Bad compressed frame size");
+		Com_Errorf ("Bad compressed frame size");
 	FS_Read (compressed, size, cl.cinematic_file);
 
 	// read sound
@@ -590,7 +590,7 @@ void SCR_PlayCinematic (const char *arg)
 	FS_FOpenFile (name, &cl.cinematic_file);
 	if (!cl.cinematic_file)
 	{
-//		Com_Error (ERR_DROP, "Cinematic %s not found.\n", name);
+//		Com_Errorf ("Cinematic %s not found.\n", name);
 		SCR_FinishCinematic ();
 		cl.cinematictime = 0;	// done
 		return;

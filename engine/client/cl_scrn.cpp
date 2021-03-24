@@ -981,7 +981,7 @@ void SCR_ExecuteLayoutString (char *s)
 			token = COM_Parse (&s);
 			value = cl.frame.playerstate.stats[atoi(token)];
 			if (value >= MAX_IMAGES)
-				Com_Error (ERR_DROP, "Pic >= MAX_IMAGES");
+				Com_Errorf ("Pic >= MAX_IMAGES");
 			if (cl.configstrings[CS_IMAGES+value])
 			{
 				SCR_AddDirtyPoint (x, y);
@@ -1005,7 +1005,7 @@ void SCR_ExecuteLayoutString (char *s)
 			token = COM_Parse (&s);
 			value = atoi(token);
 			if (value >= MAX_CLIENTS || value < 0)
-				Com_Error (ERR_DROP, "client >= MAX_CLIENTS");
+				Com_Errorf ("client >= MAX_CLIENTS");
 			ci = &cl.clientinfo[value];
 
 			token = COM_Parse (&s);
@@ -1044,7 +1044,7 @@ void SCR_ExecuteLayoutString (char *s)
 			token = COM_Parse (&s);
 			value = atoi(token);
 			if (value >= MAX_CLIENTS || value < 0)
-				Com_Error (ERR_DROP, "client >= MAX_CLIENTS");
+				Com_Errorf ("client >= MAX_CLIENTS");
 			ci = &cl.clientinfo[value];
 
 			token = COM_Parse (&s);
@@ -1147,10 +1147,10 @@ void SCR_ExecuteLayoutString (char *s)
 			token = COM_Parse (&s);
 			index = atoi(token);
 			if (index < 0 || index >= MAX_CONFIGSTRINGS)
-				Com_Error (ERR_DROP, "Bad stat_string index");
+				Com_Errorf ("Bad stat_string index");
 			index = cl.frame.playerstate.stats[index];
 			if (index < 0 || index >= MAX_CONFIGSTRINGS)
-				Com_Error (ERR_DROP, "Bad stat_string index");
+				Com_Errorf ("Bad stat_string index");
 			DrawString (x, y, cl.configstrings[index]);
 			continue;
 		}

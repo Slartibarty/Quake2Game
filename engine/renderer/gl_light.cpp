@@ -445,13 +445,13 @@ void R_BuildLightMap(msurface_t *surf, byte *dest, int stride)
 	lightstyle_t *style;
 
 	if (surf->texinfo->flags & SURFMASK_UNLIT)
-		Com_Error(ERR_DROP, "R_BuildLightMap called for non-lit surface");
+		Com_Errorf("R_BuildLightMap called for non-lit surface");
 
 	smax = (surf->extents[0] >> 4) + 1;
 	tmax = (surf->extents[1] >> 4) + 1;
 	size = smax * tmax;
 	if (size > (sizeof(s_blocklights) >> 4))
-		Com_Error(ERR_DROP, "Bad s_blocklights size");
+		Com_Errorf("Bad s_blocklights size");
 
 	// set to full bright if no light data
 	if (!surf->samples)

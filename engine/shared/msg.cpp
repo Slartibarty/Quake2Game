@@ -189,7 +189,7 @@ void MSG_ReadDir (sizebuf_t *sb, vec3_t dir)
 
 	b = MSG_ReadByte (sb);
 	if (b >= NUMVERTEXNORMALS)
-		Com_Error (ERR_DROP, "MSG_ReadDir: out of range");
+		Com_Errorf ("MSG_ReadDir: out of range");
 	VectorCopy (bytedirs[b], dir);
 }
 
@@ -207,9 +207,9 @@ void MSG_WriteDeltaEntity (entity_state_t *from, entity_state_t *to, sizebuf_t *
 	int		bits;
 
 	if (!to->number)
-		Com_Error (ERR_FATAL, "Unset entity number");
+		Com_FatalErrorf("Unset entity number");
 	if (to->number >= MAX_EDICTS)
-		Com_Error (ERR_FATAL, "Entity number >= MAX_EDICTS");
+		Com_FatalErrorf("Entity number >= MAX_EDICTS");
 
 // send an update
 	bits = 0;

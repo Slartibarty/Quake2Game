@@ -27,7 +27,7 @@ void *Hunk_Begin (int maxsize)
 #endif
 
 	if (!membase)
-		Com_Error (ERR_FATAL, "VirtualAlloc reserve failed");
+		Com_FatalErrorf("VirtualAlloc reserve failed");
 
 	return (void *)membase;
 }
@@ -45,13 +45,13 @@ void *Hunk_Alloc (int size)
 	if (!buf)
 	{
 		FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &buf, 0, NULL);
-		Com_Error (ERR_FATAL, "VirtualAlloc commit failed.\n%s", buf);
+		Com_FatalErrorf("VirtualAlloc commit failed.\n%s", buf);
 	}
 #endif
 
 	cursize += size;
 	if (cursize > hunkmaxsize)
-		Com_Error (ERR_FATAL, "Hunk_Alloc overflow");
+		Com_FatalErrorf("Hunk_Alloc overflow");
 
 	return (void *)((byte*)membase+cursize-size);
 }
@@ -65,7 +65,7 @@ int Hunk_End (void)
 	// write protect it
 	buf = VirtualAlloc (membase, cursize, MEM_COMMIT, PAGE_READONLY);
 	if (!buf)
-		Com_Error (ERR_FATAL, "VirtualAlloc commit failed");
+		Com_FatalErrorf("VirtualAlloc commit failed");
 #endif
 
 	++hunkcount;
@@ -221,7 +221,7 @@ char *Sys_FindFirst (const char *path, unsigned musthave, unsigned canthave )
 	struct _finddata_t findinfo;
 
 	if (findhandle)
-		Com_Error (ERR_FATAL, "Sys_BeginFind without close");
+		Com_FatalErrorf("Sys_BeginFind without close");
 	findhandle = 0;
 
 	COM_FilePath (path, findbase);

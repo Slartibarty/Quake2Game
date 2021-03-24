@@ -81,7 +81,7 @@ void M_PushMenu ( void (*draw) (void), const char *(*key) (int k) )
 	if (i == m_menudepth)
 	{
 		if (m_menudepth >= MAX_MENU_DEPTH)
-			Com_Error (ERR_FATAL, "M_PushMenu: MAX_MENU_DEPTH");
+			Com_FatalErrorf("M_PushMenu: MAX_MENU_DEPTH");
 		m_layers[m_menudepth].draw = m_drawfunc;
 		m_layers[m_menudepth].key = m_keyfunc;
 		m_menudepth++;
@@ -109,7 +109,7 @@ void M_PopMenu (void)
 {
 	S_StartLocalSound( menu_out_sound );
 	if (m_menudepth < 1)
-		Com_Error (ERR_FATAL, "M_PopMenu: depth < 1");
+		Com_FatalErrorf("M_PopMenu: depth < 1");
 	m_menudepth--;
 
 	m_drawfunc = m_layers[m_menudepth].draw;
@@ -2650,7 +2650,7 @@ void StartServer_MenuInit( void )
 	if ( ( fp = fopen( mapsname, "rb" ) ) == 0 )
 	{
 		if ( ( length = FS_LoadFile( "maps.lst", ( void ** ) &buffer ) ) == -1 )
-			Com_Error( ERR_DROP, "couldn't find maps.lst\n" );
+			Com_Errorf("couldn't find maps.lst\n" );
 	}
 	else
 	{
@@ -2673,7 +2673,7 @@ void StartServer_MenuInit( void )
 	}
 
 	if ( nummaps == 0 )
-		Com_Error( ERR_DROP, "no maps in maps.lst\n" );
+		Com_Errorf("no maps in maps.lst\n" );
 
 	mapnames = (char**)Z_Calloc( sizeof( char * ) * ( nummaps + 1 ) );
 

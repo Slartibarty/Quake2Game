@@ -85,7 +85,7 @@ void Sys_Init (void)
 	if (dedicated->value)
 	{
 		if (!AllocConsole ())
-			Com_Error (ERR_FATAL, "Couldn't create dedicated server console");
+			Com_FatalErrorf("Couldn't create dedicated server console");
 		hinput = GetStdHandle (STD_INPUT_HANDLE);
 		houtput = GetStdHandle (STD_OUTPUT_HANDLE);
 	
@@ -114,16 +114,16 @@ char *Sys_ConsoleInput (void)
 	for ( ;; )
 	{
 		if (!GetNumberOfConsoleInputEvents (hinput, &numevents))
-			Com_Error (ERR_FATAL, "Error getting # of console events");
+			Com_FatalErrorf("Error getting # of console events");
 
 		if (numevents == 0)
 			break;
 
 		if (!ReadConsoleInput(hinput, &recs, 1, &numread))
-			Com_Error (ERR_FATAL, "Error reading console input");
+			Com_FatalErrorf("Error reading console input");
 
 		if (numread != 1)
-			Com_Error (ERR_FATAL, "Couldn't read console input");
+			Com_FatalErrorf("Couldn't read console input");
 
 		if (recs.EventType == KEY_EVENT)
 		{
@@ -295,7 +295,7 @@ static HINSTANCE cgame_library;
 void Sys_UnloadGame()
 {
 	if ( !FreeLibrary( game_library ) ) {
-		Com_Error( ERR_FATAL, "FreeLibrary failed for game library" );
+		Com_FatalErrorf("FreeLibrary failed for game library" );
 	}
 	game_library = nullptr;
 }
@@ -303,7 +303,7 @@ void Sys_UnloadGame()
 void Sys_UnloadCGame()
 {
 	if ( !FreeLibrary( cgame_library ) ) {
-		Com_Error( ERR_FATAL, "FreeLibrary failed for cgame library" );
+		Com_FatalErrorf("FreeLibrary failed for cgame library" );
 	}
 	cgame_library = nullptr;
 }
@@ -315,7 +315,7 @@ static void *Sys_GetAPI( void *parms, HINSTANCE &instance, const char *gamename,
 	char name[MAX_OSPATH];
 
 	if ( instance ) {
-		Com_Error( ERR_FATAL, "Sys_GetAPI without Sys_Unload(C)Game" );
+		Com_FatalErrorf("Sys_GetAPI without Sys_Unload(C)Game" );
 	}
 
 	// now run through the search paths

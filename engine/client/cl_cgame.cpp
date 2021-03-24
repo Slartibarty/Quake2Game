@@ -88,8 +88,10 @@ void CL_InitCGame()
 	if ( cge )
 		CL_ShutdownCGame();
 
-	cgi.Printf = Com_Printf;
-	cgi.Errorf = Com_Error;
+	cgi.Print = Com_Print;
+	cgi.DPrint = Com_DPrint;
+	cgi.Error = Com_Error;
+	cgi.FatalError = Com_FatalError;
 
 	cgi.StartSound = S_StartSound;
 
@@ -129,12 +131,12 @@ void CL_InitCGame()
 
 	if ( !cge )
 	{
-		Com_Error( ERR_DROP, "failed to load cgame DLL" );
+		Com_Errorf("failed to load cgame DLL" );
 	}
 
 	if ( cge->apiversion != CGAME_API_VERSION )
 	{
-		Com_Error( ERR_DROP, "cgame is version %d, not %d",
+		Com_Errorf("cgame is version %d, not %d",
 			cge->apiversion, CGAME_API_VERSION );
 	}
 
