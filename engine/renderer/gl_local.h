@@ -286,7 +286,6 @@ void	R_DrawBeam( entity_t *e );
 void	R_DrawWorld (void);
 void	R_DrawAlphaSurfaces (void);
 void	R_RenderBrushPoly (msurface_t *fa);
-void	Draw_InitLocal (void);
 void	GL_SubdivideSurface (msurface_t *fa);
 bool	R_CullBox (vec3_t mins, vec3_t maxs);
 void	R_RotateForEntity (entity_t *e);
@@ -301,14 +300,16 @@ void	R_DrawSkyBox (void);
 // gl_draw.cpp
 //-------------------------------------------------------------------------------------------------
 
-void	Draw_GetPicSize (int *w, int *h, const char *name);
-void	Draw_Pic (int x, int y, const char *name);
-void	Draw_StretchPic (int x, int y, int w, int h, const char *name);
-void	Draw_Char (int x, int y, int ch);
-void	Draw_TileClear (int x, int y, int w, int h, const char *name);
-void	Draw_Fill (int x, int y, int w, int h, int c);
-void	Draw_FadeScreen (void);
-void	Draw_StretchRaw (int x, int y, int w, int h, int cols, int rows, byte *data);
+void	Draw_InitLocal( void );
+
+void	Draw_GetPicSize( int *w, int *h, const char *name );
+void	Draw_Pic( int x, int y, const char *name );
+void	Draw_StretchPic( int x, int y, int w, int h, const char *name );
+void	Draw_Char( int x, int y, int ch );
+void	Draw_TileClear( int x, int y, int w, int h, const char *name );
+void	Draw_Fill( int x, int y, int w, int h, int c );
+void	Draw_FadeScreen( void );
+void	Draw_StretchRaw( int x, int y, int w, int h, int cols, int rows, byte *data );
 
 //-------------------------------------------------------------------------------------------------
 
