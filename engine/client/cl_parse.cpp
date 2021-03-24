@@ -697,7 +697,8 @@ void CL_ParseServerMessage (void)
 			break;
 			
 		case svc_disconnect:
-			Com_Error (ERR_DISCONNECT,"Server disconnected\n");
+			Com_Print( "Server disconnected\n" );
+			Com_Disconnect();
 			break;
 
 		case svc_reconnect:

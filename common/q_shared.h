@@ -49,7 +49,6 @@
 
 #define	ERR_FATAL			0		// exit the entire game with a popup window
 #define	ERR_DROP			1		// print to console and disconnect from game
-#define	ERR_DISCONNECT		2		// don't kill server
 
 #define	PRINT_ALL			0
 #define PRINT_DEVELOPER		1		// only print when "developer 1"
@@ -328,21 +327,27 @@ void	Sys_FindClose (void);
 
 
 // Log functions that must be implemented by the project
-[[noreturn]]
+void Com_Print( const char *msg );
 void Com_Printf( _Printf_format_string_ const char *fmt, ... );
+
+void Com_DPrint( const char *msg );
 void Com_DPrintf( _Printf_format_string_ const char *fmt, ... );
-void Com_Error( int code, _Printf_format_string_ const char *fmt, ... );
+
+[[noreturn]] void Com_Error( const char *msg );
+[[noreturn]] void Com_Errorf( _Printf_format_string_ const char *fmt, ... );
+[[noreturn]] void Com_FatalError( const char *msg );
+[[noreturn]] void Com_FatalErrorf( _Printf_format_string_ const char *fmt, ... );
 
 //-------------------------------------------------------------------------------------------------
 // CVARS - cvars.cpp
 //-------------------------------------------------------------------------------------------------
 
-#define	CVAR_ARCHIVE	1	// set to cause it to be saved to vars.rc
-#define	CVAR_USERINFO	2	// added to userinfo  when changed
-#define	CVAR_SERVERINFO	4	// added to serverinfo when changed
-#define	CVAR_NOSET		8	// don't allow change from console at all,
-							// but can be set from the command line
-#define	CVAR_LATCH		16	// save changes until server restart
+#define	CVAR_ARCHIVE		1	// set to cause it to be saved to vars.rc
+#define	CVAR_USERINFO		2	// added to userinfo  when changed
+#define	CVAR_SERVERINFO		4	// added to serverinfo when changed
+#define	CVAR_NOSET			8	// don't allow change from console at all,
+								// but can be set from the command line
+#define	CVAR_LATCH			16	// save changes until server restart
 
 // nothing outside the Cvar_*() functions should modify these fields!
 struct cvar_t

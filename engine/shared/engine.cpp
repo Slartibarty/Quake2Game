@@ -73,7 +73,7 @@ void Com_EndRedirect (void)
 	rd_flush = NULL;
 }
 
-static void Com_Print_Internal( const char *msg )
+void Com_Print_Internal( const char *msg )
 {
 	if ( rd_target )
 	{
@@ -114,12 +114,12 @@ static void Com_Print_Internal( const char *msg )
 }
 
 /*
-=============
+===================
 Com_Print
 
 Both client and server can use this, and it will output
 to the apropriate place.
-=============
+===================
 */
 void Com_Print( const char *msg )
 {
@@ -139,18 +139,16 @@ void Com_Printf( _Printf_format_string_ const char *fmt, ... )
 }
 
 /*
-================
+===================
 Com_DPrint
 
 A Com_Print that only shows up if the "developer" cvar is set
-================
+===================
 */
 void Com_DPrint( const char *msg )
 {
 	if ( !developer || !developer->value )
 		return;
-
-//	Sys_OutputDebugString( msg );
 
 	Com_Print_Internal( msg );
 }
@@ -167,74 +165,109 @@ void Com_DPrintf( _Printf_format_string_ const char *fmt, ... )
 	Q_vsprintf_s( msg, fmt, argptr );
 	va_end( argptr );
 
-//	Sys_OutputDebugString( msg );
-
 	Com_Print_Internal( msg );
 }
 
 /*
-=============
+===================
 Com_Error
 
-Both client and server can use this, and it will
-do the apropriate things.
-=============
+The peaceful option
+Equivalent to an old Com_Error( ERR_DROP )
+===================
 */
 [[noreturn]]
-void Com_Error (int code, _Printf_format_string_ const char *fmt, ...)
+void Com_Error( const char *msg )
 {
-	va_list			argptr;
-	char			msg[MAX_PRINT_MSG];
-	static bool		recursive;
+	static bool recursive;
 
-	if (recursive)
+	if ( recursive )
 	{
-		// This should never happen
-		SV_Shutdown ("Server experienced a recursive error\n", false);
-		CL_Shutdown ();
-		Engine_Shutdown ();
-
-		Sys_Error ("recursive error");
+		// This is should never happen
+		// in fact this string should be optimised away if everything goes to plan
+		Com_FatalError( "recursive error, tell a developer!" );
 	}
 
 	recursive = true;
 
-	if (code == ERR_DISCONNECT)
-	{
-		CL_Drop ();
-		recursive = false;
-		longjmp (abortframe, -1);
-	}
+	Com_Printf( "********************\nERROR: %s\n********************\n", msg );
+	SV_Shutdown( va( "Server crashed: %s\n", msg ), false );
+	CL_Drop();
 
-	va_start (argptr,fmt);
-	Q_vsprintf_s (msg,fmt,argptr);
-	va_end (argptr);
-	
-	if (code == ERR_DROP)
-	{
-		Com_Printf ("********************\nERROR: %s\n********************\n", msg);
-		SV_Shutdown (va("Server crashed: %s\n", msg), false);
-		CL_Drop ();
-		recursive = false;
-		longjmp (abortframe, -1);
-	}
+	recursive = false;
 
-	// ERR_FATAL
-	SV_Shutdown (va("Server fatal crashed: %s\n", msg), false);
-	CL_Shutdown ();
-	Engine_Shutdown ();
-
-	Sys_Error (msg);
+	longjmp( abortframe, -1 );
 }
 
+[[noreturn]]
+void Com_Errorf( _Printf_format_string_ const char *fmt, ... )
+{
+	va_list		argptr;
+	char		msg[MAX_PRINT_MSG];
+
+	va_start( argptr, fmt );
+	Q_vsprintf_s( msg, fmt, argptr );
+	va_end( argptr );
+
+	Com_Error( msg );
+}
 
 /*
-=============
+===================
+Com_FatalError
+
+The nuclear option
+Equivalent to an old Com_Error( ERR_FATAL )
+Kills the server, kills the client, shuts the engine down and quits the program
+===================
+*/
+[[noreturn]]
+void Com_FatalError( const char *msg )
+{
+	SV_Shutdown( va( "Server fatal crashed: %s\n", msg ), false );
+	CL_Shutdown();
+	Engine_Shutdown();
+
+	Sys_Error( msg );
+}
+
+[[noreturn]]
+void Com_FatalErrorf( _Printf_format_string_ const char *fmt, ... )
+{
+	va_list		argptr;
+	char		msg[MAX_PRINT_MSG];
+
+	va_start( argptr, fmt );
+	Q_vsprintf_s( msg, fmt, argptr );
+	va_end( argptr );
+
+	Com_FatalError( msg );
+}
+
+//=============================================================================
+
+/*
+===================
+Com_Disconnect
+
+Equivalent to an old Com_Error( ERR_DISCONNECT )
+Drops the client from the server and returns to the beginning of the main loop
+===================
+*/
+[[noreturn]]
+void Com_Disconnect()
+{
+	CL_Drop();
+	longjmp( abortframe, -1 );
+}
+
+/*
+===================
 Com_Quit
 
 Both client and server can use this, and it will
 do the apropriate things.
-=============
+===================
 */
 [[noreturn]]
 void Com_Quit( int code )
@@ -342,7 +375,7 @@ Adds the given string at the end of the current argument list
 void COM_AddParm (char *parm)
 {
 	if (com_argc == MAX_NUM_ARGVS)
-		Com_Error (ERR_FATAL, "COM_AddParm: MAX_NUM)ARGS");
+		Com_Error (ERR_FATAL, "COM_AddParm: MAX_NUM_ARGVS");
 	com_argv[com_argc++] = parm;
 }
 

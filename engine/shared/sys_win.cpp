@@ -239,32 +239,35 @@ Sys_GetClipboardData
 */
 char *Sys_GetClipboardData( void )
 {
-	char *data = NULL;
-	char *cliptext;
+	char *data = nullptr;
 
-	if ( OpenClipboard( NULL ) != 0 )
+	if ( OpenClipboard( nullptr ) )
 	{
-		HANDLE hClipboardData;
+		HANDLE clipData = GetClipboardData( CF_TEXT );
 
-		if ( ( hClipboardData = GetClipboardData( CF_TEXT ) ) != 0 )
+		if ( clipData )
 		{
-			if ( ( cliptext = (char*)GlobalLock( hClipboardData ) ) != 0 ) 
+			char *clipText = (char *)GlobalLock( clipData );
+
+			if ( clipText )
 			{
-				data = Z_CopyString( cliptext );
-				GlobalUnlock( hClipboardData );
+				data = Z_CopyString( clipText );
+				GlobalUnlock( clipData );
 			}
 		}
+
 		CloseClipboard();
 	}
+
 	return data;
 }
 
 /*
-==============================================================================
+===============================================================================
 
- WINDOWS CRAP
+	WINDOWS CRAP
 
-==============================================================================
+===============================================================================
 */
 
 /*
@@ -281,7 +284,7 @@ void Sys_AppActivate (void)
 /*
 ========================================================================
 
-GAME DLL
+	GAME DLL
 
 ========================================================================
 */
