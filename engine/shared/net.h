@@ -17,7 +17,7 @@
 #define	PORT_ANY		-1
 
 #define	MAX_MSGLEN		1400		// max length of a message
-#define	PACKET_HEADER	10			// two ints and a short
+#define	MAX_PACKETLEN	1400		// max size of a network packet
 
 // Short so netadr_t is a nice 8 bytes
 enum netadrtype_t : uint16 { NA_LOOPBACK, NA_BROADCAST, NA_IP };
@@ -54,12 +54,8 @@ void		NET_Sleep( int msec );
 // Net channels
 //-------------------------------------------------------------------------------------------------
 
-#define	MAX_LATENT	32
-
 struct netchan_t
 {
-	qboolean	fatal_error;
-
 	netsrc_t	sock;
 
 	int			dropped;			// between last packet and previous
@@ -99,8 +95,8 @@ void		Netchan_Setup( netsrc_t sock, netchan_t *chan, netadr_t adr, int qport );
 
 qboolean	Netchan_NeedReliable( netchan_t *chan );
 void		Netchan_Transmit( netchan_t *chan, int length, byte *data );
-void		Netchan_OutOfBand( netsrc_t net_socket, netadr_t adr, int length, byte *data );
-void		Netchan_OutOfBandPrint( netsrc_t net_socket, netadr_t adr, _Printf_format_string_ const char *format, ... );
+void		Netchan_OutOfBand( netsrc_t net_socket, netadr_t &adr, int length, byte *data );
+void		Netchan_OutOfBandPrint( netsrc_t net_socket, netadr_t &adr, _Printf_format_string_ const char *format, ... );
 qboolean	Netchan_Process( netchan_t *chan, sizebuf_t *msg );
 
 qboolean	Netchan_CanReliable( netchan_t *chan );

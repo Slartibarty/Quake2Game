@@ -90,7 +90,7 @@ Netchan_OutOfBand
 Sends an out-of-band datagram
 ================
 */
-void Netchan_OutOfBand (netsrc_t net_socket, netadr_t adr, int length, byte *data)
+void Netchan_OutOfBand (netsrc_t net_socket, netadr_t &adr, int length, byte *data)
 {
 	sizebuf_t	send;
 	byte		send_buf[MAX_MSGLEN];
@@ -106,16 +106,16 @@ void Netchan_OutOfBand (netsrc_t net_socket, netadr_t adr, int length, byte *dat
 }
 
 /*
-===============
+===================
 Netchan_OutOfBandPrint
 
 Sends a text message in an out-of-band datagram
-================
+===================
 */
-void Netchan_OutOfBandPrint (netsrc_t net_socket, netadr_t adr, const char *format, ...)
+void Netchan_OutOfBandPrint (netsrc_t net_socket, netadr_t &adr, _Printf_format_string_ const char *format, ...)
 {
 	va_list		argptr;
-	static char		string[MAX_MSGLEN - 4];
+	char		string[MAX_MSGLEN - 4];
 	
 	va_start (argptr, format);
 	Q_vsprintf_s (string, format, argptr);
@@ -123,7 +123,6 @@ void Netchan_OutOfBandPrint (netsrc_t net_socket, netadr_t adr, const char *form
 
 	Netchan_OutOfBand (net_socket, adr, strlen(string), (byte *)string);
 }
-
 
 /*
 ==============
@@ -196,14 +195,13 @@ A 0 length will still generate a packet and deal with the reliable messages.
 void Netchan_Transmit (netchan_t *chan, int length, byte *data)
 {
 	sizebuf_t	send;
-	byte		send_buf[MAX_MSGLEN];
+	byte		send_buf[MAX_PACKETLEN];
 	qboolean	send_reliable;
 	unsigned	w1, w2;
 
 // check for message overflow
 	if (chan->message.overflowed)
 	{
-		chan->fatal_error = true;
 		Com_Printf ("%s:Outgoing message overflow\n"
 			, NET_NetadrToString (chan->remote_address));
 		return;

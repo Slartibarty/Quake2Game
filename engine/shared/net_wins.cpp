@@ -10,11 +10,11 @@
 
 #include "net.h"
 
-#define	MAX_LOOPBACK	4
+#define	MAX_LOOPBACK	16
 
 struct loopmsg_t
 {
-	byte	data[MAX_MSGLEN];
+	byte	data[MAX_PACKETLEN];
 	int		datalen;
 };
 
