@@ -141,7 +141,7 @@ SVC_Ack
 */
 static void SVC_Ack (void)
 {
-	Com_Printf ("Ping acknowledge from %s\n", NET_AdrToString(net_from));
+	Com_Printf ("Ping acknowledge from %s\n", NET_NetadrToString(net_from));
 }
 
 /*
@@ -214,7 +214,7 @@ static void SVC_GetChallenge (void)
 	// see if we already have a challenge for this ip
 	for (i = 0 ; i < MAX_CHALLENGES ; i++)
 	{
-		if (NET_CompareBaseAdr (net_from, svs.challenges[i].adr))
+		if (NET_CompareBaseNetadr (net_from, svs.challenges[i].adr))
 			break;
 		if (svs.challenges[i].time < oldestTime)
 		{
@@ -276,7 +276,7 @@ static void SVC_DirectConnect (void)
 	userinfo[sizeof(userinfo) - 1] = 0;
 
 	// force the IP key/value pair so the game can filter based on ip
-	Info_SetValueForKey (userinfo, "ip", NET_AdrToString(net_from));
+	Info_SetValueForKey (userinfo, "ip", NET_NetadrToString(net_from));
 
 	// attractloop servers are ONLY for local clients
 	if (sv.attractloop)
@@ -294,7 +294,7 @@ static void SVC_DirectConnect (void)
 	{
 		for (i=0 ; i<MAX_CHALLENGES ; i++)
 		{
-			if (NET_CompareBaseAdr (net_from, svs.challenges[i].adr))
+			if (NET_CompareBaseNetadr (net_from, svs.challenges[i].adr))
 			{
 				if (challenge == svs.challenges[i].challenge)
 					break;		// good
@@ -317,16 +317,16 @@ static void SVC_DirectConnect (void)
 	{
 		if (cl->state == cs_free)
 			continue;
-		if (NET_CompareBaseAdr (adr, cl->netchan.remote_address)
+		if (NET_CompareBaseNetadr (adr, cl->netchan.remote_address)
 			&& ( cl->netchan.qport == qport 
 			|| adr.port == cl->netchan.remote_address.port ) )
 		{
 			if (!NET_IsLocalAddress (adr) && (svs.realtime - cl->lastconnect) < ((int)sv_reconnect_limit->value * 1000))
 			{
-				Com_DPrintf ("%s:reconnect rejected : too soon\n", NET_AdrToString (adr));
+				Com_DPrintf ("%s:reconnect rejected : too soon\n", NET_NetadrToString (adr));
 				return;
 			}
-			Com_Printf ("%s:reconnect\n", NET_AdrToString (adr));
+			Com_Printf ("%s:reconnect\n", NET_NetadrToString (adr));
 			newcl = cl;
 			goto gotnewcl;
 		}
@@ -417,9 +417,9 @@ static void SVC_RemoteCommand (void)
 	i = Rcon_Validate ();
 
 	if (i == 0)
-		Com_Printf ("Bad rcon from %s:\n%s\n", NET_AdrToString (net_from), net_message.data+4);
+		Com_Printf ("Bad rcon from %s:\n%s\n", NET_NetadrToString (net_from), net_message.data+4);
 	else
-		Com_Printf ("Rcon from %s:\n%s\n", NET_AdrToString (net_from), net_message.data+4);
+		Com_Printf ("Rcon from %s:\n%s\n", NET_NetadrToString (net_from), net_message.data+4);
 
 	Com_BeginRedirect (RD_PACKET, sv_outputbuf, SV_OUTPUTBUF_LENGTH, SV_FlushRedirect);
 
@@ -466,7 +466,7 @@ static void SV_ConnectionlessPacket (void)
 	Cmd_TokenizeString (s, false);
 
 	c = Cmd_Argv(0);
-	Com_DPrintf ("Packet %s : %s\n", NET_AdrToString(net_from), c);
+	Com_DPrintf ("Packet %s : %s\n", NET_NetadrToString(net_from), c);
 
 	if (!Q_strcmp(c, "ping"))
 		SVC_Ping ();
@@ -484,7 +484,7 @@ static void SV_ConnectionlessPacket (void)
 		SVC_RemoteCommand ();
 	else
 		Com_Printf ("bad connectionless packet from %s:\n%s\n"
-		, NET_AdrToString (net_from), s);
+		, NET_NetadrToString (net_from), s);
 }
 
 
@@ -601,7 +601,7 @@ static void SV_ReadPackets (void)
 		{
 			if (cl->state == cs_free)
 				continue;
-			if (!NET_CompareBaseAdr (net_from, cl->netchan.remote_address))
+			if (!NET_CompareBaseNetadr (net_from, cl->netchan.remote_address))
 				continue;
 			if (cl->netchan.qport != qport)
 				continue;
@@ -833,7 +833,7 @@ void Master_Heartbeat (void)
 	for (i=0 ; i<MAX_MASTERS ; i++)
 		if (master_adr[i].port)
 		{
-			Com_Printf ("Sending heartbeat to %s\n", NET_AdrToString (master_adr[i]));
+			Com_Printf ("Sending heartbeat to %s\n", NET_NetadrToString (master_adr[i]));
 			Netchan_OutOfBandPrint (NS_SERVER, master_adr[i], "heartbeat\n%s", string);
 		}
 }
@@ -862,7 +862,7 @@ static void Master_Shutdown (void)
 		if (master_adr[i].port)
 		{
 			if (i > 0)
-				Com_Printf ("Sending heartbeat to %s\n", NET_AdrToString (master_adr[i]));
+				Com_Printf ("Sending heartbeat to %s\n", NET_NetadrToString (master_adr[i]));
 			Netchan_OutOfBandPrint (NS_SERVER, master_adr[i], "shutdown");
 		}
 }

@@ -345,7 +345,7 @@ void SV_InitGame (void)
 	// heartbeats will always be sent to the id master
 	svs.last_heartbeat = -99999;		// send immediately
 	Q_sprintf_s(idmaster, "192.246.40.37:%i", PORT_MASTER);
-	NET_StringToAdr (idmaster, master_adr[0]);
+	NET_StringToNetadr (idmaster, master_adr[0]);
 
 	// init game
 	SV_InitGameProgs ();

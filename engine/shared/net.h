@@ -26,26 +26,28 @@ enum netsrc_t { NS_CLIENT, NS_SERVER };
 
 struct netadr_t
 {
+	union
+	{
+		uint ui;
+		byte arr[4];
+	} ip;
+	uint16			port;
 	netadrtype_t	type;
-
-	byte	ip[4];
-
-	uint16	port;
 };
 
-void		NET_Init( void );
-void		NET_Shutdown( void );
+void		NET_Init();
+void		NET_Shutdown();
 
 void		NET_Config( bool multiplayer );
 
 bool		NET_GetPacket( netsrc_t sock, netadr_t *net_from, sizebuf_t *net_message );
-void		NET_SendPacket( netsrc_t sock, int length, void *data, const netadr_t &to );
+void		NET_SendPacket( netsrc_t sock, int length, const void *data, const netadr_t &to );
 
-bool		NET_CompareAdr( const netadr_t &a, const netadr_t &b );
-bool		NET_CompareBaseAdr( const netadr_t &a, const netadr_t &b );
+bool		NET_CompareNetadr( const netadr_t &a, const netadr_t &b );
+bool		NET_CompareBaseNetadr( const netadr_t &a, const netadr_t &b );
 bool		NET_IsLocalAddress( const netadr_t &adr );
-char		*NET_AdrToString( const netadr_t &a );
-bool		NET_StringToAdr( const char *s, netadr_t &a );
+char		*NET_NetadrToString( const netadr_t &a );
+bool		NET_StringToNetadr( const char *s, netadr_t &a );
 void		NET_Sleep( int msec );
 
 //-------------------------------------------------------------------------------------------------

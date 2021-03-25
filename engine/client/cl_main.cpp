@@ -361,7 +361,7 @@ void CL_SendConnectPacket (void)
 	netadr_t	adr;
 	int		port;
 
-	if (!NET_StringToAdr (cls.servername, adr))
+	if (!NET_StringToNetadr (cls.servername, adr))
 	{
 		Com_Printf ("Bad server address\n");
 		cls.connect_time = 0;
@@ -407,7 +407,7 @@ void CL_CheckForResend (void)
 	if (cls.realtime - cls.connect_time < 3000)
 		return;
 
-	if (!NET_StringToAdr (cls.servername, adr))
+	if (!NET_StringToNetadr (cls.servername, adr))
 	{
 		Com_Printf ("Bad server address\n");
 		cls.state = ca_disconnected;
@@ -513,7 +513,7 @@ void CL_Rcon_f (void)
 
 			return;
 		}
-		NET_StringToAdr (rcon_address->string, to);
+		NET_StringToNetadr (rcon_address->string, to);
 		if (to.port == 0)
 			to.port = BigShort (PORT_SERVER);
 	}
@@ -629,7 +629,7 @@ void CL_Packet_f (void)
 
 	NET_Config (true);		// allow remote
 
-	if (!NET_StringToAdr (Cmd_Argv(1), adr))
+	if (!NET_StringToNetadr (Cmd_Argv(1), adr))
 	{
 		Com_Printf ("Bad address\n");
 		return;
@@ -767,7 +767,7 @@ void CL_PingServers_f (void)
 			continue;
 
 		Com_Printf ("pinging %s...\n", adrstring);
-		if (!NET_StringToAdr (adrstring, adr))
+		if (!NET_StringToNetadr (adrstring, adr))
 		{
 			Com_Printf ("Bad address: %s\n", adrstring);
 			continue;
@@ -823,7 +823,7 @@ void CL_ConnectionlessPacket (void)
 
 	c = Cmd_Argv(0);
 
-	Com_Printf ("%s: %s\n", NET_AdrToString (net_from), c);
+	Com_Printf ("%s: %s\n", NET_NetadrToString (net_from), c);
 
 	// server connection
 	if (!Q_strcmp(c, "client_connect"))
@@ -935,17 +935,17 @@ void CL_ReadPackets (void)
 
 		if (net_message.cursize < 8)
 		{
-			Com_Printf ("%s: Runt packet\n",NET_AdrToString(net_from));
+			Com_Printf ("%s: Runt packet\n",NET_NetadrToString(net_from));
 			continue;
 		}
 
 		//
 		// packet from server
 		//
-		if (!NET_CompareAdr (net_from, cls.netchan.remote_address))
+		if (!NET_CompareNetadr (net_from, cls.netchan.remote_address))
 		{
 			Com_DPrintf ("%s:sequenced packet without connection\n"
-				,NET_AdrToString(net_from));
+				,NET_NetadrToString(net_from));
 			continue;
 		}
 		if (!Netchan_Process(&cls.netchan, &net_message))
@@ -1713,7 +1713,7 @@ void CL_Init (void)
 
 	// all archived variables will now be loaded
 
-	Con_Init ();	
+	Con_Init ();
 #if defined __linux__ || defined __sgi
 	S_Init ();	
 	VID_Init ();

@@ -40,7 +40,7 @@ static void SV_SetMaster_f (void)
 		if (slot == MAX_MASTERS)
 			break;
 
-		if (!NET_StringToAdr (Cmd_Argv(i), master_adr[i]))
+		if (!NET_StringToNetadr (Cmd_Argv(i), master_adr[i]))
 		{
 			Com_Printf ("Bad address: %s\n", Cmd_Argv(i));
 			continue;
@@ -48,7 +48,7 @@ static void SV_SetMaster_f (void)
 		if (master_adr[slot].port == 0)
 			master_adr[slot].port = BigShort (PORT_MASTER);
 
-		Com_Printf ("Master server at %s\n", NET_AdrToString (master_adr[slot]));
+		Com_Printf ("Master server at %s\n", NET_NetadrToString (master_adr[slot]));
 
 		Com_Printf ("Sending a ping.\n");
 
@@ -716,7 +716,7 @@ static void SV_Status_f (void)
 
 		Com_Printf ("%7i ", svs.realtime - cl->lastmessage );
 
-		s = NET_AdrToString ( cl->netchan.remote_address);
+		s = NET_NetadrToString ( cl->netchan.remote_address);
 		Com_Printf ("%s", s);
 		l = 22 - strlen(s);
 		for (j=0 ; j<l ; j++)

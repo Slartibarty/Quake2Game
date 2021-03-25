@@ -4,9 +4,9 @@
 
 #pragma once
 
-#define NUM_CON_TIMES	4
+#define NUM_CON_TIMES	8
 
-#define CON_TEXTSIZE	32768
+#define CON_TEXTSIZE	0x20000
 
 struct console_t
 {

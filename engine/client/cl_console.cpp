@@ -294,7 +294,8 @@ void Con_Init (void)
 
 	Con_CheckResize ();
 	
-	Com_Printf ("Console initialized.\n");
+	// this doesn't get printed to the console, because con.initialized is set below
+	Com_Print ("Console initialized.\n");
 
 //
 // register our commands
