@@ -16,7 +16,7 @@
 #include "GL/glxew.h"
 #endif
 
-#define REF_VERSION		"GL 0.02"
+#define REF_VERSION		"GL 0.03"
 
 #define DEFAULT_CLEARCOLOR		0.0f, 0.0f, 0.0f, 1.0f	// Black
 
@@ -300,7 +300,7 @@ void	R_DrawSkyBox (void);
 // gl_draw.cpp
 //-------------------------------------------------------------------------------------------------
 
-void	Draw_InitLocal( void );
+void	Draw_InitLocal();
 
 void	Draw_GetPicSize( int *w, int *h, const char *name );
 void	Draw_Pic( int x, int y, const char *name );
@@ -309,7 +309,24 @@ void	Draw_Char( int x, int y, int ch );
 void	Draw_TileClear( int x, int y, int w, int h, const char *name );
 void	Draw_Fill( int x, int y, int w, int h, int c );
 void	Draw_FadeScreen( void );
+
+void	Draw_RenderBatches();
+
 void	Draw_StretchRaw( int x, int y, int w, int h, int cols, int rows, byte *data );
+
+//-------------------------------------------------------------------------------------------------
+// gl_shader.cpp
+//-------------------------------------------------------------------------------------------------
+
+struct glProgs_t
+{
+	GLuint guiProg;
+};
+
+extern glProgs_t glProgs;
+
+void	Shaders_Init();
+void	Shaders_Shutdown();
 
 //-------------------------------------------------------------------------------------------------
 

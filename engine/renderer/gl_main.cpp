@@ -937,7 +937,7 @@ static bool R_SetMode()
 	return true;
 }
 
-static void GL_CheckErrors(void)
+static void GL_CheckForErrors()
 {
 	GLenum err;
 	while ((err = glGetError()) != GL_NO_ERROR)
@@ -969,10 +969,9 @@ bool R_Init( void *hinstance, void *hWnd )
 	// Set our "safe" mode in case our current mode is bad
 	gl_state.prev_mode = 3;
 
-	// Print our GL strings
 	GL_Strings_f();
 
-	Cvar_Set( "scr_drawall", "0" );
+	Shaders_Init();
 
 	GL_SetDefaultState();
 
@@ -984,8 +983,7 @@ bool R_Init( void *hinstance, void *hWnd )
 	Mod_Init();
 	Draw_InitLocal();
 
-	// Check for errors
-	GL_CheckErrors();
+	GL_CheckForErrors();
 
 	return true;
 }
@@ -999,9 +997,9 @@ void R_Shutdown()
 	//GLimp_RestoreGamma();
 	GL_ShutdownImages();
 
-	/*
-	** shut down OS specific OpenGL stuff like contexts, etc.
-	*/
+	Shaders_Shutdown();
+
+	// shut down OS specific OpenGL stuff like contexts, etc.
 	GLimp_Shutdown();
 }
 
@@ -1038,7 +1036,9 @@ void R_RenderFrame( refdef_t *fd )
 //-------------------------------------------------------------------------------------------------
 void R_EndFrame()
 {
-	GL_CheckErrors();
+	Draw_RenderBatches();
+
+	GL_CheckForErrors();
 
 	GLimp_EndFrame();
 }
@@ -1067,7 +1067,7 @@ void R_SetRawPalette ( const unsigned char *palette )
 		rp[i*4+3] = 0xff;
 	}
 
-	glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
+	glClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
 	glClear( GL_COLOR_BUFFER_BIT );
 	glClearColor( DEFAULT_CLEARCOLOR );
 }

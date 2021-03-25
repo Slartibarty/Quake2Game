@@ -4,13 +4,25 @@
 
 #include "gl_local.h"
 
+#include <DirectXMath.h>
+
+#include "meshbuilder.h"
+
 static constexpr auto ConChars_Name = "materials/pics/conchars" MAT_EXT;
 
 material_t *draw_chars;
 
+static qGUIMeshBuilder g_charMeshBuilder;
+
+static bool s_generatedCharData;
+static GLuint s_charsVAO;
+static GLuint s_charsVBO;
+static GLuint s_charsEBO;
+
+
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-void Draw_InitLocal( void )
+void Draw_InitLocal()
 {
 	// load console characters
 	draw_chars = GL_FindMaterial( ConChars_Name, true );
@@ -18,6 +30,20 @@ void Draw_InitLocal( void )
 		// This is super aggressive, but it easily warns about bad game folders
 		Com_Printf( "Could not get console font: %s", ConChars_Name );
 	}
+
+	glGenVertexArrays( 1, &s_charsVAO );
+	glGenBuffers( 1, &s_charsVBO );
+	glGenBuffers( 1, &s_charsEBO );
+
+	glBindVertexArray( s_charsVAO );
+	glBindBuffer( GL_ARRAY_BUFFER, s_charsVBO );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, s_charsEBO );
+
+	glEnableVertexAttribArray( 0 );
+	glEnableVertexAttribArray( 1 );
+
+	glVertexAttribPointer( 0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof( GLfloat ), (void *)( 0 ) );
+	glVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof( GLfloat ), (void *)( 2 * sizeof( GLfloat ) ) );
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -46,6 +72,33 @@ void Draw_Char( int x, int y, int ch )
 	fcol = col * 0.0625f;
 	size = 0.0625f;
 
+	guiRectangle_t rect;
+
+	// v1
+	rect.v1.x = x;
+	rect.v1.y = y;
+	rect.v1.s = fcol;
+	rect.v1.t = frow;
+	// v2
+	rect.v2.x = x + CONCHAR_WIDTH;
+	rect.v2.y = y;
+	rect.v2.s = fcol + size;
+	rect.v2.t = frow;
+	// v3
+	rect.v3.x = x + CONCHAR_WIDTH;
+	rect.v3.y = y + CONCHAR_HEIGHT;
+	rect.v3.s = fcol + size;
+	rect.v3.t = frow + size;
+	// v4
+	rect.v4.x = x;
+	rect.v4.y = y + CONCHAR_HEIGHT;
+	rect.v4.s = fcol;
+	rect.v4.t = frow + size;
+
+	g_charMeshBuilder.AddElement( rect );
+
+#if 0
+
 	draw_chars->Bind();
 
 	glEnable( GL_ALPHA_TEST );
@@ -62,6 +115,8 @@ void Draw_Char( int x, int y, int ch )
 	glEnd();
 
 	glDisable( GL_ALPHA_TEST );
+
+#endif
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -230,6 +285,46 @@ void Draw_FadeScreen( void )
 	glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
 	glEnable( GL_TEXTURE_2D );
 	glDisable( GL_BLEND );
+}
+
+//-------------------------------------------------------------------------------------------------
+// Batching
+//-------------------------------------------------------------------------------------------------
+void Draw_RenderBatches()
+{
+	if ( r_newrefdef.width == 0 || r_newrefdef.height == 0 ) {
+		return;
+	}
+
+	// render all gui draw calls
+
+	if ( g_charMeshBuilder.HasData() ) {
+
+		// set up the render state
+		DirectX::XMMATRIX orthoMatrix = DirectX::XMMatrixOrthographicOffCenterRH( 0, r_newrefdef.width, r_newrefdef.height, 0, 0.0f, 1.0f );
+	//	DirectX::XMMATRIX orthoMatrix = DirectX::XMMatrixOrthographicLH( r_newrefdef.width, r_newrefdef.height, 0.0f, 1.0f );
+
+		glUseProgram( glProgs.guiProg );
+		glUniformMatrix4fv( 2, 1, GL_FALSE, (float *)&orthoMatrix );
+		glUniform1i( 3, 0 );
+
+		glBindVertexArray( s_charsVAO );
+		glBufferData( GL_ARRAY_BUFFER, g_charMeshBuilder.GetVertexArraySize(), g_charMeshBuilder.GetVertexArray(), GL_DYNAMIC_DRAW );
+		glBufferData( GL_ELEMENT_ARRAY_BUFFER, g_charMeshBuilder.GetIndexArraySize(), g_charMeshBuilder.GetIndexArray(), GL_DYNAMIC_DRAW );
+
+		draw_chars->Bind();
+
+		glPrimitiveRestartIndex( USHRT_MAX );
+		glEnable( GL_PRIMITIVE_RESTART );
+
+		glDrawElements( GL_TRIANGLES, g_charMeshBuilder.GetIndexArrayCount(), GL_UNSIGNED_SHORT, nullptr );
+
+		glDisable( GL_PRIMITIVE_RESTART );
+
+		glUseProgram( 0 );
+
+		g_charMeshBuilder.Reset();
+	}
 }
 
 //-------------------------------------------------------------------------------------------------
