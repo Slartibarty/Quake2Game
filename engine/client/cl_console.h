@@ -6,7 +6,7 @@
 
 #define NUM_CON_TIMES	8
 
-#define CON_TEXTSIZE	0x20000
+#define CON_TEXTSIZE	0x10000
 
 struct console_t
 {
