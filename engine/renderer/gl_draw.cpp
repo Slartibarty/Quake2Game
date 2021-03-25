@@ -48,8 +48,7 @@ void Draw_Char( int x, int y, int ch )
 
 	draw_chars->Bind();
 
-	glDisable( GL_ALPHA_TEST );
-	glEnable( GL_BLEND );
+	glEnable( GL_ALPHA_TEST );
 
 	glBegin( GL_QUADS );
 	glTexCoord2f( fcol, frow );
@@ -62,8 +61,7 @@ void Draw_Char( int x, int y, int ch )
 	glVertex2i( x, y + CONCHAR_HEIGHT );
 	glEnd();
 
-	glDisable( GL_BLEND );
-	glEnable( GL_ALPHA_TEST );
+	glDisable( GL_ALPHA_TEST );
 }
 
 //-------------------------------------------------------------------------------------------------
