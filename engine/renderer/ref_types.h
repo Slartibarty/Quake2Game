@@ -62,6 +62,7 @@ struct lightstyle_t
 
 struct refdef_t
 {
+	// SlartTodo: refdef_t doesn't really need the width and height values here, it tracks it itself
 	int			x, y, width, height;// in virtual screen coordinates
 	float		fov_x, fov_y;
 	vec3_t		vieworg;

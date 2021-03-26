@@ -6,6 +6,8 @@
 #include "ref_public.h"
 
 #ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 #include <Windows.h>
 #endif
 
@@ -300,7 +302,8 @@ void	R_DrawSkyBox (void);
 // gl_draw.cpp
 //-------------------------------------------------------------------------------------------------
 
-void	Draw_InitLocal();
+void	Draw_Init();
+void	Draw_Shutdown();
 
 void	Draw_GetPicSize( int *w, int *h, const char *name );
 void	Draw_Pic( int x, int y, const char *name );

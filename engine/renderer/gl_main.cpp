@@ -441,7 +441,6 @@ static void R_PolyBlend()
 	if ( !v_blend[3] )
 		return;
 
-	glDisable( GL_ALPHA_TEST );
 	glEnable( GL_BLEND );
 	glDisable( GL_DEPTH_TEST );
 	glDisable( GL_TEXTURE_2D );
@@ -464,7 +463,6 @@ static void R_PolyBlend()
 
 	glDisable( GL_BLEND );
 	glEnable( GL_TEXTURE_2D );
-	glEnable( GL_ALPHA_TEST );
 
 	glColor4f( 1, 1, 1, 1 );
 }
@@ -632,12 +630,14 @@ void R_SetupGL()
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
 
+#if 0
 	glRotatef( -90, 1, 0, 0 );	    // put Z going up
 	glRotatef( 90, 0, 0, 1 );	    // put Z going up
 	glRotatef( -r_newrefdef.viewangles[2], 1, 0, 0 );
 	glRotatef( -r_newrefdef.viewangles[0], 0, 1, 0 );
 	glRotatef( -r_newrefdef.viewangles[1], 0, 0, 1 );
 	glTranslatef( -r_newrefdef.vieworg[0], -r_newrefdef.vieworg[1], -r_newrefdef.vieworg[2] );
+#endif
 
 	glGetFloatv( GL_MODELVIEW_MATRIX, r_world_matrix );
 
@@ -650,7 +650,6 @@ void R_SetupGL()
 		glDisable( GL_CULL_FACE );
 
 	glDisable( GL_BLEND );
-	glDisable( GL_ALPHA_TEST );
 	glEnable( GL_DEPTH_TEST );
 }
 
@@ -733,9 +732,6 @@ static void GL_SetDefaultState()
 	glCullFace( GL_FRONT );
 	glEnable( GL_TEXTURE_2D );
 
-	glEnable( GL_ALPHA_TEST );
-	glAlphaFunc( GL_GREATER, 0.666f );
-
 	glDisable( GL_DEPTH_TEST );
 	glDisable( GL_CULL_FACE );
 	glDisable( GL_BLEND );
@@ -761,24 +757,6 @@ static void GL_SetDefaultState()
 		glPointParameterfEXT( GL_POINT_SIZE_MAX_EXT, gl_particle_max_size->value );
 		glPointParameterfvEXT( GL_DISTANCE_ATTENUATION_EXT, attenuations );
 	}
-}
-
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-static void R_SetGL2D()
-{
-	// set 2D virtual screen size
-	glViewport( 0, 0, vid.width, vid.height );
-	glMatrixMode( GL_PROJECTION );
-	glLoadIdentity();
-	glOrtho( 0, vid.width, vid.height, 0, -99999, 99999 );
-	glMatrixMode( GL_MODELVIEW );
-	glLoadIdentity();
-	glDisable( GL_DEPTH_TEST );
-	glDisable( GL_CULL_FACE );
-	glDisable( GL_BLEND );
-	glEnable( GL_ALPHA_TEST );
-	glColor4f( 1, 1, 1, 1 );
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -981,7 +959,7 @@ bool R_Init( void *hinstance, void *hWnd )
 	//GLimp_SetGamma( g_gammatable, g_gammatable, g_gammatable );
 
 	Mod_Init();
-	Draw_InitLocal();
+	Draw_Init();
 
 	GL_CheckForErrors();
 
@@ -993,6 +971,7 @@ bool R_Init( void *hinstance, void *hWnd )
 void R_Shutdown()
 {
 	Mod_FreeAll();
+	Draw_Shutdown();
 
 	//GLimp_RestoreGamma();
 	GL_ShutdownImages();
@@ -1012,11 +991,6 @@ void R_BeginFrame()
 	// Check if we need to set modes
 	R_SetMode();
 
-	/*
-	** go into 2D mode
-	*/
-	R_SetGL2D();
-
 	//
 	// clear screen if desired
 	//
@@ -1029,7 +1003,6 @@ void R_RenderFrame( refdef_t *fd )
 {
 	R_RenderView( fd );
 	R_SetLightLevel();
-	R_SetGL2D();
 }
 
 //-------------------------------------------------------------------------------------------------

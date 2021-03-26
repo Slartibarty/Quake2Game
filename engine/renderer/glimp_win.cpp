@@ -158,6 +158,7 @@ static void GLimp_SetWindowSize( int width, int height )
 
 	SetWindowPos( s_glwState.hWnd, NULL, 0, 0, newWidth, newHeight, SWP_NOZORDER | SWP_NOMOVE );
 
+	glViewport( 0, 0, width, height );
 	VID_NewWindow( width, height );
 	vid.width = width;
 	vid.height = height;
@@ -517,10 +518,6 @@ bool GLimp_Init( void *hinstance, void *wndproc )
 	}
 
 	GLimp_CreateWindow( (WNDPROC)wndproc, width, height, (qboolean)vid_fullscreen->value );
-
-	// Hack?
-	r_newrefdef.width = width;
-	r_newrefdef.height = height;
 
 	gl_mode->modified = false;
 	vid_fullscreen->modified = false;

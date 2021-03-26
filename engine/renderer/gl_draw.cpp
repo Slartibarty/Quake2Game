@@ -10,40 +10,104 @@
 
 static constexpr auto ConChars_Name = "materials/pics/conchars" MAT_EXT;
 
+struct guiDrawCmd_t
+{
+	material_t *material;
+	uint32 offset, count;
+};
+
 material_t *draw_chars;
 
-static qGUIMeshBuilder g_charMeshBuilder;
+static qGUIMeshBuilder s_drawMeshBuilder;
 
-static bool s_generatedCharData;
-static GLuint s_charsVAO;
-static GLuint s_charsVBO;
-static GLuint s_charsEBO;
+static GLuint s_drawVAO;
+static GLuint s_drawVBO;
+static GLuint s_drawEBO;
 
+std::vector<guiDrawCmd_t> s_drawCmds;
+
+// Used so we can chain consecutive function calls
+static guiDrawCmd_t	*s_currentCmd;
+static uint32		s_lastOffset;
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-void Draw_InitLocal()
+void Draw_Init()
 {
 	// load console characters
 	draw_chars = GL_FindMaterial( ConChars_Name, true );
 	if ( !draw_chars->IsOkay() ) {
-		// This is super aggressive, but it easily warns about bad game folders
-		Com_Printf( "Could not get console font: %s", ConChars_Name );
+		// we NEED the console font
+		Com_FatalErrorf( "Could not get console font: %s", ConChars_Name );
 	}
 
-	glGenVertexArrays( 1, &s_charsVAO );
-	glGenBuffers( 1, &s_charsVBO );
-	glGenBuffers( 1, &s_charsEBO );
+	// reserve 64 draw commands
+	s_drawCmds.reserve( 64 );
 
-	glBindVertexArray( s_charsVAO );
-	glBindBuffer( GL_ARRAY_BUFFER, s_charsVBO );
-	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, s_charsEBO );
+	glGenVertexArrays( 1, &s_drawVAO );
+	glGenBuffers( 1, &s_drawVBO );
+	glGenBuffers( 1, &s_drawEBO );
+
+	glBindVertexArray( s_drawVAO );
+	glBindBuffer( GL_ARRAY_BUFFER, s_drawVBO );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, s_drawEBO );
 
 	glEnableVertexAttribArray( 0 );
 	glEnableVertexAttribArray( 1 );
+	glEnableVertexAttribArray( 2 );
 
-	glVertexAttribPointer( 0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof( GLfloat ), (void *)( 0 ) );
-	glVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof( GLfloat ), (void *)( 2 * sizeof( GLfloat ) ) );
+	glVertexAttribPointer( 0, 2, GL_FLOAT, GL_FALSE, 8 * sizeof( GLfloat ), (void *)( 0 ) );
+	glVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof( GLfloat ), (void *)( 2 * sizeof( GLfloat ) ) );
+	glVertexAttribPointer( 2, 4, GL_FLOAT, GL_FALSE, 8 * sizeof( GLfloat ), (void *)( 4 * sizeof( GLfloat ) ) );
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+void Draw_Shutdown()
+{
+	glDeleteBuffers( 1, &s_drawEBO );
+	glDeleteBuffers( 1, &s_drawVBO );
+	glDeleteVertexArrays( 1, &s_drawVAO );
+}
+
+//-------------------------------------------------------------------------------------------------
+// Checks for or creates a draw chain
+//-------------------------------------------------------------------------------------------------
+static void Draw_CheckChain( material_t *material )
+{
+	if ( !s_currentCmd ) {
+		// this is our first run for this frame
+		guiDrawCmd_t &cmd = s_drawCmds.emplace_back();
+
+		cmd.material = material;
+		cmd.offset = 0;
+		cmd.count = 8;
+
+		assert( s_drawMeshBuilder.GetIndexArrayCount() == 8 );
+
+		s_lastOffset = 8;
+
+		s_currentCmd = &cmd;
+	}
+	else if ( s_currentCmd->material == material ) {
+		// use the existing chain
+		guiDrawCmd_t &cmd = *s_currentCmd;
+
+		cmd.count += 8; // eight more indices
+		s_lastOffset += 8;
+	}
+	else {
+		// start a new chain
+		guiDrawCmd_t &cmd = s_drawCmds.emplace_back();
+
+		cmd.material = material;
+		cmd.offset = s_lastOffset;
+		cmd.count = 8;
+
+		s_lastOffset += 8;
+
+		s_currentCmd = &cmd;
+	}
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -53,6 +117,7 @@ void Draw_InitLocal()
 //-------------------------------------------------------------------------------------------------
 void Draw_Char( int x, int y, int ch )
 {
+#if 1
 	int row, col;
 	float frow, fcol;
 	float size;
@@ -72,50 +137,26 @@ void Draw_Char( int x, int y, int ch )
 	fcol = col * 0.0625f;
 	size = 0.0625f;
 
-	guiRectangle_t rect;
+	guiRect_t rect;
 
-	// v1
-	rect.v1.x = x;
-	rect.v1.y = y;
-	rect.v1.s = fcol;
-	rect.v1.t = frow;
-	// v2
-	rect.v2.x = x + CONCHAR_WIDTH;
-	rect.v2.y = y;
-	rect.v2.s = fcol + size;
-	rect.v2.t = frow;
-	// v3
-	rect.v3.x = x + CONCHAR_WIDTH;
-	rect.v3.y = y + CONCHAR_HEIGHT;
-	rect.v3.s = fcol + size;
-	rect.v3.t = frow + size;
-	// v4
-	rect.v4.x = x;
-	rect.v4.y = y + CONCHAR_HEIGHT;
-	rect.v4.s = fcol;
-	rect.v4.t = frow + size;
+	rect.v1.Position2f( x, y );
+	rect.v1.TexCoord2f( fcol, frow );
+	rect.v1.Color1f( 1.0f );
 
-	g_charMeshBuilder.AddElement( rect );
+	rect.v2.Position2f( x + CONCHAR_WIDTH, y );
+	rect.v2.TexCoord2f( fcol + size, frow );
+	rect.v2.Color1f( 1.0f );
 
-#if 0
+	rect.v3.Position2f( x + CONCHAR_WIDTH, y + CONCHAR_HEIGHT );
+	rect.v3.TexCoord2f( fcol + size, frow + size );
+	rect.v3.Color1f( 1.0f );
+	rect.v4.Position2f( x, y + CONCHAR_HEIGHT );
+	rect.v4.TexCoord2f( fcol, frow + size );
+	rect.v4.Color1f( 1.0f );
 
-	draw_chars->Bind();
+	s_drawMeshBuilder.AddElement( rect );
 
-	glEnable( GL_ALPHA_TEST );
-
-	glBegin( GL_QUADS );
-	glTexCoord2f( fcol, frow );
-	glVertex2i( x, y );
-	glTexCoord2f( fcol + size, frow );
-	glVertex2i( x + CONCHAR_WIDTH, y );
-	glTexCoord2f( fcol + size, frow + size );
-	glVertex2i( x + CONCHAR_WIDTH, y + CONCHAR_HEIGHT );
-	glTexCoord2f( fcol, frow + size );
-	glVertex2i( x, y + CONCHAR_HEIGHT );
-	glEnd();
-
-	glDisable( GL_ALPHA_TEST );
-
+	Draw_CheckChain( draw_chars );
 #endif
 }
 
@@ -152,6 +193,7 @@ void Draw_GetPicSize( int *w, int *h, const char *pic )
 //-------------------------------------------------------------------------------------------------
 void Draw_StretchPic( int x, int y, int w, int h, const char *pic )
 {
+#if 1
 	material_t *mat;
 	image_t *img;
 
@@ -164,24 +206,35 @@ void Draw_StretchPic( int x, int y, int w, int h, const char *pic )
 
 	img = mat->image;
 
-	mat->Bind();
+	guiRect_t rect;
 
-	glBegin( GL_QUADS );
-	glTexCoord2f( img->sl, img->tl );
-	glVertex2i( x, y );
-	glTexCoord2f( img->sh, img->tl );
-	glVertex2i( x + w, y );
-	glTexCoord2f( img->sh, img->th );
-	glVertex2i( x + w, y + h );
-	glTexCoord2f( img->sl, img->th );
-	glVertex2i( x, y + h );
-	glEnd();
+	rect.v1.Position2f( x, y );
+	rect.v1.TexCoord2f( 0, 0 );
+	rect.v1.Color1f( 1.0f );
+
+	rect.v2.Position2f( x + w, y );
+	rect.v2.TexCoord2f( 1, 0 );
+	rect.v2.Color1f( 1.0f );
+
+	rect.v3.Position2f( x + w, y + h );
+	rect.v3.TexCoord2f( 1, 1 );
+	rect.v3.Color1f( 1.0f );
+
+	rect.v4.Position2f( x, y + h );
+	rect.v4.TexCoord2f( 0, 1 );
+	rect.v4.Color1f( 1.0f );
+
+	s_drawMeshBuilder.AddElement( rect );
+
+	Draw_CheckChain( mat );
+#endif
 }
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 void Draw_Pic( int x, int y, const char *pic )
 {
+#if 1
 	material_t *mat;
 	image_t *img;
 
@@ -194,18 +247,31 @@ void Draw_Pic( int x, int y, const char *pic )
 
 	img = mat->image;
 
-	mat->Bind();
+	guiRect_t rect;
 
-	glBegin( GL_QUADS );
-	glTexCoord2f( img->sl, img->tl );
-	glVertex2i( x, y );
-	glTexCoord2f( img->sh, img->tl );
-	glVertex2i( x + img->width, y );
-	glTexCoord2f( img->sh, img->th );
-	glVertex2i( x + img->width, y + img->height );
-	glTexCoord2f( img->sl, img->th );
-	glVertex2i( x, y + img->height );
-	glEnd();
+	int w = img->width;
+	int h = img->height;
+
+	rect.v1.Position2f( x, y );
+	rect.v1.TexCoord2f( img->sl, img->tl );
+	rect.v1.Color1f( 1.0f );
+
+	rect.v2.Position2f( x + w, y );
+	rect.v2.TexCoord2f( img->sh, img->tl );
+	rect.v2.Color1f( 1.0f );
+
+	rect.v3.Position2f( x + w, y + h );
+	rect.v3.TexCoord2f( img->sh, img->th );
+	rect.v3.Color1f( 1.0f );
+
+	rect.v4.Position2f( x, y + h );
+	rect.v4.TexCoord2f( img->sl, img->th );
+	rect.v4.Color1f( 1.0f );
+
+	s_drawMeshBuilder.AddElement( rect );
+
+	Draw_CheckChain( mat );
+#endif
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -214,8 +280,8 @@ void Draw_Pic( int x, int y, const char *pic )
 //-------------------------------------------------------------------------------------------------
 void Draw_TileClear( int x, int y, int w, int h, const char *pic )
 {
+#if 1
 	material_t *mat;
-	image_t *img;
 
 	mat = Draw_FindPic( pic );
 	if ( !mat )
@@ -224,20 +290,28 @@ void Draw_TileClear( int x, int y, int w, int h, const char *pic )
 		return;
 	}
 
-	img = mat->image;
+	guiRect_t rect;
 
-	mat->Bind();
+	rect.v1.Position2f( x, y );
+	rect.v1.TexCoord2f( x / 64.0f, y / 64.0f );
+	rect.v1.Color1f( 1.0f );
 
-	glBegin( GL_QUADS );
-	glTexCoord2f( x / 64.0f, y / 64.0f );
-	glVertex2i( x, y );
-	glTexCoord2f( ( x + w ) / 64.0f, y / 64.0f );
-	glVertex2i( x + w, y );
-	glTexCoord2f( ( x + w ) / 64.0f, ( y + h ) / 64.0f );
-	glVertex2i( x + w, y + h );
-	glTexCoord2f( x / 64.0f, ( y + h ) / 64.0f );
-	glVertex2i( x, y + h );
-	glEnd();
+	rect.v2.Position2f( x + w, y );
+	rect.v2.TexCoord2f( ( x + w ) / 64.0f, y / 64.0f );
+	rect.v2.Color1f( 1.0f );
+
+	rect.v3.Position2f( x + w, y + h );
+	rect.v3.TexCoord2f( ( x + w ) / 64.0f, ( y + h ) / 64.0f );
+	rect.v3.Color1f( 1.0f );
+
+	rect.v4.Position2f( x, y + h );
+	rect.v4.TexCoord2f( x / 64.0f, ( y + h ) / 64.0f );
+	rect.v4.Color1f( 1.0f );
+
+	s_drawMeshBuilder.AddElement( rect );
+
+	Draw_CheckChain( mat );
+#endif
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -245,6 +319,7 @@ void Draw_TileClear( int x, int y, int w, int h, const char *pic )
 //-------------------------------------------------------------------------------------------------
 void Draw_Fill( int x, int y, int w, int h, int c )
 {
+#if 1
 	assert( c >= 0 && c < 255 );
 	if ( c > 255 ) {
 		Com_FatalErrorf("Draw_Fill: bad color" );
@@ -253,38 +328,66 @@ void Draw_Fill( int x, int y, int w, int h, int c )
 	glDisable( GL_TEXTURE_2D );
 
 	byte *color = (byte *)&d_8to24table[c];
-	glColor3f( color[0] / 255.0f, color[1] / 255.0f, color[2] / 255.0f );
+	float fcolor[3]
+	{
+		color[0] / 255.0f,
+		color[1] / 255.0f,
+		color[2] / 255.0f
+	};
 
-	glBegin( GL_QUADS );
-	glVertex2i( x, y );
-	glVertex2i( x + w, y );
-	glVertex2i( x + w, y + h );
-	glVertex2i( x, y + h );
-	glEnd();
+	guiRect_t rect;
 
-	glColor3f( 1.0f, 1.0f, 1.0f );
+	rect.v1.Position2f( x, y );
+	rect.v1.TexCoord2f( 0.0f, 0.0f );
+	rect.v1.Color3fv( fcolor );
 
-	glEnable( GL_TEXTURE_2D );
+	rect.v2.Position2f( x + w, y );
+	rect.v2.TexCoord2f( 0.0f, 0.0f );
+	rect.v2.Color3fv( fcolor );
+
+	rect.v3.Position2f( x + w, y + h );
+	rect.v3.TexCoord2f( 0.0f, 0.0f );
+	rect.v3.Color3fv( fcolor );
+
+	rect.v4.Position2f( x, y + h );
+	rect.v4.TexCoord2f( 0.0f, 0.0f );
+	rect.v4.Color3fv( fcolor );
+
+	s_drawMeshBuilder.AddElement( rect );
+
+	Draw_CheckChain( mat_notexture );
+#endif
 }
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 void Draw_FadeScreen( void )
 {
-	glEnable( GL_BLEND );
-	glDisable( GL_TEXTURE_2D );
-	glColor4f( 0.0f, 0.0f, 0.0f, 0.8f );
+#if 1
+	guiRect_t rect;
 
-	glBegin( GL_QUADS );
-	glVertex2i( 0, 0 );
-	glVertex2i( r_newrefdef.width, 0 );
-	glVertex2i( r_newrefdef.width, r_newrefdef.height );
-	glVertex2i( 0, r_newrefdef.height );
-	glEnd();
+	constexpr float fadeAmnt = 0.8f;
 
-	glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
-	glEnable( GL_TEXTURE_2D );
-	glDisable( GL_BLEND );
+	rect.v1.Position2f( 0.0f, 0.0f );
+	rect.v1.TexCoord2f( 0.0f, 0.0f );
+	rect.v1.Color2f( 0.0f, fadeAmnt );
+
+	rect.v2.Position2f( r_newrefdef.width, 0.0f );
+	rect.v2.TexCoord2f( 0.0f, 0.0f );
+	rect.v2.Color2f( 0.0f, fadeAmnt );
+
+	rect.v3.Position2f( r_newrefdef.width, r_newrefdef.height );
+	rect.v3.TexCoord2f( 0.0f, 0.0f );
+	rect.v3.Color2f( 0.0f, fadeAmnt );
+
+	rect.v4.Position2f( 0.0f, r_newrefdef.height );
+	rect.v4.TexCoord2f( 0.0f, 0.0f );
+	rect.v4.Color2f( 0.0f, fadeAmnt );
+
+	s_drawMeshBuilder.AddElement( rect );
+
+	Draw_CheckChain( mat_notexture );
+#endif
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -292,38 +395,51 @@ void Draw_FadeScreen( void )
 //-------------------------------------------------------------------------------------------------
 void Draw_RenderBatches()
 {
-	if ( r_newrefdef.width == 0 || r_newrefdef.height == 0 ) {
-		return;
-	}
-
 	// render all gui draw calls
 
-	if ( g_charMeshBuilder.HasData() ) {
+	if ( s_drawMeshBuilder.HasData() ) {
+
+		// profiling code
+	//	double begin = Time_FloatMilliseconds();
 
 		// set up the render state
-		DirectX::XMMATRIX orthoMatrix = DirectX::XMMatrixOrthographicOffCenterRH( 0, r_newrefdef.width, r_newrefdef.height, 0, 0.0f, 1.0f );
-	//	DirectX::XMMATRIX orthoMatrix = DirectX::XMMatrixOrthographicLH( r_newrefdef.width, r_newrefdef.height, 0.0f, 1.0f );
+		DirectX::XMMATRIX orthoMatrix = DirectX::XMMatrixOrthographicOffCenterRH( 0.0f, vid.width, vid.height, 0.0f, -1.0f, 1.0f );
 
 		glUseProgram( glProgs.guiProg );
-		glUniformMatrix4fv( 2, 1, GL_FALSE, (float *)&orthoMatrix );
-		glUniform1i( 3, 0 );
+		glUniformMatrix4fv( 3, 1, GL_FALSE, (float *)&orthoMatrix );
+		glUniform1i( 4, 0 );
 
-		glBindVertexArray( s_charsVAO );
-		glBufferData( GL_ARRAY_BUFFER, g_charMeshBuilder.GetVertexArraySize(), g_charMeshBuilder.GetVertexArray(), GL_DYNAMIC_DRAW );
-		glBufferData( GL_ELEMENT_ARRAY_BUFFER, g_charMeshBuilder.GetIndexArraySize(), g_charMeshBuilder.GetIndexArray(), GL_DYNAMIC_DRAW );
+		glBindVertexArray( s_drawVAO );
 
-		draw_chars->Bind();
+		glBufferData( GL_ARRAY_BUFFER, s_drawMeshBuilder.GetVertexArraySize(), s_drawMeshBuilder.GetVertexArray(), GL_STREAM_DRAW );
+		glBufferData( GL_ELEMENT_ARRAY_BUFFER, s_drawMeshBuilder.GetIndexArraySize(), s_drawMeshBuilder.GetIndexArray(), GL_STREAM_DRAW );
 
-		glPrimitiveRestartIndex( USHRT_MAX );
-		glEnable( GL_PRIMITIVE_RESTART );
+		// these will be re-enabled next frame
+		glDisable( GL_DEPTH_TEST );
+		glDisable( GL_CULL_FACE );
+	//	glDisable( GL_BLEND );
 
-		glDrawElements( GL_TRIANGLES, g_charMeshBuilder.GetIndexArrayCount(), GL_UNSIGNED_SHORT, nullptr );
+		glEnable( GL_PRIMITIVE_RESTART_FIXED_INDEX );
 
-		glDisable( GL_PRIMITIVE_RESTART );
+		for ( const auto &cmd : s_drawCmds )
+		{
+			cmd.material->Bind();
+
+			glDrawElements( GL_TRIANGLES, cmd.count, GL_UNSIGNED_SHORT, (void *)( (intptr_t)cmd.offset * sizeof( uint16 ) ) );
+		}
+
+		glDisable( GL_PRIMITIVE_RESTART_FIXED_INDEX );
 
 		glUseProgram( 0 );
 
-		g_charMeshBuilder.Reset();
+		s_drawMeshBuilder.Reset();
+		s_drawCmds.clear();
+		s_currentCmd = nullptr;
+		s_lastOffset = 0;
+
+		// profiling code
+	//	double end = Time_FloatMilliseconds();
+	//	Com_Printf( "Draw_RenderBatches: %.6f milliseconds\n", end - begin );
 	}
 }
 
@@ -336,6 +452,7 @@ extern unsigned	r_rawpalette[256];
 //-------------------------------------------------------------------------------------------------
 void Draw_StretchRaw( int x, int y, int w, int h, int cols, int rows, byte *data )
 {
+#if 0
 	static uint	image32[256 * 256];
 	int			i, j, trows;
 	byte		*source;
@@ -402,4 +519,5 @@ void Draw_StretchRaw( int x, int y, int w, int h, int cols, int rows, byte *data
 
 	// Delete frame
 	glDeleteTextures( 1, &id );
+#endif
 }
