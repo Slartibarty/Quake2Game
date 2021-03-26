@@ -750,7 +750,6 @@ void GL_ShutdownImages( void )
 {
 	int i;
 	material_t *material;
-	image_t *image;
 
 	if ( !g_imagesInitialised ) {
 		return;
@@ -775,6 +774,7 @@ void GL_ShutdownImages( void )
 	// Images are dereferenced by the material when their refcount reaches 0
 	// Go through every single image for security
 #ifdef Q_DEBUG
+	image_t *image;
 	for ( i = 0, image = gltextures; i < MAX_GLTEXTURES; ++i, ++image )
 	{
 		assert( image->refcount == 0 && image->texnum == 0 );

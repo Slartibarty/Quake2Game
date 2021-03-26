@@ -267,7 +267,7 @@ project "cgame"
 	
 project "game"
 	kind "SharedLib"
-	targetname "gamex64"
+	targetname "game"
 	language "C++"
 	targetdir "../game/baseq2"
 	

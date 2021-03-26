@@ -347,12 +347,12 @@ static void *Sys_GetAPI( void *parms, HINSTANCE &instance, const char *gamename,
 
 void *Sys_GetGameAPI( void *parms )
 {
-	return Sys_GetAPI( parms, game_library, "game" BLD_ARCHITECTURE ".dll", "GetGameAPI" );
+	return Sys_GetAPI( parms, game_library, "game.dll", "GetGameAPI" );
 }
 
 void *Sys_GetCGameAPI( void *parms )
 {
-	return Sys_GetAPI( parms, cgame_library, "cgame" BLD_ARCHITECTURE ".dll", "GetCGameAPI" );
+	return Sys_GetAPI( parms, cgame_library, "cgame.dll", "GetCGameAPI" );
 }
 
 //=======================================================================
