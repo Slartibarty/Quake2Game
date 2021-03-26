@@ -7,7 +7,6 @@ local conf_dbg = "debug"
 local conf_rel = "release"
 local conf_rtl = "retail"
 
-local plat_32bit = "x86"
 local plat_64bit = "x64"
 
 local build_dir = "../build"
@@ -16,14 +15,13 @@ local filter_dbg = "configurations:" .. conf_dbg
 local filter_rel_or_rtl = "configurations:release or retail" -- TODO: This shouldn't be necessary
 local filter_rtl = "configurations:" .. conf_rtl
 
-local filter_32bit = "platforms:" .. plat_32bit
 local filter_64bit = "platforms:" .. plat_64bit
 
 -- Workspace definition -------------------------------------------------------
 
 workspace "quake2"
 	configurations { conf_dbg, conf_rel, conf_rtl }
-	platforms { plat_32bit, plat_64bit }
+	platforms { plat_64bit }
 	location( build_dir )
 	preferredtoolarchitecture "x86_64"
 	startproject "engine"
@@ -41,12 +39,6 @@ warnings "Default"
 floatingpoint "Fast"
 characterset "ASCII"
 exceptionhandling "Off"
-
--- Config for all 32-bit projects
-filter( filter_32bit )
-	vectorextensions "SSE2"
-	architecture "x86"
-filter {}
 	
 -- Config for all 64-bit projects
 filter( filter_64bit )
@@ -240,12 +232,7 @@ project "engine"
 	
 project "cgame"
 	kind "SharedLib"
-	filter( filter_32bit )
-		targetname "cgamex86"
-	filter {}
-	filter( filter_64bit )
-		targetname "cgamex64"
-	filter {}
+	targetname "cgame"
 	language "C++"
 	targetdir "../game/baseq2"
 	
@@ -280,12 +267,7 @@ project "cgame"
 	
 project "game"
 	kind "SharedLib"
-	filter( filter_32bit )
-		targetname "gamex86"
-	filter {}
-	filter( filter_64bit )
-		targetname "gamex64"
-	filter {}
+	targetname "gamex64"
 	language "C++"
 	targetdir "../game/baseq2"
 	
