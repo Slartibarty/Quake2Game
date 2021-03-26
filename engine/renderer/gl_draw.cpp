@@ -391,6 +391,38 @@ void Draw_FadeScreen( void )
 }
 
 //-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+void Draw_PolyBlend( const vec4_t color )
+{
+#if 1
+	if ( !gl_polyblend->value || color[3] <= 0.0f )
+		return;
+
+	guiRect_t rect;
+
+	rect.v1.Position2f( 0.0f, 0.0f );
+	rect.v1.TexCoord2f( 0.0f, 0.0f );
+	rect.v1.Color4fv( color );
+
+	rect.v2.Position2f( r_newrefdef.width, 0.0f );
+	rect.v2.TexCoord2f( 0.0f, 0.0f );
+	rect.v2.Color4fv( color );
+
+	rect.v3.Position2f( r_newrefdef.width, r_newrefdef.height );
+	rect.v3.TexCoord2f( 0.0f, 0.0f );
+	rect.v3.Color4fv( color );
+
+	rect.v4.Position2f( 0.0f, r_newrefdef.height );
+	rect.v4.TexCoord2f( 0.0f, 0.0f );
+	rect.v4.Color4fv( color );
+
+	s_drawMeshBuilder.AddElement( rect );
+
+	Draw_CheckChain( mat_notexture );
+#endif
+}
+
+//-------------------------------------------------------------------------------------------------
 // Batching
 //-------------------------------------------------------------------------------------------------
 void Draw_RenderBatches()
@@ -419,6 +451,7 @@ void Draw_RenderBatches()
 		glDisable( GL_CULL_FACE );
 	//	glDisable( GL_BLEND );
 
+		glEnable( GL_BLEND );
 		glEnable( GL_PRIMITIVE_RESTART_FIXED_INDEX );
 
 		for ( const auto &cmd : s_drawCmds )

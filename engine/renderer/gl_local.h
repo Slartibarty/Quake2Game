@@ -312,6 +312,7 @@ void	Draw_Char( int x, int y, int ch );
 void	Draw_TileClear( int x, int y, int w, int h, const char *name );
 void	Draw_Fill( int x, int y, int w, int h, int c );
 void	Draw_FadeScreen( void );
+void	Draw_PolyBlend( const vec4_t color );
 
 void	Draw_RenderBatches();
 

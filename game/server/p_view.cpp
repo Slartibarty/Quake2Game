@@ -18,6 +18,7 @@ float	bobfracsin;		// sin(bobfrac*M_PI)
 ===============
 SV_CalcRoll
 
+This appears to be soley used for the playermodel's angles
 ===============
 */
 static float SV_CalcRoll (vec3_t angles, vec3_t velocity)
@@ -995,7 +996,6 @@ void ClientEndServerFrame (edict_t *ent)
 	else
 		ent->s.angles[PITCH] = ent->client->v_angle[PITCH]/3;
 	ent->s.angles[YAW] = ent->client->v_angle[YAW];
-	ent->s.angles[ROLL] = 0;
 	ent->s.angles[ROLL] = SV_CalcRoll (ent->s.angles, ent->velocity) * 4; // Multiplied x4
 
 	//

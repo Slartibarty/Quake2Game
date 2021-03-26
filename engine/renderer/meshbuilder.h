@@ -32,6 +32,14 @@ struct guiVertex_t
 		t = T;
 	}
 
+	void Color4fv( const float *RGB )
+	{
+		r = RGB[0];
+		g = RGB[1];
+		b = RGB[2];
+		a = RGB[3];
+	}
+
 	void Color4f( float R, float G, float B, float A )
 	{
 		r = R;
@@ -40,11 +48,11 @@ struct guiVertex_t
 		a = A;
 	}
 
-	void Color3ub( byte R, byte G, byte B )
+	void Color3fv( const float *RGB )
 	{
-		r = R / 255.0f;
-		g = G / 255.0f;
-		b = B / 255.0f;
+		r = RGB[0];
+		g = RGB[1];
+		b = RGB[2];
 		a = 1.0f;
 	}
 
@@ -55,15 +63,15 @@ struct guiVertex_t
 		b = B;
 		a = 1.0f;
 	}
-	
-	void Color3fv( float *RGB )
+
+	void Color3ub( int R, int G, int B )
 	{
-		r = RGB[0];
-		g = RGB[1];
-		b = RGB[2];
+		r = R / 255.0f;
+		g = G / 255.0f;
+		b = B / 255.0f;
 		a = 1.0f;
 	}
-
+	
 	void Color2f( float RGB, float A )
 	{
 		r = RGB;

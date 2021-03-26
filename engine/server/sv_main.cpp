@@ -582,7 +582,6 @@ static void SV_ReadPackets (void)
 	while (NET_GetPacket (NS_SERVER, &net_from, &net_message))
 	{
 		// check for connectionless packet (0xffffffff) first
-		// SlartTodo: Is this correct?
 		if (*(int *)net_message.data == -1)
 		{
 			SV_ConnectionlessPacket ();

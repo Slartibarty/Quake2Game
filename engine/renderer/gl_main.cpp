@@ -21,8 +21,6 @@ int			r_framecount;		// used for dlight push checking
 
 int			c_brush_polys, c_alias_polys;
 
-static vec4_t	v_blend;		// final blending color
-
 //
 // view origin
 //
@@ -432,41 +430,6 @@ static void R_DrawParticles()
 	}
 }
 
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-static void R_PolyBlend()
-{
-	if ( !gl_polyblend->value )
-		return;
-	if ( !v_blend[3] )
-		return;
-
-	glEnable( GL_BLEND );
-	glDisable( GL_DEPTH_TEST );
-	glDisable( GL_TEXTURE_2D );
-
-	glLoadIdentity();
-
-	// FIXME: get rid of these
-	glRotatef( -90, 1, 0, 0 );	    // put Z going up
-	glRotatef( 90, 0, 0, 1 );	    // put Z going up
-
-	glColor4fv( v_blend );
-
-	glBegin( GL_QUADS );
-
-	glVertex3f( 10, 100, 100 );
-	glVertex3f( 10, -100, 100 );
-	glVertex3f( 10, -100, -100 );
-	glVertex3f( 10, 100, -100 );
-	glEnd();
-
-	glDisable( GL_BLEND );
-	glEnable( GL_TEXTURE_2D );
-
-	glColor4f( 1, 1, 1, 1 );
-}
-
 //=================================================================================================
 
 //-------------------------------------------------------------------------------------------------
@@ -534,7 +497,6 @@ static void R_SetFrustum()
 //-------------------------------------------------------------------------------------------------
 void R_SetupFrame (void)
 {
-	int i;
 	mleaf_t	*leaf;
 
 	r_framecount++;
@@ -576,9 +538,6 @@ void R_SetupFrame (void)
 				r_viewcluster2 = leaf->cluster;
 		}
 	}
-
-	for (i=0 ; i<4 ; i++)
-		v_blend[i] = r_newrefdef.blend[i];
 
 	c_brush_polys = 0;
 	c_alias_polys = 0;
@@ -630,7 +589,7 @@ void R_SetupGL()
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
 
-#if 0
+#if 1
 	glRotatef( -90, 1, 0, 0 );	    // put Z going up
 	glRotatef( 90, 0, 0, 1 );	    // put Z going up
 	glRotatef( -r_newrefdef.viewangles[2], 1, 0, 0 );
@@ -651,6 +610,7 @@ void R_SetupGL()
 
 	glDisable( GL_BLEND );
 	glEnable( GL_DEPTH_TEST );
+	glEnable( GL_TEXTURE_2D );
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -710,7 +670,7 @@ void R_RenderView( refdef_t *fd )
 
 	R_DrawAlphaSurfaces();
 
-	R_PolyBlend();
+	Draw_PolyBlend( r_newrefdef.blend );
 
 	if ( r_speeds->value )
 	{
