@@ -7,6 +7,7 @@
 #include "msg.h"
 
 #define PARANOID
+//#define TOUGH_COMPRESSION
 
 //
 // writing functions
@@ -88,25 +89,42 @@ void MSG_WriteString (sizebuf_t *sb, const char *s)
 
 void MSG_WriteCoord (sizebuf_t *sb, float f)
 {
+#if TOUGH_COMPRESSION
 	MSG_WriteShort (sb, (int)(f*8));
+#else
+	MSG_WriteFloat( sb, f );
+#endif
 }
 
 void MSG_WritePos (sizebuf_t *sb, vec3_t pos)
 {
+#if TOUGH_COMPRESSION
 	MSG_WriteShort (sb, (int)(pos[0]*8));
 	MSG_WriteShort (sb, (int)(pos[1]*8));
 	MSG_WriteShort (sb, (int)(pos[2]*8));
+#else
+	MSG_WriteFloat( sb, pos[0] );
+	MSG_WriteFloat( sb, pos[1] );
+	MSG_WriteFloat( sb, pos[2] );
+#endif
 }
 
 void MSG_WriteAngle (sizebuf_t *sb, float f)
 {
+#ifdef TOUGH_COMPRESSION
 	MSG_WriteByte (sb, (int)(f*256/360) & 255);
+#else
+	MSG_WriteFloat( sb, f );
+#endif
 }
 
 void MSG_WriteAngle16 (sizebuf_t *sb, float f)
 {
-	// SlartTodo: f can sometimes be negative, which throws off the ANGLE2SHORT macro, what to do?
-	MSG_WriteShort (sb, ANGLE2SHORT(f));
+#ifdef TOUGH_COMPRESSION
+	MSG_WriteShort( sb, ANGLE2SHORT( f ) );
+#else
+	MSG_WriteFloat( sb, f );
+#endif
 }
 
 
@@ -159,6 +177,7 @@ void MSG_WriteDeltaUsercmd (sizebuf_t *buf, usercmd_t *from, usercmd_t *cmd)
 
 void MSG_WriteDir (sizebuf_t *sb, vec3_t dir)
 {
+#ifdef TOUGH_COMPRESSION
 	int		i, best;
 	float	d, bestd;
 	
@@ -180,17 +199,24 @@ void MSG_WriteDir (sizebuf_t *sb, vec3_t dir)
 		}
 	}
 	MSG_WriteByte (sb, best);
+#else
+	MSG_WritePos( sb, dir );
+#endif
 }
 
 
 void MSG_ReadDir (sizebuf_t *sb, vec3_t dir)
 {
+#ifdef TOUGH_COMPRESSION
 	int		b;
 
 	b = MSG_ReadByte (sb);
 	if (b >= NUMVERTEXNORMALS)
 		Com_Errorf ("MSG_ReadDir: out of range");
 	VectorCopy (bytedirs[b], dir);
+#else
+	MSG_ReadPos( sb, dir );
+#endif
 }
 
 
@@ -383,9 +409,7 @@ void MSG_WriteDeltaEntity (entity_state_t *from, entity_state_t *to, sizebuf_t *
 
 	if (bits & U_OLDORIGIN)
 	{
-		MSG_WriteCoord (msg, to->old_origin[0]);
-		MSG_WriteCoord (msg, to->old_origin[1]);
-		MSG_WriteCoord (msg, to->old_origin[2]);
+		MSG_WritePos (msg, to->old_origin);
 	}
 
 	if (bits & U_SOUND)
@@ -489,7 +513,7 @@ float MSG_ReadFloat (sizebuf_t *msg_read)
 	
 	dat.l = LittleLong (dat.l);
 
-	return dat.f;	
+	return dat.f;
 }
 
 char *MSG_ReadString (sizebuf_t *msg_read)
@@ -534,24 +558,42 @@ char *MSG_ReadStringLine (sizebuf_t *msg_read)
 
 float MSG_ReadCoord (sizebuf_t *msg_read)
 {
+#ifdef TOUGH_COMPRESSION
 	return MSG_ReadShort(msg_read) * (1.0f/8);
+#else
+	return MSG_ReadFloat( msg_read );
+#endif
 }
 
 void MSG_ReadPos (sizebuf_t *msg_read, vec3_t pos)
 {
+#ifdef TOUGH_COMPRESSION
 	pos[0] = MSG_ReadShort(msg_read) * (1.0f/8);
 	pos[1] = MSG_ReadShort(msg_read) * (1.0f/8);
 	pos[2] = MSG_ReadShort(msg_read) * (1.0f/8);
+#else
+	pos[0] = MSG_ReadFloat( msg_read );
+	pos[1] = MSG_ReadFloat( msg_read );
+	pos[2] = MSG_ReadFloat( msg_read );
+#endif
 }
 
 float MSG_ReadAngle (sizebuf_t *msg_read)
 {
+#ifdef TOUGH_COMPRESSION
 	return MSG_ReadChar(msg_read) * (360.0f/256);
+#else
+	return MSG_ReadFloat( msg_read );
+#endif
 }
 
 float MSG_ReadAngle16 (sizebuf_t *msg_read)
 {
-	return SHORT2ANGLE(MSG_ReadShort(msg_read));
+#ifdef TOUGH_COMPRESSION
+	return SHORT2ANGLE( MSG_ReadShort( msg_read ) );
+#else
+	return MSG_ReadFloat( msg_read );
+#endif
 }
 
 void MSG_ReadDeltaUsercmd (sizebuf_t *msg_read, usercmd_t *from, usercmd_t *move)
