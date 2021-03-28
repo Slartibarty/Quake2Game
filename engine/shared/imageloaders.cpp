@@ -366,7 +366,7 @@ namespace img
 
 		size_t rowbytes = png_get_rowbytes( png_ptr, info_ptr );
 
-		png_bytepp row_pointers = (png_bytepp)Z_Malloc( sizeof( png_bytep ) * height );	// Row pointers
+		png_bytepp row_pointers = (png_bytepp)Z_StackAlloc( sizeof( png_bytep ) * height );	// Row pointers
 
 		for ( int i = 0; i < height; ++i )
 		{
@@ -375,7 +375,7 @@ namespace img
 
 		png_write_image( png_ptr, row_pointers );
 
-		Z_Free( row_pointers );
+	//	Z_Free( row_pointers );
 
 		png_write_end( png_ptr, nullptr );
 

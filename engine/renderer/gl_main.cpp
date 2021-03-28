@@ -2,6 +2,8 @@
 
 #include "gl_local.h"
 
+#include <vector>
+
 viddef_t	vid;
 
 model_t		*r_worldmodel;
@@ -332,64 +334,13 @@ static void R_DrawEntitiesOnList()
 
 }
 
-//-------------------------------------------------------------------------------------------------
-// Never called if point parameters are enabled
-//-------------------------------------------------------------------------------------------------
-static void GL_DrawParticles( int num_particles, const particle_t *particles, const unsigned *colortable )
-{
-	const particle_t *p;
-	int				i;
-	vec3_t			up, right;
-	float			scale;
-	byte			color[4];
+/*
+===============================================================================
 
-	mat_particletexture->Bind();
+	Particle rendering
 
-	glDepthMask( GL_FALSE );		// no z buffering
-	glEnable( GL_BLEND );
-	GL_TexEnv( GL_MODULATE );
-	glBegin( GL_TRIANGLES );
-
-	VectorScale( vup, 1.5f, up );
-	VectorScale( vright, 1.5f, right );
-
-	for ( p = particles, i = 0; i < num_particles; i++, p++ )
-	{
-		// hack a scale up to keep particles from disapearing
-		scale = ( p->origin[0] - r_origin[0] ) * vpn[0] +
-				( p->origin[1] - r_origin[1] ) * vpn[1] +
-				( p->origin[2] - r_origin[2] ) * vpn[2];
-
-		if ( scale < 20 )
-			scale = 1;
-		else
-			scale = 1 + scale * 0.004f;
-
-		*(int *)color = colortable[p->color];
-		color[3] = p->alpha * 255;
-
-		glColor4ubv( color );
-
-		glTexCoord2f( 0.0625f, 0.0625f );
-		glVertex3fv( p->origin );
-
-		glTexCoord2f( 1.0625f, 0.0625f );
-		glVertex3f( p->origin[0] + up[0] * scale,
-					p->origin[1] + up[1] * scale,
-					p->origin[2] + up[2] * scale );
-
-		glTexCoord2f( 0.0625f, 1.0625f );
-		glVertex3f( p->origin[0] + right[0] * scale,
-					p->origin[1] + right[1] * scale,
-					p->origin[2] + right[2] * scale );
-	}
-
-	glEnd();
-	glDisable( GL_BLEND );
-	glColor4f( 1, 1, 1, 1 );
-	glDepthMask( 1 );		// back to normal Z buffering
-	GL_TexEnv( GL_REPLACE );
-}
+===============================================================================
+*/
 
 struct partPoint_t
 {
@@ -399,6 +350,8 @@ struct partPoint_t
 
 static GLuint s_partVAO;
 static GLuint s_partVBO;
+
+std::vector<partPoint_t> s_partVector;
 
 static void Particles_Init()
 {
@@ -413,6 +366,9 @@ static void Particles_Init()
 
 	glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof( GLfloat ), (void *)( 0 ) );
 	glVertexAttribPointer( 1, 4, GL_FLOAT, GL_FALSE, 7 * sizeof( GLfloat ), (void *)( 3 * sizeof( GLfloat ) ) );
+
+	// this sucks a little, we'd rather have our own class for this
+	s_partVector.reserve( MAX_PARTICLES );
 }
 
 static void Particles_Shutdown()
@@ -421,8 +377,6 @@ static void Particles_Shutdown()
 	glDeleteVertexArrays( 1, &s_partVAO );
 }
 
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
 static void Particles_Draw()
 {
 	if ( r_newrefdef.num_particles <= 0 ) {
@@ -432,18 +386,21 @@ static void Particles_Draw()
 	int i;
 	particle_t *p;
 
-	partPoint_t *points = (partPoint_t *)Z_Malloc( r_newrefdef.num_particles * sizeof( partPoint_t ) );
+	// ensure we have enough room
+	s_partVector.reserve( r_newrefdef.num_particles );
 
 	for ( i = 0, p = r_newrefdef.particles; i < r_newrefdef.num_particles; i++, p++ )
 	{
-		points[i].x = p->origin[0];
-		points[i].y = p->origin[1];
-		points[i].z = p->origin[2];
+		partPoint_t &point = s_partVector.emplace_back();
 
-		points[i].r = ((byte *)d_8to24table)[p->color+0] / 255.0f;
-		points[i].g = ((byte *)d_8to24table)[p->color+1] / 255.0f;
-		points[i].b = ((byte *)d_8to24table)[p->color+2] / 255.0f;
-		points[i].a = p->alpha;
+		point.x = p->origin[0];
+		point.y = p->origin[1];
+		point.z = p->origin[2];
+
+		point.r = ((byte *)d_8to24table)[p->color+0] / 255.0f;
+		point.g = ((byte *)d_8to24table)[p->color+1] / 255.0f;
+		point.b = ((byte *)d_8to24table)[p->color+2] / 255.0f;
+		point.a = p->alpha;
 	}
 
 	// set up the render state
@@ -463,51 +420,17 @@ static void Particles_Draw()
 	glBindVertexArray( s_partVAO );
 	glBindBuffer( GL_ARRAY_BUFFER, s_partVBO );
 
-	glBufferData( GL_ARRAY_BUFFER, r_newrefdef.num_particles * sizeof( partPoint_t ), (void *)points, GL_STREAM_DRAW );
+	glBufferData( GL_ARRAY_BUFFER, r_newrefdef.num_particles * sizeof( partPoint_t ), (void *)s_partVector.data(), GL_STREAM_DRAW );
 
-//	glDepthMask( GL_FALSE );
+	s_partVector.clear();
+
+	glDepthMask( GL_FALSE );
 	glEnable( GL_BLEND );
 
 	glDrawArrays( GL_POINTS, 0, r_newrefdef.num_particles );
 
 	glDisable( GL_BLEND );
-//	glDepthMask( GL_TRUE );
-
-#if 0
-	if ( GLEW_EXT_point_parameters && gl_ext_pointparameters->value )
-	{
-		int i;
-		unsigned char color[4];
-		const particle_t *p;
-
-		glDepthMask( GL_FALSE );
-		glEnable( GL_BLEND );
-		glDisable( GL_TEXTURE_2D );
-
-		glPointSize( gl_particle_size->value );
-
-		glBegin( GL_POINTS );
-		for ( i = 0, p = r_newrefdef.particles; i < r_newrefdef.num_particles; i++, p++ )
-		{
-			*(int *)color = d_8to24table[p->color];
-			color[3] = p->alpha * 255;
-
-			glColor4ubv( color );
-
-			glVertex3fv( p->origin );
-		}
-		glEnd();
-
-		glDisable( GL_BLEND );
-		glColor4f( 1.0F, 1.0F, 1.0F, 1.0F );
-		glDepthMask( GL_TRUE );
-		glEnable( GL_TEXTURE_2D );
-	}
-	else
-	{
-		GL_DrawParticles( r_newrefdef.num_particles, r_newrefdef.particles, d_8to24table );
-	}
-#endif
+	glDepthMask( GL_TRUE );
 }
 
 //=================================================================================================
