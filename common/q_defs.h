@@ -14,8 +14,8 @@
 
 #define countof(a) (sizeof(a) / sizeof(*a))
 
-#define STRINGIFY(a) #a
-#define XSTRINGIFY(a) STRINGIFY(a)
+#define STRINGIFY_(a) #a
+#define STRINGIFY(a) STRINGIFY_(a)
 
 #ifdef _WIN32
 

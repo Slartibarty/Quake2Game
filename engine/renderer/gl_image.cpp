@@ -21,6 +21,7 @@
 
 material_t *mat_notexture; // use for bad textures
 material_t *mat_particletexture; // little dot for particles
+material_t *whiteMaterial;
 
 image_t		gltextures[MAX_GLTEXTURES];
 int			numgltextures;
@@ -434,6 +435,12 @@ bool ParseMaterial( char *data, material_t *material )
 			}
 			continue;
 		}
+		if ( Q_strcmp( token, "$alpha" ) == 0 )
+		{
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
+			material->alpha = (float)atof( token );
+			continue;
+		}
 	}
 
 	if ( basetexture[0] )
@@ -466,6 +473,7 @@ static material_t *GL_CreateMaterialFromData( const char *name, image_t *image )
 	
 	Q_strcpy_s( material->name, name );
 	material->image = image;
+	material->alpha = 1.0f;
 	++material->image->refcount;
 
 	material->registration_sequence = -1; // Data materials are always managed
@@ -513,6 +521,7 @@ static material_t *GL_CreateMaterial( const char *name )
 
 	Q_strcpy_s( material->name, name );
 	material->image = mat_notexture->image;
+	material->alpha = 1.0f;
 
 	if ( !ParseMaterial( pBuffer, material ) )
 	{
@@ -668,6 +677,7 @@ static void GL_BuildGammaTable( float gamma, int overbright )
 // Create the default texture
 // also used when pointparameters aren't supported
 //-------------------------------------------------------------------------------------------------
+#if 0
 static const byte particletexture[8][8]{
 	{0,0,0,0,0,0,0,0},
 	{0,0,1,1,0,0,0,0},
@@ -689,19 +699,70 @@ static const byte missingtexture[8][8]{
 	{0,0,1,1,0,0,1,1},
 	{0,0,1,1,0,0,1,1}
 };
+#endif
 
-static void R_InitParticleTexture(void)
+#define	DEFAULT_SIZE	16
+
+static void R_CreateIntrinsicImages()
 {
 	int x, y;
-	byte data[8][8][4];
+	byte data[DEFAULT_SIZE][DEFAULT_SIZE][4];
 	image_t *img;
 
 	//
-	// particle texture
+	// default texture
 	//
-	for (x = 0; x < 8; x++)
+
+	// grey center
+	for ( y = 0; y < DEFAULT_SIZE; y++ ) {
+		for ( x = 0; x < DEFAULT_SIZE; x++ ) {
+			data[y][x][0] = 32;
+			data[y][x][1] = 32;
+			data[y][x][2] = 32;
+			data[y][x][3] = 255;
+		}
+	}
+	// white border
+	for ( x = 0; x < DEFAULT_SIZE; x++ ) {
+		data[0][x][0] = 255;
+		data[0][x][1] = 255;
+		data[0][x][2] = 255;
+		data[0][x][3] = 255;
+
+		data[x][0][0] = 255;
+		data[x][0][1] = 255;
+		data[x][0][2] = 255;
+		data[x][0][3] = 255;
+
+		data[DEFAULT_SIZE-1][x][0] = 255;
+		data[DEFAULT_SIZE-1][x][1] = 255;
+		data[DEFAULT_SIZE-1][x][2] = 255;
+		data[DEFAULT_SIZE-1][x][3] = 255;
+
+		data[x][DEFAULT_SIZE-1][0] = 255;
+		data[x][DEFAULT_SIZE-1][1] = 255;
+		data[x][DEFAULT_SIZE-1][2] = 255;
+		data[x][DEFAULT_SIZE-1][3] = 255;
+	}
+	img = GL_CreateImage("***r_notexture***", (byte *)data, DEFAULT_SIZE, DEFAULT_SIZE, IF_NONE);
+	mat_notexture = GL_CreateMaterialFromData( "***r_notexture***", img );
+
+	//
+	// white material
+	//
+
+	memset( data, 255, sizeof( data ) );
+	img = GL_CreateImage( "***whiteMaterial***", (byte *)data, DEFAULT_SIZE, DEFAULT_SIZE, IF_NOMIPS | IF_NEAREST );
+	whiteMaterial = GL_CreateMaterialFromData( "***whiteMaterial***", img );
+
+	//
+	// 8x8 legacy particle texture
+	//
+
+#if 0
+	for ( x = 0; x < DEFAULT_SIZE; x++ )
 	{
-		for (y = 0; y < 8; y++)
+		for ( y = 0; y < DEFAULT_SIZE; y++ )
 		{
 			data[y][x][0] = 255;
 			data[y][x][1] = 255;
@@ -709,24 +770,11 @@ static void R_InitParticleTexture(void)
 			data[y][x][3] = particletexture[x][y] * 255;
 		}
 	}
-	img = GL_CreateImage("***particle***", (byte *)data, 8, 8, IF_NOANISO | IF_CLAMPS | IF_CLAMPT);
+	img = GL_CreateImage( "***particle***", (byte *)data, 8, 8, IF_NOANISO | IF_CLAMPS | IF_CLAMPT );
 	mat_particletexture = GL_CreateMaterialFromData( "***particle***", img );
-
-	//
-	// also use this for bad textures, but without alpha
-	//
-	for (x = 0; x < 8; x++)
-	{
-		for (y = 0; y < 8; y++)
-		{
-			data[y][x][0] = missingtexture[x][y] * 255;
-			data[y][x][1] = 0;
-			data[y][x][2] = missingtexture[x][y] * 255;
-			data[y][x][3] = 255;
-		}
-	}
-	img = GL_CreateImage("***r_notexture***", (byte *)data, 8, 8, IF_NONE);
-	mat_notexture = GL_CreateMaterialFromData( "***r_notexture***", img );
+#else
+	mat_particletexture = mat_notexture;
+#endif
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -739,7 +787,7 @@ void GL_InitImages( void )
 
 	GL_BuildGammaTable( vid_gamma->value, 2 );
 
-	R_InitParticleTexture();
+	R_CreateIntrinsicImages();
 
 	g_imagesInitialised = true;
 }

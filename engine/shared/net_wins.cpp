@@ -573,7 +573,7 @@ static void NET_OpenIP()
 			port = Cvar_Get( "hostport", "0", CVAR_NOSET )->value;
 			if ( !port )
 			{
-				port = Cvar_Get( "port", XSTRINGIFY( PORT_SERVER ), CVAR_NOSET )->value;
+				port = Cvar_Get( "port", STRINGIFY( PORT_SERVER ), CVAR_NOSET )->value;
 			}
 		}
 		ip_sockets[NS_SERVER] = NET_IPSocket( ip->string, port );

@@ -4,8 +4,6 @@
 
 #include "gl_local.h"
 
-#include <DirectXMath.h>
-
 #include "meshbuilder.h"
 
 static constexpr auto ConChars_Name = "materials/pics/conchars" MAT_EXT;
@@ -124,11 +122,15 @@ void Draw_Char( int x, int y, int ch )
 
 	ch &= 255;
 
-	if ( ( ch & 127 ) == 32 )
-		return;		// space
+	if ( ( ch & 127 ) == 32 ) {
+		// space
+		return;
+	}
 
-	if ( y < -CONCHAR_HEIGHT )
-		return;		// totally off screen
+	if ( y < -CONCHAR_HEIGHT ) {
+		// totally off screen
+		return;
+	}
 
 	row = ch >> 4;
 	col = ch & 15;
@@ -191,87 +193,61 @@ void Draw_GetPicSize( int *w, int *h, const char *pic )
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-void Draw_StretchPic( int x, int y, int w, int h, const char *pic )
+static void Draw_Generic( int x, int y, int w, int h, material_t *mat )
 {
-#if 1
-	material_t *mat;
-	image_t *img;
-
-	mat = Draw_FindPic( pic );
-	if ( !mat )
-	{
-		Com_Printf( "Can't find pic: %s\n", pic );
-		return;
-	}
-
-	img = mat->image;
-
 	guiRect_t rect;
+
+	float alpha = mat->alpha;
 
 	rect.v1.Position2f( x, y );
 	rect.v1.TexCoord2f( 0, 0 );
-	rect.v1.Color1f( 1.0f );
+	rect.v1.Color2f( 1.0f, alpha );
 
 	rect.v2.Position2f( x + w, y );
 	rect.v2.TexCoord2f( 1, 0 );
-	rect.v2.Color1f( 1.0f );
+	rect.v2.Color2f( 1.0f, alpha );
 
 	rect.v3.Position2f( x + w, y + h );
 	rect.v3.TexCoord2f( 1, 1 );
-	rect.v3.Color1f( 1.0f );
+	rect.v3.Color2f( 1.0f, alpha );
 
 	rect.v4.Position2f( x, y + h );
 	rect.v4.TexCoord2f( 0, 1 );
-	rect.v4.Color1f( 1.0f );
+	rect.v4.Color2f( 1.0f, alpha );
 
 	s_drawMeshBuilder.AddElement( rect );
 
 	Draw_CheckChain( mat );
-#endif
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+void Draw_StretchPic( int x, int y, int w, int h, const char *pic )
+{
+	material_t *mat;
+
+	mat = Draw_FindPic( pic );
+	if ( !mat ) {
+		Com_Printf( "Can't find pic: %s\n", pic );
+		return;
+	}
+
+	Draw_Generic( x, y, w, h, mat );
 }
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 void Draw_Pic( int x, int y, const char *pic )
 {
-#if 1
 	material_t *mat;
-	image_t *img;
 
 	mat = Draw_FindPic( pic );
-	if ( !mat )
-	{
+	if ( !mat ) {
 		Com_Printf( "Can't find pic: %s\n", pic );
 		return;
 	}
 
-	img = mat->image;
-
-	guiRect_t rect;
-
-	int w = img->width;
-	int h = img->height;
-
-	rect.v1.Position2f( x, y );
-	rect.v1.TexCoord2f( img->sl, img->tl );
-	rect.v1.Color1f( 1.0f );
-
-	rect.v2.Position2f( x + w, y );
-	rect.v2.TexCoord2f( img->sh, img->tl );
-	rect.v2.Color1f( 1.0f );
-
-	rect.v3.Position2f( x + w, y + h );
-	rect.v3.TexCoord2f( img->sh, img->th );
-	rect.v3.Color1f( 1.0f );
-
-	rect.v4.Position2f( x, y + h );
-	rect.v4.TexCoord2f( img->sl, img->th );
-	rect.v4.Color1f( 1.0f );
-
-	s_drawMeshBuilder.AddElement( rect );
-
-	Draw_CheckChain( mat );
-#endif
+	Draw_Generic( x, y, mat->image->width, mat->image->height, mat );
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -292,21 +268,23 @@ void Draw_TileClear( int x, int y, int w, int h, const char *pic )
 
 	guiRect_t rect;
 
+	float alpha = mat->alpha;
+
 	rect.v1.Position2f( x, y );
 	rect.v1.TexCoord2f( x / 64.0f, y / 64.0f );
-	rect.v1.Color1f( 1.0f );
+	rect.v1.Color2f( 1.0f, alpha );
 
 	rect.v2.Position2f( x + w, y );
 	rect.v2.TexCoord2f( ( x + w ) / 64.0f, y / 64.0f );
-	rect.v2.Color1f( 1.0f );
+	rect.v2.Color2f( 1.0f, alpha );
 
 	rect.v3.Position2f( x + w, y + h );
 	rect.v3.TexCoord2f( ( x + w ) / 64.0f, ( y + h ) / 64.0f );
-	rect.v3.Color1f( 1.0f );
+	rect.v3.Color2f( 1.0f, alpha );
 
 	rect.v4.Position2f( x, y + h );
 	rect.v4.TexCoord2f( x / 64.0f, ( y + h ) / 64.0f );
-	rect.v4.Color1f( 1.0f );
+	rect.v4.Color2f( 1.0f, alpha );
 
 	s_drawMeshBuilder.AddElement( rect );
 
@@ -324,8 +302,6 @@ void Draw_Fill( int x, int y, int w, int h, int c )
 	if ( c > 255 ) {
 		Com_FatalErrorf("Draw_Fill: bad color" );
 	}
-
-	glDisable( GL_TEXTURE_2D );
 
 	byte *color = (byte *)&d_8to24table[c];
 	float fcolor[3]
@@ -355,7 +331,7 @@ void Draw_Fill( int x, int y, int w, int h, int c )
 
 	s_drawMeshBuilder.AddElement( rect );
 
-	Draw_CheckChain( mat_notexture );
+	Draw_CheckChain( whiteMaterial );
 #endif
 }
 
@@ -386,7 +362,7 @@ void Draw_FadeScreen( void )
 
 	s_drawMeshBuilder.AddElement( rect );
 
-	Draw_CheckChain( mat_notexture );
+	Draw_CheckChain( whiteMaterial );
 #endif
 }
 
@@ -418,7 +394,7 @@ void Draw_PolyBlend( const vec4_t color )
 
 	s_drawMeshBuilder.AddElement( rect );
 
-	Draw_CheckChain( mat_notexture );
+	Draw_CheckChain( whiteMaterial );
 #endif
 }
 
@@ -442,13 +418,15 @@ void Draw_RenderBatches()
 		glUniform1i( 4, 0 );
 
 		glBindVertexArray( s_drawVAO );
+		glBindBuffer( GL_ARRAY_BUFFER, s_drawVBO );
+		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, s_drawEBO );
 
 		glBufferData( GL_ARRAY_BUFFER, s_drawMeshBuilder.GetVertexArraySize(), s_drawMeshBuilder.GetVertexArray(), GL_STREAM_DRAW );
 		glBufferData( GL_ELEMENT_ARRAY_BUFFER, s_drawMeshBuilder.GetIndexArraySize(), s_drawMeshBuilder.GetIndexArray(), GL_STREAM_DRAW );
 
 		// these will be re-enabled next frame
 		glDisable( GL_DEPTH_TEST );
-		glDisable( GL_CULL_FACE );
+	//	glDisable( GL_CULL_FACE );
 	//	glDisable( GL_BLEND );
 
 		glEnable( GL_BLEND );
@@ -464,6 +442,8 @@ void Draw_RenderBatches()
 		glDisable( GL_PRIMITIVE_RESTART_FIXED_INDEX );
 
 		glUseProgram( 0 );
+
+		glBindVertexArray( 0 );
 
 		s_drawMeshBuilder.Reset();
 		s_drawCmds.clear();

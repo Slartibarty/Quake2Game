@@ -391,10 +391,89 @@ static void GL_DrawParticles( int num_particles, const particle_t *particles, co
 	GL_TexEnv( GL_REPLACE );
 }
 
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-static void R_DrawParticles()
+struct partPoint_t
 {
+	float x, y, z;
+	float r, g, b, a;
+};
+
+static GLuint s_partVAO;
+static GLuint s_partVBO;
+
+static void Particles_Init()
+{
+	glGenVertexArrays( 1, &s_partVAO );
+	glGenBuffers( 1, &s_partVBO );
+
+	glBindVertexArray( s_partVAO );
+	glBindBuffer( GL_ARRAY_BUFFER, s_partVBO );
+
+	glEnableVertexAttribArray( 0 );
+	glEnableVertexAttribArray( 1 );
+
+	glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof( GLfloat ), (void *)( 0 ) );
+	glVertexAttribPointer( 1, 4, GL_FLOAT, GL_FALSE, 7 * sizeof( GLfloat ), (void *)( 3 * sizeof( GLfloat ) ) );
+}
+
+static void Particles_Shutdown()
+{
+	glDeleteBuffers( 1, &s_partVBO );
+	glDeleteVertexArrays( 1, &s_partVAO );
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+static void Particles_Draw()
+{
+	if ( r_newrefdef.num_particles <= 0 ) {
+		return;
+	}
+
+	int i;
+	particle_t *p;
+
+	partPoint_t *points = (partPoint_t *)Z_Malloc( r_newrefdef.num_particles * sizeof( partPoint_t ) );
+
+	for ( i = 0, p = r_newrefdef.particles; i < r_newrefdef.num_particles; i++, p++ )
+	{
+		points[i].x = p->origin[0];
+		points[i].y = p->origin[1];
+		points[i].z = p->origin[2];
+
+		points[i].r = ((byte *)d_8to24table)[p->color+0] / 255.0f;
+		points[i].g = ((byte *)d_8to24table)[p->color+1] / 255.0f;
+		points[i].b = ((byte *)d_8to24table)[p->color+2] / 255.0f;
+		points[i].a = p->alpha;
+	}
+
+	// set up the render state
+//	DirectX::XMMATRIX perspMatrix = DirectX::XMMatrixPerspectiveFovRH( r_newrefdef.fov_y, vid.width / vid.height, 4.0f, 4096.0f );
+//	perspMatrix = DirectX::XMMatrixTranspose( perspMatrix );
+
+	float proj[16];
+	float view[16];
+
+	glGetFloatv( GL_PROJECTION_MATRIX, proj );
+	glGetFloatv( GL_MODELVIEW_MATRIX, view );
+
+	glUseProgram( glProgs.particleProg );
+	glUniformMatrix4fv( 2, 1, GL_FALSE, proj );
+	glUniformMatrix4fv( 3, 1, GL_FALSE, view );
+
+	glBindVertexArray( s_partVAO );
+	glBindBuffer( GL_ARRAY_BUFFER, s_partVBO );
+
+	glBufferData( GL_ARRAY_BUFFER, r_newrefdef.num_particles * sizeof( partPoint_t ), (void *)points, GL_STREAM_DRAW );
+
+//	glDepthMask( GL_FALSE );
+	glEnable( GL_BLEND );
+
+	glDrawArrays( GL_POINTS, 0, r_newrefdef.num_particles );
+
+	glDisable( GL_BLEND );
+//	glDepthMask( GL_TRUE );
+
+#if 0
 	if ( GLEW_EXT_point_parameters && gl_ext_pointparameters->value )
 	{
 		int i;
@@ -428,6 +507,7 @@ static void R_DrawParticles()
 	{
 		GL_DrawParticles( r_newrefdef.num_particles, r_newrefdef.particles, d_8to24table );
 	}
+#endif
 }
 
 //=================================================================================================
@@ -666,7 +746,7 @@ void R_RenderView( refdef_t *fd )
 
 	R_RenderDlights();
 
-	R_DrawParticles();
+	Particles_Draw();
 
 	R_DrawAlphaSurfaces();
 
@@ -689,12 +769,7 @@ void R_RenderView( refdef_t *fd )
 static void GL_SetDefaultState()
 {
 	glClearColor( DEFAULT_CLEARCOLOR );
-	glCullFace( GL_FRONT );
-	glEnable( GL_TEXTURE_2D );
-
-	glDisable( GL_DEPTH_TEST );
-	glDisable( GL_CULL_FACE );
-	glDisable( GL_BLEND );
+	glCullFace( GL_BACK );
 
 	glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
 
@@ -703,6 +778,8 @@ static void GL_SetDefaultState()
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
 	GL_TexEnv( GL_REPLACE );
+
+	glEnable( GL_PROGRAM_POINT_SIZE );
 
 	if ( GLEW_EXT_point_parameters && gl_ext_pointparameters->value )
 	{
@@ -875,12 +952,45 @@ static bool R_SetMode()
 	return true;
 }
 
-static void GL_CheckForErrors()
+static void GL_CheckErrors()
 {
+	const char *msg;
 	GLenum err;
+
 	while ((err = glGetError()) != GL_NO_ERROR)
 	{
-		Com_Printf("glGetError() = 0x%x\n", err);
+		switch ( err )
+		{
+		case GL_INVALID_ENUM:
+			msg = "GL_INVALID_ENUM";
+			break;
+		case GL_INVALID_VALUE:
+			msg = "GL_INVALID_VALUE";
+			break;
+		case GL_INVALID_OPERATION:
+			msg = "GL_INVALID_OPERATION";
+			break;
+		case GL_STACK_OVERFLOW:
+			msg = "GL_STACK_OVERFLOW";
+			break;
+		case GL_STACK_UNDERFLOW:
+			msg = "GL_STACK_UNDERFLOW";
+			break;
+		case GL_OUT_OF_MEMORY:
+			msg = "GL_OUT_OF_MEMORY";
+			break;
+		case GL_INVALID_FRAMEBUFFER_OPERATION:
+			msg = "GL_OUT_OF_MEMORY";
+			break;
+		case GL_CONTEXT_LOST:						// OpenGL 4.5 or ARB_KHR_robustness
+			msg = "GL_OUT_OF_MEMORY";
+			break;
+		default:
+			msg = "UNKNOWN ERROR!";
+			break;
+		}
+
+		Com_Printf( "GL_CheckErrors: 0x%x - %s\n", err, msg );
 	}
 }
 
@@ -920,8 +1030,9 @@ bool R_Init( void *hinstance, void *hWnd )
 
 	Mod_Init();
 	Draw_Init();
+	Particles_Init();
 
-	GL_CheckForErrors();
+	GL_CheckErrors();
 
 	return true;
 }
@@ -930,8 +1041,9 @@ bool R_Init( void *hinstance, void *hWnd )
 //-------------------------------------------------------------------------------------------------
 void R_Shutdown()
 {
-	Mod_FreeAll();
+	Particles_Shutdown();
 	Draw_Shutdown();
+	Mod_FreeAll();
 
 	//GLimp_RestoreGamma();
 	GL_ShutdownImages();
@@ -971,7 +1083,7 @@ void R_EndFrame()
 {
 	Draw_RenderBatches();
 
-	GL_CheckForErrors();
+	GL_CheckErrors();
 
 	GLimp_EndFrame();
 }

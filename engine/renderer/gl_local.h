@@ -5,6 +5,8 @@
 
 #include "ref_public.h"
 
+#include <DirectXMath.h>
+
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
@@ -76,6 +78,7 @@ extern byte			g_gammatable[256];
 
 extern material_t	*mat_notexture;
 extern material_t	*mat_particletexture;
+extern material_t	*whiteMaterial;
 
 extern unsigned		d_8to24table[256];
 
@@ -147,6 +150,7 @@ struct material_t
 	msurface_t			*texturechain;				// for sort-by-material world drawing
 	image_t				*image;						// the only image, may extend to more in the future
 	material_t			*nextframe;					// the next frame
+	float				alpha;						// alpha transparency
 	int32				registration_sequence;		// 0 = free, -1 = managed
 
 	// Returns true if this material is the missing texture
@@ -325,6 +329,7 @@ void	Draw_StretchRaw( int x, int y, int w, int h, int cols, int rows, byte *data
 struct glProgs_t
 {
 	GLuint guiProg;
+	GLuint particleProg;
 };
 
 extern glProgs_t glProgs;

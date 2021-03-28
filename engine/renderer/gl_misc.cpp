@@ -399,6 +399,7 @@ void GL_SelectTexture(GLenum texture)
 
 void GL_TexEnv(GLint mode)
 {
+#if 0
 	static GLint lastmodes[2] = { -1, -1 };
 
 	if (mode != lastmodes[gl_state.currenttmu])
@@ -406,6 +407,7 @@ void GL_TexEnv(GLint mode)
 		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, mode);
 		lastmodes[gl_state.currenttmu] = mode;
 	}
+#endif
 }
 
 void GL_Bind( GLuint texnum )

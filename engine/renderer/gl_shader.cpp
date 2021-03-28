@@ -15,6 +15,9 @@ struct glShaders_t
 	GLuint guiVert;
 	GLuint guiFrag;
 
+	GLuint particleVert;
+	GLuint particleFrag;
+
 };
 
 static glShaders_t glShaders;
@@ -90,10 +93,18 @@ void Shaders_Init()
 	glShaders.guiVert = MakeShader( "shaders/gui.vert", GL_VERTEX_SHADER );
 	glShaders.guiFrag = MakeShader( "shaders/gui.frag", GL_FRAGMENT_SHADER );
 
+	glShaders.particleVert = MakeShader( "shaders/particle.vert", GL_VERTEX_SHADER );
+	glShaders.particleFrag = MakeShader( "shaders/particle.frag", GL_FRAGMENT_SHADER );
+
 	glProgs.guiProg = glCreateProgram();
 	glAttachShader( glProgs.guiProg, glShaders.guiVert );
 	glAttachShader( glProgs.guiProg, glShaders.guiFrag );
 	glLinkProgram( glProgs.guiProg );
+
+	glProgs.particleProg = glCreateProgram();
+	glAttachShader( glProgs.particleProg, glShaders.particleVert );
+	glAttachShader( glProgs.particleProg, glShaders.particleFrag );
+	glLinkProgram( glProgs.particleProg );
 }
 
 /*
