@@ -12,7 +12,10 @@ Misc functions that don't fit anywhere else
 class idScreenShotThread : public idSysThread
 {
 public:
-	int Run() override;
+	int Run() override
+	{
+		return 0;
+	}
 
 };
 

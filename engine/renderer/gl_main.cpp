@@ -62,7 +62,6 @@ cvar_t	*gl_particle_att_b;
 cvar_t	*gl_particle_att_c;
 
 cvar_t	*gl_ext_multitexture;
-cvar_t	*gl_ext_pointparameters;
 cvar_t	*gl_ext_compiled_vertex_array;
 
 cvar_t	*gl_lightmap;
@@ -342,10 +341,11 @@ static void R_DrawEntitiesOnList()
 ===============================================================================
 */
 
+// 16 bytes
 struct partPoint_t
 {
-	float x, y, z;
-	float r, g, b, a;
+	float x, y, z;		// 12 bytes
+	byte r, g, b, a;	// 4 bytes
 };
 
 static GLuint s_partVAO;
@@ -364,8 +364,8 @@ static void Particles_Init()
 	glEnableVertexAttribArray( 0 );
 	glEnableVertexAttribArray( 1 );
 
-	glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof( GLfloat ), (void *)( 0 ) );
-	glVertexAttribPointer( 1, 4, GL_FLOAT, GL_FALSE, 7 * sizeof( GLfloat ), (void *)( 3 * sizeof( GLfloat ) ) );
+	glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, sizeof( partPoint_t ), (void *)( 0 ) );
+	glVertexAttribPointer( 1, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( partPoint_t ), (void *)( 3 * sizeof( GLfloat ) ) );
 
 	// this sucks a little, we'd rather have our own class for this
 	s_partVector.reserve( MAX_PARTICLES );
@@ -397,10 +397,10 @@ static void Particles_Draw()
 		point.y = p->origin[1];
 		point.z = p->origin[2];
 
-		point.r = ((byte *)d_8to24table)[p->color+0] / 255.0f;
-		point.g = ((byte *)d_8to24table)[p->color+1] / 255.0f;
-		point.b = ((byte *)d_8to24table)[p->color+2] / 255.0f;
-		point.a = p->alpha;
+		point.r = ((byte *)&d_8to24table[p->color])[0];
+		point.g = ((byte *)&d_8to24table[p->color])[1];
+		point.b = ((byte *)&d_8to24table[p->color])[2];
+		point.a = static_cast<byte>( p->alpha * 255.0f );
 	}
 
 	// set up the render state
@@ -703,20 +703,6 @@ static void GL_SetDefaultState()
 	GL_TexEnv( GL_REPLACE );
 
 	glEnable( GL_PROGRAM_POINT_SIZE );
-
-	if ( GLEW_EXT_point_parameters && gl_ext_pointparameters->value )
-	{
-		float attenuations[3];
-
-		attenuations[0] = gl_particle_att_a->value;
-		attenuations[1] = gl_particle_att_b->value;
-		attenuations[2] = gl_particle_att_c->value;
-
-		glEnable( GL_POINT_SMOOTH );
-		glPointParameterfEXT( GL_POINT_SIZE_MIN_EXT, gl_particle_min_size->value );
-		glPointParameterfEXT( GL_POINT_SIZE_MAX_EXT, gl_particle_max_size->value );
-		glPointParameterfvEXT( GL_DISTANCE_ATTENUATION_EXT, attenuations );
-	}
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -791,7 +777,6 @@ static void R_Register()
 	gl_vertex_arrays = Cvar_Get( "gl_vertex_arrays", "0", CVAR_ARCHIVE );
 
 	gl_ext_multitexture = Cvar_Get( "gl_ext_multitexture", "1", CVAR_ARCHIVE );
-	gl_ext_pointparameters = Cvar_Get( "gl_ext_pointparameters", "1", CVAR_ARCHIVE );
 	gl_ext_compiled_vertex_array = Cvar_Get( "gl_ext_compiled_vertex_array", "1", CVAR_ARCHIVE );
 
 	gl_swapinterval = Cvar_Get( "gl_swapinterval", "0", CVAR_ARCHIVE );

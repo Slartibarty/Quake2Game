@@ -173,7 +173,6 @@ struct model_t
 // brush model
 //
 	int			firstmodelsurface, nummodelsurfaces;
-	int			lightmap;		// only for submodels
 
 	int			numsubmodels;
 	mmodel_t	*submodels;

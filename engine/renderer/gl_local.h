@@ -229,7 +229,6 @@ extern	cvar_t	*r_lightlevel;	// FIXME: This is a HACK to get the client's light 
 extern	cvar_t	*gl_vertex_arrays;
 
 extern	cvar_t	*gl_ext_multitexture;
-extern	cvar_t	*gl_ext_pointparameters;
 extern	cvar_t	*gl_ext_compiled_vertex_array;
 
 extern	cvar_t	*gl_particle_min_size;
