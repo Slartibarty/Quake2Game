@@ -38,6 +38,8 @@ int		time_after_game;
 int		time_before_ref;
 int		time_after_ref;
 
+static thread_local bool	isMainThread;
+
 /*
 ============================================================================
 
@@ -95,12 +97,16 @@ void Com_Print( const char *msg )
 		return;
 	}
 
+	Sys_OutputDebugString( msg );
+
+	if ( !Engine_IsMainThread() ) {
+		return;
+	}
+
 	Con_Print( msg );
 
 	// also echo to debugging console
 	Sys_ConsoleOutput( msg );
-
-	Sys_OutputDebugString( msg );
 
 	// logfile
 	if ( logfile_active && logfile_active->value )
@@ -581,6 +587,8 @@ Engine_Init
 */
 void Engine_Init (int argc, char **argv)
 {
+	isMainThread = true;
+
 	if (setjmp (abortframe) )
 		Com_FatalErrorf("Error during initialization");
 
@@ -777,4 +785,14 @@ void Engine_Shutdown (void)
 		fclose( logfile );
 		logfile = NULL;
 	}
+}
+
+/*
+========================
+Engine_IsMainThread
+========================
+*/
+bool Engine_IsMainThread()
+{
+	return isMainThread;
 }

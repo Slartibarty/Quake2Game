@@ -13,6 +13,8 @@
 #include <Windows.h>
 #endif
 
+#include "../../common/threading.h"
+
 #include "GL/glew.h"
 #ifdef _WIN32
 #include "GL/wglew.h"

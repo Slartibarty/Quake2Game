@@ -9,7 +9,14 @@ Misc functions that don't fit anywhere else
 #include "gl_local.h"
 #include "../shared/imageloaders.h"
 
-#include "png.h"
+class idScreenShotThread : public idSysThread
+{
+public:
+	int Run() override;
+
+};
+
+idScreenShotThread rScreenshotThread;
 
 //-------------------------------------------------------------------------------------------------
 // Captures a 24-bit PNG screenshot
@@ -26,7 +33,7 @@ static void GL_ScreenShot_Internal( bool png )
 	Q_sprintf_s( checkname, "%s/screenshots", FS_Gamedir() );
 	Sys_CreateDirectory( checkname );
 
-// find a file name to save it to 
+// find a file name to save it to
 	Q_sprintf_s( picname, "quake00.%s", png ? "png" : "tga" );
 
 	for ( i = 0; i <= 99; ++i )

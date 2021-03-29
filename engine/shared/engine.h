@@ -122,6 +122,7 @@ extern	int		time_after_ref;
 void Engine_Init (int argc, char **argv);
 void Engine_Frame (int msec);
 void Engine_Shutdown (void);
+bool Engine_IsMainThread();
 
 //-------------------------------------------------------------------------------------------------
 // client / server systems

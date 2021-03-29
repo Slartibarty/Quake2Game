@@ -79,19 +79,19 @@ inline consteval int32 MakeID(int32 d, int32 c, int32 b, int32 a) {
 //-------------------------------------------------------------------------------------------------
 
 template< typename T >
-inline constexpr T Min( const T &valMin, const T &valMax )
+inline constexpr T Min( const T valMin, const T valMax )
 {
 	return valMin < valMax ? valMin : valMax;
 }
 
 template< typename T >
-inline constexpr T Max( const T &valMin, const T &valMax )
+inline constexpr T Max( const T valMin, const T valMax )
 {
 	return valMin > valMax ? valMin : valMax;
 }
 
 template< typename T >
-inline constexpr T Clamp( const T &val, const T &valMin, const T &valMax )
+inline constexpr T Clamp( const T val, const T valMin, const T valMax )
 {
 	return Min( Max( val, valMin ), valMax );
 }

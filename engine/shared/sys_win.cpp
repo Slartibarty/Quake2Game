@@ -412,6 +412,9 @@ int main(int argc, char **argv)
 		Com_DPrintf( "Using Windows UTF-8 codepage\n" );
 	}
 
+	extern void TestThread();
+	TestThread();
+
 	/* main window message loop */
 	while (1)
 	{

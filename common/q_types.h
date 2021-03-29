@@ -20,3 +20,24 @@ using byte = uint8;
 using uint = unsigned int;
 
 using qboolean = int; // Must always be 32-bits
+
+//-------------------------------------------------------------------------------------------------
+// Char types
+// 
+// Only Windows wants wide chars
+//-------------------------------------------------------------------------------------------------
+
+#ifdef _WIN32
+
+using platChar_t = wchar_t;
+
+#define PLATTEXT_(quote) L##quote
+#define PLATTEXT(quote) PLATTEXT_(quote)
+
+#else
+
+using platChar_t = char;
+
+#define PLATTEXT(quote) PLATTEXT_(quote)
+
+#endif
