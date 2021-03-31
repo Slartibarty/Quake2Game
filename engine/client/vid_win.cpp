@@ -132,21 +132,16 @@ void VID_NewWindow ( int width, int height)
 
 static bool VID_LoadRefresh()
 {
-	if ( reflib_active )
-	{
+	if ( reflib_active ) {
 		R_Shutdown();
 	}
 
-	Com_Printf( "------- Loading renderer -------\n" );
-
 	extern LRESULT CALLBACK MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
-	if ( R_Init( g_hInstance, MainWndProc ) == false )
-	{
+	if ( R_Init( g_hInstance, MainWndProc ) == false ) {
 		R_Shutdown();
 		return false;
 	}
 
-	Com_Printf( "------------------------------------\n" );
 	reflib_active = true;
 
 	return true;

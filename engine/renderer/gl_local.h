@@ -419,7 +419,7 @@ void		GLimp_EndFrame( void );
 void		GLimp_SetGamma( byte *red, byte *green, byte *blue );
 void		GLimp_RestoreGamma( void );
 
-bool 		GLimp_Init( void *hinstance, void *hWnd );
+bool 		GLimp_Init( void *hinstance, void *wndproc );
 void		GLimp_Shutdown( void );
 
 rserr_t    	GLimp_SetMode( int *pWidth, int *pHeight, int mode, bool fullscreen );

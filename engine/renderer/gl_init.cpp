@@ -105,14 +105,13 @@ static void R_InitCommands()
 R_Init
 ========================
 */
-bool R_Init( void *hinstance, void *hWnd )
+bool R_Init( void *hinstance, void *wndproc )
 {
 	Com_Print( "------- Initializing RenderSystem --------\n" );
 
 	// init turbsin
 	extern float r_turbsin[256];
-	for ( int j = 0; j < 256; j++ )
-	{
+	for ( int j = 0; j < 256; j++ ) {
 		r_turbsin[j] *= 0.5f;
 	}
 
@@ -121,8 +120,7 @@ bool R_Init( void *hinstance, void *hWnd )
 	R_InitCommands();
 
 	// initialize OS-specific parts of OpenGL
-	if ( !GLimp_Init( hinstance, hWnd ) )
-	{
+	if ( !GLimp_Init( hinstance, wndproc ) ) {
 		return false;
 	}
 
