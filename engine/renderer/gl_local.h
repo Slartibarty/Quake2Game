@@ -22,8 +22,6 @@
 #include "GL/glxew.h"
 #endif
 
-#define REF_VERSION		"GL 0.03"
-
 #define DEFAULT_CLEARCOLOR		0.0f, 0.0f, 0.0f, 1.0f	// Black
 
 #define MAT_EXT ".mat"
@@ -45,26 +43,34 @@ enum rserr_t
 
 #define BACKFACE_EPSILON	0.01f
 
-//-------------------------------------------------------------------------------------------------
-// gl_misc.cpp
-//-------------------------------------------------------------------------------------------------
+/*
+===============================================================================
+
+	gl_misc
+
+===============================================================================
+*/
+
+// Screenshots
 
 void GL_ScreenShot_PNG_f();
 void GL_ScreenShot_TGA_f();
-void GL_Strings_f();
 
-void GL_ExtractWad_f();
-void GL_UpgradeWals_f();
+// Console commands
 
-// Helpers
+void R_ExtractWad_f();
+void R_UpgradeWals_f();
 
-void		GL_EnableMultitexture(qboolean enable);
-void		GL_SelectTexture(GLenum texture);
-// Use this instead of glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, mode);
-void		GL_TexEnv(GLint value);
-// Use this instead of glBindTexture
-void		GL_Bind(GLuint texnum);
-void		GL_MBind(GLenum target, GLuint texnum);
+// OpenGL state helpers
+
+void		GL_EnableMultitexture( bool enable );
+void		GL_SelectTexture( GLenum texture );
+void		GL_TexEnv( GLint value );
+void		GL_Bind( GLuint texnum );
+void		GL_MBind( GLenum target, GLuint texnum );
+
+void		GL_SetDefaultState();
+void		GL_CheckErrors();
 
 //-------------------------------------------------------------------------------------------------
 // gl_image.cpp
@@ -183,15 +189,99 @@ struct material_t
 	}
 };
 
-//-------------------------------------------------------------------------------------------------
-// gl_main.cpp
-//-------------------------------------------------------------------------------------------------
+/*
+===============================================================================
 
-struct viddef_t
+	gl_init.cpp
+
+===============================================================================
+*/
+
+struct vidDef_t
 {
 	int	width, height;
 };
-extern viddef_t vid;
+
+struct glConfig_t
+{
+	int unused;
+};
+
+struct glState_t
+{
+	bool	fullscreen;
+
+	int     prev_mode;
+
+	int		lightmap_textures;
+
+	GLuint	currenttextures[2];
+	int		currenttmu;
+};
+
+struct renderSystemGlobals_t
+{
+	int todo;
+};
+
+extern glState_t				glState;
+extern glConfig_t				glConfig;
+extern renderSystemGlobals_t	tr;			// named "tr" to ease porting from other branches
+extern vidDef_t					vid;		// should incorporate this elsewhere eventually, written to by glimp
+
+extern	float	r_world_matrix[16];
+
+extern	model_t *r_worldmodel;
+
+extern	double	gldepthmin, gldepthmax;
+
+//
+// cvars
+//
+extern cvar_t *r_norefresh;
+extern cvar_t *r_drawentities;
+extern cvar_t *r_drawworld;
+extern cvar_t *r_speeds;
+extern cvar_t *r_fullbright;
+extern cvar_t *r_novis;
+extern cvar_t *r_nocull;
+extern cvar_t *r_lerpmodels;
+extern cvar_t *r_lefthand;
+
+// FIXME: This is a HACK to get the client's light level
+extern cvar_t *r_lightlevel;
+
+extern cvar_t *r_vertex_arrays;
+
+extern cvar_t *r_ext_multitexture;
+extern cvar_t *r_ext_compiled_vertex_array;
+
+extern cvar_t *r_lightmap;
+extern cvar_t *r_shadows;
+extern cvar_t *r_mode;
+extern cvar_t *r_dynamic;
+extern cvar_t *r_modulate;
+extern cvar_t *r_picmip;
+extern cvar_t *r_showtris;
+extern cvar_t *r_finish;
+extern cvar_t *r_clear;
+extern cvar_t *r_cullfaces;
+extern cvar_t *r_polyblend;
+extern cvar_t *r_flashblend;
+extern cvar_t *r_overbright;
+extern cvar_t *r_swapinterval;
+extern cvar_t *r_lockpvs;
+
+extern cvar_t *vid_fullscreen;
+extern cvar_t *vid_gamma;
+
+/*
+===============================================================================
+
+	gl_main.cpp
+
+===============================================================================
+*/
 
 extern	entity_t	*currententity;
 extern	model_t		*currentmodel;
@@ -214,118 +304,99 @@ extern	vec3_t	r_origin; // same as vec3_origin
 extern	refdef_t	r_newrefdef;
 extern	int		r_viewcluster, r_viewcluster2, r_oldviewcluster, r_oldviewcluster2;
 
-extern	cvar_t	*r_norefresh;
-extern	cvar_t	*r_lefthand;
-extern	cvar_t	*r_drawentities;
-extern	cvar_t	*r_drawworld;
-extern	cvar_t	*r_speeds;
-extern	cvar_t	*r_fullbright;
-extern	cvar_t	*r_novis;
-extern	cvar_t	*r_nocull;
-extern	cvar_t	*r_lerpmodels;
+// needed by gl_init
+void Particles_Init();
+void Particles_Shutdown();
 
-extern	cvar_t	*r_lightlevel;	// FIXME: This is a HACK to get the client's light level
+/*
+===============================================================================
 
-extern	cvar_t	*gl_vertex_arrays;
+	gl_light.cpp
 
-extern	cvar_t	*gl_ext_multitexture;
-extern	cvar_t	*gl_ext_compiled_vertex_array;
+===============================================================================
+*/
 
-extern	cvar_t	*gl_particle_min_size;
-extern	cvar_t	*gl_particle_max_size;
-extern	cvar_t	*gl_particle_size;
-extern	cvar_t	*gl_particle_att_a;
-extern	cvar_t	*gl_particle_att_b;
-extern	cvar_t	*gl_particle_att_c;
+void R_RenderDlights();
 
-extern	cvar_t	*gl_mode;
-extern	cvar_t	*gl_lightmap;
-extern	cvar_t	*gl_shadows;
-extern	cvar_t	*gl_dynamic;
-extern	cvar_t	*gl_picmip;
-extern	cvar_t	*gl_showtris;
-extern	cvar_t	*gl_finish;
-extern	cvar_t	*gl_clear;
-extern	cvar_t	*gl_cullfaces;
-extern	cvar_t	*gl_polyblend;
-extern	cvar_t	*gl_flashblend;
-extern	cvar_t	*gl_modulate;
-extern	cvar_t	*gl_swapinterval;
-extern  cvar_t  *gl_overbright;
-extern  cvar_t  *gl_lockpvs;
+void R_MarkLights(dlight_t *light, int bit, mnode_t *node);
+void R_PushDlights();
+void R_LightPoint(vec3_t p, vec3_t color);
 
-extern	cvar_t	*vid_fullscreen;
-extern	cvar_t	*vid_gamma;
+/*
+===============================================================================
 
-extern	float	r_world_matrix[16];
+	gl_surf.cpp
 
-extern	model_t	*r_worldmodel;
-
-extern	double	gldepthmin, gldepthmax;
-
-bool 	R_Init(void *hinstance, void *hWnd);
-void	R_Shutdown(void);
-
-void	R_RenderView(refdef_t *fd);
-
-//-------------------------------------------------------------------------------------------------
-// gl_light.cpp
-//-------------------------------------------------------------------------------------------------
-
-void	R_RenderDlights(void);
-
-void	R_MarkLights(dlight_t *light, int bit, mnode_t *node);
-void	R_PushDlights(void);
-void	R_LightPoint(vec3_t p, vec3_t color);
-
-//-------------------------------------------------------------------------------------------------
-// gl_surf.cpp
-//-------------------------------------------------------------------------------------------------
+===============================================================================
+*/
 
 extern	int		c_visible_lightmaps;
 extern	int		c_visible_textures;
 
-void	R_DrawAliasModel (entity_t *e);
-void	R_DrawStudioModel (entity_t *e);
-void	R_DrawBrushModel (entity_t *e);
-void	R_DrawSpriteModel (entity_t *e);
-void	R_DrawBeam( entity_t *e );
-void	R_DrawWorld (void);
-void	R_DrawAlphaSurfaces (void);
-void	R_RenderBrushPoly (msurface_t *fa);
-void	GL_SubdivideSurface (msurface_t *fa);
-bool	R_CullBox (vec3_t mins, vec3_t maxs);
-void	R_RotateForEntity (entity_t *e);
-void	R_MarkLeaves (void);
+void R_DrawBrushModel (entity_t *e);
+void R_DrawWorld (void);
+void R_DrawAlphaSurfaces (void);
+void R_RenderBrushPoly (msurface_t *fa);
+void R_RotateForEntity (entity_t *e);
+void R_MarkLeaves (void);
 
-void	EmitWaterPolys (msurface_t *fa);
-void	R_AddSkySurface (msurface_t *fa);
-void	R_ClearSkyBox (void);
-void	R_DrawSkyBox (void);
+/*
+===============================================================================
 
-//-------------------------------------------------------------------------------------------------
-// gl_draw.cpp
-//-------------------------------------------------------------------------------------------------
+	gl_mesh.cpp
 
-void	Draw_Init();
-void	Draw_Shutdown();
+===============================================================================
+*/
 
-void	Draw_GetPicSize( int *w, int *h, const char *name );
-void	Draw_Pic( int x, int y, const char *name );
-void	Draw_StretchPic( int x, int y, int w, int h, const char *name );
-void	Draw_Char( int x, int y, int ch );
-void	Draw_TileClear( int x, int y, int w, int h, const char *name );
-void	Draw_Fill( int x, int y, int w, int h, int c );
-void	Draw_FadeScreen( void );
-void	Draw_PolyBlend( const vec4_t color );
+void R_DrawAliasModel( entity_t *e );
+void R_DrawStudioModel( entity_t *e );
 
-void	Draw_RenderBatches();
+/*
+===============================================================================
 
-void	Draw_StretchRaw( int x, int y, int w, int h, int cols, int rows, byte *data );
+	gl_draw.cpp
 
-//-------------------------------------------------------------------------------------------------
-// gl_shader.cpp
-//-------------------------------------------------------------------------------------------------
+===============================================================================
+*/
+
+void Draw_Init();
+void Draw_Shutdown();
+
+void Draw_GetPicSize( int *w, int *h, const char *name );
+void Draw_Pic( int x, int y, const char *name );
+void Draw_StretchPic( int x, int y, int w, int h, const char *name );
+void Draw_Char( int x, int y, int ch );
+void Draw_TileClear( int x, int y, int w, int h, const char *name );
+void Draw_Fill( int x, int y, int w, int h, int c );
+void Draw_FadeScreen( void );
+void Draw_PolyBlend( const vec4_t color );
+
+void Draw_RenderBatches();
+
+void Draw_StretchRaw( int x, int y, int w, int h, int cols, int rows, byte *data );
+
+/*
+===============================================================================
+
+	gl_warp.cpp
+
+===============================================================================
+*/
+
+void GL_SubdivideSurface( msurface_t *fa );
+
+void EmitWaterPolys( msurface_t *fa );
+void R_AddSkySurface( msurface_t *fa );
+void R_ClearSkyBox();
+void R_DrawSkyBox();
+
+/*
+===============================================================================
+
+	gl_shader.cpp
+
+===============================================================================
+*/
 
 struct glProgs_t
 {
@@ -335,30 +406,8 @@ struct glProgs_t
 
 extern glProgs_t glProgs;
 
-void	Shaders_Init();
-void	Shaders_Shutdown();
-
-//-------------------------------------------------------------------------------------------------
-
-struct glconfig_t
-{
-	int unused;
-};
-
-struct glstate_t
-{
-	bool	fullscreen;
-
-	int     prev_mode;
-
-	int		lightmap_textures;
-
-	GLuint	currenttextures[2];
-	int		currenttmu;
-};
-
-extern glconfig_t	gl_config;
-extern glstate_t	gl_state;
+void Shaders_Init();
+void Shaders_Shutdown();
 
 //-------------------------------------------------------------------------------------------------
 // Implementation specific functions

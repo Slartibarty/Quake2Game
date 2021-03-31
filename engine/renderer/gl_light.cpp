@@ -10,7 +10,7 @@ static int r_dlightframecount;
 
 	Dynamic lights blend rendering
 
-	Only used if gl_flashblend is true
+	Only used if r_flashblend is true
 
 ===============================================================================
 */
@@ -58,7 +58,7 @@ void R_RenderDlights()
 	int			i;
 	dlight_t	*l;
 
-	if ( !gl_flashblend->value ) {
+	if ( !r_flashblend->value ) {
 		return;
 	}
 
@@ -143,7 +143,7 @@ void R_PushDlights()
 	int			i;
 	dlight_t	*l;
 
-	if ( gl_flashblend->value ) {
+	if ( r_flashblend->value ) {
 		return;
 	}
 
@@ -254,7 +254,7 @@ static int RecursiveLightPoint( mnode_t *node, vec3_t start, vec3_t end )
 					maps++)
 			{
 				for (i=0 ; i<3 ; i++)
-					scale[i] = gl_modulate->value*r_newrefdef.lightstyles[surf->styles[maps]].rgb[i];
+					scale[i] = r_modulate->value*r_newrefdef.lightstyles[surf->styles[maps]].rgb[i];
 
 				pointcolor[0] += lightmap[0] * scale[0] * (1.0f/255);
 				pointcolor[1] += lightmap[1] * scale[1] * (1.0f/255);
@@ -325,7 +325,7 @@ void R_LightPoint( vec3_t p, vec3_t color )
 		}
 	}
 
-	VectorScale (color, gl_modulate->value, color);
+	VectorScale (color, r_modulate->value, color);
 }
 
 
@@ -486,7 +486,7 @@ void R_BuildLightMap(msurface_t *surf, byte *dest, int stride)
 			bl = s_blocklights;
 
 			for (i = 0; i < 3; i++)
-				scale[i] = gl_modulate->value * r_newrefdef.lightstyles[surf->styles[maps]].rgb[i];
+				scale[i] = r_modulate->value * r_newrefdef.lightstyles[surf->styles[maps]].rgb[i];
 
 			if (scale[0] == 1.0F &&
 				scale[1] == 1.0F &&
@@ -523,7 +523,7 @@ void R_BuildLightMap(msurface_t *surf, byte *dest, int stride)
 			bl = s_blocklights;
 
 			for (i = 0; i < 3; i++)
-				scale[i] = gl_modulate->value * r_newrefdef.lightstyles[surf->styles[maps]].rgb[i];
+				scale[i] = r_modulate->value * r_newrefdef.lightstyles[surf->styles[maps]].rgb[i];
 
 			if (scale[0] == 1.0F &&
 				scale[1] == 1.0F &&

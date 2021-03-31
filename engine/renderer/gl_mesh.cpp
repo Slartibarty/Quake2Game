@@ -131,7 +131,7 @@ void GL_DrawAliasFrameLerp (dmdl_t *paliashdr, float backlerp)
 
 	GL_LerpVerts( paliashdr->num_xyz, v, ov, verts, lerp, move, frontv, backv );
 
-	if ( gl_vertex_arrays->value )
+	if ( r_vertex_arrays->value )
 	{
 		static float colorArray[MAX_VERTS*4];
 
@@ -162,7 +162,7 @@ void GL_DrawAliasFrameLerp (dmdl_t *paliashdr, float backlerp)
 			}
 		}
 
-		if ( GLEW_EXT_compiled_vertex_array && gl_ext_compiled_vertex_array->value )
+		if ( GLEW_EXT_compiled_vertex_array && r_ext_compiled_vertex_array->value )
 			glLockArraysEXT( 0, paliashdr->num_xyz );
 
 		while (1)
@@ -214,7 +214,7 @@ void GL_DrawAliasFrameLerp (dmdl_t *paliashdr, float backlerp)
 			glEnd ();
 		}
 
-		if ( GLEW_EXT_compiled_vertex_array && gl_ext_compiled_vertex_array->value )
+		if ( GLEW_EXT_compiled_vertex_array && r_ext_compiled_vertex_array->value )
 			glUnlockArraysEXT();
 	}
 	else
@@ -808,7 +808,7 @@ void R_DrawAliasModel (entity_t *e)
 		glDepthRange (gldepthmin, gldepthmax);
 
 #if 1
-	if (gl_shadows->value && !(currententity->flags & (RF_TRANSLUCENT | RF_WEAPONMODEL)))
+	if (r_shadows->value && !(currententity->flags & (RF_TRANSLUCENT | RF_WEAPONMODEL)))
 	{
 		glPushMatrix ();
 		R_RotateForEntity (e);

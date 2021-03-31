@@ -713,8 +713,8 @@ static void SV_Physics_Toss( edict_t *ent )
 			{
 				ent->groundentity = trace.ent;
 				ent->groundentity_linkcount = trace.ent->linkcount;
-				VectorCopy( vec3_origin, ent->velocity );
-				VectorCopy( vec3_origin, ent->avelocity );
+				VectorClear( ent->velocity );
+				VectorClear( ent->avelocity );
 			}
 		}
 

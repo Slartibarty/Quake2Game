@@ -232,21 +232,26 @@ void EmitWaterPolys(msurface_t *fa)
 }
 
 
-//===================================================================
+/*
+===================================================================================================
 
+	Skybox
 
-static vec3_t skyclip[6]
+===================================================================================================
+*/
+
+static const vec3_t skyclip[6]
 {
-	{1,1,0},
-	{1,-1,0},
-	{0,-1,1},
-	{0,1,1},
-	{1,0,1},
-	{-1,0,1}
+	{  1.0f,  1.0f,  0.0f },
+	{  1.0f, -1.0f,  0.0f },
+	{  0.0f, -1.0f,  1.0f },
+	{  0.0f,  1.0f,  1.0f },
+	{  1.0f,  0.0f,  1.0f },
+	{ -1.0f,  0.0f,  1.0f }
 };
 
 // 1 = s, 2 = t, 3 = 2048
-static int st_to_vec[6][3]
+static const int st_to_vec[6][3]
 {
 	{3,-1,2},
 	{-3,1,2},
@@ -275,8 +280,6 @@ static int vec_to_st[6][3]
 };
 
 static float skymins[2][6], skymaxs[2][6];
-//static constexpr float sky_min = 1.0f / 512.0f;
-//static constexpr float sky_max = 511.0f / 512.0f;
 
 static void DrawSkyPolygon(int nump, vec3_t vecs)
 {
@@ -363,7 +366,7 @@ static void DrawSkyPolygon(int nump, vec3_t vecs)
 #define	MAX_CLIP_VERTS	64
 static void ClipSkyPolygon(int nump, vec3_t vecs, int stage)
 {
-	float *norm;
+	const float *norm;
 	float *v;
 	qboolean	front, back;
 	float	d, e;
@@ -453,95 +456,81 @@ static void ClipSkyPolygon(int nump, vec3_t vecs, int stage)
 }
 
 /*
-=================
+========================
 R_AddSkySurface
-=================
+========================
 */
-void R_AddSkySurface(msurface_t *fa)
+void R_AddSkySurface( msurface_t *fa )
 {
 	int			i;
 	vec3_t		verts[MAX_CLIP_VERTS];
-	glpoly_t *p;
+	glpoly_t	*p;
 
 	// calculate vertex values for sky box
-	for (p = fa->polys; p; p = p->next)
+	for ( p = fa->polys; p; p = p->next )
 	{
-		for (i = 0; i < p->numverts; i++)
+		for ( i = 0; i < p->numverts; i++ )
 		{
-			VectorSubtract(p->verts[i], r_origin, verts[i]);
+			VectorSubtract( p->verts[i], r_origin, verts[i] );
 		}
-		ClipSkyPolygon(p->numverts, verts[0], 0);
+		ClipSkyPolygon( p->numverts, verts[0], 0 );
 	}
 }
-
 
 /*
-==============
+========================
 R_ClearSkyBox
-==============
+========================
 */
-void R_ClearSkyBox(void)
+void R_ClearSkyBox()
 {
-	for (int i = 0; i < 6; i++)
+	for ( int i = 0; i < 6; i++ )
 	{
-		skymins[0][i] = skymins[1][i] = 9999;
-		skymaxs[0][i] = skymaxs[1][i] = -9999;
+		skymins[0][i] = skymins[1][i] = 9999.0f;
+		skymaxs[0][i] = skymaxs[1][i] = -9999.0f;
 	}
 }
 
-#define SQRT3INV	0.57735f	// a little less than 1 / sqrt(3)
+#define SQRT3INV	0.57735026919f	// 1 / sqrt(3)
 
-static void MakeSkyVec(float s, float t, int axis)
+static void MakeSkyVec( float s, float t, int axis )
 {
 	vec3_t		v, b;
 	int			j, k;
 	float		width;
 
-	width = 4096.0f * SQRT3INV;	// 4096 = zfar
+	width = 4096.0f * SQRT3INV;	// SlartTodo: 4096 = zfar
 
 	b[0] = s * width;
 	b[1] = t * width;
 	b[2] = width;
 
-	for (j = 0; j < 3; j++)
+	for ( j = 0; j < 3; j++ )
 	{
 		k = st_to_vec[axis][j];
-		if (k < 0)
+		if ( k < 0 )
 			v[j] = -b[-k - 1];
 		else
 			v[j] = b[k - 1];
 	}
 
 	// avoid bilerp seam
-	s = (s + 1.0f) * 0.5f;
-	t = (t + 1.0f) * 0.5f;
-
-	// AV - I'm commenting this out since our skyboxes aren't 512x512 and we don't
-	//      modify the textures to deal with the border seam fixup correctly.
-	//      The code below was causing seams in the skyboxes.
-#if 0
-	if (s < sky_min)
-		s = sky_min;
-	else if (s > sky_max)
-		s = sky_max;
-	if (t < sky_min)
-		t = sky_min;
-	else if (t > sky_max)
-		t = sky_max;
-#endif
+	/*s = ( s + 1.0f ) * 0.5f;
+	t = ( t + 1.0f ) * 0.5f;*/
 
 	t = 1.0f - t;
-	glTexCoord2f(s, t);
-	glVertex3fv(v);
+	glTexCoord2f( s, t );
+	glVertex3fv( v );
 }
 
 /*
-==============
+========================
 R_DrawSkyBox
-==============
+========================
 */
-static const int skytexorder[6]{ 0,2,1,3,4,5 };
-void R_DrawSkyBox(void)
+static const int skytexorder[6]{ 0, 2, 1, 3, 4, 5 };
+
+void R_DrawSkyBox()
 {
 	int		i;
 
@@ -587,12 +576,12 @@ void R_DrawSkyBox(void)
 
 
 /*
-============
+========================
 R_SetSky
-============
+========================
 */
-// 3dstudio environment map names
 static const char *suf[6] = { "rt", "bk", "lf", "ft", "up", "dn" };
+
 void R_SetSky( const char *name, float rotate, vec3_t axis )
 {
 	char pathname[MAX_QPATH];

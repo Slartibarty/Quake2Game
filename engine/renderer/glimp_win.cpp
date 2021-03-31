@@ -183,7 +183,7 @@ static void GLimp_PerformCDS( int width, int height, qboolean fullscreen, qboole
 
 		if ( ChangeDisplaySettingsW( &dm, CDS_FULLSCREEN ) == DISP_CHANGE_SUCCESSFUL )
 		{
-			gl_state.fullscreen = true;
+			glState.fullscreen = true;
 
 			Com_Printf( "ok\n" );
 
@@ -207,7 +207,7 @@ static void GLimp_PerformCDS( int width, int height, qboolean fullscreen, qboole
 
 		ChangeDisplaySettingsW( 0, 0 );
 
-		gl_state.fullscreen = false;
+		glState.fullscreen = false;
 
 		if ( alertWindow )
 		{
@@ -371,7 +371,7 @@ static void GLimp_CreateWindow( WNDPROC wndproc, int width, int height, qboolean
 
 	if (WGLEW_EXT_swap_control)
 	{
-		wglSwapIntervalEXT((int)gl_swapinterval->value);
+		wglSwapIntervalEXT((int)r_swapinterval->value);
 	}
 
 	// let the sound and input subsystems know about the new window
@@ -511,7 +511,7 @@ bool GLimp_Init( void *hinstance, void *wndproc )
 	GLimp_DestroyDummyWindow( dvars );
 
 	int width, height;
-	if ( !VID_GetModeInfo( &width, &height, (int)gl_mode->value ) )
+	if ( !VID_GetModeInfo( &width, &height, (int)r_mode->value ) )
 	{
 		Com_Printf( "ref_gl::GLimp_Init() - invalid mode\n" );
 		return false;
@@ -519,7 +519,7 @@ bool GLimp_Init( void *hinstance, void *wndproc )
 
 	GLimp_CreateWindow( (WNDPROC)wndproc, width, height, (qboolean)vid_fullscreen->value );
 
-	gl_mode->modified = false;
+	r_mode->modified = false;
 	vid_fullscreen->modified = false;
 
 	return true;
@@ -535,10 +535,10 @@ void GLimp_Shutdown( void )
 {
 	GLimp_DestroyWindow();
 
-	if ( gl_state.fullscreen == true )
+	if ( glState.fullscreen == true )
 	{
 		ChangeDisplaySettingsW( 0, 0 );
-		gl_state.fullscreen = false;
+		glState.fullscreen = false;
 	}
 }
 
@@ -547,13 +547,13 @@ void GLimp_Shutdown( void )
 void GLimp_BeginFrame( void )
 {
 	// If our swap interval has changed, then change it!
-	if (gl_swapinterval->modified)
+	if (r_swapinterval->modified)
 	{
-		gl_swapinterval->modified = false;
+		r_swapinterval->modified = false;
 
 		if (WGLEW_EXT_swap_control)
 		{
-			wglSwapIntervalEXT((int)gl_swapinterval->value);
+			wglSwapIntervalEXT((int)r_swapinterval->value);
 		}
 	}
 }

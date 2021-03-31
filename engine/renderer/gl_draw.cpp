@@ -152,6 +152,7 @@ void Draw_Char( int x, int y, int ch )
 	rect.v3.Position2f( x + CONCHAR_WIDTH, y + CONCHAR_HEIGHT );
 	rect.v3.TexCoord2f( fcol + size, frow + size );
 	rect.v3.Color1f( 1.0f );
+
 	rect.v4.Position2f( x, y + CONCHAR_HEIGHT );
 	rect.v4.TexCoord2f( fcol, frow + size );
 	rect.v4.Color1f( 1.0f );
@@ -371,7 +372,7 @@ void Draw_FadeScreen( void )
 void Draw_PolyBlend( const vec4_t color )
 {
 #if 1
-	if ( !gl_polyblend->value || color[3] <= 0.0f )
+	if ( !r_polyblend->value || color[3] <= 0.0f )
 		return;
 
 	guiRect_t rect;
@@ -458,7 +459,36 @@ void Draw_RenderBatches()
 
 //-------------------------------------------------------------------------------------------------
 
-extern unsigned	r_rawpalette[256];
+static unsigned s_rawPalette[256];
+
+/*
+========================
+R_SetRawPalette
+
+Sets the palette used by Draw_StretchRaw
+========================
+*/
+void R_SetRawPalette( const unsigned char *palette )
+{
+	// We don't use the raw palette for anything but cinematics, so ignore NULL calls
+	if ( !palette )
+		return;
+
+	int i;
+	byte *rp = (byte *)s_rawPalette;
+
+	for ( i = 0; i < 256; i++ )
+	{
+		rp[i*4+0] = palette[i*3+0];
+		rp[i*4+1] = palette[i*3+1];
+		rp[i*4+2] = palette[i*3+2];
+		rp[i*4+3] = 0xff;
+	}
+
+	glClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
+	glClear( GL_COLOR_BUFFER_BIT );
+	glClearColor( DEFAULT_CLEARCOLOR );
+}
 
 //-------------------------------------------------------------------------------------------------
 // Used for rendering cinematic frames
@@ -500,7 +530,7 @@ void Draw_StretchRaw( int x, int y, int w, int h, int cols, int rows, byte *data
 			frac = fracstep >> 1;
 			for ( j = 0; j < 256; j++ )
 			{
-				dest[j] = r_rawpalette[source[frac >> 16]];
+				dest[j] = s_rawPalette[source[frac >> 16]];
 				frac += fracstep;
 			}
 		}

@@ -1,13 +1,14 @@
-/*
-=============================================================
-
-Misc functions that don't fit anywhere else
-
-=============================================================
-*/
 
 #include "gl_local.h"
 #include "../shared/imageloaders.h"
+
+/*
+===================================================================================================
+
+	Screenshots
+
+===================================================================================================
+*/
 
 class idScreenShotThread : public idSysThread
 {
@@ -21,9 +22,11 @@ public:
 
 idScreenShotThread rScreenshotThread;
 
-//-------------------------------------------------------------------------------------------------
-// Captures a 24-bit PNG screenshot
-//-------------------------------------------------------------------------------------------------
+/*
+========================
+GL_ScreenShot_Internal
+========================
+*/
 static void GL_ScreenShot_Internal( bool png )
 {
 	size_t i;
@@ -113,22 +116,22 @@ void GL_ScreenShot_TGA_f()
 	GL_ScreenShot_Internal( false );
 }
 
-//-------------------------------------------------------------------------------------------------
-// Prints some OpenGL strings
-//-------------------------------------------------------------------------------------------------
-void GL_Strings_f()
-{
-	Com_Printf( "GL_VENDOR: %s\n", glGetString( GL_VENDOR ) );
-	Com_Printf( "GL_RENDERER: %s\n", glGetString( GL_RENDERER ) );
-	Com_Printf( "GL_VERSION: %s\n", glGetString( GL_VERSION ) );
-	Com_Printf( "GL_SHADING_LANGUAGE_VERSION: %s\n", glGetString( GL_SHADING_LANGUAGE_VERSION ) );
-//	Com_Printf( "GL_EXTENSIONS: %s\n", glGetString( GL_EXTENSIONS ) );
-}
+/*
+===================================================================================================
 
-//-------------------------------------------------------------------------------------------------
-// Extract a WAD file to 24-bit TGA files
-//-------------------------------------------------------------------------------------------------
-void GL_ExtractWad_f()
+	Console commands
+
+===================================================================================================
+*/
+
+/*
+========================
+R_ExtractWad_f
+
+Extract a WAD file to 24-bit TGA files
+========================
+*/
+void R_ExtractWad_f()
 {
 	if ( Cmd_Argc() < 3 )
 	{
@@ -267,10 +270,14 @@ void GL_ExtractWad_f()
 	fclose( wadhandle );
 }
 
-//-------------------------------------------------------------------------------------------------
-// Loads a WAL
-//-------------------------------------------------------------------------------------------------
-byte *LoadWAL(const byte *pBuffer, int nBufLen, int &width, int &height)
+/*
+========================
+R_LoadWAL
+
+Loads a WAL (Remember those?)
+========================
+*/
+static byte *R_LoadWAL(const byte *pBuffer, int nBufLen, int &width, int &height)
 {
 	const miptex_t *pMipTex = (const miptex_t *)pBuffer;
 
@@ -295,10 +302,14 @@ byte *LoadWAL(const byte *pBuffer, int nBufLen, int &width, int &height)
 	return (byte *)pPic32;
 }
 
-//-------------------------------------------------------------------------------------------------
-// Upgrade all WALs in a specified folder to TGAs and WAScripts
-//-------------------------------------------------------------------------------------------------
-void GL_UpgradeWals_f()
+/*
+========================
+R_UpgradeWals_f
+
+Upgrade all WALs in a specified folder to TGAs
+========================
+*/
+void R_UpgradeWals_f()
 {
 	if ( Cmd_Argc() < 2 )
 	{
@@ -337,7 +348,7 @@ void GL_UpgradeWals_f()
 		fclose( handle );
 
 		int width, height;
-		byte *data = LoadWAL( file, length, width, height );
+		byte *data = R_LoadWAL( file, length, width, height );
 		Z_Free( file );
 
 		char tempname[MAX_QPATH];
@@ -355,13 +366,17 @@ void GL_UpgradeWals_f()
 	Sys_FindClose();
 }
 
-//-------------------------------------------------------------------------------------------------
-// Helpers
-//-------------------------------------------------------------------------------------------------
+/*
+===================================================================================================
 
-void GL_EnableMultitexture(qboolean enable)
+	OpenGL state helpers
+
+===================================================================================================
+*/
+
+void GL_EnableMultitexture(bool enable)
 {
-	if (!GLEW_ARB_multitexture || !gl_ext_multitexture->value)
+	if (!GLEW_ARB_multitexture || !r_ext_multitexture->value)
 		return;
 
 	if (enable)
@@ -382,7 +397,7 @@ void GL_EnableMultitexture(qboolean enable)
 
 void GL_SelectTexture(GLenum texture)
 {
-	if (!GLEW_ARB_multitexture || !gl_ext_multitexture->value)
+	if (!GLEW_ARB_multitexture || !r_ext_multitexture->value)
 		return;
 
 	int tmu;
@@ -396,12 +411,12 @@ void GL_SelectTexture(GLenum texture)
 		tmu = 1;
 	}
 
-	if (tmu == gl_state.currenttmu)
+	if (tmu == glState.currenttmu)
 	{
 		return;
 	}
 
-	gl_state.currenttmu = tmu;
+	glState.currenttmu = tmu;
 
 	glActiveTextureARB(texture);
 	glClientActiveTextureARB(texture);
@@ -412,10 +427,10 @@ void GL_TexEnv(GLint mode)
 #if 0
 	static GLint lastmodes[2] = { -1, -1 };
 
-	if (mode != lastmodes[gl_state.currenttmu])
+	if (mode != lastmodes[glState.currenttmu])
 	{
 		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, mode);
-		lastmodes[gl_state.currenttmu] = mode;
+		lastmodes[glState.currenttmu] = mode;
 	}
 #endif
 }
@@ -423,10 +438,10 @@ void GL_TexEnv(GLint mode)
 void GL_Bind( GLuint texnum )
 {
 	// Are we already bound?
-	if ( gl_state.currenttextures[gl_state.currenttmu] == texnum )
+	if ( glState.currenttextures[glState.currenttmu] == texnum )
 		return;
 
-	gl_state.currenttextures[gl_state.currenttmu] = texnum;
+	glState.currenttextures[glState.currenttmu] = texnum;
 	glBindTexture( GL_TEXTURE_2D, texnum );
 }
 
@@ -435,13 +450,84 @@ void GL_MBind(GLenum target, GLuint texnum)
 	GL_SelectTexture(target);
 	if (target == GL_TEXTURE0)
 	{
-		if (gl_state.currenttextures[0] == texnum)
+		if (glState.currenttextures[0] == texnum)
 			return;
 	}
 	else
 	{
-		if (gl_state.currenttextures[1] == texnum)
+		if (glState.currenttextures[1] == texnum)
 			return;
 	}
 	GL_Bind(texnum);
+}
+
+/*
+========================
+GL_SetDefaultState
+
+Sets some OpenGL state variables
+Called only once at init
+========================
+*/
+void GL_SetDefaultState()
+{
+	glClearColor( DEFAULT_CLEARCOLOR );
+	glCullFace( GL_BACK );
+
+	glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
+
+	glShadeModel( GL_FLAT );
+
+	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+
+	GL_TexEnv( GL_REPLACE );
+
+	glEnable( GL_PROGRAM_POINT_SIZE );
+}
+
+/*
+========================
+GL_CheckErrors
+========================
+*/
+void GL_CheckErrors()
+{
+	const char *msg;
+	GLenum err;
+
+	while ((err = glGetError()) != GL_NO_ERROR)
+	{
+		switch ( err )
+		{
+		case GL_INVALID_ENUM:
+			msg = "GL_INVALID_ENUM";
+			break;
+		case GL_INVALID_VALUE:
+			msg = "GL_INVALID_VALUE";
+			break;
+		case GL_INVALID_OPERATION:
+			msg = "GL_INVALID_OPERATION";
+			break;
+		case GL_STACK_OVERFLOW:
+			msg = "GL_STACK_OVERFLOW";
+			break;
+		case GL_STACK_UNDERFLOW:
+			msg = "GL_STACK_UNDERFLOW";
+			break;
+		case GL_OUT_OF_MEMORY:
+			msg = "GL_OUT_OF_MEMORY";
+			break;
+		case GL_INVALID_FRAMEBUFFER_OPERATION:
+			msg = "GL_OUT_OF_MEMORY";
+			break;
+		case GL_CONTEXT_LOST:						// OpenGL 4.5 or ARB_KHR_robustness
+			msg = "GL_OUT_OF_MEMORY";
+			break;
+		default:
+			msg = "UNKNOWN ERROR!";
+			break;
+		}
+
+		Com_Printf( "GL_CheckErrors: 0x%x - %s\n", err, msg );
+	}
 }
