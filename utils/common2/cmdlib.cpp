@@ -13,55 +13,85 @@
 
 bool verbose;
 
-/*
-===================
-Com_Printf
-===================
-*/
+void Com_Print( const char *msg )
+{
+	fputs( msg, stdout );
+}
+
 void Com_Printf( _Printf_format_string_ const char *fmt, ... )
 {
-	va_list argptr;
+	va_list		argptr;
+	char		msg[MAX_PRINT_MSG];
+
 	va_start( argptr, fmt );
-	vprintf( fmt, argptr );
+	Q_vsprintf_s( msg, fmt, argptr );
 	va_end( argptr );
+
+	Com_Print( msg );
 }
 
-/*
-===================
-Com_DPrintf
+void Com_DPrint( const char *msg )
+{
+	if ( !verbose ) {
+		return;
+	}
 
-A Com_Printf that only printf if verbose is true
-===================
-*/
+	Com_Print( msg );
+}
+
 void Com_DPrintf( _Printf_format_string_ const char *fmt, ... )
 {
-	if ( !verbose )
+	if ( !verbose ) {
 		return;
+	}
 
-	va_list argptr;
+	va_list		argptr;
+	char		msg[MAX_PRINT_MSG];
+
 	va_start( argptr, fmt );
-	vprintf( fmt, argptr );
+	Q_vsprintf_s( msg, fmt, argptr );
 	va_end( argptr );
+
+	Com_Print( msg );
 }
 
-/*
-=============
-Com_Error
-
-Always fatal for tools
-=============
-*/
-[[noreturn]] void Com_Error( int code, _Printf_format_string_ const char *fmt, ... )
+[[noreturn]] void Com_Error( const char *msg )
 {
-	printf( "\n************ ERROR ************\n" );
+	Com_Print( "\n************ ERROR ************\n" );
 
-	va_list argptr;
-	va_start( argptr, fmt );
-	vprintf( fmt, argptr );
-	va_end( argptr );
-	printf( "\n" );
+	Com_Print( msg );
+	Com_Print( "\n" );
 
 	exit( 1 );
+}
+
+[[noreturn]] void Com_Errorf( _Printf_format_string_ const char *fmt, ... )
+{
+	va_list		argptr;
+	char		msg[MAX_PRINT_MSG];
+
+	va_start( argptr, fmt );
+	Q_vsprintf_s( msg, fmt, argptr );
+	va_end( argptr );
+
+	Com_Error( msg );
+}
+
+[[noreturn]] void Com_FatalError( const char *msg )
+{
+	Com_Error( msg );
+}
+
+[[noreturn]] void Com_FatalErrorf( _Printf_format_string_ const char *fmt, ... )
+{
+	va_list		argptr;
+	char		msg[MAX_PRINT_MSG];
+
+	va_start( argptr, fmt );
+	Q_vsprintf_s( msg, fmt, argptr );
+	va_end( argptr );
+
+	Com_FatalError( msg );
 }
 
 //=============================================================================

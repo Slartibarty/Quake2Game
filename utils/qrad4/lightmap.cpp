@@ -823,19 +823,35 @@ void CreateDirectLights (void)
 		dl->next = directlights[cluster];
 		directlights[cluster] = dl;
 
-		intensity = FloatForKey (e, "light");
-		if (!intensity)
-			intensity = FloatForKey (e, "_light");
-		if (!intensity)
-			intensity = 300;
-		_color = ValueForKey (e, "_color");
-		if (_color && _color[1])
+		// HL light
+		_color = ValueForKey( e, "_light" );
+		if ( _color )
 		{
-			sscanf (_color, "%f %f %f", &dl->color[0],&dl->color[1],&dl->color[2]);
-			ColorNormalize (dl->color, dl->color);
+			sscanf( _color, "%f %f %f %f", &dl->color[0], &dl->color[1], &dl->color[2], &intensity );
+			dl->color[0] /= 255.0f;
+			dl->color[1] /= 255.0f;
+			dl->color[2] /= 255.0f;
 		}
 		else
-			dl->color[0] = dl->color[1] = dl->color[2] = 1.0;
+		{
+			// Quake 2 style
+			intensity = FloatForKey( e, "light" );
+			if ( !intensity ) {
+				intensity = 300;
+			}
+			_color = ValueForKey( e, "_color" );
+			if ( _color && _color[1] )
+			{
+				sscanf( _color, "%f %f %f", &dl->color[0], &dl->color[1], &dl->color[2] );
+				ColorNormalize( dl->color, dl->color );
+			}
+			else
+			{
+				dl->color[0] = dl->color[1] = dl->color[2] = 1.0f;
+			}
+		}
+
+		
 		dl->intensity = intensity*entity_scale;
 		dl->type = emit_point;
 

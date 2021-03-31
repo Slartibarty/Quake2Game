@@ -11,6 +11,8 @@ textureref_t	textureref[MAX_MAP_TEXTURES];
 
 //=============================================================================
 
+#if 0
+
 #define FLAGCHECK(flag) if ( Q_strcmp( data, #flag ) == 0 ) return flag;
 #define FLAGCHECK2(flag, name) if ( Q_strcmp( data, name ) == 0 ) return flag;
 
@@ -109,16 +111,16 @@ ParseSurfaceFlags
 3 == surface flags
 ===================
 */
-static int ParseSurfaceFlags( char *data, int type )
+static int ParseSurfaceFlags( char *curToken, char *nextToken, int type )
 {
 	char tokenhack[MAX_TOKEN_CHARS];
 	char *token = tokenhack;
 	int flags = 0;
 
-	COM_Parse2( &data, &token, sizeof( tokenhack ) );
+	token = curToken;
 
 	// Parse until the end baby
-	while ( data )
+	while ( nextToken )
 	{
 		if ( type == 1 )
 			flags |= StringToContentFlag( token );
@@ -127,11 +129,44 @@ static int ParseSurfaceFlags( char *data, int type )
 		else
 			flags |= StringToSurfaceFlag( token );
 
-		COM_Parse2( &data, &token, sizeof( tokenhack ) );
+		token = tokenhack;
+
+		COM_Parse2( &nextToken, &token, sizeof( tokenhack ) );
 	}
 
 	return flags;
 }
+
+#endif
+
+#define FLAGCHECK2(flag, name) if ( Q_strcmp( data, name ) == 0 ) return flag;
+
+/*
+===================
+StringToSurfaceType
+
+Parse a surface type from a string
+===================
+*/
+static int StringToSurfaceType( const char *data )
+{
+	FLAGCHECK2( SURFTYPE_CONCRETE, "concrete" )
+	FLAGCHECK2( SURFTYPE_METAL, "metal" )
+	FLAGCHECK2( SURFTYPE_VENT, "vent" )
+	FLAGCHECK2( SURFTYPE_DIRT, "dirt" )
+	FLAGCHECK2( SURFTYPE_GRASS, "grass" )
+	FLAGCHECK2( SURFTYPE_SAND, "sand" )
+	FLAGCHECK2( SURFTYPE_ROCK, "rock" )
+	FLAGCHECK2( SURFTYPE_WOOD, "wood" )
+	FLAGCHECK2( SURFTYPE_TILE, "tile" )
+	FLAGCHECK2( SURFTYPE_COMPUTER, "computer" )
+	FLAGCHECK2( SURFTYPE_GLASS, "glass" )
+	FLAGCHECK2( SURFTYPE_FLESH, "flesh" )
+
+	return 0;
+}
+
+#undef FLAGCHECK2
 
 /*
 ===================
@@ -147,7 +182,7 @@ static void ParseMaterial( char *data, textureref_t *ref )
 	if ( token[0] != '{' )
 	{
 		// Malformed
-		Error( "Malformed material %s\n", ref->name );
+		Com_FatalErrorf( "Malformed material %s\n", ref->name );
 	}
 
 	COM_Parse2( &data, &token, sizeof( tokenhack ) );
@@ -157,25 +192,29 @@ static void ParseMaterial( char *data, textureref_t *ref )
 		if ( Q_strcmp( token, "$nextframe" ) == 0 )
 		{
 			COM_Parse2( &data, &token, sizeof( tokenhack ) );
-			strcpy( ref->animname, token );
-			continue;
-		}
-		if ( Q_strcmp( token, "$contentflags" ) == 0 )
-		{
-			COM_Parse2( &data, &token, sizeof( tokenhack ) );
-			ref->contents = ParseSurfaceFlags( token, 1 );
+			Q_strcpy_s( ref->animname, token );
 			continue;
 		}
 		if ( Q_strcmp( token, "$surfacetype" ) == 0 )
 		{
 			COM_Parse2( &data, &token, sizeof( tokenhack ) );
-			ref->flags = ParseSurfaceFlags( token, 2 );
+			ref->flags |= StringToSurfaceType( token );
 			continue;
 		}
-		if ( Q_strcmp( token, "$surfaceflags" ) == 0 )
+		if ( Q_strcmp( token, "%compilesky" ) == 0 )
 		{
 			COM_Parse2( &data, &token, sizeof( tokenhack ) );
-			ref->flags = ParseSurfaceFlags( token, 3 );
+			if ( atoi( token ) ) {
+				ref->flags |= SURF_NODRAW | SURF_SKY;
+			}
+			continue;
+		}
+		if ( Q_strcmp( token, "%compilenodraw" ) == 0 )
+		{
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
+			if ( atoi( token ) ) {
+				ref->flags |= SURF_NODRAW;
+			}
 			continue;
 		}
 	}
