@@ -1,11 +1,11 @@
 /*
-===============================================================================
+===================================================================================================
 
 	GLSL shader programs
 
 	Shaders are cached post-link, this is like keeping .obj files around
 
-===============================================================================
+===================================================================================================
 */
 
 #include "gl_local.h"
@@ -26,9 +26,9 @@ static glShaders_t glShaders;
 glProgs_t glProgs;
 
 /*
-===================
+========================
 CheckShader
-===================
+========================
 */
 static bool CheckShader( GLuint shader, const char *filename )
 {
@@ -53,11 +53,11 @@ static bool CheckShader( GLuint shader, const char *filename )
 }
 
 /*
-===================
+========================
 MakeShader
 
 Loads and compiles a shader from disc
-===================
+========================
 */
 static GLuint MakeShader( const char *filename, GLenum type )
 {
@@ -84,18 +84,20 @@ static GLuint MakeShader( const char *filename, GLenum type )
 }
 
 /*
-===================
+========================
 Shaders_Init
-===================
+========================
 */
 void Shaders_Init()
 {
+	// create all our shaders
 	glShaders.guiVert = MakeShader( "shaders/gui.vert", GL_VERTEX_SHADER );
 	glShaders.guiFrag = MakeShader( "shaders/gui.frag", GL_FRAGMENT_SHADER );
 
 	glShaders.particleVert = MakeShader( "shaders/particle.vert", GL_VERTEX_SHADER );
 	glShaders.particleFrag = MakeShader( "shaders/particle.frag", GL_FRAGMENT_SHADER );
 
+	// create all our programs
 	glProgs.guiProg = glCreateProgram();
 	glAttachShader( glProgs.guiProg, glShaders.guiVert );
 	glAttachShader( glProgs.guiProg, glShaders.guiFrag );
@@ -108,16 +110,22 @@ void Shaders_Init()
 }
 
 /*
-===================
-Shader_Shutdown
-===================
+========================
+Shaders_Shutdown
+========================
 */
 void Shaders_Shutdown()
 {
-	glDeleteProgram( glProgs.guiProg );
+	glUseProgram( 0 );
+
+	// values of 0 are silently ignored
+
+	glDeleteShader( glShaders.particleFrag );
+	glDeleteShader( glShaders.particleVert );
 
 	glDeleteShader( glShaders.guiFrag );
 	glDeleteShader( glShaders.guiVert );
+
+	glDeleteProgram( glProgs.particleProg );
+	glDeleteProgram( glProgs.guiProg );
 }
-
-
