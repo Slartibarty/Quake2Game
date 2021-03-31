@@ -242,12 +242,12 @@ void EmitWaterPolys(msurface_t *fa)
 
 static const vec3_t skyclip[6]
 {
-	{  1.0f,  1.0f,  0.0f },
-	{  1.0f, -1.0f,  0.0f },
-	{  0.0f, -1.0f,  1.0f },
-	{  0.0f,  1.0f,  1.0f },
-	{  1.0f,  0.0f,  1.0f },
-	{ -1.0f,  0.0f,  1.0f }
+	{1,1,0},
+	{1,-1,0},
+	{0,-1,1},
+	{0,1,1},
+	{1,0,1},
+	{-1,0,1}
 };
 
 // 1 = s, 2 = t, 3 = 2048
@@ -264,7 +264,7 @@ static const int st_to_vec[6][3]
 };
 
 // s = [0]/[2], t = [1]/[2]
-static int vec_to_st[6][3]
+static const int vec_to_st[6][3]
 {
 	{-2,3,1},
 	{2,3,-1},
@@ -275,8 +275,8 @@ static int vec_to_st[6][3]
 	{-2,-1,3},
 	{-2,1,-3}
 
-	//	{-1,2,3},
-	//	{1,2,-3}
+//	{-1,2,3},
+//	{1,2,-3}
 };
 
 static float skymins[2][6], skymaxs[2][6];
@@ -289,16 +289,6 @@ static void DrawSkyPolygon(int nump, vec3_t vecs)
 	int		axis;
 	float *vp;
 
-#if 0
-	glBegin(GL_POLYGON);
-	for (i = 0; i < nump; i++, vecs += 3)
-	{
-		VectorAdd(vecs, r_origin, v);
-		glVertex3fv(v);
-	}
-	glEnd();
-	return;
-#endif
 	// decide which face it maps to
 	VectorCopy(vec3_origin, v);
 	for (i = 0, vp = vecs; i < nump; i++, vp += 3)
@@ -515,8 +505,8 @@ static void MakeSkyVec( float s, float t, int axis )
 	}
 
 	// avoid bilerp seam
-	/*s = ( s + 1.0f ) * 0.5f;
-	t = ( t + 1.0f ) * 0.5f;*/
+	s = ( s + 1.0f ) * 0.5f;
+	t = ( t + 1.0f ) * 0.5f;
 
 	t = 1.0f - t;
 	glTexCoord2f( s, t );
