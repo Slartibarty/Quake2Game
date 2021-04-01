@@ -19,45 +19,45 @@ static int		mod_numknown;
 // the inline * models from the current map are kept seperate
 static model_t	mod_inline[MAX_MOD_KNOWN];
 
-int		registration_sequence;
-
 /*
-===============
+========================
 Mod_PointInLeaf
-===============
+========================
 */
-mleaf_t *Mod_PointInLeaf (vec3_t p, model_t *model)
+mleaf_t *Mod_PointInLeaf( vec3_t p, model_t *model )
 {
-	mnode_t		*node;
+	mnode_t *node;
 	float		d;
-	cplane_t	*plane;
-	
-	if (!model || !model->nodes)
-		Com_Errorf ("Mod_PointInLeaf: bad model");
+	cplane_t *plane;
+
+	if ( !model || !model->nodes ) {
+		Com_Error( "Mod_PointInLeaf: bad model" );
+	}
 
 	node = model->nodes;
-	while (1)
+	while ( 1 )
 	{
-		if (node->contents != -1)
+		if ( node->contents != -1 ) {
 			return (mleaf_t *)node;
+		}
 		plane = node->plane;
-		d = DotProduct (p,plane->normal) - plane->dist;
-		if (d > 0)
+		d = DotProduct( p, plane->normal ) - plane->dist;
+		if ( d > 0 ) {
 			node = node->children[0];
-		else
+		} else {
 			node = node->children[1];
+		}
 	}
-	
+
 	return NULL;	// never reached
 }
 
-
 /*
-===================
+========================
 Mod_DecompressVis
-===================
+========================
 */
-byte *Mod_DecompressVis (byte *in, model_t *model)
+static byte *Mod_DecompressVis (byte *in, model_t *model)
 {
 	static byte	decompressed[MAX_MAP_LEAFS/8];
 	int		c;
@@ -98,136 +98,142 @@ byte *Mod_DecompressVis (byte *in, model_t *model)
 }
 
 /*
-==============
+========================
 Mod_ClusterPVS
-==============
+========================
 */
-byte *Mod_ClusterPVS (int cluster, model_t *model)
+byte *Mod_ClusterPVS( int cluster, model_t *model )
 {
-	if (cluster == -1 || !model->vis)
+	if ( cluster == -1 || !model->vis ) {
 		return mod_novis;
-	return Mod_DecompressVis ( (byte *)model->vis + model->vis->bitofs[cluster][DVIS_PVS],
-		model);
+	}
+	return Mod_DecompressVis( (byte *)model->vis + model->vis->bitofs[cluster][DVIS_PVS], model );
 }
 
-
-//===============================================================================
+//=================================================================================================
 
 /*
-================
+========================
 Mod_Modellist_f
-================
+========================
 */
-void Mod_Modellist_f (void)
+void Mod_Modellist_f()
 {
 	int		i;
-	model_t	*mod;
+	model_t *mod;
 	int		total;
 
 	total = 0;
-	Com_DPrintf("Loaded models:\n");
-	for (i=0, mod=mod_known ; i < mod_numknown ; i++, mod++)
+	Com_DPrintf( "Loaded models:\n" );
+	for ( i = 0, mod = mod_known; i < mod_numknown; i++, mod++ )
 	{
-		if (!mod->name[0])
+		if ( !mod->name[0] ) {
 			continue;
-		Com_Printf("%8i : %s\n",mod->extradatasize, mod->name);
+		}
+		Com_Printf( "%8i : %s\n", mod->extradatasize, mod->name );
 		total += mod->extradatasize;
 	}
-	Com_Printf("Total resident: %i\n", total);
+	Com_Printf( "Total resident: %i\n", total );
 }
 
 /*
-===============
+========================
 Mod_Init
-===============
+========================
 */
-void Mod_Init (void)
+void Mod_Init()
 {
-	memset (mod_novis, 0xff, sizeof(mod_novis));
+	memset( mod_novis, 0xff, sizeof( mod_novis ) );
 }
 
-
-
 /*
-==================
+========================
 Mod_ForName
 
 Loads in a model for the given name
-==================
+========================
 */
-model_t *Mod_ForName (const char *name, qboolean crash)
+model_t *Mod_ForName( const char *name, qboolean crash )
 {
-	model_t	*mod;
+	model_t *mod;
 	unsigned *buf;
 	int		i;
-	
-	if (!name[0])
-		Com_Errorf ("Mod_ForName: NULL name");
-		
+
+	if ( !name[0] ) {
+		Com_Error( "Mod_ForName: NULL name" );
+	}
+
 	//
 	// inline models are grabbed only from worldmodel
 	//
-	if (name[0] == '*')
+	if ( name[0] == '*' )
 	{
-		i = atoi(name+1);
-		if (i < 1 || !r_worldmodel || i >= r_worldmodel->numsubmodels)
-			Com_Errorf ("bad inline model number");
+		i = atoi( name + 1 );
+		if ( i < 1 || !r_worldmodel || i >= r_worldmodel->numsubmodels ) {
+			Com_Error( "bad inline model number" );
+		}
 		return &mod_inline[i];
 	}
 
 	//
 	// search the currently loaded models
 	//
-	for (i=0 , mod=mod_known ; i<mod_numknown ; i++, mod++)
+	for ( i = 0, mod = mod_known; i < mod_numknown; i++, mod++ )
 	{
-		if (!mod->name[0])
+		if ( !mod->name[0] ) {
 			continue;
-		if (!Q_strcmp (mod->name, name) )
+		}
+		if ( !Q_strcmp( mod->name, name ) ) {
 			return mod;
+		}
 	}
-	
+
 	//
 	// find a free model slot spot
 	//
-	for (i=0 , mod=mod_known ; i<mod_numknown ; i++, mod++)
+	for ( i = 0, mod = mod_known; i < mod_numknown; i++, mod++ )
 	{
-		if (!mod->name[0])
-			break;	// free spot
+		if ( !mod->name[0] ) {
+			// free spot
+			break;
+		}
 	}
-	if (i == mod_numknown)
+	if ( i == mod_numknown )
 	{
-		if (mod_numknown == MAX_MOD_KNOWN)
-			Com_Errorf ("mod_numknown == MAX_MOD_KNOWN");
+		if ( mod_numknown == MAX_MOD_KNOWN ) {
+			Com_Error( "mod_numknown == MAX_MOD_KNOWN" );
+		}
 		mod_numknown++;
 	}
-	strcpy (mod->name, name);
-	
+
+	Q_strcpy_s( mod->name, name );
+
 	//
 	// load the file
 	//
-	modfilelen = FS_LoadFile (mod->name, (void**)&buf);
-	if (!buf)
+	modfilelen = FS_LoadFile( mod->name, (void **)&buf );
+	if ( !buf )
 	{
-		if (crash)
-			Com_Errorf ("Mod_NumForName: %s not found", mod->name);
-		memset (mod->name, 0, sizeof(mod->name));
+		if ( crash ) {
+			Com_Errorf( "Mod_NumForName: %s not found", mod->name );
+		}
+		memset( mod->name, 0, sizeof( mod->name ) );
 		return NULL;
 	}
-	
+
 	loadmodel = mod;
 
 	//
 	// fill it in
 	//
 
-
 	// call the apropriate loader
-	
-	switch (LittleLong(*(unsigned *)buf))
+
+	switch ( LittleLong( *(unsigned *)buf ) )
 	{
 	case IDALIASHEADER:
-		loadmodel->extradata = Hunk_Begin (0x200000);
-		Mod_LoadAliasModel (mod, buf);
+		loadmodel->extradata = Hunk_Begin( 0x200000 );
+		Mod_LoadAliasModel( mod, buf );
 		break;
 
 	case IDSTUDIOHEADER:
@@ -236,44 +242,43 @@ model_t *Mod_ForName (const char *name, qboolean crash)
 		break;
 
 	case IDSPRITEHEADER:
-		loadmodel->extradata = Hunk_Begin (0x10000);
-		Mod_LoadSpriteModel (mod, buf);
+		loadmodel->extradata = Hunk_Begin( 0x10000 );
+		Mod_LoadSpriteModel( mod, buf );
 		break;
-	
+
 	case IDBSPHEADER:
-		loadmodel->extradata = Hunk_Begin (0x1000000);
-		Mod_LoadBrushModel (mod, buf);
+		loadmodel->extradata = Hunk_Begin( 0x1000000 );
+		Mod_LoadBrushModel( mod, buf );
 		break;
 
 	default:
-		Com_Errorf ("Mod_NumForName: unknown fileid for %s", mod->name);
+		Com_Errorf( "Mod_NumForName: unknown fileid for %s", mod->name );
 		break;
 	}
 
-	loadmodel->extradatasize = Hunk_End ();
+	loadmodel->extradatasize = Hunk_End();
 
-	FS_FreeFile (buf);
+	FS_FreeFile( buf );
 
 	return mod;
 }
 
 /*
-===============================================================================
+===================================================================================================
 
-					BRUSHMODEL LOADING
+	Brush models
 
-===============================================================================
+===================================================================================================
 */
 
-byte	*mod_base;
-
+static byte *mod_base;
 
 /*
-=================
+========================
 Mod_LoadLighting
-=================
+========================
 */
-void Mod_LoadLighting (lump_t *l)
+static void Mod_LoadLighting (lump_t *l)
 {
 	if (!l->filelen)
 	{
@@ -284,13 +289,12 @@ void Mod_LoadLighting (lump_t *l)
 	memcpy (loadmodel->lightdata, mod_base + l->fileofs, l->filelen);
 }
 
-
 /*
-=================
+========================
 Mod_LoadVisibility
-=================
+========================
 */
-void Mod_LoadVisibility (lump_t *l)
+static void Mod_LoadVisibility (lump_t *l)
 {
 	int		i;
 
@@ -310,13 +314,12 @@ void Mod_LoadVisibility (lump_t *l)
 	}
 }
 
-
 /*
-=================
+========================
 Mod_LoadVertexes
-=================
+========================
 */
-void Mod_LoadVertexes (lump_t *l)
+static void Mod_LoadVertexes (lump_t *l)
 {
 	dvertex_t	*in;
 	mvertex_t	*out;
@@ -340,30 +343,29 @@ void Mod_LoadVertexes (lump_t *l)
 }
 
 /*
-=================
+========================
 RadiusFromBounds
-=================
+========================
 */
-float RadiusFromBounds (vec3_t mins, vec3_t maxs)
+static float RadiusFromBounds( vec3_t mins, vec3_t maxs )
 {
 	int		i;
 	vec3_t	corner;
 
-	for (i=0 ; i<3 ; i++)
+	for ( i = 0; i < 3; i++ )
 	{
-		corner[i] = fabs(mins[i]) > fabs(maxs[i]) ? fabs(mins[i]) : fabs(maxs[i]);
+		corner[i] = fabs( mins[i] ) > fabs( maxs[i] ) ? fabs( mins[i] ) : fabs( maxs[i] );
 	}
 
-	return VectorLength (corner);
+	return VectorLength( corner );
 }
 
-
 /*
-=================
+========================
 Mod_LoadSubmodels
-=================
+========================
 */
-void Mod_LoadSubmodels (lump_t *l)
+static void Mod_LoadSubmodels (lump_t *l)
 {
 	dmodel_t	*in;
 	mmodel_t	*out;
@@ -394,11 +396,11 @@ void Mod_LoadSubmodels (lump_t *l)
 }
 
 /*
-=================
+========================
 Mod_LoadEdges
-=================
+========================
 */
-void Mod_LoadEdges (lump_t *l)
+static void Mod_LoadEdges (lump_t *l)
 {
 	dedge_t *in;
 	medge_t *out;
@@ -421,11 +423,11 @@ void Mod_LoadEdges (lump_t *l)
 }
 
 /*
-=================
+========================
 Mod_LoadTexinfo
-=================
+========================
 */
-void Mod_LoadTexinfo (lump_t *l)
+static void Mod_LoadTexinfo (lump_t *l)
 {
 	texinfo_t *in;
 	mtexinfo_t *out, *step;
@@ -473,13 +475,13 @@ void Mod_LoadTexinfo (lump_t *l)
 }
 
 /*
-================
+========================
 CalcSurfaceExtents
 
 Fills in s->texturemins[] and s->extents[]
-================
+========================
 */
-void CalcSurfaceExtents (msurface_t *s)
+static void CalcSurfaceExtents (msurface_t *s)
 {
 	float	mins[2], maxs[2], val;
 	int		i,j, e;
@@ -487,8 +489,7 @@ void CalcSurfaceExtents (msurface_t *s)
 	mtexinfo_t	*tex;
 	int		bmins[2], bmaxs[2];
 
-	mins[0] = mins[1] = 99999;
-	maxs[0] = maxs[1] = -99999;
+	ClearBounds( mins, maxs );
 
 	tex = s->texinfo;
 	
@@ -514,7 +515,7 @@ void CalcSurfaceExtents (msurface_t *s)
 	}
 
 	for (i=0 ; i<2 ; i++)
-	{	
+	{
 		bmins[i] = (int)floor(mins[i]/16);
 		bmaxs[i] = (int)ceil(maxs[i]/16);
 
@@ -526,18 +527,17 @@ void CalcSurfaceExtents (msurface_t *s)
 	}
 }
 
-
 void GL_BuildPolygonFromSurface(msurface_t *fa);
 void GL_CreateSurfaceLightmap (msurface_t *surf);
 void GL_EndBuildingLightmaps (void);
 void GL_BeginBuildingLightmaps (model_t *m);
 
 /*
-=================
+========================
 Mod_LoadFaces
-=================
+========================
 */
-void Mod_LoadFaces (lump_t *l)
+static void Mod_LoadFaces (lump_t *l)
 {
 	dface_t		*in;
 	msurface_t 	*out;
@@ -614,11 +614,10 @@ void Mod_LoadFaces (lump_t *l)
 	GL_EndBuildingLightmaps ();
 }
 
-
 /*
-=================
+========================
 Mod_SetParent
-=================
+========================
 */
 void Mod_SetParent (mnode_t *node, mnode_t *parent)
 {
@@ -630,11 +629,11 @@ void Mod_SetParent (mnode_t *node, mnode_t *parent)
 }
 
 /*
-=================
+========================
 Mod_LoadNodes
-=================
+========================
 */
-void Mod_LoadNodes (lump_t *l)
+static void Mod_LoadNodes (lump_t *l)
 {
 	int			i, j, count, p;
 	dnode_t		*in;
@@ -678,11 +677,11 @@ void Mod_LoadNodes (lump_t *l)
 }
 
 /*
-=================
+========================
 Mod_LoadLeafs
-=================
+========================
 */
-void Mod_LoadLeafs (lump_t *l)
+static void Mod_LoadLeafs (lump_t *l)
 {
 	dleaf_t 	*in;
 	mleaf_t 	*out;
@@ -715,28 +714,15 @@ void Mod_LoadLeafs (lump_t *l)
 		out->firstmarksurface = loadmodel->marksurfaces +
 			LittleShort(in->firstleafface);
 		out->nummarksurfaces = LittleShort(in->numleaffaces);
-		
-		// gl underwater warp
-#if 0
-		if (out->contents & (CONTENTS_WATER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_THINWATER) )
-		{
-			for (j=0 ; j<out->nummarksurfaces ; j++)
-			{
-				out->firstmarksurface[j]->flags |= SURF_UNDERWATER;
-				for (poly = out->firstmarksurface[j]->polys ; poly ; poly=poly->next)
-					poly->flags |= SURF_UNDERWATER;
-			}
-		}
-#endif
 	}	
 }
 
 /*
-=================
+========================
 Mod_LoadMarksurfaces
-=================
+========================
 */
-void Mod_LoadMarksurfaces (lump_t *l)
+static void Mod_LoadMarksurfaces (lump_t *l)
 {	
 	int		i, j, count;
 	short		*in;
@@ -761,11 +747,11 @@ void Mod_LoadMarksurfaces (lump_t *l)
 }
 
 /*
-=================
+========================
 Mod_LoadSurfedges
-=================
+========================
 */
-void Mod_LoadSurfedges (lump_t *l)
+static void Mod_LoadSurfedges (lump_t *l)
 {	
 	int		i, count;
 	int		*in, *out;
@@ -787,13 +773,12 @@ void Mod_LoadSurfedges (lump_t *l)
 		out[i] = LittleLong (in[i]);
 }
 
-
 /*
-=================
+========================
 Mod_LoadPlanes
-=================
+========================
 */
-void Mod_LoadPlanes (lump_t *l)
+static void Mod_LoadPlanes (lump_t *l)
 {
 	int			i, j;
 	cplane_t	*out;
@@ -827,9 +812,9 @@ void Mod_LoadPlanes (lump_t *l)
 }
 
 /*
-=================
+========================
 Mod_LoadBrushModel
-=================
+========================
 */
 void Mod_LoadBrushModel (model_t *mod, void *buffer)
 {
@@ -899,17 +884,17 @@ void Mod_LoadBrushModel (model_t *mod, void *buffer)
 }
 
 /*
-==============================================================================
+===================================================================================================
 
-ALIAS MODELS
+	Alias models
 
-==============================================================================
+===================================================================================================
 */
 
 /*
-=================
+========================
 Mod_LoadAliasModel
-=================
+========================
 */
 void Mod_LoadAliasModel (model_t *mod, void *buffer)
 {
@@ -1026,17 +1011,17 @@ void Mod_LoadAliasModel (model_t *mod, void *buffer)
 }
 
 /*
-==============================================================================
+===================================================================================================
 
-STUDIO MODELS
+	Studio models
 
-==============================================================================
+===================================================================================================
 */
 
 /*
-=================
+========================
 Mod_LoadStudioModel
-=================
+========================
 */
 void Mod_LoadStudioModel( model_t *mod, void *buffer )
 {
@@ -1069,17 +1054,17 @@ void Mod_LoadStudioModel( model_t *mod, void *buffer )
 }
 
 /*
-==============================================================================
+===================================================================================================
 
-SPRITE MODELS
+	Sprite models
 
-==============================================================================
+===================================================================================================
 */
 
 /*
-=================
+========================
 Mod_LoadSpriteModel
-=================
+========================
 */
 void Mod_LoadSpriteModel (model_t *mod, void *buffer)
 {
@@ -1115,74 +1100,104 @@ void Mod_LoadSpriteModel (model_t *mod, void *buffer)
 	mod->type = mod_sprite;
 }
 
-//=============================================================================
+//=================================================================================================
 
 /*
-@@@@@@@@@@@@@@@@@@@@@
+========================
+Mod_Free
+========================
+*/
+void Mod_Free( model_t *mod )
+{
+	Hunk_Free( mod->extradata );
+	memset( mod, 0, sizeof( *mod ) );
+}
+
+/*
+========================
+Mod_FreeAll
+========================
+*/
+void Mod_FreeAll()
+{
+	int		i;
+
+	for ( i = 0; i < mod_numknown; i++ )
+	{
+		if ( mod_known[i].extradatasize )
+			Mod_Free( &mod_known[i] );
+	}
+}
+
+//=================================================================================================
+
+/*
+========================
 R_BeginRegistration
 
 Specifies the model that will be used as the world
-@@@@@@@@@@@@@@@@@@@@@
+========================
 */
-void R_BeginRegistration (const char *model)
+void R_BeginRegistration( const char *model )
 {
-	char	fullname[MAX_QPATH];
-	cvar_t	*flushmap;
+	char fullname[MAX_QPATH];
+	static cvar_t *flushmap;
 
-	registration_sequence++;
+	tr.registrationSequence++;
 	r_oldviewcluster = -1;		// force markleafs
 
-	Q_sprintf_s (fullname, "maps/%s.bsp", model);
+	Q_sprintf_s( fullname, "maps/%s.bsp", model );
 
 	// explicitly free the old map if different
 	// this guarantees that mod_known[0] is the world map
-	flushmap = Cvar_Get ("flushmap", "0", 0);
-	if ( Q_strcmp(mod_known[0].name, fullname) || flushmap->value)
-		Mod_Free (&mod_known[0]);
-	r_worldmodel = Mod_ForName(fullname, true);
+	if ( !flushmap ) {
+		flushmap = Cvar_Get( "flushmap", "0", 0 );
+	}
+	if ( Q_strcmp( mod_known[0].name, fullname ) || flushmap->value ) {
+		Mod_Free( &mod_known[0] );
+	}
+	r_worldmodel = Mod_ForName( fullname, true );
 
 	r_viewcluster = -1;
 }
 
-
 /*
-@@@@@@@@@@@@@@@@@@@@@
+========================
 R_RegisterModel
-
-@@@@@@@@@@@@@@@@@@@@@
+========================
 */
-model_t *R_RegisterModel (const char *name)
+model_t *R_RegisterModel( const char *name )
 {
-	model_t		*mod;
+	model_t *mod;
 	int			i;
-	dsprite_t			*sprout;
-	dmdl_t				*pheader;
+	dsprite_t *sprout;
+	dmdl_t *pheader;
 
-	studiohdr_t			*pstudio;
-	mstudiotexture_t	*ptexture;
+	studiohdr_t *pstudio;
+	mstudiotexture_t *ptexture;
 
-	mod = Mod_ForName (name, false);
-	if (mod)
+	mod = Mod_ForName( name, false );
+	if ( mod )
 	{
-		mod->registration_sequence = registration_sequence;
+		mod->registration_sequence = tr.registrationSequence;
 
 		// register any images used by the models
-		if (mod->type == mod_sprite)
+		if ( mod->type == mod_sprite )
 		{
 			sprout = (dsprite_t *)mod->extradata;
-			for (i=0 ; i<sprout->numframes ; i++)
-				mod->skins[i] = GL_FindMaterial (sprout->frames[i].name);
+			for ( i = 0; i < sprout->numframes; i++ )
+				mod->skins[i] = GL_FindMaterial( sprout->frames[i].name );
 		}
-		else if (mod->type == mod_alias)
+		else if ( mod->type == mod_alias )
 		{
 			pheader = (dmdl_t *)mod->extradata;
-			for (i=0 ; i<pheader->num_skins ; i++)
-				mod->skins[i] = GL_FindMaterial ((char *)pheader + pheader->ofs_skins + i*MAX_SKINNAME);
+			for ( i = 0; i < pheader->num_skins; i++ )
+				mod->skins[i] = GL_FindMaterial( (char *)pheader + pheader->ofs_skins + i * MAX_SKINNAME );
 //PGM
 			mod->numframes = pheader->num_frames;
 //PGM
 		}
-		else if (mod->type == mod_studio)
+		else if ( mod->type == mod_studio )
 		{
 			pstudio = (studiohdr_t *)mod->extradata;
 			assert( pstudio->numtextures < MAX_MD2SKINS );
@@ -1199,67 +1214,35 @@ model_t *R_RegisterModel (const char *name)
 		//	mod->numframes = pstudio->num_frames;
 //PGM
 		}
-		else if (mod->type == mod_brush)
+		else if ( mod->type == mod_brush )
 		{
-			for (i=0 ; i<mod->numtexinfo ; i++)
-				mod->texinfo[i].material->registration_sequence = registration_sequence;
+			for ( i = 0; i < mod->numtexinfo; i++ )
+				mod->texinfo[i].material->registration_sequence = tr.registrationSequence;
 		}
 	}
 	return mod;
 }
 
-
 /*
-@@@@@@@@@@@@@@@@@@@@@
+========================
 R_EndRegistration
-
-@@@@@@@@@@@@@@@@@@@@@
+========================
 */
-void R_EndRegistration (void)
+void R_EndRegistration()
 {
-	int		i;
-	model_t	*mod;
+	int i;
+	model_t *mod;
 
-	for (i=0, mod=mod_known ; i<mod_numknown ; i++, mod++)
+	for ( i = 0, mod = mod_known; i < mod_numknown; i++, mod++ )
 	{
-		if (!mod->name[0])
+		if ( !mod->name[0] ) {
 			continue;
-		if (mod->registration_sequence != registration_sequence)
-		{	// don't need this model
-			Mod_Free (mod);
+		}
+		if ( mod->registration_sequence != tr.registrationSequence ) {
+			// don't need this model
+			Mod_Free( mod );
 		}
 	}
 
-	GL_FreeUnusedMaterials ();
-}
-
-
-//=============================================================================
-
-
-/*
-================
-Mod_Free
-================
-*/
-void Mod_Free (model_t *mod)
-{
-	Hunk_Free (mod->extradata);
-	memset (mod, 0, sizeof(*mod));
-}
-
-/*
-================
-Mod_FreeAll
-================
-*/
-void Mod_FreeAll (void)
-{
-	int		i;
-
-	for (i=0 ; i<mod_numknown ; i++)
-	{
-		if (mod_known[i].extradatasize)
-			Mod_Free (&mod_known[i]);
-	}
+	GL_FreeUnusedMaterials();
 }

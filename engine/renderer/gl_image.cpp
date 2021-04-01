@@ -562,13 +562,13 @@ material_t *GL_FindMaterial( const char *name, bool managed /*= false*/ )
 	{
 		if ( Q_strcmp( newname, material->name ) == 0 )
 		{
-			material->registration_sequence = managed ? -1 : registration_sequence;
+			material->registration_sequence = managed ? -1 : tr.registrationSequence;
 			return material;
 		}
 	}
 
 	material = GL_CreateMaterial( newname );
-	material->registration_sequence = managed ? -1 : registration_sequence;
+	material->registration_sequence = managed ? -1 : tr.registrationSequence;
 
 	return material;
 }
@@ -617,7 +617,7 @@ void GL_FreeUnusedMaterials( void )
 	{
 		if ( material == mat_notexture || material == mat_particletexture )
 			continue;		// generated material, delete only at shutdown
-		if ( material->registration_sequence == registration_sequence )
+		if ( material->registration_sequence == tr.registrationSequence )
 			continue;		// used this sequence
 		if ( material->registration_sequence <= 0 )
 			continue;		// free slot or managed

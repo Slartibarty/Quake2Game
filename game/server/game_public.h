@@ -154,7 +154,7 @@ struct game_import_t
 	// for map changing, etc
 	void	(*AddCommandString) (const char *text);
 
-	void	(*DebugGraph) (float value, int color);
+	void	(*DebugGraph) (float value, qColor color);
 };
 
 //

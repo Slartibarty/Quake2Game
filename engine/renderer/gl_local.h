@@ -221,7 +221,7 @@ struct glState_t
 
 struct renderSystemGlobals_t
 {
-	int todo;
+	int registrationSequence;
 };
 
 extern glState_t				glState;
@@ -263,6 +263,7 @@ extern cvar_t *r_dynamic;
 extern cvar_t *r_modulate;
 extern cvar_t *r_picmip;
 extern cvar_t *r_showtris;
+extern cvar_t *r_wireframe;
 extern cvar_t *r_finish;
 extern cvar_t *r_clear;
 extern cvar_t *r_cullfaces;
@@ -367,8 +368,7 @@ void Draw_Pic( int x, int y, const char *name );
 void Draw_StretchPic( int x, int y, int w, int h, const char *name );
 void Draw_Char( int x, int y, int ch );
 void Draw_TileClear( int x, int y, int w, int h, const char *name );
-void Draw_Fill( int x, int y, int w, int h, int c );
-void Draw_FadeScreen( void );
+void R_DrawFilled( float x, float y, float w, float h, qColor color );
 void Draw_PolyBlend( const vec4_t color );
 
 void Draw_RenderBatches();

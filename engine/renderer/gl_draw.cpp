@@ -54,9 +54,9 @@ void Draw_Init()
 	glEnableVertexAttribArray( 1 );
 	glEnableVertexAttribArray( 2 );
 
-	glVertexAttribPointer( 0, 2, GL_FLOAT, GL_FALSE, 8 * sizeof( GLfloat ), (void *)( 0 ) );
-	glVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof( GLfloat ), (void *)( 2 * sizeof( GLfloat ) ) );
-	glVertexAttribPointer( 2, 4, GL_FLOAT, GL_FALSE, 8 * sizeof( GLfloat ), (void *)( 4 * sizeof( GLfloat ) ) );
+	glVertexAttribPointer( 0, 2, GL_FLOAT, GL_FALSE, sizeof( guiVertex_t ), (void *)( 0 ) );
+	glVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, sizeof( guiVertex_t ), (void *)( 2 * sizeof( GLfloat ) ) );
+	glVertexAttribPointer( 2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( guiVertex_t ), (void *)( 4 * sizeof( GLfloat ) ) );
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -143,19 +143,19 @@ void Draw_Char( int x, int y, int ch )
 
 	rect.v1.Position2f( x, y );
 	rect.v1.TexCoord2f( fcol, frow );
-	rect.v1.Color1f( 1.0f );
+	rect.v1.Color1f( 255 );
 
 	rect.v2.Position2f( x + CONCHAR_WIDTH, y );
 	rect.v2.TexCoord2f( fcol + size, frow );
-	rect.v2.Color1f( 1.0f );
+	rect.v2.Color1f( 255 );
 
 	rect.v3.Position2f( x + CONCHAR_WIDTH, y + CONCHAR_HEIGHT );
 	rect.v3.TexCoord2f( fcol + size, frow + size );
-	rect.v3.Color1f( 1.0f );
+	rect.v3.Color1f( 255 );
 
 	rect.v4.Position2f( x, y + CONCHAR_HEIGHT );
 	rect.v4.TexCoord2f( fcol, frow + size );
-	rect.v4.Color1f( 1.0f );
+	rect.v4.Color1f( 255 );
 
 	s_drawMeshBuilder.AddElement( rect );
 
@@ -167,7 +167,7 @@ void Draw_Char( int x, int y, int ch )
 // Input is a filename with no decoration
 // We want to phase this function out eventually
 //-------------------------------------------------------------------------------------------------
-material_t *Draw_FindPic( const char *name )
+material_t *R_RegisterPic( const char *name )
 {
 	char fullname[MAX_QPATH];
 	Q_sprintf_s( fullname, "materials/pics/%s.mat", name );
@@ -182,7 +182,7 @@ void Draw_GetPicSize( int *w, int *h, const char *pic )
 {
 	material_t *mat;
 
-	mat = Draw_FindPic( pic );
+	mat = R_RegisterPic( pic );
 	if ( !mat )
 	{
 		*w = *h = -1;
@@ -198,23 +198,23 @@ static void Draw_Generic( int x, int y, int w, int h, material_t *mat )
 {
 	guiRect_t rect;
 
-	float alpha = mat->alpha;
+	int alpha = static_cast<int>( mat->alpha * 255.0f );
 
 	rect.v1.Position2f( x, y );
 	rect.v1.TexCoord2f( 0, 0 );
-	rect.v1.Color2f( 1.0f, alpha );
+	rect.v1.Color2f( 255, alpha );
 
 	rect.v2.Position2f( x + w, y );
 	rect.v2.TexCoord2f( 1, 0 );
-	rect.v2.Color2f( 1.0f, alpha );
+	rect.v2.Color2f( 255, alpha );
 
 	rect.v3.Position2f( x + w, y + h );
 	rect.v3.TexCoord2f( 1, 1 );
-	rect.v3.Color2f( 1.0f, alpha );
+	rect.v3.Color2f( 255, alpha );
 
 	rect.v4.Position2f( x, y + h );
 	rect.v4.TexCoord2f( 0, 1 );
-	rect.v4.Color2f( 1.0f, alpha );
+	rect.v4.Color2f( 255, alpha );
 
 	s_drawMeshBuilder.AddElement( rect );
 
@@ -227,7 +227,7 @@ void Draw_StretchPic( int x, int y, int w, int h, const char *pic )
 {
 	material_t *mat;
 
-	mat = Draw_FindPic( pic );
+	mat = R_RegisterPic( pic );
 	if ( !mat ) {
 		Com_Printf( "Can't find pic: %s\n", pic );
 		return;
@@ -242,7 +242,7 @@ void Draw_Pic( int x, int y, const char *pic )
 {
 	material_t *mat;
 
-	mat = Draw_FindPic( pic );
+	mat = R_RegisterPic( pic );
 	if ( !mat ) {
 		Com_Printf( "Can't find pic: %s\n", pic );
 		return;
@@ -260,7 +260,7 @@ void Draw_TileClear( int x, int y, int w, int h, const char *pic )
 #if 1
 	material_t *mat;
 
-	mat = Draw_FindPic( pic );
+	mat = R_RegisterPic( pic );
 	if ( !mat )
 	{
 		Com_Printf( "Can't find pic: %s\n", pic );
@@ -296,75 +296,29 @@ void Draw_TileClear( int x, int y, int w, int h, const char *pic )
 //-------------------------------------------------------------------------------------------------
 // Fills a box of pixels with a single color
 //-------------------------------------------------------------------------------------------------
-void Draw_Fill( int x, int y, int w, int h, int c )
+void R_DrawFilled( float x, float y, float w, float h, qColor color )
 {
-#if 1
-	assert( c >= 0 && c < 255 );
-	if ( c > 255 ) {
-		Com_FatalErrorf("Draw_Fill: bad color" );
-	}
-
-	byte *color = (byte *)&d_8to24table[c];
-	float fcolor[3]
-	{
-		color[0] / 255.0f,
-		color[1] / 255.0f,
-		color[2] / 255.0f
-	};
-
 	guiRect_t rect;
 
 	rect.v1.Position2f( x, y );
 	rect.v1.TexCoord2f( 0.0f, 0.0f );
-	rect.v1.Color3fv( fcolor );
+	rect.v1.Color( color );
 
 	rect.v2.Position2f( x + w, y );
-	rect.v2.TexCoord2f( 0.0f, 0.0f );
-	rect.v2.Color3fv( fcolor );
+	rect.v2.TexCoord2f( 1.0f, 0.0f );
+	rect.v2.Color( color );
 
 	rect.v3.Position2f( x + w, y + h );
-	rect.v3.TexCoord2f( 0.0f, 0.0f );
-	rect.v3.Color3fv( fcolor );
+	rect.v3.TexCoord2f( 1.0f, 1.0f );
+	rect.v3.Color( color );
 
 	rect.v4.Position2f( x, y + h );
-	rect.v4.TexCoord2f( 0.0f, 0.0f );
-	rect.v4.Color3fv( fcolor );
+	rect.v4.TexCoord2f( 0.0f, 1.0f );
+	rect.v4.Color( color );
 
 	s_drawMeshBuilder.AddElement( rect );
 
 	Draw_CheckChain( whiteMaterial );
-#endif
-}
-
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-void Draw_FadeScreen( void )
-{
-#if 1
-	guiRect_t rect;
-
-	constexpr float fadeAmnt = 0.8f;
-
-	rect.v1.Position2f( 0.0f, 0.0f );
-	rect.v1.TexCoord2f( 0.0f, 0.0f );
-	rect.v1.Color2f( 0.0f, fadeAmnt );
-
-	rect.v2.Position2f( r_newrefdef.width, 0.0f );
-	rect.v2.TexCoord2f( 0.0f, 0.0f );
-	rect.v2.Color2f( 0.0f, fadeAmnt );
-
-	rect.v3.Position2f( r_newrefdef.width, r_newrefdef.height );
-	rect.v3.TexCoord2f( 0.0f, 0.0f );
-	rect.v3.Color2f( 0.0f, fadeAmnt );
-
-	rect.v4.Position2f( 0.0f, r_newrefdef.height );
-	rect.v4.TexCoord2f( 0.0f, 0.0f );
-	rect.v4.Color2f( 0.0f, fadeAmnt );
-
-	s_drawMeshBuilder.AddElement( rect );
-
-	Draw_CheckChain( whiteMaterial );
-#endif
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -382,15 +336,15 @@ void Draw_PolyBlend( const vec4_t color )
 	rect.v1.Color4fv( color );
 
 	rect.v2.Position2f( r_newrefdef.width, 0.0f );
-	rect.v2.TexCoord2f( 0.0f, 0.0f );
+	rect.v2.TexCoord2f( 1.0f, 0.0f );
 	rect.v2.Color4fv( color );
 
 	rect.v3.Position2f( r_newrefdef.width, r_newrefdef.height );
-	rect.v3.TexCoord2f( 0.0f, 0.0f );
+	rect.v3.TexCoord2f( 1.0f, 1.0f );
 	rect.v3.Color4fv( color );
 
 	rect.v4.Position2f( 0.0f, r_newrefdef.height );
-	rect.v4.TexCoord2f( 0.0f, 0.0f );
+	rect.v4.TexCoord2f( 0.0f, 1.0f );
 	rect.v4.Color4fv( color );
 
 	s_drawMeshBuilder.AddElement( rect );

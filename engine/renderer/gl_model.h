@@ -218,8 +218,6 @@ struct model_t
 
 //-------------------------------------------------------------------------------------------------
 
-extern	int registration_sequence;
-
 void	Mod_Init (void);
 mleaf_t *Mod_PointInLeaf(vec3_t p, model_t *model);
 model_t *Mod_ForName (const char *name, qboolean crash);
@@ -227,5 +225,5 @@ byte	*Mod_ClusterPVS (int cluster, model_t *model);
 
 void	Mod_Modellist_f (void);
 
-void	Mod_FreeAll (void);
-void	Mod_Free (model_t *mod);
+void	Mod_Free( model_t *mod );
+void	Mod_FreeAll();

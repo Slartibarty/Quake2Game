@@ -340,31 +340,34 @@ void Con_Print (const char *txt)
 {
 	int		y;
 	int		c, l;
-	static bool	cr;
 	int		mask;
+	static bool	cr;
 
-	if (!con.initialized)
+	if ( !con.initialized ) {
 		return;
-
-	if (txt[0] == 1 || txt[0] == 2)
-	{
-		mask = 128;		// go to colored text
-		txt++;
 	}
-	else
-		mask = 0;
 
+	if (txt[0] == 1 || txt[0] == 2) {
+		// go to colored text
+		mask = 128;
+		txt++;
+	} else {
+		mask = 0;
+	}
 
 	while ( (c = *txt) )
 	{
-	// count word length
-		for (l=0 ; l< con.linewidth ; l++)
-			if ( txt[l] <= ' ')
+		// count word length
+		for ( l = 0; l < con.linewidth; l++ ) {
+			if ( txt[l] <= ' ' ) {
 				break;
+			}
+		}
 
-	// word wrap
-		if (l != con.linewidth && (con.x + l > con.linewidth) )
+		// word wrap
+		if ( l != con.linewidth && ( con.x + l > con.linewidth ) ) {
 			con.x = 0;
+		}
 
 		txt++;
 
@@ -374,13 +377,12 @@ void Con_Print (const char *txt)
 			cr = false;
 		}
 
-		
-		if (!con.x)
-		{
+		if (!con.x) {
 			Con_Linefeed ();
-		// mark time for transparent overlay
-			if (con.current >= 0)
+			// mark time for transparent overlay
+			if ( con.current >= 0 ) {
 				con.times[con.current % NUM_CON_TIMES] = (float)cls.realtime;
+			}
 		}
 
 		switch (c)
@@ -575,17 +577,21 @@ void Con_DrawConsole (float frac)
 	int				lines;
 	char			version[64];
 
-	lines = (int)(viddef.height * frac);
-	if (lines <= 0)
+	lines = (int)( viddef.height * frac );
+	if ( lines <= 0 ) {
 		return;
+	}
 
-	if (lines > viddef.height)
+	if ( lines > viddef.height ) {
 		lines = viddef.height;
+	}
 
 	con.xadjust = 0.0f;
 
-// draw the background
-	R_DrawStretchPic (0, -viddef.height+lines, viddef.width, viddef.height, "conback");
+	// draw the background
+	//R_DrawStretchPic (0, -viddef.height+lines, viddef.width, viddef.height, "conback");
+	R_DrawFilled( 0, -viddef.height + lines, viddef.width, viddef.height, { 0, 0, 0, 192 } );
+	R_DrawFilled( 0, frac*viddef.height-2, viddef.width, 2, colorCyan );
 	SCR_AddDirtyPoint (0,0);
 	SCR_AddDirtyPoint (viddef.width-1,lines-1);
 
@@ -594,9 +600,9 @@ void Con_DrawConsole (float frac)
 	for (x=0 ; x<5 ; x++)
 		R_DrawChar (viddef.width-44+x*8, lines-12, 128 + version[x] );
 
-// draw the text
+	// draw the text
 	con.vislines = lines;
-	
+
 	rows = (lines-CONCHAR_WIDTH)/CONCHAR_WIDTH;		// rows of text to draw
 
 	y = lines - (CONCHAR_HEIGHT*3);

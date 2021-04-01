@@ -136,7 +136,7 @@ void Con_Print (const char *text);
 void SCR_BeginLoadingPlaque (void);
 
 // this is in the client code, but can be used for debugging from server
-void SCR_DebugGraph( float value, int color );
+void SCR_DebugGraph( float value, qColor color );
 
 void SV_Init (void);
 void SV_Shutdown (const char *finalmsg, qboolean reconnect);

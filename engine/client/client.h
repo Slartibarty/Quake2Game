@@ -393,15 +393,11 @@ void CL_DrawInventory (void);
 // We could also use forceinline functions
 //-------------------------------------------------------------------------------------------------
 
-#define R_RegisterPic			Draw_FindPic
-
 #define R_DrawGetPicSize		Draw_GetPicSize
 #define R_DrawPic				Draw_Pic
 #define R_DrawStretchPic		Draw_StretchPic
 #define R_DrawChar				Draw_Char
 #define R_DrawTileClear			Draw_TileClear
-#define R_DrawFill				Draw_Fill
-#define R_DrawFadeScreen		Draw_FadeScreen
 #define R_DrawStretchRaw		Draw_StretchRaw
 
 #define R_AppActivate			GLimp_AppActivate

@@ -4101,11 +4101,14 @@ void M_Draw (void)
 	// repaint everything next frame
 	SCR_DirtyScreen ();
 
+	constexpr int fadeAmnt = static_cast<int>( 0.8f * 255 );
+
 	// dim everything behind it down
-	if (cl.cinematictime > 0)
-		R_DrawFill (0,0,viddef.width, viddef.height, 0);
-	else
-		R_DrawFadeScreen ();
+	if ( cl.cinematictime > 0 ) {
+		R_DrawFilled( 0, 0, viddef.width, viddef.height, colorBlack );
+	} else {
+		R_DrawFilled( 0, 0, viddef.width, viddef.height, { 0, 0, 0, fadeAmnt } );
+	}
 
 	m_drawfunc ();
 

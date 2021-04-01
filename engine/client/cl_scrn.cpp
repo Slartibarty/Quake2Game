@@ -80,10 +80,10 @@ void CL_AddNetgraph (void)
 		return;
 
 	for (i=0 ; i<cls.netchan.dropped ; i++)
-		SCR_DebugGraph (30, 0x40);
+		SCR_DebugGraph( 30, { 167, 59, 43, 255 } );
 
 	for (i=0 ; i<cl.surpressCount ; i++)
-		SCR_DebugGraph (30, 0xdf);
+		SCR_DebugGraph( 30, { 255, 191, 15, 255 } );
 
 	// see what the latency was on this packet
 	in = cls.netchan.incoming_acknowledged & (CMD_BACKUP-1);
@@ -91,14 +91,14 @@ void CL_AddNetgraph (void)
 	ping /= 30;
 	if (ping > 30)
 		ping = 30;
-	SCR_DebugGraph ( (float)ping, 0xd0);
+	SCR_DebugGraph( (float)ping, colorGreen );
 }
 
 
 typedef struct
 {
 	float	value;
-	int		color;
+	qColor	color;
 } graphsamp_t;
 
 static	int			current;
@@ -109,7 +109,7 @@ static	graphsamp_t	values[1024];
 SCR_DebugGraph
 ==============
 */
-void SCR_DebugGraph (float value, int color)
+void SCR_DebugGraph (float value, qColor color)
 {
 	values[current&1023].value = value;
 	values[current&1023].color = color;
@@ -125,7 +125,7 @@ void SCR_DrawDebugGraph (void)
 {
 	int		a, x, y, w, i, h;
 	float	v;
-	int		color;
+	qColor	color;
 
 	//
 	// draw the graph
@@ -134,7 +134,7 @@ void SCR_DrawDebugGraph (void)
 
 	x = scr_vrect.x;
 	y = scr_vrect.y+scr_vrect.height;
-	R_DrawFill (x, y-(int)scr_graphheight->value, w, (int)scr_graphheight->value, 8);
+	R_DrawFilled (x, y-(int)scr_graphheight->value, w, (int)scr_graphheight->value, colorDkGrey);
 
 	for (a=0 ; a<w ; a++)
 	{
@@ -146,7 +146,7 @@ void SCR_DrawDebugGraph (void)
 		if (v < 0)
 			v += (int)scr_graphheight->value * (1+(int)(-v/scr_graphheight->value));
 		h = (int)v % (int)scr_graphheight->value;
-		R_DrawFill (x+w-1-a, y - h, 1,	h, color);
+		R_DrawFilled (x+w-1-a, y - h, 1, h, color);
 	}
 }
 
@@ -500,31 +500,30 @@ void SCR_RunConsole (void)
 SCR_DrawConsole
 ==================
 */
-void SCR_DrawConsole (void)
+static void SCR_DrawConsole()
 {
-	Con_CheckResize ();
-	
-	if (cls.state == ca_disconnected || cls.state == ca_connecting)
-	{	// forced full screen console
-		Con_DrawConsole (1.0f);
+	Con_CheckResize();
+
+	if ( cls.state == ca_disconnected || cls.state == ca_connecting ) {
+		// forced full screen console
+		Con_DrawConsole( 1.0f );
 		return;
 	}
 
-	if (cls.state != ca_active || !cl.refresh_prepped)
-	{	// connected, but can't render
-		Con_DrawConsole (0.5f);
-		R_DrawFill (0, viddef.height/2, viddef.width, viddef.height/2, 0);
+	if ( cls.state != ca_active || !cl.refresh_prepped ) {
+		// connected, but can't render
+		Con_DrawConsole( 0.5f );
+		R_DrawFilled( 0, viddef.height / 2, viddef.width, viddef.height / 2, colorBlack );
 		return;
 	}
 
-	if (scr_con_current)
-	{
-		Con_DrawConsole (scr_con_current);
-	}
-	else
-	{
-		if (cls.key_dest == key_game || cls.key_dest == key_message)
-			Con_DrawNotify ();	// only draw notify in game
+	if ( scr_con_current ) {
+		Con_DrawConsole( scr_con_current );
+	} else {
+		if ( cls.key_dest == key_game || cls.key_dest == key_message ) {
+			// only draw notify in game
+			Con_DrawNotify();
+		}
 	}
 }
 
@@ -1325,7 +1324,7 @@ void SCR_UpdateScreen (void)
 		SCR_CheckDrawCenterString ();
 
 		if (scr_timegraph->value)
-			SCR_DebugGraph (cls.frametime*300, 0);
+			SCR_DebugGraph (cls.frametime*300, colorBlack);
 
 		if (scr_debuggraph->value || scr_timegraph->value || scr_netgraph->value)
 			SCR_DrawDebugGraph ();

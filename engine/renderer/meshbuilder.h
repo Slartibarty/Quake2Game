@@ -18,7 +18,7 @@ struct guiVertex_t
 {
 	float x, y;
 	float s, t;
-	float r, g, b, a;
+	byte r, g, b, a;
 
 	void Position2f( float X, float Y )
 	{
@@ -39,53 +39,29 @@ struct guiVertex_t
 		b = RGB[2];
 		a = RGB[3];
 	}
-
-	void Color4f( float R, float G, float B, float A )
-	{
-		r = R;
-		g = G;
-		b = B;
-		a = A;
-	}
-
-	void Color3fv( const float *RGB )
-	{
-		r = RGB[0];
-		g = RGB[1];
-		b = RGB[2];
-		a = 1.0f;
-	}
-
-	void Color3f( float R, float G, float B )
-	{
-		r = R;
-		g = G;
-		b = B;
-		a = 1.0f;
-	}
-
-	void Color3ub( int R, int G, int B )
-	{
-		r = R / 255.0f;
-		g = G / 255.0f;
-		b = B / 255.0f;
-		a = 1.0f;
-	}
 	
-	void Color2f( float RGB, float A )
+	void Color2f( int RGB, int A )
 	{
-		r = RGB;
-		g = RGB;
-		b = RGB;
-		a = A;
+		r = (byte)RGB;
+		g = (byte)RGB;
+		b = (byte)RGB;
+		a = (byte)A;
 	}
 
-	void Color1f( float RGB )
+	void Color1f( int RGB )
 	{
-		r = RGB;
-		g = RGB;
-		b = RGB;
-		a = 1.0f;
+		r = (byte)RGB;
+		g = (byte)RGB;
+		b = (byte)RGB;
+		a = 255;
+	}
+
+	void Color( const qColor &color )
+	{
+		r = color.r;
+		g = color.g;
+		b = color.b;
+		a = color.a;
 	}
 };
 

@@ -15,7 +15,7 @@ void		R_Shutdown();
 void		R_BeginRegistration( const char *map );
 model_t		*R_RegisterModel( const char *name );
 material_t	*R_RegisterSkin( const char *name );
-material_t	*Draw_FindPic( const char *name );
+material_t	*R_RegisterPic( const char *name );
 void		R_SetSky( const char *name, float rotate, vec3_t axis );
 void		R_EndRegistration();
 
@@ -30,8 +30,7 @@ void		Draw_Pic( int x, int y, const char *name );
 void		Draw_StretchPic( int x, int y, int w, int h, const char *name );
 void		Draw_Char( int x, int y, int ch );
 void		Draw_TileClear( int x, int y, int w, int h, const char *name );
-void		Draw_Fill( int x, int y, int w, int h, int c );
-void		Draw_FadeScreen();
+void		R_DrawFilled( float x, float y, float w, float h, qColor color );
 
 			// Draw raw image data, used by cinematics
 void		Draw_StretchRaw( int x, int y, int w, int h, int cols, int rows, byte *data );

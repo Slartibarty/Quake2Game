@@ -391,7 +391,7 @@ void Menu_Draw( menuframework_s *menu )
 
 void Menu_DrawStatusBar( const char *string )
 {
-	R_DrawFill( 0, VID_HEIGHT - CONCHAR_HEIGHT, VID_WIDTH, CONCHAR_HEIGHT, 4 );
+	R_DrawFilled( 0, VID_HEIGHT - CONCHAR_HEIGHT, VID_WIDTH, CONCHAR_HEIGHT, colorDkGrey );
 
 	if ( string )
 	{
@@ -550,7 +550,7 @@ void MenuList_Draw( menulist_s *l )
 
 	n = l->itemnames;
 
-  	R_DrawFill( l->generic.x - 112 + l->generic.parent->x, l->generic.parent->y + l->generic.y + l->curvalue*CONCHAR_HEIGHT + CONCHAR_HEIGHT, 128, 10, 16 );
+  	R_DrawFilled( l->generic.x - 112 + l->generic.parent->x, l->generic.parent->y + l->generic.y + l->curvalue*CONCHAR_HEIGHT + CONCHAR_HEIGHT, 128, 10, colorDkGrey );
 	while ( *n )
 	{
 		Menu_DrawStringR2LDark( l->generic.x + l->generic.parent->x + LCOLUMN_OFFSET, l->generic.y + l->generic.parent->y + y + 10, *n );

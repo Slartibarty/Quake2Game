@@ -29,6 +29,31 @@
 #define CONCHAR_WIDTH		8
 #define CONCHAR_HEIGHT		8
 
+// color escape character
+#define C_COLOR_ESCAPE			'^'
+#define C_COLOR_DEFAULT			'0'
+#define C_COLOR_RED				'1'
+#define C_COLOR_GREEN			'2'
+#define C_COLOR_YELLOW			'3'
+#define C_COLOR_BLUE			'4'
+#define C_COLOR_CYAN			'5'
+#define C_COLOR_ORANGE			'6'
+#define C_COLOR_WHITE			'7'
+#define C_COLOR_GRAY			'8'
+#define C_COLOR_BLACK			'9'
+
+// color escape string
+#define S_COLOR_DEFAULT			"^0"
+#define S_COLOR_RED				"^1"
+#define S_COLOR_GREEN			"^2"
+#define S_COLOR_YELLOW			"^3"
+#define S_COLOR_BLUE			"^4"
+#define S_COLOR_CYAN			"^5"
+#define S_COLOR_ORANGE			"^6"
+#define S_COLOR_WHITE			"^7"
+#define S_COLOR_GRAY			"^8"
+#define S_COLOR_BLACK			"^9"
+
 //
 // per-level limits
 //
@@ -359,6 +384,20 @@ struct cvar_t
 	bool		modified;			// set each time the cvar is changed
 	float		value;
 	cvar_t		*next;
+
+	const char *	GetName() const		{ return name; }
+	uint32			GetFlags() const	{ return flags; }
+
+	bool			IsModified() const	{ return modified; }
+	void			SetModified()		{ modified = true; }
+	void			ClearModified()		{ modified = false; }
+
+	const char *	GetString() const	{ return string; }
+	int64			GetInt64() const	{ return static_cast<int64>( value ); }
+	int32			GetInt32() const	{ return static_cast<int32>( value ); }
+	double			GetDouble() const	{ return static_cast<double>( value ); }
+	float			GetFloat() const	{ return value; }
+	bool			GetBool() const		{ return value != 0.0f; }
 };
 
 //-------------------------------------------------------------------------------------------------

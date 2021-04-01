@@ -354,11 +354,11 @@ static void DrawSkyPolygon(int nump, vec3_t vecs)
 
 #define	ON_EPSILON		0.1f		// point on plane side epsilon
 #define	MAX_CLIP_VERTS	64
-static void ClipSkyPolygon(int nump, vec3_t vecs, int stage)
+static void ClipSkyPolygon( int nump, vec3_t vecs, int stage )
 {
 	const float *norm;
 	float *v;
-	qboolean	front, back;
+	bool	front, back;
 	float	d, e;
 	float	dists[MAX_CLIP_VERTS];
 	int		sides[MAX_CLIP_VERTS];
@@ -366,25 +366,26 @@ static void ClipSkyPolygon(int nump, vec3_t vecs, int stage)
 	int		newc[2];
 	int		i, j;
 
-	if (nump > MAX_CLIP_VERTS - 2)
-		Com_Errorf("ClipSkyPolygon: MAX_CLIP_VERTS");
-	if (stage == 6)
-	{	// fully clipped, so draw it
-		DrawSkyPolygon(nump, vecs);
+	if ( nump > MAX_CLIP_VERTS - 2 ) {
+		Com_Error( "ClipSkyPolygon: MAX_CLIP_VERTS" );
+	}
+	if ( stage == 6 ) {
+		// fully clipped, so draw it
+		DrawSkyPolygon( nump, vecs );
 		return;
 	}
 
 	front = back = false;
 	norm = skyclip[stage];
-	for (i = 0, v = vecs; i < nump; i++, v += 3)
+	for ( i = 0, v = vecs; i < nump; i++, v += 3 )
 	{
-		d = DotProduct(v, norm);
-		if (d > ON_EPSILON)
+		d = DotProduct( v, norm );
+		if ( d > ON_EPSILON )
 		{
 			front = true;
 			sides[i] = SIDE_FRONT;
 		}
-		else if (d < -ON_EPSILON)
+		else if ( d < -ON_EPSILON )
 		{
 			back = true;
 			sides[i] = SIDE_BACK;
@@ -394,45 +395,46 @@ static void ClipSkyPolygon(int nump, vec3_t vecs, int stage)
 		dists[i] = d;
 	}
 
-	if (!front || !back)
+	if ( !front || !back )
 	{	// not clipped
-		ClipSkyPolygon(nump, vecs, stage + 1);
+		ClipSkyPolygon( nump, vecs, stage + 1 );
 		return;
 	}
 
 	// clip it
 	sides[i] = sides[0];
 	dists[i] = dists[0];
-	VectorCopy(vecs, (vecs + (i * 3)));
+	VectorCopy( vecs, ( vecs + ( i * 3 ) ) );
 	newc[0] = newc[1] = 0;
 
-	for (i = 0, v = vecs; i < nump; i++, v += 3)
+	for ( i = 0, v = vecs; i < nump; i++, v += 3 )
 	{
-		switch (sides[i])
+		switch ( sides[i] )
 		{
 		case SIDE_FRONT:
-			VectorCopy(v, newv[0][newc[0]]);
+			VectorCopy( v, newv[0][newc[0]] );
 			newc[0]++;
 			break;
 		case SIDE_BACK:
-			VectorCopy(v, newv[1][newc[1]]);
+			VectorCopy( v, newv[1][newc[1]] );
 			newc[1]++;
 			break;
 		case SIDE_ON:
-			VectorCopy(v, newv[0][newc[0]]);
+			VectorCopy( v, newv[0][newc[0]] );
 			newc[0]++;
-			VectorCopy(v, newv[1][newc[1]]);
+			VectorCopy( v, newv[1][newc[1]] );
 			newc[1]++;
 			break;
 		}
 
-		if (sides[i] == SIDE_ON || sides[i + 1] == SIDE_ON || sides[i + 1] == sides[i])
+		if ( sides[i] == SIDE_ON || sides[i + 1] == SIDE_ON || sides[i + 1] == sides[i] ) {
 			continue;
+		}
 
-		d = dists[i] / (dists[i] - dists[i + 1]);
-		for (j = 0; j < 3; j++)
+		d = dists[i] / ( dists[i] - dists[i + 1] );
+		for ( j = 0; j < 3; j++ )
 		{
-			e = v[j] + d * (v[j + 3] - v[j]);
+			e = v[j] + d * ( v[j + 3] - v[j] );
 			newv[0][newc[0]][j] = e;
 			newv[1][newc[1]][j] = e;
 		}
@@ -441,8 +443,8 @@ static void ClipSkyPolygon(int nump, vec3_t vecs, int stage)
 	}
 
 	// continue
-	ClipSkyPolygon(newc[0], newv[0][0], stage + 1);
-	ClipSkyPolygon(newc[1], newv[1][0], stage + 1);
+	ClipSkyPolygon( newc[0], newv[0][0], stage + 1 );
+	ClipSkyPolygon( newc[1], newv[1][0], stage + 1 );
 }
 
 /*
@@ -487,9 +489,9 @@ static void MakeSkyVec( float s, float t, int axis )
 {
 	vec3_t		v, b;
 	int			j, k;
-	float		width;
 
-	width = 4096.0f * SQRT3INV;	// SlartTodo: 4096 = zfar
+	// SlartTodo: 4096 = zfar
+	constexpr float width = 4096.0f * SQRT3INV;
 
 	b[0] = s * width;
 	b[1] = t * width;
@@ -498,10 +500,11 @@ static void MakeSkyVec( float s, float t, int axis )
 	for ( j = 0; j < 3; j++ )
 	{
 		k = st_to_vec[axis][j];
-		if ( k < 0 )
+		if ( k < 0 ) {
 			v[j] = -b[-k - 1];
-		else
+		} else {
 			v[j] = b[k - 1];
+		}
 	}
 
 	// avoid bilerp seam
@@ -522,55 +525,59 @@ static const int skytexorder[6]{ 0, 2, 1, 3, 4, 5 };
 
 void R_DrawSkyBox()
 {
-	int		i;
+	int i;
 
-	if (skyrotate)
-	{	// check for no sky at all
-		for (i = 0; i < 6; i++)
-			if (skymins[0][i] < skymaxs[0][i]
-				&& skymins[1][i] < skymaxs[1][i])
+	if ( skyrotate ) {
+		// check for no sky at all
+		for ( i = 0; i < 6; i++ ) {
+			if ( skymins[0][i] < skymaxs[0][i] &&
+				skymins[1][i] < skymaxs[1][i] ) {
 				break;
-		if (i == 6)
+			}
+		}
+		if ( i == 6 ) {
 			return;		// nothing visible
+		}
 	}
 
 	glPushMatrix();
-	glTranslatef(r_origin[0], r_origin[1], r_origin[2]);
-	glRotatef(r_newrefdef.time * skyrotate, skyaxis[0], skyaxis[1], skyaxis[2]);
+	glTranslatef( r_origin[0], r_origin[1], r_origin[2] );
+	glRotatef( r_newrefdef.time * skyrotate, skyaxis[0], skyaxis[1], skyaxis[2] );
 
-	for (i = 0; i < 6; i++)
+	for ( i = 0; i < 6; i++ )
 	{
-		if (skyrotate)
-		{	// hack, forces full sky to draw when rotating
-			skymins[0][i] = -1;
-			skymins[1][i] = -1;
-			skymaxs[0][i] = 1;
-			skymaxs[1][i] = 1;
+		if ( skyrotate ) {
+			// hack, forces full sky to draw when rotating
+			skymins[0][i] = -1.0f;
+			skymins[1][i] = -1.0f;
+			skymaxs[0][i] = 1.0f;
+			skymaxs[1][i] = 1.0f;
 		}
 
-		if (skymins[0][i] >= skymaxs[0][i]
-			|| skymins[1][i] >= skymaxs[1][i])
+		if ( skymins[0][i] >= skymaxs[0][i] ||
+			skymins[1][i] >= skymaxs[1][i] ) {
 			continue;
+		}
 
 		sky_images[skytexorder[i]]->Bind();
 
-		glBegin(GL_QUADS);
-		MakeSkyVec(skymins[0][i], skymins[1][i], i);
-		MakeSkyVec(skymins[0][i], skymaxs[1][i], i);
-		MakeSkyVec(skymaxs[0][i], skymaxs[1][i], i);
-		MakeSkyVec(skymaxs[0][i], skymins[1][i], i);
+		glBegin( GL_QUADS );
+		MakeSkyVec( skymins[0][i], skymins[1][i], i );
+		MakeSkyVec( skymins[0][i], skymaxs[1][i], i );
+		MakeSkyVec( skymaxs[0][i], skymaxs[1][i], i );
+		MakeSkyVec( skymaxs[0][i], skymins[1][i], i );
 		glEnd();
 	}
+
 	glPopMatrix();
 }
-
 
 /*
 ========================
 R_SetSky
 ========================
 */
-static const char *suf[6] = { "rt", "bk", "lf", "ft", "up", "dn" };
+static const char *suf[6]{ "rt", "bk", "lf", "ft", "up", "dn" };
 
 void R_SetSky( const char *name, float rotate, vec3_t axis )
 {

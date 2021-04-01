@@ -677,10 +677,16 @@ static void R_SetupGL()
 	//
 	// set drawing parms
 	//
-	if ( r_cullfaces->value )
+	if ( r_cullfaces->GetBool() ) {
 		glEnable( GL_CULL_FACE );
-	else
+	} else {
 		glDisable( GL_CULL_FACE );
+	}
+
+	if ( r_wireframe->IsModified() ) {
+		r_wireframe->ClearModified();
+		glPolygonMode( GL_FRONT_AND_BACK, r_wireframe->GetBool() ? GL_LINE : GL_FILL );
+	}
 
 	glDisable( GL_BLEND );
 	glEnable( GL_DEPTH_TEST );

@@ -31,6 +31,7 @@ cvar_t *r_dynamic;
 cvar_t *r_modulate;
 cvar_t *r_picmip;
 cvar_t *r_showtris;
+cvar_t *r_wireframe;
 cvar_t *r_finish;
 cvar_t *r_clear;
 cvar_t *r_cullfaces;
@@ -66,6 +67,7 @@ static void R_InitCVars()
 	r_dynamic = Cvar_Get( "r_dynamic", "1", 0 );
 	r_picmip = Cvar_Get( "r_picmip", "0", 0 );
 	r_showtris = Cvar_Get( "r_showtris", "0", 0 );
+	r_wireframe = Cvar_Get( "r_wireframe", "0", 0 );
 	r_finish = Cvar_Get( "r_finish", "0", CVAR_ARCHIVE );
 	r_clear = Cvar_Get( "r_clear", "1", 0 );
 	r_cullfaces = Cvar_Get( "r_cullfaces", "1", 0 );
@@ -149,7 +151,7 @@ bool R_Init( void *hinstance, void *wndproc )
 	GL_CheckErrors();
 
 	Com_Print( "RenderSystem initialized.\n" );
-	Com_Print( "--------------------------------------\n" );
+	Com_Print( "-------------------------------------------\n" );
 
 	return true;
 }
