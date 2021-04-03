@@ -84,20 +84,43 @@ to the apropriate place.
 ===================
 */
 
+void CopyAndStripColorCodes( char *dest, strlen_t destSize, const char *src )
+{
+	const char *last;
+	int c;
+
+	last = dest + destSize - 1;
+	while ( ( dest < last ) && ( c = *src ) != 0 ) {
+		if ( src[0] == C_COLOR_ESCAPE && src + 1 != last && IsColorIndex( src[1] ) ) {
+			src++;
+		}
+		else {
+			*dest++ = c;
+		}
+		src++;
+	}
+	*dest = '\0';
+}
+
 void Com_Print( const char *msg )
 {
+	char newMsg[MAX_PRINT_MSG];
+
+	// create a copy of the msg for places that don't want the colour codes
+	CopyAndStripColorCodes( newMsg, sizeof( newMsg ), msg );
+
 	if ( rd_target )
 	{
-		if ( ( strlen( msg ) + strlen( rd_buffer ) ) > ( rd_buffersize - 1 ) )
+		if ( ( strlen( newMsg ) + strlen( rd_buffer ) ) > ( rd_buffersize - 1 ) )
 		{
 			rd_flush( rd_target, rd_buffer );
 			*rd_buffer = 0;
 		}
-		strcat( rd_buffer, msg );
+		strcat( rd_buffer, newMsg );
 		return;
 	}
 
-	Sys_OutputDebugString( msg );
+	Sys_OutputDebugString( newMsg );
 
 	if ( !Engine_IsMainThread() ) {
 		return;
@@ -106,7 +129,7 @@ void Com_Print( const char *msg )
 	Con_Print( msg );
 
 	// also echo to debugging console
-	Sys_ConsoleOutput( msg );
+	Sys_ConsoleOutput( newMsg );
 
 	// logfile
 	if ( logfile_active && logfile_active->value )
@@ -122,7 +145,7 @@ void Com_Print( const char *msg )
 				logfile = fopen( name, "w" );
 		}
 		if ( logfile )
-			fputs( msg, logfile );
+			fputs( newMsg, logfile );
 		if ( logfile_active->value > 1 )
 			fflush( logfile );		// force it to save every time
 	}
@@ -153,7 +176,7 @@ void Com_DPrint( const char *msg )
 	if ( !developer || !developer->value )
 		return;
 
-	Com_Print( msg );
+	Com_Printf( S_COLOR_RED "%s", msg );
 }
 
 void Com_DPrintf( _Printf_format_string_ const char *fmt, ... )
@@ -168,7 +191,7 @@ void Com_DPrintf( _Printf_format_string_ const char *fmt, ... )
 	Q_vsprintf_s( msg, fmt, argptr );
 	va_end( argptr );
 
-	Com_Print( msg );
+	Com_Printf( S_COLOR_RED "%s", msg );
 }
 
 /*
@@ -194,8 +217,8 @@ void Com_Error( const char *msg )
 
 	recursive = true;
 
-	Com_Printf( "********************\nERROR: %s\n********************\n", msg );
-	SV_Shutdown( va( "Server crashed: %s\n", msg ), false );
+	Com_Printf( S_COLOR_RED "********************\nERROR: %s\n********************\n", msg );
+	SV_Shutdown( va( S_COLOR_RED "Server crashed: %s\n", msg ), false );
 	CL_Drop();
 
 	recursive = false;
@@ -229,7 +252,7 @@ Kills the server, kills the client, shuts the engine down and quits the program
 [[noreturn]]
 void Com_FatalError( const char *msg )
 {
-	SV_Shutdown( va( "Server fatal crashed: %s\n", msg ), false );
+	SV_Shutdown( va( S_COLOR_RED "Server fatal crashed: %s\n", msg ), false );
 	CL_Shutdown();
 	Engine_Shutdown();
 
@@ -639,9 +662,8 @@ void Engine_Init (int argc, char **argv)
 	dedicated = Cvar_Get ("dedicated", "0", CVAR_NOSET);
 #endif
 
-	// Create the version convar
-	Cvar_Get( "version", va( "%s %s %s", VERSION, __DATE__, BLD_STRING ), CVAR_SERVERINFO | CVAR_NOSET );
-	//Cvar_Get( "version", "WHATEVER", CVAR_SERVERINFO | CVAR_NOSET );
+	// create the version convar
+	Cvar_Get( "version", va( "%s - %s, %s", BLD_STRING, __DATE__, __TIME__ ), CVAR_SERVERINFO | CVAR_NOSET );
 
 	if (dedicated->value)
 		Cmd_AddCommand ("quit", Com_Quit_f);

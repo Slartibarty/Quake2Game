@@ -80,10 +80,10 @@ void CL_AddNetgraph (void)
 		return;
 
 	for (i=0 ; i<cls.netchan.dropped ; i++)
-		SCR_DebugGraph( 30, { 167, 59, 43, 255 } );
+		SCR_DebugGraph( 30, PackColor( 167, 59, 43, 255 ) );
 
 	for (i=0 ; i<cl.surpressCount ; i++)
-		SCR_DebugGraph( 30, { 255, 191, 15, 255 } );
+		SCR_DebugGraph( 30, PackColor( 255, 191, 15, 255 ) );
 
 	// see what the latency was on this packet
 	in = cls.netchan.incoming_acknowledged & (CMD_BACKUP-1);
@@ -98,7 +98,7 @@ void CL_AddNetgraph (void)
 typedef struct
 {
 	float	value;
-	qColor	color;
+	uint32	color;
 } graphsamp_t;
 
 static	int			current;
@@ -109,7 +109,7 @@ static	graphsamp_t	values[1024];
 SCR_DebugGraph
 ==============
 */
-void SCR_DebugGraph (float value, qColor color)
+void SCR_DebugGraph (float value, uint32 color)
 {
 	values[current&1023].value = value;
 	values[current&1023].color = color;
@@ -125,7 +125,7 @@ void SCR_DrawDebugGraph (void)
 {
 	int		a, x, y, w, i, h;
 	float	v;
-	qColor	color;
+	uint32	color;
 
 	//
 	// draw the graph
@@ -803,7 +803,7 @@ void SizeHUDString (char *string, int *w, int *h)
 	*h = lines * 8;
 }
 
-static void DrawHUDString (char *string, int x, int y, int centerwidth, int qxor)
+static void DrawHUDString (char *string, int x, int y, int centerwidth, uint32 color)
 {
 	int		margin;
 	char	line[1024];
@@ -826,7 +826,7 @@ static void DrawHUDString (char *string, int x, int y, int centerwidth, int qxor
 			x = margin;
 		for (i=0 ; i<width ; i++)
 		{
-			R_DrawChar (x, y, line[i]^ qxor);
+			R_DrawCharColor (x, y, line[i], color);
 			x += 8;
 		}
 		if (*string)
@@ -1157,7 +1157,7 @@ void SCR_ExecuteLayoutString (char *s)
 		if (!Q_strcmp(token, "cstring"))
 		{
 			token = COM_Parse (&s);
-			DrawHUDString (token, x, y, 320, 0);
+			DrawHUDString (token, x, y, 320, colorDefaultText);
 			continue;
 		}
 
@@ -1171,7 +1171,7 @@ void SCR_ExecuteLayoutString (char *s)
 		if (!Q_strcmp(token, "cstring2"))
 		{
 			token = COM_Parse (&s);
-			DrawHUDString (token, x, y, 320,0x80);
+			DrawHUDString (token, x, y, 320, colorGreen);
 			continue;
 		}
 

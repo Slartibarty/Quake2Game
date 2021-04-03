@@ -31,7 +31,7 @@
 
 //-------------------------------------------------------------------------------------------------
 
-#define	VERSION "4.00"
+#define	ENGINE_VERSION "JaffaQuake"
 
 #define	BASEDIRNAME "baseq2"
 
@@ -56,13 +56,15 @@
 
 #endif
 
-#ifdef NDEBUG
+#if defined Q_RETAIL
+#define BLD_CONFIG "Retail"
+#elif defined Q_RELEASE
 #define BLD_CONFIG "Release"
 #else
 #define BLD_CONFIG "Debug"
 #endif
 
-#define BLD_STRING BLD_PLATFORM " " BLD_CONFIG
+constexpr const char BLD_STRING[] = ( ENGINE_VERSION " - " BLD_PLATFORM " " BLD_CONFIG );
 
 //-------------------------------------------------------------------------------------------------
 // Misc
@@ -136,7 +138,7 @@ void Con_Print (const char *text);
 void SCR_BeginLoadingPlaque (void);
 
 // this is in the client code, but can be used for debugging from server
-void SCR_DebugGraph( float value, qColor color );
+void SCR_DebugGraph( float value, uint32 color );
 
 void SV_Init (void);
 void SV_Shutdown (const char *finalmsg, qboolean reconnect);

@@ -438,7 +438,7 @@ bool ParseMaterial( char *data, material_t *material )
 		if ( Q_strcmp( token, "$alpha" ) == 0 )
 		{
 			COM_Parse2( &data, &token, sizeof( tokenhack ) );
-			material->alpha = (float)atof( token );
+			material->alpha = static_cast<uint32>( atof( token ) * 255.0 + 0.5 );
 			continue;
 		}
 	}
@@ -473,7 +473,7 @@ static material_t *GL_CreateMaterialFromData( const char *name, image_t *image )
 	
 	Q_strcpy_s( material->name, name );
 	material->image = image;
-	material->alpha = 1.0f;
+	material->alpha = 0xFF;
 	++material->image->refcount;
 
 	material->registration_sequence = -1; // Data materials are always managed
@@ -521,7 +521,7 @@ static material_t *GL_CreateMaterial( const char *name )
 
 	Q_strcpy_s( material->name, name );
 	material->image = mat_notexture->image;
-	material->alpha = 1.0f;
+	material->alpha = 0xFF;
 
 	if ( !ParseMaterial( pBuffer, material ) )
 	{

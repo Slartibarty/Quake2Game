@@ -25,18 +25,19 @@ void		R_RenderFrame( refdef_t *fd );
 void		R_EndFrame();
 
 			// 2D elements, occurs after world and entities
-void		Draw_GetPicSize( int *w, int *h, const char *name );
-void		Draw_Pic( int x, int y, const char *name );
-void		Draw_StretchPic( int x, int y, int w, int h, const char *name );
-void		Draw_Char( int x, int y, int ch );
-void		Draw_TileClear( int x, int y, int w, int h, const char *name );
-void		R_DrawFilled( float x, float y, float w, float h, qColor color );
+void		R_DrawGetPicSize( int *w, int *h, const char *name );
+void		R_DrawPic( int x, int y, const char *name );
+void		R_DrawStretchPic( int x, int y, int w, int h, const char *name );
+void		R_DrawCharColor( int x, int y, int ch, uint32 color );
+void		R_DrawChar( int x, int y, int ch );
+void		R_DrawTileClear( int x, int y, int w, int h, const char *name );
+void		R_DrawFilled( int x, int y, int w, int h, uint32 color );
 
 			// Draw raw image data, used by cinematics
-void		Draw_StretchRaw( int x, int y, int w, int h, int cols, int rows, byte *data );
+void		R_DrawStretchRaw( int x, int y, int w, int h, int cols, int rows, byte *data );
 
 			// Set the palette used by cinematics
 void		R_SetRawPalette( const unsigned char *palette );
 
 			// Alert this system about the window state changing
-void		GLimp_AppActivate( bool activate );
+void		R_AppActivate( bool active );

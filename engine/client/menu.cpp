@@ -1336,7 +1336,7 @@ static void InitResolutions()
 
 	resolutions = (char **)Z_Malloc( num_resolutions * sizeof( resolutions ) );
 
-	while ( VID_GetModeInfo( &width, &height, mode ) != false )
+	while ( VID_GetModeInfo( width, height, mode ) != false )
 	{
 		resolutions[mode] = (char *)Z_Malloc( 32 );
 		Q_sprintf_s( resolutions[mode], 32, "[%dx%d]", width, height );
@@ -1911,7 +1911,7 @@ void M_Credits_MenuDraw( void )
 			x = ( viddef.width - (int)strlen( credits[i] ) * 8 - stringoffset * 8 ) / 2 + ( j + stringoffset ) * 8;
 
 			if ( bold )
-				R_DrawChar( x, y, credits[i][j+stringoffset] + 128 );
+				R_DrawCharColor( x, y, credits[i][j+stringoffset], colorGreen );
 			else
 				R_DrawChar( x, y, credits[i][j+stringoffset] );
 		}
@@ -4101,13 +4101,13 @@ void M_Draw (void)
 	// repaint everything next frame
 	SCR_DirtyScreen ();
 
-	constexpr int fadeAmnt = static_cast<int>( 0.8f * 255 );
+	constexpr uint32 color = PackColor( 0, 0, 0, static_cast<int>( 0.8 * 255 ) );
 
 	// dim everything behind it down
 	if ( cl.cinematictime > 0 ) {
 		R_DrawFilled( 0, 0, viddef.width, viddef.height, colorBlack );
 	} else {
-		R_DrawFilled( 0, 0, viddef.width, viddef.height, { 0, 0, 0, fadeAmnt } );
+		R_DrawFilled( 0, 0, viddef.width, viddef.height, color );
 	}
 
 	m_drawfunc ();

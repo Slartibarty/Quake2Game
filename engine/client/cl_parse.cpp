@@ -331,7 +331,7 @@ void CL_ParseServerData (void)
 	{
 		// seperate the printfs so the server message can have a color
 		Com_Printf("\n\n\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\37\n\n");
-		Com_Printf ("%c%s\n", 2, str);
+		Com_Printf(S_COLOR_GREEN "%s\n", str);
 
 		// need to prep refresh at next oportunity
 		cl.refresh_prepped = false;
@@ -716,10 +716,10 @@ void CL_ParseServerMessage (void)
 			if (i == PRINT_CHAT)
 			{
 				S_StartLocalSound ("misc/talk.wav");
-				con.ormask = 128;
+				Com_Printf (S_COLOR_GREEN "%s", MSG_ReadString (&net_message));
+				break;
 			}
 			Com_Printf ("%s", MSG_ReadString (&net_message));
-			con.ormask = 0;
 			break;
 			
 		case svc_centerprint:

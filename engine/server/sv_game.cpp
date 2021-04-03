@@ -293,7 +293,7 @@ SV_InitGameProgs
 Init the game subsystem for a new map
 ===============
 */
-void SCR_DebugGraph (float value, qColor color);
+void SCR_DebugGraph (float value, uint32 color);
 
 void SV_InitGameProgs (void)
 {

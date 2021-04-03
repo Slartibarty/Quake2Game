@@ -18,50 +18,23 @@ struct guiVertex_t
 {
 	float x, y;
 	float s, t;
-	byte r, g, b, a;
+	uint32 rgba;
 
-	void Position2f( float X, float Y )
+	void Position( float X, float Y )
 	{
 		x = X;
 		y = Y;
 	}
 
-	void TexCoord2f( float S, float T )
+	void TexCoord( float S, float T )
 	{
 		s = S;
 		t = T;
 	}
 
-	void Color4fv( const float *RGB )
+	void Color( uint32 color )
 	{
-		r = RGB[0];
-		g = RGB[1];
-		b = RGB[2];
-		a = RGB[3];
-	}
-	
-	void Color2f( int RGB, int A )
-	{
-		r = (byte)RGB;
-		g = (byte)RGB;
-		b = (byte)RGB;
-		a = (byte)A;
-	}
-
-	void Color1f( int RGB )
-	{
-		r = (byte)RGB;
-		g = (byte)RGB;
-		b = (byte)RGB;
-		a = 255;
-	}
-
-	void Color( const qColor &color )
-	{
-		r = color.r;
-		g = color.g;
-		b = color.b;
-		a = color.a;
+		rgba = color;
 	}
 };
 

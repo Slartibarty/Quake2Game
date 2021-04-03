@@ -30,7 +30,7 @@ workspace "quake2"
 
 -- Misc flags for all projects
 
-includedirs { "thirdparty/stb" }
+includedirs { "thirdparty/stb", "thirdparty/DirectXMath" }
 
 flags { "MultiProcessorCompile", "NoBufferSecurityCheck" }
 staticruntime "On"

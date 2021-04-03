@@ -422,7 +422,7 @@ void Menu_DrawStringDark( int x, int y, const char *string )
 
 	for ( i = 0; i < len; i++ )
 	{
-		R_DrawChar( ( x + i*CONCHAR_WIDTH ), y, string[i] + 128 );
+		R_DrawCharColor( ( x + i*CONCHAR_WIDTH ), y, string[i], colorGreen );
 	}
 }
 
@@ -444,7 +444,7 @@ void Menu_DrawStringR2LDark( int x, int y, const char *string )
 
 	for ( i = 0; i < len; i++ )
 	{
-		R_DrawChar( ( x - i*CONCHAR_WIDTH ), y, string[len-i-1]+128 );
+		R_DrawCharColor( ( x - i*CONCHAR_WIDTH ), y, string[len-i-1], colorGreen );
 	}
 }
 

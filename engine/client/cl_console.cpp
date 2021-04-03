@@ -17,22 +17,20 @@ extern int		edit_line;
 extern int		key_linepos;
 
 
-void DrawString (int x, int y, const char *s)
+void DrawString( int x, int y, const char *s )
 {
-	while (*s)
-	{
-		R_DrawChar (x, y, *s);
-		x+=CONCHAR_WIDTH;
+	while ( *s ) {
+		R_DrawChar( x, y, *s );
+		x += CONCHAR_WIDTH;
 		s++;
 	}
 }
 
-void DrawAltString (int x, int y, const char *s)
+void DrawAltString( int x, int y, const char *s )
 {
-	while (*s)
-	{
-		R_DrawChar (x, y, *s ^ 0x80);
-		x+=CONCHAR_WIDTH;
+	while ( *s ) {
+		R_DrawCharColor( x, y, *s, colorGreen );
+		x += CONCHAR_WIDTH;
 		s++;
 	}
 }
@@ -176,8 +174,6 @@ void Con_Dump_f (void)
 			else
 				break;
 		}
-		for (x=0; buffer[x]; x++)
-			buffer[x] &= 0x7f;
 
 		fprintf (f, "%s\n", buffer);
 	}
@@ -340,19 +336,10 @@ void Con_Print (const char *txt)
 {
 	int		y;
 	int		c, l;
-	int		mask;
 	static bool	cr;
 
 	if ( !con.initialized ) {
 		return;
-	}
-
-	if (txt[0] == 1 || txt[0] == 2) {
-		// go to colored text
-		mask = 128;
-		txt++;
-	} else {
-		mask = 0;
 	}
 
 	while ( (c = *txt) )
@@ -398,7 +385,7 @@ void Con_Print (const char *txt)
 
 		default:	// display character and advance
 			y = con.current % con.totallines;
-			con.text[y*con.linewidth+con.x] = c | mask | con.ormask;
+			con.text[y*con.linewidth+con.x] = c;
 			con.x++;
 			if (con.x >= con.linewidth)
 				con.x = 0;
@@ -499,7 +486,7 @@ Con_DrawNotify
 Draws the last few lines of output transparently over the game top
 ================
 */
-void Con_DrawNotify (void)
+void Con_DrawNotify()
 {
 	int		x, v;
 	char	*text;
@@ -511,22 +498,33 @@ void Con_DrawNotify (void)
 	v = 0;
 	for (i= con.current-NUM_CON_TIMES+1 ; i<=con.current ; i++)
 	{
-		if (i < 0)
+		if ( i < 0 ) {
 			continue;
+		}
 		time = con.times[i % NUM_CON_TIMES];
-		if (time == 0)
+		if ( time == 0 ) {
 			continue;
+		}
 		time = cls.realtime - time;
-		if (time > con_notifytime->value * mathconst::SecondsToMilliseconds)
+		if ( time > SEC2MS( con_notifytime->value ) ) {
 			continue;
+		}
 		text = con.text + (i % con.totallines)*con.linewidth;
+
+		uint32 color = colorDefaultText;
+		int localLineWidth = con.linewidth;
 		
-		for (x = 0 ; x < con.linewidth ; x++)
-			R_DrawChar ( con.xadjust + (x+1)*CONCHAR_WIDTH, v, text[x]);
+		for ( x = 0; x < localLineWidth; x++ ) {
+			if ( text[x] == C_COLOR_ESCAPE && IsColorIndex( text[x + 1] ) ) {
+				color = ColorForIndex( text[x + 1] );
+				localLineWidth -= 2;
+				text += 2;
+			}
+			R_DrawCharColor( con.xadjust + ( x + 1 ) * CONCHAR_WIDTH, v, text[x], color );
+		}
 
 		v += CONCHAR_HEIGHT;
 	}
-
 
 	if (cls.key_dest == key_message)
 	{
@@ -575,7 +573,6 @@ void Con_DrawConsole (float frac)
 	char			*text;
 	int				row;
 	int				lines;
-	char			version[64];
 
 	lines = (int)( viddef.height * frac );
 	if ( lines <= 0 ) {
@@ -586,19 +583,21 @@ void Con_DrawConsole (float frac)
 		lines = viddef.height;
 	}
 
-	con.xadjust = 0.0f;
+	con.xadjust = 0;
 
 	// draw the background
 	//R_DrawStretchPic (0, -viddef.height+lines, viddef.width, viddef.height, "conback");
-	R_DrawFilled( 0, -viddef.height + lines, viddef.width, viddef.height, { 0, 0, 0, 192 } );
+	R_DrawFilled( 0, -viddef.height + lines, viddef.width, viddef.height, PackColor( 0, 0, 0, 192 ) );
 	R_DrawFilled( 0, frac*viddef.height-2, viddef.width, 2, colorCyan );
 	SCR_AddDirtyPoint (0,0);
 	SCR_AddDirtyPoint (viddef.width-1,lines-1);
 
-	version[0] = 'v';
-	strcpy( version + 1, VERSION );
-	for (x=0 ; x<5 ; x++)
-		R_DrawChar (viddef.width-44+x*8, lines-12, 128 + version[x] );
+	// draw the version
+	constexpr int verLength = sizeof( BLD_STRING ) - 1;
+	for ( x = 0; x < verLength; x++ ) {
+		R_DrawCharColor( viddef.width-(verLength-x)*CONCHAR_WIDTH - 4,
+			(lines-(CONCHAR_HEIGHT+CONCHAR_HEIGHT/4)) - 4, BLD_STRING[x], colorCyan );
+	}
 
 	// draw the text
 	con.vislines = lines;
@@ -611,8 +610,9 @@ void Con_DrawConsole (float frac)
 	if (con.display != con.current)
 	{
 	// draw arrows to show the buffer is backscrolled
-		for (x=0 ; x<con.linewidth ; x+=4)
-			R_DrawChar ( con.xadjust + (x+1)*CONCHAR_WIDTH, y, '^');
+		for (x=0 ; x<con.linewidth ; x+=4) {
+			R_DrawChar ( con.xadjust + (x+1)*CONCHAR_WIDTH, y, '^' );
+		}
 	
 		y -= CONCHAR_HEIGHT;
 		rows--;
@@ -622,15 +622,27 @@ void Con_DrawConsole (float frac)
 
 	for (i=0 ; i<rows ; i++, y-=CONCHAR_HEIGHT, row--)
 	{
-		if (row < 0)
+		if ( row < 0 ) {
 			break;
-		if (con.current - row >= con.totallines)
-			continue;	// past scrollback wrap point
+		}
+		if ( con.current - row >= con.totallines ) {
+			// past scrollback wrap point
+			continue;
+		}
 			
 		text = con.text + (row % con.totallines)*con.linewidth;
 
-		for (x=0 ; x<con.linewidth ; x++)
-			R_DrawChar ( con.xadjust + (x+1)*CONCHAR_WIDTH, y, text[x]);
+		uint32 color = colorDefaultText;
+		int localLineWidth = con.linewidth;
+
+		for (x=0 ; x<localLineWidth ; x++) {
+			if ( text[x] == C_COLOR_ESCAPE && IsColorIndex( text[x + 1] ) ) {
+				color = ColorForIndex( text[x + 1] );
+				localLineWidth -= 2;
+				text += 2;
+			}
+			R_DrawCharColor( con.xadjust + ( x + 1 ) * CONCHAR_WIDTH, y, text[x], color );
+		}
 	}
 
 //ZOID

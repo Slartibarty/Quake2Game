@@ -17,8 +17,6 @@ struct console_t
 	int		x;				// offset in current line for next print
 	int		display;		// bottom of console displays this line
 
-	int		ormask;			// high bit mask for colored characters
-
 	int 	linewidth;		// characters across screen
 	int		totallines;		// total lines in console scrollback
 

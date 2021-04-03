@@ -1,12 +1,22 @@
-//-------------------------------------------------------------------------------------------------
-// Functions related to drawing 2D imagery
-//-------------------------------------------------------------------------------------------------
 
 #include "gl_local.h"
 
 #include "meshbuilder.h"
 
-static constexpr auto ConChars_Name = "materials/pics/conchars" MAT_EXT;
+/*
+===================================================================================================
+
+	2D draw functions
+
+	All calls to R_Draw functions are collected in a buffer, then at the end of the frame
+	they're uploaded to the GPU and rendered.
+	Internal functions are prefixed with Draw_, but public ones are R_Draw, this is to maintain
+	consistency with the rest of the public renderer functions.
+
+===================================================================================================
+*/
+
+static constexpr auto ConCharsName = "materials/pics/conchars" MAT_EXT;
 
 struct guiDrawCmd_t
 {
@@ -28,15 +38,20 @@ std::vector<guiDrawCmd_t> s_drawCmds;
 static guiDrawCmd_t	*s_currentCmd;
 static uint32		s_lastOffset;
 
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
+/*
+========================
+Draw_Init
+
+Grabs the console font and sets up our buffers
+========================
+*/
 void Draw_Init()
 {
 	// load console characters
-	draw_chars = GL_FindMaterial( ConChars_Name, true );
+	draw_chars = GL_FindMaterial( ConCharsName, true );
 	if ( !draw_chars->IsOkay() ) {
 		// we NEED the console font
-		Com_FatalErrorf( "Could not get console font: %s", ConChars_Name );
+		Com_FatalErrorf( "Could not find font: %s", ConCharsName );
 	}
 
 	// reserve 64 draw commands
@@ -59,8 +74,11 @@ void Draw_Init()
 	glVertexAttribPointer( 2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( guiVertex_t ), (void *)( 4 * sizeof( GLfloat ) ) );
 }
 
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
+/*
+========================
+Draw_Shutdown
+========================
+*/
 void Draw_Shutdown()
 {
 	glDeleteBuffers( 1, &s_drawEBO );
@@ -68,9 +86,13 @@ void Draw_Shutdown()
 	glDeleteVertexArrays( 1, &s_drawVAO );
 }
 
-//-------------------------------------------------------------------------------------------------
-// Checks for or creates a draw chain
-//-------------------------------------------------------------------------------------------------
+/*
+========================
+Draw_CheckChain
+
+Checks for or creates a draw chain
+========================
+*/
 static void Draw_CheckChain( material_t *material )
 {
 	if ( !s_currentCmd ) {
@@ -108,19 +130,56 @@ static void Draw_CheckChain( material_t *material )
 	}
 }
 
-//-------------------------------------------------------------------------------------------------
-// Draws one graphics character with 0 being transparent.
-// It can be clipped to the top of the screen to allow the console to be
-// smoothly scrolled off.
-//-------------------------------------------------------------------------------------------------
-void Draw_Char( int x, int y, int ch )
+/*
+========================
+R_RegisterPic
+
+Input is a filename with no decoration
+We want to phase this function out eventually
+========================
+*/
+material_t *R_RegisterPic( const char *name )
 {
-#if 1
+	char fullname[MAX_QPATH];
+	Q_sprintf_s( fullname, "materials/pics/%s.mat", name );
+	assert( !strstr( fullname, "//" ) ); // Check for double slashes
+
+	return GL_FindMaterial( fullname );
+}
+
+/*
+========================
+R_DrawGetPicSize
+========================
+*/
+void R_DrawGetPicSize( int *w, int *h, const char *pic )
+{
+	material_t *mat;
+
+	mat = R_RegisterPic( pic );
+	if ( !mat )
+	{
+		*w = *h = -1;
+		return;
+	}
+	*w = mat->image->width;
+	*h = mat->image->height;
+}
+
+/*
+========================
+R_DrawCharColor
+========================
+*/
+void R_DrawCharColor( int x, int y, int ch, uint32 color )
+{
 	int row, col;
 	float frow, fcol;
 	float size;
 
 	ch &= 255;
+
+	bool isHigh = ( ch & 127 ) != ch;
 
 	if ( ( ch & 127 ) == 32 ) {
 		// space
@@ -141,89 +200,79 @@ void Draw_Char( int x, int y, int ch )
 
 	guiRect_t rect;
 
-	rect.v1.Position2f( x, y );
-	rect.v1.TexCoord2f( fcol, frow );
-	rect.v1.Color1f( 255 );
+	rect.v1.Position( x, y );
+	rect.v1.TexCoord( fcol, frow );
+	rect.v1.Color( color );
 
-	rect.v2.Position2f( x + CONCHAR_WIDTH, y );
-	rect.v2.TexCoord2f( fcol + size, frow );
-	rect.v2.Color1f( 255 );
+	rect.v2.Position( x + CONCHAR_WIDTH, y );
+	rect.v2.TexCoord( fcol + size, frow );
+	rect.v2.Color( color );
 
-	rect.v3.Position2f( x + CONCHAR_WIDTH, y + CONCHAR_HEIGHT );
-	rect.v3.TexCoord2f( fcol + size, frow + size );
-	rect.v3.Color1f( 255 );
+	rect.v3.Position( x + CONCHAR_WIDTH, y + CONCHAR_HEIGHT );
+	rect.v3.TexCoord( fcol + size, frow + size );
+	rect.v3.Color( color );
 
-	rect.v4.Position2f( x, y + CONCHAR_HEIGHT );
-	rect.v4.TexCoord2f( fcol, frow + size );
-	rect.v4.Color1f( 255 );
+	rect.v4.Position( x, y + CONCHAR_HEIGHT );
+	rect.v4.TexCoord( fcol, frow + size );
+	rect.v4.Color( color );
 
 	s_drawMeshBuilder.AddElement( rect );
 
 	Draw_CheckChain( draw_chars );
-#endif
 }
 
-//-------------------------------------------------------------------------------------------------
-// Input is a filename with no decoration
-// We want to phase this function out eventually
-//-------------------------------------------------------------------------------------------------
-material_t *R_RegisterPic( const char *name )
+/*
+========================
+R_DrawChar
+
+Draws one graphics character with 0 being transparent.
+It can be clipped to the top of the screen to allow the console to be
+smoothly scrolled off.
+========================
+*/
+void R_DrawChar( int x, int y, int ch )
 {
-	char fullname[MAX_QPATH];
-	Q_sprintf_s( fullname, "materials/pics/%s.mat", name );
-	assert( !strstr( fullname, "//" ) ); // Check for double slashes
-
-	return GL_FindMaterial( fullname );
+	R_DrawCharColor( x, y, ch, colorDefaultText );
 }
 
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-void Draw_GetPicSize( int *w, int *h, const char *pic )
-{
-	material_t *mat;
-
-	mat = R_RegisterPic( pic );
-	if ( !mat )
-	{
-		*w = *h = -1;
-		return;
-	}
-	*w = mat->image->width;
-	*h = mat->image->height;
-}
-
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-static void Draw_Generic( int x, int y, int w, int h, material_t *mat )
+/*
+========================
+R_DrawGetPicSize
+========================
+*/
+inline void R_DrawGeneric( int x, int y, int w, int h, material_t *mat )
 {
 	guiRect_t rect;
 
-	int alpha = static_cast<int>( mat->alpha * 255.0f );
+	uint32 color = PackColor( 255, 255, 255, mat->alpha );
 
-	rect.v1.Position2f( x, y );
-	rect.v1.TexCoord2f( 0, 0 );
-	rect.v1.Color2f( 255, alpha );
+	rect.v1.Position( x, y );
+	rect.v1.TexCoord( 0.0f, 0.0f );
+	rect.v1.Color( color );
 
-	rect.v2.Position2f( x + w, y );
-	rect.v2.TexCoord2f( 1, 0 );
-	rect.v2.Color2f( 255, alpha );
+	rect.v2.Position( x + w, y );
+	rect.v2.TexCoord( 1.0f, 0.0f );
+	rect.v2.Color( color );
 
-	rect.v3.Position2f( x + w, y + h );
-	rect.v3.TexCoord2f( 1, 1 );
-	rect.v3.Color2f( 255, alpha );
+	rect.v3.Position( x + w, y + h );
+	rect.v3.TexCoord( 1.0f, 1.0f );
+	rect.v3.Color( color );
 
-	rect.v4.Position2f( x, y + h );
-	rect.v4.TexCoord2f( 0, 1 );
-	rect.v4.Color2f( 255, alpha );
+	rect.v4.Position( x, y + h );
+	rect.v4.TexCoord( 0.0f, 1.0f );
+	rect.v4.Color( color );
 
 	s_drawMeshBuilder.AddElement( rect );
 
 	Draw_CheckChain( mat );
 }
 
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-void Draw_StretchPic( int x, int y, int w, int h, const char *pic )
+/*
+========================
+R_DrawGetPicSize
+========================
+*/
+void R_DrawStretchPic( int x, int y, int w, int h, const char *pic )
 {
 	material_t *mat;
 
@@ -233,12 +282,15 @@ void Draw_StretchPic( int x, int y, int w, int h, const char *pic )
 		return;
 	}
 
-	Draw_Generic( x, y, w, h, mat );
+	R_DrawGeneric( x, y, w, h, mat );
 }
 
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-void Draw_Pic( int x, int y, const char *pic )
+/*
+========================
+R_DrawGetPicSize
+========================
+*/
+void R_DrawPic( int x, int y, const char *pic )
 {
 	material_t *mat;
 
@@ -248,14 +300,18 @@ void Draw_Pic( int x, int y, const char *pic )
 		return;
 	}
 
-	Draw_Generic( x, y, mat->image->width, mat->image->height, mat );
+	R_DrawGeneric( x, y, mat->image->width, mat->image->height, mat );
 }
 
-//-------------------------------------------------------------------------------------------------
-// This repeats a 64*64 tile graphic to fill the screen around a sized down
-// refresh window.
-//-------------------------------------------------------------------------------------------------
-void Draw_TileClear( int x, int y, int w, int h, const char *pic )
+/*
+========================
+R_DrawTileClear
+
+This repeats a 64*64 tile graphic to fill the screen around a sized down
+refresh window.
+========================
+*/
+void R_DrawTileClear( int x, int y, int w, int h, const char *pic )
 {
 #if 1
 	material_t *mat;
@@ -269,23 +325,23 @@ void Draw_TileClear( int x, int y, int w, int h, const char *pic )
 
 	guiRect_t rect;
 
-	float alpha = mat->alpha;
+	uint32 color = PackColor( 255, 255, 255, mat->alpha );
 
-	rect.v1.Position2f( x, y );
-	rect.v1.TexCoord2f( x / 64.0f, y / 64.0f );
-	rect.v1.Color2f( 1.0f, alpha );
+	rect.v1.Position( x, y );
+	rect.v1.TexCoord( x / 64.0f, y / 64.0f );
+	rect.v1.Color( color );
 
-	rect.v2.Position2f( x + w, y );
-	rect.v2.TexCoord2f( ( x + w ) / 64.0f, y / 64.0f );
-	rect.v2.Color2f( 1.0f, alpha );
+	rect.v2.Position( x + w, y );
+	rect.v2.TexCoord( ( x + w ) / 64.0f, y / 64.0f );
+	rect.v2.Color( color );
 
-	rect.v3.Position2f( x + w, y + h );
-	rect.v3.TexCoord2f( ( x + w ) / 64.0f, ( y + h ) / 64.0f );
-	rect.v3.Color2f( 1.0f, alpha );
+	rect.v3.Position( x + w, y + h );
+	rect.v3.TexCoord( ( x + w ) / 64.0f, ( y + h ) / 64.0f );
+	rect.v3.Color( color );
 
-	rect.v4.Position2f( x, y + h );
-	rect.v4.TexCoord2f( x / 64.0f, ( y + h ) / 64.0f );
-	rect.v4.Color2f( 1.0f, alpha );
+	rect.v4.Position( x, y + h );
+	rect.v4.TexCoord( x / 64.0f, ( y + h ) / 64.0f );
+	rect.v4.Color( color );
 
 	s_drawMeshBuilder.AddElement( rect );
 
@@ -293,27 +349,31 @@ void Draw_TileClear( int x, int y, int w, int h, const char *pic )
 #endif
 }
 
-//-------------------------------------------------------------------------------------------------
-// Fills a box of pixels with a single color
-//-------------------------------------------------------------------------------------------------
-void R_DrawFilled( float x, float y, float w, float h, qColor color )
+/*
+========================
+R_DrawFilled
+
+Fills a box of pixels with a single color
+========================
+*/
+void R_DrawFilled( int x, int y, int w, int h, uint32 color )
 {
 	guiRect_t rect;
 
-	rect.v1.Position2f( x, y );
-	rect.v1.TexCoord2f( 0.0f, 0.0f );
+	rect.v1.Position( x, y );
+	rect.v1.TexCoord( 0.0f, 0.0f );
 	rect.v1.Color( color );
 
-	rect.v2.Position2f( x + w, y );
-	rect.v2.TexCoord2f( 1.0f, 0.0f );
+	rect.v2.Position( x + w, y );
+	rect.v2.TexCoord( 1.0f, 0.0f );
 	rect.v2.Color( color );
 
-	rect.v3.Position2f( x + w, y + h );
-	rect.v3.TexCoord2f( 1.0f, 1.0f );
+	rect.v3.Position( x + w, y + h );
+	rect.v3.TexCoord( 1.0f, 1.0f );
 	rect.v3.Color( color );
 
-	rect.v4.Position2f( x, y + h );
-	rect.v4.TexCoord2f( 0.0f, 1.0f );
+	rect.v4.Position( x, y + h );
+	rect.v4.TexCoord( 0.0f, 1.0f );
 	rect.v4.Color( color );
 
 	s_drawMeshBuilder.AddElement( rect );
@@ -321,41 +381,31 @@ void R_DrawFilled( float x, float y, float w, float h, qColor color )
 	Draw_CheckChain( whiteMaterial );
 }
 
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-void Draw_PolyBlend( const vec4_t color )
+/*
+========================
+R_DrawScreenOverlay
+
+Fills the whole screen with floating point color
+========================
+*/
+void R_DrawScreenOverlay( const vec4_t color )
 {
-#if 1
-	if ( !r_polyblend->value || color[3] <= 0.0f )
+	if ( !r_polyblend->value || color[3] <= 0.0f ) {
 		return;
+	}
 
-	guiRect_t rect;
+	uint32 newColor = PackColorFromFloats( color[0], color[1], color[2], color[3] );
 
-	rect.v1.Position2f( 0.0f, 0.0f );
-	rect.v1.TexCoord2f( 0.0f, 0.0f );
-	rect.v1.Color4fv( color );
-
-	rect.v2.Position2f( r_newrefdef.width, 0.0f );
-	rect.v2.TexCoord2f( 1.0f, 0.0f );
-	rect.v2.Color4fv( color );
-
-	rect.v3.Position2f( r_newrefdef.width, r_newrefdef.height );
-	rect.v3.TexCoord2f( 1.0f, 1.0f );
-	rect.v3.Color4fv( color );
-
-	rect.v4.Position2f( 0.0f, r_newrefdef.height );
-	rect.v4.TexCoord2f( 0.0f, 1.0f );
-	rect.v4.Color4fv( color );
-
-	s_drawMeshBuilder.AddElement( rect );
-
-	Draw_CheckChain( whiteMaterial );
-#endif
+	R_DrawFilled( 0, 0, r_newrefdef.width, r_newrefdef.height, newColor );
 }
 
-//-------------------------------------------------------------------------------------------------
-// Batching
-//-------------------------------------------------------------------------------------------------
+/*
+========================
+Draw_RenderBatches
+
+Renders all our collected draw calls
+========================
+*/
 void Draw_RenderBatches()
 {
 	// render all gui draw calls
@@ -419,35 +469,27 @@ static unsigned s_rawPalette[256];
 ========================
 R_SetRawPalette
 
-Sets the palette used by Draw_StretchRaw
+Sets the palette used by R_DrawStretchRaw
 ========================
 */
 void R_SetRawPalette( const unsigned char *palette )
 {
-	// We don't use the raw palette for anything but cinematics, so ignore NULL calls
-	if ( !palette )
+	// we don't use the raw palette for anything but cinematics, so ignore NULL calls
+	if ( !palette ) {
 		return;
-
-	int i;
-	byte *rp = (byte *)s_rawPalette;
-
-	for ( i = 0; i < 256; i++ )
-	{
-		rp[i*4+0] = palette[i*3+0];
-		rp[i*4+1] = palette[i*3+1];
-		rp[i*4+2] = palette[i*3+2];
-		rp[i*4+3] = 0xff;
 	}
 
-	glClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
-	glClear( GL_COLOR_BUFFER_BIT );
-	glClearColor( DEFAULT_CLEARCOLOR );
+	memcpy( s_rawPalette, palette, sizeof( s_rawPalette ) );
 }
 
-//-------------------------------------------------------------------------------------------------
-// Used for rendering cinematic frames
-//-------------------------------------------------------------------------------------------------
-void Draw_StretchRaw( int x, int y, int w, int h, int cols, int rows, byte *data )
+/*
+========================
+R_DrawStretchRaw
+
+Used for rendering cinematic frames
+========================
+*/
+void R_DrawStretchRaw( int x, int y, int w, int h, int cols, int rows, byte *data )
 {
 #if 0
 	static uint	image32[256 * 256];
@@ -502,13 +544,13 @@ void Draw_StretchRaw( int x, int y, int w, int h, int cols, int rows, byte *data
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 
 	glBegin( GL_QUADS );
-	glTexCoord2f( 0.0f, 0.0f );
+	glTexCoord( 0.0f, 0.0f );
 	glVertex2i( x, y );
-	glTexCoord2f( 1.0f, 0.0f );
+	glTexCoord( 1.0f, 0.0f );
 	glVertex2i( x + w, y );
-	glTexCoord2f( 1.0f, t );
+	glTexCoord( 1.0f, t );
 	glVertex2i( x + w, y + h );
-	glTexCoord2f( 0.0f, t );
+	glTexCoord( 0.0f, t );
 	glVertex2i( x, y + h );
 	glEnd();
 

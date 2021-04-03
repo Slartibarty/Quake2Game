@@ -321,7 +321,7 @@ void ED_CallSpawn (edict_t *ent)
 			return;
 		}
 	}
-	gi.dprintf ("%s doesn't have a spawn function\n", ent->classname);
+	gi.dprintf (S_COLOR_YELLOW"%s doesn't have a spawn function\n", ent->classname);
 }
 
 /*
@@ -413,7 +413,7 @@ void ED_ParseField (char *key, char *value, edict_t *ent)
 			return;
 		}
 	}
-	gi.dprintf ("%s is not a field\n", key);
+	gi.dprintf (S_COLOR_YELLOW "%s is not a field\n", key);
 }
 
 /*

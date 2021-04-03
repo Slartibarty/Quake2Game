@@ -824,6 +824,8 @@ void R_DrawAliasModel (entity_t *e)
 	glColor4f (1,1,1,1);
 }
 
+#if 0
+
 /*
 =============================================================
 
@@ -1493,3 +1495,12 @@ void R_DrawStudioModel( entity_t *e )
 
 	glPopMatrix();
 }
+
+#else
+
+void R_DrawStudioModel( entity_t *e )
+{
+
+}
+
+#endif

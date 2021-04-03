@@ -5,7 +5,9 @@
 
 #include "ref_public.h"
 
-#include <DirectXMath.h>
+// slart: have to include it this way otherwise it uses the winsdk version...
+#include "Inc/DirectXMath.h"
+static_assert( DIRECTX_MATH_VERSION >= 316 );
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -28,17 +30,6 @@
 
 //-------------------------------------------------------------------------------------------------
 
-// Convenient return type
-enum rserr_t
-{
-	rserr_ok,
-
-	rserr_invalid_fullscreen,
-	rserr_invalid_mode,
-
-	rserr_unknown
-};
-
 #include "gl_model.h"
 
 #define BACKFACE_EPSILON	0.01f
@@ -46,7 +37,7 @@ enum rserr_t
 /*
 ===============================================================================
 
-	gl_misc
+	gl_misc.cpp
 
 ===============================================================================
 */
@@ -72,9 +63,13 @@ void		GL_MBind( GLenum target, GLuint texnum );
 void		GL_SetDefaultState();
 void		GL_CheckErrors();
 
-//-------------------------------------------------------------------------------------------------
-// gl_image.cpp
-//-------------------------------------------------------------------------------------------------
+/*
+===============================================================================
+
+	gl_image.cpp
+
+===============================================================================
+*/
 
 #define MAX_GLTEXTURES		2048
 #define MAX_GLMATERIALS		2048
@@ -158,28 +153,26 @@ struct material_t
 	msurface_t			*texturechain;				// for sort-by-material world drawing
 	image_t				*image;						// the only image, may extend to more in the future
 	material_t			*nextframe;					// the next frame
-	float				alpha;						// alpha transparency
+	uint32				alpha;						// alpha transparency, in range 0 - 255
 	int32				registration_sequence;		// 0 = free, -1 = managed
 
 	// Returns true if this material is the missing texture
-	bool IsMissing() { return this == mat_notexture; }
+	bool IsMissing() const { return this == mat_notexture; }
 
 	// Returns true if the image referenced is the missing image
-	bool IsImageMissing() { return image == mat_notexture->image; }
+	bool IsImageMissing() const { return image == mat_notexture->image; }
 
 	// Returns true if this material is perfectly okay
-	bool IsOkay() { return !IsMissing() && !IsImageMissing(); }
+	bool IsOkay() const { return !IsMissing() && !IsImageMissing(); }
 
-	// Bind the referenced texture
-	void Bind()
-	{
-		//assert( image->refcount > 0 );
+	// Bind the referenced image
+	void Bind() const {
+		assert( image->refcount > 0 );
 		GL_Bind( image->texnum );
 	}
 
 	// Deference the referenced image and clear this struct
-	void Delete()
-	{
+	void Delete() {
 		image->DecrementRefCount();
 		if ( image->refcount == 0 ) {
 			// Save time in FreeUnusedImages
@@ -202,6 +195,7 @@ struct vidDef_t
 	int	width, height;
 };
 
+// GLEW covers all our bases so this is empty right now
 struct glConfig_t
 {
 	int unused;
@@ -363,17 +357,9 @@ void R_DrawStudioModel( entity_t *e );
 void Draw_Init();
 void Draw_Shutdown();
 
-void Draw_GetPicSize( int *w, int *h, const char *name );
-void Draw_Pic( int x, int y, const char *name );
-void Draw_StretchPic( int x, int y, int w, int h, const char *name );
-void Draw_Char( int x, int y, int ch );
-void Draw_TileClear( int x, int y, int w, int h, const char *name );
-void R_DrawFilled( float x, float y, float w, float h, qColor color );
-void Draw_PolyBlend( const vec4_t color );
+void R_DrawScreenOverlay( const vec4_t color );
 
 void Draw_RenderBatches();
-
-void Draw_StretchRaw( int x, int y, int w, int h, int cols, int rows, byte *data );
 
 /*
 ===============================================================================
@@ -422,7 +408,7 @@ void		GLimp_RestoreGamma( void );
 bool 		GLimp_Init( void *hinstance, void *wndproc );
 void		GLimp_Shutdown( void );
 
-rserr_t    	GLimp_SetMode( int *pWidth, int *pHeight, int mode, bool fullscreen );
+bool    	GLimp_SetMode( int &width, int &height, int mode, bool fullscreen );
 
 void		GLimp_AppActivate( bool active );
 
@@ -433,5 +419,5 @@ void		GLimp_AppActivate( bool active );
 //-------------------------------------------------------------------------------------------------
 
 // Client functions
-extern bool VID_GetModeInfo( int *width, int *height, int mode );
+extern bool VID_GetModeInfo( int &width, int &height, int mode );
 extern void VID_NewWindow( int width, int height );

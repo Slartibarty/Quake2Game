@@ -412,7 +412,7 @@ void Particles_Init()
 	glVertexAttribPointer( 1, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( partPoint_t ), (void *)( 3 * sizeof( GLfloat ) ) );
 
 	// this sucks a little, we'd rather have our own class for this
-	s_partVector.reserve( MAX_PARTICLES );
+	s_partVector.reserve( MAX_PARTICLES / 2 );
 }
 
 /*
@@ -428,10 +428,10 @@ void Particles_Shutdown()
 
 /*
 ========================
-Particles_Draw
+R_DrawParticles
 ========================
 */
-static void Particles_Draw()
+static void R_DrawParticles()
 {
 	if ( r_newrefdef.num_particles <= 0 ) {
 		return;
@@ -499,7 +499,6 @@ static int SignbitsForPlane( cplane_t *out )
 	int	bits, j;
 
 	// for fast box on planeside test
-
 	bits = 0;
 	for ( j = 0; j < 3; j++ )
 	{
@@ -765,13 +764,13 @@ static void R_RenderView( refdef_t *fd )
 	R_RenderDlights();
 
 	// particles!
-	Particles_Draw();
+	R_DrawParticles();
 
 	// world alpha surfaces
 	R_DrawAlphaSurfaces();
 
 	// screen overlay
-	Draw_PolyBlend( r_newrefdef.blend );
+	R_DrawScreenOverlay( r_newrefdef.blend );
 
 	if ( r_speeds->value )
 	{
@@ -824,46 +823,30 @@ static void R_SetLightLevel()
 R_SetMode
 ========================
 */
-static bool R_SetMode()
+static void R_SetMode()
 {
-	rserr_t err;
-
-	if ( r_mode->modified || vid_fullscreen->modified )
+	if ( r_mode->IsModified() || vid_fullscreen->IsModified() )
 	{
-		r_mode->modified = false;
-		vid_fullscreen->modified = false;
+		r_mode->ClearModified();
+		vid_fullscreen->ClearModified();
 
-		if ( ( err = GLimp_SetMode( &vid.width, &vid.height, r_mode->value, (bool)vid_fullscreen->value ) ) == rserr_ok )
+		if ( GLimp_SetMode( vid.width, vid.height, r_mode->GetInt32(), vid_fullscreen->GetBool() ) == true )
 		{
-			glState.prev_mode = r_mode->value;
+			glState.prev_mode = r_mode->GetInt32();
 		}
 		else
 		{
-			if ( err == rserr_invalid_fullscreen )
-			{
-				Cvar_SetValue( "vid_fullscreen", 0 );
-				vid_fullscreen->modified = false;
-				Com_Printf( "ref_gl::R_SetMode() - fullscreen unavailable in this mode\n" );
-				if ( ( err = GLimp_SetMode( &vid.width, &vid.height, r_mode->value, false ) ) == rserr_ok )
-					return true;
-			}
-			else if ( err == rserr_invalid_mode )
-			{
-				Cvar_SetValue( "r_mode", glState.prev_mode );
-				r_mode->modified = false;
-				Com_Printf( "ref_gl::R_SetMode() - invalid mode\n" );
-			}
+			Cvar_SetValue( "r_mode", glState.prev_mode );
+			r_mode->ClearModified();
+			Com_Printf( "R_SetMode: invalid mode\n" );
 
 			// try setting it back to something safe
-			if ( ( err = GLimp_SetMode( &vid.width, &vid.height, glState.prev_mode, false ) ) != rserr_ok )
+			if ( GLimp_SetMode( vid.width, vid.height, glState.prev_mode, false ) == false )
 			{
-				Com_Printf( "ref_gl::R_SetMode() - could not revert to safe mode\n" );
-				return false;
+				Com_FatalError( "R_SetMode: could not revert to safe mode" );
 			}
 		}
 	}
-
-	return true;
 }
 
 /*

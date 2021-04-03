@@ -1,17 +1,17 @@
-//-------------------------------------------------------------------------------------------------
-//
-// glimp_win.c
-//
-// This file contains ALL Win32 specific stuff having to do with the
-// OpenGL refresh.  When a port is being made the following functions
-// must be implemented by the port:
-//
-// GLimp_EndFrame
-// GLimp_Init
-// GLimp_Shutdown
-// GLimp_SwitchFullscreen
-//
-//-------------------------------------------------------------------------------------------------
+/*
+===================================================================================================
+
+	This file contains ALL Win32 specific stuff having to do with the
+	OpenGL refresh.  When a port is being made the following functions
+	must be implemented by the port:
+
+	GLimp_EndFrame
+	GLimp_Init
+	GLimp_Shutdown
+	GLimp_SwitchFullscreen
+
+===================================================================================================
+*/
 
 #include "gl_local.h"
 #include <Windows.h>
@@ -28,11 +28,13 @@ struct glwstate_t
 
 static glwstate_t s_glwState;
 
-//-------------------------------------------------------------------------------------------------
-//
-// Dummy window
-//
-//-------------------------------------------------------------------------------------------------
+/*
+===================================================================================================
+
+	Dummy window
+
+===================================================================================================
+*/
 
 struct DummyVars
 {
@@ -42,8 +44,6 @@ struct DummyVars
 
 static constexpr auto	DummyClassname = L"GRUG";
 
-// Create a dummy window
-//
 static void GLimp_CreateDummyWindow( DummyVars &dvars )
 {
 	BOOL result;
@@ -118,8 +118,6 @@ static void GLimp_CreateDummyWindow( DummyVars &dvars )
 	assert( result );
 }
 
-// Destroy a dummy window
-//
 static void GLimp_DestroyDummyWindow( DummyVars &dvars )
 {
 	BOOL result;
@@ -132,23 +130,22 @@ static void GLimp_DestroyDummyWindow( DummyVars &dvars )
 	assert( result );
 }
 
-//-------------------------------------------------------------------------------------------------
-//
-// Client window
-//
-//-------------------------------------------------------------------------------------------------
+/*
+===================================================================================================
 
-static constexpr auto	WINDOW_TITLE = L"Quake 2 - OpenGL";
+	Client window
+
+===================================================================================================
+*/
+
+static constexpr auto	WINDOW_TITLE = L"JaffaQuake";
 static constexpr auto	WINDOW_CLASS_NAME = L"Q2GAME";
 static constexpr DWORD	WINDOW_STYLE = ( WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX );
 
-//-------------------------------------------------------------------------------------------------
-// Resizes a window without destroying it
-//-------------------------------------------------------------------------------------------------
 static void GLimp_SetWindowSize( int width, int height )
 {
-	DWORD dwStyle = (DWORD)GetWindowLongPtrW( s_glwState.hWnd, GWL_STYLE );
-	DWORD dwExStyle = (DWORD)GetWindowLongPtrW( s_glwState.hWnd, GWL_EXSTYLE );
+	DWORD dwStyle = (DWORD)GetWindowLongW( s_glwState.hWnd, GWL_STYLE );
+	DWORD dwExStyle = (DWORD)GetWindowLongW( s_glwState.hWnd, GWL_EXSTYLE );
 
 	RECT r{ 0, 0, width, height };
 	AdjustWindowRectEx( &r, dwStyle, false, dwExStyle );
@@ -164,9 +161,7 @@ static void GLimp_SetWindowSize( int width, int height )
 	vid.height = height;
 }
 
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-static void GLimp_PerformCDS( int width, int height, qboolean fullscreen, qboolean alertWindow )
+static void GLimp_PerformCDS( int width, int height, bool fullscreen, bool alertWindow )
 {
 	// do a CDS if needed
 	if ( fullscreen )
@@ -216,14 +211,11 @@ static void GLimp_PerformCDS( int width, int height, qboolean fullscreen, qboole
 	}
 }
 
-//-------------------------------------------------------------------------------------------------
-// Fill a PFD struct
-//-------------------------------------------------------------------------------------------------
-static void PopulateLegacyPFD(PIXELFORMATDESCRIPTOR &pfd)
+static void GLimp_PopulateLegacyPFD( PIXELFORMATDESCRIPTOR &pfd )
 {
 	const PIXELFORMATDESCRIPTOR newpfd
 	{
-		sizeof(PIXELFORMATDESCRIPTOR),
+		sizeof( PIXELFORMATDESCRIPTOR ),
 		1,
 		PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,    // Flags
 		PFD_TYPE_RGBA,		// The kind of framebuffer. RGBA or palette
@@ -244,9 +236,7 @@ static void PopulateLegacyPFD(PIXELFORMATDESCRIPTOR &pfd)
 	pfd = newpfd;
 }
 
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-static void GLimp_CreateWindow( WNDPROC wndproc, int width, int height, qboolean fullscreen )
+static void GLimp_CreateWindow( WNDPROC wndproc, int width, int height, bool fullscreen )
 {
 	const WNDCLASSEXW wcex
 	{
@@ -315,7 +305,7 @@ static void GLimp_CreateWindow( WNDPROC wndproc, int width, int height, qboolean
 	assert( s_glwState.hDC );
 
 	// Intel HD Graphics 3000 chips (my laptop) don't support this function
-	if (WGLEW_ARB_pixel_format)
+	if ( WGLEW_ARB_pixel_format )
 	{
 		const int attriblist[]
 		{
@@ -331,23 +321,23 @@ static void GLimp_CreateWindow( WNDPROC wndproc, int width, int height, qboolean
 
 		UINT numformats;
 
-		result = wglChoosePixelFormatARB(s_glwState.hDC, attriblist, NULL, 1, &pixelformat, &numformats);
-		assert(result);
+		result = wglChoosePixelFormatARB( s_glwState.hDC, attriblist, NULL, 1, &pixelformat, &numformats );
+		assert( result );
 
-		result = DescribePixelFormat(s_glwState.hDC, pixelformat, sizeof(pfd), &pfd);
-		assert(result != 0);
+		result = DescribePixelFormat( s_glwState.hDC, pixelformat, sizeof( pfd ), &pfd );
+		assert( result != 0 );
 	}
 	else
 	{
-		PopulateLegacyPFD(pfd);
-		pixelformat = ChoosePixelFormat(s_glwState.hDC, &pfd);
+		GLimp_PopulateLegacyPFD( pfd );
+		pixelformat = ChoosePixelFormat( s_glwState.hDC, &pfd );
 	}
 
 	result = SetPixelFormat( s_glwState.hDC, pixelformat, &pfd );
 	assert( result );
 
 	// Intel HD Graphics 3000 chips (my laptop) don't support this function
-	if (WGLEW_ARB_create_context)
+	if ( WGLEW_ARB_create_context )
 	{
 		const int contextAttribs[]
 		{
@@ -357,21 +347,21 @@ static void GLimp_CreateWindow( WNDPROC wndproc, int width, int height, qboolean
 			0, // End
 		};
 
-		s_glwState.hGLRC = wglCreateContextAttribsARB(s_glwState.hDC, NULL, contextAttribs);
-		assert(s_glwState.hGLRC);
+		s_glwState.hGLRC = wglCreateContextAttribsARB( s_glwState.hDC, NULL, contextAttribs );
+		assert( s_glwState.hGLRC );
 	}
 	else
 	{
-		s_glwState.hGLRC = wglCreateContext(s_glwState.hDC);
-		assert(s_glwState.hGLRC);
+		s_glwState.hGLRC = wglCreateContext( s_glwState.hDC );
+		assert( s_glwState.hGLRC );
 	}
 
 	result = wglMakeCurrent( s_glwState.hDC, s_glwState.hGLRC );
 	assert( result );
 
-	if (WGLEW_EXT_swap_control)
+	if ( WGLEW_EXT_swap_control )
 	{
-		wglSwapIntervalEXT((int)r_swapinterval->value);
+		wglSwapIntervalEXT( r_swapinterval->GetInt32() );
 	}
 
 	// let the sound and input subsystems know about the new window
@@ -382,15 +372,13 @@ static void GLimp_CreateWindow( WNDPROC wndproc, int width, int height, qboolean
 	if ( fullscreen )
 	{
 		// Perform our CDS now
-		GLimp_PerformCDS( width, height, fullscreen, false );
+		GLimp_PerformCDS( width, height, true, false );
 	}
 
 	ShowWindow( s_glwState.hWnd, SW_SHOW );
 }
 
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-static void GLimp_DestroyWindow( void )
+static void GLimp_DestroyWindow()
 {
 	if ( s_glwState.hGLRC )
 	{
@@ -403,19 +391,20 @@ static void GLimp_DestroyWindow( void )
 		DestroyWindow( s_glwState.hWnd );
 		UnregisterClassW( WINDOW_CLASS_NAME, s_glwState.hInstance );
 		s_glwState.hWnd = NULL;
+		s_glwState.hDC = NULL;
 	}
 }
 
-//-------------------------------------------------------------------------------------------------
-//
-// Misc
-//
-//-------------------------------------------------------------------------------------------------
+/*
+===================================================================================================
+
+	Miscellaneous
+
+===================================================================================================
+*/
 
 static uint16 s_oldHardwareGamma[3][256];
 
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
 void GLimp_SetGamma( byte *red, byte *green, byte *blue )
 {
 	uint16 table[3][256];
@@ -465,34 +454,27 @@ void GLimp_RestoreGamma( void )
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-rserr_t GLimp_SetMode( int *pWidth, int *pHeight, int mode, bool fullscreen )
+bool GLimp_SetMode( int &width, int &height, int mode, bool fullscreen )
 {
-	int width, height;
-
 	Com_Printf( "Setting mode %d:", mode );
 
-	if ( !VID_GetModeInfo( &width, &height, mode ) )
+	if ( !VID_GetModeInfo( width, height, mode ) )
 	{
 		Com_Printf( " invalid mode\n" );
-		*pWidth = 0; *pHeight = 0;
-		return rserr_invalid_mode;
+		width = 0;
+		height = 0;
+		return false;
 	}
 
-//	Com_Printf( " %d %d %s\n", width, height, (fullscreen ? "FS" : "W"));
+	//Com_Printf( " %d %d %s\n", width, height, (fullscreen ? "FS" : "W"));
 
 	GLimp_PerformCDS( width, height, fullscreen, true );
 
-	*pWidth = width;
-	*pHeight = height;
+	glViewport( 0, 0, width, height );
 
-	return rserr_ok;
+	return true;
 }
 
-//-------------------------------------------------------------------------------------------------
-// This routine is responsible for initializing the OS specific portions
-// of OpenGL.  Under Win32 this means dealing with the pixelformats and
-// doing the wgl interface stuff.
-//-------------------------------------------------------------------------------------------------
 bool GLimp_Init( void *hinstance, void *wndproc )
 {
 	s_glwState.hInstance = (HINSTANCE)hinstance;
@@ -511,27 +493,21 @@ bool GLimp_Init( void *hinstance, void *wndproc )
 	GLimp_DestroyDummyWindow( dvars );
 
 	int width, height;
-	if ( !VID_GetModeInfo( &width, &height, (int)r_mode->value ) )
+	if ( !VID_GetModeInfo( width, height, r_mode->GetInt32() ) )
 	{
 		Com_Printf( "ref_gl::GLimp_Init() - invalid mode\n" );
 		return false;
 	}
 
-	GLimp_CreateWindow( (WNDPROC)wndproc, width, height, (qboolean)vid_fullscreen->value );
+	GLimp_CreateWindow( (WNDPROC)wndproc, width, height, vid_fullscreen->GetBool() );
 
-	r_mode->modified = false;
-	vid_fullscreen->modified = false;
+	r_mode->ClearModified();
+	vid_fullscreen->ClearModified();
 
 	return true;
 }
 
-//-------------------------------------------------------------------------------------------------
-// This routine does all OS specific shutdown procedures for the OpenGL
-// subsystem.  Under OpenGL this means NULLing out the current DC and
-// HGLRC, deleting the rendering context, and releasing the DC acquired
-// for the window.  The state structure is also nulled out.
-//-------------------------------------------------------------------------------------------------
-void GLimp_Shutdown( void )
+void GLimp_Shutdown()
 {
 	GLimp_DestroyWindow();
 
@@ -542,36 +518,28 @@ void GLimp_Shutdown( void )
 	}
 }
 
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-void GLimp_BeginFrame( void )
+void GLimp_BeginFrame()
 {
 	// If our swap interval has changed, then change it!
-	if (r_swapinterval->modified)
+	if ( r_swapinterval->IsModified() )
 	{
-		r_swapinterval->modified = false;
+		r_swapinterval->ClearModified();
 
-		if (WGLEW_EXT_swap_control)
+		if ( WGLEW_EXT_swap_control )
 		{
-			wglSwapIntervalEXT((int)r_swapinterval->value);
+			wglSwapIntervalEXT( r_swapinterval->GetInt32() );
 		}
 	}
 }
 
-//-------------------------------------------------------------------------------------------------
-// Responsible for doing a swapbuffers and possibly for other stuff
-// as yet to be determined.  Probably better not to make this a GLimp
-// function and instead do a call to GLimp_SwapBuffers.
-//-------------------------------------------------------------------------------------------------
-void GLimp_EndFrame( void )
+void GLimp_EndFrame()
 {
 	SwapBuffers( s_glwState.hDC );
 }
 
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
 void GLimp_AppActivate( bool active )
 {
+#if 0
 	if ( active )
 	{
 		SetForegroundWindow( s_glwState.hWnd );
@@ -582,4 +550,5 @@ void GLimp_AppActivate( bool active )
 		if ( vid_fullscreen->value )
 			ShowWindow( s_glwState.hWnd, SW_MINIMIZE );
 	}
+#endif
 }

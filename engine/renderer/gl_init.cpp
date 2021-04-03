@@ -111,6 +111,8 @@ bool R_Init( void *hinstance, void *wndproc )
 {
 	Com_Print( "------- Initializing RenderSystem --------\n" );
 
+	Com_Printf( "Using DirectXMath v%d\n", DIRECTX_MATH_VERSION );
+
 	// init turbsin
 	extern float r_turbsin[256];
 	for ( int j = 0; j < 256; j++ ) {
@@ -139,7 +141,7 @@ bool R_Init( void *hinstance, void *wndproc )
 
 	Shaders_Init();
 
-	registration_sequence = 1;
+	tr.registrationSequence = 1;
 
 	GL_InitImages();
 	//GLimp_SetGamma( g_gammatable, g_gammatable, g_gammatable );
@@ -150,7 +152,7 @@ bool R_Init( void *hinstance, void *wndproc )
 
 	GL_CheckErrors();
 
-	Com_Print( "RenderSystem initialized.\n" );
+	Com_Print( "RenderSystem initialized\n" );
 	Com_Print( "-------------------------------------------\n" );
 
 	return true;
@@ -174,4 +176,9 @@ void R_Shutdown()
 
 	// shut down OS specific OpenGL stuff like contexts, etc.
 	GLimp_Shutdown();
+}
+
+void R_AppActivate( bool active )
+{
+	GLimp_AppActivate( active );
 }

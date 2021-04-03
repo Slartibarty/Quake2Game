@@ -10,3 +10,6 @@
 [submodule "external/UVAtlas"]
 	path = thirdparty/UVAtlas
 	url = https://github.com/microsoft/UVAtlas.git
+[submodule "thirdparty/DirectXMath"]
+	path = thirdparty/DirectXMath
+	url = https://github.com/microsoft/DirectXMath.git

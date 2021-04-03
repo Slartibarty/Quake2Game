@@ -26,8 +26,8 @@
 #define	MAX_STRING_TOKENS	80		// max tokens resulting from Cmd_TokenizeString
 #define	MAX_TOKEN_CHARS		128		// max length of an individual token
 
-#define CONCHAR_WIDTH		8
-#define CONCHAR_HEIGHT		8
+#define CONCHAR_WIDTH		16
+#define CONCHAR_HEIGHT		16
 
 // color escape character
 #define C_COLOR_ESCAPE			'^'
@@ -72,12 +72,6 @@
 #define	PRINT_HIGH			2		// critical messages
 #define	PRINT_CHAT			3		// chat messages
 
-#define	ERR_FATAL			0		// exit the entire game with a popup window
-#define	ERR_DROP			1		// print to console and disconnect from game
-
-#define	PRINT_ALL			0
-#define PRINT_DEVELOPER		1		// only print when "developer 1"
-
 // destination class for gi.multicast()
 enum multicast_t
 {
@@ -94,9 +88,20 @@ enum multicast_t
 //-------------------------------------------------------------------------------------------------
 
 // Makes a 4-byte "packed ID" int32 out of 4 characters
-//
 inline consteval int32 MakeID(int32 d, int32 c, int32 b, int32 a) {
-	return ((a << 24) | (b << 16) | (c << 8) | (d));
+	return ( ( a << 24 ) | ( b << 16 ) | ( c << 8 ) | ( d ) );
+}
+
+inline constexpr uint32 PackColor( uint32 r, uint32 g, uint32 b, uint32 a ) {
+	return ( ( r ) | ( g << 8 ) | ( b << 16 ) | ( a << 24 ) );
+}
+
+inline constexpr uint32 PackColorFromFloats( float fr, float fg, float fb, float fa ) {
+	uint32 r = static_cast<uint32>( fr * 255.0f + 0.5f );
+	uint32 g = static_cast<uint32>( fg * 255.0f + 0.5f );
+	uint32 b = static_cast<uint32>( fb * 255.0f + 0.5f );
+	uint32 a = static_cast<uint32>( fa * 255.0f + 0.5f );
+	return ( ( r ) | ( g << 8 ) | ( b << 16 ) | ( a << 24 ) );
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -104,20 +109,17 @@ inline consteval int32 MakeID(int32 d, int32 c, int32 b, int32 a) {
 //-------------------------------------------------------------------------------------------------
 
 template< typename T >
-inline constexpr T Min( const T valMin, const T valMax )
-{
+inline constexpr T Min( const T valMin, const T valMax ) {
 	return valMin < valMax ? valMin : valMax;
 }
 
 template< typename T >
-inline constexpr T Max( const T valMin, const T valMax )
-{
+inline constexpr T Max( const T valMin, const T valMax ) {
 	return valMin > valMax ? valMin : valMax;
 }
 
 template< typename T >
-inline constexpr T Clamp( const T val, const T valMin, const T valMax )
-{
+inline constexpr T Clamp( const T val, const T valMin, const T valMax ) {
 	return Min( Max( val, valMin ), valMax );
 }
 
@@ -216,6 +218,101 @@ inline void Q_strupr( char *dest )
 	{
 		*dest = Q_toupper( *dest );
 		++dest;
+	}
+}
+
+/*
+===================================================================================================
+
+	Colour
+
+===================================================================================================
+*/
+
+struct qColor
+{
+	union
+	{
+		byte arr[4];
+		uint32 rgba;
+	} data;
+
+	constexpr qColor( uint32 rgba ) {
+		SetFromUint32( rgba );
+	}
+
+	constexpr void SetFromUint32( uint32 rgba ) {
+		data.rgba = rgba;
+	}
+
+	constexpr void SetFromBytes( byte r, byte g, byte b, byte a = 255 ) {
+		data.arr[0] = r;
+		data.arr[1] = g;
+		data.arr[2] = b;
+		data.arr[3] = a;
+	}
+
+	constexpr void SetFromFloats( float r, float g, float b, float a = 1.0f ) {
+		data.arr[0] = static_cast<byte>( r * 255.0f );
+		data.arr[1] = static_cast<byte>( g * 255.0f );
+		data.arr[2] = static_cast<byte>( b * 255.0f );
+		data.arr[3] = static_cast<byte>( a * 255.0f );
+	}
+
+	constexpr uint32 GetUint32() const {
+		return data.rgba;
+	}
+
+	constexpr void SetUint32( uint32 color ) {
+		data.rgba = color;
+	}
+};
+
+constexpr uint32	colorBlack		= PackColor(   0,   0,   0, 255 );
+constexpr uint32	colorWhite		= PackColor( 255, 255, 255, 255 );
+constexpr uint32	colorRed		= PackColor( 255,   0,   0, 255 );
+constexpr uint32	colorGreen		= PackColor(   0, 255,   0, 255 );
+constexpr uint32	colorBlue		= PackColor(   0,   0, 255, 255 );
+constexpr uint32	colorYellow		= PackColor( 255, 255,   0, 255 );
+constexpr uint32	colorMagenta	= PackColor( 255,   0, 255, 255 );
+constexpr uint32	colorCyan		= PackColor(   0, 255, 255, 255 );
+constexpr uint32	colorOrange		= PackColor( 255, 128,   0, 255 );
+constexpr uint32	colorPurple		= PackColor( 153,   0, 153, 255 );
+constexpr uint32	colorPink		= PackColor( 186, 102, 122, 255 );
+constexpr uint32	colorBrown		= PackColor( 102,  89,  20, 255 );
+constexpr uint32	colorLtGrey		= PackColor( 192, 192, 192, 255 );
+constexpr uint32	colorMdGrey		= PackColor( 128, 128, 128, 255 );
+constexpr uint32	colorDkGrey		= PackColor(  64,  64,  64, 255 );
+
+constexpr uint32	colorDefaultText = colorWhite;
+
+inline constexpr bool IsColorIndex( int c ) {
+	return c >= '1' || c <= '9';
+}
+
+inline constexpr uint32 ColorForIndex( int c ) {
+	switch ( c )
+	{
+	default: // C_COLOR_DEFAULT
+		return colorDefaultText;
+	case C_COLOR_RED:
+		return colorRed;
+	case C_COLOR_GREEN:
+		return colorGreen;
+	case C_COLOR_YELLOW:
+		return colorYellow;
+	case C_COLOR_BLUE:
+		return colorBlue;
+	case C_COLOR_CYAN:
+		return colorCyan;
+	case C_COLOR_ORANGE:
+		return colorOrange;
+	case C_COLOR_WHITE:
+		return colorWhite;
+	case C_COLOR_GRAY:
+		return colorMdGrey;
+	case C_COLOR_BLACK:
+		return colorBlack;
 	}
 }
 

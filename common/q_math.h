@@ -11,46 +11,6 @@
 
 struct cplane_t;
 
-/*
-===================================================================================================
-
-	Colors
-
-===================================================================================================
-*/
-
-struct qColor
-{
-	byte r, g, b, a;
-
-	uint32 Pack() {
-		return ( r << 0 ) | ( g << 8 ) | ( b << 16 ) | ( a << 24 );
-	}
-
-	void Unpack( uint32 color ) {
-		r = color >> 0;
-		g = color >> 8;
-		b = color >> 16;
-		a = color >> 24;
-	}
-};
-
-constexpr qColor	colorBlack		{   0,   0,   0, 255 };
-constexpr qColor	colorWhite		{ 255, 255, 255, 255 };
-constexpr qColor	colorRed		{ 255,   0,   0, 255 };
-constexpr qColor	colorGreen		{   0, 255,   0, 255 };
-constexpr qColor	colorBlue		{   0,   0, 255, 255 };
-constexpr qColor	colorYellow		{ 255, 255,   0, 255 };
-constexpr qColor	colorMagenta	{ 255,   0, 255, 255 };
-constexpr qColor	colorCyan		{   0, 255, 255, 255 };
-constexpr qColor	colorOrange		{ 255, 128,   0, 255 };
-constexpr qColor	colorPurple		{ 153,   0, 153, 255 };
-constexpr qColor	colorPink		{ 186, 102, 122, 255 };
-constexpr qColor	colorBrown		{ 102,  89,  20, 255 };
-constexpr qColor	colorLtGrey		{ 192, 192, 192, 255 };
-constexpr qColor	colorMdGrey		{ 128, 128, 128, 255 };
-constexpr qColor	colorDkGrey		{  64,  64,  64, 255 };
-
 //=================================================================================================
 
 typedef float vec_t;			// deprecated, use float instead

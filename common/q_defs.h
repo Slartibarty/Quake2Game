@@ -4,7 +4,7 @@
 
 #pragma once
 
-#define MAX_PRINT_MSG		1024	// max length of a printf string
+#define MAX_PRINT_MSG		4096	// max length of a printf string
 
 #define	MAX_QPATH			64		// max length of a quake game pathname
 
