@@ -76,12 +76,12 @@ void Com_EndRedirect (void)
 }
 
 /*
-===================
+========================
 Com_Print
 
 Both client and server can use this, and it will output
 to the apropriate place.
-===================
+========================
 */
 
 void CopyAndStripColorCodes( char *dest, strlen_t destSize, const char *src )
@@ -109,10 +109,8 @@ void Com_Print( const char *msg )
 	// create a copy of the msg for places that don't want the colour codes
 	CopyAndStripColorCodes( newMsg, sizeof( newMsg ), msg );
 
-	if ( rd_target )
-	{
-		if ( ( strlen( newMsg ) + strlen( rd_buffer ) ) > ( rd_buffersize - 1 ) )
-		{
+	if ( rd_target ) {
+		if ( ( strlen( newMsg ) + strlen( rd_buffer ) ) > ( rd_buffersize - 1 ) ) {
 			rd_flush( rd_target, rd_buffer );
 			*rd_buffer = 0;
 		}
@@ -132,22 +130,25 @@ void Com_Print( const char *msg )
 	Sys_ConsoleOutput( newMsg );
 
 	// logfile
-	if ( logfile_active && logfile_active->value )
-	{
+	if ( logfile_active && logfile_active->value ) {
 		char name[MAX_QPATH];
 
-		if ( !logfile )
-		{
+		if ( !logfile ) {
 			Q_sprintf_s( name, "%s/qconsole.log", FS_Gamedir() );
-			if ( logfile_active->value > 2 )
+			if ( logfile_active->value > 2 ) {
 				logfile = fopen( name, "a" );
-			else
+			}
+			else {
 				logfile = fopen( name, "w" );
+			}
 		}
-		if ( logfile )
+		if ( logfile ) {
 			fputs( newMsg, logfile );
-		if ( logfile_active->value > 1 )
-			fflush( logfile );		// force it to save every time
+		}
+		if ( logfile_active->value > 1 ) {
+			// force it to save every time
+			fflush( logfile );
+		}
 	}
 }
 
@@ -164,43 +165,45 @@ void Com_Printf( _Printf_format_string_ const char *fmt, ... )
 }
 
 /*
-===================
+========================
 Com_DPrint
 
 A Com_Print that only shows up if the "developer" cvar is set
-===================
+========================
 */
 
 void Com_DPrint( const char *msg )
 {
-	if ( !developer || !developer->value )
+	if ( !developer || !developer->value ) {
 		return;
+	}
 
-	Com_Printf( S_COLOR_RED "%s", msg );
+	Com_Printf( S_COLOR_YELLOW "%s", msg );
 }
 
 void Com_DPrintf( _Printf_format_string_ const char *fmt, ... )
 {
-	if ( !developer || !developer->value )
+	if ( !developer || !developer->value ) {
 		return;
+	}
 
-	va_list		argptr;
-	char		msg[MAX_PRINT_MSG];
+	va_list argptr;
+	char msg[MAX_PRINT_MSG];
 
 	va_start( argptr, fmt );
 	Q_vsprintf_s( msg, fmt, argptr );
 	va_end( argptr );
 
-	Com_Printf( S_COLOR_RED "%s", msg );
+	Com_Printf( S_COLOR_YELLOW "%s", msg );
 }
 
 /*
-===================
+========================
 Com_Error
 
 The peaceful option
 Equivalent to an old Com_Error( ERR_DROP )
-===================
+========================
 */
 
 [[noreturn]]
@@ -229,8 +232,8 @@ void Com_Error( const char *msg )
 [[noreturn]]
 void Com_Errorf( _Printf_format_string_ const char *fmt, ... )
 {
-	va_list		argptr;
-	char		msg[MAX_PRINT_MSG];
+	va_list argptr;
+	char msg[MAX_PRINT_MSG];
 
 	va_start( argptr, fmt );
 	Q_vsprintf_s( msg, fmt, argptr );
@@ -240,13 +243,13 @@ void Com_Errorf( _Printf_format_string_ const char *fmt, ... )
 }
 
 /*
-===================
+========================
 Com_FatalError
 
 The nuclear option
 Equivalent to an old Com_Error( ERR_FATAL )
 Kills the server, kills the client, shuts the engine down and quits the program
-===================
+========================
 */
 
 [[noreturn]]
@@ -262,8 +265,8 @@ void Com_FatalError( const char *msg )
 [[noreturn]]
 void Com_FatalErrorf( _Printf_format_string_ const char *fmt, ... )
 {
-	va_list		argptr;
-	char		msg[MAX_PRINT_MSG];
+	va_list argptr;
+	char msg[MAX_PRINT_MSG];
 
 	va_start( argptr, fmt );
 	Q_vsprintf_s( msg, fmt, argptr );
@@ -272,15 +275,15 @@ void Com_FatalErrorf( _Printf_format_string_ const char *fmt, ... )
 	Com_FatalError( msg );
 }
 
-//=============================================================================
+//=================================================================================================
 
 /*
-===================
+========================
 Com_Disconnect
 
 Equivalent to an old Com_Error( ERR_DISCONNECT )
 Drops the client from the server and returns to the beginning of the main loop
-===================
+========================
 */
 [[noreturn]]
 void Com_Disconnect()
@@ -291,12 +294,12 @@ void Com_Disconnect()
 }
 
 /*
-===================
+========================
 Com_Quit
 
 Both client and server can use this, and it will
 do the apropriate things.
-===================
+========================
 */
 [[noreturn]]
 void Com_Quit( int code )
@@ -308,151 +311,173 @@ void Com_Quit( int code )
 	Sys_Quit( code );
 }
 
+//=================================================================================================
 
 /*
-==================
+========================
 Com_ServerState
-==================
+========================
 */
-int Com_ServerState (void)
+int Com_ServerState()
 {
 	return server_state;
 }
 
 /*
-==================
+========================
 Com_SetServerState
-==================
+========================
 */
-void Com_SetServerState (int state)
+void Com_SetServerState( int state )
 {
 	server_state = state;
 }
 
-//============================================================================
-
+//=================================================================================================
 
 /*
-================
+========================
 COM_CheckParm
 
 Returns the position (1 to argc-1) in the program's argument list
 where the given parameter apears, or 0 if not present
-================
+========================
 */
-int COM_CheckParm (char *parm)
+int COM_CheckParm( char *parm )
 {
-	int		i;
-	
-	for (i=1 ; i<com_argc ; i++)
-	{
-		if (!Q_strcmp (parm,com_argv[i]))
+	for ( int i = 1; i < com_argc; i++ ) {
+		if ( Q_strcmp( parm, com_argv[i] ) == 0 ) {
 			return i;
+		}
 	}
-		
+
 	return 0;
 }
 
-int COM_Argc (void)
+/*
+========================
+COM_Argc
+========================
+*/
+int COM_Argc()
 {
 	return com_argc;
 }
 
-char *COM_Argv (int arg)
+/*
+========================
+COM_Argv
+========================
+*/
+char *COM_Argv( int arg )
 {
-	if (arg < 0 || arg >= com_argc || !com_argv[arg])
+	if ( arg < 0 || arg >= com_argc || !com_argv[arg] ) {
 		return null_string;
+	}
 	return com_argv[arg];
 }
 
-void COM_ClearArgv (int arg)
+/*
+========================
+COM_ClearArgv
+========================
+*/
+void COM_ClearArgv( int arg )
 {
-	if (arg < 0 || arg >= com_argc || !com_argv[arg])
+	if ( arg < 0 || arg >= com_argc || !com_argv[arg] ) {
 		return;
+	}
 	com_argv[arg] = null_string;
 }
 
-
 /*
-================
+========================
 COM_InitArgv
-================
+========================
 */
-void COM_InitArgv (int argc, char **argv)
+void COM_InitArgv( int argc, char **argv )
 {
-	int		i;
-
-	if (argc > MAX_NUM_ARGVS)
-		Com_FatalErrorf("argc > MAX_NUM_ARGVS");
+	if ( argc > MAX_NUM_ARGVS ) {
+		Com_FatalErrorf( "argc > MAX_NUM_ARGVS" );
+	}
 	com_argc = argc;
-	for (i=0 ; i<argc ; i++)
-	{
-		if (!argv[i] || strlen(argv[i]) >= MAX_TOKEN_CHARS )
+
+	for ( int i = 0; i < argc; i++ ) {
+		if ( !argv[i] || strlen( argv[i] ) >= MAX_TOKEN_CHARS ) {
 			com_argv[i] = null_string;
-		else
+		} else {
 			com_argv[i] = argv[i];
+		}
 	}
 }
 
 /*
-================
+========================
 COM_AddParm
 
 Adds the given string at the end of the current argument list
-================
+========================
 */
-void COM_AddParm (char *parm)
+void COM_AddParm( char *parm )
 {
-	if (com_argc == MAX_NUM_ARGVS)
-		Com_FatalErrorf("COM_AddParm: MAX_NUM_ARGVS");
+	if ( com_argc == MAX_NUM_ARGVS ) {
+		Com_FatalError( "COM_AddParm: MAX_NUM_ARGVS" );
+	}
 	com_argv[com_argc++] = parm;
 }
 
-
-void Info_Print (const char *s)
+/*
+========================
+Info_Print
+========================
+*/
+void Info_Print( const char *s )
 {
 	char	key[512];
 	char	value[512];
-	char	*o;
+	char *	o;
 	int		l;
 
-	if (*s == '\\')
+	if ( *s == '\\' ) {
 		s++;
-	while (*s)
-	{
+	}
+
+	while ( *s ) {
 		o = key;
-		while (*s && *s != '\\')
+		while ( *s && *s != '\\' ) {
 			*o++ = *s++;
+		}
 
 		l = o - key;
-		if (l < 20)
-		{
-			memset (o, ' ', 20-l);
+		if ( l < 20 ) {
+			memset( o, ' ', 20 - l );
 			key[20] = 0;
 		}
-		else
+		else {
 			*o = 0;
-		Com_Printf ("%s", key);
+		}
+		Com_Print( key );
 
-		if (!*s)
-		{
-			Com_Printf ("MISSING VALUE\n");
+		if ( !*s ) {
+			Com_Print( "MISSING VALUE\n" );
 			return;
 		}
 
 		o = value;
 		s++;
-		while (*s && *s != '\\')
+		while ( *s && *s != '\\' ) {
 			*o++ = *s++;
+		}
 		*o = 0;
 
-		if (*s)
+		if ( *s ) {
 			s++;
-		Com_Printf ("%s\n", value);
+		}
+		Com_Printf( "%s\n", value );
 	}
 }
 
-//============================================================================
+//=================================================================================================
 
 static const byte chktbl[1024]{
 0x84, 0x47, 0x51, 0xc1, 0x93, 0x22, 0x21, 0x24, 0x2f, 0x66, 0x60, 0x4d, 0xb0, 0x7c, 0xda,
@@ -522,48 +547,48 @@ static const byte chktbl[1024]{
 };
 
 /*
-====================
+========================
 COM_BlockSequenceCRCByte
 
 For proxy protecting
-====================
+========================
 */
-byte	COM_BlockSequenceCRCByte (byte *base, int length, int sequence)
+byte COM_BlockSequenceCRCByte( byte *base, int length, int sequence )
 {
-	int		n;
-	const byte	*p;
-	int		x;
-	byte chkb[60 + 4];
-	unsigned short crc;
+	if ( sequence < 0 ) {
+		Com_FatalError( "sequence < 0, this shouldn't happen\n" );
+	}
 
+	const byte *p = chktbl + ( sequence % ( sizeof( chktbl ) - 4 ) );
 
-	if (sequence < 0)
-		Com_FatalError("sequence < 0, this shouldn't happen\n");
-
-	p = chktbl + (sequence % (sizeof(chktbl) - 4));
-
-	if (length > 60)
+	if ( length > 60 ) {
 		length = 60;
-	memcpy (chkb, base, length);
+	}
+
+	byte chkb[60 + 4];
+	memcpy( chkb, base, length );
 
 	chkb[length] = p[0];
-	chkb[length+1] = p[1];
-	chkb[length+2] = p[2];
-	chkb[length+3] = p[3];
+	chkb[length + 1] = p[1];
+	chkb[length + 2] = p[2];
+	chkb[length + 3] = p[3];
 
 	length += 4;
 
-	crc = crc16::Block(chkb, length);
+	uint16 crc = crc16::Block( chkb, length );
 
-	for (x=0, n=0; n<length; n++)
+	int x, n;
+
+	for ( x = 0, n = 0; n < length; n++ ) {
 		x += chkb[n];
+	}
 
-	crc = (crc ^ x) & 0xff;
+	crc = ( crc ^ x ) & 0xff;
 
 	return crc;
 }
 
-//========================================================
+//=================================================================================================
 
 // Compressed vertex normals
 vec3_t bytedirs[NUMVERTEXNORMALS]
@@ -571,32 +596,32 @@ vec3_t bytedirs[NUMVERTEXNORMALS]
 #include "../renderer/anorms.inl"
 };
 
-//========================================================
+//=================================================================================================
 
 /*
-=============
+========================
 Com_Error_f
 
 Just throw a fatal error to
 test error shutdown procedures
-=============
+========================
 */
 static void Com_Error_f()
 {
 	if ( Cmd_Argc() == 2 )
 	{
-		Com_FatalErrorf(Cmd_Argv( 1 ) );
+		Com_FatalErrorf( Cmd_Argv( 1 ) );
 	}
-	Com_FatalErrorf("Error test" );
+	Com_FatalErrorf( "Error test" );
 }
 
 /*
-=============
+========================
 Com_Quit_f
 
 A version of the quit command for dedicated servers
 the client uses the one in cl_main.cpp
-=============
+========================
 */
 static void Com_Quit_f()
 {
@@ -604,129 +629,130 @@ static void Com_Quit_f()
 }
 
 /*
-=================
+========================
 Engine_Init
-=================
+========================
 */
-void Engine_Init (int argc, char **argv)
+void Engine_Init( int argc, char **argv )
 {
 	isMainThread = true;
 
-	if (setjmp (abortframe) )
-		Com_FatalErrorf("Error during initialization");
+	if ( setjmp( abortframe ) ) {
+		Com_FatalError( "Error during initialization" );
+	}
 
 	Z_Init();
 
 	// prepare enough of the subsystems to handle
 	// cvar and command buffer management
-	COM_InitArgv (argc, argv);
+	COM_InitArgv( argc, argv );
 
 	//Swap_Init ();
-	Cbuf_Init ();
+	Cbuf_Init();
 
-	Cmd_Init ();
-	Cvar_Init ();
+	Cmd_Init();
+	Cvar_Init();
 
-	Key_Init ();
+	Key_Init();
 
 	// we need to add the early commands twice, because
 	// a basedir or cddir needs to be set before execing
 	// config files, but we want other parms to override
 	// the settings of the config files
-	Cbuf_AddEarlyCommands (false);
-	Cbuf_Execute ();
+	Cbuf_AddEarlyCommands( false );
+	Cbuf_Execute();
 
-	FS_Init ();
+	FS_Init();
 
-	Cbuf_AddText ("exec default.cfg\n");
-	Cbuf_AddText ("exec config.cfg\n");
+	Cbuf_AddText( "exec default.cfg\n" );
+	Cbuf_AddText( "exec config.cfg\n" );
 
-	Cbuf_AddEarlyCommands (true);
-	Cbuf_Execute ();
+	Cbuf_AddEarlyCommands( true );
+	Cbuf_Execute();
 
 	//
 	// init commands and vars
 	//
-	Cmd_AddCommand ("error", Com_Error_f);
+	Cmd_AddCommand( "error", Com_Error_f );
 
-	host_speeds = Cvar_Get ("host_speeds", "0", 0);
-	log_stats = Cvar_Get ("log_stats", "0", 0);
-	developer = Cvar_Get ("developer", "0", 0);
-	timescale = Cvar_Get ("timescale", "1", 0);
-	fixedtime = Cvar_Get ("fixedtime", "0", 0);
-	logfile_active = Cvar_Get ("logfile", "0", 0);
-	showtrace = Cvar_Get ("showtrace", "0", 0);
+	host_speeds = Cvar_Get( "host_speeds", "0", 0 );
+	log_stats = Cvar_Get( "log_stats", "0", 0 );
+	developer = Cvar_Get( "developer", "0", 0 );
+	timescale = Cvar_Get( "timescale", "1", 0 );
+	fixedtime = Cvar_Get( "fixedtime", "0", 0 );
+	logfile_active = Cvar_Get( "logfile", "0", 0 );
+	showtrace = Cvar_Get( "showtrace", "0", 0 );
+
 #ifdef DEDICATED_ONLY
-	dedicated = Cvar_Get ("dedicated", "1", CVAR_NOSET);
+	dedicated = Cvar_Get( "dedicated", "1", CVAR_NOSET );
 #else
-	dedicated = Cvar_Get ("dedicated", "0", CVAR_NOSET);
+	dedicated = Cvar_Get( "dedicated", "0", CVAR_NOSET );
 #endif
 
 	// create the version convar
 	Cvar_Get( "version", va( "%s - %s, %s", BLD_STRING, __DATE__, __TIME__ ), CVAR_SERVERINFO | CVAR_NOSET );
 
-	if (dedicated->value)
-		Cmd_AddCommand ("quit", Com_Quit_f);
+	if ( dedicated->value ) {
+		Cmd_AddCommand( "quit", Com_Quit_f );
+	}
 
-	Sys_Init ();
+	Sys_Init();
 
-	NET_Init ();
-	Netchan_Init ();
+	NET_Init();
+	Netchan_Init();
 
-	SV_Init ();
-	CL_Init ();
+	SV_Init();
+	CL_Init();
 
 	// add + commands from command line
-	if (!Cbuf_AddLateCommands ())
-	{	// if the user didn't give any commands, run default action
-		if (!dedicated->value)
-			Cbuf_AddText ("d1\n");
-		else
-			Cbuf_AddText ("dedicated_start\n");
-		Cbuf_Execute ();
-	}
-	else
-	{	// the user asked for something explicit
+	if ( !Cbuf_AddLateCommands() ) {
+		// if the user didn't give any commands, run default action
+		if ( !dedicated->value ) {
+			Cbuf_AddText( "d1\n" );
+		} else {
+			Cbuf_AddText( "dedicated_start\n" );
+		}
+		Cbuf_Execute();
+	} else {
+		// the user asked for something explicit
 		// so drop the loading plaque
-		SCR_EndLoadingPlaque ();
+		SCR_EndLoadingPlaque();
 	}
 
-	Com_Printf ("====== Quake2 Initialized ======\n\n");
+	Com_Print( "====== Quake2 Initialized ======\n\n" );
 }
 
 /*
-=================
+========================
 Engine_Frame
-=================
+========================
 */
-void Engine_Frame (int msec)
+void Engine_Frame( int msec )
 {
 	char	*s;
 	int		time_before, time_between, time_after;
 
-	if (setjmp (abortframe) )
-		return;			// an ERR_DROP was thrown
+	if ( setjmp( abortframe ) ) {
+		// an ERR_DROP was thrown
+		return;
+	}
 
-	if ( log_stats->modified )
-	{
+	if ( log_stats->modified ) {
 		log_stats->modified = false;
-		if ( log_stats->value )
-		{
-			if ( log_stats_file )
-			{
+		if ( log_stats->value ) {
+			if ( log_stats_file ) {
 				fclose( log_stats_file );
-				log_stats_file = 0;
+				log_stats_file = nullptr;
 			}
 			log_stats_file = fopen( "stats.log", "w" );
-			if ( log_stats_file )
-				fprintf( log_stats_file, "entities,dlights,parts,frame time\n" );
+			if ( log_stats_file ) {
+				fputs( "entities,dlights,parts,frame time\n", log_stats_file );
+			}
 		}
-		else
-		{
-			if ( log_stats_file )
-			{
+		else {
+			if ( log_stats_file ) {
 				fclose( log_stats_file );
-				log_stats_file = 0;
+				log_stats_file = nullptr;
 			}
 		}
 	}
@@ -741,42 +767,43 @@ void Engine_Frame (int msec)
 		}
 	}
 
-	if (showtrace->value)
-	{
+	if ( showtrace->value ) {
 		// cmodel
 		extern int c_traces, c_brush_traces;
 		extern int c_pointcontents;
 
-		Com_Printf ("%4i traces  %4i points\n", c_traces, c_pointcontents);
+		Com_Printf( "%4i traces  %4i points\n", c_traces, c_pointcontents );
 		c_traces = 0;
 		c_brush_traces = 0;
 		c_pointcontents = 0;
 	}
 
-	do
-	{
-		s = Sys_ConsoleInput ();
-		if (s)
-			Cbuf_AddText (va("%s\n",s));
-	} while (s);
-	Cbuf_Execute ();
+	do {
+		s = Sys_ConsoleInput();
+		if ( s ) {
+			Cbuf_AddText( va( "%s\n", s ) );
+		}
+	} while ( s );
+	Cbuf_Execute();
 
-	if (host_speeds->value)
-		time_before = Sys_Milliseconds ();
+	if ( host_speeds->value ) {
+		time_before = Sys_Milliseconds();
+	}
 
-	SV_Frame (msec);
+	SV_Frame( msec );
 
-	if (host_speeds->value)
-		time_between = Sys_Milliseconds ();		
+	if ( host_speeds->value ) {
+		time_between = Sys_Milliseconds();
+	}
 
-	CL_Frame (msec);
+	CL_Frame( msec );
 
-	if (host_speeds->value)
-		time_after = Sys_Milliseconds ();		
+	if ( host_speeds->value ) {
+		time_after = Sys_Milliseconds();
+	}
 
-	if (host_speeds->value)
-	{
-		int			all, sv, gm, cl, rf;
+	if ( host_speeds->value ) {
+		int all, sv, gm, cl, rf;
 
 		all = time_after - time_before;
 		sv = time_between - time_before;
@@ -785,27 +812,26 @@ void Engine_Frame (int msec)
 		rf = time_after_ref - time_before_ref;
 		sv -= gm;
 		cl -= rf;
-		Com_Printf ("all:%3i sv:%3i gm:%3i cl:%3i rf:%3i\n",
-			all, sv, gm, cl, rf);
-	}	
+		Com_Printf( "all:%3i sv:%3i gm:%3i cl:%3i rf:%3i\n",
+			all, sv, gm, cl, rf );
+	}
 }
 
 /*
-=================
+========================
 Engine_Shutdown
-=================
+========================
 */
-void Engine_Shutdown (void)
+void Engine_Shutdown()
 {
 	// Clear our allocated globals
 	CM_Shutdown();
 
 	Z_Shutdown();
 
-	if ( logfile )
-	{
+	if ( logfile ) {
 		fclose( logfile );
-		logfile = NULL;
+		logfile = nullptr;
 	}
 }
 

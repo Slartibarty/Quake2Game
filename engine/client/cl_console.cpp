@@ -6,6 +6,8 @@
 
 #define	DEFAULT_CONSOLE_WIDTH	78
 
+static constexpr uint32 colorConsoleText = colorCyan;
+
 console_t	con;
 
 cvar_t		*con_notifytime;
@@ -51,14 +53,16 @@ void Con_ToggleConsole_f (void)
 {
 	SCR_EndLoadingPlaque ();	// get rid of loading plaque
 
-	if (cl.attractloop)
+	// uncomment to kill the attract loop
+	/*if (cl.attractloop)
 	{
 		Cbuf_AddText ("killserver\n");
 		return;
-	}
+	}*/
 
 	if (cls.state == ca_disconnected)
-	{	// start the demo loop again
+	{
+		// start the demo loop again
 		Cbuf_AddText ("d1\n");
 		return;
 	}
@@ -117,7 +121,7 @@ void Con_Clear_f (void)
 	Con_Bottom();		// go to end
 }
 
-						
+
 /*
 ================
 Con_Dump_f
@@ -511,7 +515,7 @@ void Con_DrawNotify()
 		}
 		text = con.text + (i % con.totallines)*con.linewidth;
 
-		uint32 color = colorDefaultText;
+		uint32 color = colorConsoleText;
 		int localLineWidth = con.linewidth;
 		
 		for ( x = 0; x < localLineWidth; x++ ) {
@@ -632,7 +636,7 @@ void Con_DrawConsole (float frac)
 			
 		text = con.text + (row % con.totallines)*con.linewidth;
 
-		uint32 color = colorDefaultText;
+		uint32 color = colorConsoleText;
 		int localLineWidth = con.linewidth;
 
 		for (x=0 ; x<localLineWidth ; x++) {

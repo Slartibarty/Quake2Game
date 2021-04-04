@@ -24,7 +24,7 @@ struct guiDrawCmd_t
 	uint32 offset, count;
 };
 
-material_t *draw_chars;
+material_t *s_drawChars;
 
 static qGUIMeshBuilder s_drawMeshBuilder;
 
@@ -48,8 +48,8 @@ Grabs the console font and sets up our buffers
 void Draw_Init()
 {
 	// load console characters
-	draw_chars = GL_FindMaterial( ConCharsName, true );
-	if ( !draw_chars->IsOkay() ) {
+	s_drawChars = GL_FindMaterial( ConCharsName, true );
+	if ( !s_drawChars->IsOkay() ) {
 		// we NEED the console font
 		Com_FatalErrorf( "Could not find font: %s", ConCharsName );
 	}
@@ -218,7 +218,7 @@ void R_DrawCharColor( int x, int y, int ch, uint32 color )
 
 	s_drawMeshBuilder.AddElement( rect );
 
-	Draw_CheckChain( draw_chars );
+	Draw_CheckChain( s_drawChars );
 }
 
 /*
@@ -237,7 +237,7 @@ void R_DrawChar( int x, int y, int ch )
 
 /*
 ========================
-R_DrawGetPicSize
+R_DrawGeneric
 ========================
 */
 inline void R_DrawGeneric( int x, int y, int w, int h, material_t *mat )
@@ -269,7 +269,7 @@ inline void R_DrawGeneric( int x, int y, int w, int h, material_t *mat )
 
 /*
 ========================
-R_DrawGetPicSize
+R_DrawStretchPic
 ========================
 */
 void R_DrawStretchPic( int x, int y, int w, int h, const char *pic )
@@ -287,7 +287,7 @@ void R_DrawStretchPic( int x, int y, int w, int h, const char *pic )
 
 /*
 ========================
-R_DrawGetPicSize
+R_DrawPic
 ========================
 */
 void R_DrawPic( int x, int y, const char *pic )

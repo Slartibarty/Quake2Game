@@ -153,7 +153,7 @@ bool R_Init( void *hinstance, void *wndproc )
 	GL_CheckErrors();
 
 	Com_Print( "RenderSystem initialized\n" );
-	Com_Print( "-------------------------------------------\n" );
+	Com_Print( "------------------------------------------\n" );
 
 	return true;
 }
