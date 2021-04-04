@@ -53,7 +53,7 @@ threadHandle_t Sys_CreateThread( xthread_t function, void *parms, xthreadPriorit
 	// Without this flag the 'dwStackSize' parameter to CreateThread specifies the "Stack Commit Size"
 	// and the "Stack Reserve Size" is set to the value specified at link-time.
 	// With this flag the 'dwStackSize' parameter to CreateThread specifies the "Stack Reserve Size"
-	// and the “Stack Commit Size” is set to the value specified at link-time.
+	// and the "Stack Commit Size" is set to the value specified at link-time.
 	// For various reasons (some of which historic) we reserve a large amount of stack space in the
 	// project settings. By setting this flag and by specifying 64 kB for the "Stack Commit Size" in
 	// the project settings we can create new threads with a much smaller reserved (and committed)

@@ -1598,7 +1598,7 @@ static void RasterizePolygon(uint8_t *dest, int destWidth, int vertices[][2], co
 			}
 			j=i;
 		}
-		//  Sort the nodes, via a simple “Bubble” sort.
+		//  Sort the nodes, via a simple "Bubble" sort.
 		i=0;
 		while (i<nodes-1) {
 			if (nodeX[i]>nodeX[i+1]) {
