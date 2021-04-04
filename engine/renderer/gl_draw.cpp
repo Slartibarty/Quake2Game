@@ -313,7 +313,6 @@ refresh window.
 */
 void R_DrawTileClear( int x, int y, int w, int h, const char *pic )
 {
-#if 1
 	material_t *mat;
 
 	mat = R_RegisterPic( pic );
@@ -346,7 +345,6 @@ void R_DrawTileClear( int x, int y, int w, int h, const char *pic )
 	s_drawMeshBuilder.AddElement( rect );
 
 	Draw_CheckChain( mat );
-#endif
 }
 
 /*
