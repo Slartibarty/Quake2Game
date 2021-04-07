@@ -26,9 +26,6 @@
 #define	MAX_STRING_TOKENS	80		// max tokens resulting from Cmd_TokenizeString
 #define	MAX_TOKEN_CHARS		128		// max length of an individual token
 
-#define CONCHAR_WIDTH		16
-#define CONCHAR_HEIGHT		16
-
 // color escape character
 #define C_COLOR_ESCAPE			'^'
 #define C_COLOR_DEFAULT			'0'
