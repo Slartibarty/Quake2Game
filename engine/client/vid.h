@@ -21,8 +21,8 @@ void	VID_Init (void);
 void	VID_Shutdown (void);
 void	VID_CheckChanges (void);
 
-bool	VID_GetModeInfo(int &width, int &height, int mode);
 int		VID_GetNumModes();
+bool	VID_GetModeInfo(int &width, int &height, int mode);
 
 void	VID_MenuInit( void );
 void	VID_MenuDraw( void );
