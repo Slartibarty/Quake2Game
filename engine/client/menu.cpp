@@ -1328,7 +1328,9 @@ static int num_resolutions;
 
 static void InitResolutions()
 {
-	assert( !resolutions && num_resolutions == 0 );
+	if ( resolutions ) {
+		return;
+	}
 
 	int width = 0, height = 0;
 	int mode = 0;

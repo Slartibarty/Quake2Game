@@ -1,8 +1,8 @@
 
 #pragma once
 
-#define CONCHAR_WIDTH		8
-#define CONCHAR_HEIGHT		8
+#define CONCHAR_WIDTH		16
+#define CONCHAR_HEIGHT		16
 
 #define	MAX_DLIGHTS			32
 #define	MAX_ENTITIES		128

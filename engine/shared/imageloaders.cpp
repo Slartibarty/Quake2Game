@@ -234,6 +234,9 @@ namespace img
 			}
 		}
 
+		// SlartTodo: there must be a better way
+		VerticalFlip( pPixels, width, height, 4 );
+
 		//stbi_write_tga("Farts.tga", width, height, 4, pPixels);
 		//exit(0);
 
