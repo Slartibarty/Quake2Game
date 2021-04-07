@@ -43,8 +43,8 @@ struct vidmode_t
 static vidmode_t	*s_vid_modes;
 static int			s_num_modes;
 
-// Allocate space for 16 modes by default, 32, 64, etc
-static constexpr int DefaultNumModes = 16;
+// Allocate space for 32 modes by default, 64, 128, etc
+static constexpr int DefaultNumModes = 32;
 static constexpr int DefaultAlloc = DefaultNumModes * sizeof( vidmode_t );
 
 static void VID_InitModes()

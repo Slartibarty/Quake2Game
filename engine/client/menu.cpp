@@ -1251,9 +1251,9 @@ extern cvar_t *vid_fullscreen;
 extern cvar_t *vid_gamma;
 extern cvar_t *scr_viewsize;
 
-static cvar_t *gl_mode;
-static cvar_t *gl_picmip;
-static cvar_t *gl_finish;
+extern cvar_t *r_mode;
+extern cvar_t *r_picmip;
+extern cvar_t *r_finish;
 
 static menuframework_s	s_vid_menu;
 
@@ -1296,10 +1296,10 @@ static void ApplyChanges( void *unused )
 	gamma = ( 0.8f - ( s_brightness_slider.curvalue / 10.0f - 0.5f ) ) + 0.5f;
 
 	Cvar_SetValue( "vid_gamma", gamma );
-	Cvar_SetValue( "gl_picmip", 3 - s_tq_slider.curvalue );
+	Cvar_SetValue( "r_picmip", 3 - s_tq_slider.curvalue );
 	Cvar_SetValue( "vid_fullscreen", s_fs_box.curvalue );
-	Cvar_SetValue( "gl_finish", s_finish_box.curvalue );
-	Cvar_SetValue( "gl_mode", s_mode_list.curvalue );
+	Cvar_SetValue( "r_finish", s_finish_box.curvalue );
+	Cvar_SetValue( "r_mode", s_mode_list.curvalue );
 
 	/*
 	** update appropriate stuff if we're running OpenGL and gamma
@@ -1334,7 +1334,7 @@ static void InitResolutions()
 
 	num_resolutions = VID_GetNumModes();
 
-	resolutions = (char **)Z_Malloc( num_resolutions * sizeof( resolutions ) );
+	resolutions = (char **)Z_Malloc( ( num_resolutions + 1 ) * sizeof( resolutions ) );
 
 	while ( VID_GetModeInfo( width, height, mode ) != false )
 	{
@@ -1344,12 +1344,14 @@ static void InitResolutions()
 		++mode;
 	}
 
-	//resolutions[numModes] = nullptr;
+	resolutions[mode] = nullptr;
 }
 
 static void DeleteResolutions()
 {
-	assert( resolutions && num_resolutions > 0 );
+	if ( !resolutions ) {
+		return;
+	}
 
 	for ( int i = 0; i < num_resolutions; ++i )
 	{
@@ -1375,14 +1377,14 @@ void VID_MenuInit( void )
 
 	InitResolutions();
 
-	if ( !gl_picmip )
-		gl_picmip = Cvar_Get( "gl_picmip", "0", 0 );
-	if ( !gl_mode )
-		gl_mode = Cvar_Get( "gl_mode", "0", 0 );
-	if ( !gl_finish )
-		gl_finish = Cvar_Get( "gl_finish", "0", CVAR_ARCHIVE );
+	if ( !r_picmip )
+		r_picmip = Cvar_Get( "r_picmip", "0", 0 );
+	if ( !r_mode )
+		r_mode = Cvar_Get( "r_mode", "0", 0 );
+	if ( !r_finish )
+		r_finish = Cvar_Get( "r_finish", "0", CVAR_ARCHIVE );
 
-	s_mode_list.curvalue = gl_mode->value;
+	s_mode_list.curvalue = r_mode->value;
 
 	if ( !scr_viewsize )
 		scr_viewsize = Cvar_Get ("viewsize", "100", CVAR_ARCHIVE);
@@ -1440,13 +1442,13 @@ void VID_MenuInit( void )
 	s_tq_slider.generic.name	= "texture quality";
 	s_tq_slider.minvalue = 0;
 	s_tq_slider.maxvalue = 3;
-	s_tq_slider.curvalue = 3-gl_picmip->value;
+	s_tq_slider.curvalue = 3-r_picmip->value;
 
 	s_finish_box.generic.type = MTYPE_SPINCONTROL;
 	s_finish_box.generic.x	= 0;
 	s_finish_box.generic.y	= 80;
 	s_finish_box.generic.name	= "sync every frame";
-	s_finish_box.curvalue = gl_finish->value;
+	s_finish_box.curvalue = r_finish->value;
 	s_finish_box.itemnames = yesno_names;
 
 	Menu_AddItem( &s_vid_menu, ( void * ) &s_mode_list );
@@ -1501,7 +1503,6 @@ const char *VID_MenuKey( int key )
 	switch ( key )
 	{
 	case K_ESCAPE:
-		DeleteResolutions();
 		ApplyChanges( nullptr );
 		break;
 	case K_KP_ENTER:

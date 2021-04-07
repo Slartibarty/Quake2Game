@@ -118,7 +118,7 @@ void Shaders_Shutdown()
 {
 	glUseProgram( 0 );
 
-	// values of 0 are silently ignored
+	// values of 0 are silently ignored for glDeleteShader and glDeleteProgram
 
 	glDeleteShader( glShaders.particleFrag );
 	glDeleteShader( glShaders.particleVert );

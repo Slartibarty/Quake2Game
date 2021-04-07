@@ -163,6 +163,9 @@ static void GLimp_SetWindowSize( int width, int height )
 
 static void GLimp_PerformCDS( int width, int height, bool fullscreen, bool alertWindow )
 {
+	// SLARTTODO: DENY FULLSCREEN!
+	fullscreen = false;
+
 	// do a CDS if needed
 	if ( fullscreen )
 	{
@@ -467,7 +470,7 @@ bool GLimp_SetMode( int &width, int &height, int mode, bool fullscreen )
 		return false;
 	}
 
-	//Com_Printf( " %d %d %s\n", width, height, (fullscreen ? "FS" : "W"));
+	Com_Printf( " %dx%d %s\n", width, height, ( fullscreen ? "FS" : "W" ) );
 
 	GLimp_PerformCDS( width, height, fullscreen, true );
 

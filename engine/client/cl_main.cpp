@@ -1768,6 +1768,7 @@ void CL_Shutdown(void)
 
 	CL_ShutdownCGame();
 
+	M_Shutdown();
 	CDAudio_Shutdown ();
 	S_Shutdown();
 	input::Shutdown ();
