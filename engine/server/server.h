@@ -5,11 +5,11 @@
 #include "../shared/engine.h"
 #include "../../game/server/game_public.h"
 
-//=============================================================================
+//=================================================================================================
 
 #define	MAX_MASTERS	8				// max recipients for heartbeat packets
 
-enum server_state_t
+enum serverState_t
 {
 	ss_dead,			// no map loaded
 	ss_loading,			// spawning level edicts
@@ -18,12 +18,10 @@ enum server_state_t
 	ss_demo,
 	ss_pic
 };
-// some qc commands are only valid before the server has finished
-// initializing (precache commands, static sounds / objects, etc)
 
 struct server_t
 {
-	server_state_t	state;			// precache commands are only valid during load
+	serverState_t	state;			// precache commands are only valid during load
 
 	qboolean	attractloop;		// running cinematics and demos for the local system only
 	qboolean	loadgame;			// client begins should reuse existing entity
@@ -51,8 +49,7 @@ struct server_t
 #define NUM_FOR_EDICT(e) ( ((byte *)(e)-(byte *)ge->edicts ) / ge->edict_size)
 
 
-enum client_state_t
-{
+enum clientState_t {
 	cs_free,		// can be reused for a new connection
 	cs_zombie,		// client has been disconnected, but don't reuse
 					// connection for a couple seconds
@@ -60,7 +57,7 @@ enum client_state_t
 	cs_spawned		// client is fully in game
 };
 
-struct client_frame_t
+struct clientSnapshot_t
 {
 	int					areabytes;
 	byte				areabits[MAX_MAP_AREAS/8];		// portalarea visibility bits
@@ -75,7 +72,7 @@ struct client_frame_t
 
 struct client_t
 {
-	client_state_t	state;
+	clientState_t	state;
 
 	char			userinfo[MAX_INFO_STRING];		// name, etc
 
@@ -101,7 +98,7 @@ struct client_t
 	sizebuf_t		datagram;
 	byte			datagram_buf[MAX_MSGLEN];
 
-	client_frame_t	frames[UPDATE_BACKUP];	// updates can be delta'd from here
+	clientSnapshot_t	frames[UPDATE_BACKUP];	// updates can be delta'd from here
 
 	byte			*download;			// file being downloaded
 	int				downloadsize;		// total bytes (can't use EOF because of paks)
@@ -121,7 +118,7 @@ struct client_t
 // getting kicked off by the server operator
 // a program error, like an overflowed reliable buffer
 
-//=============================================================================
+//=================================================================================================
 
 // MAX_CHALLENGES is made large to prevent a denial
 // of service attack that could cycle all of them
@@ -135,8 +132,7 @@ struct challenge_t
 	int			time;
 };
 
-
-struct server_static_t
+struct serverStatic_t
 {
 	qboolean	initialized;				// sv_init has completed
 	int			realtime;					// always increasing, no clamping, etc
@@ -161,14 +157,14 @@ struct server_static_t
 	byte		demo_multicast_buf[MAX_MSGLEN];
 };
 
-//=============================================================================
+//=================================================================================================
 
 extern	netadr_t	net_from;
 extern	sizebuf_t	net_message;
 
 extern	netadr_t	master_adr[MAX_MASTERS];	// address of the master server
 
-extern	server_static_t	svs;				// persistant server info
+extern	serverStatic_t	svs;				// persistant server info
 extern	server_t		sv;					// local server
 
 extern	cvar_t		*sv_paused;
@@ -181,7 +177,7 @@ extern	cvar_t		*sv_enforcetime;
 extern	client_t	*sv_client;
 extern	edict_t		*sv_player;
 
-//===========================================================
+//=================================================================================================
 
 //
 // sv_main.c

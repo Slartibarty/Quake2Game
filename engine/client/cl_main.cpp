@@ -61,8 +61,8 @@ cvar_t	*gender_auto;
 
 cvar_t	*cl_vwep;
 
-client_static_t	cls;
-client_state_t	cl;
+clientStatic_t	cls;
+clientActive_t	cl;
 
 centity_t		cl_entities[MAX_EDICTS];
 

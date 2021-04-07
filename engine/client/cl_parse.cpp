@@ -284,7 +284,7 @@ void CL_ParseServerData (void)
 	
 	Com_DPrintf ("Serverdata packet received.\n");
 //
-// wipe the client_state_t struct
+// wipe the clientActive_t struct
 //
 	CL_ClearState ();
 	cls.state = ca_connected;

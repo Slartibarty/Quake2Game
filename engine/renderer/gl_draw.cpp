@@ -179,9 +179,9 @@ void R_DrawCharColor( int x, int y, int ch, uint32 color )
 
 	ch &= 255;
 
-	bool isHigh = ( ch & 127 ) != ch;
+	ch = ( ch & 127 );
 
-	if ( ( ch & 127 ) == 32 ) {
+	if ( ch == 32 ) {
 		// space
 		return;
 	}

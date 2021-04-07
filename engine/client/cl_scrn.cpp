@@ -513,7 +513,7 @@ static void SCR_DrawConsole()
 	if ( cls.state != ca_active || !cl.refresh_prepped ) {
 		// connected, but can't render
 		Con_DrawConsole( 0.5f );
-		R_DrawFilled( 0, viddef.height / 2, viddef.width, viddef.height / 2, colorBlack );
+	//	R_DrawFilled( 0, viddef.height / 2, viddef.width, viddef.height / 2, colorBlack );
 		return;
 	}
 
@@ -1255,8 +1255,10 @@ void SCR_UpdateScreen (void)
 		return;
 	}
 
-	if (!scr_initialized || !con.initialized)
-		return;				// not initialized yet
+	if ( !scr_initialized || !Con_IsInitialized() ) {
+		// not initialized yet
+		return;
+	}
 
 	R_BeginFrame();
 

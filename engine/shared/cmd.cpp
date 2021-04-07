@@ -243,29 +243,20 @@ the client and server initialize for the first time.
 Other commands are added late, after all initialization is complete.
 ===============
 */
-void Cbuf_AddEarlyCommands (bool clear)
+void Cbuf_AddEarlyCommands( int argc, char **argv )
 {
-	int		i;
-	char	*s;
-
-	for (i=0 ; i<COM_Argc() ; i++)
+	for ( int i = 0; i < argc; ++i )
 	{
-		s = COM_Argv(i);
-		if (Q_strcmp (s, "+set"))
+		if ( Q_strcmp( argv[i], "+set" ) != 0 ) {
 			continue;
-		Cbuf_AddText (va("set %s %s\n", COM_Argv(i+1), COM_Argv(i+2)));
-		if (clear)
-		{
-			COM_ClearArgv(i);
-			COM_ClearArgv(i+1);
-			COM_ClearArgv(i+2);
 		}
-		i+=2;
+		Cbuf_AddText( va( "set %s %s\n", argv[i + 1], argv[i + 2] ) );
+		i += 2;
 	}
 }
 
 /*
-=================
+========================
 Cbuf_AddLateCommands
 
 Adds command line parameters as script statements
@@ -274,61 +265,65 @@ quake +vid_ref gl +map amlev1
 
 Returns true if any late commands were added, which
 will keep the demoloop from immediately starting
-=================
+========================
 */
-bool Cbuf_AddLateCommands (void)
+bool Cbuf_AddLateCommands( int argc, char **argv )
 {
-	int		i, j;
-	int		s;
-	char	*text, *build, c;
-	int		argc;
-	bool	ret;
+	int i, j;
 
-// build the combined string to parse from
-	s = 0;
-	argc = COM_Argc();
-	for (i=1 ; i<argc ; i++)
+	// build the combined string to parse from
+	int s = 0;
+	for ( i = 1; i < argc; ++i )
 	{
-		s += strlen (COM_Argv(i)) + 1;
+		if ( Q_strcmp( argv[i], "+set" ) == 0 ) {
+			i += 2;
+			continue;
+		}
+		s += static_cast<int>( strlen( argv[i] ) + 1 );
 	}
-	if (!s)
+	if ( s == 0 ) {
 		return false;
-		
-	text = (char*)Z_StackAlloc (s+1);
-	text[0] = 0;
-	for (i=1 ; i<argc ; i++)
+	}
+
+	char *text = (char *)Z_StackAlloc( s + 1 );
+	text[0] = '\0';
+	for ( i = 1; i < argc; ++i )
 	{
-		strcat (text,COM_Argv(i));
-		if (i != argc-1)
-			strcat (text, " ");
+		if ( Q_strcmp( argv[i], "+set" ) == 0 ) {
+			i += 2;
+			continue;
+		}
+		strcat( text, argv[i] );
+		if ( i != argc - 1 ) {
+			strcat( text, " " );
+		}
 	}
 	
-// pull out the commands
-	build = (char*)Z_StackAlloc (s+1);
-	build[0] = 0;
-	
-	for (i=0 ; i<s-1 ; i++)
+	// pull out the commands
+	char *build = (char *)Z_StackAlloc( s + 1 );
+	build[0] = '\0';
+	for ( i = 0; i < s - 1; ++i )
 	{
-		if (text[i] == '+')
-		{
-			i++;
+		if ( text[i] == '+' ) {
+			++i;
 
-			for (j=i ; (text[j] != '+') && (text[j] != '-') && (text[j] != 0) ; j++)
+			for ( j = i; ( text[j] != '+' ) && ( text[j] != '-' ) && ( text[j] != 0 ); j++ )
 				;
 
-			c = text[j];
-			text[j] = 0;
-			
-			strcat (build, text+i);
-			strcat (build, "\n");
+			char c = text[j];
+			text[j] = '\0';
+
+			strcat( build, text + i );
+			strcat( build, "\n" );
 			text[j] = c;
-			i = j-1;
+			i = j - 1;
 		}
 	}
 
-	ret = build[0] != 0;
-	if (ret)
-		Cbuf_AddText (build);
+	bool ret = build[0] != 0;
+	if ( ret ) {
+		Cbuf_AddText( build );
+	}
 	
 	return ret;
 }

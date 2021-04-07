@@ -193,12 +193,12 @@ inline void Q_sprintf( char *pDest, _Printf_format_string_ const char *pFmt, ...
 }
 
 // SlartTodo: Operate with int like std::tolower?
-inline char Q_tolower( char ch )
+inline int Q_tolower( int ch )
 {
 	return ( ch <= 'Z' && ch >= 'A' ) ? ( ch + ( 'a' - 'A' ) ) : ch;
 }
 
-inline char Q_toupper( char ch )
+inline int Q_toupper( int ch )
 {
 	return ( ch >= 'a' && ch <= 'z' ) ? ( ch - ( 'a' - 'A' ) ) : ch;
 }

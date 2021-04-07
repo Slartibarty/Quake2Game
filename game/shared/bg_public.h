@@ -128,10 +128,10 @@ enum muzzleEvent_t
 	MZ_IONRIPPER,
 	MZ_BLUEHYPERBLASTER,
 	MZ_PHALANX,
-	MZ_SILENCED,				// bit flag ORed with one of the above numbers
+	MZ_SILENCED = 128,				// bit flag ORed with one of the above numbers
 
 //ROGUE
-	MZ_ETF_RIFLE,
+	MZ_ETF_RIFLE = 30,
 	MZ_UNUSED,
 	MZ_SHOTGUN2,
 	MZ_HEATBEAM,

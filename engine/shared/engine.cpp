@@ -9,11 +9,6 @@
 extern void SCR_EndLoadingPlaque( void );
 extern void Key_Init( void ); // This should really be in common? It's not part of the client? Or is it? huh? what.
 
-#define MAX_NUM_ARGVS	50
-
-int		com_argc;
-char	*com_argv[MAX_NUM_ARGVS+1];
-
 jmp_buf abortframe;		// an ERR_DROP occured, exit the entire frame
 
 
@@ -337,97 +332,6 @@ void Com_SetServerState( int state )
 
 /*
 ========================
-COM_CheckParm
-
-Returns the position (1 to argc-1) in the program's argument list
-where the given parameter apears, or 0 if not present
-========================
-*/
-int COM_CheckParm( char *parm )
-{
-	for ( int i = 1; i < com_argc; i++ ) {
-		if ( Q_strcmp( parm, com_argv[i] ) == 0 ) {
-			return i;
-		}
-	}
-
-	return 0;
-}
-
-/*
-========================
-COM_Argc
-========================
-*/
-int COM_Argc()
-{
-	return com_argc;
-}
-
-/*
-========================
-COM_Argv
-========================
-*/
-char *COM_Argv( int arg )
-{
-	if ( arg < 0 || arg >= com_argc || !com_argv[arg] ) {
-		return null_string;
-	}
-	return com_argv[arg];
-}
-
-/*
-========================
-COM_ClearArgv
-========================
-*/
-void COM_ClearArgv( int arg )
-{
-	if ( arg < 0 || arg >= com_argc || !com_argv[arg] ) {
-		return;
-	}
-	com_argv[arg] = null_string;
-}
-
-/*
-========================
-COM_InitArgv
-========================
-*/
-void COM_InitArgv( int argc, char **argv )
-{
-	if ( argc > MAX_NUM_ARGVS ) {
-		Com_FatalErrorf( "argc > MAX_NUM_ARGVS" );
-	}
-	com_argc = argc;
-
-	for ( int i = 0; i < argc; i++ ) {
-		if ( !argv[i] || strlen( argv[i] ) >= MAX_TOKEN_CHARS ) {
-			com_argv[i] = null_string;
-		} else {
-			com_argv[i] = argv[i];
-		}
-	}
-}
-
-/*
-========================
-COM_AddParm
-
-Adds the given string at the end of the current argument list
-========================
-*/
-void COM_AddParm( char *parm )
-{
-	if ( com_argc == MAX_NUM_ARGVS ) {
-		Com_FatalError( "COM_AddParm: MAX_NUM_ARGVS" );
-	}
-	com_argv[com_argc++] = parm;
-}
-
-/*
-========================
 Info_Print
 ========================
 */
@@ -645,9 +549,7 @@ void Engine_Init( int argc, char **argv )
 
 	// prepare enough of the subsystems to handle
 	// cvar and command buffer management
-	COM_InitArgv( argc, argv );
 
-	//Swap_Init ();
 	Cbuf_Init();
 
 	Cmd_Init();
@@ -659,7 +561,7 @@ void Engine_Init( int argc, char **argv )
 	// a basedir or cddir needs to be set before execing
 	// config files, but we want other parms to override
 	// the settings of the config files
-	Cbuf_AddEarlyCommands( false );
+	Cbuf_AddEarlyCommands( argc, argv );
 	Cbuf_Execute();
 
 	FS_Init();
@@ -667,7 +569,7 @@ void Engine_Init( int argc, char **argv )
 	Cbuf_AddText( "exec default.cfg\n" );
 	Cbuf_AddText( "exec config.cfg\n" );
 
-	Cbuf_AddEarlyCommands( true );
+	Cbuf_AddEarlyCommands( argc, argv );
 	Cbuf_Execute();
 
 	//
@@ -705,7 +607,7 @@ void Engine_Init( int argc, char **argv )
 	CL_Init();
 
 	// add + commands from command line
-	if ( !Cbuf_AddLateCommands() ) {
+	if ( !Cbuf_AddLateCommands( argc, argv ) ) {
 		// if the user didn't give any commands, run default action
 		if ( !dedicated->value ) {
 			Cbuf_AddText( "d1\n" );

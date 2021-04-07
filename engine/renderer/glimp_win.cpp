@@ -271,12 +271,13 @@ static void GLimp_CreateWindow( WNDPROC wndproc, int width, int height, bool ful
 		dwStyle = WINDOW_STYLE;
 		dwExStyle = 0;
 
-		// Not multi-monitor safe
+		// not multi-monitor safe
 		int dispWidth = GetSystemMetrics( SM_CXSCREEN );
 		int dispHeight = GetSystemMetrics( SM_CYSCREEN );
 
-		xPos = dispWidth / 8;
-		yPos = dispHeight / 8;
+		// centre window
+		xPos = ( dispWidth / 2 ) - ( width / 2 );
+		yPos = ( dispHeight / 2 ) - ( height / 2 );
 	}
 
 	RECT r{ 0, 0, width, height };

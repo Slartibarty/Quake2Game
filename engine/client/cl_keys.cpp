@@ -6,6 +6,7 @@ key up events are sent even if in console mode
 
 */
 
+// duplicated in: cl_console.cpp, cl_keys.cpp
 #define MAXCMDLINE 256
 
 char	key_lines[32][MAXCMDLINE];
@@ -147,7 +148,7 @@ void CompleteCommand (void)
 	const char	*cmd;
 	char		*s;
 
-	s = key_lines[edit_line]+1;
+	s = key_lines[edit_line];
 	if (*s == '\\' || *s == '/')
 		s++;
 
@@ -156,9 +157,9 @@ void CompleteCommand (void)
 		cmd = Cvar_CompleteVariable (s);
 	if (cmd)
 	{
-		key_lines[edit_line][1] = '/';
-		strcpy (key_lines[edit_line]+2, cmd);
-		key_linepos = (int)strlen(cmd)+2;
+		key_lines[edit_line][0] = '/';
+		strcpy (key_lines[edit_line] + 1, cmd);
+		key_linepos = (int)strlen( cmd ) + 1;
 		key_lines[edit_line][key_linepos] = ' ';
 		key_linepos++;
 		key_lines[edit_line][key_linepos] = 0;
@@ -175,7 +176,6 @@ Interactive line editing and console scrollback
 */
 void Key_Console (int key)
 {
-
 	switch ( key )
 	{
 	case K_KP_SLASH:
@@ -222,24 +222,22 @@ void Key_Console (int key)
 		break;
 	}
 
-	if ( ( toupper( key ) == 'V' && keydown[K_CTRL] ) ||
-		 ( ( ( key == K_INS ) || ( key == K_KP_INS ) ) && keydown[K_SHIFT] ) )
+	if ( ( Q_toupper( key ) == 'V' && keydown[K_CTRL] ) ||
+		( ( ( key == K_INS ) || ( key == K_KP_INS ) ) && keydown[K_SHIFT] ) )
 	{
 		char *cbd;
-		
-		if ( ( cbd = Sys_GetClipboardData() ) != 0 )
-		{
-			int i;
 
+		if ( ( cbd = Sys_GetClipboardData() ) != nullptr )
+		{
 			strtok( cbd, "\n\r\b" );
 
-			i = (int)strlen( cbd );
-			if ( i + key_linepos >= MAXCMDLINE)
-				i= MAXCMDLINE - key_linepos;
+			int i = (int)strlen( cbd );
+			if ( i + key_linepos >= MAXCMDLINE ) {
+				i = MAXCMDLINE - key_linepos;
+			}
 
-			if ( i > 0 )
-			{
-				cbd[i]=0;
+			if ( i > 0 ) {
+				cbd[i] = 0;
 				strcat( key_lines[edit_line], cbd );
 				key_linepos += i;
 			}
@@ -249,93 +247,96 @@ void Key_Console (int key)
 		return;
 	}
 
-	if ( key == 'l' ) 
-	{
-		if ( keydown[K_CTRL] )
-		{
-			Cbuf_AddText ("clear\n");
-			return;
-		}
-	}
-
-	if ( key == K_ENTER || key == K_KP_ENTER )
-	{	// backslash text are commands, else chat
-		if (key_lines[edit_line][1] == '\\' || key_lines[edit_line][1] == '/')
-			Cbuf_AddText (key_lines[edit_line]+2);	// skip the >
-		else
-			Cbuf_AddText (key_lines[edit_line]+1);	// valid command
-
-		Cbuf_AddText ("\n");
-		Com_Printf ("%s\n",key_lines[edit_line]);
-		edit_line = (edit_line + 1) & 31;
-		history_line = edit_line;
-		key_lines[edit_line][0] = ']';
-		key_linepos = 1;
-		if (cls.state == ca_disconnected)
-			SCR_UpdateScreen ();	// force an update, because the command
-									// may take some time
+	if ( key == 'l' && keydown[K_CTRL] ) {
+		Cbuf_AddText ("clear\n");
 		return;
 	}
 
-	if (key == K_TAB)
-	{	// command completion
+	if ( key == K_ENTER || key == K_KP_ENTER ) {
+		// backslash text are commands, else chat
+		if ( key_lines[edit_line][0] == '\\' || key_lines[edit_line][0] == '/' ) {
+			// skip the >
+			Cbuf_AddText( key_lines[edit_line] + 1 );
+		} else {
+			// valid command
+			Cbuf_AddText( key_lines[edit_line] );
+		}
+
+		Cbuf_AddText( "\n" );
+
+		Com_Printf( "]%s\n", key_lines[edit_line] );
+
+		edit_line = (edit_line + 1) & 31;
+		history_line = edit_line;
+	//	key_lines[edit_line][0] = ']';
+		key_linepos = 0;
+
+		if ( cls.state == ca_disconnected ) {
+			// force an update, because the command may take some time
+			SCR_UpdateScreen();
+		}
+
+		return;
+	}
+
+	if (key == K_TAB) {
+		// command completion
 		CompleteCommand ();
 		return;
 	}
 	
-	if ( ( key == K_BACKSPACE ) || ( key == K_LEFTARROW ) || ( key == K_KP_LEFTARROW ) || ( ( key == 'h' ) && ( keydown[K_CTRL] ) ) )
-	{
-		if (key_linepos > 1)
+	if ( ( key == K_BACKSPACE ) || ( key == K_LEFTARROW ) || ( key == K_KP_LEFTARROW ) || ( ( key == 'h' ) && ( keydown[K_CTRL] ) ) ) {
+		if ( key_linepos > 0 ) {
 			key_linepos--;
+		}
 		return;
 	}
 
 	if ( ( key == K_UPARROW ) || ( key == K_KP_UPARROW ) ||
-		 ( ( key == 'p' ) && keydown[K_CTRL] ) )
+		( ( key == 'p' ) && keydown[K_CTRL] ) )
 	{
-		do
-		{
-			history_line = (history_line - 1) & 31;
-		} while (history_line != edit_line
-				&& !key_lines[history_line][1]);
-		if (history_line == edit_line)
-			history_line = (edit_line+1)&31;
-		strcpy(key_lines[edit_line], key_lines[history_line]);
-		key_linepos = (int)strlen(key_lines[edit_line]);
+		do {
+			history_line = ( history_line - 1 ) & 31;
+		} while ( history_line != edit_line && !key_lines[history_line][0] );
+
+		if ( history_line == edit_line ) {
+			history_line = ( edit_line + 1 ) & 31;
+		}
+
+		strcpy( key_lines[edit_line], key_lines[history_line] );
+		key_linepos = (int)strlen( key_lines[edit_line] );
+
 		return;
 	}
 
 	if ( ( key == K_DOWNARROW ) || ( key == K_KP_DOWNARROW ) ||
-		 ( ( key == 'n' ) && keydown[K_CTRL] ) )
+		( ( key == 'n' ) && keydown[K_CTRL] ) )
 	{
-		if (history_line == edit_line) return;
-		do
-		{
-			history_line = (history_line + 1) & 31;
+		if ( history_line == edit_line ) {
+			return;
 		}
-		while (history_line != edit_line
-			&& !key_lines[history_line][1]);
-		if (history_line == edit_line)
-		{
-			key_lines[edit_line][0] = ']';
-			key_linepos = 1;
+
+		do {
+			history_line = ( history_line + 1 ) & 31;
+		} while ( history_line != edit_line && !key_lines[history_line][0] );
+
+		if ( history_line == edit_line ) {
+		//	key_lines[edit_line][0] = ']';
+			key_linepos = 0;
+		} else {
+			strcpy( key_lines[edit_line], key_lines[history_line] );
+			key_linepos = (int)strlen( key_lines[edit_line] );
 		}
-		else
-		{
-			strcpy(key_lines[edit_line], key_lines[history_line]);
-			key_linepos = (int)strlen(key_lines[edit_line]);
-		}
+
 		return;
 	}
 
-	if ( key == K_PGUP || key == K_KP_PGUP )
-	{
+	if ( key == K_PGUP || key == K_KP_PGUP ) {
 		Con_PageUp();
 		return;
 	}
 
-	if ( key == K_PGDN || key == K_KP_PGDN ) 
-	{
+	if ( key == K_PGDN || key == K_KP_PGDN ) {
 		Con_PageDown();
 		return;
 	}
@@ -362,23 +363,22 @@ void Key_Console (int key)
 		return;
 	}
 
-	if ( key == K_HOME || key == K_KP_HOME )
-	{
+	if ( key == K_HOME || key == K_KP_HOME ) {
 		Con_Top();
 		return;
 	}
 
-	if ( key == K_END || key == K_KP_END )
-	{
+	if ( key == K_END || key == K_KP_END ) {
 		Con_Bottom();
 		return;
 	}
 	
-	if (key < 32 || key > 127)
-		return;	// non printable
+	if ( key < 32 || key > 127 ) {
+		// non printable
+		return;
+	}
 		
-	if (key_linepos < MAXCMDLINE-1)
-	{
+	if (key_linepos < MAXCMDLINE-1) {
 		key_lines[edit_line][key_linepos] = key;
 		key_linepos++;
 		key_lines[edit_line][key_linepos] = 0;
@@ -645,20 +645,17 @@ Key_Init
 */
 void Key_Init (void)
 {
-	int		i;
+	int i;
 
-	for (i=0 ; i<32 ; i++)
-	{
-		key_lines[i][0] = ']';
-		key_lines[i][1] = 0;
-	}
-	key_linepos = 1;
+	// init for key_lines was here
+	key_linepos = 0;
 	
 //
 // init ascii characters in console mode
 //
-	for (i=32 ; i<128 ; i++)
+	for ( i = 32; i < 128; i++ ) {
 		consolekeys[i] = true;
+	}
 	consolekeys[K_ENTER] = true;
 	consolekeys[K_KP_ENTER] = true;
 	consolekeys[K_TAB] = true;
@@ -688,17 +685,19 @@ void Key_Init (void)
 	consolekeys[K_KP_MINUS] = true;
 	consolekeys[K_KP_5] = true;
 
-	// The mousewheel can be a conkey
+	// the mousewheel can be a conkey
 	consolekeys[K_MWHEELUP] = true;
 	consolekeys[K_MWHEELDOWN] = true;
 
 	consolekeys['`'] = false;
 	consolekeys['~'] = false;
 
-	for (i=0 ; i<256 ; i++)
+	for ( i = 0; i < 256; i++ ) {
 		keyshift[i] = i;
-	for (i='a' ; i<='z' ; i++)
+	}
+	for ( i = 'a'; i <= 'z'; i++ ) {
 		keyshift[i] = i - 'a' + 'A';
+	}
 	keyshift['1'] = '!';
 	keyshift['2'] = '@';
 	keyshift['3'] = '#';

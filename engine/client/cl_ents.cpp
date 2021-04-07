@@ -147,7 +147,7 @@ Parses deltas from the given base and adds the resulting entity
 to the current frame
 ==================
 */
-static void CL_DeltaEntity (frame_t *frame, int newnum, entity_state_t *old, uint bits)
+static void CL_DeltaEntity (clSnapshot_t *frame, int newnum, entity_state_t *old, uint bits)
 {
 	centity_t	*ent;
 	entity_state_t	*state;
@@ -208,7 +208,7 @@ An svc_packetentities has just been parsed, deal with the
 rest of the data stream.
 ==================
 */
-void CL_ParsePacketEntities (frame_t *oldframe, frame_t *newframe)
+void CL_ParsePacketEntities (clSnapshot_t *oldframe, clSnapshot_t *newframe)
 {
 	int			newnum;
 	uint		bits;
@@ -335,7 +335,7 @@ void CL_ParsePacketEntities (frame_t *oldframe, frame_t *newframe)
 CL_ParsePlayerstate
 ===================
 */
-void CL_ParsePlayerstate (frame_t *oldframe, frame_t *newframe)
+void CL_ParsePlayerstate (clSnapshot_t *oldframe, clSnapshot_t *newframe)
 {
 	int			flags;
 	player_state_t	*state;
@@ -459,7 +459,7 @@ CL_FireEntityEvents
 
 ==================
 */
-void CL_FireEntityEvents (frame_t *frame)
+void CL_FireEntityEvents (clSnapshot_t *frame)
 {
 	entity_state_t		*s1;
 	int					pnum, num;
@@ -485,9 +485,9 @@ CL_ParseFrame
 */
 void CL_ParseFrame (void)
 {
-	int			cmd;
-	int			len;
-	frame_t		*old;
+	int cmd;
+	int len;
+	clSnapshot_t *old;
 
 	memset (&cl.frame, 0, sizeof(cl.frame));
 
@@ -651,7 +651,7 @@ CL_AddPacketEntities
 
 ===============
 */
-void CL_AddPacketEntities (frame_t *frame)
+void CL_AddPacketEntities (clSnapshot_t *frame)
 {
 	entity_t			ent;
 	entity_state_t		*s1;
@@ -1047,11 +1047,11 @@ Sets cl.refdef view values
 */
 void CL_CalcViewValues (void)
 {
-	int			i;
-	float		lerp, backlerp;
-	centity_t	*ent;
-	frame_t		*oldframe;
-	player_state_t	*ps, *ops;
+	int i;
+	float lerp, backlerp;
+	centity_t *ent;
+	clSnapshot_t *oldframe;
+	player_state_t *ps, *ops;
 
 	// find the previous frame to interpolate from
 	ps = &cl.frame.playerstate;

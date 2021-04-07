@@ -399,21 +399,16 @@ int main(int argc, char **argv)
 	g_argc = argc; g_argv = argv;
 
 	// no abort/retry/fail errors
-	// Slart: Was SetErrorMode
-	SetThreadErrorMode(SEM_FAILCRITICALERRORS, NULL);
+	SetErrorMode( SEM_FAILCRITICALERRORS );
 
 	Time_Init();
 
 	Engine_Init (argc, argv);
 	oldtime = Sys_Milliseconds ();
 
-	if ( GetACP() == CP_UTF8 )
-	{
-		Com_DPrintf( "Using Windows UTF-8 codepage\n" );
+	if ( GetACP() == CP_UTF8 ) {
+		Com_DPrint( "Using Windows UTF-8 codepage\n" );
 	}
-
-	extern void TestThread();
-	TestThread();
 
 	/* main window message loop */
 	while (1)
@@ -436,5 +431,5 @@ int main(int argc, char **argv)
 	}
 
 	// never gets here
-	return TRUE;
+	return 0;
 }

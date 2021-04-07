@@ -4,43 +4,22 @@
 
 #pragma once
 
-#define NUM_CON_TIMES	8
+void DrawString( int x, int y, const char *s );
+void DrawAltString( int x, int y, const char *s );	// Green
 
-#define CON_TEXTSIZE	0x10000
+void Con_CheckResize();
+void Con_Init();
+void Con_DrawConsole( float frac );
+void Con_Print( const char *txt );
+void Con_Clear_f();
+void Con_DrawNotify();
+void Con_ClearNotify();
+void Con_ToggleConsole_f();
 
-struct console_t
-{
-	bool	initialized;
-
-	char	text[CON_TEXTSIZE];
-	int		current;		// line where next message will be printed
-	int		x;				// offset in current line for next print
-	int		display;		// bottom of console displays this line
-
-	int 	linewidth;		// characters across screen
-	int		totallines;		// total lines in console scrollback
-
-	int		xadjust;		// for wide aspect screens
-
-	int		vislines;
-
-	float	times[NUM_CON_TIMES];	// cls.realtime time the line was generated
-									// for transparent notify lines
-};
-
-extern console_t con;
-
-void Con_CheckResize (void);
-void Con_Init (void);
-void Con_DrawConsole (float frac);
-void Con_Print (const char *txt);
-void Con_Clear_f (void);
-void Con_DrawNotify (void);
-void Con_ClearNotify (void);
-void Con_ToggleConsole_f (void);
+bool Con_IsInitialized();
 
 // Q3 added
-void Con_PageUp( void );
-void Con_PageDown( void );
-void Con_Top( void );
-void Con_Bottom( void );
+void Con_PageUp();
+void Con_PageDown();
+void Con_Top();
+void Con_Bottom();

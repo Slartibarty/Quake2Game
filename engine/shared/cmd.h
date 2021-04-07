@@ -41,10 +41,10 @@ void Cbuf_InsertText( const char *text );
 void Cbuf_ExecuteText( int exec_when, char *text );
 // this can be used in place of either Cbuf_AddText or Cbuf_InsertText
 
-void Cbuf_AddEarlyCommands( bool clear );
+void Cbuf_AddEarlyCommands( int argc, char **argv );
 // adds all the +set commands from the command line
 
-bool Cbuf_AddLateCommands( void );
+bool Cbuf_AddLateCommands( int argc, char **argv );
 // adds all the remaining + commands from the command line
 // Returns true if any late commands were added, which
 // will keep the demoloop from immediately starting

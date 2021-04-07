@@ -83,15 +83,6 @@ void		Com_Disconnect();
 [[noreturn]]
 void		Com_Quit( int code );
 
-// Our copy of the command line parameters
-int			COM_Argc();
-char *		COM_Argv( int arg );	// range and null checked
-void		COM_ClearArgv( int arg );
-int			COM_CheckParm( char *parm );
-void		COM_AddParm( char *parm );
-
-void		COM_InitArgv( int argc, char **argv );
-
 void		Info_Print( const char *s );
 
 int			Com_ServerState();	// this should have just been a cvar...

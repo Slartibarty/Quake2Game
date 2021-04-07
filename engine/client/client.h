@@ -16,11 +16,12 @@
 
 #include "keycodes.h"
 
-//=============================================================================
+//=================================================================================================
 
 extern centity_t	cl_entities[MAX_EDICTS];
 
-struct frame_t
+// snapshots are a view of the server at a given time
+struct clSnapshot_t
 {
 	qboolean		valid;			// cleared if delta parsing was invalid
 	int				serverframe;
@@ -31,6 +32,15 @@ struct frame_t
 	int				num_entities;
 	int				parse_entities;	// non-masked index into cl_parse_entities array
 };
+
+/*
+===================================================================================================
+
+	the clientActive_t structure is wiped completely at every
+	new gamestate_t, potentially several times during an established connection
+
+===================================================================================================
+*/
 
 #define MAX_CLIENTWEAPONMODELS		20		// PGM -- upped from 16 to fit the chainfist vwep
 
@@ -48,11 +58,7 @@ struct clientinfo_t
 extern char cl_weaponmodels[MAX_CLIENTWEAPONMODELS][MAX_QPATH];
 extern int num_cl_weaponmodels;
 
-//
-// the client_state_t structure is wiped completely at every
-// server map change
-//
-struct client_state_t
+struct clientActive_t
 {
 	int			timeoutcount;
 
@@ -77,9 +83,9 @@ struct client_state_t
 	vec3_t		predicted_angles;
 	vec3_t		prediction_error;
 
-	frame_t		frame;				// received from server
-	int			surpressCount;		// number of messages rate supressed
-	frame_t		frames[UPDATE_BACKUP];
+	clSnapshot_t	frame;				// received from server
+	int				surpressCount;		// number of messages rate supressed
+	clSnapshot_t	frames[UPDATE_BACKUP];
 
 	// the client maintains its own idea of view angles, which are
 	// sent to the server each frame.  It is cleared to 0 upon entering each level.
@@ -134,15 +140,15 @@ struct client_state_t
 	clientinfo_t	baseclientinfo;
 };
 
-extern	client_state_t	cl;
+extern clientActive_t	cl;
 
 /*
-==================================================================
+===================================================================================================
 
-the client_static_t structure is persistant through an arbitrary number
-of server connections
+	the clientStatic_t structure is never wiped, and is used even when
+	no client connection is active at all
 
-==================================================================
+===================================================================================================
 */
 
 enum connstate_t {
@@ -163,7 +169,7 @@ enum dltype_t {
 
 enum keydest_t {key_game, key_console, key_message, key_menu};
 
-struct client_static_t
+struct clientStatic_t
 {
 	connstate_t	state;
 	keydest_t	key_dest;
@@ -203,9 +209,15 @@ struct client_static_t
 	FILE		*demofile;
 };
 
-extern client_static_t	cls;
+extern clientStatic_t	cls;
 
-//=============================================================================
+//=================================================================================================
+
+// the cl_parse_entities must be large enough to hold UPDATE_BACKUP frames of
+// entities, so that when a delta compressed message arives from the server
+// it can be un-deltad from the original 
+#define	MAX_PARSE_ENTITIES	1024
+extern	entity_state_t	cl_parse_entities[MAX_PARSE_ENTITIES];
 
 //
 // cvars
@@ -249,30 +261,22 @@ extern	cvar_t	*cl_timedemo;
 
 extern	cvar_t	*cl_vwep;
 
-// the cl_parse_entities must be large enough to hold UPDATE_BACKUP frames of
-// entities, so that when a delta compressed message arives from the server
-// it can be un-deltad from the original 
-#define	MAX_PARSE_ENTITIES	1024
-extern	entity_state_t	cl_parse_entities[MAX_PARSE_ENTITIES];
-
-//=============================================================================
+//=================================================================================================
 
 extern	netadr_t	net_from;
 extern	sizebuf_t	net_message;
 
-void DrawString (int x, int y, const char *s);
-void DrawAltString (int x, int y, const char *s);	// toggle high bit
 qboolean	CL_CheckOrDownloadFile (const char *filename);
 
 void CL_AddNetgraph (void);
 
-//=================================================
+//=================================================================================================
 
 int CL_ParseEntityBits (unsigned *bits);
 void CL_ParseDelta (entity_state_t *from, entity_state_t *to, int number, uint bits);
 void CL_ParseFrame (void);
 
-//=================================================
+//=================================================================================================
 
 void CL_PrepRefresh (void);
 void CL_RegisterSounds (void);

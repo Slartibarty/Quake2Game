@@ -16,7 +16,7 @@ SV_EmitPacketEntities
 Writes a delta update of an entity_state_t list to the message.
 =============
 */
-static void SV_EmitPacketEntities (client_frame_t *from, client_frame_t *to, sizebuf_t *msg)
+static void SV_EmitPacketEntities (clientSnapshot_t *from, clientSnapshot_t *to, sizebuf_t *msg)
 {
 	entity_state_t	*oldent, *newent;
 	int		oldindex, newindex;
@@ -111,7 +111,7 @@ SV_WritePlayerstateToClient
 
 =============
 */
-static void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, sizebuf_t *msg)
+static void SV_WritePlayerstateToClient (clientSnapshot_t *from, clientSnapshot_t *to, sizebuf_t *msg)
 {
 	int				i;
 	int				pflags;
@@ -308,7 +308,7 @@ SV_WriteFrameToClient
 */
 void SV_WriteFrameToClient (client_t *client, sizebuf_t *msg)
 {
-	client_frame_t		*frame, *oldframe;
+	clientSnapshot_t	*frame, *oldframe;
 	int					lastframe;
 
 //Com_Printf ("%i -> %i\n", client->lastframe, sv.framenum);
@@ -421,7 +421,7 @@ void SV_BuildClientFrame (client_t *client)
 	vec3_t	org;
 	edict_t	*ent;
 	edict_t	*clent;
-	client_frame_t	*frame;
+	clientSnapshot_t	*frame;
 	entity_state_t	*state;
 	int		l;
 	int		clientarea, clientcluster;

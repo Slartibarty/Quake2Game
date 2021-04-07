@@ -1,7 +1,7 @@
 
 #include "server.h"
 
-server_static_t	svs;				// persistant server info
+serverStatic_t	svs;				// persistant server info
 server_t		sv;					// local server
 
 /*
@@ -126,7 +126,7 @@ static void SV_CheckForSavegame (void)
 		// rlava2 was sending too many lightstyles, and overflowing the
 		// reliable data. temporarily changing the server state to loading
 		// prevents these from being passed down.
-		server_state_t		previousState;		// PGM
+		serverState_t		previousState;		// PGM
 
 		previousState = sv.state;				// PGM
 		sv.state = ss_loading;					// PGM
@@ -147,7 +147,7 @@ clients along with it.
 
 ================
 */
-static void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate, qboolean attractloop, qboolean loadgame)
+static void SV_SpawnServer (char *server, char *spawnpoint, serverState_t serverstate, qboolean attractloop, qboolean loadgame)
 {
 	int			i;
 	unsigned	checksum;
