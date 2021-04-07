@@ -41,6 +41,55 @@ cvar_t *r_overbright;
 cvar_t *r_swapinterval;
 cvar_t *r_lockpvs;
 
+cvar_t *r_fullscreen;
+cvar_t *r_gamma;
+
+/*
+========================
+R_Restart
+========================
+*/
+void R_Restart()
+{
+	Com_Print( "------- Restarting RenderSystem --------\n" );
+
+	// shutdown everything excluding glimp
+
+	Particles_Shutdown();
+	Draw_Shutdown();
+	Mod_FreeAll();
+
+	//GLimp_RestoreGamma();
+	GL_ShutdownImages();
+
+	Shaders_Shutdown();
+
+	GL_CheckErrors();
+
+	// re-intialise everything (excluding glimp)
+
+	// set a "safe" display mode
+	glState.prev_mode = 3;
+
+	// set some default state variables
+	GL_SetDefaultState();
+
+	Shaders_Init();
+
+	tr.registrationSequence = 1;
+
+	GL_InitImages();
+	//GLimp_SetGamma( g_gammatable, g_gammatable, g_gammatable );
+
+	Mod_Init();
+	Draw_Init();
+	Particles_Init();
+
+	GL_CheckErrors();
+
+	Com_Print( "RenderSystem restarted\n" "----------------------------------------\n" );
+}
+
 /*
 ========================
 R_InitCVars
@@ -80,9 +129,11 @@ static void R_InitCVars()
 	r_ext_multitexture = Cvar_Get( "r_ext_multitexture", "1", CVAR_ARCHIVE );
 	r_ext_compiled_vertex_array = Cvar_Get( "r_ext_compiled_vertex_array", "1", CVAR_ARCHIVE );
 
+	r_overbright = Cvar_Get( "r_overbright", "1", 0 );
 	r_swapinterval = Cvar_Get( "r_swapinterval", "0", CVAR_ARCHIVE );
 
-	r_overbright = Cvar_Get( "r_overbright", "1", 0 );
+	r_fullscreen = Cvar_Get( "r_fullscreen", "0", CVAR_ARCHIVE );
+	r_gamma = Cvar_Get( "r_gamma", "1", CVAR_ARCHIVE );
 }
 
 /*
@@ -107,7 +158,7 @@ static void R_InitCommands()
 R_Init
 ========================
 */
-bool R_Init( void *hinstance, void *wndproc )
+bool R_Init()
 {
 	Com_Print( "------- Initializing RenderSystem --------\n" );
 
@@ -124,9 +175,11 @@ bool R_Init( void *hinstance, void *wndproc )
 	R_InitCommands();
 
 	// initialize OS-specific parts of OpenGL
-	if ( !GLimp_Init( hinstance, wndproc ) ) {
+	if ( !GLimp_Init() ) {
 		return false;
 	}
+
+	GL_CheckErrors();
 
 	Com_Printf( "OpenGL Vendor  : %s\n", glGetString( GL_VENDOR ) );
 	Com_Printf( "OpenGL Renderer: %s\n", glGetString( GL_RENDERER ) );
@@ -152,8 +205,7 @@ bool R_Init( void *hinstance, void *wndproc )
 
 	GL_CheckErrors();
 
-	Com_Print( "RenderSystem initialized\n" );
-	Com_Print( "------------------------------------------\n" );
+	Com_Print( "RenderSystem initialized\n" "------------------------------------------\n" );
 
 	return true;
 }
@@ -174,10 +226,16 @@ void R_Shutdown()
 
 	Shaders_Shutdown();
 
-	// shut down OS specific OpenGL stuff like contexts, etc.
 	GLimp_Shutdown();
 }
 
+/*
+========================
+R_AppActivate
+
+Simple wrapper
+========================
+*/
 void R_AppActivate( bool active )
 {
 	GLimp_AppActivate( active );

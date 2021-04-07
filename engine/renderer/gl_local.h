@@ -267,8 +267,8 @@ extern cvar_t *r_overbright;
 extern cvar_t *r_swapinterval;
 extern cvar_t *r_lockpvs;
 
-extern cvar_t *vid_fullscreen;
-extern cvar_t *vid_gamma;
+extern cvar_t *r_fullscreen;
+extern cvar_t *r_gamma;
 
 /*
 ===============================================================================
@@ -395,18 +395,24 @@ extern glProgs_t glProgs;
 void Shaders_Init();
 void Shaders_Shutdown();
 
-//-------------------------------------------------------------------------------------------------
-// Implementation specific functions
-//-------------------------------------------------------------------------------------------------
+/*
+===============================================================================
 
-void		GLimp_BeginFrame( void );
-void		GLimp_EndFrame( void );
+	Implementation specific functions
+
+	glimp_win.cpp
+
+===============================================================================
+*/
+
+void		GLimp_BeginFrame();
+void		GLimp_EndFrame();
 
 void		GLimp_SetGamma( byte *red, byte *green, byte *blue );
-void		GLimp_RestoreGamma( void );
+void		GLimp_RestoreGamma();
 
-bool 		GLimp_Init( void *hinstance, void *wndproc );
-void		GLimp_Shutdown( void );
+bool 		GLimp_Init();
+void		GLimp_Shutdown();
 
 bool    	GLimp_SetMode( int &width, int &height, int mode, bool fullscreen );
 
@@ -419,5 +425,5 @@ void		GLimp_AppActivate( bool active );
 //-------------------------------------------------------------------------------------------------
 
 // Client functions
-extern bool VID_GetModeInfo( int &width, int &height, int mode );
+extern bool Sys_GetVidModeInfo( int &width, int &height, int mode );
 extern void VID_NewWindow( int width, int height );

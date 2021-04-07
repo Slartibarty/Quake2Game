@@ -8,7 +8,7 @@
 
 #include "client.h"
 
-static constexpr uint32 colorConsoleText = colorCyan;
+static constexpr uint32 colorConsoleText = colorWhite;
 
 #define	DEFAULT_CONSOLE_WIDTH	78
 

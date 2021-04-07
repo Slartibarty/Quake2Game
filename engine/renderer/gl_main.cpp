@@ -825,12 +825,12 @@ R_SetMode
 */
 static void R_SetMode()
 {
-	if ( r_mode->IsModified() || vid_fullscreen->IsModified() )
+	if ( r_mode->IsModified() || r_fullscreen->IsModified() )
 	{
 		r_mode->ClearModified();
-		vid_fullscreen->ClearModified();
+		r_fullscreen->ClearModified();
 
-		if ( GLimp_SetMode( vid.width, vid.height, r_mode->GetInt32(), vid_fullscreen->GetBool() ) == true )
+		if ( GLimp_SetMode( vid.width, vid.height, r_mode->GetInt32(), r_fullscreen->GetBool() ) == true )
 		{
 			glState.prev_mode = r_mode->GetInt32();
 		}

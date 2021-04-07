@@ -8,7 +8,8 @@
 
 #include "ref_types.h"
 
-bool		R_Init( void *hinstance, void *wndproc );
+bool		R_Init();
+void		R_Restart();
 void		R_Shutdown();
 
 			// Registration

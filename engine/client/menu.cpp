@@ -1247,8 +1247,8 @@ VIDEO MENU
 =======================================================================
 */
 
-extern cvar_t *vid_fullscreen;
-extern cvar_t *vid_gamma;
+extern cvar_t *r_fullscreen;
+extern cvar_t *r_gamma;
 extern cvar_t *scr_viewsize;
 
 extern cvar_t *r_mode;
@@ -1283,6 +1283,7 @@ static void BrightnessCallback( void *s )
 
 static void ResetDefaults( void *unused )
 {
+	extern void VID_MenuInit(); // defined below
 	VID_MenuInit();
 }
 
@@ -1295,9 +1296,9 @@ static void ApplyChanges( void *unused )
 	*/
 	gamma = ( 0.8f - ( s_brightness_slider.curvalue / 10.0f - 0.5f ) ) + 0.5f;
 
-	Cvar_SetValue( "vid_gamma", gamma );
+	Cvar_SetValue( "r_gamma", gamma );
 	Cvar_SetValue( "r_picmip", 3 - s_tq_slider.curvalue );
-	Cvar_SetValue( "vid_fullscreen", s_fs_box.curvalue );
+	Cvar_SetValue( "r_fullscreen", s_fs_box.curvalue );
 	Cvar_SetValue( "r_finish", s_finish_box.curvalue );
 	Cvar_SetValue( "r_mode", s_mode_list.curvalue );
 
@@ -1305,7 +1306,7 @@ static void ApplyChanges( void *unused )
 	** update appropriate stuff if we're running OpenGL and gamma
 	** has been modified
 	*/
-	if ( vid_gamma->modified )
+	if ( r_gamma->modified )
 	{
 		// SLARTTODO
 		//vid_ref->modified = true;
@@ -1332,11 +1333,11 @@ static void InitResolutions()
 	int width = 0, height = 0;
 	int mode = 0;
 
-	num_resolutions = VID_GetNumModes();
+	num_resolutions = Sys_GetNumVidModes();
 
 	resolutions = (char **)Z_Malloc( ( num_resolutions + 1 ) * sizeof( resolutions ) );
 
-	while ( VID_GetModeInfo( width, height, mode ) != false )
+	while ( Sys_GetVidModeInfo( width, height, mode ) != false )
 	{
 		resolutions[mode] = (char *)Z_Malloc( 32 );
 		Q_sprintf_s( resolutions[mode], 32, "[%dx%d]", width, height );
@@ -1415,14 +1416,14 @@ void VID_MenuInit( void )
 	s_brightness_slider.generic.callback = BrightnessCallback;
 	s_brightness_slider.minvalue = 5;
 	s_brightness_slider.maxvalue = 13;
-	s_brightness_slider.curvalue = ( 1.3f - vid_gamma->value + 0.5f ) * 10;
+	s_brightness_slider.curvalue = ( 1.3f - r_gamma->value + 0.5f ) * 10;
 
 	s_fs_box.generic.type = MTYPE_SPINCONTROL;
 	s_fs_box.generic.x	= 0;
 	s_fs_box.generic.y	= 40;
 	s_fs_box.generic.name	= "fullscreen";
 	s_fs_box.itemnames = yesno_names;
-	s_fs_box.curvalue = vid_fullscreen->value;
+	s_fs_box.curvalue = r_fullscreen->value;
 
 	s_defaults_action.generic.type = MTYPE_ACTION;
 	s_defaults_action.generic.name = "reset to defaults";

@@ -1628,17 +1628,16 @@ void CL_Frame (int msec)
 	cls.realtime = curtime;
 
 	extratime = 0;
-#if 0
-	if (cls.frametime > (1.0f / cl_minfps->value))
-		cls.frametime = (1.0f / cl_minfps->value);
-#else
-//	if (cls.frametime > (1.0f / 5))
-//		cls.frametime = (1.0f / 5);
-#endif
+
+	// SlartTodo: wtf does this do?
+	if ( cls.frametime > ( 1.0f / 5.0f ) ) {
+		cls.frametime = ( 1.0f / 5.0f );
+	}
 
 	// if in the debugger last frame, don't timeout
-	if (msec > 5000)
-		cls.netchan.last_received = Sys_Milliseconds ();
+	if ( msec > 5000 ) {
+		cls.netchan.last_received = Sys_Milliseconds();
+	}
 
 	// fetch results from server
 	CL_ReadPackets ();
@@ -1650,9 +1649,9 @@ void CL_Frame (int msec)
 	CL_PredictMovement ();
 
 	// allow rendering DLL change
-	VID_CheckChanges ();
-	if (!cl.refresh_prepped && cls.state == ca_active)
-		CL_PrepRefresh ();
+	if ( !cl.refresh_prepped && cls.state == ca_active ) {
+		CL_PrepRefresh();
+	}
 
 	// update the screen
 	if (host_speeds->value)

@@ -7,9 +7,11 @@
 #include <Windows.h>
 #include "../client/winquake.h"	// Hack?
 
+#include <vector>
+
 #include "sys.h"
 
-//#define DEMO
+HINSTANCE		g_hInstance;
 
 qboolean		ActiveApp, Minimized;
 
@@ -22,11 +24,11 @@ int		g_argc;
 char	**g_argv;
 
 /*
-===============================================================================
+===================================================================================================
 
-SYSTEM IO
+	System I/O
 
-===============================================================================
+===================================================================================================
 */
 
 void Sys_OutputDebugString( const char *msg )
@@ -40,9 +42,8 @@ void Sys_OutputDebugString( const char *msg )
 [[noreturn]]
 void Sys_Error( const char *msg )
 {
-	Sys_OutputDebugString( msg ); // Mirror to the debugger
+	Sys_OutputDebugString( msg );
 
-	// We won't have a window by now
 	MessageBoxA( nullptr, msg, "Engine Error", MB_OK | MB_ICONERROR | MB_TOPMOST );
 
 	Sys_Quit( EXIT_FAILURE );
@@ -60,7 +61,7 @@ void Sys_Quit( int code )
 	exit( code );
 }
 
-//================================================================
+//=================================================================================================
 
 /*
 ================
@@ -73,7 +74,7 @@ void Sys_CopyProtect (void)
 
 }
 
-//================================================================
+//=================================================================================================
 
 /*
 ================
@@ -263,11 +264,102 @@ char *Sys_GetClipboardData( void )
 }
 
 /*
-===============================================================================
+===================================================================================================
 
-	WINDOWS CRAP
+	Video modes. Don't move this to the renderer.
 
-===============================================================================
+===================================================================================================
+*/
+
+struct alignas( 16 ) vidmode_t
+{
+	/*char	description[32];*/
+	int		width, height, mode;
+};
+
+static constexpr size_t DefaultNumModes = 64;
+
+std::vector<vidmode_t> s_vidModes;
+
+static void Sys_InitVidModes()
+{
+	DEVMODEW dm;
+	dm.dmSize = sizeof( dm );
+	dm.dmDriverExtra = 0;
+
+	DWORD lastWidth = 0, lastHeight = 0;
+
+	int internalNum = 0;				// for EnumDisplaySettings
+	int numModes = 0;					// same as s_num_modes
+
+	s_vidModes.reserve( DefaultNumModes );
+
+	while ( EnumDisplaySettingsW( nullptr, internalNum, &dm ) != FALSE )
+	{
+		if ( dm.dmPelsWidth == lastWidth && dm.dmPelsHeight == lastHeight )
+		{
+			++internalNum;
+			continue;
+		}
+
+		lastWidth = dm.dmPelsWidth;
+		lastHeight = dm.dmPelsHeight;
+
+		vidmode_t &mode = s_vidModes.emplace_back();
+
+		/*Q_sprintf_s( mode.description, "Mode %d:\t%dx%d", numModes, dm.dmPelsWidth, dm.dmPelsHeight );*/
+		mode.width = static_cast<int>( dm.dmPelsWidth );
+		mode.height = static_cast<int>( dm.dmPelsHeight );
+		mode.mode = numModes;
+
+		++internalNum;
+		++numModes;
+	}
+
+#if 0
+	qsort( s_vidModes.data(), s_vidModes.size(), sizeof( vidmode_t ), []( const void *p1, const void *p2 )
+		{
+			const vidmode_t *m1 = reinterpret_cast<const vidmode_t *>( p1 );
+			const vidmode_t *m2 = reinterpret_cast<const vidmode_t *>( p2 );
+
+			if ( m1-> )
+
+			return 1;
+		} );
+#endif
+}
+
+// never called anywhere right now
+// s_vidModes is global anyway, so it'll be freed at exit by the CRT
+static void Sys_FreeVidModes()
+{
+	s_vidModes.clear();
+	s_vidModes.shrink_to_fit();
+}
+
+int Sys_GetNumVidModes()
+{
+	return static_cast<int>( s_vidModes.size() );
+}
+
+bool Sys_GetVidModeInfo( int &width, int &height, int mode )
+{
+	if ( mode < 0 || mode >= Sys_GetNumVidModes() ) {
+		return false;
+	}
+
+	width = s_vidModes[mode].width;
+	height = s_vidModes[mode].height;
+
+	return true;
+}
+
+/*
+===================================================================================================
+
+	Miscellaneous
+
+===================================================================================================
 */
 
 /*
@@ -282,11 +374,11 @@ void Sys_AppActivate (void)
 }
 
 /*
-========================================================================
+===================================================================================================
 
-	GAME DLL
+	Game DLLs
 
-========================================================================
+===================================================================================================
 */
 
 static HINSTANCE game_library;
@@ -295,7 +387,7 @@ static HINSTANCE cgame_library;
 void Sys_UnloadGame()
 {
 	if ( !FreeLibrary( game_library ) ) {
-		Com_FatalErrorf("FreeLibrary failed for game library" );
+		Com_FatalError( "FreeLibrary failed for game library" );
 	}
 	game_library = nullptr;
 }
@@ -303,7 +395,7 @@ void Sys_UnloadGame()
 void Sys_UnloadCGame()
 {
 	if ( !FreeLibrary( cgame_library ) ) {
-		Com_FatalErrorf("FreeLibrary failed for cgame library" );
+		Com_FatalError( "FreeLibrary failed for cgame library" );
 	}
 	cgame_library = nullptr;
 }
@@ -315,7 +407,7 @@ static void *Sys_GetAPI( void *parms, HINSTANCE &instance, const char *gamename,
 	char name[MAX_OSPATH];
 
 	if ( instance ) {
-		Com_FatalErrorf("Sys_GetAPI without Sys_Unload(C)Game" );
+		Com_FatalError( "Sys_GetAPI without Sys_Unload(C)Game" );
 	}
 
 	// now run through the search paths
@@ -379,14 +471,11 @@ void Cmd_Testwhatever()
 #endif
 
 /*
-==================
-WinMain
-
-==================
+========================
+main
+========================
 */
-HINSTANCE	g_hInstance;
-
-int main(int argc, char **argv)
+int main( int argc, char **argv )
 {
 	int time, oldtime, newtime;
 
@@ -394,7 +483,7 @@ int main(int argc, char **argv)
 	// rather than printing to stderr
 	_set_app_type( _crt_gui_app );
 
-	g_hInstance = GetModuleHandleW(NULL);
+	g_hInstance = GetModuleHandleW( nullptr );
 
 	g_argc = argc; g_argv = argv;
 
@@ -403,33 +492,36 @@ int main(int argc, char **argv)
 
 	Time_Init();
 
-	Engine_Init (argc, argv);
-	oldtime = Sys_Milliseconds ();
+	Sys_InitVidModes();
+
+	Engine_Init( argc, argv );
 
 	if ( GetACP() == CP_UTF8 ) {
 		Com_DPrint( "Using Windows UTF-8 codepage\n" );
 	}
 
-	/* main window message loop */
-	while (1)
+	oldtime = Sys_Milliseconds();
+
+	// main loop
+	while ( 1 )
 	{
 		// if at a full screen console, don't update unless needed
-		if (Minimized || (dedicated && dedicated->value) )
+		if ( Minimized || ( dedicated && dedicated->value ) )
 		{
-			Sleep (1);
+			Sleep( 1 );
 		}
 
 		do
 		{
-			newtime = Sys_Milliseconds ();
+			newtime = Sys_Milliseconds();
 			time = newtime - oldtime;
-		} while (time < 1);
+		} while ( time < 1 );
 
-		Engine_Frame (time);
+		Engine_Frame( time );
 
 		oldtime = newtime;
 	}
 
-	// never gets here
+	// unreachable
 	return 0;
 }

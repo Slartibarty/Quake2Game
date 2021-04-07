@@ -445,8 +445,6 @@ void GLimp_SetGamma( byte *red, byte *green, byte *blue )
 	}
 }
 
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
 void GLimp_RestoreGamma( void )
 {
 	HDC hDC = GetDC( nullptr );
@@ -456,13 +454,11 @@ void GLimp_RestoreGamma( void )
 	ReleaseDC( nullptr, hDC );
 }
 
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
 bool GLimp_SetMode( int &width, int &height, int mode, bool fullscreen )
 {
 	Com_Printf( "Setting mode %d:", mode );
 
-	if ( !VID_GetModeInfo( width, height, mode ) )
+	if ( !Sys_GetVidModeInfo( width, height, mode ) )
 	{
 		Com_Printf( " invalid mode\n" );
 		width = 0;
@@ -479,9 +475,9 @@ bool GLimp_SetMode( int &width, int &height, int mode, bool fullscreen )
 	return true;
 }
 
-bool GLimp_Init( void *hinstance, void *wndproc )
+bool GLimp_Init()
 {
-	s_glwState.hInstance = (HINSTANCE)hinstance;
+	s_glwState.hInstance = GetModuleHandleW( nullptr );
 
 	DummyVars dvars;
 	GLimp_CreateDummyWindow( dvars );
@@ -490,23 +486,24 @@ bool GLimp_Init( void *hinstance, void *wndproc )
 	glewExperimental = GL_TRUE;
 	if ( glewInit() != GLEW_OK && wglewInit() != GLEW_OK )
 	{
-		Com_Printf( "ref_gl::GLimp_Init() - could not load OpenGL bindings\n" );
+		Com_Printf( "GLimp_Init() - could not load OpenGL bindings\n" );
 		return false;
 	}
 
 	GLimp_DestroyDummyWindow( dvars );
 
 	int width, height;
-	if ( !VID_GetModeInfo( width, height, r_mode->GetInt32() ) )
+	if ( !Sys_GetVidModeInfo( width, height, r_mode->GetInt32() ) )
 	{
-		Com_Printf( "ref_gl::GLimp_Init() - invalid mode\n" );
+		Com_Printf( "GLimp_Init() - invalid mode\n" );
 		return false;
 	}
 
-	GLimp_CreateWindow( (WNDPROC)wndproc, width, height, vid_fullscreen->GetBool() );
+	extern LRESULT CALLBACK MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
+	GLimp_CreateWindow( MainWndProc, width, height, r_fullscreen->GetBool() );
 
 	r_mode->ClearModified();
-	vid_fullscreen->ClearModified();
+	r_fullscreen->ClearModified();
 
 	return true;
 }

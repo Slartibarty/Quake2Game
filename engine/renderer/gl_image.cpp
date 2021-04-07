@@ -785,7 +785,7 @@ void GL_InitImages( void )
 {
 	GL_GetPalette();
 
-	GL_BuildGammaTable( vid_gamma->value, 2 );
+	GL_BuildGammaTable( r_gamma->GetFloat(), 2 );
 
 	R_CreateIntrinsicImages();
 

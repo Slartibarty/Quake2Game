@@ -9,7 +9,6 @@
 
 HWND cl_hwnd;
 
-extern bool	reflib_active;
 extern unsigned sys_msg_time;
 
 namespace input
@@ -316,23 +315,17 @@ LRESULT CALLBACK MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 	}
 	return 0;
 
-//	case WM_PAINT:
-//		SCR_DirtyScreen();	// force entire screen to update next frame
-//		break;
-
 	case WM_ACTIVATE:
 	{
-		int fActive, fMinimized;
-
-		// KJB: Watch this for problems in fullscreen modes with Alt-tabbing.
-		fActive = (int)LOWORD( wParam );
-		fMinimized = (int)HIWORD( wParam );
+		WORD fActive = LOWORD( wParam );
+		WORD fMinimized = HIWORD( wParam );
 
 		AppActivate( fActive != WA_INACTIVE, fMinimized );
 
-		if ( reflib_active ) {
-			R_AppActivate( fActive != WA_INACTIVE );
-		}
+		// there used to be a check here for reflib_active
+		// but since the window is handled by the ref
+		// this was always true!
+		R_AppActivate( fActive != WA_INACTIVE );
 	}
 	return 0;
 
