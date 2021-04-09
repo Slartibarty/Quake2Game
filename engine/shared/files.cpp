@@ -316,7 +316,7 @@ void FS_Init()
 	fs_basedir = Cvar_Get( "basedir", ".", CVAR_NOSET );
 
 	//
-	// start up with baseq2 by default
+	// start up with base by default
 	//
 	FS_AddGameDirectory( va( "%s/" BASEDIRNAME, fs_basedir->string ) );
 

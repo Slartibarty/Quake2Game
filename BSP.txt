@@ -1,0 +1,5 @@
+
+New BSP lump, contains an array of optimised render data
+discard old render data (vertices, faces, etc)
+
+new bsp data is per-visleaf, each visleaf points to an associated block of render data

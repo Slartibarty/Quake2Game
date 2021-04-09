@@ -216,7 +216,7 @@ static void GLimp_PerformCDS( int width, int height, bool fullscreen, bool alert
 
 static void GLimp_PopulateLegacyPFD( PIXELFORMATDESCRIPTOR &pfd )
 {
-	const PIXELFORMATDESCRIPTOR newpfd
+	pfd =
 	{
 		sizeof( PIXELFORMATDESCRIPTOR ),
 		1,
@@ -235,8 +235,6 @@ static void GLimp_PopulateLegacyPFD( PIXELFORMATDESCRIPTOR &pfd )
 		0,
 		0, 0, 0
 	};
-
-	pfd = newpfd;
 }
 
 static void GLimp_CreateWindow( WNDPROC wndproc, int width, int height, bool fullscreen )
@@ -484,7 +482,7 @@ bool GLimp_Init()
 
 	// initialize our OpenGL dynamic bindings
 	glewExperimental = GL_TRUE;
-	if ( glewInit() != GLEW_OK && wglewInit() != GLEW_OK )
+	if ( glewInit() != GLEW_OK || wglewInit() != GLEW_OK )
 	{
 		Com_Printf( "GLimp_Init() - could not load OpenGL bindings\n" );
 		return false;

@@ -33,7 +33,7 @@
 
 #define	ENGINE_VERSION "JaffaQuake"
 
-#define	BASEDIRNAME "baseq2"
+#define	BASEDIRNAME "base"
 
 #ifdef _WIN32
 
