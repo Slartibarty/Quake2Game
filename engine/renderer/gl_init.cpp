@@ -110,7 +110,7 @@ static void R_InitCVars()
 	r_lightlevel = Cvar_Get( "r_lightlevel", "0", 0 );
 
 	r_modulate = Cvar_Get( "r_modulate", "1", CVAR_ARCHIVE );
-	r_mode = Cvar_Get( "r_mode", "0", CVAR_ARCHIVE );
+	r_mode = Cvar_Get( "r_mode", "3", CVAR_ARCHIVE );
 	r_lightmap = Cvar_Get( "r_lightmap", "0", 0 );
 	r_shadows = Cvar_Get( "r_shadows", "0", CVAR_ARCHIVE );
 	r_dynamic = Cvar_Get( "r_dynamic", "1", 0 );
@@ -126,7 +126,7 @@ static void R_InitCVars()
 
 	r_vertex_arrays = Cvar_Get( "r_vertex_arrays", "0", CVAR_ARCHIVE );
 
-	r_ext_multitexture = Cvar_Get( "r_ext_multitexture", "1", CVAR_ARCHIVE );
+	r_ext_multitexture = Cvar_Get( "r_ext_multitexture", "0", CVAR_ARCHIVE );
 	r_ext_compiled_vertex_array = Cvar_Get( "r_ext_compiled_vertex_array", "1", CVAR_ARCHIVE );
 
 	r_overbright = Cvar_Get( "r_overbright", "1", 0 );
