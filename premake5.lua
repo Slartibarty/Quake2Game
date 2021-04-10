@@ -234,7 +234,7 @@ project "cgame"
 	kind "SharedLib"
 	targetname "cgame"
 	language "C++"
-	targetdir "../game/baseq2"
+	targetdir "../game/base"
 	
 	disablewarnings { "4244", "4267" }
 		
@@ -269,7 +269,7 @@ project "game"
 	kind "SharedLib"
 	targetname "game"
 	language "C++"
-	targetdir "../game/baseq2"
+	targetdir "../game/base"
 	
 	disablewarnings { "4244", "4311", "4302" }
 	
