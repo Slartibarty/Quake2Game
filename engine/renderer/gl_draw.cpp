@@ -179,6 +179,7 @@ void R_DrawCharColor( int x, int y, int ch, uint32 color )
 
 	ch &= 255;
 
+	// temp: remove legacy colour codes
 	ch = ( ch & 127 );
 
 	if ( ch == 32 ) {

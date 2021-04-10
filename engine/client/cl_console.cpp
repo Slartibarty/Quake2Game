@@ -162,7 +162,7 @@ Con_Clear_f
 */
 static void Con_Clear_f()
 {
-	memset( con.text, ' ', CON_TEXTSIZE );
+	memset( con.text, '\0', CON_TEXTSIZE );
 
 	Con_Bottom(); // go to end
 }
@@ -201,7 +201,7 @@ static void Con_Dump_f()
 	{
 		line = con.text + ( l % con.totallines ) * con.linewidth;
 		for ( x = 0; x < con.linewidth; x++ ) {
-			if ( line[x] != ' ' ) {
+			if ( line[x] != '\0' ) {
 				break;
 			}
 		}
@@ -220,7 +220,7 @@ static void Con_Dump_f()
 		Q_strcpy_s( buffer, con.linewidth, line );
 		for ( x = con.linewidth - 1; x >= 0; x-- )
 		{
-			if ( buffer[x] == ' ' )
+			if ( buffer[x] == '\0' )
 				buffer[x] = 0;
 			else
 				break;
@@ -292,7 +292,7 @@ void Con_CheckResize (void)
 		width = DEFAULT_CONSOLE_WIDTH;
 		con.linewidth = width;
 		con.totallines = CON_TEXTSIZE / con.linewidth;
-		memset (con.text, ' ', CON_TEXTSIZE);
+		memset (con.text, '\0', CON_TEXTSIZE);
 	}
 	else
 	{
@@ -311,7 +311,7 @@ void Con_CheckResize (void)
 			numchars = con.linewidth;
 
 		memcpy (tbuf, con.text, CON_TEXTSIZE);
-		memset (con.text, ' ', CON_TEXTSIZE);
+		memset (con.text, '\0', CON_TEXTSIZE);
 
 		for (i=0 ; i<numlines ; i++)
 		{
@@ -377,7 +377,7 @@ void Con_Linefeed()
 		con.display++;
 	}
 	con.current++;
-	memset( &con.text[( con.current % con.totallines ) * con.linewidth], ' ', con.linewidth );
+	memset( &con.text[( con.current % con.totallines ) * con.linewidth], '\0', con.linewidth );
 }
 
 /*
@@ -484,7 +484,7 @@ static void Con_DrawInput()
 
 	// fill out remainder with spaces
 	for ( i = key_linepos; i < con.linewidth; i++ ) {
-		text[i] = ' ';
+		text[i] = '\0';
 	}
 
 	// prestep if horizontally scrolling
@@ -499,12 +499,16 @@ static void Con_DrawInput()
 		y, ']', colorConsoleText );
 
 	for ( i = 0; i < con.linewidth; i++ ) {
+		if ( text[i] == '\0' ) {
+			// row's done
+			break;
+		}
 		R_DrawCharColor( con.xadjust + ( i + 2 ) * CONCHAR_WIDTH,
 			y, text[i], colorWhite );
 	}
 
 	// add the cursor frame
-	if ( (int)( cls.realtime >> 8 ) & 1 ) {
+	if ( ( cls.realtime >> 8 ) & 1 ) {
 		R_DrawCharColor( con.xadjust + ( key_linepos + 2 ) * CONCHAR_WIDTH,
 			y, 11, colorWhite );
 	}
@@ -581,6 +585,10 @@ void Con_DrawNotify()
 		int localLineWidth = con.linewidth;
 		
 		for ( x = 0; x < localLineWidth; x++ ) {
+			if ( text[x] == '\0' ) {
+				// row's done
+				break;
+			}
 			if ( text[x] == C_COLOR_ESCAPE && IsColorIndex( text[x + 1] ) ) {
 				color = ColorForIndex( text[x + 1] );
 				localLineWidth -= 2;
@@ -706,6 +714,10 @@ void Con_DrawConsole( float frac )
 		int localLineWidth = con.linewidth;
 
 		for ( x = 0; x < localLineWidth; x++ ) {
+			if ( text[x] == '\0' ) {
+				// row's done
+				break;
+			}
 			if ( text[x] == C_COLOR_ESCAPE && IsColorIndex( text[x + 1] ) ) {
 				color = ColorForIndex( text[x + 1] );
 				localLineWidth -= 2;
