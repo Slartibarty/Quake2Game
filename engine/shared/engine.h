@@ -19,7 +19,7 @@
 #include "protocol.h"
 #include "sizebuf.h"
 #include "sys.h"
-#include "zone.h"
+#include "memory.h"
 
 #include "../../common/q_formats.h" // File formats
 
