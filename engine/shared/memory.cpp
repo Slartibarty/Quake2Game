@@ -100,11 +100,11 @@ void *Mem_TagAlloc( size_t size, uint16 tag )
 }
 
 // Free a single tag allocation
-static void Mem_TagFree( void *ptr )
+void Mem_TagFree( void *block )
 {
 	zhead_t *z;
 
-	z = (zhead_t *)ptr - 1;
+	z = (zhead_t *)block - 1;
 
 	assert( z->magic == Z_MAGIC );
 
@@ -150,5 +150,5 @@ void Mem_Init()
 
 void Mem_Shutdown()
 {
-
+	
 }

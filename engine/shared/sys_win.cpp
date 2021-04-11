@@ -483,6 +483,12 @@ int main( int argc, char **argv )
 	// rather than printing to stderr
 	_set_app_type( _crt_gui_app );
 
+#if _DEBUG
+	int dbgFlags = _CrtSetDbgFlag( _CRTDBG_REPORT_FLAG );
+	dbgFlags |= _CRTDBG_LEAK_CHECK_DF;
+	_CrtSetDbgFlag( dbgFlags );
+#endif
+
 	g_hInstance = GetModuleHandleW( nullptr );
 
 	g_argc = argc; g_argv = argv;
