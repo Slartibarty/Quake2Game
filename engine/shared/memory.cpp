@@ -1,83 +1,65 @@
-//=================================================================================================
-// Zone memory allocation
-//
-// Taggged allocations are used by the game code
-//=================================================================================================
+/*
+===================================================================================================
+
+	Memory management
+
+	Tagged allocation is used by the game code
+
+===================================================================================================
+*/
 
 #include "engine.h"
 
-#include "zone.h"
+#include "memory.h"
 
-#ifndef Q_RETAIL
-#define Q_MEM_DEBUG
-#endif
+#include <cstdio>
+#include <cstdlib>
 
-//=================================================================================================
-// Basic allocation
-//=================================================================================================
+static constexpr size_t MemAlignment = 16;
+static constexpr size_t MemShift = MemAlignment - 1;
 
-#ifdef Q_MEM_DEBUG
-static size_t	z_basicbytes;
-#endif
+static constexpr size_t ALIGN( size_t size ) { return ( size + MemShift ) & ~MemShift; }
 
-//-------------------------------------------------------------------------------------------------
-// Allocate memory with no frills
-//-------------------------------------------------------------------------------------------------
-void *Z_Malloc( size_t size )
+/*
+=================================================
+	Basic allocation
+=================================================
+*/
+
+void *Mem_Alloc( size_t size )
 {
-#ifdef Q_MEM_DEBUG
-	z_basicbytes += size;
-#endif
-	return malloc( size );
+	return _aligned_malloc( ALIGN( size ), MemAlignment );
 }
 
-//-------------------------------------------------------------------------------------------------
-// Allocate memory with no frills and set to zero
-//-------------------------------------------------------------------------------------------------
-void *Z_Calloc( size_t size )
+void *Mem_ReAlloc( void *block, size_t size )
 {
-#ifdef Q_MEM_DEBUG
-	z_basicbytes += size;
-#endif
-	return calloc( size, 1 );
+	return _aligned_realloc( block, ALIGN( size ), MemAlignment );
 }
 
-//-------------------------------------------------------------------------------------------------
-// Reallocate an existing block
-//-------------------------------------------------------------------------------------------------
-void *Z_Realloc( void *block, size_t size )
+void *Mem_ClearedAlloc( size_t size )
 {
-#ifdef Q_MEM_DEBUG
-	z_basicbytes -= _msize( block );
-	z_basicbytes += size;
-#endif
-	return realloc( block, size );
+	void *mem = Mem_Alloc( size );
+	memset( mem, 0, size );
+	return mem;
 }
 
-//-------------------------------------------------------------------------------------------------
-// Duplicate a string
-//-------------------------------------------------------------------------------------------------
-char *Z_CopyString( const char *in )
+char *Mem_CopyString( const char *in )
 {
-	char *out = (char *)Z_Malloc( strlen( in ) + 1 );
+	char *out = (char *)Mem_Alloc( strlen( in ) + 1 );
 	strcpy( out, in );
 	return out;
 }
 
-//-------------------------------------------------------------------------------------------------
-// Free some no-frills memory
-//-------------------------------------------------------------------------------------------------
-void Z_Free( void *block )
+void Mem_Free( void *block )
 {
-#ifdef Q_MEM_DEBUG
-	z_basicbytes -= _msize( block );
-#endif
-	free( block );
+	_aligned_free( block );
 }
 
-//=================================================================================================
-// Tagged allocation
-//=================================================================================================
+/*
+=================================================
+	Tagged allocation
+=================================================
+*/
 
 static constexpr uint16 Z_MAGIC = 0x1d1d;
 
@@ -93,15 +75,13 @@ struct zhead_t
 static zhead_t	z_tagchain;
 static size_t	z_tagcount, z_tagbytes;
 
-//-------------------------------------------------------------------------------------------------
-// Allocate some tracked memory
-//-------------------------------------------------------------------------------------------------
-void *Z_TagMalloc( size_t size, uint16 tag )
+// Allocate some memory with a tag at the front
+void *Mem_TagAlloc( size_t size, uint16 tag )
 {
 	zhead_t *z;
 
 	size += sizeof( zhead_t );
-	z = (zhead_t *)malloc( size );
+	z = (zhead_t *)Mem_Alloc( size );
 	assert( z );
 
 	++z_tagcount;
@@ -119,10 +99,8 @@ void *Z_TagMalloc( size_t size, uint16 tag )
 	return (void *)( z + 1 );
 }
 
-//-------------------------------------------------------------------------------------------------
-// Free some tagged memory, should this be allowed???
-//-------------------------------------------------------------------------------------------------
-void Z_TagFree( void *ptr )
+// Free a single tag allocation
+static void Mem_TagFree( void *ptr )
 {
 	zhead_t *z;
 
@@ -135,13 +113,11 @@ void Z_TagFree( void *ptr )
 
 	--z_tagcount;
 	z_tagbytes -= z->size;
-	free( z );
+	Mem_Free( z );
 }
 
-//-------------------------------------------------------------------------------------------------
 // Free all allocations associated with the given tag
-//-------------------------------------------------------------------------------------------------
-void Z_TagFreeGroup( uint16 tag )
+void Mem_TagFreeGroup( uint16 tag )
 {
 	zhead_t *z, *next;
 
@@ -149,53 +125,30 @@ void Z_TagFreeGroup( uint16 tag )
 	{
 		next = z->next;
 		if ( z->tag == tag ) {
-			Z_TagFree( (void *)( z + 1 ) );
+			Mem_TagFree( (void *)( z + 1 ) );
 		}
 	}
 }
 
-//=================================================================================================
-// Status (for tracked memory)
-//=================================================================================================
+/*
+=================================================
+	Status
+=================================================
+*/
 
-// Concommand to return misc info
-static void Z_Stats_f()
+static void Mem_Stats_f()
 {
-#ifdef Q_MEM_DEBUG
-	Com_Printf(
-		"Normal allocations: %zu bytes\n"
-		"Tag allocations: %zu bytes in %zu blocks\n"
-		"Total: %zu bytes\n",
-		z_basicbytes,
-		z_tagbytes, z_tagcount,
-		z_basicbytes + z_tagbytes );
-#else
-	Com_Printf(
-		"Tag allocations: %zu bytes in %zu blocks\n",
-		z_tagbytes, z_tagcount );
-#endif
+	Com_Print( "Not implemented\n" );
 }
 
-//-------------------------------------------------------------------------------------------------
-// Inits the chain for tagged allocations
-//-------------------------------------------------------------------------------------------------
-void Z_Init()
+void Mem_Init()
 {
 	z_tagchain.next = z_tagchain.prev = &z_tagchain;
 
-	Cmd_AddCommand( "z_stats", Z_Stats_f );
+	Cmd_AddCommand( "mem_stats", Mem_Stats_f );
 }
 
-//-------------------------------------------------------------------------------------------------
-// No purpose yet, eventually will report memory still in use
-//-------------------------------------------------------------------------------------------------
-void Z_Shutdown()
+void Mem_Shutdown()
 {
-	// Make sure by the time we get here, we don't have any memory still in use...
-#ifdef Q_MEM_DEBUG
-	// TODO: Figure out why this is always at 16kb or so
-//	assert( z_basicbytes == 0 );
-#endif
-	assert( z_tagbytes == 0 );
-	assert( z_tagcount == 0 );
+
 }
