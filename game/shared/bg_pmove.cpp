@@ -1547,6 +1547,11 @@ static void PM_SnapPosition()
 
 	VectorCopy( pml.velocity, pm->s.velocity );
 	VectorCopy( pml.origin, pm->s.origin );
+
+	// slarthack: this was a big mistake
+	if ( pm->groundentity ) {
+		pm->s.pm_flags |= PMF_ON_GROUND;
+	}
 }
 
 /*

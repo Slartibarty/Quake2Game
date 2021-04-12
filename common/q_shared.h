@@ -578,9 +578,10 @@ enum waterLevel_t
 // pmove->pm_flags
 #define	PMF_DUCKED			1
 #define	PMF_JUMP_HELD		2
-#define	PMF_TIME_WATERJUMP	4	// pm_time is waterjump
-#define	PMF_TIME_TELEPORT	8	// pm_time is non-moving time
-#define PMF_NO_PREDICTION	16	// temporarily disables prediction (used for grappling hook)
+#define	PMF_ON_GROUND		4
+#define	PMF_TIME_WATERJUMP	8	// pm_time is waterjump
+#define	PMF_TIME_TELEPORT	16	// pm_time is non-moving time
+#define PMF_NO_PREDICTION	32	// temporarily disables prediction (used for grappling hook)
 
 #define	PMF_ALL_TIMES	(PMF_TIME_WATERJUMP|PMF_TIME_TELEPORT)
 
