@@ -13,6 +13,25 @@
 extern cgame_import_t cgi;
 
 //=============================================================================
+
+// all cg.stepTime, cg.duckTime, cg.landTime, etc are set to cg.time when the action
+// occurs, and they will have visible effects for #define STEP_TIME or whatever msec after
+
+struct cg_t
+{
+	int			time;			// this is the time value that the client
+								// is rendering at.  always <= cls.realtime
+
+};
+
+struct cgs_t
+{
+};
+
+extern cgs_t		cgs;
+extern cg_t			cg;
+
+//=============================================================================
 // FX dlights
 
 struct cdlight_t

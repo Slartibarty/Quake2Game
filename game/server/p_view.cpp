@@ -1034,10 +1034,15 @@ void ClientEndServerFrame (edict_t *ent)
 	P_DamageFeedback (ent);
 
 	// determine the view offsets
+#if 0
 	SV_CalcViewOffset (ent);
 
 	// determine the gun offsets
 	SV_CalcGunOffset (ent);
+#else
+	VectorClear( ent->client->ps.viewoffset );
+	ent->client->ps.viewoffset[2] = ent->viewheight;
+#endif
 
 	// determine the full screen color blend
 	// must be after viewoffset, so eye contents can be
