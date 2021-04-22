@@ -39,6 +39,7 @@ warnings "Default"
 floatingpoint "Fast"
 characterset "ASCII"
 exceptionhandling "Off"
+editandcontinue "Off"
 	
 -- Config for all 64-bit projects
 filter( filter_64bit )
@@ -171,6 +172,20 @@ local uvatlas_sources = {
 }
 
 -------------------------------------------------------------------------------
+
+group "support"
+
+project "core"
+	kind "StaticLib"
+	targetname "core"
+	language "C++"
+	
+	vpaths { ["code"] = "*" }
+	
+	files {
+		"core/*.cpp",
+		"core/*.h"
+	}
 
 group "game"
 
@@ -341,7 +356,41 @@ project "qbsp4"
 		}
 	filter {}
 
+project "qbsp5"
+	kind "ConsoleApp"
+	targetname "qbsp5"
+	language "C++"
+	floatingpoint "Default"
+	targetdir "../game"
+	includedirs { "utils/common2", "common" }
 	
+	files {
+		"common/windows_default.manifest",
+		
+		"common/*.cpp",
+		"common/*.h",
+		
+		"utils/common2/cmdlib.*",
+		"utils/common2/mathlib.*",
+		"utils/common2/scriplib.*",
+		"utils/common2/polylib.*",
+		"utils/common2/threads.*",
+		"utils/common2/bspfile.*",
+			
+		"utils/qbsp5/*"
+	}
+	
+	filter "system:windows"
+		removefiles {
+			"**/*_linux.*"
+		}
+	filter {}
+	filter "system:linux"
+		removefiles {
+			"**/*_win.*"
+		}
+	filter {}
+
 project "qvis4"
 	kind "ConsoleApp"
 	targetname "qvis4"
