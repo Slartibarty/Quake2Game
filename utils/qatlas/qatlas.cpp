@@ -1,5 +1,5 @@
 
-#include "../../common/q_shared.h"
+#include "../../core/core.h"
 #include "../../common/q_formats.h"
 
 #include <vector>

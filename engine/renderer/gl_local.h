@@ -15,7 +15,7 @@ static_assert( DIRECTX_MATH_VERSION >= 316 );
 #include <Windows.h>
 #endif
 
-#include "../../common/threading.h"
+#include "../../core/threading.h"
 
 #include "GL/glew.h"
 #ifdef _WIN32

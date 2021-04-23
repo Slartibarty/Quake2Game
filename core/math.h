@@ -265,9 +265,15 @@ inline bool VectorCompare( const vec3_t v1, const vec3_t v2 )
 	return ( v1[0] == v2[0] && v1[1] == v2[1] && v1[2] == v2[2] );
 }
 
+inline void ClearBounds( vec3_t mins, vec3_t maxs )
+{
+	mins[0] = mins[1] = mins[2] = 99999.0f;
+	maxs[0] = maxs[1] = maxs[2] = -99999.0f;
+}
+
 // returns vector length
 float VectorNormalize( vec3_t v );
-float ColorNormalize( vec3_t in, vec3_t out );
+float ColorNormalize( const vec3_t in, vec3_t out );
 
 void AngleVectors( const vec3_t angles, vec3_t forward, vec3_t right, vec3_t up );
 
@@ -291,3 +297,12 @@ void RotatePointAroundVector( vec3_t dst, const vec3_t dir, const vec3_t point, 
 void AngleQuaternion( const vec3_t angles, vec4_t quaternion );
 void QuaternionMatrix( const vec4_t quaternion, float( *matrix )[4] );
 void QuaternionSlerp( const vec4_t p, vec4_t q, float t, vec4_t qt );
+
+// legacy macros
+#define _DotProduct(x,y)		(x[0]*y[0]+x[1]*y[1]+x[2]*y[2])
+#define _VectorSubtract(a,b,c)	(c[0]=a[0]-b[0],c[1]=a[1]-b[1],c[2]=a[2]-b[2])
+#define _VectorAdd(a,b,c)		(c[0]=a[0]+b[0],c[1]=a[1]+b[1],c[2]=a[2]+b[2])
+#define _VectorCopy(a,b)		(b[0]=a[0],b[1]=a[1],b[2]=a[2])
+#define _VectorClear(a)			(a[0]=a[1]=a[2]=0)
+#define _VectorNegate(a,b)		(b[0]=-a[0],b[1]=-a[1],b[2]=-a[2])
+#define _VectorSet(v, x, y, z)	(v[0]=(x), v[1]=(y), v[2]=(z))

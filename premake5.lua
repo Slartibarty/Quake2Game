@@ -196,6 +196,7 @@ project "engine"
 	targetdir "../game"
 	includedirs { "thirdparty/glew/include", "thirdparty/zlib", "thirdparty/libpng", "thirdparty/libpng_config" }
 	defines { "GLEW_STATIC", "GLEW_NO_GLU" }
+	links { "core" }
 	filter "system:windows"
 		linkoptions { "/ENTRY:mainCRTStartup" }
 		links { "ws2_32", "dsound", "dxguid", "opengl32", "noenv.obj", "zlib", "libpng" }
@@ -250,6 +251,7 @@ project "cgame"
 	targetname "cgame"
 	language "C++"
 	targetdir "../game/base"
+	links { "core" }
 	
 	disablewarnings { "4244", "4267" }
 		
@@ -285,7 +287,8 @@ project "game"
 	targetname "game"
 	language "C++"
 	targetdir "../game/base"
-	
+	links { "core" }
+
 	disablewarnings { "4244", "4311", "4302" }
 	
 	pchsource( "game/server/g_pch.cpp" )
@@ -327,6 +330,7 @@ project "qbsp4"
 	language "C++"
 	floatingpoint "Default"
 	targetdir "../game"
+	links { "core" }
 	includedirs { "utils/common2", "common" }
 	
 	files {
@@ -362,6 +366,7 @@ project "qbsp5"
 	language "C++"
 	floatingpoint "Default"
 	targetdir "../game"
+	links { "core" }
 	includedirs { "utils/common2", "common" }
 	
 	files {
@@ -397,6 +402,7 @@ project "qvis4"
 	language "C++"
 	floatingpoint "Default"
 	targetdir "../game"
+	links { "core" }
 	includedirs { "utils/common2", "common" }
 	
 	files {
@@ -431,6 +437,7 @@ project "qrad4"
 	language "C++"
 	floatingpoint "Default"
 	targetdir "../game"
+	links { "core" }
 	includedirs { "utils/common2", "common", "thirdparty/stb" }
 	
 	files {
@@ -466,11 +473,11 @@ project "qatlas"
 	language "C++"
 	floatingpoint "Default"
 	targetdir "../game"
-	includedirs { "utils/common2", "common", "thirdparty/xatlas" }
+	links { "core" }
+	includedirs { "utils/common2", "thirdparty/xatlas" }
 	
 	files {
 		"common/windows_default.manifest",
-		"common/q_shared.*",
 		"common/q_formats.h",
 	
 		"utils/common2/cmdlib.*",

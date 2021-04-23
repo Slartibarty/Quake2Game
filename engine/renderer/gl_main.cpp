@@ -491,26 +491,6 @@ static void R_DrawParticles()
 
 /*
 ========================
-SignbitsForPlane
-========================
-*/
-static int SignbitsForPlane( cplane_t *out )
-{
-	int	bits, j;
-
-	// for fast box on planeside test
-	bits = 0;
-	for ( j = 0; j < 3; j++ )
-	{
-		if ( out->normal[j] < 0.0f ) {
-			bits |= 1 << j;
-		}
-	}
-	return bits;
-}
-
-/*
-========================
 R_SetFrustum
 ========================
 */
@@ -550,7 +530,7 @@ static void R_SetFrustum()
 	{
 		frustum[i].type = PLANE_ANYZ;
 		frustum[i].dist = DotProduct( r_origin, frustum[i].normal );
-		frustum[i].signbits = SignbitsForPlane( &frustum[i] );
+		frustum[i].signbits = SignbitsForPlane( frustum[i] );
 	}
 }
 

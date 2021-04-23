@@ -1,6 +1,6 @@
 // The q_shared of the tools
 
-#include "q_shared.h"
+#include "../../core/core.h"
 
 #ifdef _WIN32
 #include <direct.h>

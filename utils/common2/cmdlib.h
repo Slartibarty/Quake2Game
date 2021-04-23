@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "q_shared.h"
+#include "../../core/core.h"
 
 extern bool verbose;
 

@@ -271,7 +271,7 @@ char *Sys_GetClipboardData( void )
 ===================================================================================================
 */
 
-struct alignas( 16 ) vidmode_t
+struct vidmode_t
 {
 	/*char	description[32];*/
 	int		width, height, mode;

@@ -6,15 +6,15 @@
 
 #pragma once
 
-#include "q_types.h"
-#include "q_math.h"
+#include "../core/sys_types.h"
+#include "../core/utilities.h"
 
 //-------------------------------------------------------------------------------------------------
 // PAK files
 // The .pak files are just a linear collapse of a directory tree
 //-------------------------------------------------------------------------------------------------
 
-constexpr int IDPAKHEADER = MakeID('P', 'A', 'C', 'K');
+constexpr int IDPAKHEADER = MakeFourCC('P', 'A', 'C', 'K');
 
 struct dpackfile_t
 {
@@ -56,7 +56,7 @@ struct pcx_t
 // .MD2 triangle model file format
 //-------------------------------------------------------------------------------------------------
 
-constexpr int IDALIASHEADER = MakeID('I', 'D', 'P', '2');
+constexpr int IDALIASHEADER = MakeFourCC('I', 'D', 'P', '2');
 
 #define ALIAS_VERSION	8
 
@@ -140,8 +140,8 @@ struct dmdl_t
 
 namespace
 {
-	constexpr int32 IDSTUDIOHEADER = MakeID( 'I', 'D', 'S', 'T' );
-	constexpr int32 IDSTUDIOSEQHEADER = MakeID( 'I', 'D', 'S', 'Q' );
+	constexpr int32 IDSTUDIOHEADER = MakeFourCC( 'I', 'D', 'S', 'T' );
+	constexpr int32 IDSTUDIOSEQHEADER = MakeFourCC( 'I', 'D', 'S', 'Q' );
 
 	constexpr auto MAXSTUDIOTRIANGLES	= 20000;	// TODO: tune this
 	constexpr auto MAXSTUDIOVERTS		= 2048;		// TODO: tune this
@@ -471,7 +471,7 @@ namespace
 // .SP2 sprite file format
 //-------------------------------------------------------------------------------------------------
 
-constexpr int IDSPRITEHEADER = MakeID('I', 'D', 'S', '2');
+constexpr int IDSPRITEHEADER = MakeFourCC('I', 'D', 'S', '2');
 
 #define SPRITE_VERSION	2
 
@@ -524,7 +524,7 @@ struct was_t
 
 namespace wad2
 {
-	constexpr int IDWADHEADER = MakeID( 'W', 'A', 'D', '2' );
+	constexpr int IDWADHEADER = MakeFourCC( 'W', 'A', 'D', '2' );
 	
 	// obsolete
 	enum compression_t : int8
@@ -579,7 +579,7 @@ namespace wad2
 // .BSP file format
 //-------------------------------------------------------------------------------------------------
 
-constexpr int IDBSPHEADER = MakeID('Q', 'B', 'S', 'P');
+constexpr int IDBSPHEADER = MakeFourCC('Q', 'B', 'S', 'P');
 
 #define BSPVERSION 41
 

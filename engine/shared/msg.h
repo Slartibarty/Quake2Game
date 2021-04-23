@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "../../common/q_types.h"
-#include "../../common/q_math.h"
+#include "../../core/sys_types.h"
+#include "../../core/math.h"
 #include "sizebuf.h"
 
 // q_shared

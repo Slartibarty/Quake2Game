@@ -12,7 +12,7 @@ void	SCR_CenterPrint (const char *str);
 void	SCR_BeginLoadingPlaque (void);
 void	SCR_EndLoadingPlaque (void);
 
-void	SCR_DebugGraph (float value, qColor color);
+void	SCR_DebugGraph (float value, uint32 color);
 
 void	SCR_TouchPics (void);
 

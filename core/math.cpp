@@ -8,6 +8,8 @@
 
 #include "core.h"
 
+vec3_t vec3_origin;
+
 /*
 ===================================================================================================
 
@@ -30,7 +32,7 @@ float VectorNormalize( vec3_t v )
 	return length;
 }
 
-float ColorNormalize( vec3_t in, vec3_t out )
+float ColorNormalize( const vec3_t in, vec3_t out )
 {
 	float max, scale;
 
@@ -172,7 +174,6 @@ int BoxOnPlaneSide( const vec3_t emins, const vec3_t emaxs, const cplane_t *p )
 	// fast axial cases
 	if ( p->type < 3 )
 	{
-		assert( 0 );
 		if ( p->dist <= emins[p->type] )
 			return 1;
 		if ( p->dist >= emaxs[p->type] )
@@ -352,6 +353,22 @@ void AngleQuaternion( const vec3_t angles, vec4_t quaternion )
 	quaternion[1] = cr * sp * cy + sr * cp * sy; // Y
 	quaternion[2] = cr * cp * sy - sr * sp * cy; // Z
 	quaternion[3] = cr * cp * cy + sr * sp * sy; // W
+}
+
+void QuaternionMatrix( const vec4_t quaternion, float( *matrix )[4] )
+{
+
+	matrix[0][0] = 1.0f - 2.0f * quaternion[1] * quaternion[1] - 2.0f * quaternion[2] * quaternion[2];
+	matrix[1][0] = 2.0f * quaternion[0] * quaternion[1] + 2.0f * quaternion[3] * quaternion[2];
+	matrix[2][0] = 2.0f * quaternion[0] * quaternion[2] - 2.0f * quaternion[3] * quaternion[1];
+
+	matrix[0][1] = 2.0f * quaternion[0] * quaternion[1] - 2.0f * quaternion[3] * quaternion[2];
+	matrix[1][1] = 1.0f - 2.0f * quaternion[0] * quaternion[0] - 2.0f * quaternion[2] * quaternion[2];
+	matrix[2][1] = 2.0f * quaternion[1] * quaternion[2] + 2.0f * quaternion[3] * quaternion[0];
+
+	matrix[0][2] = 2.0f * quaternion[0] * quaternion[2] + 2.0f * quaternion[3] * quaternion[1];
+	matrix[1][2] = 2.0f * quaternion[1] * quaternion[2] - 2.0f * quaternion[3] * quaternion[0];
+	matrix[2][2] = 1.0f - 2.0f * quaternion[0] * quaternion[0] - 2.0f * quaternion[1] * quaternion[1];
 }
 
 void QuaternionSlerp( const vec4_t p, vec4_t q, float t, vec4_t qt )

@@ -15,10 +15,12 @@
 #include <cstdio>
 #include <cstdlib>
 
+#if 0
 static constexpr size_t MemAlignment = 16;
 static constexpr size_t MemShift = MemAlignment - 1;
 
 static constexpr size_t ALIGN( size_t size ) { return ( size + MemShift ) & ~MemShift; }
+#endif
 
 /*
 =================================================
@@ -28,12 +30,12 @@ static constexpr size_t ALIGN( size_t size ) { return ( size + MemShift ) & ~Mem
 
 void *Mem_Alloc( size_t size )
 {
-	return _aligned_malloc( ALIGN( size ), MemAlignment );
+	return malloc( size );
 }
 
 void *Mem_ReAlloc( void *block, size_t size )
 {
-	return _aligned_realloc( block, ALIGN( size ), MemAlignment );
+	return realloc( block, size );
 }
 
 void *Mem_ClearedAlloc( size_t size )
@@ -52,7 +54,7 @@ char *Mem_CopyString( const char *in )
 
 void Mem_Free( void *block )
 {
-	_aligned_free( block );
+	free( block );
 }
 
 /*

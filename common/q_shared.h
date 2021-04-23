@@ -1,22 +1,14 @@
-//-------------------------------------------------------------------------------------------------
-// q_shared.h - included first by ALL program modules
-//-------------------------------------------------------------------------------------------------
+/*
+===================================================================================================
+
+	Contains defs shared between cgame, game and the engine
+
+===================================================================================================
+*/
 
 #pragma once
 
-#include <cstddef>
-#include <cstdlib>
-#include <cmath>
-#include <cstring>
-#include <cstdarg>
-#include <cstdio>
-#include <cassert>
-#include <cctype>
-#include <ctime>
-
-#include "q_defs.h"
-#include "q_types.h"
-#include "q_math.h"
+#include "../core/core.h"
 
 #ifndef _WIN32
 #define _Printf_format_string_
@@ -24,32 +16,6 @@
 
 #define	MAX_STRING_CHARS	1024	// max length of a string passed to Cmd_TokenizeString
 #define	MAX_STRING_TOKENS	80		// max tokens resulting from Cmd_TokenizeString
-#define	MAX_TOKEN_CHARS		128		// max length of an individual token
-
-// color escape character
-#define C_COLOR_ESCAPE			'^'
-#define C_COLOR_DEFAULT			'0'
-#define C_COLOR_RED				'1'
-#define C_COLOR_GREEN			'2'
-#define C_COLOR_YELLOW			'3'
-#define C_COLOR_BLUE			'4'
-#define C_COLOR_CYAN			'5'
-#define C_COLOR_ORANGE			'6'
-#define C_COLOR_WHITE			'7'
-#define C_COLOR_GRAY			'8'
-#define C_COLOR_BLACK			'9'
-
-// color escape string
-#define S_COLOR_DEFAULT			"^0"
-#define S_COLOR_RED				"^1"
-#define S_COLOR_GREEN			"^2"
-#define S_COLOR_YELLOW			"^3"
-#define S_COLOR_BLUE			"^4"
-#define S_COLOR_CYAN			"^5"
-#define S_COLOR_ORANGE			"^6"
-#define S_COLOR_WHITE			"^7"
-#define S_COLOR_GRAY			"^8"
-#define S_COLOR_BLACK			"^9"
 
 //
 // per-level limits
@@ -81,311 +47,6 @@ enum multicast_t
 };
 
 //-------------------------------------------------------------------------------------------------
-// Utilities - Slartibarty additions
-//-------------------------------------------------------------------------------------------------
-
-// Makes a 4-byte "packed ID" int32 out of 4 characters
-inline consteval int32 MakeID(int32 d, int32 c, int32 b, int32 a) {
-	return ( ( a << 24 ) | ( b << 16 ) | ( c << 8 ) | ( d ) );
-}
-
-inline constexpr uint32 PackColor( uint32 r, uint32 g, uint32 b, uint32 a ) {
-	return ( ( r ) | ( g << 8 ) | ( b << 16 ) | ( a << 24 ) );
-}
-
-inline constexpr uint32 PackColorFromFloats( float fr, float fg, float fb, float fa ) {
-	uint32 r = static_cast<uint32>( fr * 255.0f + 0.5f );
-	uint32 g = static_cast<uint32>( fg * 255.0f + 0.5f );
-	uint32 b = static_cast<uint32>( fb * 255.0f + 0.5f );
-	uint32 a = static_cast<uint32>( fa * 255.0f + 0.5f );
-	return ( ( r ) | ( g << 8 ) | ( b << 16 ) | ( a << 24 ) );
-}
-
-//-------------------------------------------------------------------------------------------------
-// Library replacement functions - q_shared.cpp
-//-------------------------------------------------------------------------------------------------
-
-template< typename T >
-inline constexpr T Min( const T valMin, const T valMax ) {
-	return valMin < valMax ? valMin : valMax;
-}
-
-template< typename T >
-inline constexpr T Max( const T valMin, const T valMax ) {
-	return valMin > valMax ? valMin : valMax;
-}
-
-template< typename T >
-inline constexpr T Clamp( const T val, const T valMin, const T valMax ) {
-	return Min( Max( val, valMin ), valMax );
-}
-
-// size_t is wack
-using strlen_t = uint32;
-
-[[nodiscard]]
-inline strlen_t Q_strlen( const char *str )
-{
-	return static_cast<strlen_t>( strlen( str ) );
-}
-
-// Safe strcpy that ensures null termination
-// Returns bytes written
-void Q_strcpy_s(char *pDest, strlen_t nDestSize, const char *pSrc);
-
-template< strlen_t nDestSize >
-inline void Q_strcpy_s(char (&pDest)[nDestSize], const char *pSrc)
-{
-	Q_strcpy_s(pDest, nDestSize, pSrc);
-}
-
-inline int Q_strcmp( const char *s1, const char *s2 )
-{
-	return s1 == s2 ? 0 : strcmp( s1, s2 );
-}
-
-inline int Q_strncmp( const char *s1, const char *s2, strlen_t maxcount )
-{
-	return s1 == s2 ? 0 : strncmp( s1, s2, maxcount );
-}
-
-// portable case insensitive compare
-int Q_strcasecmp( const char *s1, const char *s2 );
-int Q_strncasecmp( const char *s1, const char *s2, strlen_t n );
-inline int Q_stricmp( const char *s1, const char *s2 ) { return Q_strcasecmp( s1, s2 ); } // FIXME: replace all Q_stricmp with Q_strcasecmp
-
-void Q_vsprintf_s(char *pDest, strlen_t nDestSize, _Printf_format_string_ const char *pFmt, va_list args);
-
-template< strlen_t nDestSize >
-inline void Q_vsprintf_s( char( &pDest )[nDestSize], _Printf_format_string_ const char *pFmt, va_list args )
-{
-	Q_vsprintf_s( pDest, nDestSize, pFmt, args );
-}
-
-inline void Q_sprintf_s( char *pDest, strlen_t nDestSize, _Printf_format_string_ const char *pFmt, ... )
-{
-	va_list args;
-	va_start( args, pFmt );
-	Q_vsprintf_s( pDest, nDestSize, pFmt, args );
-	va_end( args );
-}
-
-template< strlen_t nDestSize >
-inline void Q_sprintf_s( char( &pDest )[nDestSize], _Printf_format_string_ const char *pFmt, ... )
-{
-	va_list args;
-	va_start( args, pFmt );
-	Q_vsprintf_s( pDest, nDestSize, pFmt, args );
-	va_end( args );
-}
-
-void Q_vsprintf( char *pDest, _Printf_format_string_ const char *pFmt, va_list args );
-
-inline void Q_sprintf( char *pDest, _Printf_format_string_ const char *pFmt, ... )
-{
-	va_list args;
-	va_start( args, pFmt );
-	Q_vsprintf( pDest, pFmt, args );
-	va_end( args );
-}
-
-// SlartTodo: Operate with int like std::tolower?
-inline int Q_tolower( int ch )
-{
-	return ( ch <= 'Z' && ch >= 'A' ) ? ( ch + ( 'a' - 'A' ) ) : ch;
-}
-
-inline int Q_toupper( int ch )
-{
-	return ( ch >= 'a' && ch <= 'z' ) ? ( ch - ( 'a' - 'A' ) ) : ch;
-}
-
-inline void Q_strlwr( char *dest )
-{
-	while ( *dest )
-	{
-		*dest = Q_tolower( *dest );
-		++dest;
-	}
-}
-
-inline void Q_strupr( char *dest )
-{
-	while ( *dest )
-	{
-		*dest = Q_toupper( *dest );
-		++dest;
-	}
-}
-
-/*
-===================================================================================================
-
-	Colour
-
-===================================================================================================
-*/
-
-struct qColor
-{
-	union
-	{
-		byte arr[4];
-		uint32 rgba;
-	} data;
-
-	constexpr qColor( uint32 rgba ) {
-		SetFromUint32( rgba );
-	}
-
-	constexpr void SetFromUint32( uint32 rgba ) {
-		data.rgba = rgba;
-	}
-
-	constexpr void SetFromBytes( byte r, byte g, byte b, byte a = 255 ) {
-		data.arr[0] = r;
-		data.arr[1] = g;
-		data.arr[2] = b;
-		data.arr[3] = a;
-	}
-
-	constexpr void SetFromFloats( float r, float g, float b, float a = 1.0f ) {
-		data.arr[0] = static_cast<byte>( r * 255.0f );
-		data.arr[1] = static_cast<byte>( g * 255.0f );
-		data.arr[2] = static_cast<byte>( b * 255.0f );
-		data.arr[3] = static_cast<byte>( a * 255.0f );
-	}
-
-	constexpr uint32 GetUint32() const {
-		return data.rgba;
-	}
-
-	constexpr void SetUint32( uint32 color ) {
-		data.rgba = color;
-	}
-};
-
-constexpr uint32	colorBlack		= PackColor(   0,   0,   0, 255 );
-constexpr uint32	colorWhite		= PackColor( 255, 255, 255, 255 );
-constexpr uint32	colorRed		= PackColor( 255,   0,   0, 255 );
-constexpr uint32	colorGreen		= PackColor(   0, 255,   0, 255 );
-constexpr uint32	colorBlue		= PackColor(   0,   0, 255, 255 );
-constexpr uint32	colorYellow		= PackColor( 255, 255,   0, 255 );
-constexpr uint32	colorMagenta	= PackColor( 255,   0, 255, 255 );
-constexpr uint32	colorCyan		= PackColor(   0, 255, 255, 255 );
-constexpr uint32	colorOrange		= PackColor( 255, 128,   0, 255 );
-constexpr uint32	colorPurple		= PackColor( 153,   0, 153, 255 );
-constexpr uint32	colorPink		= PackColor( 186, 102, 122, 255 );
-constexpr uint32	colorBrown		= PackColor( 102,  89,  20, 255 );
-constexpr uint32	colorLtGrey		= PackColor( 192, 192, 192, 255 );
-constexpr uint32	colorMdGrey		= PackColor( 128, 128, 128, 255 );
-constexpr uint32	colorDkGrey		= PackColor(  64,  64,  64, 255 );
-
-constexpr uint32	colorDefaultText = colorWhite;
-
-inline constexpr bool IsColorIndex( int c ) {
-	return c >= '1' || c <= '9';
-}
-
-inline constexpr uint32 ColorForIndex( int c ) {
-	switch ( c )
-	{
-	default: // C_COLOR_DEFAULT
-		return colorDefaultText;
-	case C_COLOR_RED:
-		return colorRed;
-	case C_COLOR_GREEN:
-		return colorGreen;
-	case C_COLOR_YELLOW:
-		return colorYellow;
-	case C_COLOR_BLUE:
-		return colorBlue;
-	case C_COLOR_CYAN:
-		return colorCyan;
-	case C_COLOR_ORANGE:
-		return colorOrange;
-	case C_COLOR_WHITE:
-		return colorWhite;
-	case C_COLOR_GRAY:
-		return colorMdGrey;
-	case C_COLOR_BLACK:
-		return colorBlack;
-	}
-}
-
-//-------------------------------------------------------------------------------------------------
-// Misc - q_shared.cpp
-//-------------------------------------------------------------------------------------------------
-
-extern char null_string[1];
-
-inline bool COM_IsPathSeparator( char a )
-{
-	return ( a == '/' || a == '\\' );
-}
-
-inline void COM_StripExtension( const char *in, char *out )
-{
-	while ( *in && *in != '.' )
-		*out++ = *in++;
-	*out = '\0';
-}
-
-// Extract the filename from a path
-void COM_FileBase( const char *in, char *out );
-
-// Returns the path up to, but not including the last /
-void COM_FilePath( const char *in, char *out );
-
-// Set a filename's extension
-// extension should have the period
-void Com_FileSetExtension( const char *in, char *out, const char *extension );
-
-// Parse a token out of a string
-// data is an in/out parm, returns a parsed out token
-char *COM_Parse( char **data_p );
-void COM_Parse2( char **data_p, char **token_p, int tokenlen );
-
-float	frand(void);	// 0 to 1
-float	crand(void);	// -1 to 1
-
-char *va( _Printf_format_string_ const char *format, ... );
-
-//-------------------------------------------------------------------------------------------------
-// Byteswap functions - q_shared.cpp
-//-------------------------------------------------------------------------------------------------
-
-#define BIG_ENDIAN 0
-
-short	ShortSwap(short s);
-int		LongSwap(int l);
-float	FloatSwap(float f);
-
-#if BIG_ENDIAN
-
-FORCEINLINE short BigShort(short s) { return s; }
-FORCEINLINE short LittleShort(short s) { return ShortSwap(s); }
-
-FORCEINLINE int BigLong(int l) { return l; }
-FORCEINLINE int LittleLong(int l) { return LongSwap(l); }
-
-FORCEINLINE float BigFloat(float f) { return f; }
-FORCEINLINE float LittleFloat(float f) { return FloatSwap(f); }
-
-#else // Little endian
-
-FORCEINLINE short BigShort(short s) { return ShortSwap(s); }
-FORCEINLINE short LittleShort(short s) { return s; }
-
-FORCEINLINE int BigLong(int l) { return LongSwap(l); }
-FORCEINLINE int LittleLong(int l) { return l; }
-
-FORCEINLINE float BigFloat(float f) { return FloatSwap(f); }
-FORCEINLINE float LittleFloat(float f) { return f; }
-
-#endif
-
-//-------------------------------------------------------------------------------------------------
 // key / value info strings - q_shared.cpp
 //-------------------------------------------------------------------------------------------------
 
@@ -395,67 +56,14 @@ FORCEINLINE float LittleFloat(float f) { return f; }
 
 // Searches the string for the given
 // key and returns the associated value, or an empty string.
-char		*Info_ValueForKey (const char *s, const char *key);
+char *	Info_ValueForKey (const char *s, const char *key);
 
-void		Info_RemoveKey (char *s, const char *key);
-void		Info_SetValueForKey (char *s, const char *key, const char *value);
+void	Info_RemoveKey (char *s, const char *key);
+void	Info_SetValueForKey (char *s, const char *key, const char *value);
 
 // Some characters are illegal in info strings because they
 // can mess up the server's parsing
-qboolean	Info_Validate (const char *s);
-
-//-------------------------------------------------------------------------------------------------
-// System specific - misc_win.cpp
-//-------------------------------------------------------------------------------------------------
-
-extern int curtime; // time returned by last Sys_Milliseconds
-
-void	Time_Init();
-double	Time_FloatSeconds();
-double	Time_FloatMilliseconds();
-double	Time_FloatMicroseconds();
-
-int64	Time_Milliseconds();
-int64	Time_Microseconds();
-
-// Legacy
-int		Sys_Milliseconds();
-
-void	Sys_CopyFile (const char *src, const char *dst);
-void	Sys_CreateDirectory (const char *path);
-
-// large block stack allocation routines
-void	*Hunk_Begin (int maxsize);
-void	*Hunk_Alloc (int size);
-void	Hunk_Free (void *buf);
-int		Hunk_End (void);
-
-// directory searching
-#define SFF_ARCH    0x01
-#define SFF_HIDDEN  0x02
-#define SFF_RDONLY  0x04
-#define SFF_SUBDIR  0x08
-#define SFF_SYSTEM  0x10
-
-/*
-** pass in an attribute mask of things you wish to REJECT
-*/
-char	*Sys_FindFirst (const char *path, unsigned musthave, unsigned canthave);
-char	*Sys_FindNext (unsigned musthave, unsigned canthave);
-void	Sys_FindClose (void);
-
-
-// Log functions that must be implemented by the project
-void Com_Print( const char *msg );
-void Com_Printf( _Printf_format_string_ const char *fmt, ... );
-
-void Com_DPrint( const char *msg );
-void Com_DPrintf( _Printf_format_string_ const char *fmt, ... );
-
-[[noreturn]] void Com_Error( const char *msg );
-[[noreturn]] void Com_Errorf( _Printf_format_string_ const char *fmt, ... );
-[[noreturn]] void Com_FatalError( const char *msg );
-[[noreturn]] void Com_FatalErrorf( _Printf_format_string_ const char *fmt, ... );
+bool	Info_Validate (const char *s);
 
 //-------------------------------------------------------------------------------------------------
 // CVARS - cvars.cpp
@@ -506,15 +114,6 @@ struct cvar_t
 #define	AREA_SOLID		1
 #define	AREA_TRIGGERS	2
 
-
-// plane_t structure
-struct cplane_t
-{
-	vec3_t	normal;
-	float	dist;
-	byte	type;			// for fast side tests
-	byte	signbits;		// signx + (signy<<1) + (signz<<1)
-};
 
 struct cmodel_t
 {

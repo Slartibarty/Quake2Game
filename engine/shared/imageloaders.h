@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "../../common/q_types.h"
+#include "../../core/sys_types.h"
 
 namespace img
 {
