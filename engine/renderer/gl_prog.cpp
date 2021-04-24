@@ -18,6 +18,9 @@ struct glShaders_t
 	GLuint particleVert;
 	GLuint particleFrag;
 
+	GLuint smfMeshVert;
+	GLuint smfMeshFrag;
+
 };
 
 static glShaders_t glShaders;
@@ -97,6 +100,9 @@ void Shaders_Init()
 	glShaders.particleVert = MakeShader( "shaders/particle.vert", GL_VERTEX_SHADER );
 	glShaders.particleFrag = MakeShader( "shaders/particle.frag", GL_FRAGMENT_SHADER );
 
+	glShaders.smfMeshVert = MakeShader( "shaders/smfmesh.vert", GL_VERTEX_SHADER );
+	glShaders.smfMeshFrag = MakeShader( "shaders/smfmesh.frag", GL_FRAGMENT_SHADER );
+
 	// create all our programs
 	glProgs.guiProg = glCreateProgram();
 	glAttachShader( glProgs.guiProg, glShaders.guiVert );
@@ -107,6 +113,11 @@ void Shaders_Init()
 	glAttachShader( glProgs.particleProg, glShaders.particleVert );
 	glAttachShader( glProgs.particleProg, glShaders.particleFrag );
 	glLinkProgram( glProgs.particleProg );
+
+	glProgs.smfMeshProg = glCreateProgram();
+	glAttachShader( glProgs.smfMeshProg, glShaders.smfMeshVert );
+	glAttachShader( glProgs.smfMeshProg, glShaders.smfMeshFrag );
+	glLinkProgram( glProgs.smfMeshProg );
 }
 
 /*

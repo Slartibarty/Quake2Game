@@ -303,6 +303,9 @@ static void R_DrawEntitiesOnList()
 			}
 			switch ( currentmodel->type )
 			{
+			case mod_smf:
+				R_DrawStaticMeshFile( currententity );
+				break;
 			case mod_alias:
 				R_DrawAliasModel( currententity );
 				break;
@@ -316,7 +319,7 @@ static void R_DrawEntitiesOnList()
 				R_DrawSpriteModel( currententity );
 				break;
 			default:
-				Com_Errorf("Bad modeltype" );
+				Com_Error("Bad modeltype" );
 				break;
 			}
 		}
@@ -346,6 +349,9 @@ static void R_DrawEntitiesOnList()
 			}
 			switch ( currentmodel->type )
 			{
+			case mod_smf:
+				R_DrawStaticMeshFile( currententity );
+				break;
 			case mod_alias:
 				R_DrawAliasModel( currententity );
 				break;
@@ -359,7 +365,7 @@ static void R_DrawEntitiesOnList()
 				R_DrawSpriteModel( currententity );
 				break;
 			default:
-				Com_Errorf("Bad modeltype" );
+				Com_Error("Bad modeltype" );
 				break;
 			}
 		}

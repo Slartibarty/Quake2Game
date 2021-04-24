@@ -345,6 +345,7 @@ void R_MarkLeaves (void);
 
 void R_DrawAliasModel( entity_t *e );
 void R_DrawStudioModel( entity_t *e );
+void R_DrawStaticMeshFile( entity_t *e );
 
 /*
 ===============================================================================
@@ -388,6 +389,7 @@ struct glProgs_t
 {
 	GLuint guiProg;
 	GLuint particleProg;
+	GLuint smfMeshProg;
 };
 
 extern glProgs_t glProgs;

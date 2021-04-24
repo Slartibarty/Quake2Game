@@ -137,6 +137,14 @@ struct mleaf_t
 	int			nummarksurfaces;
 };
 
+// in-memory SMF data
+struct mSMF_t
+{
+	GLuint vao, vbo, ebo;
+	uint32 numIndices;
+	char materialName[256];
+};
+
 
 //-------------------------------------------------------------------------------------------------
 
@@ -144,7 +152,7 @@ struct mleaf_t
 // Whole model
 //
 
-enum modtype_t { mod_bad, mod_brush, mod_sprite, mod_alias, mod_studio };
+enum modtype_t { mod_bad, mod_brush, mod_sprite, mod_alias, mod_studio, mod_smf };
 
 struct model_t
 {

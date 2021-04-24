@@ -1504,3 +1504,58 @@ void R_DrawStudioModel( entity_t *e )
 }
 
 #endif
+
+/*
+===================================================================================================
+
+	Static Mesh Files
+
+===================================================================================================
+*/
+
+void R_DrawStaticMeshFile( entity_t *e )
+{
+	mSMF_t *memSMF = (mSMF_t *)e->model->extradata;
+
+	glUseProgram( glProgs.smfMeshProg );
+
+//	float model[16];
+//	for ( int i = 0; i < 16; ++i )
+//	{
+//		model[i] = 1.0f;
+//	}
+
+	DirectX::XMMATRIX modelMatrix = DirectX::XMMatrixTranslation( e->origin[0], e->origin[1], e->origin[2] );
+	float view[16];
+	float proj[16];
+
+	glGetFloatv( GL_MODELVIEW_MATRIX, view );
+	glGetFloatv( GL_PROJECTION_MATRIX, proj );
+
+	glUniformMatrix4fv( 3, 1, GL_FALSE, (const GLfloat *)&modelMatrix );
+	glUniformMatrix4fv( 4, 1, GL_FALSE, view );
+	glUniformMatrix4fv( 5, 1, GL_FALSE, proj );
+	glUniform1i( 6, 0 );
+
+	vec3_t addPos{ 0.0f, -16.0f, 96.0f };
+
+	vec3_t lightPos;
+	VectorCopy( e->origin, lightPos );
+	VectorAdd( lightPos, addPos, lightPos );
+
+	glUniform3fv( 7, 1, lightPos );
+
+	glBindVertexArray( memSMF->vao );
+	glBindBuffer( GL_ARRAY_BUFFER, memSMF->vbo );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, memSMF->ebo );
+
+	e->model->skins[0]->Bind();
+
+	glDisable( GL_CULL_FACE );
+
+	glDrawElements( GL_TRIANGLES, memSMF->numIndices, GL_UNSIGNED_SHORT, (void *)( 0 ) );
+
+	glEnable( GL_CULL_FACE );
+
+	glUseProgram( 0 );
+}

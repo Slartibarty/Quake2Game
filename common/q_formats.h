@@ -468,6 +468,38 @@ namespace
 }
 
 //-------------------------------------------------------------------------------------------------
+// .SMF Static Mesh Format
+// 
+// Indices are shorts
+//-------------------------------------------------------------------------------------------------
+
+namespace fmtSMF
+{
+	constexpr int32 fourCC = MakeFourCC( 'B', 'R', 'U', 'H' );
+	constexpr int32 version = 1;
+
+	struct header_t
+	{
+		int32 fourCC;
+		int32 version;
+		uint32 numVerts;
+		uint32 offsetVerts;		// offset in file to vertex data
+		uint32 numIndices;
+		uint32 offsetIndices;	// offset in file to index data
+		char materialName[256];	// "materials/models/alien01/grimbles.mat"
+	};
+
+	struct vertex_t
+	{
+		float x, y, z;
+		float s, t;
+		float n1, n2, n3;
+	};
+
+	using index_t = uint16;
+}
+
+//-------------------------------------------------------------------------------------------------
 // .SP2 sprite file format
 //-------------------------------------------------------------------------------------------------
 

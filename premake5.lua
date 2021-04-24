@@ -488,6 +488,24 @@ project "qatlas"
 		xatlas_sources
 	}
 	
+project "qsmf"
+	kind "ConsoleApp"
+	targetname "qsmf"
+	language "C++"
+	floatingpoint "Default"
+	targetdir "../game"
+	links { "core" }
+	includedirs { "utils/common2" }
+	
+	files {
+		"common/windows_default.manifest",
+		"common/q_formats.h",
+	
+		"utils/common2/cmdlib.*",
+		
+		"utils/qsmf/*",
+	}
+	
 --[[
 project "light"
 	kind "ConsoleApp"

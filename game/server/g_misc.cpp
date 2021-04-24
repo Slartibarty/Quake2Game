@@ -485,7 +485,7 @@ void SP_viewthing( edict_t *ent )
 	ent->solid = SOLID_BBOX;
 	VectorSet( ent->mins, -16, -16, -24 );
 	VectorSet( ent->maxs, 16, 16, 32 );
-	ent->s.modelindex = gi.modelindex( "models/barney.mdl" );
+	ent->s.modelindex = gi.modelindex( "models/devtest/gman.smf" );
 	gi.linkentity( ent );
 
 //	ent->think = TH_viewthing;
