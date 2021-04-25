@@ -184,6 +184,9 @@ void InitGame (void)
 	// dm map list
 	sv_maplist = gi.cvar ("sv_maplist", "", 0);
 
+	// viewthing model
+	g_viewthing = gi.cvar ("g_viewthing", "models/devtest/computer/computer.smf", CVAR_ARCHIVE | CVAR_SERVERINFO);
+
 	// items
 	InitItems ();
 

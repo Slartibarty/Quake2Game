@@ -39,6 +39,8 @@ cvar_t	*gun_x;
 cvar_t	*gun_y;
 cvar_t	*gun_z;
 
+cvar_t	*g_viewthing;
+
 cvar_t	*run_pitch;
 cvar_t	*run_roll;
 cvar_t	*bob_up;
