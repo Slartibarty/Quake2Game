@@ -376,11 +376,11 @@ static bool R_CullAliasModel( vec3_t bbox[8], entity_t *e )
 	}
 
 	pframe = ( daliasframe_t * ) ( ( byte * ) paliashdr + 
-		                              paliashdr->ofs_frames +
+									  paliashdr->ofs_frames +
 									  e->frame * paliashdr->framesize);
 
 	poldframe = ( daliasframe_t * ) ( ( byte * ) paliashdr + 
-		                              paliashdr->ofs_frames +
+									  paliashdr->ofs_frames +
 									  e->oldframe * paliashdr->framesize);
 
 	/*
@@ -709,13 +709,13 @@ void R_DrawAliasModel (entity_t *e)
 		glPushMatrix();
 		glLoadIdentity();
 		glScalef( -1, 1, 1 );
-	    MYgluPerspective( r_newrefdef.fov_y, ( float ) r_newrefdef.width / r_newrefdef.height,  4,  4096);
+		MYgluPerspective( r_newrefdef.fov_y, ( float ) r_newrefdef.width / r_newrefdef.height,  4,  4096);
 		glMatrixMode( GL_MODELVIEW );
 
 		glCullFace( GL_BACK );
 	}
 
-    glPushMatrix ();
+	glPushMatrix ();
 	e->angles[PITCH] = -e->angles[PITCH];	// sigh.
 	R_RotateForEntity (e);
 	e->angles[PITCH] = -e->angles[PITCH];	// sigh.
@@ -1515,47 +1515,67 @@ void R_DrawStudioModel( entity_t *e )
 
 void R_DrawStaticMeshFile( entity_t *e )
 {
+	using namespace DirectX;
+
 	mSMF_t *memSMF = (mSMF_t *)e->model->extradata;
 
-	glUseProgram( glProgs.smfMeshProg );
+	//XMMATRIX rotationMatrix = XMMatrixRotationRollPitchYaw( e->angles[PITCH], e->angles[YAW], e->angles[ROLL] );
+	//XMMATRIX translationMatrix = XMMatrixTranslation( e->origin[0], e->origin[1], e->origin[2] );
+	XMMATRIX rotationMatrix = XMMatrixRotationRollPitchYaw( 0.0f, 0.0f, 0.0f );
+	XMMATRIX translationMatrix = XMMatrixTranslation( e->origin[0], e->origin[1], e->origin[2] );
+	XMMATRIX modelMatrix = XMMatrixMultiply( rotationMatrix, translationMatrix );
 
-//	float model[16];
-//	for ( int i = 0; i < 16; ++i )
-//	{
-//		model[i] = 1.0f;
-//	}
+//	modelMatrix = XMMatrixTranspose( modelMatrix );
 
-	DirectX::XMMATRIX modelMatrix = DirectX::XMMatrixTranslation( e->origin[0], e->origin[1], e->origin[2] );
+	XMFLOAT4X4A modelMatrixStore;
+	XMStoreFloat4x4A( &modelMatrixStore, modelMatrix );
+
 	float view[16];
 	float proj[16];
 
 	glGetFloatv( GL_MODELVIEW_MATRIX, view );
 	glGetFloatv( GL_PROJECTION_MATRIX, proj );
 
-	glUniformMatrix4fv( 3, 1, GL_FALSE, (const GLfloat *)&modelMatrix );
+	glUseProgram( glProgs.smfMeshProg );
+
+	glUniformMatrix4fv( 3, 1, GL_FALSE, (const GLfloat *)&modelMatrixStore );
 	glUniformMatrix4fv( 4, 1, GL_FALSE, view );
 	glUniformMatrix4fv( 5, 1, GL_FALSE, proj );
-	glUniform1i( 6, 0 );
 
-	vec3_t addPos{ 0.0f, -16.0f, 96.0f };
+	vec3_t addPos{ 0.0f, 64.0f, 96.0f };
 
 	vec3_t lightPos;
 	VectorCopy( e->origin, lightPos );
 	VectorAdd( lightPos, addPos, lightPos );
 
-	glUniform3fv( 7, 1, lightPos );
+	glUniform3fv( 6, 1, lightPos );
+	glUniform3fv( 7, 1, r_newrefdef.vieworg );
+
+	glUniform1i( 8, 0 ); // diffuse
+	glUniform1i( 9, 1 ); // specular
+	glUniform1i( 10, 2 ); // emission
 
 	glBindVertexArray( memSMF->vao );
 	glBindBuffer( GL_ARRAY_BUFFER, memSMF->vbo );
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, memSMF->ebo );
 
-	e->model->skins[0]->Bind();
+	// HACK: this should go away when bsp rendering is nuked
+	glActiveTexture( GL_TEXTURE0 );
+	memSMF->material->Bind();
+	glActiveTexture( GL_TEXTURE1 );
+	memSMF->material->BindSpec();
+	glActiveTexture( GL_TEXTURE2 );
+	memSMF->material->BindEmit();
 
-	glDisable( GL_CULL_FACE );
+	glCullFace( GL_BACK );
 
 	glDrawElements( GL_TRIANGLES, memSMF->numIndices, GL_UNSIGNED_SHORT, (void *)( 0 ) );
 
-	glEnable( GL_CULL_FACE );
+	glCullFace( GL_FRONT );
+
+	// HACK: this should go away when bsp rendering is nuked
+	GLenum hackTmu = glState.currenttmu ? GL_TEXTURE1 : GL_TEXTURE0;
+	glActiveTexture( hackTmu );
 
 	glUseProgram( 0 );
 }

@@ -18,6 +18,129 @@
 
 //=================================================================================================
 
+#ifndef _In_reads_
+#define _In_reads_( x )
+#endif
+
+struct vec3
+{
+	union
+	{
+		struct
+		{
+			float x, y, z;
+		};
+		float v[3];
+	};
+
+	vec3() = default;
+
+	vec3( const vec3 & ) = default;
+	vec3 &operator=( const vec3 & ) = default;
+
+	vec3( vec3 && ) = default;
+	vec3 &operator=( vec3 && ) = default;
+
+	constexpr vec3( float X, float Y, float Z ) noexcept : x( X ), y( Y ), z( Z ) {}
+	//explicit vec3( _In_reads_( 3 ) const float *pArray ) noexcept : x( pArray[0] ), y( pArray[1] ), z( pArray[2] ) {}
+
+	void Set( float X, float Y, float Z )
+	{
+		x = X;
+		y = Y;
+		z = Z;
+	}
+
+	void Replicate( float f )
+	{
+		x = f;
+		y = f;
+		z = f;
+	}
+
+	// should this be called Zero()?
+	void Clear()
+	{
+		x = 0.0f;
+		y = 0.0f;
+		z = 0.0f;
+	}
+
+	[[nodiscard]] float Length() const
+	{
+		return sqrt( x*x + y*y + z*z );
+	}
+
+	float *Base()
+	{
+		return reinterpret_cast<float *>( this );
+	}
+
+	const float *Base() const
+	{
+		return reinterpret_cast<const float *>( this );
+	}
+
+	// avoid, use vec.v[i]
+	float &vec3::operator[]( int i )
+	{
+		return v[i];
+	}
+
+	// avoid, use vec.v[i]
+	float vec3::operator[]( int i ) const
+	{
+		return v[i];
+	}
+};
+
+// ensure triviality
+static_assert( std::is_trivial<vec3>::value, "vec3 is not trivial" );
+
+using fvec3 = vec3&;
+
+inline float Vec3DotProduct( const vec3 &v1, const vec3 &v2 )
+{
+	return ( v1.x * v2[0] + v1[1] * v2[1] + v1[2] * v2[2] );
+}
+
+inline void Vec3Add( const vec3 &veca, const vec3 &vecb, vec3 &out )
+{
+	out.x = veca.x + vecb.x;
+	out.y = veca.y + vecb.y;
+	out.z = veca.z + vecb.z;
+}
+
+inline void Vec3Subtract( const vec3 &veca, const vec3 &vecb, vec3 &out )
+{
+	out.x = veca.x - vecb.x;
+	out.y = veca.y - vecb.y;
+	out.z = veca.z - vecb.z;
+}
+
+inline void Vec3Multiply( const vec3 &veca, const vec3 &vecb, vec3 &out )
+{
+	out.x = veca.x * vecb.x;
+	out.y = veca.y * vecb.y;
+	out.z = veca.z * vecb.z;
+}
+
+inline void Vec3Lerp( const vec3 src1, const vec3 src2, float t, vec3 out )
+{
+	out[0] = src1[0] + ( src2[0] - src1[0] ) * t;
+	out[1] = src1[1] + ( src2[1] - src1[1] ) * t;
+	out[2] = src1[2] + ( src2[2] - src1[2] ) * t;
+}
+
+inline void Vec3Copy( const vec3 in, vec3 out )
+{
+	out[0] = in[0];
+	out[1] = in[1];
+	out[2] = in[2];
+}
+
+//=================================================================================================
+
 typedef float vec_t;			// deprecated, use float instead
 typedef float vec3_t[3];
 typedef float vec4_t[4];

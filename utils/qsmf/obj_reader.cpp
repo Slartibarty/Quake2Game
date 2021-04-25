@@ -61,9 +61,9 @@ void OBJReader::Parse( char *buffer )
 			// Skip past 'vt'
 			token = strtok_r( nullptr, Delimiters, &save_ptr );
 
-			f2.x = (float)atof( token );
+			f2.x = (float)( atof( token ) );
 			token = strtok_r( nullptr, Delimiters, &save_ptr );
-			f2.y = (float)atof( token );
+			f2.y = (float)( 1.0 - atof( token ) ); // swap for opengl :)
 			token = strtok_r( nullptr, Delimiters, &save_ptr );
 		//	f2.z = (float)atof( token );
 
@@ -170,6 +170,10 @@ void OBJReader::Parse( char *buffer )
 			new_vertex.normal = vnormals[set.inormal];
 
 			// See if this combo already exists
+			// Optimise: This is so fucking slow holy shit, for every single fucking index
+			// we iterate through the entire vertex list, for the s2 gman model this can be
+			// over 40,000 vertices, so about 40,000 * 40,000, so expontential growth of
+			// 1600000000!!!! Dude! I don't even think multithreading will help here
 			for ( size_t k = 0; k < m_vertices.size(); ++k )
 			{
 				if ( memcmp( &new_vertex, &m_vertices[k], sizeof( vertex_t ) ) == 0 )

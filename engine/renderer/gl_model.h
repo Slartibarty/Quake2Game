@@ -140,9 +140,9 @@ struct mleaf_t
 // in-memory SMF data
 struct mSMF_t
 {
-	GLuint vao, vbo, ebo;
-	uint32 numIndices;
-	char materialName[256];
+	GLuint			vao, vbo, ebo;
+	uint32			numIndices;
+	material_t		*material;
 };
 
 
@@ -233,5 +233,5 @@ byte	*Mod_ClusterPVS (int cluster, model_t *model);
 
 void	Mod_Modellist_f (void);
 
-void	Mod_Free( model_t *mod );
+void	Mod_Free( model_t *pModel );
 void	Mod_FreeAll();

@@ -5,11 +5,11 @@
 model_t			*loadmodel;
 static int		modfilelen;
 
-void Mod_LoadSpriteModel( model_t *mod, void *buffer );
 void Mod_LoadBrushModel( model_t *mod, void *buffer );
-void Mod_LoadSMFModel( model_t *mod, void *buffer );
 void Mod_LoadAliasModel( model_t *mod, void *buffer );
 void Mod_LoadStudioModel( model_t *mod, void *buffer );
+void Mod_LoadSMFModel( model_t *mod, void *buffer );
+void Mod_LoadSpriteModel( model_t *mod, void *buffer );
 
 static byte	mod_novis[MAX_MAP_LEAFS/8];
 
@@ -893,65 +893,6 @@ void Mod_LoadBrushModel (model_t *mod, void *buffer)
 /*
 ===================================================================================================
 
-	SMF models
-
-===================================================================================================
-*/
-
-void Mod_LoadSMFModel( model_t *mod, void *buffer )
-{
-	fmtSMF::header_t *header = (fmtSMF::header_t *)buffer;
-
-	if ( header->version != fmtSMF::version )
-	{
-		Com_Errorf( "%s has wrong version number (%i should be %i)", mod->name, header->version, fmtSMF::version );
-	}
-
-	// hijack lightdata
-	//mod->lightdata = (byte *)Mem_Alloc( sizeof( mSMF_t ) );
-	mSMF_t *memSMF = (mSMF_t *)Hunk_Alloc( sizeof( mSMF_t ) );
-
-	Q_strcpy_s( memSMF->materialName, header->materialName );
-
-	memSMF->numIndices = header->numIndices;
-
-	glGenVertexArrays( 1, &memSMF->vao );
-	glGenBuffers( 1, &memSMF->vbo );
-	glGenBuffers( 1, &memSMF->ebo );
-
-	glBindVertexArray( memSMF->vao );
-	glBindBuffer( GL_ARRAY_BUFFER, memSMF->vbo );
-	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, memSMF->ebo );
-
-	glEnableVertexAttribArray( 0 );
-	glEnableVertexAttribArray( 1 );
-	glEnableVertexAttribArray( 2 );
-
-	glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, sizeof( fmtSMF::vertex_t ), (void *)( 0 ) );
-	glVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, sizeof( fmtSMF::vertex_t ), (void *)( 3 * sizeof( GLfloat ) ) );
-	glVertexAttribPointer( 2, 3, GL_FLOAT, GL_FALSE, sizeof( fmtSMF::vertex_t ), (void *)( 5 * sizeof( GLfloat ) ) );
-
-	const byte *vertexData = (byte *)buffer + header->offsetVerts;
-	const byte *indexData = (byte *)buffer + header->offsetIndices;
-
-	glBufferData( GL_ARRAY_BUFFER, header->numVerts * sizeof( fmtSMF::vertex_t ), vertexData, GL_STATIC_DRAW );
-	glBufferData( GL_ELEMENT_ARRAY_BUFFER, header->numIndices * sizeof( uint16 ), indexData, GL_STATIC_DRAW );
-
-	mod->skins[0] = GL_FindMaterial( header->materialName );
-
-	mod->type = mod_smf;
-
-	mod->mins[0] = -32;
-	mod->mins[1] = -32;
-	mod->mins[2] = -32;
-	mod->maxs[0] = 32;
-	mod->maxs[1] = 32;
-	mod->maxs[2] = 32;
-}
-
-/*
-===================================================================================================
-
 	Alias models
 
 ===================================================================================================
@@ -1122,6 +1063,61 @@ void Mod_LoadStudioModel( model_t *mod, void *buffer )
 /*
 ===================================================================================================
 
+	SMF models
+
+===================================================================================================
+*/
+
+void Mod_LoadSMFModel( model_t *pModel, void *pBuffer )
+{
+	fmtSMF::header_t *header = (fmtSMF::header_t *)pBuffer;
+
+	if ( header->version != fmtSMF::version )
+	{
+		Com_Errorf( "%s has wrong version number (%i should be %i)", pModel->name, header->version, fmtSMF::version );
+	}
+
+	mSMF_t *memSMF = (mSMF_t *)Hunk_Alloc( sizeof( mSMF_t ) );
+
+	memSMF->material = GL_FindMaterial( "models/devtest/computer/computer.mat" /*header->materialName*/ );
+
+	memSMF->numIndices = header->numIndices;
+
+	glGenVertexArrays( 1, &memSMF->vao );
+	glGenBuffers( 1, &memSMF->vbo );
+	glGenBuffers( 1, &memSMF->ebo );
+
+	glBindVertexArray( memSMF->vao );
+	glBindBuffer( GL_ARRAY_BUFFER, memSMF->vbo );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, memSMF->ebo );
+
+	glEnableVertexAttribArray( 0 );
+	glEnableVertexAttribArray( 1 );
+	glEnableVertexAttribArray( 2 );
+
+	glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, sizeof( fmtSMF::vertex_t ), (void *)( 0 ) );
+	glVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, sizeof( fmtSMF::vertex_t ), (void *)( 3 * sizeof( GLfloat ) ) );
+	glVertexAttribPointer( 2, 3, GL_FLOAT, GL_FALSE, sizeof( fmtSMF::vertex_t ), (void *)( 5 * sizeof( GLfloat ) ) );
+
+	const byte *vertexData = (byte *)pBuffer + header->offsetVerts;
+	const byte *indexData = (byte *)pBuffer + header->offsetIndices;
+
+	glBufferData( GL_ARRAY_BUFFER, header->numVerts * sizeof( fmtSMF::vertex_t ), vertexData, GL_STATIC_DRAW );
+	glBufferData( GL_ELEMENT_ARRAY_BUFFER, header->numIndices * sizeof( uint16 ), indexData, GL_STATIC_DRAW );
+
+	pModel->type = mod_smf;
+
+	pModel->mins[0] = -32;
+	pModel->mins[1] = -32;
+	pModel->mins[2] = -32;
+	pModel->maxs[0] = 32;
+	pModel->maxs[1] = 32;
+	pModel->maxs[2] = 32;
+}
+
+/*
+===================================================================================================
+
 	Sprite models
 
 ===================================================================================================
@@ -1173,10 +1169,10 @@ void Mod_LoadSpriteModel (model_t *mod, void *buffer)
 Mod_Free
 ========================
 */
-void Mod_Free( model_t *mod )
+void Mod_Free( model_t *pModel )
 {
-	Hunk_Free( mod->extradata );
-	memset( mod, 0, sizeof( *mod ) );
+	Hunk_Free( pModel->extradata );
+	memset( pModel, 0, sizeof( *pModel ) );
 }
 
 /*
@@ -1186,12 +1182,14 @@ Mod_FreeAll
 */
 void Mod_FreeAll()
 {
-	int		i;
+	int i;
 
 	for ( i = 0; i < mod_numknown; i++ )
 	{
 		if ( mod_known[i].extradatasize )
+		{
 			Mod_Free( &mod_known[i] );
+		}
 	}
 }
 
@@ -1234,65 +1232,61 @@ R_RegisterModel
 */
 model_t *R_RegisterModel( const char *name )
 {
-	model_t *			mod;
 	int					i;
-	dsprite_t *			sprout;
-	dmdl_t *			pheader;
-	mSMF_t *			pSMFHeader;
+	model_t *			pModel;
+	dsprite_t *			pSpriteHeader;
+	dmdl_t *			pAliasHeader;
+	mSMF_t *			pMemSMF;
 
-	studiohdr_t *pstudio;
-	mstudiotexture_t *ptexture;
-
-	mod = Mod_ForName( name, false );
-	if ( mod )
+	pModel = Mod_ForName( name, false );
+	if ( pModel )
 	{
-		mod->registration_sequence = tr.registrationSequence;
+		pModel->registration_sequence = tr.registrationSequence;
 
-		// register any images used by the models
-		if ( mod->type == mod_smf )
+		switch ( pModel->type )
 		{
-			pSMFHeader = (mSMF_t *)mod->extradata;
-			mod->skins[0] = GL_FindMaterial( pSMFHeader->materialName );
-		}
-		if ( mod->type == mod_sprite )
-		{
-			sprout = (dsprite_t *)mod->extradata;
-			for ( i = 0; i < sprout->numframes; i++ )
-				mod->skins[i] = GL_FindMaterial( sprout->frames[i].name );
-		}
-		else if ( mod->type == mod_alias )
-		{
-			pheader = (dmdl_t *)mod->extradata;
-			for ( i = 0; i < pheader->num_skins; i++ )
-				mod->skins[i] = GL_FindMaterial( (char *)pheader + pheader->ofs_skins + i * MAX_SKINNAME );
-//PGM
-			mod->numframes = pheader->num_frames;
-//PGM
-		}
-		else if ( mod->type == mod_studio )
-		{
-			pstudio = (studiohdr_t *)mod->extradata;
-			assert( pstudio->numtextures < MAX_MD2SKINS );
-
-			ptexture = (mstudiotexture_t *)( (byte *)pstudio + pstudio->textureindex );
-
-			if ( pstudio->textureindex != 0 )
+		case mod_smf:
+			pMemSMF = (mSMF_t *)pModel->extradata;
+			// don't register if we're the missing material
+			if ( !pMemSMF->material->IsMissing() )
 			{
-				for ( i = 0; i < pstudio->numtextures; i++ ) {
-					mod->skins[i] = GL_FindMaterial( ptexture->name );
-				}
+				pMemSMF->material->Register();
+			}
+			break;
+
+		case mod_alias:
+			pAliasHeader = (dmdl_t *)pModel->extradata;
+			for ( i = 0; i < pAliasHeader->num_skins; i++ )
+			{
+				pModel->skins[i] = GL_FindMaterial( (char *)pAliasHeader + pAliasHeader->ofs_skins + i * MAX_SKINNAME );
 			}
 //PGM
-		//	mod->numframes = pstudio->num_frames;
+			pModel->numframes = pAliasHeader->num_frames;
 //PGM
-		}
-		else if ( mod->type == mod_brush )
-		{
-			for ( i = 0; i < mod->numtexinfo; i++ )
-				mod->texinfo[i].material->registration_sequence = tr.registrationSequence;
+			break;
+
+		case mod_sprite:
+			pSpriteHeader = (dsprite_t *)pModel->extradata;
+			for ( i = 0; i < pSpriteHeader->numframes; i++ )
+			{
+				pModel->skins[i] = GL_FindMaterial( pSpriteHeader->frames[i].name );
+			}
+			break;
+
+		case mod_brush:
+			for ( i = 0; i < pModel->numtexinfo; i++ )
+			{
+				pModel->texinfo[i].material->registration_sequence = tr.registrationSequence;
+			}
+			break;
+
+		default:
+			// get rid of this
+			Com_Errorf( "R_RegisterModel: mod_bad for %s\n", pModel->name );
 		}
 	}
-	return mod;
+
+	return pModel;
 }
 
 /*

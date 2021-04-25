@@ -2,6 +2,8 @@
 
 #include "g_local.h"
 
+#define VIEWTHING_MODEL_NAME "models/devtest/computer/computer.smf"
+
 
 /*QUAKED func_group (0 0 0) ?
 Used to group brushes together just for editor convenience.
@@ -483,9 +485,9 @@ void SP_viewthing( edict_t *ent )
 
 	ent->movetype = MOVETYPE_NONE;
 	ent->solid = SOLID_BBOX;
-	VectorSet( ent->mins, -16, -16, -24 );
-	VectorSet( ent->maxs, 16, 16, 32 );
-	ent->s.modelindex = gi.modelindex( "models/devtest/gman.smf" );
+//	VectorSet( ent->mins, -16, -16, -24 );
+//	VectorSet( ent->maxs, 16, 16, 32 );
+	ent->s.modelindex = gi.modelindex( VIEWTHING_MODEL_NAME );
 	gi.linkentity( ent );
 
 //	ent->think = TH_viewthing;

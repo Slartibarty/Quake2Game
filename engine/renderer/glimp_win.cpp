@@ -309,11 +309,14 @@ static void GLimp_CreateWindow( WNDPROC wndproc, int width, int height, bool ful
 	// Intel HD Graphics 3000 chips (my laptop) don't support this function
 	if ( WGLEW_ARB_pixel_format )
 	{
+		int multiSamples = 8;
+
 		const int attriblist[]
 		{
 			WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
 			WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
 			WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
+			WGL_SAMPLES_ARB, multiSamples,
 			WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB,
 			WGL_COLOR_BITS_ARB, 32,
 			WGL_DEPTH_BITS_ARB, 24,

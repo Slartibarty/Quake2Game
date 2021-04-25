@@ -21,6 +21,7 @@
 
 material_t *mat_notexture; // use for bad textures
 material_t *mat_particletexture; // little dot for particles
+material_t *blackMaterial;
 material_t *whiteMaterial;
 
 image_t		gltextures[MAX_GLTEXTURES];
@@ -357,8 +358,14 @@ bool ParseMaterial( char *data, material_t *material )
 	char tokenhack[MAX_TOKEN_CHARS];
 	char *token = tokenhack;
 
-	char basetexture[MAX_TOKEN_CHARS]; // For storing off the basetexture for later
-	basetexture[0] = '\0';
+	char baseTexture[MAX_TOKEN_CHARS]; // For storing off the basetexture for later
+	baseTexture[0] = '\0';
+
+	char specTexture[MAX_TOKEN_CHARS];
+	specTexture[0] = '\0';
+
+	char emitTexture[MAX_TOKEN_CHARS];
+	emitTexture[0] = '\0';
 
 	imageflags_t flags = 0;
 
@@ -377,7 +384,19 @@ bool ParseMaterial( char *data, material_t *material )
 		if ( Q_strcmp( token, "$basetexture" ) == 0 )
 		{
 			COM_Parse2( &data, &token, sizeof( tokenhack ) );
-			Q_strcpy_s( basetexture, token );
+			Q_strcpy_s( baseTexture, token );
+			continue;
+		}
+		if ( Q_strcmp( token, "$spectexture" ) == 0 )
+		{
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
+			Q_strcpy_s( specTexture, token );
+			continue;
+		}
+		if ( Q_strcmp( token, "$emittexture" ) == 0 )
+		{
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
+			Q_strcpy_s( emitTexture, token );
 			continue;
 		}
 		if ( Q_strcmp( token, "$nextframe" ) == 0 )
@@ -437,21 +456,32 @@ bool ParseMaterial( char *data, material_t *material )
 		}
 		if ( Q_strcmp( token, "$alpha" ) == 0 )
 		{
+			// stored as a float for user convenience (it's easier to understand 0.5 as half transparency than 128 is)
 			COM_Parse2( &data, &token, sizeof( tokenhack ) );
-			material->alpha = static_cast<uint32>( atof( token ) * 255.0 + 0.5 );
+			material->alpha = Clamp( static_cast<uint32>( atof( token ) * 255.0 + 0.5 ), 0u, 255u );
 			continue;
 		}
 	}
 
-	if ( basetexture[0] )
+	if ( baseTexture[0] )
 	{
-		material->image = GL_FindImage( basetexture, flags );
+		material->image = GL_FindImage( baseTexture, flags );
+	}
+
+	if ( specTexture[0] )
+	{
+		material->specImage = GL_FindImage( specTexture, flags );
+	}
+
+	if ( emitTexture[0] )
+	{
+		material->emitImage = GL_FindImage( emitTexture, flags );
 	}
 
 	return true;
 }
 
-static material_t *GL_CreateMaterialFromData( const char *name, image_t *image )
+static material_t *GL_CreateMaterialFromData( const char *name, image_t *image, image_t *specImage, image_t *emitImage )
 {
 	int i;
 	material_t *material;
@@ -472,9 +502,16 @@ static material_t *GL_CreateMaterialFromData( const char *name, image_t *image )
 	memset( material, 0, sizeof( *material ) );
 	
 	Q_strcpy_s( material->name, name );
+
+	// gotcha: increment refcount
+	image->IncrementRefCount();
 	material->image = image;
+	specImage->IncrementRefCount();
+	material->specImage = specImage;
+	emitImage->IncrementRefCount();
+	material->emitImage = emitImage;
+
 	material->alpha = 0xFF;
-	++material->image->refcount;
 
 	material->registration_sequence = -1; // Data materials are always managed
 
@@ -513,14 +550,18 @@ static material_t *GL_CreateMaterial( const char *name )
 	if ( i == numglmaterials )
 	{
 		if ( numglmaterials == MAX_GLMATERIALS )
-			Com_Errorf("MAX_GLMATERIALS" ); // This can probably just return mat_notexture
+			Com_Error("MAX_GLMATERIALS" ); // This can probably just return mat_notexture
 		++numglmaterials;
 	}
 	material = &glmaterials[i];
 	memset( material, 0, sizeof( *material ) );
 
 	Q_strcpy_s( material->name, name );
+
 	material->image = mat_notexture->image;
+	material->specImage = blackMaterial->image;
+	material->emitImage = blackMaterial->image;
+
 	material->alpha = 0xFF;
 
 	if ( !ParseMaterial( pBuffer, material ) )
@@ -528,6 +569,20 @@ static material_t *GL_CreateMaterial( const char *name )
 		FS_FreeFile( pBuffer );
 		memset( material, 0, sizeof( *material ) );
 		return mat_notexture;
+	}
+
+	// this sucks, need a better solution for defaulting
+	if ( material->image == mat_notexture->image )
+	{
+		material->image->IncrementRefCount();
+	}
+	if ( material->specImage == blackMaterial->image )
+	{
+		material->specImage->IncrementRefCount();
+	}
+	if ( material->emitImage == blackMaterial->image )
+	{
+		material->emitImage->IncrementRefCount();
 	}
 
 	FS_FreeFile( pBuffer );
@@ -615,8 +670,6 @@ void GL_FreeUnusedMaterials( void )
 
 	for ( i = 0, material = glmaterials; i < numglmaterials; i++, material++ )
 	{
-		if ( material == mat_notexture || material == mat_particletexture )
-			continue;		// generated material, delete only at shutdown
 		if ( material->registration_sequence == tr.registrationSequence )
 			continue;		// used this sequence
 		if ( material->registration_sequence <= 0 )
@@ -705,13 +758,28 @@ static const byte missingtexture[8][8]{
 
 static void R_CreateIntrinsicImages()
 {
-	int x, y;
 	byte data[DEFAULT_SIZE][DEFAULT_SIZE][4];
-	image_t *img;
+
+	// black image
+
+	memset( data, 0, sizeof( data ) );
+	image_t *blackImage = GL_CreateImage( "***blackImage***", (byte *)data, DEFAULT_SIZE, DEFAULT_SIZE, IF_NOMIPS | IF_NEAREST );
+
+	// white image
+
+	memset( data, 255, sizeof( data ) );
+	image_t *whiteImage = GL_CreateImage( "***whiteImage***", (byte *)data, DEFAULT_SIZE, DEFAULT_SIZE, IF_NOMIPS | IF_NEAREST );
+
+	// black and white materials
+
+	blackMaterial = GL_CreateMaterialFromData( "***blackMaterial***", blackImage, blackImage, blackImage );
+	whiteMaterial = GL_CreateMaterialFromData( "***whiteMaterial***", whiteImage, blackImage, blackImage );
 
 	//
 	// default texture
 	//
+
+	int x, y;
 
 	// grey center
 	for ( y = 0; y < DEFAULT_SIZE; y++ ) {
@@ -744,16 +812,10 @@ static void R_CreateIntrinsicImages()
 		data[x][DEFAULT_SIZE-1][2] = 255;
 		data[x][DEFAULT_SIZE-1][3] = 255;
 	}
-	img = GL_CreateImage("***r_notexture***", (byte *)data, DEFAULT_SIZE, DEFAULT_SIZE, IF_NONE);
-	mat_notexture = GL_CreateMaterialFromData( "***r_notexture***", img );
+	image_t *defaultImage = GL_CreateImage("***defaultImage***", (byte *)data, DEFAULT_SIZE, DEFAULT_SIZE, IF_NONE);
+	mat_notexture = GL_CreateMaterialFromData( "***mat_notexture***", defaultImage, whiteImage, blackImage );
 
-	//
-	// white material
-	//
-
-	memset( data, 255, sizeof( data ) );
-	img = GL_CreateImage( "***whiteMaterial***", (byte *)data, DEFAULT_SIZE, DEFAULT_SIZE, IF_NOMIPS | IF_NEAREST );
-	whiteMaterial = GL_CreateMaterialFromData( "***whiteMaterial***", img );
+	// must be done after init of black and white materials...
 
 	//
 	// 8x8 legacy particle texture

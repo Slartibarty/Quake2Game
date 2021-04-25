@@ -66,125 +66,6 @@ void		GL_CheckErrors();
 /*
 ===============================================================================
 
-	gl_image.cpp
-
-===============================================================================
-*/
-
-#define MAX_GLTEXTURES		2048
-#define MAX_GLMATERIALS		2048
-
-extern material_t	glmaterials[MAX_GLMATERIALS];
-extern int			numglmaterials;
-
-extern byte			g_gammatable[256];
-
-extern material_t	*mat_notexture;
-extern material_t	*mat_particletexture;
-extern material_t	*whiteMaterial;
-
-extern unsigned		d_8to24table[256];
-
-void		GL_ImageList_f(void);
-void		GL_MaterialList_f(void);
-
-material_t	*GL_FindMaterial( const char *name, bool managed = false );
-material_t	*R_RegisterSkin(const char *name);
-
-void		GL_FreeUnusedMaterials(void);
-
-void		GL_InitImages(void);
-void		GL_ShutdownImages(void);
-
-// Image flags
-// Mipmaps are opt-out
-// Anisotropic filtering is opt-out
-// Clamping is opt-in
-//
-// NOTABLE OVERSIGHT:
-// The first material to use an image decides whether an image uses mipmaps or not
-// This may confuse artists who expect a mipmapped texture, when the image was first
-// referenced without them
-// A solution to this problem is to generate mipmaps when required, but only once
-//
-using imageflags_t = uint8;
-
-#define IF_NONE			0	// Gaben sound pack for FLStudio 6.1
-#define IF_NOMIPS		1	// Do not use or generate mipmaps (infers no anisotropy)
-#define IF_NOANISO		2	// Do not use anisotropic filtering (only applies to mipmapped images)
-#define IF_NEAREST		4	// Use nearest filtering (as opposed to linear filtering)
-#define IF_CLAMPS		8	// Clamp to edge (S)
-#define IF_CLAMPT		16	// Clamp to edge (T)
-
-struct image_t
-{
-	char				name[MAX_QPATH];			// game path, including extension
-	imageflags_t		flags;
-	int					width, height;				// source image
-	GLuint				texnum;						// gl texture binding
-	int					refcount;
-	float				sl, tl, sh, th;				// 0,0 - 1,1 unless part of the scrap
-	bool				scrap;						// true if this is part of a larger sheet
-
-	void IncrementRefCount()
-	{
-		assert( refcount >= 0 );
-		++refcount;
-	}
-
-	void DecrementRefCount()
-	{
-		--refcount;
-		assert( refcount >= 0 );
-	}
-
-	void Delete()
-	{
-		glDeleteTextures( 1, &texnum );
-		memset( this, 0, sizeof( *this ) );
-	}
-};
-
-struct msurface_t;
-
-struct material_t
-{
-	char				name[MAX_QPATH];			// game path, including extension
-	msurface_t			*texturechain;				// for sort-by-material world drawing
-	image_t				*image;						// the only image, may extend to more in the future
-	material_t			*nextframe;					// the next frame
-	uint32				alpha;						// alpha transparency, in range 0 - 255
-	int32				registration_sequence;		// 0 = free, -1 = managed
-
-	// Returns true if this material is the missing texture
-	bool IsMissing() const { return this == mat_notexture; }
-
-	// Returns true if the image referenced is the missing image
-	bool IsImageMissing() const { return image == mat_notexture->image; }
-
-	// Returns true if this material is perfectly okay
-	bool IsOkay() const { return !IsMissing() && !IsImageMissing(); }
-
-	// Bind the referenced image
-	void Bind() const {
-		assert( image->refcount > 0 );
-		GL_Bind( image->texnum );
-	}
-
-	// Deference the referenced image and clear this struct
-	void Delete() {
-		image->DecrementRefCount();
-		if ( image->refcount == 0 ) {
-			// Save time in FreeUnusedImages
-			image->Delete();
-		}
-		memset( this, 0, sizeof( *this ) );
-	}
-};
-
-/*
-===============================================================================
-
 	gl_init.cpp
 
 ===============================================================================
@@ -302,6 +183,150 @@ extern	int		r_viewcluster, r_viewcluster2, r_oldviewcluster, r_oldviewcluster2;
 // needed by gl_init
 void Particles_Init();
 void Particles_Shutdown();
+
+/*
+===============================================================================
+
+	gl_image.cpp
+
+===============================================================================
+*/
+
+#define MAX_GLTEXTURES		2048
+#define MAX_GLMATERIALS		2048
+
+extern material_t	glmaterials[MAX_GLMATERIALS];
+extern int			numglmaterials;
+
+extern byte			g_gammatable[256];
+
+extern material_t	*mat_notexture;
+extern material_t	*mat_particletexture;
+extern material_t	*blackMaterial;
+extern material_t	*whiteMaterial;
+
+extern unsigned		d_8to24table[256];
+
+void		GL_ImageList_f(void);
+void		GL_MaterialList_f(void);
+
+material_t	*GL_FindMaterial( const char *name, bool managed = false );
+material_t	*R_RegisterSkin(const char *name);
+
+void		GL_FreeUnusedMaterials(void);
+
+void		GL_InitImages(void);
+void		GL_ShutdownImages(void);
+
+// Image flags
+// Mipmaps are opt-out
+// Anisotropic filtering is opt-out
+// Clamping is opt-in
+//
+// NOTABLE OVERSIGHT:
+// The first material to use an image decides whether an image uses mipmaps or not
+// This may confuse artists who expect a mipmapped texture, when the image was first
+// referenced without them
+// A solution to this problem is to generate mipmaps when required, but only once
+//
+using imageflags_t = uint8;
+
+#define IF_NONE			0	// Gaben sound pack for FLStudio 6.1
+#define IF_NOMIPS		1	// Do not use or generate mipmaps (infers no anisotropy)
+#define IF_NOANISO		2	// Do not use anisotropic filtering (only applies to mipmapped images)
+#define IF_NEAREST		4	// Use nearest filtering (as opposed to linear filtering)
+#define IF_CLAMPS		8	// Clamp to edge (S)
+#define IF_CLAMPT		16	// Clamp to edge (T)
+
+struct image_t
+{
+	char				name[MAX_QPATH];			// game path, including extension
+	imageflags_t		flags;
+	int					width, height;				// source image
+	GLuint				texnum;						// gl texture binding
+	int					refcount;
+	float				sl, tl, sh, th;				// 0,0 - 1,1 unless part of the scrap
+	bool				scrap;						// true if this is part of a larger sheet
+
+	void IncrementRefCount()
+	{
+		assert( refcount >= 0 );
+		++refcount;
+	}
+
+	void DecrementRefCount()
+	{
+		--refcount;
+		assert( refcount >= 0 );
+	}
+
+	void Delete()
+	{
+		glDeleteTextures( 1, &texnum );
+		memset( this, 0, sizeof( *this ) );
+	}
+};
+
+struct msurface_t;
+
+struct material_t
+{
+	char				name[MAX_QPATH];			// game path, including extension
+	msurface_t *		texturechain;				// for sort-by-material world drawing
+	image_t *			image;						// the diffuse map
+	image_t *			specImage;					// the specular map (defaults to black)
+	image_t *			emitImage;					// the emission map (defaults to black)
+	material_t *		nextframe;					// the next frame
+	uint32				alpha;						// alpha transparency, in range 0 - 255
+	int32				registration_sequence;		// 0 = free, -1 = managed
+
+	// Returns true if this material is the missing texture
+	bool IsMissing() const { return this == mat_notexture; }
+
+	// Returns true if the image referenced is the missing image
+	bool IsImageMissing() const { return image == mat_notexture->image; }
+
+	// Returns true if this material is perfectly okay
+	bool IsOkay() const { return !IsMissing() && !IsImageMissing(); }
+
+	void Register() { registration_sequence = tr.registrationSequence; }
+
+	// Bind the referenced image
+	void Bind() const {
+		assert( image->refcount > 0 );
+		GL_Bind( image->texnum );
+	}
+
+	// Bind the spec image
+	void BindSpec() const {
+		assert( specImage->refcount > 0 );
+		GL_Bind( specImage->texnum );
+	}
+
+	// Bind the emission image
+	void BindEmit() const {
+		assert( emitImage->refcount > 0 );
+		GL_Bind( emitImage->texnum );
+	}
+
+	// Deference the referenced image and clear this struct
+	void Delete() {
+		image->DecrementRefCount();
+		if ( image->refcount == 0 ) {
+			// Save time in FreeUnusedImages
+			image->Delete();
+		}
+		specImage->DecrementRefCount();
+		if ( specImage->refcount == 0 ) {
+			specImage->Delete();
+		}
+		emitImage->DecrementRefCount();
+		if ( emitImage->refcount == 0 ) {
+			emitImage->Delete();
+		}
+		memset( this, 0, sizeof( *this ) );
+	}
+};
 
 /*
 ===============================================================================

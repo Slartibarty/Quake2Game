@@ -48,7 +48,7 @@ filter {}
 
 -- Config for Windows
 filter "system:windows"
-	buildoptions { "/utf-8", "/permissive", "/Zc:__cplusplus" }
+	buildoptions { "/utf-8", "/permissive", "/Zc:__cplusplus", "/Zc:preprocessor" }
 	defines { "WIN32", "_WINDOWS", "_CRT_SECURE_NO_WARNINGS" }
 filter {}
 	
