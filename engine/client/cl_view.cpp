@@ -492,13 +492,14 @@ void V_RenderView (void)
 			VectorClear (cl.refdef.blend);
 		}
 
+		cl.refdef.lightstyles = r_lightstyles;
+
 		cl.refdef.num_entities = r_numentities;
 		cl.refdef.entities = r_entities;
-		cl.refdef.num_particles = r_numparticles;
-		cl.refdef.particles = r_particles;
 		cl.refdef.num_dlights = r_numdlights;
 		cl.refdef.dlights = r_dlights;
-		cl.refdef.lightstyles = r_lightstyles;
+		cl.refdef.num_particles = r_numparticles;
+		cl.refdef.particles = r_particles;
 
 		cl.refdef.rdflags = cl.frame.playerstate.rdflags;
 

@@ -15,6 +15,14 @@
 
 #include "obj_reader.h"
 
+struct options_t
+{
+	char materialName[MAX_OSPATH];
+
+	char objName[MAX_OSPATH];
+	char smfName[MAX_OSPATH];
+};
+
 static size_t GetFileSize( FILE *handle )
 {
 	long oldpos, newpos;
@@ -52,32 +60,73 @@ static size_t LoadFile( const char *filename, byte **buffer, size_t extradata = 
 
 static void PrintUsage()
 {
-	Com_Print( "Usage: qsmf input.obj output.smf\n" );
+	Com_Print( "Usage: qsmf [options] input.obj output.smf\n" );
+}
+
+static void PrintHelp()
+{
+	Com_Print(
+		"Help for qsmf:\n"
+		"  -material <filename>    : The material this smf should use, defaults to materials/models/default.mat\n"
+	);
 }
 
 int main( int argc, char **argv )
 {
-	if ( argc != 3 )
+	if ( argc < 3 )
 	{
+		// need at least input and output
 		PrintUsage();
+		PrintHelp();
 		return EXIT_FAILURE;
 	}
 
-	const char *filename = argv[1];
-	const char *outName = argv[2];
+	options_t options;
 
-	FILE *outFile = fopen( outName, "wb" );
+	Q_strcpy_s( options.materialName, "materials/models/default.mat" );
+
+	Q_strcpy_s( options.objName, argv[argc - 2] );
+	Str_FixSlashes( options.objName );
+	Q_strcpy_s( options.smfName, argv[argc - 1] );
+	Str_FixSlashes( options.smfName );
+
+	int argIter;
+	for ( argIter = 1; argIter < argc; ++argIter )
+	{
+		const char *token = argv[argIter];
+
+		if ( Q_stricmp( token, "-material" ) == 0 )
+		{
+			if ( ++argIter >= argc )
+			{
+				Com_Printf( "Expected an argument after %s\n", token );
+				return EXIT_FAILURE;
+			}
+
+			Q_strcpy_s( options.materialName, argv[argIter] );
+			Str_FixSlashes( options.materialName );
+
+			strlen_t matExtension = Q_strlen( options.materialName ) - 4;
+			if ( Q_stricmp( options.materialName + matExtension, ".mat" ) != 0 )
+			{
+				Com_Print( "Material name doesn't end with \".mat\"\n" );
+				return EXIT_FAILURE;
+			}
+		}
+	}
+
+	FILE *outFile = fopen( options.smfName, "wb" );
 	if ( !outFile )
 	{
-		Com_Printf( "Couldn't open %s\n", outName );
+		Com_Printf( "Couldn't open %s\n", options.smfName );
 		return EXIT_FAILURE;
 	}
 
 	char *buffer;
-	size_t fileSize = LoadFile( filename, (byte **)&buffer );
+	size_t fileSize = LoadFile( options.objName, (byte **)&buffer );
 	if ( !buffer )
 	{
-		Com_Printf( "Couldn't open %s\n", filename );
+		Com_Printf( "Couldn't open %s\n", options.objName );
 		return EXIT_FAILURE;
 	}
 
@@ -93,8 +142,10 @@ int main( int argc, char **argv )
 		.offsetVerts = sizeof( header ),
 		.numIndices = (uint32)objReader.GetNumIndices(),
 		.offsetIndices = (uint32)( sizeof( header ) + objReader.GetVerticesSize() ),
-		.materialName{ "materials/models/default.mat" } // null
+		.materialName{} // filled below
 	};
+
+	Q_strcpy_s( header.materialName, options.materialName );
 
 	fwrite( &header, sizeof( header ), 1, outFile );
 	header.offsetVerts = (uint32)ftell( outFile );
@@ -105,5 +156,5 @@ int main( int argc, char **argv )
 
 	fclose( outFile );
 
-	Com_Printf( "Successfully wrote %s\n", outName );
+	Com_Printf( "Successfully wrote %s\n", options.smfName );
 }

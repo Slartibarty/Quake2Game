@@ -1519,13 +1519,11 @@ void R_DrawStaticMeshFile( entity_t *e )
 
 	mSMF_t *memSMF = (mSMF_t *)e->model->extradata;
 
-	//XMMATRIX rotationMatrix = XMMatrixRotationRollPitchYaw( e->angles[PITCH], e->angles[YAW], e->angles[ROLL] );
-	//XMMATRIX translationMatrix = XMMatrixTranslation( e->origin[0], e->origin[1], e->origin[2] );
+	// Matrices
+
 	XMMATRIX rotationMatrix = XMMatrixRotationRollPitchYaw( 0.0f, 0.0f, 0.0f );
 	XMMATRIX translationMatrix = XMMatrixTranslation( e->origin[0], e->origin[1], e->origin[2] );
 	XMMATRIX modelMatrix = XMMatrixMultiply( rotationMatrix, translationMatrix );
-
-//	modelMatrix = XMMatrixTranspose( modelMatrix );
 
 	XMFLOAT4X4A modelMatrixStore;
 	XMStoreFloat4x4A( &modelMatrixStore, modelMatrix );
@@ -1536,24 +1534,47 @@ void R_DrawStaticMeshFile( entity_t *e )
 	glGetFloatv( GL_MODELVIEW_MATRIX, view );
 	glGetFloatv( GL_PROJECTION_MATRIX, proj );
 
+	// Ambient colour
+
+	vec3_t ambientColor;
+
+	R_LightPoint( e->origin, ambientColor );
+
+	// Light colour and position
+
+	vec3_t lightColor;
+	vec3_t lightPos;
+
+	if ( r_newrefdef.num_dlights > 0 )
+	{
+		const auto &dlight = r_newrefdef.dlights[0];
+		lightColor[0] = dlight.color[0];
+		lightColor[1] = dlight.color[1];
+		lightColor[2] = dlight.color[2];
+	//	lightColor[3] = dlight.intensity;
+
+		VectorCopy( r_newrefdef.dlights[0].origin, lightPos );
+	}
+	else
+	{
+		VectorClear( lightColor );
+		VectorClear( lightPos );
+	}
+
 	glUseProgram( glProgs.smfMeshProg );
 
 	glUniformMatrix4fv( 3, 1, GL_FALSE, (const GLfloat *)&modelMatrixStore );
 	glUniformMatrix4fv( 4, 1, GL_FALSE, view );
 	glUniformMatrix4fv( 5, 1, GL_FALSE, proj );
 
-	vec3_t addPos{ 0.0f, 64.0f, 96.0f };
+	glUniform3fv( 6, 1, ambientColor );
+	glUniform3fv( 7, 1, lightColor );
+	glUniform3fv( 8, 1, lightPos );
+	glUniform3fv( 9, 1, r_newrefdef.vieworg );
 
-	vec3_t lightPos;
-	VectorCopy( e->origin, lightPos );
-	VectorAdd( lightPos, addPos, lightPos );
-
-	glUniform3fv( 6, 1, lightPos );
-	glUniform3fv( 7, 1, r_newrefdef.vieworg );
-
-	glUniform1i( 8, 0 ); // diffuse
-	glUniform1i( 9, 1 ); // specular
-	glUniform1i( 10, 2 ); // emission
+	glUniform1i( 10, 0 ); // diffuse
+	glUniform1i( 11, 1 ); // specular
+	glUniform1i( 12, 2 ); // emission
 
 	glBindVertexArray( memSMF->vao );
 	glBindBuffer( GL_ARRAY_BUFFER, memSMF->vbo );

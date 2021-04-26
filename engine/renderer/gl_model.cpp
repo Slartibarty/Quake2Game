@@ -1079,7 +1079,7 @@ void Mod_LoadSMFModel( model_t *pModel, void *pBuffer )
 
 	mSMF_t *memSMF = (mSMF_t *)Hunk_Alloc( sizeof( mSMF_t ) );
 
-	memSMF->material = GL_FindMaterial( "models/devtest/computer/computer.mat" /*header->materialName*/ );
+	memSMF->material = GL_FindMaterial( header->materialName );
 
 	memSMF->numIndices = header->numIndices;
 

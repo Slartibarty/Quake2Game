@@ -52,6 +52,13 @@ float ColorNormalize( const vec3_t in, vec3_t out )
 	return max;
 }
 
+float VectorDistance( const vec3_t v1, const vec3_t v2 )
+{
+	vec3_t delta;
+	VectorSubtract( v1, v2, delta );
+	return VectorLength( delta );
+}
+
 void AngleVectors( const vec3_t angles, vec3_t forward, vec3_t right, vec3_t up )
 {
 	float angle;

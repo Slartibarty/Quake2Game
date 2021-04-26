@@ -467,15 +467,30 @@ bool ParseMaterial( char *data, material_t *material )
 	{
 		material->image = GL_FindImage( baseTexture, flags );
 	}
+	else
+	{
+		material->image = mat_notexture->image;
+		material->image->IncrementRefCount();
+	}
 
 	if ( specTexture[0] )
 	{
 		material->specImage = GL_FindImage( specTexture, flags );
 	}
+	else
+	{
+		material->specImage = blackMaterial->image;
+		material->specImage->IncrementRefCount();
+	}
 
 	if ( emitTexture[0] )
 	{
 		material->emitImage = GL_FindImage( emitTexture, flags );
+	}
+	else
+	{
+		material->emitImage = blackMaterial->image;
+		material->emitImage->IncrementRefCount();
 	}
 
 	return true;
@@ -558,9 +573,9 @@ static material_t *GL_CreateMaterial( const char *name )
 
 	Q_strcpy_s( material->name, name );
 
-	material->image = mat_notexture->image;
-	material->specImage = blackMaterial->image;
-	material->emitImage = blackMaterial->image;
+	material->image = nullptr;
+	material->specImage = nullptr;
+	material->emitImage = nullptr;
 
 	material->alpha = 0xFF;
 
@@ -569,20 +584,6 @@ static material_t *GL_CreateMaterial( const char *name )
 		FS_FreeFile( pBuffer );
 		memset( material, 0, sizeof( *material ) );
 		return mat_notexture;
-	}
-
-	// this sucks, need a better solution for defaulting
-	if ( material->image == mat_notexture->image )
-	{
-		material->image->IncrementRefCount();
-	}
-	if ( material->specImage == blackMaterial->image )
-	{
-		material->specImage->IncrementRefCount();
-	}
-	if ( material->emitImage == blackMaterial->image )
-	{
-		material->emitImage->IncrementRefCount();
 	}
 
 	FS_FreeFile( pBuffer );
@@ -813,7 +814,7 @@ static void R_CreateIntrinsicImages()
 		data[x][DEFAULT_SIZE-1][3] = 255;
 	}
 	image_t *defaultImage = GL_CreateImage("***defaultImage***", (byte *)data, DEFAULT_SIZE, DEFAULT_SIZE, IF_NONE);
-	mat_notexture = GL_CreateMaterialFromData( "***mat_notexture***", defaultImage, whiteImage, blackImage );
+	mat_notexture = GL_CreateMaterialFromData( "***defaultMaterial***", defaultImage, whiteImage, blackImage );
 
 	// must be done after init of black and white materials...
 

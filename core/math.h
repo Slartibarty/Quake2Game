@@ -281,7 +281,7 @@ inline void CrossProduct( const vec3_t v1, const vec3_t v2, vec3_t cross )
 
 inline float VectorLength( vec3_t v )
 {
-	return sqrt( v[0] * v[0] + v[1] * v[1] + v[2] * v[2] );
+	return sqrt( v[0]*v[0] + v[1]*v[1] + v[2]*v[2] );
 }
 
 inline void VectorSubtract( const vec3_t veca, const vec3_t vecb, vec3_t out )
@@ -397,6 +397,7 @@ inline void ClearBounds( vec3_t mins, vec3_t maxs )
 // returns vector length
 float VectorNormalize( vec3_t v );
 float ColorNormalize( const vec3_t in, vec3_t out );
+float VectorDistance( const vec3_t v1, const vec3_t v2 );
 
 void AngleVectors( const vec3_t angles, vec3_t forward, vec3_t right, vec3_t up );
 

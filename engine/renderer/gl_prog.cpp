@@ -88,12 +88,11 @@ static GLuint MakeShader( const char *filename, GLenum type )
 
 /*
 ========================
-Shaders_Init
+BuildAllShaders
 ========================
 */
-void Shaders_Init()
+static void BuildAllShaders()
 {
-	// create all our shaders
 	glShaders.guiVert = MakeShader( "shaders/gui.vert", GL_VERTEX_SHADER );
 	glShaders.guiFrag = MakeShader( "shaders/gui.frag", GL_FRAGMENT_SHADER );
 
@@ -122,6 +121,29 @@ void Shaders_Init()
 
 /*
 ========================
+RebuildShaders_f
+========================
+*/
+static void R_RebuildShaders_f()
+{
+	Shaders_Shutdown();
+	BuildAllShaders();
+}
+
+/*
+========================
+Shaders_Init
+========================
+*/
+void Shaders_Init()
+{
+	Cmd_AddCommand( "r_rebuildshaders", R_RebuildShaders_f );
+
+	BuildAllShaders();
+}
+
+/*
+========================
 Shaders_Shutdown
 ========================
 */
@@ -131,12 +153,16 @@ void Shaders_Shutdown()
 
 	// values of 0 are silently ignored for glDeleteShader and glDeleteProgram
 
+	glDeleteProgram( glProgs.smfMeshProg );
+	glDeleteProgram( glProgs.particleProg );
+	glDeleteProgram( glProgs.guiProg );
+
+	glDeleteShader( glShaders.smfMeshVert );
+	glDeleteShader( glShaders.smfMeshFrag );
+
 	glDeleteShader( glShaders.particleFrag );
 	glDeleteShader( glShaders.particleVert );
 
 	glDeleteShader( glShaders.guiFrag );
 	glDeleteShader( glShaders.guiVert );
-
-	glDeleteProgram( glProgs.particleProg );
-	glDeleteProgram( glProgs.guiProg );
 }
