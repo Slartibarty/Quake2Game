@@ -341,8 +341,8 @@ LRESULT CALLBACK MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		// DefWindowProc calls this after WM_CLOSE
 	case WM_DESTROY:
 		// let sound and input know about this?
-		cl_hwnd = NULL;
-	//	PostQuitMessage( 0 );
+		cl_hwnd = nullptr;
+		PostQuitMessage( 0 );
 		return 0;
 	}
 

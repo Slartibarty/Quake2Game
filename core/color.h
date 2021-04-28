@@ -22,23 +22,26 @@ inline constexpr uint32 PackColorFromFloats( float fr, float fg, float fb, float
 	return PackColor( r, g, b, a );
 }
 
-constexpr uint32	colorBlack = PackColor( 0, 0, 0, 255 );
-constexpr uint32	colorWhite = PackColor( 255, 255, 255, 255 );
-constexpr uint32	colorRed = PackColor( 255, 0, 0, 255 );
-constexpr uint32	colorGreen = PackColor( 0, 255, 0, 255 );
-constexpr uint32	colorBlue = PackColor( 0, 0, 255, 255 );
-constexpr uint32	colorYellow = PackColor( 255, 255, 0, 255 );
-constexpr uint32	colorMagenta = PackColor( 255, 0, 255, 255 );
-constexpr uint32	colorCyan = PackColor( 0, 255, 255, 255 );
-constexpr uint32	colorOrange = PackColor( 255, 128, 0, 255 );
-constexpr uint32	colorPurple = PackColor( 153, 0, 153, 255 );
-constexpr uint32	colorPink = PackColor( 186, 102, 122, 255 );
-constexpr uint32	colorBrown = PackColor( 102, 89, 20, 255 );
-constexpr uint32	colorLtGrey = PackColor( 192, 192, 192, 255 );
-constexpr uint32	colorMdGrey = PackColor( 128, 128, 128, 255 );
-constexpr uint32	colorDkGrey = PackColor( 64, 64, 64, 255 );
+namespace colors
+{
+	inline constexpr uint32 black		= PackColor( 0, 0, 0, 255 );
+	inline constexpr uint32 white		= PackColor( 255, 255, 255, 255 );
+	inline constexpr uint32 red			= PackColor( 255, 0, 0, 255 );
+	inline constexpr uint32 green		= PackColor( 0, 255, 0, 255 );
+	inline constexpr uint32 blue		= PackColor( 0, 0, 255, 255 );
+	inline constexpr uint32 yellow		= PackColor( 255, 255, 0, 255 );
+	inline constexpr uint32 magenta		= PackColor( 255, 0, 255, 255 );
+	inline constexpr uint32 cyan		= PackColor( 0, 255, 255, 255 );
+	inline constexpr uint32 orange		= PackColor( 255, 128, 0, 255 );
+	inline constexpr uint32 purple		= PackColor( 153, 0, 153, 255 );
+	inline constexpr uint32 pink		= PackColor( 186, 102, 122, 255 );
+	inline constexpr uint32 brown		= PackColor( 102, 89, 20, 255 );
+	inline constexpr uint32 ltGray		= PackColor( 192, 192, 192, 255 );
+	inline constexpr uint32 mdGray		= PackColor( 128, 128, 128, 255 );
+	inline constexpr uint32 dkGray		= PackColor( 64, 64, 64, 255 );
 
-constexpr uint32	colorDefaultText = colorWhite;
+	inline constexpr uint32 defaultText	= white;
+}
 
 // colour escape characters
 #define C_COLOR_ESCAPE			'^'
@@ -66,33 +69,33 @@ constexpr uint32	colorDefaultText = colorWhite;
 #define S_COLOR_BLACK			"^9"
 
 // returns true if a char is a valid colour index
-inline constexpr bool IsColorIndex( int c ) {
-	return c >= '1' || c <= '9';
+inline constexpr bool IsColorIndex( int ch ) {
+	return ch >= '0' && ch <= '9';
 }
 
-// returns a colour for a given color index ( 0 - 9 )
-inline constexpr uint32 ColorForIndex( int c ) {
-	switch ( c )
+// returns a colour for a given colour index ( 0 - 9 )
+inline constexpr uint32 ColorForIndex( int ch ) {
+	switch ( ch )
 	{
 	default: // C_COLOR_DEFAULT
-		return colorDefaultText;
+		return colors::defaultText;
 	case C_COLOR_RED:
-		return colorRed;
+		return colors::red;
 	case C_COLOR_GREEN:
-		return colorGreen;
+		return colors::green;
 	case C_COLOR_YELLOW:
-		return colorYellow;
+		return colors::yellow;
 	case C_COLOR_BLUE:
-		return colorBlue;
+		return colors::blue;
 	case C_COLOR_CYAN:
-		return colorCyan;
+		return colors::cyan;
 	case C_COLOR_ORANGE:
-		return colorOrange;
+		return colors::orange;
 	case C_COLOR_WHITE:
-		return colorWhite;
+		return colors::white;
 	case C_COLOR_GRAY:
-		return colorMdGrey;
+		return colors::mdGray;
 	case C_COLOR_BLACK:
-		return colorBlack;
+		return colors::black;
 	}
 }

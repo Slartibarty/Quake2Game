@@ -1513,6 +1513,57 @@ void R_DrawStudioModel( entity_t *e )
 ===================================================================================================
 */
 
+// TODO: there needs to be a constant that defines the max boundaries of the map, try to match Q3 eventually
+// pretend that BIG_FLOAT_VALUE is the max distance you can travel from the origin
+#define BIG_FLOAT_VALUE 131072.0f
+
+#define MAX_LIGHTS	4
+
+struct renderLight_t
+{
+	vec3_t position;
+	vec3_t color;
+	float intensity;
+};
+
+struct checkLight_t
+{
+	float distance;
+	int index;
+};
+
+static DirectX::XMFLOAT4X4 R_CreateViewMatrix( const vec3 &origin, const vec3 &forward, const vec3 &up )
+{
+	using namespace DirectX;
+
+	XMVECTOR zaxis = XMVector3Normalize( XMVectorNegate( XMLoadFloat3( (const XMFLOAT3 *)&forward ) ) );
+	XMVECTOR yaxis = XMLoadFloat3( (const XMFLOAT3 *)&up );
+	XMVECTOR xaxis = XMVector3Normalize( XMVector3Cross( yaxis, zaxis ) );
+	yaxis = XMVector3Cross( zaxis, xaxis );
+
+	XMFLOAT4X4 r;
+	XMStoreFloat3( reinterpret_cast<XMFLOAT3 *>( &r._11 ), xaxis );
+	XMStoreFloat3( reinterpret_cast<XMFLOAT3 *>( &r._21 ), yaxis );
+	XMStoreFloat3( reinterpret_cast<XMFLOAT3 *>( &r._31 ), zaxis );
+	r._14 = 0.0f;
+	r._24 = 0.0f;
+	r._34 = 0.0f;
+	r._41 = origin.x;
+	r._42 = origin.y;
+	r._43 = origin.z;
+	r._44 = 1.f;
+	return r;
+}
+
+#undef countof
+
+#if 0
+#define GLM_FORCE_EXPLICIT_CTOR
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
+#endif
+
 void R_DrawStaticMeshFile( entity_t *e )
 {
 	using namespace DirectX;
@@ -1521,9 +1572,11 @@ void R_DrawStaticMeshFile( entity_t *e )
 
 	// Matrices
 
-	XMMATRIX rotationMatrix = XMMatrixRotationRollPitchYaw( 0.0f, 0.0f, 0.0f );
-	XMMATRIX translationMatrix = XMMatrixTranslation( e->origin[0], e->origin[1], e->origin[2] );
-	XMMATRIX modelMatrix = XMMatrixMultiply( rotationMatrix, translationMatrix );
+	XMMATRIX modelMatrix = XMMatrixMultiply(
+		//XMMatrixRotationRollPitchYaw( e->angles[PITCH], e->angles[YAW], e->angles[ROLL] ),
+		XMMatrixRotationRollPitchYaw( 0.0f, 0.0f, 0.0f ),
+		XMMatrixTranslation( e->origin[0], e->origin[1], e->origin[2] )
+	);
 
 	XMFLOAT4X4A modelMatrixStore;
 	XMStoreFloat4x4A( &modelMatrixStore, modelMatrix );
@@ -1534,47 +1587,129 @@ void R_DrawStaticMeshFile( entity_t *e )
 	glGetFloatv( GL_MODELVIEW_MATRIX, view );
 	glGetFloatv( GL_PROJECTION_MATRIX, proj );
 
+	vec3 viewOrigin;
+	viewOrigin.SetFromLegacy( r_newrefdef.vieworg );
+
+	XMFLOAT4X4 viewMatrixStore = R_CreateViewMatrix( viewOrigin, { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } );
+
+	float fovx = 4.0f * tan( r_newrefdef.fov_y / 2.0f );
+	
+	XMMATRIX projMatrix = XMMatrixPerspectiveFovRH( DEG2RAD( fovx ), (float)vid.width / (float)vid.height, 4.0f, 4096.0f );
+	projMatrix = XMMatrixTranspose( projMatrix );
+
+	XMFLOAT4X4A projMatrixStore;
+	XMStoreFloat4x4A( &projMatrixStore, projMatrix );
+
+#if 0
+	glm::mat4 projection = glm::perspective( DEG2RAD( r_newrefdef.fov_y ), (float)vid.width / (float)vid.height, 4.0f, 4096.0f );
+	glm::mat4 model( 1.0f );
+
+	glm::vec3 origin;
+	origin.x = e->origin[0];
+	origin.y = e->origin[1];
+	origin.z = e->origin[2];
+	glm::vec3 angles;
+	angles.x = e->angles[0];
+	angles.y = e->angles[1];
+	angles.z = e->angles[2];
+
+	model = glm::translate( model, origin );
+#endif
+
+//	model = glm::rotate( model, e->angles[0], { 1.0f, 0.0f, 0.0f } );
+//	model = glm::rotate( model, e->angles[1], { 0.0f, 0.0f, 1.0f } );
+//	model = glm::rotate( model, e->angles[2], { 0.0f, 1.0f, 0.0f } );
+
 	// Ambient colour
 
 	vec3_t ambientColor;
 
 	R_LightPoint( e->origin, ambientColor );
 
-	// Light colour and position
+	// Lights
 
-	vec3_t lightColor;
-	vec3_t lightPos;
+	// build a list of all lights in our PVS
 
-	if ( r_newrefdef.num_dlights > 0 )
+	std::vector<staticLight_t> lightsInPVS;
+	lightsInPVS.reserve( 32 );
+
+	for ( int i = 0; i < mod_numStaticLights; ++i )
 	{
-		const auto &dlight = r_newrefdef.dlights[0];
-		lightColor[0] = dlight.color[0];
-		lightColor[1] = dlight.color[1];
-		lightColor[2] = dlight.color[2];
-	//	lightColor[3] = dlight.intensity;
+		// hack into the server code, this doesn't call any server functions so we're safe, it's just a wrapper
+		extern qboolean PF_inPVS( vec3_t p1, vec3_t p2 );
 
-		VectorCopy( r_newrefdef.dlights[0].origin, lightPos );
+		if ( PF_inPVS( e->origin, mod_staticLights[i].origin ) )
+		{
+			lightsInPVS.push_back( mod_staticLights[i] );
+		}
 	}
-	else
+
+	renderLight_t finalLights[MAX_LIGHTS]{};
+
+	if ( lightsInPVS.size() == 0 )
 	{
-		VectorClear( lightColor );
-		VectorClear( lightPos );
+		goto skipLights;
 	}
+
+	int skipIndices[MAX_LIGHTS]{};
+
+	// for all the lights in our PVS, find the four values that have the shortest distance to the origin, do this MAX_LIGHTS times
+	for ( int iter1 = 0; iter1 < MAX_LIGHTS; ++iter1 )
+	{
+		float smallestDistance = BIG_FLOAT_VALUE;
+		int smallestIndex = 0;
+
+		for ( int iter2 = 0; iter2 < (int)lightsInPVS.size(); ++iter2 )
+		{
+			float distance = VectorDistance( e->origin, lightsInPVS[iter2].origin );
+			if ( distance < smallestDistance )
+			{
+				if ( iter1 > 0 && skipIndices[iter1 - 1] == iter2 )
+				{
+					// skip, already got it
+					continue;
+				}
+				smallestDistance = distance;
+				smallestIndex = iter2;
+			}
+		}
+
+		skipIndices[iter1] = smallestIndex;
+
+		renderLight_t &finalLight = finalLights[iter1];
+		staticLight_t &staticLight = lightsInPVS[smallestIndex];
+
+		VectorCopy( staticLight.origin, finalLight.position );
+		VectorCopy( staticLight.color, finalLight.color );
+		finalLight.intensity = static_cast<float>( staticLight.intensity ) * 0.5; // compensate
+	}
+
+skipLights:
 
 	glUseProgram( glProgs.smfMeshProg );
 
 	glUniformMatrix4fv( 3, 1, GL_FALSE, (const GLfloat *)&modelMatrixStore );
-	glUniformMatrix4fv( 4, 1, GL_FALSE, view );
-	glUniformMatrix4fv( 5, 1, GL_FALSE, proj );
+	glUniformMatrix4fv( 4, 1, GL_FALSE, (const GLfloat *)&view );
+	glUniformMatrix4fv( 5, 1, GL_FALSE, (const GLfloat *)&proj );
 
 	glUniform3fv( 6, 1, ambientColor );
-	glUniform3fv( 7, 1, lightColor );
-	glUniform3fv( 8, 1, lightPos );
-	glUniform3fv( 9, 1, r_newrefdef.vieworg );
+	glUniform3fv( 7, 1, r_newrefdef.vieworg );
 
-	glUniform1i( 10, 0 ); // diffuse
-	glUniform1i( 11, 1 ); // specular
-	glUniform1i( 12, 2 ); // emission
+	constexpr int startIndex = 8;
+	constexpr int elementsInRenderLight = 3;
+
+	for ( int iter1 = 0, iter2 = 0; iter1 < MAX_LIGHTS; ++iter1, iter2 += elementsInRenderLight )
+	{
+		glUniform3fv( startIndex + iter2 + 0, 1, finalLights[iter1].position );
+		glUniform3fv( startIndex + iter2 + 1, 1, finalLights[iter1].color );
+		glUniform1f( startIndex + iter2 + 2, finalLights[iter1].intensity );
+	}
+
+	constexpr int indexAfterLights = startIndex + elementsInRenderLight * MAX_LIGHTS;
+
+	glUniform1i( indexAfterLights + 0, 0 ); // diffuse
+	glUniform1i( indexAfterLights + 1, 1 ); // specular
+	glUniform1i( indexAfterLights + 2, 2 ); // emission
 
 	glBindVertexArray( memSMF->vao );
 	glBindBuffer( GL_ARRAY_BUFFER, memSMF->vbo );

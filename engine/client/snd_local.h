@@ -4,7 +4,6 @@
 
 #include "client.h"
 
-// !!! if this is changed, the asm code must change !!!
 struct portable_samplepair_t
 {
 	int			left;
@@ -56,7 +55,6 @@ struct dma_t
 	byte		*buffer;
 };
 
-// !!! if this is changed, the asm code must change !!!
 struct channel_t
 {
 	sfx_t		*sfx;			// sfx number

@@ -1,6 +1,9 @@
 #include "g_local.h"
 #include "m_player.h"
 
+// uncomment to make entities spawn at your feet when you summon them
+#define SPAWN_AT_FEET
+
 
 char *ClientTeam (edict_t *ent)
 {
@@ -336,8 +339,18 @@ void Cmd_Spawn_f(edict_t *ent)
 	edict = G_Spawn ();
 	edict->classname = classname;
 
-	VectorCopy (ent->s.origin, edict->s.origin);
-	edict->s.angles[YAW] = ent->s.origin[YAW];
+	// origin
+
+#ifdef SPAWN_AT_FEET
+	// we do this so the entity spawns at your feet, rather than your centre (player origin is the centre)
+	VectorCopy( ent->s.origin, edict->s.origin );
+	edict->s.origin[2] -= ent->maxs[2];
+#else
+	VectorCopy( ent->s.origin, edict->s.origin );
+#endif
+
+	// angles
+	edict->s.angles[YAW] = ent->s.angles[YAW];
 
 	ED_CallSpawn (edict);
 

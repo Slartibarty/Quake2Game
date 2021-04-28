@@ -476,7 +476,7 @@ void V_RenderView (void)
 		cl.refdef.width = scr_vrect.width;
 		cl.refdef.height = scr_vrect.height;
 		cl.refdef.fov_y = CalcFov (cl.refdef.fov_x, (float)cl.refdef.width, (float)cl.refdef.height);
-		cl.refdef.time = cl.time * mathconst::MillisecondsToSeconds; // SlartTime
+		cl.refdef.time = MS2SEC( (float)cl.time ); // SlartTime
 		cl.refdef.frametime = cls.frametime; // SlartTime
 
 		cl.refdef.areabits = cl.frame.areabits;

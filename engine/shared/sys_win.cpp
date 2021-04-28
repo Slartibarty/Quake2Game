@@ -215,6 +215,9 @@ Send Key_Event calls
 */
 void Sys_SendKeyEvents( void )
 {
+	// slart: wtf were they thinking, doing it in the main loop works just fine...
+	// clean up the view code too, it's so bad
+#if 0
 	MSG msg;
 
 	while ( PeekMessageW( &msg, NULL, 0, 0, PM_NOREMOVE ) )
@@ -226,6 +229,7 @@ void Sys_SendKeyEvents( void )
 		TranslateMessage( &msg );
 		DispatchMessageW( &msg );
 	}
+#endif
 
 	// grab frame time
 	sys_frame_time = Sys_Milliseconds(); // FIXME: should this be at start?
@@ -271,7 +275,7 @@ char *Sys_GetClipboardData( void )
 ===================================================================================================
 */
 
-struct vidmode_t
+struct vidMode_t
 {
 	/*char	description[32];*/
 	int		width, height, mode;
@@ -279,7 +283,7 @@ struct vidmode_t
 
 static constexpr size_t DefaultNumModes = 64;
 
-std::vector<vidmode_t> s_vidModes;
+std::vector<vidMode_t> s_vidModes;
 
 static void Sys_InitVidModes()
 {
@@ -305,7 +309,7 @@ static void Sys_InitVidModes()
 		lastWidth = dm.dmPelsWidth;
 		lastHeight = dm.dmPelsHeight;
 
-		vidmode_t &mode = s_vidModes.emplace_back();
+		vidMode_t &mode = s_vidModes.emplace_back();
 
 		/*Q_sprintf_s( mode.description, "Mode %d:\t%dx%d", numModes, dm.dmPelsWidth, dm.dmPelsHeight );*/
 		mode.width = static_cast<int>( dm.dmPelsWidth );
@@ -508,6 +512,8 @@ int main( int argc, char **argv )
 
 	oldtime = Sys_Milliseconds();
 
+	MSG msg;
+
 	// main loop
 	while ( 1 )
 	{
@@ -516,6 +522,19 @@ int main( int argc, char **argv )
 		{
 			Sleep( 1 );
 		}
+
+		// proces all queued messages
+		while ( PeekMessageW( &msg, nullptr, 0, 0, PM_REMOVE ) )
+		{
+			if ( msg.message == WM_QUIT )
+			{
+				Com_Quit( EXIT_SUCCESS );
+			}
+			TranslateMessage( &msg );
+			DispatchMessageW( &msg );
+		}
+
+		sys_msg_time = msg.time;
 
 		do
 		{

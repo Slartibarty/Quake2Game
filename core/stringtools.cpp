@@ -134,7 +134,7 @@ int Q_strncasecmp( const char *s1, const char *s2, strlen_t n )
 	while ( n-- > 0 )
 	{
 		int c1 = *( s1++ );
-		int c2 = *( s1++ );
+		int c2 = *( s2++ );
 		if ( c1 == c2 )
 		{
 			if ( !c1 )

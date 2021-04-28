@@ -26,6 +26,11 @@ void OBJReader::Parse( char *buffer )
 {
 	char *token, *save_ptr;
 
+	if ( Q_strncmp( buffer, "# Blender ", 10 ) == 0 ) {
+		Com_Print( "Blender OBJ detected\n" );
+		blenderMode = true;
+	}
+
 	float2 f2;
 	float3 f3;
 	index3_t index;
@@ -64,7 +69,9 @@ void OBJReader::Parse( char *buffer )
 			f2.x = (float)( atof( token ) );
 			token = strtok_r( nullptr, Delimiters, &save_ptr );
 			f2.y = (float)( 1.0 - atof( token ) ); // swap for opengl :)
-			token = strtok_r( nullptr, Delimiters, &save_ptr );
+			if ( !blenderMode ) {
+				token = strtok_r( nullptr, Delimiters, &save_ptr );
+			}
 		//	f2.z = (float)atof( token );
 
 			tcoords.push_back( f2 );

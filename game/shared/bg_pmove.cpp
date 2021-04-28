@@ -1665,7 +1665,7 @@ void PM_Simulate( pmove_t *pmove )
 	VectorCopy( pm->s.origin, pml.previousOrigin );
 
 	// determine the time
-	pml.frameTime = MS2SEC( pm->cmd.msec );
+	pml.frameTime = MS2SEC( (float)pm->cmd.msec );
 
 	// update our view angles
 	PM_UpdateViewAngles();

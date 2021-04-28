@@ -227,8 +227,7 @@ static void SV_SpawnServer (char *server, char *spawnpoint, serverState_t server
 	
 	for (i=1 ; i< CM_NumInlineModels() ; i++)
 	{
-		Q_sprintf_s (sv.configstrings[CS_MODELS+1+i],
-			"*%i", i);
+		Q_sprintf_s (sv.configstrings[CS_MODELS+1+i], "*%i", i);
 		sv.models[i+1] = CM_InlineModel (sv.configstrings[CS_MODELS+1+i]);
 	}
 
@@ -245,8 +244,8 @@ static void SV_SpawnServer (char *server, char *spawnpoint, serverState_t server
 	ge->SpawnEntities ( sv.name, CM_EntityString(), spawnpoint );
 
 	// run two frames to allow everything to settle
-	ge->RunFrame ();
-	ge->RunFrame ();
+	//ge->RunFrame ();
+	//ge->RunFrame ();
 
 	// all precaches are complete
 	sv.state = serverstate;

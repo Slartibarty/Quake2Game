@@ -212,7 +212,7 @@ PF_inPVS
 Also checks portalareas so that doors block sight
 =================
 */
-static qboolean PF_inPVS (vec3_t p1, vec3_t p2)
+qboolean PF_inPVS (vec3_t p1, vec3_t p2)
 {
 	int		leafnum;
 	int		cluster;

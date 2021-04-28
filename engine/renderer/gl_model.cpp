@@ -1,24 +1,34 @@
-// models.c -- model loading and caching
+/*
+===================================================================================================
+
+	Model loading and caching
+
+===================================================================================================
+*/
 
 #include "gl_local.h"
 
-model_t			*loadmodel;
-static int		modfilelen;
+#define	MAX_MOD_KNOWN 1024
 
-void Mod_LoadBrushModel( model_t *mod, void *buffer );
-void Mod_LoadAliasModel( model_t *mod, void *buffer );
-void Mod_LoadStudioModel( model_t *mod, void *buffer );
-void Mod_LoadSMFModel( model_t *mod, void *buffer );
-void Mod_LoadSpriteModel( model_t *mod, void *buffer );
+// delete me
+model_t *loadmodel;
 
-static byte	mod_novis[MAX_MAP_LEAFS/8];
+void Mod_LoadBrushModel( model_t *pMod, void *pBuffer, int bufferLength );
+void Mod_LoadAliasModel( model_t *pMod, void *pBuffer, int bufferLength );
+void Mod_LoadStudioModel( model_t *pMod, void *pBuffer, int bufferLength );
+void Mod_LoadSMFModel( model_t *pMod, void *pBuffer, int bufferLength );
+void Mod_LoadSpriteModel( model_t *pMod, void *pBuffer, int bufferLength );
 
-#define	MAX_MOD_KNOWN	512
+static byte		mod_novis[MAX_MAP_LEAFS/8];
+
 static model_t	mod_known[MAX_MOD_KNOWN];
 static int		mod_numknown;
 
 // the inline * models from the current map are kept seperate
 static model_t	mod_inline[MAX_MOD_KNOWN];
+
+staticLight_t	mod_staticLights[MAX_ENTITIES];
+int				mod_numStaticLights;
 
 /*
 ========================
@@ -121,18 +131,18 @@ Mod_Modellist_f
 void Mod_Modellist_f()
 {
 	int		i;
-	model_t *mod;
 	int		total;
+	model_t *pMod;
 
 	total = 0;
 	Com_DPrintf( "Loaded models:\n" );
-	for ( i = 0, mod = mod_known; i < mod_numknown; i++, mod++ )
+	for ( i = 0, pMod = mod_known; i < mod_numknown; i++, pMod++ )
 	{
-		if ( !mod->name[0] ) {
+		if ( !pMod->name[0] ) {
 			continue;
 		}
-		Com_Printf( "%8i : %s\n", mod->extradatasize, mod->name );
-		total += mod->extradatasize;
+		Com_Printf( "%8i : %s\n", pMod->extradatasize, pMod->name );
+		total += pMod->extradatasize;
 	}
 	Com_Printf( "Total resident: %i\n", total );
 }
@@ -156,9 +166,9 @@ Loads in a model for the given name
 */
 model_t *Mod_ForName( const char *name, qboolean crash )
 {
-	model_t *mod;
-	unsigned *buf;
-	int		i;
+	model_t *	pMod;
+	void *		pBuffer;
+	int			i;
 
 	if ( !name[0] ) {
 		Com_Error( "Mod_ForName: NULL name" );
@@ -179,22 +189,22 @@ model_t *Mod_ForName( const char *name, qboolean crash )
 	//
 	// search the currently loaded models
 	//
-	for ( i = 0, mod = mod_known; i < mod_numknown; i++, mod++ )
+	for ( i = 0, pMod = mod_known; i < mod_numknown; i++, pMod++ )
 	{
-		if ( !mod->name[0] ) {
+		if ( !pMod->name[0] ) {
 			continue;
 		}
-		if ( !Q_strcmp( mod->name, name ) ) {
-			return mod;
+		if ( !Q_strcmp( pMod->name, name ) ) {
+			return pMod;
 		}
 	}
 
 	//
 	// find a free model slot spot
 	//
-	for ( i = 0, mod = mod_known; i < mod_numknown; i++, mod++ )
+	for ( i = 0, pMod = mod_known; i < mod_numknown; i++, pMod++ )
 	{
-		if ( !mod->name[0] ) {
+		if ( !pMod->name[0] ) {
 			// free spot
 			break;
 		}
@@ -207,22 +217,22 @@ model_t *Mod_ForName( const char *name, qboolean crash )
 		mod_numknown++;
 	}
 
-	Q_strcpy_s( mod->name, name );
+	Q_strcpy_s( pMod->name, name );
 
 	//
 	// load the file
 	//
-	modfilelen = FS_LoadFile( mod->name, (void **)&buf );
-	if ( !buf )
+	int bufferLength = FS_LoadFile( pMod->name, (void **)&pBuffer );
+	if ( !pBuffer )
 	{
 		if ( crash ) {
-			Com_Errorf( "Mod_NumForName: %s not found", mod->name );
+			Com_Errorf( "Mod_NumForName: %s not found", pMod->name );
 		}
-		memset( mod->name, 0, sizeof( mod->name ) );
+		memset( pMod->name, 0, sizeof( pMod->name ) );
 		return NULL;
 	}
 
-	loadmodel = mod;
+	loadmodel = pMod;
 
 	//
 	// fill it in
@@ -230,43 +240,43 @@ model_t *Mod_ForName( const char *name, qboolean crash )
 
 	// call the apropriate loader
 
-	switch ( LittleLong( *(unsigned *)buf ) )
+	switch ( LittleLong( *(int *)pBuffer ) )
 	{
 	case fmtSMF::fourCC:
-		loadmodel->extradata = Hunk_Begin( 0x1000000 );
-		Mod_LoadSMFModel( mod, buf );
+		loadmodel->extradata = Hunk_Begin( 0x10000 );
+		Mod_LoadSMFModel( pMod, pBuffer, bufferLength );
 		break;
 
 	case IDALIASHEADER:
 		loadmodel->extradata = Hunk_Begin( 0x200000 );
-		Mod_LoadAliasModel( mod, buf );
+		Mod_LoadAliasModel( pMod, pBuffer, bufferLength );
 		break;
 
 	case IDSTUDIOHEADER:
 		loadmodel->extradata = Hunk_Begin( 0x400000 );
-		Mod_LoadStudioModel( mod, buf );
+		Mod_LoadStudioModel( pMod, pBuffer, bufferLength );
 		break;
 
 	case IDSPRITEHEADER:
 		loadmodel->extradata = Hunk_Begin( 0x10000 );
-		Mod_LoadSpriteModel( mod, buf );
+		Mod_LoadSpriteModel( pMod, pBuffer, bufferLength );
 		break;
 
 	case IDBSPHEADER:
 		loadmodel->extradata = Hunk_Begin( 0x1000000 );
-		Mod_LoadBrushModel( mod, buf );
+		Mod_LoadBrushModel( pMod, pBuffer, bufferLength );
 		break;
 
 	default:
-		Com_Errorf( "Mod_NumForName: unknown fileid for %s", mod->name );
+		Com_Errorf( "Mod_NumForName: unknown fileid for %s", pMod->name );
 		break;
 	}
 
 	loadmodel->extradatasize = Hunk_End();
 
-	FS_FreeFile( buf );
+	FS_FreeFile( pBuffer );
 
-	return mod;
+	return pMod;
 }
 
 /*
@@ -820,10 +830,140 @@ static void Mod_LoadPlanes (lump_t *l)
 
 /*
 ========================
+Mod_ParseEntity
+
+Derived from g_spawn.cpp's version
+========================
+*/
+static char *Mod_ParseEntity( char *entString, staticLight_t &light, bool &foundLight )
+{
+	char keyname[MAX_TOKEN_CHARS];
+	char *com_token;
+
+	// go through all the dictionary pairs
+	while ( 1 )
+	{
+		// parse key
+		com_token = COM_Parse( &entString );
+		if ( com_token[0] == '}' ) {
+			break;
+		}
+		if ( !entString ) {
+			Com_Error( "Mod_ParseEntity: EOF without closing brace\n" );
+		}
+
+		Q_strcpy_s( keyname, com_token );
+
+		// parse value	
+		com_token = COM_Parse( &entString );
+		if ( !entString ) {
+			Com_Error( "Mod_ParseEntity: EOF without closing brace\n" );
+		}
+
+		if ( com_token[0] == '}' ) {
+			Com_Error( "Mod_ParseEntity: closing brace without data\n" );
+		}
+
+		// keynames with a leading underscore are used for utility comments,
+		// and are immediately discarded by quake
+		/*if ( keyname[0] == '_' ) {
+			continue;
+		}*/
+
+		if ( Q_strcmp( keyname, "origin" ) == 0 )
+		{
+			sscanf( com_token, "%f %f %f", &light.origin[0], &light.origin[1], &light.origin[2] );
+		}
+		else if ( Q_strcmp( keyname, "_light" ) == 0 )
+		{
+			uint32 r, g, b, i;
+			sscanf( com_token, "%d %d %d %d", &r, &g, &b, &i );
+
+			light.color[0] = r / 255.0f;
+			light.color[1] = g / 255.0f;
+			light.color[2] = b / 255.0f;
+			light.intensity = i;
+		}
+		else if ( Q_strcmp( keyname, "classname" ) == 0 )
+		{
+			if ( Q_strcmp( com_token, "light" ) == 0 )
+			{
+				foundLight = true;
+			}
+		}
+	}
+
+	return entString;
+}
+
+/*
+========================
+Mod_ParseLights
+
+Derived from g_spawn.cpp's version
+========================
+*/
+static void Mod_ParseLights( char *entString )
+{
+	if ( mod_numStaticLights > 0 ) {
+		// reset last map
+		memset( mod_staticLights, 0, mod_numStaticLights * sizeof( staticLight_t ) );
+		mod_numStaticLights = 0;
+	}
+
+	if ( !entString ) {
+		Com_Error( "Mod_ParseLights: Tried to parse a null entString! The map probably hasn't loaded on the client yet?\n" );
+	}
+
+	char *com_token;
+
+	staticLight_t light;
+
+	// parse ents
+	while ( 1 )
+	{
+		// parse the opening brace
+		com_token = COM_Parse( &entString );
+		if ( !entString ) {
+			break;
+		}
+		if ( com_token[0] != '{' ) {
+			Com_Errorf( "Mod_ParseLights: found %s when expecting {\n", com_token );
+		}
+
+		bool foundLight = false;
+		entString = Mod_ParseEntity( entString, light, foundLight );
+
+		if ( foundLight )
+		{
+			int i;
+			staticLight_t *pLight;
+			for ( i = 0, pLight = mod_staticLights; i < mod_numStaticLights; ++i, ++pLight )
+			{
+				if ( pLight->intensity == 0.0f ) {
+					break;
+				}
+			}
+			if ( i == mod_numStaticLights )
+			{
+				if ( mod_numStaticLights == MAX_ENTITIES ) {
+					Com_Error( "mod_numStaticLights == MAX_ENTITIES" );
+				}
+				++mod_numStaticLights;
+			}
+
+			// copy it over
+			*pLight = light;
+		}
+	}
+}
+
+/*
+========================
 Mod_LoadBrushModel
 ========================
 */
-void Mod_LoadBrushModel (model_t *mod, void *buffer)
+void Mod_LoadBrushModel( model_t *pMod, void *pBuffer, int bufferLength )
 {
 	int			i;
 	dheader_t	*header;
@@ -833,11 +973,11 @@ void Mod_LoadBrushModel (model_t *mod, void *buffer)
 	if (loadmodel != mod_known)
 		Com_Errorf ("Loaded a brush model after the world");
 
-	header = (dheader_t *)buffer;
+	header = (dheader_t *)pBuffer;
 
 	i = LittleLong (header->version);
 	if (i != BSPVERSION)
-		Com_Errorf ("Mod_LoadBrushModel: %s has wrong version number (%i should be %i)", mod->name, i, BSPVERSION);
+		Com_Errorf ("Mod_LoadBrushModel: %s has wrong version number (%i should be %i)", pMod->name, i, BSPVERSION);
 
 // swap all the lumps
 	mod_base = (byte *)header;
@@ -859,16 +999,19 @@ void Mod_LoadBrushModel (model_t *mod, void *buffer)
 	Mod_LoadLeafs (&header->lumps[LUMP_LEAFS]);
 	Mod_LoadNodes (&header->lumps[LUMP_NODES]);
 	Mod_LoadSubmodels (&header->lumps[LUMP_MODELS]);
-	mod->numframes = 2;		// regular and alternate animation
+
+	Mod_ParseLights( CM_EntityString() );
+
+	pMod->numframes = 2;		// regular and alternate animation
 	
 //
 // set up the submodels
 //
-	for (i=0 ; i<mod->numsubmodels ; i++)
+	for (i=0 ; i<pMod->numsubmodels ; i++)
 	{
 		model_t	*starmod;
 
-		bm = &mod->submodels[i];
+		bm = &pMod->submodels[i];
 		starmod = &mod_inline[i];
 
 		*starmod = *loadmodel;
@@ -903,7 +1046,7 @@ void Mod_LoadBrushModel (model_t *mod, void *buffer)
 Mod_LoadAliasModel
 ========================
 */
-void Mod_LoadAliasModel (model_t *mod, void *buffer)
+void Mod_LoadAliasModel( model_t *pMod, void *pBuffer, int bufferLength )
 {
 	int					i, j;
 	dmdl_t				*pinmodel, *pheader;
@@ -913,33 +1056,33 @@ void Mod_LoadAliasModel (model_t *mod, void *buffer)
 	int					*pincmd, *poutcmd;
 	int					version;
 
-	pinmodel = (dmdl_t *)buffer;
+	pinmodel = (dmdl_t *)pBuffer;
 
 	version = LittleLong (pinmodel->version);
 	if (version != ALIAS_VERSION)
 		Com_Errorf ("%s has wrong version number (%i should be %i)",
-				 mod->name, version, ALIAS_VERSION);
+				 pMod->name, version, ALIAS_VERSION);
 
 	pheader = (dmdl_t*)Hunk_Alloc (LittleLong(pinmodel->ofs_end));
 	
 	// byte swap the header fields and sanity check
 	for (i=0 ; i<sizeof(dmdl_t)/4 ; i++)
-		((int *)pheader)[i] = LittleLong (((int *)buffer)[i]);
+		((int *)pheader)[i] = LittleLong (((int *)pBuffer)[i]);
 
 	if (pheader->num_xyz <= 0)
-		Com_Errorf ("model %s has no vertices", mod->name);
+		Com_Errorf ("model %s has no vertices", pMod->name);
 
 	if (pheader->num_xyz > MAX_VERTS)
-		Com_Errorf ("model %s has too many vertices", mod->name);
+		Com_Errorf ("model %s has too many vertices", pMod->name);
 
 	if (pheader->num_st <= 0)
-		Com_Errorf ("model %s has no st vertices", mod->name);
+		Com_Errorf ("model %s has no st vertices", pMod->name);
 
 	if (pheader->num_tris <= 0)
-		Com_Errorf ("model %s has no triangles", mod->name);
+		Com_Errorf ("model %s has no triangles", pMod->name);
 
 	if (pheader->num_frames <= 0)
-		Com_Errorf ("model %s has no frames", mod->name);
+		Com_Errorf ("model %s has no frames", pMod->name);
 
 //
 // load base s and t vertices (not used in gl version)
@@ -990,7 +1133,7 @@ void Mod_LoadAliasModel (model_t *mod, void *buffer)
 
 	}
 
-	mod->type = mod_alias;
+	pMod->type = mod_alias;
 
 	//
 	// load the glcmds
@@ -1006,15 +1149,15 @@ void Mod_LoadAliasModel (model_t *mod, void *buffer)
 		pheader->num_skins*MAX_SKINNAME);
 	for (i=0 ; i<pheader->num_skins ; i++)
 	{
-		mod->skins[i] = GL_FindMaterial( (char *)pheader + pheader->ofs_skins + i * MAX_SKINNAME );
+		pMod->skins[i] = GL_FindMaterial( (char *)pheader + pheader->ofs_skins + i * MAX_SKINNAME );
 	}
 
-	mod->mins[0] = -32;
-	mod->mins[1] = -32;
-	mod->mins[2] = -32;
-	mod->maxs[0] = 32;
-	mod->maxs[1] = 32;
-	mod->maxs[2] = 32;
+	pMod->mins[0] = -32;
+	pMod->mins[1] = -32;
+	pMod->mins[2] = -32;
+	pMod->maxs[0] = 32;
+	pMod->maxs[1] = 32;
+	pMod->maxs[2] = 32;
 }
 
 /*
@@ -1030,14 +1173,14 @@ void Mod_LoadAliasModel (model_t *mod, void *buffer)
 Mod_LoadStudioModel
 ========================
 */
-void Mod_LoadStudioModel( model_t *mod, void *buffer )
+void Mod_LoadStudioModel( model_t *pMod, void *pBuffer, int bufferLength )
 {
 	int					i;
 	studiohdr_t			*phdr;
 	mstudiotexture_t	*ptexture;
 
-	phdr = (studiohdr_t *)Hunk_Alloc( modfilelen );
-	memcpy( phdr, buffer, modfilelen ); // Don't bother with swapping
+	phdr = (studiohdr_t *)Hunk_Alloc( bufferLength );
+	memcpy( phdr, pBuffer, bufferLength ); // Don't bother with swapping
 
 	assert( phdr->numtextures <= MAX_MD2SKINS );
 
@@ -1049,15 +1192,15 @@ void Mod_LoadStudioModel( model_t *mod, void *buffer )
 		{
 			// strcpy( name, mod->name );
 			// strcpy( name, ptexture[i].name );
-			mod->skins[i] = mat_notexture;
-			ptexture[i].index = mod->skins[i]->image->texnum;
+			pMod->skins[i] = mat_notexture;
+			ptexture[i].index = pMod->skins[i]->image->texnum;
 		}
 	}
 
-	mod->type = mod_studio;
+	pMod->type = mod_studio;
 
-	VectorCopy( phdr->min, mod->mins );
-	VectorCopy( phdr->max, mod->maxs );
+	VectorCopy( phdr->min, pMod->mins );
+	VectorCopy( phdr->max, pMod->maxs );
 }
 
 /*
@@ -1068,13 +1211,13 @@ void Mod_LoadStudioModel( model_t *mod, void *buffer )
 ===================================================================================================
 */
 
-void Mod_LoadSMFModel( model_t *pModel, void *pBuffer )
+void Mod_LoadSMFModel( model_t *pMod, void *pBuffer, [[maybe_unused]] int bufferLength )
 {
 	fmtSMF::header_t *header = (fmtSMF::header_t *)pBuffer;
 
 	if ( header->version != fmtSMF::version )
 	{
-		Com_Errorf( "%s has wrong version number (%i should be %i)", pModel->name, header->version, fmtSMF::version );
+		Com_Errorf( "%s has wrong version number (%i should be %i)", pMod->name, header->version, fmtSMF::version );
 	}
 
 	mSMF_t *memSMF = (mSMF_t *)Hunk_Alloc( sizeof( mSMF_t ) );
@@ -1105,14 +1248,14 @@ void Mod_LoadSMFModel( model_t *pModel, void *pBuffer )
 	glBufferData( GL_ARRAY_BUFFER, header->numVerts * sizeof( fmtSMF::vertex_t ), vertexData, GL_STATIC_DRAW );
 	glBufferData( GL_ELEMENT_ARRAY_BUFFER, header->numIndices * sizeof( uint16 ), indexData, GL_STATIC_DRAW );
 
-	pModel->type = mod_smf;
+	pMod->type = mod_smf;
 
-	pModel->mins[0] = -32;
-	pModel->mins[1] = -32;
-	pModel->mins[2] = -32;
-	pModel->maxs[0] = 32;
-	pModel->maxs[1] = 32;
-	pModel->maxs[2] = 32;
+	pMod->mins[0] = -32;
+	pMod->mins[1] = -32;
+	pMod->mins[2] = -32;
+	pMod->maxs[0] = 32;
+	pMod->maxs[1] = 32;
+	pMod->maxs[2] = 32;
 }
 
 /*
@@ -1128,13 +1271,13 @@ void Mod_LoadSMFModel( model_t *pModel, void *pBuffer )
 Mod_LoadSpriteModel
 ========================
 */
-void Mod_LoadSpriteModel (model_t *mod, void *buffer)
+void Mod_LoadSpriteModel( model_t *pMod, void *pBuffer, int bufferLength )
 {
 	dsprite_t	*sprin, *sprout;
 	int			i;
 
-	sprin = (dsprite_t *)buffer;
-	sprout = (dsprite_t*)Hunk_Alloc (modfilelen);
+	sprin = (dsprite_t *)pBuffer;
+	sprout = (dsprite_t*)Hunk_Alloc ( bufferLength );
 
 	sprout->ident = LittleLong (sprin->ident);
 	sprout->version = LittleLong (sprin->version);
@@ -1142,11 +1285,11 @@ void Mod_LoadSpriteModel (model_t *mod, void *buffer)
 
 	if (sprout->version != SPRITE_VERSION)
 		Com_Errorf ("%s has wrong version number (%i should be %i)",
-				 mod->name, sprout->version, SPRITE_VERSION);
+				 pMod->name, sprout->version, SPRITE_VERSION);
 
 	if (sprout->numframes > MAX_MD2SKINS)
 		Com_Errorf ("%s has too many frames (%i > %i)",
-				 mod->name, sprout->numframes, MAX_MD2SKINS);
+				 pMod->name, sprout->numframes, MAX_MD2SKINS);
 
 	// byte swap everything
 	for (i=0 ; i<sprout->numframes ; i++)
@@ -1156,10 +1299,10 @@ void Mod_LoadSpriteModel (model_t *mod, void *buffer)
 		sprout->frames[i].origin_x = LittleLong (sprin->frames[i].origin_x);
 		sprout->frames[i].origin_y = LittleLong (sprin->frames[i].origin_y);
 		memcpy (sprout->frames[i].name, sprin->frames[i].name, MAX_SKINNAME);
-		mod->skins[i] = GL_FindMaterial (sprout->frames[i].name);
+		pMod->skins[i] = GL_FindMaterial (sprout->frames[i].name);
 	}
 
-	mod->type = mod_sprite;
+	pMod->type = mod_sprite;
 }
 
 //=================================================================================================
@@ -1297,16 +1440,16 @@ R_EndRegistration
 void R_EndRegistration()
 {
 	int i;
-	model_t *mod;
+	model_t *pMod;
 
-	for ( i = 0, mod = mod_known; i < mod_numknown; i++, mod++ )
+	for ( i = 0, pMod = mod_known; i < mod_numknown; i++, pMod++ )
 	{
-		if ( !mod->name[0] ) {
+		if ( !pMod->name[0] ) {
 			continue;
 		}
-		if ( mod->registration_sequence != tr.registrationSequence ) {
+		if ( pMod->registration_sequence != tr.registrationSequence ) {
 			// don't need this model
-			Mod_Free( mod );
+			Mod_Free( pMod );
 		}
 	}
 

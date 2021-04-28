@@ -233,7 +233,7 @@ smoothly scrolled off.
 */
 void R_DrawChar( int x, int y, int ch )
 {
-	R_DrawCharColor( x, y, ch, colorDefaultText );
+	R_DrawCharColor( x, y, ch, colors::defaultText );
 }
 
 /*

@@ -382,7 +382,7 @@ Returns true if a buffer is a wave buffer
 */
 bool IsWav( byte *wav )
 {
-	return ( wav[0] == 'R' && wav[1] == 'I' && wav[2] == 'F' && wav[3] == 'F' );
+	return *( (uint *)wav ) == MakeFourCC( 'R', 'I', 'F', 'F' );
 }
 
 /*
@@ -394,5 +394,5 @@ Returns true if a buffer is an OGG buffer
 */
 bool IsOgg( byte *ogg )
 {
-	return ( ogg[0] == 'O' && ogg[1] == 'g' && ogg[2] == 'g' && ogg[3] == 'S' );
+	return *( (uint *)ogg ) == MakeFourCC( 'O', 'G', 'G', 'S' );
 }

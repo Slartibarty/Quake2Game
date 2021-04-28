@@ -50,6 +50,8 @@ private:
 	std::vector<vertex_t> m_vertices;
 	std::vector<uint3> m_indices;
 
+	bool blenderMode = false;
+
 	// Takes a null terminated buffer
 	void Parse( char *buffer );
 

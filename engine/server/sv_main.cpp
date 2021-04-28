@@ -820,7 +820,7 @@ void Master_Heartbeat (void)
 	if (svs.last_heartbeat > svs.realtime)
 		svs.last_heartbeat = svs.realtime;
 
-	if (svs.realtime - svs.last_heartbeat < HEARTBEAT_SECONDS * mathconst::SecondsToMilliseconds)
+	if (svs.realtime - svs.last_heartbeat < SEC2MS(HEARTBEAT_SECONDS))
 		return;		// not time to send yet
 
 	svs.last_heartbeat = svs.realtime;

@@ -483,8 +483,8 @@ void SP_viewthing( edict_t *ent )
 
 	ent->movetype = MOVETYPE_NONE;
 	ent->solid = SOLID_NOT;
-//	VectorSet( ent->mins, -16, -16, -24 );
-//	VectorSet( ent->maxs, 16, 16, 32 );
+	VectorSet( ent->mins, -16, -16, 0 );
+	VectorSet( ent->maxs, 16, 16, 72 );
 	ent->s.modelindex = gi.modelindex( g_viewthing->GetString() );
 	gi.linkentity( ent );
 

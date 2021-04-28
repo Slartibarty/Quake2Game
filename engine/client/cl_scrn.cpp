@@ -91,7 +91,7 @@ void CL_AddNetgraph (void)
 	ping /= 30;
 	if (ping > 30)
 		ping = 30;
-	SCR_DebugGraph( (float)ping, colorGreen );
+	SCR_DebugGraph( (float)ping, colors::green );
 }
 
 
@@ -134,7 +134,7 @@ void SCR_DrawDebugGraph (void)
 
 	x = scr_vrect.x;
 	y = scr_vrect.y+scr_vrect.height;
-	R_DrawFilled (x, y-(int)scr_graphheight->value, w, (int)scr_graphheight->value, colorDkGrey);
+	R_DrawFilled (x, y-(int)scr_graphheight->value, w, (int)scr_graphheight->value, colors::dkGray);
 
 	for (a=0 ; a<w ; a++)
 	{
@@ -599,40 +599,41 @@ int entitycmpfnc( const entity_t *a, const entity_t *b )
 
 void SCR_TimeRefresh_f (void)
 {
-	int		i;
-	int		start, stop;
-	float	time;
+	int i;
 
-	if ( cls.state != ca_active )
+	if ( cls.state != ca_active ) {
 		return;
+	}
 
-	start = Sys_Milliseconds ();
+	double start = Time_FloatMilliseconds();
 
-	if (Cmd_Argc() == 2)
-	{	// run without page flipping
+	if ( Cmd_Argc() == 2 )
+	{
+		// run without page flipping
 		R_BeginFrame();
-		for (i=0 ; i<128 ; i++)
+		for ( i = 0; i < 128; i++ )
 		{
-			cl.refdef.viewangles[1] = i/128.0f*360.0f;
-			R_RenderFrame (&cl.refdef);
+			cl.refdef.viewangles[1] = i / 128.0f * 360.0f;
+			R_RenderFrame( &cl.refdef );
 		}
 		R_EndFrame();
 	}
 	else
 	{
-		for (i=0 ; i<128 ; i++)
+		for ( i = 0; i < 128; i++ )
 		{
-			cl.refdef.viewangles[1] = i/128.0f*360.0f;
+			cl.refdef.viewangles[1] = i / 128.0f * 360.0f;
 
 			R_BeginFrame();
-			R_RenderFrame (&cl.refdef);
+			R_RenderFrame( &cl.refdef );
 			R_EndFrame();
 		}
 	}
 
-	stop = Sys_Milliseconds ();
-	time = (stop-start) * mathconst::MillisecondsToSeconds;
-	Com_Printf ("%f seconds (%f fps)\n", time, 128/time);
+	double end = Time_FloatMilliseconds();
+	double time = MS2SEC( end - start );
+
+	Com_Printf( "%f seconds (%f fps)\n", time, 128.0 / time );
 }
 
 /*
@@ -1157,7 +1158,7 @@ void SCR_ExecuteLayoutString (char *s)
 		if (!Q_strcmp(token, "cstring"))
 		{
 			token = COM_Parse (&s);
-			DrawHUDString (token, x, y, 320, colorDefaultText);
+			DrawHUDString (token, x, y, 320, colors::defaultText);
 			continue;
 		}
 
@@ -1171,7 +1172,7 @@ void SCR_ExecuteLayoutString (char *s)
 		if (!Q_strcmp(token, "cstring2"))
 		{
 			token = COM_Parse (&s);
-			DrawHUDString (token, x, y, 320, colorGreen);
+			DrawHUDString (token, x, y, 320, colors::green);
 			continue;
 		}
 
@@ -1326,7 +1327,7 @@ void SCR_UpdateScreen (void)
 		SCR_CheckDrawCenterString ();
 
 		if (scr_timegraph->value)
-			SCR_DebugGraph (cls.frametime*300, colorBlack);
+			SCR_DebugGraph (cls.frametime*300, colors::black);
 
 		if (scr_debuggraph->value || scr_timegraph->value || scr_netgraph->value)
 			SCR_DrawDebugGraph ();

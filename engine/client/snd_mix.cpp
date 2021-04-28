@@ -8,7 +8,7 @@ int		snd_scaletable[32][256];
 int 	*snd_p, snd_linear_count, snd_vol;
 short	*snd_out;
 
-void S_WriteLinearBlastStereo16 (void)
+static void S_WriteLinearBlastStereo16 (void)
 {
 	int		i;
 	int		val;
@@ -33,7 +33,7 @@ void S_WriteLinearBlastStereo16 (void)
 	}
 }
 
-void S_TransferStereo16 (unsigned long *pbuf, int endtime)
+static void S_TransferStereo16 (unsigned long *pbuf, int endtime)
 {
 	int		lpos;
 	int		lpaintedtime;
@@ -68,7 +68,7 @@ S_TransferPaintBuffer
 
 ===================
 */
-void S_TransferPaintBuffer(int endtime)
+static void S_TransferPaintBuffer(int endtime)
 {
 	int 	out_idx;
 	int 	count;

@@ -3,6 +3,7 @@
 
 #include "../shared/engine.h"
 
+#include "ref_types.h"
 #include "ref_public.h"
 
 // slart: have to include it this way otherwise it uses the winsdk version...

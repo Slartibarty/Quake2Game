@@ -27,6 +27,9 @@
 #include <ctime>
 #include <cassert>
 
+#include <concepts>
+#include <numbers>
+
 #include "sys_defines.h"
 #include "sys_types.h"
 #include "utilities.h"
@@ -74,10 +77,10 @@ void Com_DPrintf( _Printf_format_string_ const char *fmt, ... );
 =======================================
 */
 
-void *	Hunk_Begin( int maxsize );
-void *	Hunk_Alloc( int size );
+void *	Hunk_Begin( size_t maxsize );
+void *	Hunk_Alloc( size_t size );
 void	Hunk_Free( void *buf );
-int		Hunk_End();
+size_t	Hunk_End();
 
 /*
 =======================================

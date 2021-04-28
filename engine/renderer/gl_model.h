@@ -7,18 +7,13 @@ m*_t structures are in-memory
 */
 
 /*
-==============================================================================
+===================================================================================================
 
 BRUSH MODELS
 
-==============================================================================
+===================================================================================================
 */
 
-
-//
-// in memory representation
-//
-// !!! if this is changed, it must be changed in asm_draw.h too !!!
 struct mvertex_t
 {
 	vec3_t		position;
@@ -34,14 +29,12 @@ struct mmodel_t
 	int			firstface, numfaces;
 };
 
-
 #define	SURF_PLANEBACK		2
 #define	SURF_DRAWSKY		4
 #define SURF_DRAWTURB		0x10
 #define SURF_DRAWBACKGROUND	0x40
 #define SURF_UNDERWATER		0x80
 
-// !!! if this is changed, it must be changed in asm_draw.h too !!!
 struct medge_t
 {
 	unsigned short	v[2];
@@ -220,9 +213,19 @@ struct model_t
 	// for alias models and skins
 	material_t	*skins[MAX_MD2SKINS];
 
-	int			extradatasize;
-	void		*extradata;
+	size_t		extradatasize;
+	void *		extradata;
 };
+
+struct staticLight_t
+{
+	vec3_t origin;
+	vec3_t color;
+	uint32 intensity;	// 0 - 1
+};
+
+extern staticLight_t	mod_staticLights[MAX_ENTITIES];
+extern int				mod_numStaticLights;
 
 //-------------------------------------------------------------------------------------------------
 

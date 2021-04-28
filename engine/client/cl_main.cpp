@@ -1611,19 +1611,23 @@ void CL_Frame (int msec)
 
 	extratime += msec;
 
-	if (!cl_timedemo->value)
+	if ( !cl_timedemo->value )
 	{
-		if (cls.state == ca_connected && extratime < 100)
-			return;			// don't flood packets out while connecting
-		if (extratime < mathconst::SecondsToMilliseconds / cl_maxfps->value)
-			return;			// framerate is too high
+		if ( cls.state == ca_connected && extratime < 100 ) {
+			// don't flood packets out while connecting
+			return;
+		}
+		if ( extratime < mconst::SecondsToMilliseconds / cl_maxfps->value ) {
+			// framerate is too high
+			return;
+		}
 	}
 
 	// let the mouse activate or deactivate
 	input::Frame ();
 
 	// decide the simulation time
-	cls.frametime = extratime * mathconst::MillisecondsToSeconds; // SlartTime
+	cls.frametime = MS2SEC( (float)extratime ); // SlartTime
 	cl.time += extratime;
 	cls.realtime = curtime;
 

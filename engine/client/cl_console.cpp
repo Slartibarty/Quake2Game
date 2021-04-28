@@ -8,7 +8,7 @@
 
 #include "client.h"
 
-static constexpr uint32 colorConsoleText = colorCyan;
+static constexpr uint32 ConsoleTextColor = colors::cyan;
 
 #define	DEFAULT_CONSOLE_WIDTH	78
 
@@ -70,7 +70,7 @@ This shouldn't be here
 void DrawAltString( int x, int y, const char *s )
 {
 	while ( *s ) {
-		R_DrawCharColor( x, y, *s, colorGreen );
+		R_DrawCharColor( x, y, *s, colors::green );
 		x += CONCHAR_WIDTH;
 		s++;
 	}
@@ -496,7 +496,7 @@ static void Con_DrawInput()
 	int y = con.vislines - ( CONCHAR_HEIGHT * 2 );
 
 	R_DrawCharColor( con.xadjust + CONCHAR_WIDTH,
-		y, ']', colorConsoleText );
+		y, ']', ConsoleTextColor );
 
 	for ( i = 0; i < con.linewidth; i++ ) {
 		if ( text[i] == '\0' ) {
@@ -504,13 +504,13 @@ static void Con_DrawInput()
 			break;
 		}
 		R_DrawCharColor( con.xadjust + ( i + 2 ) * CONCHAR_WIDTH,
-			y, text[i], colorWhite );
+			y, text[i], colors::white );
 	}
 
 	// add the cursor frame
 	if ( ( cls.realtime >> 8 ) & 1 ) {
 		R_DrawCharColor( con.xadjust + ( key_linepos + 2 ) * CONCHAR_WIDTH,
-			y, 11, colorWhite );
+			y, 11, colors::white );
 	}
 }
 #else
@@ -581,7 +581,7 @@ void Con_DrawNotify()
 		}
 		text = con.text + (i % con.totallines)*con.linewidth;
 
-		uint32 color = colorConsoleText;
+		uint32 color = ConsoleTextColor;
 		int localLineWidth = con.linewidth;
 		
 		for ( x = 0; x < localLineWidth; x++ ) {
@@ -663,7 +663,7 @@ void Con_DrawConsole( float frac )
 
 	// draw the background
 	R_DrawFilled( 0, -viddef.height + lines, viddef.width, viddef.height, PackColor( 0, 0, 0, 192 ) );
-	R_DrawFilled( 0, lines - 2, viddef.width, 2, colorConsoleText );
+	R_DrawFilled( 0, lines - 2, viddef.width, 2, ConsoleTextColor );
 	SCR_AddDirtyPoint( 0, 0 );
 	SCR_AddDirtyPoint( viddef.width - 1, lines - 1 );
 
@@ -671,7 +671,7 @@ void Con_DrawConsole( float frac )
 	constexpr int verLength = sizeof( BLD_STRING ) - 1;
 	for ( x = 0; x < verLength; x++ ) {
 		R_DrawCharColor( viddef.width - ( verLength - x + 1 ) * CONCHAR_WIDTH,
-			lines - ( CONCHAR_HEIGHT * 2 ), BLD_STRING[x], colorConsoleText );
+			lines - ( CONCHAR_HEIGHT * 2 ), BLD_STRING[x], ConsoleTextColor );
 	}
 
 	// draw the text
@@ -684,7 +684,7 @@ void Con_DrawConsole( float frac )
 	if (con.display != con.current) {
 		// draw arrows to show the buffer is backscrolled
 		for ( x = 0; x < con.linewidth; x += 4 ) {
-			R_DrawCharColor( con.xadjust + ( x + 1 ) * CONCHAR_WIDTH, y, '^', colorConsoleText );
+			R_DrawCharColor( con.xadjust + ( x + 1 ) * CONCHAR_WIDTH, y, '^', ConsoleTextColor );
 		}
 		y -= CONCHAR_HEIGHT;
 		rows--;
@@ -710,7 +710,7 @@ void Con_DrawConsole( float frac )
 
 		text = con.text + ( row % con.totallines ) * con.linewidth;
 
-		uint32 color = colorConsoleText;
+		uint32 color = ConsoleTextColor;
 		int localLineWidth = con.linewidth;
 
 		for ( x = 0; x < localLineWidth; x++ ) {

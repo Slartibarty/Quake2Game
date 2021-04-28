@@ -391,7 +391,7 @@ void Menu_Draw( menuframework_s *menu )
 
 void Menu_DrawStatusBar( const char *string )
 {
-	R_DrawFilled( 0, VID_HEIGHT - CONCHAR_HEIGHT, VID_WIDTH, CONCHAR_HEIGHT, colorDkGrey );
+	R_DrawFilled( 0, VID_HEIGHT - CONCHAR_HEIGHT, VID_WIDTH, CONCHAR_HEIGHT, colors::dkGray );
 
 	if ( string )
 	{
@@ -422,7 +422,7 @@ void Menu_DrawStringDark( int x, int y, const char *string )
 
 	for ( i = 0; i < len; i++ )
 	{
-		R_DrawCharColor( ( x + i*CONCHAR_WIDTH ), y, string[i], colorGreen );
+		R_DrawCharColor( ( x + i*CONCHAR_WIDTH ), y, string[i], colors::green );
 	}
 }
 
@@ -444,7 +444,7 @@ void Menu_DrawStringR2LDark( int x, int y, const char *string )
 
 	for ( i = 0; i < len; i++ )
 	{
-		R_DrawCharColor( ( x - i*CONCHAR_WIDTH ), y, string[len-i-1], colorGreen );
+		R_DrawCharColor( ( x - i*CONCHAR_WIDTH ), y, string[len-i-1], colors::green );
 	}
 }
 
@@ -550,7 +550,7 @@ void MenuList_Draw( menulist_s *l )
 
 	n = l->itemnames;
 
-  	R_DrawFilled( l->generic.x - 112 + l->generic.parent->x, l->generic.parent->y + l->generic.y + l->curvalue*CONCHAR_HEIGHT + CONCHAR_HEIGHT, 128, 10, colorDkGrey );
+  	R_DrawFilled( l->generic.x - 112 + l->generic.parent->x, l->generic.parent->y + l->generic.y + l->curvalue*CONCHAR_HEIGHT + CONCHAR_HEIGHT, 128, 10, colors::dkGray );
 	while ( *n )
 	{
 		Menu_DrawStringR2LDark( l->generic.x + l->generic.parent->x + LCOLUMN_OFFSET, l->generic.y + l->generic.parent->y + y + 10, *n );

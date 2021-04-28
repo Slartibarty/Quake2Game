@@ -10,6 +10,8 @@
 
 #include <cmath>
 
+#include <numbers> // std::numbers
+
 #include "sys_types.h"
 
 #ifdef M_PI
@@ -44,31 +46,56 @@ struct vec3
 	constexpr vec3( float X, float Y, float Z ) noexcept : x( X ), y( Y ), z( Z ) {}
 	//explicit vec3( _In_reads_( 3 ) const float *pArray ) noexcept : x( pArray[0] ), y( pArray[1] ), z( pArray[2] ) {}
 
+	// I wonder how the compiler deals with this
+	friend bool operator==( const vec3 &, const vec3 & ) = default;
+
 	void Set( float X, float Y, float Z )
 	{
-		x = X;
-		y = Y;
-		z = Z;
+		x = X; y = Y; z = Z;
+	}
+
+	void SetFromLegacy( const float *pArray )
+	{
+		x = pArray[0]; y = pArray[1]; z = pArray[2];
 	}
 
 	void Replicate( float f )
 	{
-		x = f;
-		y = f;
-		z = f;
+		x = f; y = f; z = f;
 	}
 
-	// should this be called Zero()?
-	void Clear()
+	void Zero()
 	{
-		x = 0.0f;
-		y = 0.0f;
-		z = 0.0f;
+		x = 0.0f; y = 0.0f; z = 0.0f;
 	}
 
-	[[nodiscard]] float Length() const
+	float Length() const
 	{
 		return sqrt( x*x + y*y + z*z );
+	}
+
+	float Normalize()
+	{
+		float length = Length();
+
+		// prevent divide by zero
+		float ilength = 1.0f / ( length + FLT_EPSILON );
+
+		v[0] *= ilength;
+		v[1] *= ilength;
+		v[2] *= ilength;
+
+		return length;
+	}
+
+	void NormalizeFast()
+	{
+		// prevent divide by zero
+		float ilength = 1.0f / ( Length() + FLT_EPSILON );
+
+		v[0] *= ilength;
+		v[1] *= ilength;
+		v[2] *= ilength;
 	}
 
 	float *Base()
@@ -97,11 +124,9 @@ struct vec3
 // ensure triviality
 static_assert( std::is_trivial<vec3>::value, "vec3 is not trivial" );
 
-using fvec3 = vec3&;
-
 inline float Vec3DotProduct( const vec3 &v1, const vec3 &v2 )
 {
-	return ( v1.x * v2[0] + v1[1] * v2[1] + v1[2] * v2[2] );
+	return ( v1.x*v2.x + v1.y*v2.y + v1.z*v2.z );
 }
 
 inline void Vec3Add( const vec3 &veca, const vec3 &vecb, vec3 &out )
@@ -125,18 +150,32 @@ inline void Vec3Multiply( const vec3 &veca, const vec3 &vecb, vec3 &out )
 	out.z = veca.z * vecb.z;
 }
 
-inline void Vec3Lerp( const vec3 src1, const vec3 src2, float t, vec3 out )
+inline void Vec3Lerp( const vec3 &src1, const vec3 &src2, float t, vec3 &out )
 {
-	out[0] = src1[0] + ( src2[0] - src1[0] ) * t;
-	out[1] = src1[1] + ( src2[1] - src1[1] ) * t;
-	out[2] = src1[2] + ( src2[2] - src1[2] ) * t;
+	out.x = src1.x + ( src2.x - src1.x ) * t;
+	out.y = src1.y + ( src2.y - src1.y ) * t;
+	out.z = src1.z + ( src2.z - src1.z ) * t;
 }
 
-inline void Vec3Copy( const vec3 in, vec3 out )
+inline void Vec3Copy( const vec3 &in, vec3 &out )
 {
-	out[0] = in[0];
-	out[1] = in[1];
-	out[2] = in[2];
+	out = in;
+}
+
+inline bool Vec3Compare( const vec3 &v1, const vec3 &v2 )
+{
+	return v1 == v2;
+}
+
+inline void Vec3Test()
+{
+	vec3 vec1( 4.0f, 1.0f, 1.0f );
+	vec3 vec2( 8.0f, 3.0f, 2.0f );
+
+	if ( Vec3Compare( vec1, vec2 ) )
+	{
+
+	}
 }
 
 //=================================================================================================
@@ -175,53 +214,75 @@ struct cplane_t
 #define M_PI_F		3.14159265358979323846f
 
 // these suck, the namespace name also sucks
+// Use std::numbers instead of these
 namespace mconst
 {
-	constexpr float	Pi = 3.14159265358979323846f;
-	constexpr float	TwoPi = 2.0f * Pi;
-	constexpr float	HalfPi = 0.5f * Pi;
-	constexpr float	OneFourth_Pi = 0.25f * Pi;
-	constexpr float OneOver_Pi = 1.0f / Pi;
-	constexpr float OneOver_TwoPi = 1.0f / TwoPi;
-	constexpr float E = 2.71828182845904523536f;
-	constexpr float Sqrt_2 = 1.41421356237309504880f;
-	constexpr float Sqrt_3 = 1.73205080756887729352f;
-	constexpr float	Sqrt_1Over2 = 0.70710678118654752440f;
-	constexpr float	Sqrt_1Over3 = 0.57735026918962576450f;
-	constexpr float	DegreesToRadians = Pi / 180.0f;
-	constexpr float	RadiansToDegrees = 180.0f / Pi;
-	constexpr float	SecondsToMilliseconds = 1000.0f;
-	constexpr float	MillisecondsToSeconds = 0.001f;
+	constexpr float		Pi = 3.14159265358979323846f;
+	constexpr float		TwoPi = 2.0f * Pi;
+	constexpr float		HalfPi = 0.5f * Pi;
+	constexpr float		OneFourth_Pi = 0.25f * Pi;
+	constexpr float		OneOver_Pi = 1.0f / Pi;
+	constexpr float		OneOver_TwoPi = 1.0f / TwoPi;
+	constexpr float		E = 2.71828182845904523536f;
+	constexpr float		Sqrt_2 = 1.41421356237309504880f;
+	constexpr float		Sqrt_3 = 1.73205080756887729352f;
+	constexpr float		Sqrt_1Over2 = 0.70710678118654752440f;
+	constexpr float		Sqrt_1Over3 = 0.57735026918962576450f;
+	constexpr float		DegreesToRadians = Pi / 180.0f;
+	constexpr float		RadiansToDegrees = 180.0f / Pi;
+	constexpr float		SecondsToMilliseconds = 1000.0f;
+	constexpr float		MillisecondsToSeconds = 0.001f;
 }
-
-namespace mathconst = mconst;
 
 /*
 ===================================================================================================
 
-	Unit conversions
+	Unit conversions using C++20 concepts
 
 ===================================================================================================
 */
 
-inline constexpr float DEG2RAD( float degrees )
+namespace mpriv
 {
-	return degrees * mconst::DegreesToRadians;
+	constexpr double DegreesToRadians = std::numbers::pi / 180.0;
+	constexpr double RadiansToDegrees = 180.0 / std::numbers::pi;
 }
 
-inline constexpr float RAD2DEG( float radians )
-{
-	return radians * mconst::RadiansToDegrees;
+// floating point
+
+template< std::floating_point T >
+constexpr T DEG2RAD( T degrees ) {
+	return degrees * static_cast<T>( mpriv::DegreesToRadians );
 }
 
-inline constexpr float SEC2MS( float seconds )
-{
-	return seconds * mconst::SecondsToMilliseconds;
+template< std::floating_point T >
+constexpr T RAD2DEG( T radians ) {
+	return radians * static_cast<T>( mpriv::RadiansToDegrees );
 }
 
-inline constexpr float MS2SEC( float milliseconds )
-{
-	return milliseconds * mconst::MillisecondsToSeconds;
+template< std::floating_point T >
+constexpr T SEC2MS( T seconds ) {
+	return seconds * static_cast<T>( 1000.0 );
+}
+
+template< std::floating_point T >
+constexpr T MS2SEC( T milliseconds ) {
+	return milliseconds * static_cast<T>( 0.001 );
+}
+
+// integers
+
+template< std::integral T >
+constexpr T SEC2MS( T seconds ) {
+	static_assert( sizeof( T ) >= sizeof( int32 ) );
+	return seconds * static_cast<T>( 1000 );
+}
+
+// Avoid using this... It'll return 0 if you input a value below 1000, use floats
+template< std::integral T >
+constexpr T MS2SEC( T milliseconds ) {
+	static_assert( sizeof( T ) >= sizeof( int32 ) );
+	return milliseconds / static_cast<T>( 1000 );
 }
 
 /*

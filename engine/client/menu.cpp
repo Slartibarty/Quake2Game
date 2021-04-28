@@ -1915,7 +1915,7 @@ void M_Credits_MenuDraw( void )
 			x = ( viddef.width - (int)strlen( credits[i] ) * 8 - stringoffset * 8 ) / 2 + ( j + stringoffset ) * 8;
 
 			if ( bold )
-				R_DrawCharColor( x, y, credits[i][j+stringoffset], colorGreen );
+				R_DrawCharColor( x, y, credits[i][j+stringoffset], colors::green );
 			else
 				R_DrawChar( x, y, credits[i][j+stringoffset] );
 		}
@@ -4105,11 +4105,11 @@ void M_Draw (void)
 	// repaint everything next frame
 	SCR_DirtyScreen ();
 
-	constexpr uint32 color = PackColor( 0, 0, 0, static_cast<int>( 0.8 * 255 ) );
+	constexpr uint32 color = PackColorFromFloats( 0.0f, 0.0f, 0.0f, 0.8f );
 
 	// dim everything behind it down
 	if ( cl.cinematictime > 0 ) {
-		R_DrawFilled( 0, 0, viddef.width, viddef.height, colorBlack );
+		R_DrawFilled( 0, 0, viddef.width, viddef.height, colors::black );
 	} else {
 		R_DrawFilled( 0, 0, viddef.width, viddef.height, color );
 	}

@@ -494,7 +494,7 @@ void CL_Heatbeam( vec3_t start, vec3_t forward )
 		if ( i > step * 5 ) // don't bother after the 5th ring
 			break;
 
-		for ( rot = 0; rot < mathconst::TwoPi; rot += rstep )
+		for ( rot = 0; rot < mconst::TwoPi; rot += rstep )
 		{
 
 			if ( !free_particles )
