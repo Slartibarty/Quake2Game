@@ -746,9 +746,6 @@ static void R_RenderView( refdef_t *fd )
 	// entities
 	R_DrawEntitiesOnList();
 
-	// ugly dlights approximation
-	R_RenderDlights();
-
 	// particles!
 	R_DrawParticles();
 

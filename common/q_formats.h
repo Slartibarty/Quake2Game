@@ -14,7 +14,7 @@
 // The .pak files are just a linear collapse of a directory tree
 //-------------------------------------------------------------------------------------------------
 
-constexpr int IDPAKHEADER = MakeFourCC('P', 'A', 'C', 'K');
+inline constexpr int IDPAKHEADER = MakeFourCC('P', 'A', 'C', 'K');
 
 struct dpackfile_t
 {
@@ -56,7 +56,7 @@ struct pcx_t
 // .MD2 triangle model file format
 //-------------------------------------------------------------------------------------------------
 
-constexpr int IDALIASHEADER = MakeFourCC('I', 'D', 'P', '2');
+inline constexpr int IDALIASHEADER = MakeFourCC('I', 'D', 'P', '2');
 
 #define ALIAS_VERSION	8
 
@@ -135,7 +135,7 @@ struct dmdl_t
 //-------------------------------------------------------------------------------------------------
 // Studio models
 //
-// Studio models are position independent, so the cache manager can move them.
+// Please remove me
 //-------------------------------------------------------------------------------------------------
 
 namespace
@@ -611,7 +611,7 @@ namespace wad2
 // .BSP file format
 //-------------------------------------------------------------------------------------------------
 
-constexpr int IDBSPHEADER = MakeFourCC('Q', 'B', 'S', 'P');
+inline constexpr int IDBSPHEADER = MakeFourCC( 'Q', 'B', 'S', 'P' );
 
 #define BSPVERSION 41
 

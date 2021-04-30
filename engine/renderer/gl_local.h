@@ -337,8 +337,6 @@ struct material_t
 ===============================================================================
 */
 
-void R_RenderDlights();
-
 void R_MarkLights(dlight_t *light, int bit, mnode_t *node);
 void R_PushDlights();
 void R_LightPoint(vec3_t p, vec3_t color);

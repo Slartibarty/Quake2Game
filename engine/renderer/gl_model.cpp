@@ -164,7 +164,7 @@ Mod_ForName
 Loads in a model for the given name
 ========================
 */
-model_t *Mod_ForName( const char *name, qboolean crash )
+model_t *Mod_ForName( const char *name, bool crash )
 {
 	model_t *	pMod;
 	void *		pBuffer;

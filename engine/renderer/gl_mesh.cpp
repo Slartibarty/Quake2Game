@@ -274,79 +274,6 @@ void GL_DrawAliasFrameLerp (dmdl_t *paliashdr, float backlerp)
 		glEnable( GL_TEXTURE_2D );
 }
 
-
-#if 1
-/*
-=============
-GL_DrawAliasShadow
-=============
-*/
-extern vec3_t	lightspot;
-
-void GL_DrawAliasShadow (dmdl_t *paliashdr, int posenum)
-{
-	dtrivertx_t	*verts;
-	int		*order;
-	vec3_t	point;
-	float	height, lheight;
-	int		count;
-	daliasframe_t	*frame;
-
-	lheight = currententity->origin[2] - lightspot[2];
-
-	frame = (daliasframe_t *)((byte *)paliashdr + paliashdr->ofs_frames 
-		+ currententity->frame * paliashdr->framesize);
-	verts = frame->verts;
-
-	height = 0;
-
-	order = (int *)((byte *)paliashdr + paliashdr->ofs_glcmds);
-
-	height = -lheight + 1.0f;
-
-	while (1)
-	{
-		// get the vertex count and primitive type
-		count = *order++;
-		if (!count)
-			break;		// done
-		if (count < 0)
-		{
-			count = -count;
-			glBegin (GL_TRIANGLE_FAN);
-		}
-		else
-			glBegin (GL_TRIANGLE_STRIP);
-
-		do
-		{
-			// normals and vertexes come from the frame list
-/*
-			point[0] = verts[order[2]].v[0] * frame->scale[0] + frame->translate[0];
-			point[1] = verts[order[2]].v[1] * frame->scale[1] + frame->translate[1];
-			point[2] = verts[order[2]].v[2] * frame->scale[2] + frame->translate[2];
-*/
-
-			memcpy( point, s_lerped[order[2]], sizeof( point )  );
-
-			point[0] -= shadevector[0]*(point[2]+lheight);
-			point[1] -= shadevector[1]*(point[2]+lheight);
-			point[2] = height;
-//			height -= 0.001;
-			glVertex3fv (point);
-
-			order += 3;
-
-//			verts++;
-
-		} while (--count);
-
-		glEnd ();
-	}	
-}
-
-#endif
-
 /*
 ** R_CullAliasModel
 */
@@ -807,20 +734,6 @@ void R_DrawAliasModel (entity_t *e)
 	if (currententity->flags & RF_DEPTHHACK)
 		glDepthRange (gldepthmin, gldepthmax);
 
-#if 1
-	if (r_shadows->value && !(currententity->flags & (RF_TRANSLUCENT | RF_WEAPONMODEL)))
-	{
-		glPushMatrix ();
-		R_RotateForEntity (e);
-		glDisable (GL_TEXTURE_2D);
-		glEnable (GL_BLEND);
-		glColor4f (0,0,0,0.5);
-		GL_DrawAliasShadow (paliashdr, currententity->frame );
-		glEnable (GL_TEXTURE_2D);
-		glDisable (GL_BLEND);
-		glPopMatrix ();
-	}
-#endif
 	glColor4f (1,1,1,1);
 }
 

@@ -9,7 +9,7 @@ m*_t structures are in-memory
 /*
 ===================================================================================================
 
-BRUSH MODELS
+	Brush models
 
 ===================================================================================================
 */
@@ -130,6 +130,14 @@ struct mleaf_t
 	int			nummarksurfaces;
 };
 
+/*
+===================================================================================================
+
+	Models
+
+===================================================================================================
+*/
+
 // in-memory SMF data
 struct mSMF_t
 {
@@ -139,7 +147,7 @@ struct mSMF_t
 };
 
 
-//-------------------------------------------------------------------------------------------------
+//=================================================================================================
 
 //
 // Whole model
@@ -229,12 +237,12 @@ extern int				mod_numStaticLights;
 
 //-------------------------------------------------------------------------------------------------
 
-void	Mod_Init (void);
-mleaf_t *Mod_PointInLeaf(vec3_t p, model_t *model);
-model_t *Mod_ForName (const char *name, qboolean crash);
-byte	*Mod_ClusterPVS (int cluster, model_t *model);
+void		Mod_Init();
+mleaf_t *	Mod_PointInLeaf( vec3_t p, model_t *model );
+model_t *	Mod_ForName( const char *name, bool crash );
+byte *		Mod_ClusterPVS( int cluster, model_t *model );
 
-void	Mod_Modellist_f (void);
+void		Mod_Modellist_f();
 
-void	Mod_Free( model_t *pModel );
-void	Mod_FreeAll();
+void		Mod_Free( model_t *pModel );
+void		Mod_FreeAll();

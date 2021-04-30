@@ -17,7 +17,6 @@ qboolean		ActiveApp, Minimized;
 
 static HANDLE	hinput, houtput;
 
-unsigned		sys_msg_time;
 unsigned		sys_frame_time;
 
 int		g_argc;
@@ -229,10 +228,10 @@ void Sys_SendKeyEvents( void )
 		TranslateMessage( &msg );
 		DispatchMessageW( &msg );
 	}
-#endif
 
 	// grab frame time
 	sys_frame_time = Sys_Milliseconds(); // FIXME: should this be at start?
+#endif
 }
 
 
@@ -534,13 +533,13 @@ int main( int argc, char **argv )
 			DispatchMessageW( &msg );
 		}
 
-		sys_msg_time = msg.time;
-
 		do
 		{
 			newtime = Sys_Milliseconds();
 			time = newtime - oldtime;
 		} while ( time < 1 );
+
+		sys_frame_time = newtime;
 
 		Engine_Frame( time );
 
