@@ -360,6 +360,7 @@ project "qbsp4"
 		}
 	filter {}
 
+--[[
 project "qbsp5"
 	kind "ConsoleApp"
 	targetname "qbsp5"
@@ -395,6 +396,7 @@ project "qbsp5"
 			"**/*_win.*"
 		}
 	filter {}
+--]]
 
 project "qvis4"
 	kind "ConsoleApp"

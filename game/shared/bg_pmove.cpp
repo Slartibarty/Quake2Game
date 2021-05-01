@@ -596,15 +596,13 @@ PM_StepSlideMove
 */
 static void PM_StepSlideMove()
 {
-	vec3_t		start_o, start_v;
-	vec3_t		down_o, down_v;
+	vec3_t		startOrigin, startVelocity;
+	vec3_t		downOrigin, downVelocity;
 	trace_t		trace;
-	float		down_dist, up_dist;
-//	vec3_t		delta;
 	vec3_t		up, down;
 
-	VectorCopy( pml.origin, start_o );
-	VectorCopy( pml.velocity, start_v );
+	VectorCopy( pml.origin, startOrigin );
+	VectorCopy( pml.velocity, startVelocity );
 
 	if ( !PM_SlideMove( true ) )
 	{
@@ -612,56 +610,54 @@ static void PM_StepSlideMove()
 		return;
 	}
 
-	VectorCopy( pml.origin, down_o );
-	VectorCopy( pml.velocity, down_v );
+	VectorCopy( pml.origin, downOrigin );
+	VectorCopy( pml.velocity, downVelocity );
 
-	VectorCopy( start_o, up );
+	// test for a step up
+	VectorCopy( startOrigin, up );
 	up[2] += STEPSIZE;
 
 	trace = pm->trace( up, pm->mins, pm->maxs, up );
 	if ( trace.allsolid )
-		return;		// can't step up
+	{
+		return;
+	}
 
 	// try sliding above
 	VectorCopy( up, pml.origin );
-	VectorCopy( start_v, pml.velocity );
+	VectorCopy( startVelocity, pml.velocity );
 
 	PM_SlideMove( true );
 
 	// push down the final amount
 	VectorCopy( pml.origin, down );
 	down[2] -= STEPSIZE;
+
 	trace = pm->trace( pml.origin, pm->mins, pm->maxs, down );
 	if ( !trace.allsolid )
 	{
 		VectorCopy( trace.endpos, pml.origin );
 	}
 
-#if 0
-	VectorSubtract( pml.origin, up, delta );
-	up_dist = DotProduct( delta, start_v );
-
-	VectorSubtract( down_o, start_o, delta );
-	down_dist = DotProduct( delta, start_v );
-#else
 	VectorCopy( pml.origin, up );
 
 	// decide which one went farther
-	down_dist = ( down_o[0] - start_o[0] ) * ( down_o[0] - start_o[0] )
-		+ ( down_o[1] - start_o[1] ) * ( down_o[1] - start_o[1] );
-	up_dist = ( up[0] - start_o[0] ) * ( up[0] - start_o[0] )
-		+ ( up[1] - start_o[1] ) * ( up[1] - start_o[1] );
-#endif
+	float downDist =
+		( downOrigin[0] - startOrigin[0] ) * ( downOrigin[0] - startOrigin[0] ) +
+		( downOrigin[1] - startOrigin[1] ) * ( downOrigin[1] - startOrigin[1] );
+	float upDist =
+		( up[0] - startOrigin[0] ) * ( up[0] - startOrigin[0] ) +
+		( up[1] - startOrigin[1] ) * ( up[1] - startOrigin[1] );
 
-	if ( down_dist > up_dist || trace.plane.normal[2] < MIN_STEP_NORMAL )
+	if ( downDist > upDist || trace.plane.normal[2] < MIN_STEP_NORMAL )
 	{
-		VectorCopy( down_o, pml.origin );
-		VectorCopy( down_v, pml.velocity );
-		return;
+		VectorCopy( downOrigin, pml.origin );
+		VectorCopy( downVelocity, pml.velocity );
 	}
+
 	//!! Special case
 	// if we were walking along a plane, then we need to copy the Z over
-	pml.velocity[2] = down_v[2];
+	//pml.velocity[2] = downVelocity[2];
 }
 
 

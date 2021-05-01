@@ -475,8 +475,8 @@ namespace
 
 namespace fmtSMF
 {
-	constexpr int32 fourCC = MakeFourCC( 'B', 'R', 'U', 'H' );
-	constexpr int32 version = 1;
+	inline constexpr int32 fourCC = MakeFourCC( 'B', 'R', 'U', 'H' );
+	inline constexpr int32 version = 1;
 
 	struct header_t
 	{
@@ -497,6 +497,51 @@ namespace fmtSMF
 	};
 
 	using index_t = uint16;
+}
+
+//-------------------------------------------------------------------------------------------------
+// .SKL SKeLetal model format
+// 
+// Indices are shorts
+//-------------------------------------------------------------------------------------------------
+
+namespace fmtSKL
+{
+	inline constexpr int32 MaxJoints = 256;			// 256 max joints per model
+	inline constexpr int32 MaxVertexWeights = 4;	// 4 joints per vertex
+
+	inline constexpr int32 fourCC = MakeFourCC( 'M', 'A', 'T', 'E' );
+	inline constexpr int32 version = 1;
+
+	struct header_t
+	{
+		int32 fourCC;
+		int32 version;
+		uint32 numVerts;
+		uint32 offsetVerts;
+		uint32 numIndices;
+		uint32 offsetIndices;
+		uint32 numJoints;
+		uint32 offsetJoints;
+		char materialName[256];	// "materials/models/alien01/grimbles.mat"
+	};
+
+	struct vertex_t
+	{
+		float x, y, z;
+		float s, t;
+		float n1, n2, n3;
+		uint8 indices[MaxVertexWeights];	// bone indices
+		uint8 weights[MaxVertexWeights];	// 0 = no effect, 255 = total effect
+	};
+
+	using index_t = uint16;
+
+	struct joint_t
+	{
+		int32 parentIndex;	// index of parent bone, -1 indicates a root bone
+		float x, y, z;		// relative
+	};
 }
 
 //-------------------------------------------------------------------------------------------------
