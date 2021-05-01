@@ -61,7 +61,6 @@ void		GL_TexEnv( GLint value );
 void		GL_Bind( GLuint texnum );
 void		GL_MBind( GLenum target, GLuint texnum );
 
-void		GL_SetDefaultState();
 void		GL_CheckErrors();
 
 /*

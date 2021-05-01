@@ -44,6 +44,126 @@ cvar_t *r_lockpvs;
 cvar_t *r_fullscreen;
 cvar_t *r_gamma;
 
+#ifdef Q_DEBUG
+
+static void GLAPIENTRY GL_DebugProc( GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam )
+{
+	if ( severity == GL_DEBUG_SEVERITY_NOTIFICATION )
+	{
+		// ignore notifications
+		return;
+	}
+
+	const char *pSource;
+	const char *pType;
+	const char *pSeverity;
+
+	switch ( source )
+	{
+	case GL_DEBUG_SOURCE_API:
+		pSource = "API";
+		break;
+	case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+		pSource = "WINDOW SYSTEM";
+		break;
+	case GL_DEBUG_SOURCE_SHADER_COMPILER:
+		pSource = "SHADER COMPILER";
+		break;
+	case GL_DEBUG_SOURCE_THIRD_PARTY:
+		pSource = "THIRD PARTY";
+		break;
+	case GL_DEBUG_SOURCE_APPLICATION:
+		pSource = "APPLICATION";
+		break;
+	default: // GL_DEBUG_SOURCE_OTHER
+		pSource = "UNKNOWN";
+		break;
+	}
+
+	switch ( type )
+	{
+	case GL_DEBUG_TYPE_ERROR:
+		pType = "ERROR";
+		break;
+	case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+		pType = "DEPRECATED BEHAVIOR";
+		break;
+	case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+		pType = "UDEFINED BEHAVIOR";
+		break;
+	case GL_DEBUG_TYPE_PORTABILITY:
+		pType = "PORTABILITY";
+		break;
+	case GL_DEBUG_TYPE_PERFORMANCE:
+		pType = "PERFORMANCE";
+		break;
+	case GL_DEBUG_TYPE_OTHER:
+		pType = "OTHER";
+		break;
+	case GL_DEBUG_TYPE_MARKER:
+		pType = "MARKER";
+		break;
+	default:
+		pType = "UNKNOWN";
+		break;
+	}
+
+	switch ( severity )
+	{
+	case GL_DEBUG_SEVERITY_HIGH:
+		pSeverity = "HIGH";
+		break;
+	case GL_DEBUG_SEVERITY_MEDIUM:
+		pSeverity = "MEDIUM";
+		break;
+	case GL_DEBUG_SEVERITY_LOW:
+		pSeverity = "LOW";
+		break;
+	case GL_DEBUG_SEVERITY_NOTIFICATION:
+		pSeverity = "NOTIFICATION";
+		break;
+	default:
+		pSeverity = "UNKNOWN";
+		break;
+	}
+
+	Com_Printf( "%d: %s of %s severity, raised from %s: %s\n", id, pType, pSeverity, pSource, message );
+}
+
+#endif
+
+/*
+========================
+GL_SetDefaultState
+
+Sets some OpenGL state variables
+Called only once at init
+========================
+*/
+void GL_SetDefaultState()
+{
+	glClearColor( DEFAULT_CLEARCOLOR );
+	glCullFace( GL_BACK );
+
+	glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
+
+	glShadeModel( GL_FLAT );
+
+	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+
+	GL_TexEnv( GL_REPLACE );
+
+	glEnable( GL_PROGRAM_POINT_SIZE );
+
+#ifdef Q_DEBUG
+
+	glEnable( GL_DEBUG_OUTPUT );
+	glEnable( GL_DEBUG_OUTPUT_SYNCHRONOUS );
+	glDebugMessageCallback( GL_DebugProc, nullptr );
+
+#endif
+}
+
 /*
 ========================
 R_Restart

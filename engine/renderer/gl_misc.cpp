@@ -463,30 +463,6 @@ void GL_MBind(GLenum target, GLuint texnum)
 
 /*
 ========================
-GL_SetDefaultState
-
-Sets some OpenGL state variables
-Called only once at init
-========================
-*/
-void GL_SetDefaultState()
-{
-	glClearColor( DEFAULT_CLEARCOLOR );
-	glCullFace( GL_BACK );
-
-	glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
-
-	glShadeModel( GL_FLAT );
-
-	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-
-	GL_TexEnv( GL_REPLACE );
-
-	glEnable( GL_PROGRAM_POINT_SIZE );
-}
-
-/*
-========================
 GL_CheckErrors
 ========================
 */
