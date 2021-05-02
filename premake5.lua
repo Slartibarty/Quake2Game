@@ -268,13 +268,13 @@ project "cgame"
 	targetdir "../game/base"
 	links { "core" }
 	
-	--[[disablewarnings { "4244", "4267" }
+	disablewarnings { "4244", "4267" }
 		
 	pchsource( "game/client/cg_pch.cpp" )
 	pchheader( "cg_local.h" )
 	filter( "files:not game/client/**" )
 		flags( { "NoPCH" } )
-	filter( {} )--]]
+	filter( {} )
 
 	files {
 		"common/*",
@@ -304,13 +304,13 @@ project "game"
 	targetdir "../game/base"
 	links { "core" }
 
-	--[[disablewarnings { "4244", "4311", "4302" }
+	disablewarnings { "4244", "4311", "4302" }
 	
 	pchsource( "game/server/g_pch.cpp" )
 	pchheader( "g_local.h" )
 	filter( "files:not game/server/**" )
 		flags( { "NoPCH" } )
-	filter {}--]]
+	filter {}
 
 	files {
 		"common/*",
