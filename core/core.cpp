@@ -11,7 +11,7 @@
 ===================================================================================================
 */
 
-char null_string[1];
+static char core_null_string[1];
 
 void COM_FileBase( const char *in, char *out )
 {
@@ -94,7 +94,7 @@ char *COM_Parse( char **data_p )
 	if ( !data )
 	{
 		*data_p = NULL;
-		return null_string;
+		return core_null_string;
 	}
 
 // skip whitespace
@@ -104,7 +104,7 @@ skipwhite:
 		if ( c == 0 )
 		{
 			*data_p = NULL;
-			return null_string;
+			return core_null_string;
 		}
 		data++;
 	}

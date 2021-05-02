@@ -1617,7 +1617,7 @@ void CL_Frame (int msec)
 			// don't flood packets out while connecting
 			return;
 		}
-		if ( extratime < mconst::SecondsToMilliseconds / cl_maxfps->value ) {
+		if ( extratime < 1000.0f / cl_maxfps->value ) {		// 1000.0f = seconds to milliseconds
 			// framerate is too high
 			return;
 		}

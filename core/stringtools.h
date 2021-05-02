@@ -32,11 +32,9 @@ inline void Str_Substitute( char *pStr, int a, int b )
 	}
 }
 
-inline void Str_FixSlashes( char *pStr )
-{
+inline void Str_FixSlashes( char *pStr ) {
 	Str_Substitute( pStr, '\\', '/' );
 }
-
 
 /*
 ===================================================================================================

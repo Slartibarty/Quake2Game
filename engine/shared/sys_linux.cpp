@@ -2,57 +2,50 @@
 
 #include "engine.h"
 
+#include <vector>
+
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 
 #include "sys.h"
 
-//#define DEMO
+qboolean		ActiveApp, Minimized;
 
-unsigned		sys_msg_time;
 unsigned		sys_frame_time;
 
 int		g_argc;
 char	**g_argv;
 
 /*
-===============================================================================
+===================================================================================================
 
-SYSTEM IO
+	System I/O
 
-===============================================================================
+===================================================================================================
 */
 
-[[noreturn]]
-void Sys_Error (const char *error, ...)
+void Sys_OutputDebugString( const char *msg )
 {
-	va_list		argptr;
-	char		text[MAX_PRINT_MSG];
-
-	CL_Shutdown ();
-	Engine_Shutdown ();
-
-	va_start (argptr, error);
-	Q_vsprintf_s (text, error, argptr);
-	va_end (argptr);
-	fputs( text, stderr );
-
-	// We won't have a window by now
-	SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "Engine Error", text, nullptr );
-
-	exit (1);
+	fputs( msg, stderr );
 }
 
 [[noreturn]]
-void Sys_Quit (void)
+void Sys_Error( const char *msg )
 {
-	CL_Shutdown();
-	Engine_Shutdown ();
+	Sys_OutputDebugString( msg );
 
-	exit (0);
+	SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "Engine Error", msg, nullptr );
+
+	Sys_Quit( EXIT_FAILURE );
 }
 
-//================================================================
+[[noreturn]]
+void Sys_Quit( int code )
+{
+	exit( code );
+}
+
+//=================================================================================================
 
 /*
 ================
@@ -62,9 +55,10 @@ Sys_CopyProtect
 */
 void Sys_CopyProtect (void)
 {
+
 }
 
-//================================================================
+//=================================================================================================
 
 /*
 ================
@@ -73,7 +67,11 @@ Sys_Init
 */
 void Sys_Init (void)
 {
+
 }
+
+static char	console_text[256];
+static int	console_textlen;
 
 /*
 ================
@@ -85,6 +83,7 @@ char *Sys_ConsoleInput (void)
 	return nullptr;
 }
 
+
 /*
 ================
 Sys_ConsoleOutput
@@ -94,7 +93,9 @@ Print text to the dedicated console
 */
 void Sys_ConsoleOutput (const char *string)
 {
+
 }
+
 
 /*
 ================
@@ -106,9 +107,8 @@ Send Key_Event calls
 void Sys_SendKeyEvents( void )
 {
 
-	// grab frame time
-	sys_frame_time = Sys_Milliseconds(); // FIXME: should this be at start?
 }
+
 
 /*
 ================
@@ -118,15 +118,90 @@ Sys_GetClipboardData
 */
 char *Sys_GetClipboardData( void )
 {
-	return nullptr;
+	char *data = nullptr;
+
+	if ( SDL_HasClipboardText() )
+	{
+		// SlartTodoLinux: LEAK LEAK LEAK! must be freed using SDL_Free(data)!
+		data = SDL_GetClipboardText();
+	}
+
+	return data;
 }
 
 /*
-==============================================================================
+===================================================================================================
 
- WINDOWS CRAP
+	Video modes. Don't move this to the renderer.
 
-==============================================================================
+===================================================================================================
+*/
+
+struct vidMode_t
+{
+	int width, height;
+};
+
+std::vector<vidMode_t> s_vidModes;
+
+static void Sys_InitVidModes()
+{
+	int numModes = SDL_GetNumDisplayModes(0);
+
+	s_vidModes.reserve(numModes);
+
+	// We only care about different widths and heights
+	int lastWidth = 0, lastHeight = 0;
+	SDL_DisplayMode mode{};
+
+	for (int i = 0; i < numModes; ++i)
+	{
+		SDL_GetDisplayMode(0, i, &mode);
+
+		if (lastWidth == mode.w && lastHeight == mode.h)
+		{
+			continue;
+		}
+
+		// add to list
+		s_vidModes.push_back({mode.w, mode.h});
+
+		lastWidth = mode.w;
+		lastHeight = mode.h;
+	}
+}
+
+// never called anywhere right now
+// s_vidModes is global anyway, so it'll be freed at exit by the CRT
+static void Sys_FreeVidModes()
+{
+	s_vidModes.clear();
+	s_vidModes.shrink_to_fit();
+}
+
+int Sys_GetNumVidModes()
+{
+	return static_cast<int>( s_vidModes.size() );
+}
+
+bool Sys_GetVidModeInfo( int &width, int &height, int mode )
+{
+	if ( mode < 0 || mode >= Sys_GetNumVidModes() ) {
+		return false;
+	}
+
+	width = s_vidModes[mode].width;
+	height = s_vidModes[mode].height;
+
+	return true;
+}
+
+/*
+===================================================================================================
+
+	Miscellaneous
+
+===================================================================================================
 */
 
 /*
@@ -136,72 +211,67 @@ Sys_AppActivate
 */
 void Sys_AppActivate (void)
 {
+
 }
 
 /*
-========================================================================
+===================================================================================================
 
-GAME DLL
+	Game DLLs
 
-========================================================================
+===================================================================================================
 */
 
-static void *game_library;
+using libHandle_t = void *;
 
-/*
-=================
-Sys_UnloadGame
-=================
-*/
-void Sys_UnloadGame( void )
+static libHandle_t game_library;
+static libHandle_t cgame_library;
+
+void Sys_UnloadGame()
 {
-	if ( !game_library ) {
-		Com_Error( ERR_FATAL, "Sys_UnloadGame called with NULL game_library\n" );
-		return;
-	}
 	SDL_UnloadObject( game_library );
+
 	game_library = nullptr;
 }
 
-typedef void *( *GetGameAPI_t ) ( void * );
+void Sys_UnloadCGame()
+{
+	SDL_UnloadObject( cgame_library );
 
-/*
-=================
-Sys_GetGameAPI
+	game_library = nullptr;
+}
 
-Loads the game dll
-=================
-*/
-void *Sys_GetGameAPI( void *parms )
+typedef void *( *GetAPI_t ) ( void * );
+
+static void *Sys_GetAPI( void *parms, libHandle_t &instance, const char *gamename, const char *procname )
 {
 	char name[MAX_OSPATH];
 
-	const char *gamename = "game" BLD_ARCHITECTURE ".so";
-
-	if ( game_library ) {
-		Com_Error( ERR_FATAL, "Sys_GetGameAPI without Sys_UnloadingGame" );
+	if ( instance ) {
+		Com_FatalError( "Sys_GetAPI without Sys_Unload(C)Game" );
 	}
 
 	// now run through the search paths
-	char *path = nullptr;
+	const char *path = nullptr;
 	while ( 1 )
 	{
 		path = FS_NextPath( path );
 		if ( !path ) {
-			return nullptr; // couldn't find one anywhere
+			return nullptr;		// couldn't find one anywhere
 		}
 		Q_sprintf_s( name, "%s/%s", path, gamename );
-		game_library = SDL_LoadObject( name );
-		if ( game_library )
+		instance = SDL_LoadObject( gamename );
+		if ( instance )
 		{
-			Com_DPrintf( "SDL_LoadObject (%s)\n", name );
+			Com_DPrintf( "LoadLibrary (%s)\n", name );
 			break;
 		}
 	}
 
-	GetGameAPI_t GetGameAPI = (GetGameAPI_t)SDL_LoadFunction( game_library, "GetGameAPI" );
+	GetAPI_t GetGameAPI = (GetAPI_t)SDL_LoadFunction( instance, procname );
 	if ( !GetGameAPI )
 	{
+		Com_Printf("Failed to get game API: %s", SDL_GetError());
 		Sys_UnloadGame();
 		return nullptr;
 	}
@@ -209,39 +279,70 @@ void *Sys_GetGameAPI( void *parms )
 	return GetGameAPI( parms );
 }
 
-//=======================================================================
+void *Sys_GetGameAPI( void *parms )
+{
+	return Sys_GetAPI( parms, game_library, "/home/josh/projects/moon/game/base/libgame.so", "GetGameAPI" );
+}
+
+void *Sys_GetCGameAPI( void *parms )
+{
+	return Sys_GetAPI( parms, cgame_library, "/home/josh/projects/moon/game/base/libcgame.so", "GetCGameAPI" );
+}
+
+//=================================================================================================
 
 /*
-==================
-WinMain
-
-==================
+========================
+main
+========================
 */
-int main(int argc, char **argv)
+int main( int argc, char **argv )
 {
 	int time, oldtime, newtime;
 
 	g_argc = argc; g_argv = argv;
 
+	// TODO: tune this
+	SDL_InitSubSystem(SDL_INIT_EVERYTHING);
+
 	Time_Init();
 
-	Engine_Init (argc, argv);
-	oldtime = Sys_Milliseconds ();
+	Sys_InitVidModes();
 
-    /* main window message loop */
-	while (1)
+	Engine_Init( argc, argv );
+
+	oldtime = Sys_Milliseconds();
+
+	SDL_Event msg;
+
+	// main loop
+	while ( 1 )
 	{
+		// if at a full screen console, don't update unless needed
+		if ( Minimized || ( dedicated && dedicated->value ) )
+		{
+
+		}
+
+		// proces all queued messages
+		while ( SDL_PollEvent( &msg ) )
+		{
+			// handoff to input system
+		}
+
 		do
 		{
-			newtime = Sys_Milliseconds ();
+			newtime = Sys_Milliseconds();
 			time = newtime - oldtime;
-		} while (time < 1);
+		} while ( time < 1 );
 
-		Engine_Frame (time);
+		sys_frame_time = newtime;
+
+		Engine_Frame( time );
 
 		oldtime = newtime;
 	}
 
-	// never gets here
-    return 0;
+	// unreachable
+	return 0;
 }

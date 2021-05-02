@@ -762,6 +762,9 @@ static const char		*sb_nums[2][11] =
 	"anum_6", "anum_7", "anum_8", "anum_9", "anum_minus"}
 };
 
+// GNU libc defines this in limits.h
+#undef CHAR_WIDTH
+
 #define	ICON_WIDTH	24
 #define	ICON_HEIGHT	24
 #define	CHAR_WIDTH	16

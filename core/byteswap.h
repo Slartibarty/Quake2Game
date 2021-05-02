@@ -8,13 +8,13 @@
 
 #pragma once
 
-#define BIG_ENDIAN 0
+#define Q_BIG_ENDIAN 0
 
 short ShortSwap( short s );
 int LongSwap( int l );
 float FloatSwap( float f );
 
-#if BIG_ENDIAN
+#if Q_BIG_ENDIAN
 
 inline short BigShort( short s ) { return s; }
 inline short LittleShort( short s ) { return ShortSwap( s ); }

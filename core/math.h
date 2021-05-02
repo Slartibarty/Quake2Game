@@ -14,170 +14,6 @@
 
 #include "sys_types.h"
 
-#ifdef M_PI
-#error M_PI was defined by an external library
-#endif
-
-//=================================================================================================
-
-#ifndef _In_reads_
-#define _In_reads_( x )
-#endif
-
-struct vec3
-{
-	union
-	{
-		struct
-		{
-			float x, y, z;
-		};
-		float v[3];
-	};
-
-	vec3() = default;
-
-	vec3( const vec3 & ) = default;
-	vec3 &operator=( const vec3 & ) = default;
-
-	vec3( vec3 && ) = default;
-	vec3 &operator=( vec3 && ) = default;
-
-	constexpr vec3( float X, float Y, float Z ) noexcept : x( X ), y( Y ), z( Z ) {}
-	//explicit vec3( _In_reads_( 3 ) const float *pArray ) noexcept : x( pArray[0] ), y( pArray[1] ), z( pArray[2] ) {}
-
-	// I wonder how the compiler deals with this
-	friend bool operator==( const vec3 &, const vec3 & ) = default;
-
-	void Set( float X, float Y, float Z )
-	{
-		x = X; y = Y; z = Z;
-	}
-
-	void SetFromLegacy( const float *pArray )
-	{
-		x = pArray[0]; y = pArray[1]; z = pArray[2];
-	}
-
-	void Replicate( float f )
-	{
-		x = f; y = f; z = f;
-	}
-
-	void Zero()
-	{
-		x = 0.0f; y = 0.0f; z = 0.0f;
-	}
-
-	float Length() const
-	{
-		return sqrt( x*x + y*y + z*z );
-	}
-
-	float Normalize()
-	{
-		float length = Length();
-
-		// prevent divide by zero
-		float ilength = 1.0f / ( length + FLT_EPSILON );
-
-		v[0] *= ilength;
-		v[1] *= ilength;
-		v[2] *= ilength;
-
-		return length;
-	}
-
-	void NormalizeFast()
-	{
-		// prevent divide by zero
-		float ilength = 1.0f / ( Length() + FLT_EPSILON );
-
-		v[0] *= ilength;
-		v[1] *= ilength;
-		v[2] *= ilength;
-	}
-
-	float *Base()
-	{
-		return reinterpret_cast<float *>( this );
-	}
-
-	const float *Base() const
-	{
-		return reinterpret_cast<const float *>( this );
-	}
-
-	// avoid, use vec.v[i]
-	float &vec3::operator[]( int i )
-	{
-		return v[i];
-	}
-
-	// avoid, use vec.v[i]
-	float vec3::operator[]( int i ) const
-	{
-		return v[i];
-	}
-};
-
-// ensure triviality
-static_assert( std::is_trivial<vec3>::value, "vec3 is not trivial" );
-
-inline float Vec3DotProduct( const vec3 &v1, const vec3 &v2 )
-{
-	return ( v1.x*v2.x + v1.y*v2.y + v1.z*v2.z );
-}
-
-inline void Vec3Add( const vec3 &veca, const vec3 &vecb, vec3 &out )
-{
-	out.x = veca.x + vecb.x;
-	out.y = veca.y + vecb.y;
-	out.z = veca.z + vecb.z;
-}
-
-inline void Vec3Subtract( const vec3 &veca, const vec3 &vecb, vec3 &out )
-{
-	out.x = veca.x - vecb.x;
-	out.y = veca.y - vecb.y;
-	out.z = veca.z - vecb.z;
-}
-
-inline void Vec3Multiply( const vec3 &veca, const vec3 &vecb, vec3 &out )
-{
-	out.x = veca.x * vecb.x;
-	out.y = veca.y * vecb.y;
-	out.z = veca.z * vecb.z;
-}
-
-inline void Vec3Lerp( const vec3 &src1, const vec3 &src2, float t, vec3 &out )
-{
-	out.x = src1.x + ( src2.x - src1.x ) * t;
-	out.y = src1.y + ( src2.y - src1.y ) * t;
-	out.z = src1.z + ( src2.z - src1.z ) * t;
-}
-
-inline void Vec3Copy( const vec3 &in, vec3 &out )
-{
-	out = in;
-}
-
-inline bool Vec3Compare( const vec3 &v1, const vec3 &v2 )
-{
-	return v1 == v2;
-}
-
-inline void Vec3Test()
-{
-	vec3 vec1( 4.0f, 1.0f, 1.0f );
-	vec3 vec2( 8.0f, 3.0f, 2.0f );
-
-	if ( Vec3Compare( vec1, vec2 ) )
-	{
-
-	}
-}
-
 //=================================================================================================
 
 typedef float vec_t;			// deprecated, use float instead
@@ -210,28 +46,59 @@ struct cplane_t
 // utils glue
 #define EQUAL_EPSILON	0.001f
 
+// GNU libc defines this
+#undef M_PI
+
 #define M_PI		3.14159265358979323846
 #define M_PI_F		3.14159265358979323846f
+
+#ifndef FLT_EPSILON
+#define FLT_EPSILON	1.192092896e-07F
+#endif
 
 // these suck, the namespace name also sucks
 // Use std::numbers instead of these
 namespace mconst
 {
-	constexpr float		Pi = 3.14159265358979323846f;
-	constexpr float		TwoPi = 2.0f * Pi;
-	constexpr float		HalfPi = 0.5f * Pi;
-	constexpr float		OneFourth_Pi = 0.25f * Pi;
-	constexpr float		OneOver_Pi = 1.0f / Pi;
-	constexpr float		OneOver_TwoPi = 1.0f / TwoPi;
-	constexpr float		E = 2.71828182845904523536f;
-	constexpr float		Sqrt_2 = 1.41421356237309504880f;
-	constexpr float		Sqrt_3 = 1.73205080756887729352f;
-	constexpr float		Sqrt_1Over2 = 0.70710678118654752440f;
-	constexpr float		Sqrt_1Over3 = 0.57735026918962576450f;
-	constexpr float		DegreesToRadians = Pi / 180.0f;
-	constexpr float		RadiansToDegrees = 180.0f / Pi;
-	constexpr float		SecondsToMilliseconds = 1000.0f;
-	constexpr float		MillisecondsToSeconds = 0.001f;
+	inline constexpr float e = std::numbers::e_v<float>;
+	inline constexpr float log2e = std::numbers::log2e_v<float>;
+	inline constexpr float log10e = std::numbers::log10e_v<float>;
+	inline constexpr float pi = std::numbers::pi_v<float>;
+	inline constexpr float inv_pi = std::numbers::inv_pi_v<float>;
+	inline constexpr float inv_sqrtpi = std::numbers::inv_sqrtpi_v<float>;
+	inline constexpr float ln2 = std::numbers::ln2_v<float>;
+	inline constexpr float ln10 = std::numbers::ln10_v<float>;
+	inline constexpr float sqrt2 = std::numbers::sqrt2_v<float>;
+	inline constexpr float sqrt3 = std::numbers::sqrt3_v<float>;
+	inline constexpr float inv_sqrt3 = std::numbers::inv_sqrt3_v<float>;
+	inline constexpr float egamma = std::numbers::egamma_v<float>;
+	inline constexpr float phi = std::numbers::phi_v<float>;
+
+	inline constexpr float deg2rad = pi / 180.0f;
+	inline constexpr float rad2deg = 180.0f / pi;
+
+	// destroy this later
+	inline constexpr float Pi = std::numbers::pi_v<float>;
+}
+
+namespace mconst::dbl
+{
+	inline constexpr double e = std::numbers::e_v<double>;
+	inline constexpr double log2e = std::numbers::log2e_v<double>;
+	inline constexpr double log10e = std::numbers::log10e_v<double>;
+	inline constexpr double pi = std::numbers::pi_v<double>;
+	inline constexpr double inv_pi = std::numbers::inv_pi_v<double>;
+	inline constexpr double inv_sqrtpi = std::numbers::inv_sqrtpi_v<double>;
+	inline constexpr double ln2 = std::numbers::ln2_v<double>;
+	inline constexpr double ln10 = std::numbers::ln10_v<double>;
+	inline constexpr double sqrt2 = std::numbers::sqrt2_v<double>;
+	inline constexpr double sqrt3 = std::numbers::sqrt3_v<double>;
+	inline constexpr double inv_sqrt3 = std::numbers::inv_sqrt3_v<double>;
+	inline constexpr double egamma = std::numbers::egamma_v<double>;
+	inline constexpr double phi = std::numbers::phi_v<double>;
+
+	inline constexpr double deg2rad = pi / 180.0;
+	inline constexpr double rad2deg = 180.0 / pi;
 }
 
 /*
@@ -242,22 +109,16 @@ namespace mconst
 ===================================================================================================
 */
 
-namespace mpriv
-{
-	constexpr double DegreesToRadians = std::numbers::pi / 180.0;
-	constexpr double RadiansToDegrees = 180.0 / std::numbers::pi;
-}
-
 // floating point
 
 template< std::floating_point T >
 constexpr T DEG2RAD( T degrees ) {
-	return degrees * static_cast<T>( mpriv::DegreesToRadians );
+	return degrees * static_cast<T>( mconst::dbl::deg2rad );
 }
 
 template< std::floating_point T >
 constexpr T RAD2DEG( T radians ) {
-	return radians * static_cast<T>( mpriv::RadiansToDegrees );
+	return radians * static_cast<T>( mconst::dbl::rad2deg );
 }
 
 template< std::floating_point T >
@@ -318,26 +179,211 @@ inline int Q_rint( float a )
 /*
 ===================================================================================================
 
-	Vector maths
+	3D Vector
+
+	Principles: You can access elements using vec.x/y/z or an array form with vec.v[0].
+	Operations that would usually only take a single vector as a parameter are defined as class
+	methods, for convenience.
+	Functions that would take more than one vector as a parameter are defined externally for better
+	code generation and more straightforward logic.
+	You can copy a vector from one to another with the = operator, or with Vec3Copy for explicitness.
+	Comparing vectors is enabled with the == operator, or Vec3Compare.
+	You can initialise the members with a constructor, manually after
+	constructon time, or with Set, Replicate or SetFromLegacy.
+
+===================================================================================================
+*/
+
+struct vec3
+{
+	union
+	{
+		struct
+		{
+			float x, y, z;
+		};
+		float v[3];
+	};
+
+	vec3() = default;
+
+	vec3( const vec3 & ) = default;
+	vec3 &operator=( const vec3 & ) = default;
+
+	vec3( vec3 && ) = default;
+	vec3 &operator=( vec3 && ) = default;
+
+	constexpr vec3( float X, float Y, float Z ) noexcept : x( X ), y( Y ), z( Z ) {}
+
+	// I wonder how the compiler deals with this
+	// SlartTodo: GCC doesn't like this
+#ifdef _WIN32
+	friend bool operator==( const vec3 &, const vec3 & ) = default;
+#endif
+
+	void Set( float X, float Y, float Z )
+	{
+		x = X; y = Y; z = Z;
+	}
+
+	void SetFromLegacy( const float *pArray )
+	{
+		x = pArray[0]; y = pArray[1]; z = pArray[2];
+	}
+
+	void Replicate( float f )
+	{
+		x = f; y = f; z = f;
+	}
+
+	void Zero()
+	{
+		x = 0.0f; y = 0.0f; z = 0.0f;
+	}
+
+	float Length() const
+	{
+		return sqrt( x*x + y*y + z*z );
+	}
+
+	float Normalize()
+	{
+		float length = Length();
+
+		// prevent divide by zero
+		float ilength = 1.0f / ( length + FLT_EPSILON );
+
+		x *= ilength;
+		y *= ilength;
+		z *= ilength;
+
+		return length;
+	}
+
+	void NormalizeFast()
+	{
+		// prevent divide by zero
+		float ilength = 1.0f / ( Length() + FLT_EPSILON );
+
+		x *= ilength;
+		y *= ilength;
+		z *= ilength;
+	}
+
+	float *Base()
+	{
+		return reinterpret_cast<float *>( this );
+	}
+
+	const float *Base() const
+	{
+		return reinterpret_cast<const float *>( this );
+	}
+
+	// avoid, use vec.v[i]
+	float &operator[]( int i )
+	{
+		return v[i];
+	}
+
+	// avoid, use vec.v[i]
+	float operator[]( int i ) const
+	{
+		return v[i];
+	}
+};
+
+// ensure triviality
+static_assert( std::is_trivial<vec3>::value, "vec3 is not trivial" );
+
+inline float Vec3DotProduct( const vec3 &v1, const vec3 &v2 )
+{
+	return ( v1.x*v2.x + v1.y*v2.y + v1.z*v2.z );
+}
+
+inline void Vec3CrossProduct( const vec3 &v1, const vec3 &v2, vec3 &out )
+{
+	out.x = v1.y*v2.z - v1.z*v2.y;
+	out.y = v1.z*v2.x - v1.x*v2.z;
+	out.z = v1.x*v2.y - v1.y*v2.x;
+}
+
+inline void Vec3Add( const vec3 &v1, const vec3 &v2, vec3 &out )
+{
+	out.x = v1.x + v2.x;
+	out.y = v1.y + v2.y;
+	out.z = v1.z + v2.z;
+}
+
+inline void Vec3Subtract( const vec3 &v1, const vec3 &v2, vec3 &out )
+{
+	out.x = v1.x - v2.x;
+	out.y = v1.y - v2.y;
+	out.z = v1.z - v2.z;
+}
+
+inline void Vec3Multiply( const vec3 &v1, const vec3 &v2, vec3 &out )
+{
+	out.x = v1.x * v2.x;
+	out.y = v1.y * v2.y;
+	out.z = v1.z * v2.z;
+}
+
+inline void Vec3Lerp( const vec3 &src1, const vec3 &src2, float t, vec3 &out )
+{
+	out.x = src1.x + ( src2.x - src1.x ) * t;
+	out.y = src1.y + ( src2.y - src1.y ) * t;
+	out.z = src1.z + ( src2.z - src1.z ) * t;
+}
+
+inline void Vec3Copy( const vec3 &in, vec3 &out )
+{
+	out = in;
+}
+
+inline bool Vec3Compare( const vec3 &v1, const vec3 &v2 )
+{
+#ifdef _WIN32
+	return v1 == v2;
+#else
+	return ( v1.x == v2.x && v1.y == v2.y && v1.z == v2.z );
+#endif
+}
+
+inline void Vec3Test()
+{
+	vec3 vec1( 4.0f, 1.0f, 1.0f );
+	vec3 vec2( 8.0f, 3.0f, 2.0f );
+
+	if ( Vec3Compare( vec1, vec2 ) )
+	{
+
+	}
+}
+
+/*
+===================================================================================================
+
+	Old vector maths
 
 ===================================================================================================
 */
 
 inline float DotProduct( const vec3_t v1, const vec3_t v2 )
 {
-	return ( v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2] );
+	return ( v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2] );
 }
 
 inline float DotProductAbs( const vec3_t v1, const vec3_t v2 )
 {
-	return ( fabs( v1[0] * v2[0] ) + fabs( v1[1] * v2[1] ) + fabs( v1[2] * v2[2] ) );
+	return ( fabs( v1[0]*v2[0] ) + fabs( v1[1]*v2[1] ) + fabs( v1[2]*v2[2] ) );
 }
 
 inline void CrossProduct( const vec3_t v1, const vec3_t v2, vec3_t cross )
 {
-	cross[0] = v1[1] * v2[2] - v1[2] * v2[1];
-	cross[1] = v1[2] * v2[0] - v1[0] * v2[2];
-	cross[2] = v1[0] * v2[1] - v1[1] * v2[0];
+	cross[0] = v1[1]*v2[2] - v1[2]*v2[1];
+	cross[1] = v1[2]*v2[0] - v1[0]*v2[2];
+	cross[2] = v1[0]*v2[1] - v1[1]*v2[0];
 }
 
 inline float VectorLength( vec3_t v )

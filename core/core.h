@@ -30,6 +30,12 @@
 #include <concepts>
 #include <numbers>
 
+#ifndef _WIN32
+// Include our bogus sal.h
+// special thanks to the Wine team!
+#include "sal.h"
+#endif
+
 #include "sys_defines.h"
 #include "sys_types.h"
 #include "utilities.h"
@@ -138,8 +144,6 @@ void	Sys_FindClose( void );
 
 ===================================================================================================
 */
-
-extern char null_string[1];
 
 inline bool Str_IsPathSeparator( int a ) {
 	return ( a == '/' || a == '\\' );

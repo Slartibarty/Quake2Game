@@ -22,6 +22,8 @@ static bool cmd_wait;
 #define	ALIAS_LOOP_COUNT	16
 int		alias_count;		// for detecting runaway loops
 
+static char cmd_null_string[1]; // lame
+
 
 //=============================================================================
 
@@ -517,7 +519,7 @@ Cmd_Argv
 char *Cmd_Argv (int arg)
 {
 	if ( arg >= cmd_argc )
-		return null_string;
+		return cmd_null_string;
 	return cmd_argv[arg];	
 }
 

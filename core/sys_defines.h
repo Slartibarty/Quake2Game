@@ -33,7 +33,7 @@
 
 #define MAX_OSPATH			1024
 
-#define DLLEXPORT
+#define DLLEXPORT			__attribute__((visibility("default")))
 #define FORCEINLINE			inline
 
 #endif

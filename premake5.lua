@@ -57,6 +57,12 @@ filter { "system:windows", filter_rel_or_rtl }
 	buildoptions { "/Gw" }
 filter {}
 
+-- Config for Linux
+filter "system:linux"
+	-- Fake headers for Linux
+	includedirs { "thirdparty/linuxcompat" }
+filter {}
+
 -- Config for all projects in debug, _DEBUG is defined for library-compatibility
 filter( filter_dbg )
 	defines { "_DEBUG", "Q_DEBUG" }
@@ -173,8 +179,6 @@ local uvatlas_sources = {
 
 -------------------------------------------------------------------------------
 
-group "support"
-
 project "core"
 	kind "StaticLib"
 	targetname "core"
@@ -187,7 +191,16 @@ project "core"
 		"core/*.h"
 	}
 
-group "game"
+	filter "system:windows"
+		removefiles {
+			"**/*_linux.*"
+		}
+	filter {}
+	filter "system:linux"
+		removefiles {
+			"**/*_win.*"
+		}
+	filter {}
 
 project "engine"
 	kind "WindowedApp"
@@ -202,7 +215,7 @@ project "engine"
 		links { "ws2_32", "dsound", "dxguid", "opengl32", "noenv.obj", "zlib", "libpng" }
 	filter {}
 	filter "system:linux"
-		links { "sdl2" }
+		links { "GL", "SDL2", "zlib", "png" }
 	filter {}
 	
 	disablewarnings { "4244", "4267" }
@@ -234,7 +247,9 @@ project "engine"
 	filter {}
 	filter "system:linux"
 		removefiles {
-			"**/*_win.*"
+			"**/*_win.*",
+			"**/conproc.*",
+			"**/*.rc"
 		}
 	filter {}
 	
@@ -253,13 +268,13 @@ project "cgame"
 	targetdir "../game/base"
 	links { "core" }
 	
-	disablewarnings { "4244", "4267" }
+	--[[disablewarnings { "4244", "4267" }
 		
 	pchsource( "game/client/cg_pch.cpp" )
 	pchheader( "cg_local.h" )
 	filter( "files:not game/client/**" )
 		flags( { "NoPCH" } )
-	filter( {} )
+	filter( {} )--]]
 
 	files {
 		"common/*",
@@ -289,13 +304,13 @@ project "game"
 	targetdir "../game/base"
 	links { "core" }
 
-	disablewarnings { "4244", "4311", "4302" }
+	--[[disablewarnings { "4244", "4311", "4302" }
 	
 	pchsource( "game/server/g_pch.cpp" )
 	pchheader( "g_local.h" )
 	filter( "files:not game/server/**" )
 		flags( { "NoPCH" } )
-	filter( {} )
+	filter {}--]]
 
 	files {
 		"common/*",

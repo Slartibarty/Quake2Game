@@ -10,6 +10,8 @@
 ===================================================================================================
 */
 
+#if 0
+
 class idScreenShotThread : public idSysThread
 {
 public:
@@ -21,6 +23,8 @@ public:
 };
 
 idScreenShotThread rScreenshotThread;
+
+#endif
 
 /*
 ========================

@@ -10,10 +10,6 @@
 
 #include "../core/core.h"
 
-#ifndef _WIN32
-#define _Printf_format_string_
-#endif
-
 #define	MAX_STRING_CHARS	1024	// max length of a string passed to Cmd_TokenizeString
 #define	MAX_STRING_TOKENS	80		// max tokens resulting from Cmd_TokenizeString
 

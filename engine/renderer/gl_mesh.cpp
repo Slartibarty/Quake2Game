@@ -2,6 +2,8 @@
 
 #include "gl_local.h"
 
+#include <vector>
+
 #define POWERSUIT_SCALE		4.0f
 
 /*
@@ -1559,45 +1561,41 @@ void R_DrawStaticMeshFile( entity_t *e )
 
 	renderLight_t finalLights[MAX_LIGHTS]{};
 
-	if ( lightsInPVS.size() == 0 )
+	if ( lightsInPVS.size() != 0 )
 	{
-		goto skipLights;
-	}
+		int skipIndices[MAX_LIGHTS]{};
 
-	int skipIndices[MAX_LIGHTS]{};
-
-	// for all the lights in our PVS, find the four values that have the shortest distance to the origin, do this MAX_LIGHTS times
-	for ( int iter1 = 0; iter1 < MAX_LIGHTS; ++iter1 )
-	{
-		float smallestDistance = BIG_FLOAT_VALUE;
-		int smallestIndex = 0;
-
-		for ( int iter2 = 0; iter2 < (int)lightsInPVS.size(); ++iter2 )
+		// for all the lights in our PVS, find the four values that have the shortest distance to the origin, do this MAX_LIGHTS times
+		for ( int iter1 = 0; iter1 < MAX_LIGHTS; ++iter1 )
 		{
-			float distance = VectorDistance( e->origin, lightsInPVS[iter2].origin );
-			if ( distance < smallestDistance )
+			float smallestDistance = BIG_FLOAT_VALUE;
+			int smallestIndex = 0;
+
+			for ( int iter2 = 0; iter2 < (int)lightsInPVS.size(); ++iter2 )
 			{
-				if ( iter1 > 0 && skipIndices[iter1 - 1] == iter2 )
+				float distance = VectorDistance( e->origin, lightsInPVS[iter2].origin );
+				if ( distance < smallestDistance )
 				{
-					// skip, already got it
-					continue;
+					if ( iter1 > 0 && skipIndices[iter1 - 1] == iter2 )
+					{
+						// skip, already got it
+						continue;
+					}
+					smallestDistance = distance;
+					smallestIndex = iter2;
 				}
-				smallestDistance = distance;
-				smallestIndex = iter2;
 			}
+
+			skipIndices[iter1] = smallestIndex;
+
+			renderLight_t &finalLight = finalLights[iter1];
+			staticLight_t &staticLight = lightsInPVS[smallestIndex];
+
+			VectorCopy( staticLight.origin, finalLight.position );
+			VectorCopy( staticLight.color, finalLight.color );
+			finalLight.intensity = static_cast<float>( staticLight.intensity ) * 0.5; // compensate
 		}
-
-		skipIndices[iter1] = smallestIndex;
-
-		renderLight_t &finalLight = finalLights[iter1];
-		staticLight_t &staticLight = lightsInPVS[smallestIndex];
-
-		VectorCopy( staticLight.origin, finalLight.position );
-		VectorCopy( staticLight.color, finalLight.color );
-		finalLight.intensity = static_cast<float>( staticLight.intensity ) * 0.5; // compensate
 	}
-
-skipLights:
 
 	glUseProgram( glProgs.smfMeshProg );
 

@@ -6,7 +6,7 @@
 
 #include "msg.h"
 
-#define PARANOID
+//#define PARANOID
 //#define TOUGH_COMPRESSION
 
 //

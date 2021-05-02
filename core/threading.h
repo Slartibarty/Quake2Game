@@ -11,6 +11,9 @@
 
 #pragma once
 
+// Not Linux-capable yet
+#ifdef _WIN32
+
 // I am so sorry
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
@@ -549,3 +552,5 @@ idSysThreadSynchronizer::Synchronize
 inline bool idSysThreadSynchronizer::Synchronize( uint threadNum, uint timeout ) {
 	return signals[threadNum]->Wait( timeout );
 }
+
+#endif

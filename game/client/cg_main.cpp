@@ -219,7 +219,7 @@ Returns a pointer to the structure with all entry points
 and global variables
 ===================
 */
-cgame_export_t *GetCGameAPI( cgame_import_t *import )
+extern "C" DLLEXPORT cgame_export_t *GetCGameAPI( cgame_import_t *import )
 {
 	cgi = *import;
 

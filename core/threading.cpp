@@ -1,4 +1,7 @@
 
+// Not Linux-capable yet
+#ifdef _WIN32
+
 #include "core.h"
 
 #include "threading.h"
@@ -266,3 +269,5 @@ void TestWorkers() {
 		workers.SignalWorkAndWait();
 	}
 }
+
+#endif

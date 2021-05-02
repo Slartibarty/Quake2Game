@@ -888,6 +888,7 @@ void SV_UserinfoChanged (client_t *cl)
 	// name for C code
 	Q_strcpy_s (cl->name, Info_ValueForKey (cl->userinfo, "name"));
 	// mask off high bit
+	// SlartTodo: obsolete?
 	for (i=0 ; i<sizeof(cl->name) ; i++)
 		cl->name[i] &= 127;
 

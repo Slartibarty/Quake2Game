@@ -21,8 +21,6 @@ static_assert( DIRECTX_MATH_VERSION >= 316 );
 #include "GL/glew.h"
 #ifdef _WIN32
 #include "GL/wglew.h"
-#elif defined __linux__
-#include "GL/glxew.h"
 #endif
 
 #define DEFAULT_CLEARCOLOR		0.0f, 0.0f, 0.0f, 1.0f	// Black

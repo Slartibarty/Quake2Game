@@ -25,7 +25,12 @@ using uint = unsigned int;
 
 using qboolean = int32;		// obsolete
 
+// Platform specific character types
+// currently not used, avoid usage
+
 #ifdef _WIN32
+
+// UTF-16 on Windows
 
 using platChar_t = wchar_t;
 
@@ -34,8 +39,10 @@ using platChar_t = wchar_t;
 
 #else
 
+// UTF-8 on Linux
+
 using platChar_t = char;
 
-#define PLATTEXT( quote ) PLATTEXT_( quote )
+#define PLATTEXT( quote ) ( quote )
 
 #endif

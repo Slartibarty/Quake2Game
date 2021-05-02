@@ -14,6 +14,9 @@
 =======================================
 */
 
+// SlartTodo: There must be a better way!
+static char q_shared_null_string[1];
+
 char *Info_ValueForKey (const char *s, const char *key)
 {
 	char	pkey[512];
@@ -31,7 +34,7 @@ char *Info_ValueForKey (const char *s, const char *key)
 		while (*s != '\\')
 		{
 			if (!*s)
-				return null_string;
+				return q_shared_null_string;
 			*o++ = *s++;
 		}
 		*o = 0;
@@ -42,7 +45,7 @@ char *Info_ValueForKey (const char *s, const char *key)
 		while (*s != '\\' && *s)
 		{
 			if (!*s)
-				return null_string;
+				return q_shared_null_string;
 			*o++ = *s++;
 		}
 		*o = 0;
@@ -51,7 +54,7 @@ char *Info_ValueForKey (const char *s, const char *key)
 			return value[valueindex];
 
 		if (!*s)
-			return null_string;
+			return q_shared_null_string;
 		s++;
 	}
 }

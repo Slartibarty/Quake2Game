@@ -449,10 +449,6 @@ extern	spawn_temp_t	st;
 extern	int	sm_meat_index;
 extern	int	snd_fry;
 
-extern	int	jacket_armor_index;
-extern	int	combat_armor_index;
-extern	int	body_armor_index;
-
 
 // means of death
 enum meansofdeath_t
@@ -499,17 +495,31 @@ extern	int	meansOfDeath;
 
 extern	edict_t			*g_edicts;
 
+// SlartTodoLinux: bad code below:
+
+#ifdef _WIN32
 #define	FOFS(x) (int)&(((edict_t *)0)->x)
 #define	STOFS(x) (int)&(((spawn_temp_t *)0)->x)
 #define	LLOFS(x) (int)&(((level_locals_t *)0)->x)
 #define	CLOFS(x) (int)&(((gclient_t *)0)->x)
+#else
+#define	FOFS(x) (intptr_t)&(((edict_t *)0)->x)
+#define	STOFS(x) (intptr_t)&(((spawn_temp_t *)0)->x)
+#define	LLOFS(x) (intptr_t)&(((level_locals_t *)0)->x)
+#define	CLOFS(x) (intptr_t)&(((gclient_t *)0)->x)
+#endif
 
-inline float random( void )
+// GNU C++ defines this function, needs to be a macro...
+#ifdef _WIN32
+inline float random()
 {
 	return ((rand () & 0x7fff) / ((float)0x7fff));
 }
+#else
+#define random() ((float)((rand () & 0x7fff) / ((float)0x7fff)))
+#endif
 
-inline float crandom( void )
+inline float crandom()
 {
 	return (2.0f * (random() - 0.5f));
 }

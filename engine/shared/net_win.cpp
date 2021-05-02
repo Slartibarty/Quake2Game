@@ -156,7 +156,7 @@ bool NET_CompareNetadr( const netadr_t &a, const netadr_t &b )
 		return false;
 	}
 
-	Com_Print( __FUNCTION__ ": bad address type\n" );
+	Com_Print( "NET_CompareNetadr: bad address type\n" );
 	return false;
 }
 

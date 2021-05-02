@@ -8,6 +8,8 @@
 
 cvar_t *cvar_vars;
 
+static char cvar_null_string[1]; // lame
+
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 static bool Cvar_InfoValidate( const char *s )
@@ -57,7 +59,7 @@ char *Cvar_VariableString( const char *var_name )
 
 	var = Cvar_FindVar( var_name );
 	if ( !var )
-		return null_string;
+		return cvar_null_string;
 
 	return var->string;
 }
