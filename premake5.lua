@@ -179,6 +179,8 @@ local uvatlas_sources = {
 
 -------------------------------------------------------------------------------
 
+group "support"
+
 project "core"
 	kind "StaticLib"
 	targetname "core"
@@ -201,6 +203,8 @@ project "core"
 			"**/*_win.*"
 		}
 	filter {}
+	
+group "moon"
 
 project "engine"
 	kind "WindowedApp"
