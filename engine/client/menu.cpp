@@ -1337,11 +1337,11 @@ static void InitResolutions()
 
 	num_resolutions = Sys_GetNumVidModes();
 
-	resolutions = (char **)Z_Malloc( ( num_resolutions + 1 ) * sizeof( resolutions ) );
+	resolutions = (char **)Mem_Alloc( ( num_resolutions + 1 ) * sizeof( resolutions ) );
 
 	while ( Sys_GetVidModeInfo( width, height, mode ) != false )
 	{
-		resolutions[mode] = (char *)Z_Malloc( 32 );
+		resolutions[mode] = (char *)Mem_Alloc( 32 );
 		Q_sprintf_s( resolutions[mode], 32, "[%dx%d]", width, height );
 
 		++mode;
@@ -1358,9 +1358,9 @@ static void DeleteResolutions()
 
 	for ( int i = 0; i < num_resolutions; ++i )
 	{
-		Z_Free( resolutions[i] );
+		Mem_Free( resolutions[i] );
 	}
-	Z_Free( resolutions );
+	Mem_Free( resolutions );
 
 	resolutions = nullptr;
 	num_resolutions = 0;
@@ -2662,7 +2662,7 @@ void StartServer_MenuInit( void )
 		length = ftell(fp);
 		fseek(fp, 0, SEEK_SET);
 
-		buffer = (char*)Z_Malloc( length );
+		buffer = (char*)Mem_Alloc( length );
 		fread( buffer, length, 1, fp );
 	}
 
@@ -2679,7 +2679,7 @@ void StartServer_MenuInit( void )
 	if ( nummaps == 0 )
 		Com_Errorf("no maps in maps.lst\n" );
 
-	mapnames = (char**)Z_Calloc( sizeof( char * ) * ( nummaps + 1 ) );
+	mapnames = (char**)Mem_ClearedAlloc( sizeof( char * ) * ( nummaps + 1 ) );
 
 	s = buffer;
 
@@ -2697,14 +2697,14 @@ void StartServer_MenuInit( void )
 		strcpy( longname, COM_Parse( &s ) );
 		Q_sprintf_s( scratch, "%s\n%s", longname, shortname );
 
-		mapnames[i] = Z_CopyString( scratch );
+		mapnames[i] = Mem_CopyString( scratch );
 	}
 	mapnames[nummaps] = 0;
 
 	if ( fp != 0 )
 	{
 		fp = 0;
-		Z_Free( buffer );
+		Mem_Free( buffer );
 	}
 	else
 	{
@@ -2834,8 +2834,8 @@ const char *StartServer_MenuKey( int key )
 			int i;
 
 			for ( i = 0; i < nummaps; i++ )
-				Z_Free( mapnames[i] );
-			Z_Free( mapnames );
+				Mem_Free( mapnames[i] );
+			Mem_Free( mapnames );
 		}
 		mapnames = 0;
 		nummaps = 0;
@@ -3525,11 +3525,11 @@ static void FreeFileList( char **list, int n )
 	{
 		if ( list[i] )
 		{
-			Z_Free( list[i] );
+			Mem_Free( list[i] );
 			list[i] = 0;
 		}
 	}
-	Z_Free( list );
+	Mem_Free( list );
 }
 
 static qboolean IconOfSkinExists( char *skin, char **pcxfiles, int npcxfiles )
@@ -3602,7 +3602,7 @@ static qboolean PlayerConfig_ScanDirectories( void )
 		strcat( scratch, "/tris.md2" );
 		if ( !Sys_FindFirst( scratch, 0, SFF_SUBDIR | SFF_HIDDEN | SFF_SYSTEM ) )
 		{
-			Z_Free( dirnames[i] );
+			Mem_Free( dirnames[i] );
 			dirnames[i] = 0;
 			Sys_FindClose();
 			continue;
@@ -3616,7 +3616,7 @@ static qboolean PlayerConfig_ScanDirectories( void )
 
 		if ( !pcxnames )
 		{
-			Z_Free( dirnames[i] );
+			Mem_Free( dirnames[i] );
 			dirnames[i] = 0;
 			continue;
 		}
@@ -3635,7 +3635,7 @@ static qboolean PlayerConfig_ScanDirectories( void )
 		if ( !nskins )
 			continue;
 
-		skinnames = (char**)Z_Calloc( sizeof( char * ) * ( nskins + 1 ) );
+		skinnames = (char**)Mem_ClearedAlloc( sizeof( char * ) * ( nskins + 1 ) );
 
 		// copy the valid skins
 		for ( s = 0, k = 0; k < npcxfiles-1; k++ )
@@ -3659,7 +3659,7 @@ static qboolean PlayerConfig_ScanDirectories( void )
 					if ( strrchr( scratch, '.' ) )
 						*strrchr( scratch, '.' ) = 0;
 
-					skinnames[s] = Z_CopyString( scratch );
+					skinnames[s] = Mem_CopyString( scratch );
 					s++;
 				}
 			}
@@ -3960,10 +3960,10 @@ const char *PlayerConfig_MenuKey (int key)
 			for ( j = 0; j < s_pmi[i].nskins; j++ )
 			{
 				if ( s_pmi[i].skindisplaynames[j] )
-					Z_Free( s_pmi[i].skindisplaynames[j] );
+					Mem_Free( s_pmi[i].skindisplaynames[j] );
 				s_pmi[i].skindisplaynames[j] = 0;
 			}
-			Z_Free( s_pmi[i].skindisplaynames );
+			Mem_Free( s_pmi[i].skindisplaynames );
 			s_pmi[i].skindisplaynames = 0;
 			s_pmi[i].nskins = 0;
 		}

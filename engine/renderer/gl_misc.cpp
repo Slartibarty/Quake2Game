@@ -53,7 +53,7 @@ static void GL_Screenshot_Internal( bool png )
 		addsize = 18; // TGA Header
 		c += addsize;
 	}
-	pixbuffer = (byte *)Z_Malloc( c );
+	pixbuffer = (byte *)Mem_Alloc( c );
 
 	glReadPixels( 0, 0, vid.width, vid.height, GL_RGB, GL_UNSIGNED_BYTE, pixbuffer + addsize );
 
@@ -89,7 +89,7 @@ static void GL_Screenshot_Internal( bool png )
 
 	fclose( handle );
 
-	Z_Free( pixbuffer );
+	Mem_Free( pixbuffer );
 
 	Com_Printf( "Wrote %s\n", picname );
 }
@@ -170,11 +170,11 @@ void R_ExtractWad_f()
 
 	fseek( wadhandle, wadheader.infotableofs, SEEK_SET );
 
-	wad2::lumpinfo_t *wadlumps = (wad2::lumpinfo_t *)Z_Malloc( sizeof( wad2::lumpinfo_t ) * wadheader.numlumps );
+	wad2::lumpinfo_t *wadlumps = (wad2::lumpinfo_t *)Mem_Alloc( sizeof( wad2::lumpinfo_t ) * wadheader.numlumps );
 
 	if ( fread( wadlumps, sizeof( wad2::lumpinfo_t ), wadheader.numlumps, wadhandle ) != wadheader.numlumps )
 	{
-		Z_Free( wadlumps );
+		Mem_Free( wadlumps );
 		fclose( wadhandle );
 		Com_Printf( "Malformed wadfile\n" );
 		return;
@@ -197,11 +197,11 @@ void R_ExtractWad_f()
 
 		c = miptex.width * miptex.height;
 
-		pic8 = (byte *)Z_Malloc( c );
+		pic8 = (byte *)Mem_Alloc( c );
 
 		fread( pic8, 1, c, wadhandle );
 
-		pic32 = (byte *)Z_Malloc( c * 3 );
+		pic32 = (byte *)Mem_Alloc( c * 3 );
 
 		for ( int32 pixel = 0; pixel < ( c * 3 ); pixel += 3 )
 		{
@@ -210,7 +210,7 @@ void R_ExtractWad_f()
 			pic32[pixel + 2] = palette[pic8[pixel + 2]];
 		}
 
-		Z_Free( pic8 );
+		Mem_Free( pic8 );
 
 		char outname[MAX_QPATH];
 		Q_sprintf_s( outname, "%s/textures/%s/%s.tga", FS_Gamedir(), wadbase, wadlumps[i].name );
@@ -227,7 +227,7 @@ void R_ExtractWad_f()
 			Com_Printf( "Failed to write %s\n", outname );
 		}
 
-		Z_Free( pic32 );
+		Mem_Free( pic32 );
 
 		Q_sprintf_s( outname, "%s/textures/%s/%s.was", FS_Gamedir(), wadbase, wadlumps[i].name );
 
@@ -254,7 +254,7 @@ void R_ExtractWad_f()
 
 	}
 
-	Z_Free( wadlumps );
+	Mem_Free( wadlumps );
 	fclose( wadhandle );
 }
 
@@ -280,7 +280,7 @@ static byte *R_LoadWAL(const byte *pBuffer, int nBufLen, int &width, int &height
 	int c = width * height;
 
 	byte *pPic8 = (byte *)pMipTex + pMipTex->offsets[0];
-	uint *pPic32 = (uint *)Z_Malloc(c * 4);
+	uint *pPic32 = (uint *)Mem_Alloc(c * 4);
 
 	for (int i = 0; i < c; ++i)
 	{
@@ -329,7 +329,7 @@ void R_UpgradeWals_f()
 		int length = ftell( handle );
 		fseek( handle, 0, SEEK_SET );
 
-		byte *file = (byte *)Z_Malloc( length );
+		byte *file = (byte *)Mem_Alloc( length );
 
 		fread( file, 1, length, handle );
 
@@ -337,7 +337,7 @@ void R_UpgradeWals_f()
 
 		int width, height;
 		byte *data = R_LoadWAL( file, length, width, height );
-		Z_Free( file );
+		Mem_Free( file );
 
 		char tempname[MAX_QPATH];
 		Q_strcpy_s( tempname, str );
@@ -348,7 +348,7 @@ void R_UpgradeWals_f()
 		img::WritePNG( width, height, true, data, handle );
 		fclose( handle );
 
-		Z_Free( data );
+		Mem_Free( data );
 	}
 
 	Sys_FindClose();

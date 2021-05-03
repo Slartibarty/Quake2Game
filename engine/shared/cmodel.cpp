@@ -106,9 +106,9 @@ public:
 			// SlartTodo: Is it more efficient to realloc here? We don't care about our data at this point
 			if ( data )
 			{
-				Z_Free( data );
+				Mem_Free( data );
 			}
-			data = (T *)Z_Malloc( reserved * sizeof( T ) );
+			data = (T *)Mem_Alloc( reserved * sizeof( T ) );
 		}
 		// Don't bother clearing memory, it will be written over by clients
 	}
@@ -117,7 +117,7 @@ public:
 	{
 		if ( data )
 		{
-			Z_Free( data );
+			Mem_Free( data );
 			data = nullptr;
 			reserved = 0;
 			count = 0;

@@ -256,7 +256,7 @@ char *Sys_GetClipboardData( void )
 
 			if ( clipText )
 			{
-				data = Z_CopyString( clipText );
+				data = Mem_CopyString( clipText );
 				GlobalUnlock( clipData );
 			}
 		}

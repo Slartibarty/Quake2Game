@@ -550,7 +550,7 @@ void Engine_Init( int argc, char **argv )
 		Com_FatalError( "Error during initialization" );
 	}
 
-	Z_Init();
+	Mem_Init();
 
 	// prepare enough of the subsystems to handle
 	// cvar and command buffer management
@@ -736,7 +736,7 @@ void Engine_Shutdown()
 
 	CM_Shutdown();
 
-	Z_Shutdown();
+	Mem_Shutdown();
 
 	if ( logfile ) {
 		fclose( logfile );

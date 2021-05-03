@@ -96,7 +96,7 @@ namespace img
 
 		int nNumPixels = width * height;
 		int nSize = nNumPixels * 4;
-		byte *pRGBA = (byte *)Z_Malloc(nSize);				// Final RGBA image
+		byte *pRGBA = (byte *)Mem_Alloc(nSize);				// Final RGBA image
 
 		const byte *pData = pBuffer + sizeof(*pHeader);		// Indexes
 		const byte *pPalette = pBuffer + nBufLen - 768;		// Palette map
@@ -208,7 +208,7 @@ namespace img
 
 		uint nNumPixels = (uint)width * (uint)height;
 		uint nSize = nNumPixels * 4;
-		byte *pPixels = (byte *)Z_Malloc(nSize);
+		byte *pPixels = (byte *)Mem_Alloc(nSize);
 
 		byte* pPixelIter = pPixels;
 		const byte* pDataIter = pData;
@@ -328,8 +328,8 @@ namespace img
 
 		size_t rowbytes = png_get_rowbytes( png_ptr, info_ptr );
 
-		png_bytepp row_pointers = (png_bytepp)Z_Malloc( sizeof( png_bytep ) * height );	// Row pointers
-		png_bytep rows = (png_bytep)Z_Malloc( rowbytes * height );						// Rows
+		png_bytepp row_pointers = (png_bytepp)Mem_Alloc( sizeof( png_bytep ) * height );	// Row pointers
+		png_bytep rows = (png_bytep)Mem_Alloc( rowbytes * height );						// Rows
 
 		for ( int i = 0; i < height; ++i )
 		{
@@ -338,7 +338,7 @@ namespace img
 
 		png_read_image( png_ptr, row_pointers );
 
-		Z_Free( row_pointers ); // Don't need these anymore
+		Mem_Free( row_pointers ); // Don't need these anymore
 
 		// This is optional, but calling it means we touch all data in the buffer
 		//png_read_end( png_ptr, nullptr );
@@ -369,7 +369,7 @@ namespace img
 
 		size_t rowbytes = png_get_rowbytes( png_ptr, info_ptr );
 
-		png_bytepp row_pointers = (png_bytepp)Z_StackAlloc( sizeof( png_bytep ) * height );	// Row pointers
+		png_bytepp row_pointers = (png_bytepp)Mem_StackAlloc( sizeof( png_bytep ) * height );	// Row pointers
 
 		for ( int i = 0; i < height; ++i )
 		{
@@ -378,7 +378,7 @@ namespace img
 
 		png_write_image( png_ptr, row_pointers );
 
-	//	Z_Free( row_pointers );
+	//	Mem_Free( row_pointers );
 
 		png_write_end( png_ptr, nullptr );
 

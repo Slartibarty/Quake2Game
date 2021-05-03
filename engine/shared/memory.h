@@ -38,18 +38,3 @@ void		Mem_TagFreeGroup( uint16 tag );
 // Status
 void		Mem_Init();
 void		Mem_Shutdown();
-
-#define Z_StackAlloc Mem_StackAlloc
-
-#define Z_Malloc Mem_Alloc
-#define Z_Realloc Mem_ReAlloc
-#define Z_Calloc Mem_ClearedAlloc
-#define Z_CopyString Mem_CopyString
-#define Z_Free Mem_Free
-
-#define Z_TagMalloc Mem_TagAlloc
-#define Z_TagFree Mem_TagFree
-#define Z_TagFreeGroup Mem_TagFreeGroup
-
-#define Z_Init Mem_Init
-#define Z_Shutdown Mem_Shutdown

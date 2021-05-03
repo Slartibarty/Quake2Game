@@ -126,11 +126,11 @@ static pack_t *FS_LoadPackFile( const char *packfile )
 
 	fseek( packhandle, header.dirofs, SEEK_SET );
 
-	info = (dpackfile_t *)Z_Malloc( header.dirlen );
+	info = (dpackfile_t *)Mem_Alloc( header.dirlen );
 
 	fread( info, 1, header.dirlen, packhandle );
 
-	newfiles = (packfile_t *)Z_Malloc( numpackfiles * sizeof( packfile_t ) );
+	newfiles = (packfile_t *)Mem_Alloc( numpackfiles * sizeof( packfile_t ) );
 
 // parse the directory
 	for ( i = 0; i < numpackfiles; i++ )
@@ -140,9 +140,9 @@ static pack_t *FS_LoadPackFile( const char *packfile )
 		newfiles[i].filelen = LittleLong( info[i].filelen );
 	}
 
-	Z_Free( info );
+	Mem_Free( info );
 
-	pack = (pack_t *)Z_Malloc( sizeof( pack_t ) );
+	pack = (pack_t *)Mem_Alloc( sizeof( pack_t ) );
 	Q_strcpy_s( pack->filename, packfile );
 	pack->handle = packhandle;
 	pack->numfiles = numpackfiles;
@@ -168,7 +168,7 @@ static void FS_AddGameDirectory( const char *dir )
 	//
 	// add the directory to the search path
 	//
-	search = (searchpath_t *)Z_Malloc( sizeof( searchpath_t ) );
+	search = (searchpath_t *)Mem_Alloc( sizeof( searchpath_t ) );
 	Q_strcpy_s( search->filename, dir );
 	search->pack = nullptr;
 	search->next = fs_searchpaths;
@@ -183,7 +183,7 @@ static void FS_AddGameDirectory( const char *dir )
 		pak = FS_LoadPackFile( pakfile );
 		if ( !pak )
 			break; // If a game is missing packs, then too bad
-		search = (searchpath_t *)Z_Malloc( sizeof( searchpath_t ) );
+		search = (searchpath_t *)Mem_Alloc( sizeof( searchpath_t ) );
 		search->filename[0] = '\0';
 		search->pack = pak;
 		search->next = fs_searchpaths;
@@ -214,7 +214,7 @@ char **FS_ListFiles( const char *findname, int *numfiles, unsigned musthave, uns
 	nfiles++; // add space for a guard
 	*numfiles = nfiles;
 
-	list = (char **)Z_Calloc( sizeof( char * ) * nfiles );
+	list = (char **)Mem_ClearedAlloc( sizeof( char * ) * nfiles );
 
 	s = Sys_FindFirst( findname, musthave, canthave );
 	nfiles = 0;
@@ -222,7 +222,7 @@ char **FS_ListFiles( const char *findname, int *numfiles, unsigned musthave, uns
 	{
 		if ( s[strlen( s ) - 1] != '.' )
 		{
-			list[nfiles] = Z_CopyString( s );
+			list[nfiles] = Mem_CopyString( s );
 #ifdef _WIN32
 			_strlwr( list[nfiles] );
 #endif
@@ -276,9 +276,9 @@ static void FS_Dir_f()
 				else
 					Com_Printf( "%s\n", dirnames[i] );
 
-				Z_Free( dirnames[i] );
+				Mem_Free( dirnames[i] );
 			}
-			Z_Free( dirnames );
+			Mem_Free( dirnames );
 		}
 		Com_Printf( "\n" );
 	};
@@ -449,7 +449,7 @@ int FS_LoadFile( const char *path, void **buffer, int extradata )
 		return len;
 	}
 
-	*buffer = Z_Malloc( len + extradata );
+	*buffer = Mem_Alloc( len + extradata );
 
 	FS_Read( *buffer, len, h );
 
@@ -464,7 +464,7 @@ int FS_LoadFile( const char *path, void **buffer, int extradata )
 //-------------------------------------------------------------------------------------------------
 void FS_FreeFile( void *buffer )
 {
-	Z_Free( buffer );
+	Mem_Free( buffer );
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -517,11 +517,11 @@ void FS_SetGamedir( const char *dir, bool flush )
 		if ( fs_searchpaths->pack )
 		{
 			fclose( fs_searchpaths->pack->handle );
-			Z_Free( fs_searchpaths->pack->files );
-			Z_Free( fs_searchpaths->pack );
+			Mem_Free( fs_searchpaths->pack->files );
+			Mem_Free( fs_searchpaths->pack );
 		}
 		next = fs_searchpaths->next;
-		Z_Free( fs_searchpaths );
+		Mem_Free( fs_searchpaths );
 		fs_searchpaths = next;
 	}
 

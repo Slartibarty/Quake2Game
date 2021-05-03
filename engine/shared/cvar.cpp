@@ -125,9 +125,9 @@ cvar_t *Cvar_Get( const char *var_name, const char *var_value, uint32 flags )
 		}
 	}
 
-	var = (cvar_t *)Z_Calloc( sizeof( cvar_t ) );
-	var->name = Z_CopyString( var_name );
-	var->string = Z_CopyString( var_value );
+	var = (cvar_t *)Mem_ClearedAlloc( sizeof( cvar_t ) );
+	var->name = Mem_CopyString( var_name );
+	var->string = Mem_CopyString( var_value );
 	var->modified = true;
 	var->value = (float)atof( var->string );
 
@@ -175,7 +175,7 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, bool force )
 			{
 				if ( Q_strcmp( value, var->latched_string ) == 0 )
 					return var;
-				Z_Free( var->latched_string );
+				Mem_Free( var->latched_string );
 			}
 			else
 			{
@@ -186,11 +186,11 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, bool force )
 			if ( Com_ServerState() )
 			{
 				Com_Printf( "%s will be changed for next game.\n", var_name );
-				var->latched_string = Z_CopyString( value );
+				var->latched_string = Mem_CopyString( value );
 			}
 			else
 			{
-				var->string = Z_CopyString( value );
+				var->string = Mem_CopyString( value );
 				var->value = (float)atof( var->string );
 				if ( Q_strcmp( var->name, "game" ) == 0 )
 				{
@@ -205,7 +205,7 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, bool force )
 	{
 		if ( var->latched_string )
 		{
-			Z_Free( var->latched_string );
+			Mem_Free( var->latched_string );
 			var->latched_string = NULL;
 		}
 	}
@@ -218,9 +218,9 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, bool force )
 	if ( var->flags & CVAR_USERINFO )
 		userinfo_modified = true;	// transmit at next oportunity
 
-	Z_Free( var->string );	// free the old value string
+	Mem_Free( var->string );	// free the old value string
 
-	var->string = Z_CopyString( value );
+	var->string = Mem_CopyString( value );
 	var->value = (float)atof( var->string );
 
 	return var;
@@ -257,9 +257,9 @@ cvar_t *Cvar_FullSet( const char *var_name, const char *value, uint32 flags )
 	if ( var->flags & CVAR_USERINFO )
 		userinfo_modified = true;	// transmit at next opportunity
 
-	Z_Free( var->string );	// free the old value string
+	Mem_Free( var->string );	// free the old value string
 
-	var->string = Z_CopyString( value );
+	var->string = Mem_CopyString( value );
 	var->value = (float)atof( var->string );
 	var->flags = flags;
 
@@ -292,7 +292,7 @@ void Cvar_GetLatchedVars()
 		if ( !var->latched_string )
 			continue;
 
-		Z_Free( var->string );
+		Mem_Free( var->string );
 		var->string = var->latched_string;
 		var->latched_string = nullptr;
 		var->value = (float)atof( var->string );
@@ -470,14 +470,14 @@ void Cvar_Shutdown()
 	for ( ; var; var = var->next )
 	{
 		if ( lastVar ) {
-			Z_Free( lastVar );
+			Mem_Free( lastVar );
 		}
 
 		lastVar = var;
 
-		Z_Free( var->name );
-		Z_Free( var->string );
-		Z_Free( var->latched_string );
+		Mem_Free( var->name );
+		Mem_Free( var->string );
+		Mem_Free( var->latched_string );
 	}
-	Z_Free( lastVar );
+	Mem_Free( lastVar );
 }

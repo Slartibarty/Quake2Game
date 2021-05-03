@@ -13,8 +13,8 @@
 
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #define STBIR_MAX_CHANNELS 32
-#define STBIR_MALLOC(size,c) ((void)(c), Z_Malloc(size))
-#define STBIR_FREE(ptr,c) ((void)(c), Z_Free(ptr))
+#define STBIR_MALLOC(size,c) ((void)(c), Mem_Alloc(size))
+#define STBIR_FREE(ptr,c) ((void)(c), Mem_Free(ptr))
 #include "stb_image_resize.h"
 
 //-------------------------------------------------------------------------------------------------
@@ -141,7 +141,7 @@ static GLuint GL_Upload32( const byte *pData, int nWidth, int nHeight, imageflag
 			int nOutHeight = nHeight / 2;
 			int nLevel = 1;
 
-			byte *pNewData = (byte *)Z_Malloc( ( nOutWidth * nOutHeight ) * 4 );
+			byte *pNewData = (byte *)Mem_Alloc( ( nOutWidth * nOutHeight ) * 4 );
 
 			while ( nOutWidth > 1 && nOutHeight > 1 )
 			{
@@ -153,7 +153,7 @@ static GLuint GL_Upload32( const byte *pData, int nWidth, int nHeight, imageflag
 				nOutHeight /= 2;
 			}
 
-			Z_Free( pNewData );
+			Mem_Free( pNewData );
 		}
 
 		if ( flags & IF_NEAREST )
@@ -316,7 +316,7 @@ static image_t *GL_FindImage (const char *name, imageflags_t flags)
 	if ( pic )
 	{
 		int outsize = width * height * 4;
-		byte *pic32 = (byte *)Z_Malloc( outsize );
+		byte *pic32 = (byte *)Mem_Alloc( outsize );
 		rgb_t *palette = (rgb_t *)( pic + width * height );
 
 		for ( i = 0, j = 0; i < outsize; i += 4, ++j )
@@ -329,7 +329,7 @@ static image_t *GL_FindImage (const char *name, imageflags_t flags)
 		
 		image = GL_CreateImage( name, pic32, width, height, flags );
 
-		Z_Free( pic32 );
+		Mem_Free( pic32 );
 
 		++image->refcount;
 		return image;
@@ -347,7 +347,7 @@ static image_t *GL_FindImage (const char *name, imageflags_t flags)
 
 	image = GL_CreateImage( name, pic, width, height, flags );
 
-	Z_Free( pic );
+	Mem_Free( pic );
 
 	++image->refcount;
 	return image;

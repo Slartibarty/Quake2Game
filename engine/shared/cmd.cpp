@@ -115,7 +115,7 @@ void Cbuf_InsertText (const char *text)
 	templen = cmd_text.cursize;
 	if (templen)
 	{
-		temp = (char*)Z_StackAlloc (templen);
+		temp = (char*)Mem_StackAlloc (templen);
 		memcpy (temp, cmd_text.data, templen);
 		SZ_Clear (&cmd_text);
 	}
@@ -127,7 +127,7 @@ void Cbuf_InsertText (const char *text)
 	if (templen)
 	{
 		SZ_Write (&cmd_text, (void*)temp, templen);
-		//Z_Free (temp);
+		//Mem_Free (temp);
 	}
 }
 
@@ -271,7 +271,7 @@ bool Cbuf_AddLateCommands( int argc, char **argv )
 		return false;
 	}
 
-	char *text = (char *)Z_StackAlloc( s + 1 );
+	char *text = (char *)Mem_StackAlloc( s + 1 );
 	text[0] = '\0';
 	for ( i = 1; i < argc; ++i )
 	{
@@ -286,7 +286,7 @@ bool Cbuf_AddLateCommands( int argc, char **argv )
 	}
 	
 	// pull out the commands
-	char *build = (char *)Z_StackAlloc( s + 1 );
+	char *build = (char *)Mem_StackAlloc( s + 1 );
 	build[0] = '\0';
 	for ( i = 0; i < s - 1; ++i )
 	{
@@ -349,13 +349,13 @@ void Cmd_Exec_f (void)
 	Com_Printf ("execing %s\n",Cmd_Argv(1));
 	
 	// the file doesn't have a trailing 0, so we need to copy it off
-	char *f2 = (char*)Z_StackAlloc(len+1);
+	char *f2 = (char*)Mem_StackAlloc(len+1);
 	memcpy (f2, f, len);
 	f2[len] = 0;
 
 	Cbuf_InsertText (f2);
 
-	//Z_Free (f2);
+	//Mem_Free (f2);
 	FS_FreeFile (f);
 }
 
@@ -410,14 +410,14 @@ void Cmd_Alias_f (void)
 	{
 		if (!Q_strcmp(s, a->name))
 		{
-			Z_Free (a->value);
+			Mem_Free (a->value);
 			break;
 		}
 	}
 
 	if (!a)
 	{
-		a = (cmdalias_t*)Z_Calloc (sizeof(cmdalias_t)); // Assume we want calloc for this
+		a = (cmdalias_t*)Mem_ClearedAlloc (sizeof(cmdalias_t)); // Assume we want calloc for this
 		a->next = cmd_alias;
 		cmd_alias = a;
 	}
@@ -434,7 +434,7 @@ void Cmd_Alias_f (void)
 	}
 	strcat (cmd, "\n");
 	
-	a->value = Z_CopyString(cmd);
+	a->value = Mem_CopyString(cmd);
 }
 
 /*
@@ -610,7 +610,7 @@ void Cmd_TokenizeString (char *text, bool macroExpand)
 
 // clear the args from the last string
 	for (i=0 ; i<cmd_argc ; i++)
-		Z_Free (cmd_argv[i]);
+		Mem_Free (cmd_argv[i]);
 		
 	cmd_argc = 0;
 	cmd_args[0] = 0;
@@ -660,7 +660,7 @@ void Cmd_TokenizeString (char *text, bool macroExpand)
 
 		if (cmd_argc < MAX_STRING_TOKENS)
 		{
-			cmd_argv[cmd_argc] = Z_CopyString( com_token );
+			cmd_argv[cmd_argc] = Mem_CopyString( com_token );
 			cmd_argc++;
 		}
 	}
@@ -722,7 +722,7 @@ void	Cmd_RemoveCommand (const char *cmd_name)
 		if (!Q_strcmp (cmd_name, cmd->name))
 		{
 			*back = cmd->next;
-			Z_Free (cmd);
+			Mem_Free (cmd);
 			return;
 		}
 		back = &cmd->next;
@@ -889,12 +889,12 @@ void Cmd_Shutdown()
 	for ( ; cmd; cmd = cmd->next )
 	{
 		if ( lastCmd ) {
-			Z_Free( lastCmd );
+			Mem_Free( lastCmd );
 		}
 
 		lastCmd = cmd;
 	}
-	Z_Free( lastCmd );
+	Mem_Free( lastCmd );
 
 	cmdalias_t *alias = cmd_alias;
 	cmdalias_t *lastAlias = nullptr;
@@ -902,16 +902,16 @@ void Cmd_Shutdown()
 	for ( ; alias; alias = alias->next )
 	{
 		if ( lastAlias ) {
-			Z_Free( lastAlias );
+			Mem_Free( lastAlias );
 		}
 
 		lastAlias = alias;
 
-		Z_Free( alias->value );
+		Mem_Free( alias->value );
 	}
-	Z_Free( lastAlias );
+	Mem_Free( lastAlias );
 
 	for ( int i = 0; i < cmd_argc; ++i ) {
-		Z_Free( cmd_argv[i] );
+		Mem_Free( cmd_argv[i] );
 	}
 }

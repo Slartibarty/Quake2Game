@@ -276,12 +276,12 @@ static void PF_StartSound (edict_t *entity, int channel, int sound_num, float vo
 
 void *Wrap_TagMalloc( int size, int tag )
 {
-	return Z_TagMalloc( size, tag );
+	return Mem_TagAlloc( size, tag );
 }
 
 void Wrap_TagFreeGroup( int tag )
 {
-	Z_TagFreeGroup( tag );
+	Mem_TagFreeGroup( tag );
 }
 
 //==============================================
@@ -340,7 +340,7 @@ void SV_InitGameProgs (void)
 	gi.WriteAngle = PF_WriteAngle;
 
 	gi.TagMalloc = Wrap_TagMalloc;
-	gi.TagFree = Z_TagFree;
+	gi.TagFree = Mem_TagFree;
 	gi.FreeTags = Wrap_TagFreeGroup;
 
 	gi.cvar = Cvar_Get;

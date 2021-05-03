@@ -50,7 +50,7 @@ static bool CheckShader( GLuint shader, const char *filename )
 	}
 
 	if ( logLength > 1 ) {
-		GLchar *msg = (GLchar *)Z_StackAlloc( logLength );
+		GLchar *msg = (GLchar *)Mem_StackAlloc( logLength );
 		glGetShaderInfoLog( shader, logLength, nullptr, msg );
 		Com_Printf( "Compiler reported: %s", msg );
 	}

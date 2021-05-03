@@ -164,7 +164,7 @@ void S_Shutdown(void)
 		if (!sfx->name[0])
 			continue;
 		if (sfx->cache)
-			Z_Free (sfx->cache);
+			Mem_Free (sfx->cache);
 		memset (sfx, 0, sizeof(*sfx));
 	}
 
@@ -264,7 +264,7 @@ sfx_t *S_AliasName ( const char *aliasname, const char *truename )
 	memset (sfx, 0, sizeof(*sfx));
 	Q_strcpy_s (sfx->name, aliasname);
 	sfx->registration_sequence = s_registration_sequence;
-	sfx->truename = Z_CopyString( truename );
+	sfx->truename = Mem_CopyString( truename );
 
 	return sfx;
 }
@@ -324,7 +324,7 @@ void S_EndRegistration (void)
 		if (sfx->registration_sequence != s_registration_sequence)
 		{	// don't need this sound
 			if (sfx->cache)	// it is possible to have a leftover
-				Z_Free (sfx->cache);	// from a server that didn't finish loading
+				Mem_Free (sfx->cache);	// from a server that didn't finish loading
 			memset (sfx, 0, sizeof(*sfx));
 		}
 #if 0

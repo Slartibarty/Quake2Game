@@ -210,7 +210,7 @@ static void Con_Dump_f()
 		}
 	}
 
-	char *buffer = (char *)Z_Malloc( con.linewidth + 1 );
+	char *buffer = (char *)Mem_Alloc( con.linewidth + 1 );
 
 	// write the remaining lines
 	buffer[con.linewidth] = 0;
