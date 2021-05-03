@@ -27,7 +27,7 @@ inline void Str_Substitute( char *pStr, int a, int b )
 	{
 		if ( *pStr == a )
 		{
-			*pStr = b;
+			*pStr = (char)b;
 		}
 	}
 }

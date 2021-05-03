@@ -270,7 +270,7 @@ cvar_t *Cvar_FullSet( const char *var_name, const char *value, uint32 flags )
 //-------------------------------------------------------------------------------------------------
 void Cvar_SetValue( const char *var_name, float value )
 {
-	char val[64];
+	char val[128];
 
 	if ( value == (int)value )
 		Q_sprintf( val, "%i", (int)value );
@@ -453,10 +453,31 @@ char *Cvar_Serverinfo()
 }
 
 //-------------------------------------------------------------------------------------------------
-// Reads in all archived cvars
 //-------------------------------------------------------------------------------------------------
 void Cvar_Init()
 {
 	Cmd_AddCommand( "set", Cvar_Set_f );
 	Cmd_AddCommand( "cvarlist", Cvar_List_f );
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+void Cvar_Shutdown()
+{
+	cvar_t *var = cvar_vars;
+	cvar_t *lastVar = nullptr;
+
+	for ( ; var; var = var->next )
+	{
+		if ( lastVar ) {
+			Z_Free( lastVar );
+		}
+
+		lastVar = var;
+
+		Z_Free( var->name );
+		Z_Free( var->string );
+		Z_Free( var->latched_string );
+	}
+	Z_Free( lastVar );
 }

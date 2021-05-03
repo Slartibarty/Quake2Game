@@ -1487,9 +1487,11 @@ void R_DrawStaticMeshFile( entity_t *e )
 
 	// Matrices
 
+	float rotate = anglemod( r_newrefdef.time * 100.0f );
+
 	XMMATRIX modelMatrix = XMMatrixMultiply(
-		//XMMatrixRotationRollPitchYaw( e->angles[PITCH], e->angles[YAW], e->angles[ROLL] ),
-		XMMatrixRotationRollPitchYaw( 0.0f, 0.0f, 0.0f ),
+		XMMatrixRotationRollPitchYaw( DEG2RAD( e->angles[PITCH] + rotate ), DEG2RAD( e->angles[ROLL] + rotate ), DEG2RAD( e->angles[YAW] + rotate ) ),
+		//XMMatrixRotationRollPitchYaw( 0.0f, 0.0f, 0.0f ),
 		XMMatrixTranslation( e->origin[0], e->origin[1], e->origin[2] )
 	);
 
@@ -1501,39 +1503,6 @@ void R_DrawStaticMeshFile( entity_t *e )
 
 	glGetFloatv( GL_MODELVIEW_MATRIX, view );
 	glGetFloatv( GL_PROJECTION_MATRIX, proj );
-
-	vec3 viewOrigin;
-	viewOrigin.SetFromLegacy( r_newrefdef.vieworg );
-
-	XMFLOAT4X4 viewMatrixStore = R_CreateViewMatrix( viewOrigin, { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } );
-
-	float fovx = 4.0f * tan( r_newrefdef.fov_y / 2.0f );
-	
-	XMMATRIX projMatrix = XMMatrixPerspectiveFovRH( DEG2RAD( fovx ), (float)vid.width / (float)vid.height, 4.0f, 4096.0f );
-	projMatrix = XMMatrixTranspose( projMatrix );
-
-	XMFLOAT4X4A projMatrixStore;
-	XMStoreFloat4x4A( &projMatrixStore, projMatrix );
-
-#if 0
-	glm::mat4 projection = glm::perspective( DEG2RAD( r_newrefdef.fov_y ), (float)vid.width / (float)vid.height, 4.0f, 4096.0f );
-	glm::mat4 model( 1.0f );
-
-	glm::vec3 origin;
-	origin.x = e->origin[0];
-	origin.y = e->origin[1];
-	origin.z = e->origin[2];
-	glm::vec3 angles;
-	angles.x = e->angles[0];
-	angles.y = e->angles[1];
-	angles.z = e->angles[2];
-
-	model = glm::translate( model, origin );
-#endif
-
-//	model = glm::rotate( model, e->angles[0], { 1.0f, 0.0f, 0.0f } );
-//	model = glm::rotate( model, e->angles[1], { 0.0f, 0.0f, 1.0f } );
-//	model = glm::rotate( model, e->angles[2], { 0.0f, 1.0f, 0.0f } );
 
 	// Ambient colour
 

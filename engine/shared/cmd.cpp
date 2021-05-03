@@ -15,7 +15,7 @@ struct cmdalias_t
 	char		*value;
 };
 
-cmdalias_t	*cmd_alias;
+static cmdalias_t *cmd_alias;
 
 static bool cmd_wait;
 
@@ -60,9 +60,19 @@ byte		defer_text_buf[8192];
 Cbuf_Init
 ============
 */
-void Cbuf_Init (void)
+void Cbuf_Init()
 {
-	SZ_Init (&cmd_text, cmd_text_buf, sizeof(cmd_text_buf));
+	SZ_Init( &cmd_text, cmd_text_buf, sizeof( cmd_text_buf ) );
+}
+
+/*
+============
+Cbuf_Shutdown
+============
+*/
+void Cbuf_Shutdown()
+{
+	SZ_Init( &cmd_text, cmd_text_buf, sizeof( cmd_text_buf ) );
 }
 
 /*
@@ -109,8 +119,6 @@ void Cbuf_InsertText (const char *text)
 		memcpy (temp, cmd_text.data, templen);
 		SZ_Clear (&cmd_text);
 	}
-	else
-		temp = NULL;	// shut up compiler
 		
 // add the entire text of the file
 	Cbuf_AddText (text);
@@ -145,30 +153,6 @@ void Cbuf_InsertFromDefer (void)
 {
 	Cbuf_InsertText ((char*)defer_text_buf);
 	defer_text_buf[0] = 0;
-}
-
-
-/*
-============
-Cbuf_ExecuteText
-============
-*/
-void Cbuf_ExecuteText (int exec_when, char *text)
-{
-	switch (exec_when)
-	{
-	case EXEC_NOW:
-		Cmd_ExecuteString (text);
-		break;
-	case EXEC_INSERT:
-		Cbuf_InsertText (text);
-		break;
-	case EXEC_APPEND:
-		Cbuf_AddText (text);
-		break;
-	default:
-		Com_FatalErrorf("Cbuf_ExecuteText: bad exec_when");
-	}
 }
 
 /*
@@ -710,7 +694,7 @@ void	Cmd_AddCommand (const char *cmd_name, xcommand_t function)
 		}
 	}
 
-	cmd = (cmd_function_t*)Z_Calloc (sizeof(cmd_function_t)); // Assume we want calloc for this
+	cmd = (cmd_function_t*)Mem_Alloc (sizeof(cmd_function_t));
 	cmd->name = cmd_name;
 	cmd->function = function;
 	cmd->next = cmd_functions;
@@ -892,3 +876,42 @@ void Cmd_Init (void)
 	Cmd_AddCommand ("wait", Cmd_Wait_f);
 }
 
+/*
+============
+Cmd_Shutdown
+============
+*/
+void Cmd_Shutdown()
+{
+	cmd_function_t *cmd = cmd_functions;
+	cmd_function_t *lastCmd = nullptr;
+
+	for ( ; cmd; cmd = cmd->next )
+	{
+		if ( lastCmd ) {
+			Z_Free( lastCmd );
+		}
+
+		lastCmd = cmd;
+	}
+	Z_Free( lastCmd );
+
+	cmdalias_t *alias = cmd_alias;
+	cmdalias_t *lastAlias = nullptr;
+
+	for ( ; alias; alias = alias->next )
+	{
+		if ( lastAlias ) {
+			Z_Free( lastAlias );
+		}
+
+		lastAlias = alias;
+
+		Z_Free( alias->value );
+	}
+	Z_Free( lastAlias );
+
+	for ( int i = 0; i < cmd_argc; ++i ) {
+		Z_Free( cmd_argv[i] );
+	}
+}

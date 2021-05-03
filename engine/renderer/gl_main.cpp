@@ -229,42 +229,75 @@ void R_DrawBeam( entity_t *e )
 
 /*
 ========================
+R_DrawThingy
+
+Draws the thingy
+========================
+*/
+static void R_DrawThingy( const vec3_t origin, const vec3_t angles, uint32 color )
+{
+	using namespace DirectX;
+
+	XMMATRIX modelMatrix = XMMatrixMultiply(
+		XMMatrixRotationRollPitchYaw( DEG2RAD( angles[PITCH] ), DEG2RAD( angles[ROLL] ), DEG2RAD( angles[YAW] ) ),
+		//XMMatrixRotationRollPitchYaw( 0.0f, 0.0f, 0.0f ),
+		XMMatrixTranslation( origin[0], origin[1], origin[2] )
+	);
+
+	XMFLOAT4X4 modelMatrixStore;
+	XMStoreFloat4x4( &modelMatrixStore, modelMatrix );
+
+	float view[16];
+	float proj[16];
+
+	glGetFloatv( GL_MODELVIEW_MATRIX, view );
+	glGetFloatv( GL_PROJECTION_MATRIX, proj );
+
+	glUseProgram( glProgs.debugMeshProg );
+
+	glUniformMatrix4fv( 1, 1, GL_FALSE, (const GLfloat *)&modelMatrixStore );
+	glUniformMatrix4fv( 2, 1, GL_FALSE, (const GLfloat *)&view );
+	glUniformMatrix4fv( 3, 1, GL_FALSE, (const GLfloat *)&proj );
+
+	glBindVertexArray( tr.debugMeshVAO );
+	glBindBuffer( GL_ARRAY_BUFFER, tr.debugMeshVBO );
+
+	//const uint32 color = colors::white;
+
+	//glUniform4uiv( 4, 1, GL_TRUE, &color );
+
+	glDrawArrays( GL_TRIANGLE_FAN, 0, 11 );
+
+	glUseProgram( 0 );
+}
+
+/*
+========================
 R_DrawNullModel
 
 Draws a little thingy in place of a model, cool!
 ========================
 */
-static void R_DrawNullModel()
+static void R_DrawNullModel( entity_t *e )
 {
-	vec3_t shadelight;
-	int i;
+	R_DrawThingy( e->origin, e->angles, colors::white );
+}
 
-	if ( currententity->flags & RF_FULLBRIGHT )
-		shadelight[0] = shadelight[1] = shadelight[2] = 1.0f;
-	else
-		R_LightPoint( currententity->origin, shadelight );
+/*
+========================
+R_DrawLight
 
-	glPushMatrix();
-	R_RotateForEntity( currententity );
+Draws all lights in the staticlights structure
+========================
+*/
+static void R_DrawLights()
+{
+	for ( int i = 0; i < mod_numStaticLights; ++i )
+	{
+		staticLight_t &light = mod_staticLights[i];
 
-	glDisable( GL_TEXTURE_2D );
-	glColor3fv( shadelight );
-
-	glBegin( GL_TRIANGLE_FAN );
-	glVertex3f( 0, 0, -16 );
-	for ( i=0; i<=4; i++ )
-		glVertex3f (16*cosf(i*M_PI_F/2), 16*sinf(i*M_PI_F/2), 0);
-	glEnd();
-
-	glBegin( GL_TRIANGLE_FAN );
-	glVertex3f( 0, 0, 16 );
-	for ( i=4; i>=0; i-- )
-		glVertex3f( 16*cosf(i*M_PI_F/2), 16*sinf(i*M_PI_F/2), 0 );
-	glEnd();
-
-	glColor3f( 1,1,1 );
-	glPopMatrix();
-	glEnable( GL_TEXTURE_2D );
+		R_DrawThingy( light.origin, vec3_origin, colors::white );
+	}
 }
 
 /*
@@ -274,104 +307,83 @@ R_DrawEntitiesOnList
 This actually performs rendering
 ========================
 */
-static void R_DrawEntitiesOnList()
+static void R_DrawEntity( entity_t *e )
 {
-	int i;
+	currententity = e;
 
-	if ( !r_drawentities->value )
+	if ( e->flags & RF_BEAM )
+	{
+		R_DrawBeam( e );
+	}
+	else
+	{
+		currentmodel = e->model;
+
+		if ( !e->model )
+		{
+			R_DrawNullModel( e );
+			return;
+		}
+		switch ( e->model->type )
+		{
+		case mod_smf:
+			R_DrawStaticMeshFile( e );
+			break;
+		case mod_alias:
+			R_DrawAliasModel( e );
+			break;
+		case mod_studio:
+			R_DrawStudioModel( e );
+			break;
+		case mod_brush:
+			R_DrawBrushModel( e );
+			break;
+		case mod_sprite:
+			R_DrawSpriteModel( e );
+			break;
+		default:
+			Com_Error( "Bad modeltype" );
+		}
+	}
+}
+
+/*
+========================
+R_DrawEntities
+========================
+*/
+static void R_DrawEntities()
+{
+	if ( !r_drawentities->GetBool() ) {
 		return;
+	}
 
 	// draw non-transparent first
-	for ( i = 0; i < r_newrefdef.num_entities; i++ )
+
+	for ( int i = 0; i < r_newrefdef.num_entities; ++i )
 	{
-		currententity = &r_newrefdef.entities[i];
-		if ( currententity->flags & RF_TRANSLUCENT )
-			continue;	// solid
-
-		if ( currententity->flags & RF_BEAM )
-		{
-			R_DrawBeam( currententity );
+		if ( r_newrefdef.entities[i].flags & RF_TRANSLUCENT ) {
+			continue;
 		}
-		else
-		{
-			currentmodel = currententity->model;
 
-			if ( !currentmodel )
-			{
-				R_DrawNullModel();
-				continue;
-			}
-			switch ( currentmodel->type )
-			{
-			case mod_smf:
-				R_DrawStaticMeshFile( currententity );
-				break;
-			case mod_alias:
-				R_DrawAliasModel( currententity );
-				break;
-			case mod_studio:
-				R_DrawStudioModel( currententity );
-				break;
-			case mod_brush:
-				R_DrawBrushModel( currententity );
-				break;
-			case mod_sprite:
-				R_DrawSpriteModel( currententity );
-				break;
-			default:
-				Com_Error("Bad modeltype" );
-				break;
-			}
-		}
+		R_DrawEntity( r_newrefdef.entities + i );
 	}
 
 	// draw transparent entities
 	// we could sort these if it ever becomes a problem...
-	glDepthMask( 0 );		// no z writes
-	for ( i = 0; i < r_newrefdef.num_entities; i++ )
+
+	glDepthMask( GL_FALSE );	// no z writes
+
+	for ( int i = 0; i < r_newrefdef.num_entities; ++i )
 	{
-		currententity = &r_newrefdef.entities[i];
-		if ( !( currententity->flags & RF_TRANSLUCENT ) )
-			continue;	// solid
-
-		if ( currententity->flags & RF_BEAM )
-		{
-			R_DrawBeam( currententity );
+		if ( !( r_newrefdef.entities[i].flags & RF_TRANSLUCENT ) ) {
+			continue;
 		}
-		else
-		{
-			currentmodel = currententity->model;
 
-			if ( !currentmodel )
-			{
-				R_DrawNullModel();
-				continue;
-			}
-			switch ( currentmodel->type )
-			{
-			case mod_smf:
-				R_DrawStaticMeshFile( currententity );
-				break;
-			case mod_alias:
-				R_DrawAliasModel( currententity );
-				break;
-			case mod_studio:
-				R_DrawStudioModel( currententity );
-				break;
-			case mod_brush:
-				R_DrawBrushModel( currententity );
-				break;
-			case mod_sprite:
-				R_DrawSpriteModel( currententity );
-				break;
-			default:
-				Com_Error("Bad modeltype" );
-				break;
-			}
-		}
+		R_DrawEntity( r_newrefdef.entities + i );
 	}
-	glDepthMask( 1 );		// back to writing
 
+	glDepthMask( GL_TRUE );		// back to writing
 }
 
 /*
@@ -744,7 +756,10 @@ static void R_RenderView( refdef_t *fd )
 	R_DrawWorld();
 
 	// entities
-	R_DrawEntitiesOnList();
+	R_DrawEntities();
+
+	// lights
+	R_DrawLights();
 
 	// particles!
 	R_DrawParticles();

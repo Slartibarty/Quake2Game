@@ -10,28 +10,12 @@
 ===================================================================================================
 */
 
-#if 0
-
-class idScreenShotThread : public idSysThread
-{
-public:
-	int Run() override
-	{
-		return 0;
-	}
-
-};
-
-idScreenShotThread rScreenshotThread;
-
-#endif
-
 /*
 ========================
-GL_ScreenShot_Internal
+GL_Screenshot_Internal
 ========================
 */
-static void GL_ScreenShot_Internal( bool png )
+static void GL_Screenshot_Internal( bool png )
 {
 	size_t i;
 	char checkname[MAX_OSPATH];
@@ -110,14 +94,14 @@ static void GL_ScreenShot_Internal( bool png )
 	Com_Printf( "Wrote %s\n", picname );
 }
 
-void GL_ScreenShot_PNG_f()
+void GL_Screenshot_PNG_f()
 {
-	GL_ScreenShot_Internal( true );
+	GL_Screenshot_Internal( true );
 }
 
-void GL_ScreenShot_TGA_f()
+void GL_Screenshot_TGA_f()
 {
-	GL_ScreenShot_Internal( false );
+	GL_Screenshot_Internal( false );
 }
 
 /*

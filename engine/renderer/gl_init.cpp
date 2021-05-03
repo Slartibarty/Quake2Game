@@ -1,6 +1,10 @@
 
 #include "gl_local.h"
 
+#ifdef Q_DEBUG
+//#define Q_DEBUG_GL
+#endif
+
 glState_t				glState;
 glConfig_t				glConfig;
 renderSystemGlobals_t	tr;
@@ -9,6 +13,7 @@ vidDef_t				vid;
 cvar_t *r_norefresh;
 cvar_t *r_drawentities;
 cvar_t *r_drawworld;
+cvar_t *r_drawlights;
 cvar_t *r_speeds;
 cvar_t *r_fullbright;
 cvar_t *r_novis;
@@ -44,7 +49,7 @@ cvar_t *r_lockpvs;
 cvar_t *r_fullscreen;
 cvar_t *r_gamma;
 
-#ifdef Q_DEBUG
+#ifdef Q_DEBUG_GL
 
 static void GLAPIENTRY GL_DebugProc( GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam )
 {
@@ -155,7 +160,7 @@ void GL_SetDefaultState()
 
 	glEnable( GL_PROGRAM_POINT_SIZE );
 
-#ifdef Q_DEBUG
+#ifdef Q_DEBUG_GL
 
 	glEnable( GL_DEBUG_OUTPUT );
 	glEnable( GL_DEBUG_OUTPUT_SYNCHRONOUS );
@@ -222,6 +227,7 @@ static void R_InitCVars()
 	r_fullbright = Cvar_Get( "r_fullbright", "0", 0 );
 	r_drawentities = Cvar_Get( "r_drawentities", "1", 0 );
 	r_drawworld = Cvar_Get( "r_drawworld", "1", 0 );
+	r_drawlights = Cvar_Get( "r_drawlights", "0", 0 );
 	r_novis = Cvar_Get( "r_novis", "0", 0 );
 	r_nocull = Cvar_Get( "r_nocull", "0", 0 );
 	r_lerpmodels = Cvar_Get( "r_lerpmodels", "1", 0 );
@@ -265,12 +271,56 @@ static void R_InitCommands()
 {
 	Cmd_AddCommand( "imagelist", GL_ImageList_f );
 	Cmd_AddCommand( "materiallist", GL_MaterialList_f );
-	Cmd_AddCommand( "screenshot", GL_ScreenShot_PNG_f );
-	Cmd_AddCommand( "screenshot_tga", GL_ScreenShot_TGA_f );
+	Cmd_AddCommand( "screenshot", GL_Screenshot_PNG_f );
+	Cmd_AddCommand( "screenshot_tga", GL_Screenshot_TGA_f );
 	Cmd_AddCommand( "modellist", Mod_Modellist_f );
 
 	Cmd_AddCommand( "extractwad", R_ExtractWad_f );
 	Cmd_AddCommand( "upgradewals", R_UpgradeWals_f );
+}
+
+/*
+========================
+R_Init
+========================
+*/
+static void R_CreateDebugMesh()
+{
+	glGenVertexArrays( 1, &tr.debugMeshVAO );
+	glGenBuffers( 1, &tr.debugMeshVBO );
+
+	glBindVertexArray( tr.debugMeshVAO );
+	glBindBuffer( GL_ARRAY_BUFFER, tr.debugMeshVBO );
+
+	glEnableVertexAttribArray( 0 );
+
+	glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, sizeof( float[3] ), (void *)( 0 ) );
+
+	int i = 0, j = 1;
+	vec3 vertices[11];
+
+	vertices[0].Set( 0.0f, 0.0f, -16.0f );
+	for ( ; i <= 4; ++i, ++j ) {
+		vertices[j].Set( 16.0f*cos(i*M_PI_F/2.0f), 16.0f*sin(i*M_PI_F/2.0f), 0.0f );
+	}
+
+	vertices[j].Set( 0.0f, 0.0f, 16.0f );
+	for ( i = 4; i >= 0; --i, ++j ) {
+		vertices[j].Set( 16.0f*cos(i*M_PI_F/2.0f), 16.0f*sin(i*M_PI_F/2.0f), 0.0f );
+	}
+
+	glBufferData( GL_ARRAY_BUFFER, sizeof( vertices ), vertices, GL_STATIC_DRAW );
+}
+
+/*
+========================
+R_DestroyDebugMesh
+========================
+*/
+static void R_DestroyDebugMesh()
+{
+	glDeleteBuffers( 1, &tr.debugMeshVBO );
+	glDeleteVertexArrays( 1, &tr.debugMeshVAO );
 }
 
 /*
@@ -316,6 +366,8 @@ bool R_Init()
 
 	tr.registrationSequence = 1;
 
+	R_CreateDebugMesh();
+
 	GL_InitImages();
 	//GLimp_SetGamma( g_gammatable, g_gammatable, g_gammatable );
 
@@ -343,6 +395,8 @@ void R_Shutdown()
 
 	//GLimp_RestoreGamma();
 	GL_ShutdownImages();
+
+	R_DestroyDebugMesh();
 
 	Shaders_Shutdown();
 

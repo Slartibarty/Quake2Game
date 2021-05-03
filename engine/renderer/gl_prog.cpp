@@ -21,6 +21,9 @@ struct glShaders_t
 	GLuint smfMeshVert;
 	GLuint smfMeshFrag;
 
+	GLuint debugMeshVert;
+	GLuint debugMeshFrag;
+
 };
 
 static glShaders_t glShaders;
@@ -102,6 +105,9 @@ static void BuildAllShaders()
 	glShaders.smfMeshVert = MakeShader( "shaders/smfmesh.vert", GL_VERTEX_SHADER );
 	glShaders.smfMeshFrag = MakeShader( "shaders/smfmesh.frag", GL_FRAGMENT_SHADER );
 
+	glShaders.debugMeshVert = MakeShader( "shaders/debugmesh.vert", GL_VERTEX_SHADER );
+	glShaders.debugMeshFrag = MakeShader( "shaders/debugmesh.frag", GL_FRAGMENT_SHADER );
+
 	// create all our programs
 	glProgs.guiProg = glCreateProgram();
 	glAttachShader( glProgs.guiProg, glShaders.guiVert );
@@ -117,6 +123,11 @@ static void BuildAllShaders()
 	glAttachShader( glProgs.smfMeshProg, glShaders.smfMeshVert );
 	glAttachShader( glProgs.smfMeshProg, glShaders.smfMeshFrag );
 	glLinkProgram( glProgs.smfMeshProg );
+
+	glProgs.debugMeshProg = glCreateProgram();
+	glAttachShader( glProgs.debugMeshProg, glShaders.debugMeshVert );
+	glAttachShader( glProgs.debugMeshProg, glShaders.debugMeshFrag );
+	glLinkProgram( glProgs.debugMeshProg );
 }
 
 /*
@@ -153,9 +164,13 @@ void Shaders_Shutdown()
 
 	// values of 0 are silently ignored for glDeleteShader and glDeleteProgram
 
+	glDeleteProgram( glProgs.debugMeshProg );
 	glDeleteProgram( glProgs.smfMeshProg );
 	glDeleteProgram( glProgs.particleProg );
 	glDeleteProgram( glProgs.guiProg );
+
+	glDeleteShader( glShaders.debugMeshVert );
+	glDeleteShader( glShaders.debugMeshFrag );
 
 	glDeleteShader( glShaders.smfMeshVert );
 	glDeleteShader( glShaders.smfMeshFrag );

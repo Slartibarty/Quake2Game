@@ -51,8 +51,9 @@ void Sys_Error( const char *msg )
 [[noreturn]]
 void Sys_Quit( int code )
 {
-	if ( dedicated && dedicated->value )
-		FreeConsole();
+	// SLARTHACK: FIXME!!!!
+//	if ( dedicated && dedicated->value )
+//		FreeConsole();
 
 	// shut down QHOST hooks if necessary
 	DeinitConProc();
@@ -276,13 +277,34 @@ char *Sys_GetClipboardData( void )
 
 struct vidMode_t
 {
-	/*char	description[32];*/
-	int		width, height, mode;
+	int width, height;
 };
 
 static constexpr size_t DefaultNumModes = 64;
 
 std::vector<vidMode_t> s_vidModes;
+
+static int SortModes( const void *p1, const void *p2 )
+{
+	const vidMode_t *m1 = reinterpret_cast<const vidMode_t *>( p1 );
+	const vidMode_t *m2 = reinterpret_cast<const vidMode_t *>( p2 );
+
+	if ( m1->width > m2->width ) {
+		return 1;
+	}
+	if ( m1->width < m2->width ) {
+		return -1;
+	}
+
+	if ( m1->width == m2->width && m1->height > m2->height ) {
+		return 1;
+	}
+	if ( m1->width == m2->width && m1->height < m2->height ) {
+		return -1;
+	}
+
+	return 0;
+}
 
 static void Sys_InitVidModes()
 {
@@ -293,7 +315,6 @@ static void Sys_InitVidModes()
 	DWORD lastWidth = 0, lastHeight = 0;
 
 	int internalNum = 0;				// for EnumDisplaySettings
-	int numModes = 0;					// same as s_num_modes
 
 	s_vidModes.reserve( DefaultNumModes );
 
@@ -310,26 +331,13 @@ static void Sys_InitVidModes()
 
 		vidMode_t &mode = s_vidModes.emplace_back();
 
-		/*Q_sprintf_s( mode.description, "Mode %d:\t%dx%d", numModes, dm.dmPelsWidth, dm.dmPelsHeight );*/
 		mode.width = static_cast<int>( dm.dmPelsWidth );
 		mode.height = static_cast<int>( dm.dmPelsHeight );
-		mode.mode = numModes;
 
 		++internalNum;
-		++numModes;
 	}
 
-#if 0
-	qsort( s_vidModes.data(), s_vidModes.size(), sizeof( vidmode_t ), []( const void *p1, const void *p2 )
-		{
-			const vidmode_t *m1 = reinterpret_cast<const vidmode_t *>( p1 );
-			const vidmode_t *m2 = reinterpret_cast<const vidmode_t *>( p2 );
-
-			if ( m1-> )
-
-			return 1;
-		} );
-#endif
+	qsort( s_vidModes.data(), s_vidModes.size(), sizeof( vidMode_t ), SortModes );
 }
 
 // never called anywhere right now
@@ -486,7 +494,7 @@ int main( int argc, char **argv )
 	// rather than printing to stderr
 	_set_app_type( _crt_gui_app );
 
-#if _DEBUG
+#ifdef Q_MEM_DEBUG
 	int dbgFlags = _CrtSetDbgFlag( _CRTDBG_REPORT_FLAG );
 	dbgFlags |= _CRTDBG_LEAK_CHECK_DF;
 	_CrtSetDbgFlag( dbgFlags );

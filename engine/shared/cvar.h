@@ -64,6 +64,7 @@ void 		Cvar_WriteVariables( const char *path );
 // with the archive flag set to true.
 
 void		Cvar_Init();
+void		Cvar_Shutdown();
 
 char		*Cvar_Userinfo();
 // returns an info string containing all the CVAR_USERINFO cvars

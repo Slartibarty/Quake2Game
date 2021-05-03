@@ -407,15 +407,19 @@ Renders all our collected draw calls
 */
 void Draw_RenderBatches()
 {
+	using namespace DirectX;
+
 	// render all gui draw calls
 
-	if ( s_drawMeshBuilder.HasData() ) {
+	if ( s_drawMeshBuilder.HasData() )
+	{
 
 		// profiling code
 	//	double begin = Time_FloatMilliseconds();
 
 		// set up the render state
-		DirectX::XMMATRIX orthoMatrix = DirectX::XMMatrixOrthographicOffCenterRH( 0.0f, vid.width, vid.height, 0.0f, -1.0f, 1.0f );
+		DirectX::XMFLOAT4X4A orthoMatrix;
+		DirectX::XMStoreFloat4x4A( &orthoMatrix, XMMatrixOrthographicOffCenterRH( 0.0f, vid.width, vid.height, 0.0f, -1.0f, 1.0f ) );
 
 		glUseProgram( glProgs.guiProg );
 		glUniformMatrix4fv( 3, 1, GL_FALSE, (float *)&orthoMatrix );

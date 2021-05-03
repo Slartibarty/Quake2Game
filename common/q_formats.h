@@ -494,6 +494,7 @@ namespace fmtSMF
 		float x, y, z;
 		float s, t;
 		float n1, n2, n3;
+		float t1, t2, t3;
 	};
 
 	using index_t = uint16;

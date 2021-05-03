@@ -36,7 +36,7 @@ static void Sys_SetThreadName( HANDLE thread, const char *name )
 Sys_SetCurrentThreadName
 ========================
 */
-static void Sys_SetCurrentThreadName( const char *name )
+void Sys_SetCurrentThreadName( const char *name )
 {
 	Sys_SetThreadName( GetCurrentThread(), name );
 }
@@ -70,7 +70,6 @@ threadHandle_t Sys_CreateThread( xthread_t function, void *parms, xthreadPriorit
 	HANDLE handle = CreateThread( nullptr, stackSize, (LPTHREAD_START_ROUTINE)function, parms, flags, &threadId );
 	if ( handle == 0 ) {
 		Com_FatalErrorf( "Sys_CreateThread error: %u", GetLastError() );
-		return 0;
 	}
 
 	Sys_SetThreadName( handle, name );

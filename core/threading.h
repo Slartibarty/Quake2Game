@@ -25,7 +25,7 @@
 
 #include "sys_types.h"
 
-constexpr int MAX_THREAD_NAME = 32;
+inline constexpr int MAX_THREAD_NAME = 32;
 
 /*
 ===================================================================================================
@@ -55,7 +55,7 @@ using interlockedInt_t			= LONG;
 using threadHandle_t			= uintptr_t;
 using threadID_t				= uintptr_t;
 
-constexpr uint WAIT_INFINITE = -1;
+inline constexpr uint WAIT_INFINITE = UINT_MAX;
 
 enum core_t {
 	CORE_ANY = -1,
@@ -67,7 +67,7 @@ enum core_t {
 	CORE_2B
 };
 
-typedef uint ( *xthread_t )( void * );
+typedef uint32 ( *xthread_t )( void * );
 
 enum xthreadPriority {
 	THREAD_LOWEST,
@@ -77,14 +77,14 @@ enum xthreadPriority {
 	THREAD_HIGHEST
 };
 
-constexpr size_t	DEFAULT_THREAD_STACK_SIZE		= ( 256 * 1024 );
+inline constexpr size_t DEFAULT_THREAD_STACK_SIZE = ( 256 * 1024 );
 
 // on win32, the threadID is NOT the same as the threadHandle
 threadID_t			Sys_GetCurrentThreadID();
 
 // returns a threadHandle
 threadHandle_t		Sys_CreateThread( xthread_t function, void *parms, xthreadPriority priority,
-									  const char *name, core_t core, size_t stackSize = DEFAULT_THREAD_STACK_SIZE, 
+									  const char *name, core_t core, size_t stackSize = DEFAULT_THREAD_STACK_SIZE,
 									  bool suspended = false );
 
 void				Sys_WaitForThread( threadHandle_t threadHandle );
@@ -185,8 +185,8 @@ public:
 private:
 	signalHandle_t		handle;
 
-						idSysSignal( const idSysSignal & s ) {}
-	void				operator=( const idSysSignal & s ) {}
+						idSysSignal( const idSysSignal & s ) = delete;
+	void				operator=( const idSysSignal & s ) = delete;
 };
 
 /*

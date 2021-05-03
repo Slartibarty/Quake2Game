@@ -99,7 +99,6 @@ static void SV_CheckForSavegame (void)
 {
 	char		name[MAX_OSPATH];
 	FILE		*f;
-	int			i;
 
 	if (sv_noreload->value)
 		return;
@@ -119,6 +118,7 @@ static void SV_CheckForSavegame (void)
 	// get configstrings and areaportals
 	SV_ReadLevelFile ();
 
+#if 0
 	if (!sv.loadgame)
 	{	// coming back to a level after being in a different
 		// level, so run it for ten seconds
@@ -135,6 +135,7 @@ static void SV_CheckForSavegame (void)
 
 		sv.state = previousState;				// PGM
 	}
+#endif
 }
 
 

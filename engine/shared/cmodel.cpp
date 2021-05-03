@@ -1739,6 +1739,12 @@ void	FloodAreaConnections (void)
 	carea_t	*area;
 	int		floodnum;
 
+	// nothing to do if we have no areaportals
+	if ( cm.areaportals.Count() == 0 )
+	{
+		return;
+	}
+
 	// all current floods are now invalid
 	cm.floodvalid++;
 	floodnum = 0;

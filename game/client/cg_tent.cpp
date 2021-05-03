@@ -141,7 +141,7 @@ void CL_RegisterTEntSounds()
 	cl_sfx_spark7 = cgi.RegisterSound( "world/spark7.wav" );
 	cl_sfx_railg = cgi.RegisterSound( "weapons/railgf1a.wav" );
 	cl_sfx_rockexp = cgi.RegisterSound( "weapons/rocklx1a.wav" );
-	cl_sfx_grenexp = cgi.RegisterSound( "weapons/grenlx1a.wav" );
+	cl_sfx_grenexp = cgi.RegisterSound( "weapons/small_explosion1.ogg" );
 	cl_sfx_watrexp = cgi.RegisterSound( "weapons/xpld_wat.wav" );
 	// RAFAEL
 	// cl_sfx_plasexp = cgi.RegisterSound ("weapons/plasexpl.wav");

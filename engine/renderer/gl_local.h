@@ -43,8 +43,8 @@ static_assert( DIRECTX_MATH_VERSION >= 316 );
 
 // Screenshots
 
-void GL_ScreenShot_PNG_f();
-void GL_ScreenShot_TGA_f();
+void GL_Screenshot_PNG_f();
+void GL_Screenshot_TGA_f();
 
 // Console commands
 
@@ -95,6 +95,9 @@ struct glState_t
 struct renderSystemGlobals_t
 {
 	int registrationSequence;
+
+	GLuint debugMeshVAO;
+	GLuint debugMeshVBO;
 };
 
 extern glState_t				glState;
@@ -114,6 +117,7 @@ extern	double	gldepthmin, gldepthmax;
 extern cvar_t *r_norefresh;
 extern cvar_t *r_drawentities;
 extern cvar_t *r_drawworld;
+extern cvar_t *r_drawlights;
 extern cvar_t *r_speeds;
 extern cvar_t *r_fullbright;
 extern cvar_t *r_novis;
@@ -411,6 +415,7 @@ struct glProgs_t
 	GLuint guiProg;
 	GLuint particleProg;
 	GLuint smfMeshProg;
+	GLuint debugMeshProg;
 };
 
 extern glProgs_t glProgs;

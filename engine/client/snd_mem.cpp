@@ -195,7 +195,7 @@ sfxcache_t *S_LoadSound (sfx_t *s)
 	else
 	{
 		FS_FreeFile( data );
-		Com_DPrintf( "%s is neither WAV or OGG data\n", namebuffer );
+		Com_Printf( "%s is neither WAV or OGG data\n", namebuffer );
 		return nullptr;
 	}
 
@@ -382,7 +382,7 @@ Returns true if a buffer is a wave buffer
 */
 bool IsWav( byte *wav )
 {
-	return *( (uint *)wav ) == MakeFourCC( 'R', 'I', 'F', 'F' );
+	return *( (int32 *)wav ) == MakeFourCC( 'R', 'I', 'F', 'F' );
 }
 
 /*
@@ -394,5 +394,5 @@ Returns true if a buffer is an OGG buffer
 */
 bool IsOgg( byte *ogg )
 {
-	return *( (uint *)ogg ) == MakeFourCC( 'O', 'G', 'G', 'S' );
+	return *( (int32 *)ogg ) == MakeFourCC( 'O', 'g', 'g', 'S' );
 }

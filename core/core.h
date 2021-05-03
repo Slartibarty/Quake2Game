@@ -14,7 +14,12 @@
 
 #pragma once
 
-// TODO: thin these out?
+// mem debugging, must be above the CRT headers
+#if defined Q_DEBUG && defined _WIN32
+#define Q_MEM_DEBUG
+#define _CRTDBG_MAP_ALLOC
+#endif
+
 #include <cstddef>
 #include <cstdint>
 #include <climits>
@@ -30,6 +35,10 @@
 #include <concepts>
 #include <numbers>
 
+#ifdef Q_MEM_DEBUG
+#include <crtdbg.h>
+#endif
+
 #ifndef _WIN32
 // Include our bogus sal.h
 // special thanks to the Wine team!
@@ -41,7 +50,7 @@
 #include "utilities.h"
 #include "color.h"
 
-#include "math.h" // blahhh, nasty filename?
+#include "math.h"			// blahhh, nasty filename?
 #include "byteswap.h"
 #include "stringtools.h"
 

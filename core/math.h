@@ -56,8 +56,7 @@ struct cplane_t
 #define FLT_EPSILON	1.192092896e-07F
 #endif
 
-// these suck, the namespace name also sucks
-// Use std::numbers instead of these
+// these suck a little
 namespace mconst
 {
 	inline constexpr float e = std::numbers::e_v<float>;
@@ -76,9 +75,6 @@ namespace mconst
 
 	inline constexpr float deg2rad = pi / 180.0f;
 	inline constexpr float rad2deg = 180.0f / pi;
-
-	// destroy this later
-	inline constexpr float Pi = std::numbers::pi_v<float>;
 }
 
 namespace mconst::dbl
@@ -218,7 +214,7 @@ struct vec3
 	// I wonder how the compiler deals with this
 	// SlartTodo: GCC doesn't like this
 #ifdef _WIN32
-	friend bool operator==( const vec3 &, const vec3 & ) = default;
+	friend bool operator==( const vec3 &v1, const vec3 &v2 ) = default;
 #endif
 
 	void Set( float X, float Y, float Z )

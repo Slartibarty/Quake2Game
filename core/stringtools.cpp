@@ -102,7 +102,10 @@ int Q_strcasecmp( const char *s1, const char *s2 )
 		c2 = *( s2++ );
 		if ( c1 == c2 )
 		{
-			if ( !c1 ) return 0;
+			if ( !c1 )
+			{
+				return 0;
+			}
 		}
 		else
 		{

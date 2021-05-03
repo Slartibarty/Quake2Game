@@ -7,11 +7,11 @@
 #include <limits>
 
 /*
-===============================================================================
+===================================================================================================
 
 	A mesh builder specialised for building GUI mesh data
 
-===============================================================================
+===================================================================================================
 */
 
 struct guiVertex_t
@@ -151,3 +151,64 @@ private:
 };
 
 using qGUIMeshBuilder = qGUIMeshBuilder_Base< uint16 >;
+
+/*
+===================================================================================================
+
+	A mesh builder for drawing debug meshes
+
+===================================================================================================
+*/
+
+struct debugVertex_t
+{
+	float x, y, z;
+
+	void Position( float X, float Y, float Z )
+	{
+		x = X;
+		y = Y;
+		z = Z;
+	}
+};
+
+template< typename index_t >
+class qDebugMeshBuilder
+{
+public:
+	qDebugMeshBuilder()
+	{
+		m_vertices.reserve( 128 );
+	}
+
+	void AddVertex( guiRect_t &rect )
+	{
+
+	}
+
+	// clear stored data
+	void Reset()
+	{
+		m_vertices.clear();
+	}
+
+	float *GetVertexArray()
+	{
+		return (float *)m_vertices.data();
+	}
+
+	size_t GetVertexArraySize()
+	{
+		return m_vertices.size() * sizeof( debugVertex_t );
+	}
+
+	bool HasData()
+	{
+		return m_vertices.size() != 0;
+	}
+
+private:
+
+	std::vector<debugVertex_t> m_vertices;
+
+};
