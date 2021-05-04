@@ -7,7 +7,9 @@
 #include <csetjmp>
 
 extern void SCR_EndLoadingPlaque( void );
-extern void Key_Init( void ); // This should really be in common? It's not part of the client? Or is it? huh? what.
+// This should really be in common? It's not part of the client? Or is it? huh? what.
+extern void Key_Init();
+extern void Key_Shutdown();
 
 jmp_buf abortframe;		// an ERR_DROP occured, exit the entire frame
 
@@ -731,6 +733,8 @@ Engine_Shutdown
 */
 void Engine_Shutdown()
 {
+	FS_Shutdown();
+	Key_Shutdown();
 	Cvar_Shutdown();
 	Cmd_Shutdown();
 

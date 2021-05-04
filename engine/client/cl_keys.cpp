@@ -512,7 +512,6 @@ void Key_SetBinding (int keynum, const char *binding)
 	if (keybindings[keynum])
 	{
 		Mem_Free (keybindings[keynum]);
-		keybindings[keynum] = NULL;
 	}
 			
 // allocate memory for new binding
@@ -643,7 +642,7 @@ void Key_Bindlist_f (void)
 Key_Init
 ===================
 */
-void Key_Init (void)
+void Key_Init()
 {
 	int i;
 
@@ -731,6 +730,22 @@ void Key_Init (void)
 	Cmd_AddCommand ("unbind",Key_Unbind_f);
 	Cmd_AddCommand ("unbindall",Key_Unbindall_f);
 	Cmd_AddCommand ("bindlist",Key_Bindlist_f);
+}
+
+/*
+===================
+Key_Shutdown
+===================
+*/
+void Key_Shutdown()
+{
+	for ( int i = 0; i < 256; ++i )
+	{
+		// it's legal to call free with a nullptr, but whatever
+		if ( keybindings[i] ) {
+			Mem_Free( keybindings[i] );
+		}
+	}
 }
 
 /*

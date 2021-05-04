@@ -224,7 +224,8 @@ char **FS_ListFiles( const char *findname, int *numfiles, unsigned musthave, uns
 		{
 			list[nfiles] = Mem_CopyString( s );
 #ifdef _WIN32
-			_strlwr( list[nfiles] );
+			// slart: is this needed?
+			Q_strlwr( list[nfiles] );
 #endif
 			nfiles++;
 		}
@@ -327,6 +328,23 @@ void FS_Init()
 	fs_gamedirvar = Cvar_Get( "game", BASEDIRNAME, CVAR_LATCH | CVAR_SERVERINFO );
 	if ( Q_strcmp( fs_gamedirvar->string, BASEDIRNAME ) != 0 )
 		FS_SetGamedir( fs_gamedirvar->string, false );
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+void FS_Shutdown()
+{
+	searchpath_t *path = fs_searchpaths;
+	searchpath_t *lastPath = nullptr;
+
+	// clean up all search paths
+	for ( searchpath_t *path = fs_searchpaths; path; path = path->next )
+	{
+		if ( lastPath ) {
+			Mem_Free( path );
+		}
+	}
+	Mem_Free( path );
 }
 
 //

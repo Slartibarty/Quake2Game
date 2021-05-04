@@ -28,6 +28,8 @@ static constexpr size_t ALIGN( size_t size ) { return ( size + MemShift ) & ~Mem
 =================================================
 */
 
+#ifndef Q_MEM_DEBUG
+
 void *Mem_Alloc( size_t size )
 {
 	return malloc( size );
@@ -56,6 +58,8 @@ void Mem_Free( void *block )
 {
 	free( block );
 }
+
+#endif
 
 /*
 =================================================

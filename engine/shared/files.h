@@ -6,9 +6,8 @@
 
 #pragma once
 
-#include <cstdio>
-
 void		FS_Init();
+void		FS_Shutdown();
 
 // I/O
 

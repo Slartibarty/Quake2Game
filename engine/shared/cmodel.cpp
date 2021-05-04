@@ -1718,7 +1718,7 @@ void FloodArea_r (carea_t *area, int floodnum)
 
 	area->floodnum = floodnum;
 	area->floodvalid = cm.floodvalid;
-	p = &cm.areaportals.Data(area->firstareaportal);
+	p = &cm.areaportals.Data(area->firstareaportal-1);
 	for (i=0 ; i<area->numareaportals ; i++, p++)
 	{
 		if (cm.portalopen.Data(p->portalnum))
