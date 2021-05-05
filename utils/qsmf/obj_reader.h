@@ -9,16 +9,6 @@
 
 #include <vector>
 
-struct float2
-{
-	float x, y;
-};
-
-struct float3
-{
-	float x, y, z;
-};
-
 struct uint3
 {
 	uint16 x, y, z;
@@ -26,14 +16,15 @@ struct uint3
 
 struct vertex_t
 {
-	float3 vertex;
-	float2 texcoord;
-	float3 normal;
+	vec3 position;
+	vec2 texcoord;
+	vec3 normal;
+	vec3 tangent;
 };
 
 struct index_t
 {
-	uint16 ivertex, itexcoord, inormal;
+	uint16 iPosition, iTexcoord, iNormal;
 };
 
 struct index3_t
@@ -62,9 +53,9 @@ public:
 		Parse( buffer );
 	}
 
-	float3 *GetVertices()
+	float *GetVertices()
 	{
-		return (float3 *)m_vertices.data();
+		return (float *)m_vertices.data();
 	}
 
 	size_t GetNumVertices()

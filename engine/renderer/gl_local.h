@@ -153,6 +153,10 @@ extern cvar_t *r_lockpvs;
 extern cvar_t *r_fullscreen;
 extern cvar_t *r_gamma;
 
+extern cvar_t *r_specmaps;
+extern cvar_t *r_normmaps;
+extern cvar_t *r_emitmaps;
+
 /*
 ===============================================================================
 
@@ -194,6 +198,8 @@ void Particles_Shutdown();
 ===============================================================================
 */
 
+struct image_t;
+
 #define MAX_GLTEXTURES		2048
 #define MAX_GLMATERIALS		2048
 
@@ -202,10 +208,11 @@ extern int			numglmaterials;
 
 extern byte			g_gammatable[256];
 
-extern material_t	*mat_notexture;
-extern material_t	*mat_particletexture;
-extern material_t	*blackMaterial;
-extern material_t	*whiteMaterial;
+extern material_t *		mat_notexture;
+extern material_t *		mat_particletexture;
+extern material_t *		blackMaterial;
+extern material_t *		whiteMaterial;
+extern image_t *		flatNormalImage;
 
 extern unsigned		d_8to24table[256];
 
@@ -277,6 +284,7 @@ struct material_t
 	msurface_t *		texturechain;				// for sort-by-material world drawing
 	image_t *			image;						// the diffuse map
 	image_t *			specImage;					// the specular map (defaults to black)
+	image_t *			normImage;					// the normal map (defaults to funny blue)
 	image_t *			emitImage;					// the emission map (defaults to black)
 	material_t *		nextframe;					// the next frame
 	uint32				alpha;						// alpha transparency, in range 0 - 255
@@ -302,13 +310,19 @@ struct material_t
 	// Bind the spec image
 	void BindSpec() const {
 		assert( specImage->refcount > 0 );
-		GL_Bind( specImage->texnum );
+		GL_Bind( r_specmaps->GetBool() ? specImage->texnum : blackMaterial->image->texnum );
+	}
+
+	// Bind the norm image
+	void BindNorm() const {
+		assert( normImage->refcount > 0 );
+		GL_Bind( r_normmaps->GetBool() ? normImage->texnum : flatNormalImage->texnum );
 	}
 
 	// Bind the emission image
 	void BindEmit() const {
 		assert( emitImage->refcount > 0 );
-		GL_Bind( emitImage->texnum );
+		GL_Bind( r_emitmaps->GetBool() ? emitImage->texnum : whiteMaterial->image->texnum );
 	}
 
 	// Deference the referenced image and clear this struct
@@ -321,6 +335,10 @@ struct material_t
 		specImage->DecrementRefCount();
 		if ( specImage->refcount == 0 ) {
 			specImage->Delete();
+		}
+		normImage->DecrementRefCount();
+		if ( normImage->refcount == 0 ) {
+			normImage->Delete();
 		}
 		emitImage->DecrementRefCount();
 		if ( emitImage->refcount == 0 ) {

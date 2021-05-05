@@ -11,18 +11,21 @@
 #include "gl_local.h"
 #include "../shared/imageloaders.h"
 
+#if 0
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #define STBIR_MAX_CHANNELS 32
 #define STBIR_MALLOC(size,c) ((void)(c), Mem_Alloc(size))
 #define STBIR_FREE(ptr,c) ((void)(c), Mem_Free(ptr))
 #include "stb_image_resize.h"
+#endif
 
 //-------------------------------------------------------------------------------------------------
 
-material_t *mat_notexture; // use for bad textures
-material_t *mat_particletexture; // little dot for particles
-material_t *blackMaterial;
-material_t *whiteMaterial;
+material_t *	mat_notexture;			// use for bad textures
+material_t *	mat_particletexture;	// DEPRECATED: little dot for particles
+material_t *	blackMaterial;
+material_t *	whiteMaterial;
+image_t *		flatNormalImage;
 
 image_t		gltextures[MAX_GLTEXTURES];
 int			numgltextures;
@@ -131,9 +134,9 @@ static GLuint GL_Upload32( const byte *pData, int nWidth, int nHeight, imageflag
 	{
 		if ( GLEW_ARB_framebuffer_object )
 		{
-			// This sucks
 			glGenerateMipmap( GL_TEXTURE_2D );
 		}
+#if 0
 		else
 		{
 			// This sucks even more
@@ -155,6 +158,7 @@ static GLuint GL_Upload32( const byte *pData, int nWidth, int nHeight, imageflag
 
 			Mem_Free( pNewData );
 		}
+#endif
 
 		if ( flags & IF_NEAREST )
 		{
@@ -364,6 +368,9 @@ bool ParseMaterial( char *data, material_t *material )
 	char specTexture[MAX_TOKEN_CHARS];
 	specTexture[0] = '\0';
 
+	char normTexture[MAX_TOKEN_CHARS];
+	normTexture[0] = '\0';
+
 	char emitTexture[MAX_TOKEN_CHARS];
 	emitTexture[0] = '\0';
 
@@ -391,6 +398,12 @@ bool ParseMaterial( char *data, material_t *material )
 		{
 			COM_Parse2( &data, &token, sizeof( tokenhack ) );
 			Q_strcpy_s( specTexture, token );
+			continue;
+		}
+		if ( Q_strcmp( token, "$normtexture" ) == 0 )
+		{
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
+			Q_strcpy_s( normTexture, token );
 			continue;
 		}
 		if ( Q_strcmp( token, "$emittexture" ) == 0 )
@@ -483,6 +496,16 @@ bool ParseMaterial( char *data, material_t *material )
 		material->specImage->IncrementRefCount();
 	}
 
+	if ( normTexture[0] )
+	{
+		material->normImage = GL_FindImage( normTexture, flags );
+	}
+	else
+	{
+		material->normImage = flatNormalImage;
+		material->normImage->IncrementRefCount();
+	}
+
 	if ( emitTexture[0] )
 	{
 		material->emitImage = GL_FindImage( emitTexture, flags );
@@ -496,7 +519,7 @@ bool ParseMaterial( char *data, material_t *material )
 	return true;
 }
 
-static material_t *GL_CreateMaterialFromData( const char *name, image_t *image, image_t *specImage, image_t *emitImage )
+static material_t *GL_CreateMaterialFromData( const char *name, image_t *image, image_t *specImage, image_t *normImage, image_t *emitImage )
 {
 	int i;
 	material_t *material;
@@ -523,6 +546,8 @@ static material_t *GL_CreateMaterialFromData( const char *name, image_t *image, 
 	material->image = image;
 	specImage->IncrementRefCount();
 	material->specImage = specImage;
+	normImage->IncrementRefCount();
+	material->normImage = normImage;
 	emitImage->IncrementRefCount();
 	material->emitImage = emitImage;
 
@@ -575,6 +600,7 @@ static material_t *GL_CreateMaterial( const char *name )
 
 	material->image = nullptr;
 	material->specImage = nullptr;
+	material->normImage = nullptr;
 	material->emitImage = nullptr;
 
 	material->alpha = 0xFF;
@@ -771,10 +797,20 @@ static void R_CreateIntrinsicImages()
 	memset( data, 255, sizeof( data ) );
 	image_t *whiteImage = GL_CreateImage( "***whiteImage***", (byte *)data, DEFAULT_SIZE, DEFAULT_SIZE, IF_NOMIPS | IF_NEAREST );
 
+	// flat normal map for default bump mapping
+
+	for ( int i = 0; i < 4; ++i ) {
+		data[0][i][0] = 128;
+		data[0][i][1] = 128;
+		data[0][i][2] = 255;
+		data[0][i][3] = 255;
+	}
+	flatNormalImage = GL_CreateImage( "***flatNormalImage***", (byte *)data, DEFAULT_SIZE, DEFAULT_SIZE, IF_NOMIPS | IF_NEAREST );
+
 	// black and white materials
 
-	blackMaterial = GL_CreateMaterialFromData( "***blackMaterial***", blackImage, blackImage, blackImage );
-	whiteMaterial = GL_CreateMaterialFromData( "***whiteMaterial***", whiteImage, blackImage, blackImage );
+	blackMaterial = GL_CreateMaterialFromData( "***blackMaterial***", blackImage, blackImage, flatNormalImage, blackImage );
+	whiteMaterial = GL_CreateMaterialFromData( "***whiteMaterial***", whiteImage, blackImage, flatNormalImage, blackImage );
 
 	//
 	// default texture
@@ -814,7 +850,7 @@ static void R_CreateIntrinsicImages()
 		data[x][DEFAULT_SIZE-1][3] = 255;
 	}
 	image_t *defaultImage = GL_CreateImage("***defaultImage***", (byte *)data, DEFAULT_SIZE, DEFAULT_SIZE, IF_NONE);
-	mat_notexture = GL_CreateMaterialFromData( "***defaultMaterial***", defaultImage, whiteImage, blackImage );
+	mat_notexture = GL_CreateMaterialFromData( "***defaultMaterial***", defaultImage, whiteImage, flatNormalImage, blackImage );
 
 	// must be done after init of black and white materials...
 

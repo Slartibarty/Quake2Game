@@ -360,6 +360,92 @@ inline void Vec3Test()
 /*
 ===================================================================================================
 
+	2D Vector
+
+===================================================================================================
+*/
+
+struct vec2
+{
+	union
+	{
+		struct
+		{
+			float x, y;
+		};
+		float v[2];
+	};
+
+	vec2() = default;
+
+	vec2( const vec2 & ) = default;
+	vec2 &operator=( const vec2 & ) = default;
+
+	vec2( vec2 && ) = default;
+	vec2 &operator=( vec2 && ) = default;
+
+	constexpr vec2( float X, float Y ) noexcept : x( X ), y( Y ) {}
+
+	// I wonder how the compiler deals with this
+	// SlartTodo: GCC doesn't like this
+#ifdef _WIN32
+	friend bool operator==( const vec2 &v1, const vec2 &v2 ) = default;
+#endif
+
+	void Set( float X, float Y )
+	{
+		x = X; y = Y;
+	}
+
+	void SetFromLegacy( const float *pArray )
+	{
+		x = pArray[0]; y = pArray[1];
+	}
+
+	void Replicate( float f )
+	{
+		x = f; y = f;
+	}
+
+	void Zero()
+	{
+		x = 0.0f; y = 0.0f;
+	}
+
+	float Length() const
+	{
+		return sqrt( x * x + y * y );
+	}
+
+	float *Base()
+	{
+		return reinterpret_cast<float *>( this );
+	}
+
+	const float *Base() const
+	{
+		return reinterpret_cast<const float *>( this );
+	}
+};
+
+inline void Vec2Subtract( const vec2 &v1, const vec2 &v2, vec2 &out )
+{
+	out.x = v1.x - v2.x;
+	out.y = v1.y - v2.y;
+}
+
+inline bool Vec2Compare( const vec2 &v1, const vec2 &v2 )
+{
+#ifdef _WIN32
+	return v1 == v2;
+#else
+	return ( v1.x == v2.x && v1.y == v2.y );
+#endif
+}
+
+/*
+===================================================================================================
+
 	Old vector maths
 
 ===================================================================================================

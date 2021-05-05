@@ -73,6 +73,8 @@ static void PrintHelp()
 
 int main( int argc, char **argv )
 {
+	Com_Print( "---- QSMF - By Slartibarty ----\n" );
+
 	if ( argc < 3 )
 	{
 		// need at least input and output
@@ -80,6 +82,8 @@ int main( int argc, char **argv )
 		PrintHelp();
 		return EXIT_FAILURE;
 	}
+
+	Time_Init();
 
 	options_t options;
 
@@ -105,6 +109,20 @@ int main( int argc, char **argv )
 
 			Q_strcpy_s( options.materialName, argv[argIter] );
 			Str_FixSlashes( options.materialName );
+
+			char *ext = strrchr( options.materialName, '.' );
+			if ( !ext )
+			{
+				// append .mat
+				Com_Print( "Automatically appending \".mat\" to -material's argument\n" );
+				strcat( options.materialName, ".mat" );		// TODO: NEED SAFE STRCAT
+			}
+			if ( Q_stricmp( ext, ".mat" ) != 0 )
+			{
+				// we have an extension, but it's not .mat, replace with .mat
+				Com_Print( "Replacing \"%s\" with \".mat\" in the -material argument\n" );
+				strcpy( ext, ".mat" );
+			}
 
 			strlen_t matExtension = Q_strlen( options.materialName ) - 4;
 			if ( Q_stricmp( options.materialName + matExtension, ".mat" ) != 0 )
@@ -144,6 +162,8 @@ int main( int argc, char **argv )
 		.offsetIndices = (uint32)( sizeof( header ) + objReader.GetVerticesSize() ),
 		.materialName{} // filled below
 	};
+
+	Com_Printf( "Model stats: %u verts, %u faces\n", header.numVerts, header.numIndices / 3 );
 
 	Q_strcpy_s( header.materialName, options.materialName );
 

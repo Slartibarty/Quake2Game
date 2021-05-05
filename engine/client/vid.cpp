@@ -60,15 +60,18 @@ VID_LoadRefresh
 static bool VID_LoadRefresh()
 {
 	if ( s_rendererActive ) {
-		Com_FatalError( "Tried to initialise the renderer twice!\nTell Slarti if this should be an error or not!" );
+		Com_FatalError( "Tried to initialise the renderer twice!" );
 	}
 
-	if ( R_Init() == false )
+	if ( !R_Init() )
 	{
 		R_Shutdown();
 		return false;
 	}
 
+	// this should *really* be set prematurely so fatal errors kill the renderer
+	// but if I do that, MessageBoxA fails, do I have to wait until PeekMessage has recieved the
+	// WM_QUIT message to show a message box? Annoying.
 	s_rendererActive = true;
 
 	return true;
@@ -104,7 +107,7 @@ void VID_Shutdown()
 {
 	if ( s_rendererActive )
 	{
-		R_Shutdown();
 		s_rendererActive = false;
+		R_Shutdown();
 	}
 }

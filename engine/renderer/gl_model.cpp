@@ -1237,10 +1237,12 @@ void Mod_LoadSMFModel( model_t *pMod, void *pBuffer, [[maybe_unused]] int buffer
 	glEnableVertexAttribArray( 0 );
 	glEnableVertexAttribArray( 1 );
 	glEnableVertexAttribArray( 2 );
+	glEnableVertexAttribArray( 3 );
 
 	glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, sizeof( fmtSMF::vertex_t ), (void *)( 0 ) );
 	glVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, sizeof( fmtSMF::vertex_t ), (void *)( 3 * sizeof( GLfloat ) ) );
 	glVertexAttribPointer( 2, 3, GL_FLOAT, GL_FALSE, sizeof( fmtSMF::vertex_t ), (void *)( 5 * sizeof( GLfloat ) ) );
+	glVertexAttribPointer( 3, 3, GL_FLOAT, GL_FALSE, sizeof( fmtSMF::vertex_t ), (void *)( 8 * sizeof( GLfloat ) ) );
 
 	const byte *vertexData = (byte *)pBuffer + header->offsetVerts;
 	const byte *indexData = (byte *)pBuffer + header->offsetIndices;

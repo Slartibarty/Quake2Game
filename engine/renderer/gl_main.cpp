@@ -292,6 +292,10 @@ Draws all lights in the staticlights structure
 */
 static void R_DrawLights()
 {
+	if ( !r_drawlights->GetBool() ) {
+		return;
+	}
+
 	for ( int i = 0; i < mod_numStaticLights; ++i )
 	{
 		staticLight_t &light = mod_staticLights[i];

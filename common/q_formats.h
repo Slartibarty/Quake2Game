@@ -476,7 +476,7 @@ namespace
 namespace fmtSMF
 {
 	inline constexpr int32 fourCC = MakeFourCC( 'B', 'R', 'U', 'H' );
-	inline constexpr int32 version = 1;
+	inline constexpr int32 version = 2;
 
 	struct header_t
 	{
@@ -491,10 +491,10 @@ namespace fmtSMF
 
 	struct vertex_t
 	{
-		float x, y, z;
-		float s, t;
-		float n1, n2, n3;
-		float t1, t2, t3;
+		vec3 xyz;
+		vec2 st;
+		vec3 normal;
+		vec3 tangent;
 	};
 
 	using index_t = uint16;

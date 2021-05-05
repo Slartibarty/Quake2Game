@@ -1447,38 +1447,6 @@ struct checkLight_t
 	int index;
 };
 
-static DirectX::XMFLOAT4X4 R_CreateViewMatrix( const vec3 &origin, const vec3 &forward, const vec3 &up )
-{
-	using namespace DirectX;
-
-	XMVECTOR zaxis = XMVector3Normalize( XMVectorNegate( XMLoadFloat3( (const XMFLOAT3 *)&forward ) ) );
-	XMVECTOR yaxis = XMLoadFloat3( (const XMFLOAT3 *)&up );
-	XMVECTOR xaxis = XMVector3Normalize( XMVector3Cross( yaxis, zaxis ) );
-	yaxis = XMVector3Cross( zaxis, xaxis );
-
-	XMFLOAT4X4 r;
-	XMStoreFloat3( reinterpret_cast<XMFLOAT3 *>( &r._11 ), xaxis );
-	XMStoreFloat3( reinterpret_cast<XMFLOAT3 *>( &r._21 ), yaxis );
-	XMStoreFloat3( reinterpret_cast<XMFLOAT3 *>( &r._31 ), zaxis );
-	r._14 = 0.0f;
-	r._24 = 0.0f;
-	r._34 = 0.0f;
-	r._41 = origin.x;
-	r._42 = origin.y;
-	r._43 = origin.z;
-	r._44 = 1.f;
-	return r;
-}
-
-#undef countof
-
-#if 0
-#define GLM_FORCE_EXPLICIT_CTOR
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "glm/gtc/type_ptr.hpp"
-#endif
-
 void R_DrawStaticMeshFile( entity_t *e )
 {
 	using namespace DirectX;
@@ -1498,8 +1466,8 @@ void R_DrawStaticMeshFile( entity_t *e )
 	XMFLOAT4X4A modelMatrixStore;
 	XMStoreFloat4x4A( &modelMatrixStore, modelMatrix );
 
-	float view[16];
-	float proj[16];
+	float alignas( 16 ) view[16];
+	float alignas( 16 ) proj[16];
 
 	glGetFloatv( GL_MODELVIEW_MATRIX, view );
 	glGetFloatv( GL_PROJECTION_MATRIX, proj );
@@ -1562,20 +1530,20 @@ void R_DrawStaticMeshFile( entity_t *e )
 
 			VectorCopy( staticLight.origin, finalLight.position );
 			VectorCopy( staticLight.color, finalLight.color );
-			finalLight.intensity = static_cast<float>( staticLight.intensity ) * 0.5; // compensate
+			finalLight.intensity = static_cast<float>( staticLight.intensity ) * 0.5f; // compensate
 		}
 	}
 
 	glUseProgram( glProgs.smfMeshProg );
 
-	glUniformMatrix4fv( 3, 1, GL_FALSE, (const GLfloat *)&modelMatrixStore );
-	glUniformMatrix4fv( 4, 1, GL_FALSE, (const GLfloat *)&view );
-	glUniformMatrix4fv( 5, 1, GL_FALSE, (const GLfloat *)&proj );
+	glUniformMatrix4fv( 4, 1, GL_FALSE, (const GLfloat *)&modelMatrixStore );
+	glUniformMatrix4fv( 5, 1, GL_FALSE, (const GLfloat *)&view );
+	glUniformMatrix4fv( 6, 1, GL_FALSE, (const GLfloat *)&proj );
 
-	glUniform3fv( 6, 1, ambientColor );
 	glUniform3fv( 7, 1, r_newrefdef.vieworg );
+	glUniform3fv( 8, 1, ambientColor );
 
-	constexpr int startIndex = 8;
+	constexpr int startIndex = 9;
 	constexpr int elementsInRenderLight = 3;
 
 	for ( int iter1 = 0, iter2 = 0; iter1 < MAX_LIGHTS; ++iter1, iter2 += elementsInRenderLight )
@@ -1589,7 +1557,8 @@ void R_DrawStaticMeshFile( entity_t *e )
 
 	glUniform1i( indexAfterLights + 0, 0 ); // diffuse
 	glUniform1i( indexAfterLights + 1, 1 ); // specular
-	glUniform1i( indexAfterLights + 2, 2 ); // emission
+	glUniform1i( indexAfterLights + 2, 2 ); // normal
+	glUniform1i( indexAfterLights + 3, 3 ); // emission
 
 	glBindVertexArray( memSMF->vao );
 	glBindBuffer( GL_ARRAY_BUFFER, memSMF->vbo );
@@ -1601,13 +1570,15 @@ void R_DrawStaticMeshFile( entity_t *e )
 	glActiveTexture( GL_TEXTURE1 );
 	memSMF->material->BindSpec();
 	glActiveTexture( GL_TEXTURE2 );
+	memSMF->material->BindNorm();
+	glActiveTexture( GL_TEXTURE3 );
 	memSMF->material->BindEmit();
 
-	glCullFace( GL_BACK );
+	glCullFace( GL_BACK ); // TODO: eugh
 
 	glDrawElements( GL_TRIANGLES, memSMF->numIndices, GL_UNSIGNED_SHORT, (void *)( 0 ) );
 
-	glCullFace( GL_FRONT );
+	glCullFace( GL_FRONT ); // TODO: eugh
 
 	// HACK: this should go away when bsp rendering is nuked
 	GLenum hackTmu = glState.currenttmu ? GL_TEXTURE1 : GL_TEXTURE0;

@@ -2,7 +2,7 @@
 #include "gl_local.h"
 
 #ifdef Q_DEBUG
-//#define Q_DEBUG_GL
+#define Q_DEBUG_GL
 #endif
 
 glState_t				glState;
@@ -48,6 +48,10 @@ cvar_t *r_lockpvs;
 
 cvar_t *r_fullscreen;
 cvar_t *r_gamma;
+
+cvar_t *r_specmaps;
+cvar_t *r_normmaps;
+cvar_t *r_emitmaps;
 
 #ifdef Q_DEBUG_GL
 
@@ -171,52 +175,6 @@ void GL_SetDefaultState()
 
 /*
 ========================
-R_Restart
-========================
-*/
-void R_Restart()
-{
-	Com_Print( "------- Restarting RenderSystem --------\n" );
-
-	// shutdown everything excluding glimp
-
-	Particles_Shutdown();
-	Draw_Shutdown();
-	Mod_FreeAll();
-
-	//GLimp_RestoreGamma();
-	GL_ShutdownImages();
-
-	Shaders_Shutdown();
-
-	GL_CheckErrors();
-
-	// re-intialise everything (excluding glimp)
-
-	// set a "safe" display mode
-	glState.prev_mode = 3;
-
-	// set some default state variables
-	GL_SetDefaultState();
-
-	Shaders_Init();
-
-	tr.registrationSequence = 1;
-
-	GL_InitImages();
-	//GLimp_SetGamma( g_gammatable, g_gammatable, g_gammatable );
-
-	Mod_Init();
-	Draw_Init();
-	Particles_Init();
-
-	GL_CheckErrors();
-
-	Com_Print( "RenderSystem restarted\n" "----------------------------------------\n" );
-}
-
-/*
-========================
 R_InitCVars
 ========================
 */
@@ -260,6 +218,10 @@ static void R_InitCVars()
 
 	r_fullscreen = Cvar_Get( "r_fullscreen", "0", CVAR_ARCHIVE );
 	r_gamma = Cvar_Get( "r_gamma", "1", CVAR_ARCHIVE );
+
+	r_specmaps = Cvar_Get( "r_specmaps", "1", 0 );
+	r_normmaps = Cvar_Get( "r_normmaps", "1", 0 );
+	r_emitmaps = Cvar_Get( "r_emitmaps", "1", 0 );
 }
 
 /*
@@ -286,6 +248,7 @@ R_Init
 */
 static void R_CreateDebugMesh()
 {
+#if 0
 	glGenVertexArrays( 1, &tr.debugMeshVAO );
 	glGenBuffers( 1, &tr.debugMeshVBO );
 
@@ -306,10 +269,11 @@ static void R_CreateDebugMesh()
 
 	vertices[j].Set( 0.0f, 0.0f, 16.0f );
 	for ( i = 4; i >= 0; --i, ++j ) {
-		vertices[j].Set( 16.0f*cos(i*M_PI_F/2.0f), 16.0f*sin(i*M_PI_F/2.0f), 0.0f );
+		vertices[j].Set( -16.0f*cos(i*M_PI_F/2.0f), -16.0f*sin(i*M_PI_F/2.0f), 0.0f );
 	}
 
 	glBufferData( GL_ARRAY_BUFFER, sizeof( vertices ), vertices, GL_STATIC_DRAW );
+#endif
 }
 
 /*
@@ -319,8 +283,58 @@ R_DestroyDebugMesh
 */
 static void R_DestroyDebugMesh()
 {
+#if 0
 	glDeleteBuffers( 1, &tr.debugMeshVBO );
 	glDeleteVertexArrays( 1, &tr.debugMeshVAO );
+#endif
+}
+
+/*
+========================
+R_Restart
+========================
+*/
+void R_Restart()
+{
+	Com_Print( "------- Restarting RenderSystem --------\n" );
+
+	// shutdown everything excluding glimp
+
+	Particles_Shutdown();
+	Draw_Shutdown();
+	Mod_FreeAll();
+
+	//GLimp_RestoreGamma();
+	GL_ShutdownImages();
+
+	R_DestroyDebugMesh();
+
+	Shaders_Shutdown();
+
+	GL_CheckErrors();
+
+	// re-intialise everything (excluding glimp)
+
+	// set a "safe" display mode
+	glState.prev_mode = 3;
+
+	// set some default state variables
+	GL_SetDefaultState();
+
+	Shaders_Init();
+
+	tr.registrationSequence = 1;
+
+	GL_InitImages();
+	//GLimp_SetGamma( g_gammatable, g_gammatable, g_gammatable );
+
+	Mod_Init();
+	Draw_Init();
+	Particles_Init();
+
+	GL_CheckErrors();
+
+	Com_Print( "RenderSystem restarted\n" "----------------------------------------\n" );
 }
 
 /*
@@ -346,6 +360,11 @@ bool R_Init()
 
 	// initialize OS-specific parts of OpenGL
 	if ( !GLimp_Init() ) {
+		return false;
+	}
+
+	if ( !GLEW_ARB_framebuffer_object ) {
+		// need an error message solution, just a const char *& in the params maybe?
 		return false;
 	}
 
