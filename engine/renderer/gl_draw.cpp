@@ -201,6 +201,30 @@ void R_DrawCharColor( int x, int y, int ch, uint32 color )
 
 	guiRect_t rect;
 
+	// draw nice drop shadows
+
+	rect.v1.Position( x + 1, y + 1 );
+	rect.v1.TexCoord( fcol, frow );
+	rect.v1.Color( colors::dkGray );
+
+	rect.v2.Position( x + CONCHAR_WIDTH + 1, y + 1 );
+	rect.v2.TexCoord( fcol + size, frow );
+	rect.v2.Color( colors::dkGray );
+
+	rect.v3.Position( x + CONCHAR_WIDTH + 1, y + CONCHAR_HEIGHT + 1 );
+	rect.v3.TexCoord( fcol + size, frow + size );
+	rect.v3.Color( colors::dkGray );
+
+	rect.v4.Position( x + 1, y + CONCHAR_HEIGHT + 1 );
+	rect.v4.TexCoord( fcol, frow + size );
+	rect.v4.Color( colors::dkGray );
+
+	s_drawMeshBuilder.AddElement( rect );
+
+	Draw_CheckChain( s_drawChars );
+
+	// draw the actual character
+
 	rect.v1.Position( x, y );
 	rect.v1.TexCoord( fcol, frow );
 	rect.v1.Color( color );

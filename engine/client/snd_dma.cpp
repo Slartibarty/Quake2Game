@@ -722,7 +722,7 @@ void S_StartSound(vec3_t origin, int entnum, int entchannel, sfx_t *sfx, float f
 S_StartLocalSound
 ==================
 */
-void S_StartLocalSound (const char *sound)
+void S_StartLocalSound (const char *sound, float volume)
 {
 	sfx_t	*sfx;
 
@@ -735,7 +735,7 @@ void S_StartLocalSound (const char *sound)
 		Com_Printf ("S_StartLocalSound: can't cache %s\n", sound);
 		return;
 	}
-	S_StartSound (NULL, cl.playernum+1, 0, sfx, 1, 1, 0);
+	S_StartSound (NULL, cl.playernum+1, 0, sfx, volume, 1, 0);
 }
 
 

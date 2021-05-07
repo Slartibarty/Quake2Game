@@ -27,7 +27,8 @@
 #define NON_JUMP_VELOCITY	140.0f
 #define AIR_MAX_WISHSPEED	30.0f
 
-// This is 1.0 in Quake 2 and Half-Life 2, 1.001f in Quake 3
+// this is 1.0 in Quake 2 and Half-Life 2, 1.001f in Quake 3
+// higher values make the player bounce off of walls when they jump into them, like grenades
 #define OVERCLIP			1.0f
 
 #define PM_SURFTYPE_LADDER	1000
@@ -1497,8 +1498,7 @@ static void PM_CheckDuck()
 	if ( pm->cmd.upmove < 0 && !pml.ladder ) {
 		// duck
 		pm->s.pm_flags |= PMF_DUCKED;
-	}
-	else if ( pm->s.pm_flags & PMF_DUCKED ) {
+	} else if ( pm->s.pm_flags & PMF_DUCKED ) {
 		// try to stand up
 
 		end[0] = pml.origin[0];
@@ -1515,8 +1515,7 @@ static void PM_CheckDuck()
 		pm->mins[2] = -CROUCH_HEIGHT;
 		pm->maxs[2] = CROUCH_HEIGHT;
 		pm->viewheight = CROUCH_VIEWHEIGHT;
-	}
-	else {
+	} else {
 		pm->mins[2] = -STAND_HEIGHT;
 		pm->maxs[2] = STAND_HEIGHT;
 		pm->viewheight = STAND_VIEWHEIGHT;
