@@ -429,7 +429,7 @@ void SV_CalcBlend (edict_t *ent)
 	else
 		ent->client->ps.rdflags &= ~RDF_UNDERWATER;
 
-	if (contents & (CONTENTS_SOLID|CONTENTS_LAVA))
+	if (contents & (CONTENTS_LAVA))
 		SV_AddBlend (1.0, 0.3, 0.0, 0.6, ent->client->ps.blend);
 	else if (contents & CONTENTS_SLIME)
 		SV_AddBlend (0.0, 0.1, 0.05, 0.6, ent->client->ps.blend);
