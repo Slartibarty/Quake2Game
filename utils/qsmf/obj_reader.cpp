@@ -75,13 +75,19 @@ void OBJReader::Parse( char *buffer )
 			// Skip past 'vt'
 			token = strtok_r( nullptr, Delimiters, &save_ptr );
 
-			v2.x = static_cast<float>( atof( token ) );
+			const char *s1, *s2;
+			s1 = token;
+
+			v2.x = static_cast<float>( Clamp( atof( token ), 0.0, 1.0 ) );
 			token = strtok_r( nullptr, Delimiters, &save_ptr );
-			v2.y = static_cast<float>( 1.0 - atof( token ) ); // swap for opengl :)
+			s2 = token;
+			v2.y = static_cast<float>( 1.0 - Clamp( atof( token ), 0.0, 1.0 ) ); // swap for opengl :)
 			if ( !blenderMode ) {
 				// 3ds max writes an extra 0.0 value
 				token = strtok_r( nullptr, Delimiters, &save_ptr );
 			}
+
+			assert( ( v2.x >= 0.0f && v2.x <= 1.0f ) && ( v2.y >= 0.0f && v2.y <= 1.0f ) );
 
 			rawCoords.push_back( v2 );
 
@@ -177,21 +183,21 @@ void OBJReader::Parse( char *buffer )
 		vec2 &t3 = rawCoords[rawIndices[iter1].c.iTexcoord];
 
 		vec3 edge1, edge2;
-		vec2 deltaST1, deltaST2;
+		vec2 deltaUV1, deltaUV2;
 
 		Vec3Subtract( p2, p1, edge1 );
 		Vec3Subtract( p3, p1, edge2 );
-		Vec2Subtract( t2, t1, deltaST1 );
-		Vec2Subtract( t3, t1, deltaST2 );
+		Vec2Subtract( t2, t1, deltaUV1 );
+		Vec2Subtract( t3, t1, deltaUV2 );
 
-		float f = 1.0f / ( deltaST1.x * deltaST2.y - deltaST2.x * deltaST1.y );
+		float f = 1.0f / ( deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y );
 
 		// tangent for this set
 		vec3 tangent;
 
-		tangent.x = f * ( deltaST2.y * edge1.x - deltaST1.y * edge2.x );
-		tangent.y = f * ( deltaST2.y * edge1.y - deltaST1.y * edge2.y );
-		tangent.z = f * ( deltaST2.y * edge1.z - deltaST1.y * edge2.z );
+		tangent.x = f * ( deltaUV2.y * edge1.x - deltaUV1.y * edge2.x );
+		tangent.y = f * ( deltaUV2.y * edge1.y - deltaUV1.y * edge2.y );
+		tangent.z = f * ( deltaUV2.y * edge1.z - deltaUV1.y * edge2.z );
 
 		rawTangents.push_back( tangent );
 
@@ -225,6 +231,7 @@ void OBJReader::Parse( char *buffer )
 
 			// see if this combination already exists
 			// TODO: slooooow
+#if 1
 			for ( size_t k = 0; k < m_vertices.size(); ++k )
 			{
 				//if ( memcmp( &newVertex, &m_vertices[k], sizeof( vertex_t ) ) == 0 )
@@ -239,6 +246,7 @@ void OBJReader::Parse( char *buffer )
 					index = static_cast<uint32>( k );
 				}
 			}
+#endif
 
 			if ( index == 0 )
 			{

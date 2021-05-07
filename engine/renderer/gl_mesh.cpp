@@ -1455,10 +1455,10 @@ void R_DrawStaticMeshFile( entity_t *e )
 
 	// Matrices
 
-	float rotate = anglemod( r_newrefdef.time * 100.0f );
+	float rotate = anglemod( r_newrefdef.time * 50.0f );
 
 	XMMATRIX modelMatrix = XMMatrixMultiply(
-		XMMatrixRotationRollPitchYaw( DEG2RAD( e->angles[PITCH] + rotate ), DEG2RAD( e->angles[ROLL] + rotate ), DEG2RAD( e->angles[YAW] + rotate ) ),
+		XMMatrixRotationRollPitchYaw( DEG2RAD( e->angles[PITCH] ), DEG2RAD( e->angles[ROLL] ), DEG2RAD( e->angles[YAW] + rotate ) ),
 		//XMMatrixRotationRollPitchYaw( 0.0f, 0.0f, 0.0f ),
 		XMMatrixTranslation( e->origin[0], e->origin[1], e->origin[2] )
 	);

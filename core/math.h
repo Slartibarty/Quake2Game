@@ -213,7 +213,7 @@ struct vec3
 
 	// I wonder how the compiler deals with this
 	// SlartTodo: GCC doesn't like this
-#ifdef _WIN32
+#if 0
 	friend bool operator==( const vec3 &v1, const vec3 &v2 ) = default;
 #endif
 
@@ -339,22 +339,11 @@ inline void Vec3Copy( const vec3 &in, vec3 &out )
 
 inline bool Vec3Compare( const vec3 &v1, const vec3 &v2 )
 {
-#ifdef _WIN32
+#if 0
 	return v1 == v2;
 #else
 	return ( v1.x == v2.x && v1.y == v2.y && v1.z == v2.z );
 #endif
-}
-
-inline void Vec3Test()
-{
-	vec3 vec1( 4.0f, 1.0f, 1.0f );
-	vec3 vec2( 8.0f, 3.0f, 2.0f );
-
-	if ( Vec3Compare( vec1, vec2 ) )
-	{
-
-	}
 }
 
 /*
@@ -388,18 +377,13 @@ struct vec2
 
 	// I wonder how the compiler deals with this
 	// SlartTodo: GCC doesn't like this
-#ifdef _WIN32
+#if 0
 	friend bool operator==( const vec2 &v1, const vec2 &v2 ) = default;
 #endif
 
 	void Set( float X, float Y )
 	{
 		x = X; y = Y;
-	}
-
-	void SetFromLegacy( const float *pArray )
-	{
-		x = pArray[0]; y = pArray[1];
 	}
 
 	void Replicate( float f )
@@ -410,11 +394,6 @@ struct vec2
 	void Zero()
 	{
 		x = 0.0f; y = 0.0f;
-	}
-
-	float Length() const
-	{
-		return sqrt( x * x + y * y );
 	}
 
 	float *Base()
@@ -436,7 +415,7 @@ inline void Vec2Subtract( const vec2 &v1, const vec2 &v2, vec2 &out )
 
 inline bool Vec2Compare( const vec2 &v1, const vec2 &v2 )
 {
-#ifdef _WIN32
+#if 0
 	return v1 == v2;
 #else
 	return ( v1.x == v2.x && v1.y == v2.y );

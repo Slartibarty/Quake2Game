@@ -209,7 +209,6 @@ extern int			numglmaterials;
 extern byte			g_gammatable[256];
 
 extern material_t *		mat_notexture;
-extern material_t *		mat_particletexture;
 extern material_t *		blackMaterial;
 extern material_t *		whiteMaterial;
 extern image_t *		flatNormalImage;

@@ -22,7 +22,6 @@
 //-------------------------------------------------------------------------------------------------
 
 material_t *	mat_notexture;			// use for bad textures
-material_t *	mat_particletexture;	// DEPRECATED: little dot for particles
 material_t *	blackMaterial;
 material_t *	whiteMaterial;
 image_t *		flatNormalImage;
@@ -851,29 +850,6 @@ static void R_CreateIntrinsicImages()
 	}
 	image_t *defaultImage = GL_CreateImage("***defaultImage***", (byte *)data, DEFAULT_SIZE, DEFAULT_SIZE, IF_NONE);
 	mat_notexture = GL_CreateMaterialFromData( "***defaultMaterial***", defaultImage, whiteImage, flatNormalImage, blackImage );
-
-	// must be done after init of black and white materials...
-
-	//
-	// 8x8 legacy particle texture
-	//
-
-#if 0
-	for ( x = 0; x < DEFAULT_SIZE; x++ )
-	{
-		for ( y = 0; y < DEFAULT_SIZE; y++ )
-		{
-			data[y][x][0] = 255;
-			data[y][x][1] = 255;
-			data[y][x][2] = 255;
-			data[y][x][3] = particletexture[x][y] * 255;
-		}
-	}
-	img = GL_CreateImage( "***particle***", (byte *)data, 8, 8, IF_NOANISO | IF_CLAMPS | IF_CLAMPT );
-	mat_particletexture = GL_CreateMaterialFromData( "***particle***", img );
-#else
-	mat_particletexture = mat_notexture;
-#endif
 }
 
 //-------------------------------------------------------------------------------------------------
