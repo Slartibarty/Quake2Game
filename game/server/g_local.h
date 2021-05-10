@@ -61,8 +61,6 @@
 #define FL_RESPAWN				0x80000000	// used for item respawning
 
 
-#define	FRAMETIME		0.1f
-
 // memory tags to allow dynamic memory to be cleaned up
 #define	TAG_GAME	765		// clear when unloading the dll
 #define	TAG_LEVEL	766		// clear when loading a new level
@@ -552,6 +550,9 @@ extern	cvar_t	*gun_x, *gun_y, *gun_z;
 extern	cvar_t	*sv_rollspeed;
 extern	cvar_t	*sv_rollangle;
 
+extern	cvar_t	*g_viewthing;
+extern	cvar_t	*g_frametime;
+
 extern	cvar_t	*run_pitch;
 extern	cvar_t	*run_roll;
 extern	cvar_t	*bob_up;
@@ -568,9 +569,9 @@ extern	cvar_t	*flood_waitdelay;
 
 extern	cvar_t	*sv_maplist;
 
-extern	cvar_t	*g_viewthing;
+#define	FRAMETIME	g_frametime->GetFloat()
 
-#define world	(&g_edicts[0])
+#define world		(&g_edicts[0])
 
 // item spawnflags
 #define ITEM_TRIGGER_SPAWN		0x00000001

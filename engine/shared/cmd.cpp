@@ -460,7 +460,9 @@ void Cmd_Toggle_f()
 		return;
 	}
 
-	Cvar_SetValue( cmdName, ( var->value ) ? 0.0f : 1.0f );
+	Cvar_SetValue( cmdName, var->GetBool() ? 0.0f : 1.0f );
+
+	Com_Printf( "Toggled %s to %s\n", var->GetName(), var->GetBool() ? "true" : "false" );
 }
 
 /*

@@ -82,34 +82,33 @@ struct wavinfo_t
 	int			dataofs;		// chunk starts this many bytes from file start
 };
 
-
 /*
-====================================================================
+===================================================================================================
 
-  SYSTEM SPECIFIC FUNCTIONS
+	Platform specific functions
 
-====================================================================
+===================================================================================================
 */
 
 // initializes cycling through a DMA buffer and returns information on it
-qboolean SNDDMA_Init(void);
+bool	SNDDMA_Init();
 
 // gets the current DMA position
-int		SNDDMA_GetDMAPos(void);
+int		SNDDMA_GetDMAPos();
 
 // shutdown the DMA xfer.
-void	SNDDMA_Shutdown(void);
+void	SNDDMA_Shutdown();
 
-void	SNDDMA_BeginPainting(void);
+void	SNDDMA_BeginPainting();
 
-void	SNDDMA_Submit(void);
+void	SNDDMA_Submit();
 
-void	SNDDMA_Activate(qboolean active);
+void	SNDDMA_Activate( bool active );
 
-//====================================================================
+//=================================================================================================
 
-#define	MAX_CHANNELS			32
-extern	channel_t   channels[MAX_CHANNELS];
+#define MAX_CHANNELS 32
+extern channel_t channels[MAX_CHANNELS];
 
 extern	int		paintedtime;
 extern	int		s_rawend;
@@ -136,8 +135,6 @@ wavinfo_t GetWavinfo (char *name, byte *wav, int wavlength);
 bool IsWav( byte *wav );
 bool IsOgg( byte *ogg );
 
-void S_InitScaletable (void);
-
 sfxcache_t *S_LoadSound (sfx_t *s);
 
 void S_IssuePlaysound (playsound_t *ps);
@@ -149,3 +146,8 @@ channel_t *S_PickChannel(int entnum, int entchannel);
 
 // spatializes a channel
 void S_Spatialize(channel_t *ch);
+
+
+// snd_mix
+
+void S_InitScaletable();

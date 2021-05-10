@@ -47,8 +47,8 @@ enum contentFlags_t
 
 // Surface types
 
-constexpr int NUM_SURFACE_BITS = 4;
-constexpr int MAX_SURFACE_TYPES = 1 << NUM_SURFACE_BITS;
+inline constexpr int NUM_SURFACE_BITS = 4;
+inline constexpr int MAX_SURFACE_TYPES = 1 << NUM_SURFACE_BITS;
 
 enum surfaceTypes_t
 {

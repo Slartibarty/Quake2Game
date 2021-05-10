@@ -6,9 +6,6 @@
 
 #pragma once
 
-#include "../core/sys_types.h"
-#include "../core/utilities.h"
-
 //-------------------------------------------------------------------------------------------------
 // PAK files
 // The .pak files are just a linear collapse of a directory tree
@@ -37,19 +34,19 @@ struct dpackheader_t
 
 struct pcx_t
 {
-    char	manufacturer;
-    char	version;
-    char	encoding;
-    char	bits_per_pixel;
-    unsigned short	xmin,ymin,xmax,ymax;
-    unsigned short	hres,vres;
-    unsigned char	palette[48];
-    char	reserved;
-    char	color_planes;
-    unsigned short	bytes_per_line;
-    unsigned short	palette_type;
-    char	filler[58];
-    unsigned char	data;			// unbounded
+	char	manufacturer;
+	char	version;
+	char	encoding;
+	char	bits_per_pixel;
+	unsigned short	xmin,ymin,xmax,ymax;
+	unsigned short	hres,vres;
+	unsigned char	palette[48];
+	char	reserved;
+	char	color_planes;
+	unsigned short	bytes_per_line;
+	unsigned short	palette_type;
+	char	filler[58];
+	unsigned char	data;			// unbounded
 };
 
 //-------------------------------------------------------------------------------------------------
@@ -653,17 +650,33 @@ namespace wad2
 	};
 }
 
-//-------------------------------------------------------------------------------------------------
-// .BSP file format
-//-------------------------------------------------------------------------------------------------
+/*
+===================================================================================================
+.BSP file format
+
+Notes on the new mesh data format:
+	The old GL renderer traverses the BSP tree node by node. Nodes contain an offset and count into
+	the face lump, those faces each have an offset into the texinfo lump that contain material name
+	and etc. The faces are drawn via indexes into the edge lump that have indexes into the vertex
+	lump, the new node format will contain a new offset and count into the "new" face lump, the new
+	faces are obviously stored contiguously. A face is just an abstraction to allow multiple
+	materials per-node, the faces will just contain the material name, and an offset into the mesh
+	data lump, and a count.
+	We don't have to worry too much about cache locality since this information will just be parsed
+	locally before being stored into an optimised local format (see m<name>_t structures).
+
+A few comments on maximum limits:
+	Max limits are pretty much purely dependent on the size of the integers in the structures below
+	legacy face data is bounded by uint16s, so 65536 max.
+===================================================================================================
+*/
 
 inline constexpr int IDBSPHEADER = MakeFourCC( 'Q', 'B', 'S', 'P' );
 
 #define BSPVERSION 41
 
-// upper design bounds
-// leaffaces, leafbrushes, planes, and verts are still bounded by
-// 16 bit short limits
+// almost none of these constants are used by the game
+
 #define	MAX_MAP_MODELS		2048	// 1024
 #define	MAX_MAP_BRUSHES		8192
 #define	MAX_MAP_ENTITIES	16384	// 2048
@@ -686,10 +699,26 @@ inline constexpr int IDBSPHEADER = MakeFourCC( 'Q', 'B', 'S', 'P' );
 #define	MAX_MAP_LIGHTING	0x200000
 #define	MAX_MAP_VISIBILITY	0x100000
 
-// key / value pair sizes
+// key / value pair sizes in the entities lump
 
 #define	MAX_KEY		32
 #define	MAX_VALUE	1024
+
+// legacy predefined yaw angles, I don't think the game handles these anywhere anymore
+
+#define	ANGLE_UP	-1
+#define	ANGLE_DOWN	-2
+
+// world min/max values. arbitrary really, could be even bigger
+// in fact, do we even need this?
+// this is also the wrong place for these defines, should be in q_shared.h
+
+inline constexpr float MAX_WORLD_COORD = 131072.0f;
+inline constexpr float MIN_WORLD_COORD = -131072.0f;
+inline constexpr float WORLD_SIZE = MAX_WORLD_COORD - MIN_WORLD_COORD;
+
+// the maximum traceable distance, from corner to corner
+inline constexpr float MAX_TRACE_LENGTH = mconst::sqrt3 * WORLD_SIZE;
 
 //=============================================================================
 
@@ -700,22 +729,24 @@ struct lump_t
 
 #define	LUMP_ENTITIES		0
 #define	LUMP_PLANES			1
-#define	LUMP_VERTEXES		2
+#define	LUMP_VERTEXES		2		// deprecated, remove
 #define	LUMP_VISIBILITY		3
 #define	LUMP_NODES			4
 #define	LUMP_TEXINFO		5
 #define	LUMP_FACES			6
-#define	LUMP_LIGHTING		7
+#define	LUMP_LIGHTING		7		// deprecated, remove
 #define	LUMP_LEAFS			8
 #define	LUMP_LEAFFACES		9
 #define	LUMP_LEAFBRUSHES	10
-#define	LUMP_EDGES			11
-#define	LUMP_SURFEDGES		12
+#define	LUMP_EDGES			11		// deprecated, remove
+#define	LUMP_SURFEDGES		12		// deprecated, remove
 #define	LUMP_MODELS			13
 #define	LUMP_BRUSHES		14
 #define	LUMP_BRUSHSIDES		15
-#define	LUMP_AREAS			16
-#define	LUMP_AREAPORTALS	17
+#define	LUMP_AREAS			16		// TODO: why doesn't Quake 3 have these?
+#define	LUMP_AREAPORTALS	17		// TODO: why doesn't Quake 3 have these?
+//#define	LUMP_DRAWVERTS		18		// NEW!
+//#define	LUMP_DRAWINDICES	19		// NEW! uint16 indices
 #define	HEADER_LUMPS		18
 
 struct dheader_t
@@ -730,8 +761,7 @@ struct dmodel_t
 	float		mins[3], maxs[3];
 	float		origin[3];				// for sounds or lights
 	int			headnode;
-	int			firstface, numfaces;	// submodels just draw faces
-										// without walking the bsp tree
+	int			firstface, numfaces;	// submodels just draw faces without walking the bsp tree
 };
 
 
@@ -740,6 +770,8 @@ struct dvertex_t
 	float	point[3];
 };
 
+
+// TODO: move these defines to math.h? plane maths should be more generic
 
 // 0-2 are axial planes
 #define	PLANE_X			0
@@ -774,6 +806,18 @@ struct dnode_t
 	unsigned short	numfaces;	// counting both sides
 };
 
+struct dnode_new_t
+{
+	int32		planenum;
+	int32		children[2];	// negative numbers are -(leafs+1), not nodes
+	int16		mins[3];		// for frustom culling
+	int16		maxs[3];
+	uint16		firstface;
+	uint16		numfaces;		// counting both sides
+	uint32		newFirstFace;
+	uint32		newNumFaces;
+};
+
 
 struct texinfo_t
 {
@@ -798,7 +842,7 @@ struct dface_t
 	short		side;
 
 	int			firstedge;		// we must support > 64k edges
-	short		numedges;	
+	short		numedges;
 	short		texinfo;
 
 // lighting info
@@ -836,9 +880,6 @@ struct dbrush_t
 	int			contents;
 };
 
-#define	ANGLE_UP	-1
-#define	ANGLE_DOWN	-2
-
 
 // the visibility lump consists of a header with a count, then
 // byte offsets for the PVS and PHS of each cluster, then the raw
@@ -864,4 +905,14 @@ struct darea_t
 {
 	int		numareaportals;
 	int		firstareaportal;
+};
+
+//=============================================================================
+
+struct bspDrawVert_t
+{
+	vec3 xyz;
+	vec2 st;
+	vec2 st2;
+	//vec3 normal;		// TODO: normals
 };

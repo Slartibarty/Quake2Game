@@ -34,17 +34,13 @@ void		Mem_Free( void *block );
 
 #else
 
+// mem debug is never active on Linux
+
 #define Mem_Alloc( a ) malloc( a )
 #define Mem_ReAlloc( a, b ) realloc( a, b )
-#define Mem_ClearedAlloc( a ) calloc( a, 1 )
+#define Mem_ClearedAlloc( a ) calloc( 1, a )
+#define Mem_CopyString( a ) _strdup( a )
 #define Mem_Free( a ) free( a )
-
-inline char *Mem_CopyString( const char *in )
-{
-	char *out = (char *)Mem_Alloc( strlen( in ) + 1 );
-	strcpy( out, in );
-	return out;
-}
 
 #endif
 

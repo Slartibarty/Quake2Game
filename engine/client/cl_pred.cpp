@@ -254,7 +254,7 @@ void CL_PredictMovement()
 	if ( pm.groundentity && stepFabs > 1.0f && stepFabs < 18.0f ) // STEPSIZE
 	{
 		cl.predicted_step = step;
-		cl.predicted_step_time = cls.realtime - ( cls.frametime * 500.0f );
+		cl.predicted_step_time = cls.realtime - ( cls.frametime * 100.0f );
 	}
 
 	// copy results out for rendering

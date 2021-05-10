@@ -75,13 +75,13 @@ bool	Info_Validate (const char *s);
 // nothing outside the Cvar_*() functions should modify these fields!
 struct cvar_t
 {
-	char		*name;
-	char		*string;
-	char		*latched_string;	// for CVAR_LATCH vars
+	char *		name;
+	char *		string;
+	char *		latched_string;		// for CVAR_LATCH vars
 	uint32		flags;
 	bool		modified;			// set each time the cvar is changed
 	float		value;
-	cvar_t		*next;
+	cvar_t *	next;
 
 	const char *	GetName() const		{ return name; }
 	uint32			GetFlags() const	{ return flags; }

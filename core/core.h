@@ -18,6 +18,8 @@
 #if defined Q_DEBUG && defined _WIN32
 #define Q_MEM_DEBUG
 #define _CRTDBG_MAP_ALLOC
+#include <cstdlib>
+#include <crtdbg.h>
 #endif
 
 #include <cstddef>
@@ -34,10 +36,6 @@
 
 #include <concepts>
 #include <numbers>
-
-#ifdef Q_MEM_DEBUG
-#include <crtdbg.h>
-#endif
 
 #ifndef _WIN32
 // Include our bogus sal.h

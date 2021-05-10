@@ -4,6 +4,7 @@
 
 #include "client.h"
 #define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 #include <Windows.h>
 #include "winquake.h"
 
@@ -11,6 +12,7 @@ HWND cl_hwnd;
 
 extern unsigned sys_frame_time;
 
+// TODO: this shouldn't really be in a namespace
 namespace input
 {
 	static bool in_appactive;
@@ -18,7 +20,7 @@ namespace input
 	static RECT window_rect;
 	static LONG last_xpos, last_ypos;
 
-	static const byte scantokey[128]
+	static const uint8 scantokey[128]
 	{
 		//  0           1       2       3       4       5       6       7 
 		//  8           9       A       B       C       D       E       F 
@@ -48,15 +50,15 @@ namespace input
 	// Really need to research how Microsoft considers the old keyinputs "legacy", do they really mean it?
 	// Could also just go back to using the old regular window messages instead of raw input
 	//-------------------------------------------------------------------------------------------------
-	static int MapKey( int scancode, bool extended )
+	static int MapKey( int scancode )
 	{
 		if ( scancode > 127 ) {
 			return 0;
 		}
 
-		int result = scantokey[scancode];
-
-		if ( !extended )
+		return scantokey[scancode];
+#if 0
+		if ( isE0 )
 		{
 			switch ( result )
 			{
@@ -98,6 +100,7 @@ namespace input
 				return result;
 			}
 		}
+#endif
 	}
 
 	//-------------------------------------------------------------------------------------------------
@@ -131,11 +134,7 @@ namespace input
 
 	static void HandleKeyboardInput( RAWKEYBOARD &raw )
 	{
-		assert( raw.VKey < 256 );
-
-		bool down = ( raw.Message == WM_KEYDOWN ) ? true : false;
-
-		Key_Event( MapKey( raw.MakeCode, raw.Flags & RI_KEY_E0 ), down, sys_frame_time );
+		Key_Event( MapKey( raw.MakeCode ), !( raw.Flags & RI_KEY_BREAK ), sys_frame_time );
 	}
 
 	static void HandleMouseInput( RAWMOUSE &raw )
@@ -171,16 +170,13 @@ namespace input
 			return;
 		}
 
-		RECT r;
-		GetClientRect( cl_hwnd, &r );
-
-		float xpos = float( raw.lLastX + last_xpos );
-		float ypos = float( raw.lLastY + last_ypos );
+		float xpos = static_cast<float>( raw.lLastX + last_xpos );
+		float ypos = static_cast<float>( raw.lLastY + last_ypos );
 		last_xpos = raw.lLastX;
 		last_ypos = raw.lLastY;
 
-		xpos *= sensitivity->value;
-		ypos *= sensitivity->value;
+		xpos *= m_yaw->GetFloat() * sensitivity->GetFloat();
+		ypos *= m_pitch->GetFloat() * sensitivity->GetFloat();
 
 #if 0
 		// force the mouse to the center, so there's room to move
@@ -188,8 +184,8 @@ namespace input
 			SetCursorPos( window_center_x, window_center_y );
 #endif
 
-		cl.viewangles[YAW] -= xpos; // m_yaw->value *
-		cl.viewangles[PITCH] += ypos; // m_pitch->value *
+		cl.viewangles[YAW] -= xpos;
+		cl.viewangles[PITCH] += ypos;
 	}
 
 	//-------------------------------------------------------------------------------------------------
@@ -228,7 +224,7 @@ namespace input
 	{
 		// Register for raw input
 
-		Com_Printf( "Initialising Windows InputSystem...\n" );
+		Com_Print( "Initialising Windows InputSystem...\n" );
 
 		RAWINPUTDEVICE rid[2];
 
@@ -246,7 +242,7 @@ namespace input
 
 		BOOL result = RegisterRawInputDevices( rid, 2, sizeof( *rid ) );
 		if ( result == FALSE ) {
-			Com_Printf( "Failed to register for raw input!\n" );
+			Com_Print( "Failed to register for raw input!\n" );
 		}
 	}
 

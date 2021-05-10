@@ -204,7 +204,7 @@ project "core"
 		}
 	filter {}
 	
-group "moon"
+group "quake2"
 
 project "engine"
 	kind "WindowedApp"

@@ -115,7 +115,7 @@ struct mnode_t
 struct mleaf_t
 {
 // common with node
-	int			contents;		// wil be a negative contents number
+	int			contents;		// will be a negative contents number
 	int			visframe;		// node needs to be traversed if current
 
 	float		minmaxs[6];		// for bounding box culling

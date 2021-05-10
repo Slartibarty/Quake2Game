@@ -1,11 +1,11 @@
 #include "snd_local.h"
 
-#define DIRECTSOUND_VERSION 0x0900
+#define DIRECTSOUND_VERSION 0x1000
 
 #include <dsound.h>
 #include "winquake.h"
 
-#define SECONDARY_BUFFER_SIZE	0x10000
+#define SECONDARY_BUFFER_SIZE 0x10000
 
 // starts at 0 for disabled
 static int			sample16;
@@ -17,7 +17,7 @@ static DWORD		locksize;
 static LPDIRECTSOUND8		pDS;
 static LPDIRECTSOUNDBUFFER	pDSBuf;
 
-static const char* DSoundError( HRESULT hr )
+static const char *DSoundError( HRESULT hr )
 {
 	switch ( hr )
 	{
@@ -35,40 +35,41 @@ static const char* DSoundError( HRESULT hr )
 }
 
 /*
-==================
+========================
 SNDDMA_InitDS
 
 Direct-Sound support
 Returns false if failed
-==================
+========================
 */
-qboolean SNDDMA_InitDS (void)
+static bool SNDDMA_InitDS()
 {
 	HRESULT hr;
 
-	Com_Printf("Initializing DirectSound\n");
+	Com_Print( "Initializing DirectSound\n" );
 
 	// Create IDirectSound using the primary sound device
-//	if (DirectSoundCreate8(NULL, &pDS, NULL) != DS_OK)
-	if (FAILED(CoCreateInstance(CLSID_DirectSound8, NULL, CLSCTX_INPROC_SERVER, IID_IDirectSound8, (void**)&pDS))) 
+	//if (DirectSoundCreate8(NULL, &pDS, NULL) != DS_OK)
+	if ( FAILED( CoCreateInstance( CLSID_DirectSound8, nullptr, CLSCTX_INPROC_SERVER, IID_IDirectSound8, (void **)&pDS ) ) )
 	{
-		Com_Printf("failed\n");
+		Com_Print( "failed\n" );
 		SNDDMA_Shutdown();
 		return false;
 	}
 
-	pDS->Initialize(NULL);
+	pDS->Initialize( nullptr );
 
-	Com_DPrintf("ok\n");
+	Com_DPrint( "ok\n" );
 
-	Com_DPrintf("...setting DSSCL_PRIORITY coop level: ");
+	Com_DPrint( "...setting DSSCL_PRIORITY coop level: " );
 
-	if (FAILED(pDS->SetCooperativeLevel(cl_hwnd, DSSCL_PRIORITY))) {
-		Com_Printf("failed\n");
+	if ( FAILED( pDS->SetCooperativeLevel( cl_hwnd, DSSCL_PRIORITY ) ) )
+	{
+		Com_Print( "failed\n" );
 		SNDDMA_Shutdown();
 		return false;
 	}
-	Com_DPrintf("ok\n");
+	Com_DPrint( "ok\n" );
 
 	// create the secondary buffer we'll actually work with
 	dma.channels = 2;
@@ -81,47 +82,50 @@ qboolean SNDDMA_InitDS (void)
 	format.wBitsPerSample = dma.samplebits;
 	format.nSamplesPerSec = dma.speed;
 	format.nBlockAlign = format.nChannels * format.wBitsPerSample / 8;
-	format.cbSize = 0;
 	format.nAvgBytesPerSec = format.nSamplesPerSec * format.nBlockAlign;
 
-	DSBUFFERDESC dsbuf{};
-	dsbuf.dwSize = sizeof(dsbuf);
+	DSBUFFERDESC bufDesc{};
+	bufDesc.dwSize = sizeof( bufDesc );
+	// Micah: take advantage of 2D hardware if available
+	bufDesc.dwFlags = DSBCAPS_LOCHARDWARE | DSBCAPS_GETCURRENTPOSITION2;
+	bufDesc.dwBufferBytes = SECONDARY_BUFFER_SIZE;
+	bufDesc.lpwfxFormat = &format;
 
-	// Micah: take advantage of 2D hardware if available.
-	dsbuf.dwFlags = DSBCAPS_LOCHARDWARE | DSBCAPS_GETCURRENTPOSITION2;
-	dsbuf.dwBufferBytes = SECONDARY_BUFFER_SIZE;
-	dsbuf.lpwfxFormat = &format;
+	Com_DPrint( "...creating secondary buffer: " );
 
-	Com_DPrintf("...creating secondary buffer: ");
-	hr = pDS->CreateSoundBuffer(&dsbuf, &pDSBuf, NULL);
-//	hr = pDS->QueryInterface(IID_IDirectSoundBuffer8, (void**)&pDSBuf);
-	if (FAILED(hr)) {
+	hr = pDS->CreateSoundBuffer( &bufDesc, &pDSBuf, nullptr );
+	if ( FAILED( hr ) )
+	{
 		// No hardware support, use software mixing
-		dsbuf.dwFlags = DSBCAPS_LOCSOFTWARE | DSBCAPS_GETCURRENTPOSITION2;
-		hr = pDS->CreateSoundBuffer(&dsbuf, &pDSBuf, NULL);
-		if (FAILED(hr)) {
-			Com_Printf("failed to create secondary buffer - %s\n", DSoundError(hr));
+		bufDesc.dwFlags = DSBCAPS_LOCSOFTWARE | DSBCAPS_GETCURRENTPOSITION2;
+		hr = pDS->CreateSoundBuffer( &bufDesc, &pDSBuf, nullptr );
+		if ( FAILED( hr ) )
+		{
+			Com_Printf( "failed to create secondary buffer - %s\n", DSoundError( hr ) );
 			SNDDMA_Shutdown();
 			return false;
 		}
-		Com_DPrintf("forced to software.  ok\n");
+		Com_DPrint( "forced to software.  ok\n" );
 	}
-	else {
-		Com_Printf("locked hardware.  ok\n");
+	else
+	{
+		Com_Print( "locked hardware.  ok\n" );
 	}
 
 	// Make sure mixer is active
-	if (FAILED(pDSBuf->Play(0, 0, DSBPLAY_LOOPING))) {
-		Com_Printf("*** Looped sound play failed ***\n");
+	if ( FAILED( pDSBuf->Play( 0, 0, DSBPLAY_LOOPING ) ) )
+	{
+		Com_Print( "*** Looped sound play failed ***\n" );
 		SNDDMA_Shutdown();
 		return false;
 	}
 
 	DSBCAPS dsbcaps{};
-	dsbcaps.dwSize = sizeof(dsbcaps);
+	dsbcaps.dwSize = sizeof( dsbcaps );
 	// get the returned buffer size
-	if (FAILED(pDSBuf->GetCaps(&dsbcaps))) {
-		Com_Printf("*** GetCaps failed ***\n");
+	if ( FAILED( pDSBuf->GetCaps( &dsbcaps ) ) )
+	{
+		Com_Print( "*** GetCaps failed ***\n" );
 		SNDDMA_Shutdown();
 		return false;
 	}
@@ -133,205 +137,198 @@ qboolean SNDDMA_InitDS (void)
 	dma.speed = format.nSamplesPerSec;
 	dma.samples = gSndBufSize / (dma.samplebits / 8);
 	dma.submission_chunk = 1;
-	dma.buffer = NULL;			// must be locked first
+	dma.buffer = nullptr;		// must be locked first
 
 	sample16 = (dma.samplebits / 8) - 1;
 
 	SNDDMA_BeginPainting();
-	if (dma.buffer)
-		memset(dma.buffer, 0, dma.samples * dma.samplebits / 8);
+	if ( dma.buffer ) {
+		memset( dma.buffer, 0, dma.samples * dma.samplebits / 8 );
+	}
 	SNDDMA_Submit();
-	return 1;
+
+	return true;
 }
 
 /*
-==============
+========================
 SNDDMA_GetDMAPos
 
 return the current sample position (in mono samples read)
 inside the recirculating dma buffer, so the mixing code will know
 how many sample are required to fill it up.
-===============
+========================
 */
-int SNDDMA_GetDMAPos(void)
+int SNDDMA_GetDMAPos()
 {
-	DWORD	mmtime;
+	DWORD	dwTime;
 	int		s;
-	DWORD	dwWrite;
 
-	if (!dsound_init) {
+	if ( !pDSBuf ) {
 		return 0;
 	}
 
-	pDSBuf->GetCurrentPosition(&mmtime, &dwWrite);
+	pDSBuf->GetCurrentPosition( &dwTime, nullptr );
 
-	s = mmtime;
+	s = dwTime;
 
 	s >>= sample16;
 
-	s &= (dma.samples - 1);
+	s &= ( dma.samples - 1 );
 
 	return s;
 }
 
 /*
-==============
+========================
 SNDDMA_BeginPainting
 
 Makes sure dma.buffer is valid
-===============
+========================
 */
-void SNDDMA_BeginPainting (void)
+void SNDDMA_BeginPainting()
 {
-	int		reps;
-	DWORD	dwSize2;
-	DWORD	*pbuf, *pbuf2;
-	HRESULT	hresult;
-	DWORD	dwStatus;
-
 	if ( !pDSBuf ) {
 		return;
 	}
 
+	DWORD dwStatus;
+
 	// if the buffer was lost or stopped, restore it and/or restart it
-	if ( pDSBuf->GetStatus (&dwStatus) != DS_OK ) {
-		Com_Printf ("Couldn't get sound buffer status\n");
+	if ( pDSBuf->GetStatus( &dwStatus ) != DS_OK ) {
+		Com_Print( "Couldn't get sound buffer status\n" );
 	}
-	
-	if (dwStatus & DSBSTATUS_BUFFERLOST)
-		pDSBuf->Restore ();
-	
-	if (!(dwStatus & DSBSTATUS_PLAYING))
-		pDSBuf->Play(0, 0, DSBPLAY_LOOPING);
+
+	if ( dwStatus & DSBSTATUS_BUFFERLOST ) {
+		pDSBuf->Restore();
+	}
+
+	if ( !( dwStatus & DSBSTATUS_PLAYING ) ) {
+		pDSBuf->Play( 0, 0, DSBPLAY_LOOPING );
+	}
 
 	// lock the dsound buffer
 
-	reps = 0;
-	dma.buffer = NULL;
+	HRESULT hresult;
+	DWORD dwSize2;
+	void *pBuf, *pBuf2;
 
-	while ((hresult = pDSBuf->Lock(0, gSndBufSize, (void **)&pbuf, &locksize, 
-								   (void **)&pbuf2, &dwSize2, 0)) != DS_OK)
+	int reps = 0;
+	dma.buffer = nullptr;
+
+	while ( ( hresult = pDSBuf->Lock( 0, gSndBufSize, &pBuf, &locksize, &pBuf2, &dwSize2, 0 ) ) != DS_OK )
 	{
-		if (hresult != DSERR_BUFFERLOST)
+		if ( hresult != DSERR_BUFFERLOST )
 		{
 			Com_Printf( "SNDDMA_BeginPainting: Lock failed with error '%s'\n", DSoundError( hresult ) );
-			S_Shutdown ();
+			S_Shutdown();
 			return;
-		}
-		else
-		{
-			pDSBuf->Restore( );
 		}
 
-		if (++reps > 2)
+		pDSBuf->Restore();
+
+		if ( ++reps > 2 ) {
 			return;
+		}
 	}
-	dma.buffer = (unsigned char *)pbuf;
+
+	dma.buffer = (unsigned char *)pBuf;
 }
 
 /*
-==============
+========================
 SNDDMA_Submit
 
 Send sound to device if buffer isn't really the dma buffer
 Also unlocks the dsound buffer
-===============
+========================
 */
-void SNDDMA_Submit(void)
+void SNDDMA_Submit()
 {
 	// unlock the dsound buffer
-	if (pDSBuf) {
-		pDSBuf->Unlock(dma.buffer, locksize, NULL, 0);
+	if ( pDSBuf )
+	{
+		pDSBuf->Unlock( dma.buffer, locksize, nullptr, 0 );
 	}
 }
 
 /*
-==================
+========================
 SNDDMA_Init
-
-Try to find a sound device to mix for.
-Returns false if nothing is found.
-==================
+========================
 */
-qboolean SNDDMA_Init(void)
+bool SNDDMA_Init()
 {
-	memset((void*)&dma, 0, sizeof(dma));
+	memset( &dma, 0, sizeof( dma ) );
 	dsound_init = false;
 
-	// Init COM
-	CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+	CoInitializeEx( nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE );
 
-	/* Init DirectSound */
-	if (!SNDDMA_InitDS()) {
+	if ( !SNDDMA_InitDS() )
+	{
 		CoUninitialize();
 		return false;
 	}
 
 	dsound_init = true;
 
-	Com_DPrintf("Completed successfully\n");
+	Com_DPrint( "Completed successfully\n" );
 
 	return true;
 }
 
 /*
-==============
+========================
 SNDDMA_Shutdown
-
-Reset the sound device for exiting
-===============
+========================
 */
-void SNDDMA_Shutdown(void)
+void SNDDMA_Shutdown()
 {
-	Com_DPrintf("Shutting down sound system\n");
+	Com_DPrint( "Shutting down sound system\n" );
 
-	if (dsound_init)
+	if ( dsound_init )
 	{
-		Com_DPrintf("Destroying DS buffers\n");
-		if (pDS)
+		Com_DPrint( "Destroying DS buffers\n" );
+		if ( pDS )
 		{
-			Com_DPrintf("...setting NORMAL coop level\n");
-			pDS->SetCooperativeLevel(cl_hwnd, DSSCL_NORMAL);
+			Com_DPrint( "...setting NORMAL coop level\n" );
+			pDS->SetCooperativeLevel( cl_hwnd, DSSCL_NORMAL );
 		}
 
-		if (pDSBuf)
+		if ( pDSBuf )
 		{
-			Com_DPrintf("...stopping and releasing sound buffer\n");
+			Com_DPrint( "...stopping and releasing sound buffer\n" );
 			pDSBuf->Stop();
 			pDSBuf->Release();
 		}
 
-		pDSBuf = NULL;
+		dma.buffer = nullptr;
 
-		dma.buffer = NULL;
-
-		Com_DPrintf("...releasing DS object\n");
+		Com_DPrint( "...releasing DS object\n" );
 		pDS->Release();
 
 		CoUninitialize();
 	}
 
-	pDS = NULL;
-	pDSBuf = NULL;
+	pDS = nullptr;
+	pDSBuf = nullptr;
 	dsound_init = false;
-	memset(&dma, 0, sizeof(dma));
+	memset( &dma, 0, sizeof( dma ) );
 }
 
 /*
-===========
+========================
 SNDDMA_Activate
-
-Called when the main window gains or loses focus.
-The window have been destroyed and recreated
-between a deactivate and an activate.
-===========
+========================
 */
-void SNDDMA_Activate (qboolean active)
+void SNDDMA_Activate( bool active )
 {
 	// SlartTodo: What?
-	if (dsound_init) {
-		if (DS_OK != pDS->SetCooperativeLevel(cl_hwnd, DSSCL_PRIORITY)) {
-			Com_Printf("sound SetCooperativeLevel failed\n");
+	if ( pDS )
+	{
+		if ( pDS->SetCooperativeLevel( cl_hwnd, DSSCL_PRIORITY ) != DS_OK )
+		{
+			Com_Print( "DSound SetCooperativeLevel failed\n" );
 			SNDDMA_Shutdown();
 		}
 	}
