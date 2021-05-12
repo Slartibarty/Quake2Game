@@ -4102,9 +4102,6 @@ void M_Draw (void)
 	if (cls.key_dest != key_menu)
 		return;
 
-	// repaint everything next frame
-	SCR_DirtyScreen ();
-
 	constexpr uint32 color = PackColorFromFloats( 0.0f, 0.0f, 0.0f, 0.8f );
 
 	// dim everything behind it down

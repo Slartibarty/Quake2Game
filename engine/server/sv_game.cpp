@@ -293,8 +293,6 @@ SV_InitGameProgs
 Init the game subsystem for a new map
 ===============
 */
-void SCR_DebugGraph (float value, uint32 color);
-
 void SV_InitGameProgs (void)
 {
 	game_import_t gi;

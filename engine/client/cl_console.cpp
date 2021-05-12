@@ -241,11 +241,10 @@ Con_ClearNotify
 ================
 */
 void Con_ClearNotify (void)
-{
-	int		i;
-	
-	for (i=0 ; i<NUM_CON_TIMES ; i++)
+{	
+	for ( int i = 0; i < NUM_CON_TIMES; i++ ) {
 		con.times[i] = 0;
+	}
 }
 						
 /*
@@ -625,12 +624,6 @@ void Con_DrawNotify()
 		R_DrawChar ( con.xadjust + (x+skip)*CONCHAR_WIDTH, v, 10+((cls.realtime>>8)&1));
 		v += CONCHAR_HEIGHT;
 	}
-	
-	if (v)
-	{
-		SCR_AddDirtyPoint (0,0);
-		SCR_AddDirtyPoint (viddef.width-1, v);
-	}
 }
 
 /*
@@ -664,8 +657,6 @@ void Con_DrawConsole( float frac )
 	// draw the background
 	R_DrawFilled( 0, -viddef.height + lines, viddef.width, viddef.height, PackColor( 0, 0, 0, 192 ) );
 	R_DrawFilled( 0, lines - 2, viddef.width, 2, ConsoleTextColor );
-	SCR_AddDirtyPoint( 0, 0 );
-	SCR_AddDirtyPoint( viddef.width - 1, lines - 1 );
 
 	// draw the version
 	constexpr int verLength = sizeof( BLD_STRING ) - 1;

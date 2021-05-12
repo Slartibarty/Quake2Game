@@ -115,7 +115,6 @@ struct clientActive_t
 	int			cinematictime;		// cls.realtime for first cinematic frame
 	int			cinematicframe;
 	byte		cinematicpalette[768];
-	qboolean	cinematicpalette_active;
 
 	//
 	// server state information

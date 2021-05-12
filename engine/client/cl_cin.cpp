@@ -144,11 +144,6 @@ void SCR_StopCinematic (void)
 		Mem_Free (cin.pic_pending);
 		cin.pic_pending = NULL;
 	}
-	if (cl.cinematicpalette_active)
-	{
-		R_SetRawPalette(NULL);
-		cl.cinematicpalette_active = false;
-	}
 	if (cl.cinematic_file)
 	{
 		fclose (cl.cinematic_file);
@@ -427,9 +422,10 @@ byte *SCR_ReadNextFrame (void)
 		return NULL;	// last frame marker
 
 	if (command == 1)
-	{	// read palette
+	{
+		// read palette
 		FS_Read (cl.cinematicpalette, sizeof(cl.cinematicpalette), cl.cinematic_file);
-		cl.cinematicpalette_active=0;	// dubious....  exposes an edge case
+		R_SetRawPalette( cl.cinematicpalette );
 	}
 
 	// decompress the next frame
@@ -518,31 +514,25 @@ Returns true if a cinematic is active, meaning the view rendering
 should be skipped
 ==================
 */
-qboolean SCR_DrawCinematic (void)
+qboolean SCR_DrawCinematic()
 {
-	if (cl.cinematictime <= 0)
+	if ( cl.cinematictime <= 0 )
 	{
 		return false;
 	}
 
-	if (cls.key_dest == key_menu)
-	{	// blank screen and pause if menu is up
-		R_SetRawPalette(NULL);
-		cl.cinematicpalette_active = false;
-		return true;
-	}
-
-	if (!cl.cinematicpalette_active)
+	if ( cls.key_dest == key_menu )
 	{
-		R_SetRawPalette(cl.cinematicpalette);
-		cl.cinematicpalette_active = true;
+		// blank screen and pause if menu is up
+		return true;
 	}
 
-	if (!cin.pic)
+	if ( !cin.pic )
+	{
 		return true;
+	}
 
-	R_DrawStretchRaw (0, 0, viddef.width, viddef.height,
-		cin.width, cin.height, cin.pic);
+	R_DrawStretchRaw( 0, 0, viddef.width, viddef.height, cin.width, cin.height, cin.pic );
 
 	return true;
 }

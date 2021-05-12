@@ -1089,7 +1089,8 @@ void CL_CalcViewValues (void)
 
 		if ( delta < 100 )
 		{
-			cl.refdef.vieworg[2] -= cl.predicted_step * float( 100 - delta ) * 0.01f;
+			// TODO: sucks
+			//cl.refdef.vieworg[2] -= cl.predicted_step * float( 100 - delta ) * 0.01f;
 		}
 	}
 	else

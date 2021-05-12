@@ -1527,39 +1527,37 @@ void ClientDisconnect (edict_t *ent)
 //==============================================================
 
 
-edict_t	*pm_passent;
-
 // pmove doesn't need to know about passent and contentmask
-trace_t	PM_trace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end)
+static trace_t PM_trace( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end )
 {
-	if (pm_passent->health > 0)
-		return gi.trace (start, mins, maxs, end, pm_passent, MASK_PLAYERSOLID);
-	else
-		return gi.trace (start, mins, maxs, end, pm_passent, MASK_DEADSOLID);
+	if ( level.current_entity->health > 0 ) {
+		return gi.trace( start, mins, maxs, end, level.current_entity, MASK_PLAYERSOLID );
+	} else {
+		return gi.trace( start, mins, maxs, end, level.current_entity, MASK_DEADSOLID );
+	}
 }
-
-unsigned CheckBlock (void *b, int c)
-{
-	int	v,i;
-	v = 0;
-	for (i=0 ; i<c ; i++)
-		v+= ((byte *)b)[i];
-	return v;
-}
-void PrintPmove (pmove_t *pm)
-{
-	unsigned	c1, c2;
-
-	c1 = CheckBlock (&pm->s, sizeof(pm->s));
-	c2 = CheckBlock (&pm->cmd, sizeof(pm->cmd));
-	gi.dprintf ("sv %i %i\n", c1, c2);
-}
-
-static edict_t *enthack;
 
 static void PM_PlaySound( const char *sample, float volume )
 {
-	gi.sound( enthack, CHAN_BODY, gi.soundindex( sample ), volume, ATTN_NORM, 0.0f );
+	gi.sound( level.current_entity, CHAN_AUTO, gi.soundindex( sample ), volume, ATTN_NORM, 0.0f );
+}
+
+static uint CheckBlock( void *b, int c )
+{
+	int	v = 0, i = 0;
+	for ( ; i < c; i++ ) {
+		v += ( (byte *)b )[i];
+	}
+	return v;
+}
+
+static void PrintPmove( pmove_t *pm )
+{
+	uint c1, c2;
+
+	c1 = CheckBlock( &pm->s, sizeof( pm->s ) );
+	c2 = CheckBlock( &pm->cmd, sizeof( pm->cmd ) );
+	gi.dprintf( "sv %u %u\n", c1, c2 );
 }
 
 /*
@@ -1590,8 +1588,6 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 		return;
 	}
 
-	pm_passent = ent;
-
 	if (ent->client->chase_target) {
 
 		VectorCopy( ucmd->angles, client->resp.cmd_angles );
@@ -1620,7 +1616,6 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 
 		pm.trace = PM_trace;	// adds default parms
 		pm.pointcontents = gi.pointcontents;
-		enthack = ent;
 		pm.playsound = PM_PlaySound;
 
 		// perform a pmove
