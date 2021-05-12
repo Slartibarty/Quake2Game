@@ -11,9 +11,7 @@
 
 #include "sys.h"
 
-HINSTANCE		g_hInstance;
-
-qboolean		ActiveApp, Minimized;
+bool			g_activeApp, g_minimized;
 
 static HANDLE	hinput, houtput;
 
@@ -482,8 +480,6 @@ int main( int argc, char **argv )
 	_CrtSetDbgFlag( dbgFlags );
 #endif
 
-	g_hInstance = GetModuleHandleW( nullptr );
-
 	g_argc = argc; g_argv = argv;
 
 	// no abort/retry/fail errors
@@ -507,7 +503,7 @@ int main( int argc, char **argv )
 	while ( 1 )
 	{
 		// if at a full screen console, don't update unless needed
-		if ( Minimized || ( dedicated && dedicated->value ) )
+		if ( !g_activeApp || ( dedicated && dedicated->value ) )
 		{
 			Sleep( 1 );
 		}

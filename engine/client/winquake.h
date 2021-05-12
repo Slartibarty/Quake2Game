@@ -2,7 +2,5 @@
 
 #pragma once
 
-extern HINSTANCE	g_hInstance;
-
-extern HWND			cl_hwnd;
-extern qboolean		ActiveApp, Minimized;
+extern HWND		cl_hwnd;
+extern bool		g_activeApp, g_minimized;

@@ -105,31 +105,23 @@ namespace input
 
 	//-------------------------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------------------------
-	static void AppActivate( bool fActive, bool minimize )
+	static void AppActivate( bool fActive, bool minimized )
 	{
-		Minimized = minimize;
+		g_minimized = minimized;
 
 		Key_ClearStates();
 
 		// we don't want to act like we're active if we're minimized
-		if ( fActive && !Minimized )
-			ActiveApp = true;
-		else
-			ActiveApp = false;
+		if ( fActive && !minimized ) {
+			g_activeApp = true;
+		} else {
+			g_activeApp = false;
+		}
 
 		// minimize/restore mouse-capture on demand
-		if ( !ActiveApp )
-		{
-			input::Activate( false );
-			CDAudio_Activate( false );
-			S_Activate( false );
-		}
-		else
-		{
-			input::Activate( true );
-			CDAudio_Activate( true );
-			S_Activate( true );
-		}
+		input::Activate( g_activeApp );
+		CDAudio_Activate( g_activeApp );
+		S_Activate( g_activeApp );
 	}
 
 	static void HandleKeyboardInput( RAWKEYBOARD &raw )
