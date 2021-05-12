@@ -12,6 +12,13 @@
 struct model_t;
 struct material_t;
 
+struct dlight_t
+{
+	vec3_t	origin;
+	vec3_t	color;
+	float	intensity;
+};
+
 struct entity_t
 {
 	model_t		*model;				// opaque type outside refresh
@@ -43,13 +50,6 @@ struct entity_t
 
 };
 
-struct dlight_t
-{
-	vec3_t	origin;
-	vec3_t	color;
-	float	intensity;
-};
-
 struct particle_t
 {
 	vec3_t	origin;
@@ -65,8 +65,8 @@ struct lightstyle_t
 
 struct refdef_t
 {
-	// SlartTodo: refdef_t doesn't really need the width and height values here, it tracks it itself
-	int			x, y, width, height;// in virtual screen coordinates
+	int			x, y, width, height;	// in virtual screen coordinates
+
 	float		fov_x, fov_y;
 	vec3_t		vieworg;
 	vec3_t		viewangles;
@@ -75,16 +75,18 @@ struct refdef_t
 	float		frametime;			// time since last frame, in milliseconds
 	int			rdflags;			// RDF_UNDERWATER, etc
 
-	byte		*areabits;			// if not NULL, only areas with set bits will be drawn
+	byte *		areabits;			// if not NULL, only areas with set bits will be drawn
 
-	lightstyle_t	*lightstyles;	// [MAX_LIGHTSTYLES]
+	// client view information
+	// separate from clView since we might want to
+	// fake some counts
 
-	int			num_entities;
-	entity_t	*entities;
+	dlight_t *		dlights;
+	entity_t *		entities;
+	particle_t *	particles;
+	lightstyle_t *	lightstyles;
 
-	int			num_dlights;
-	dlight_t	*dlights;
-
-	int			num_particles;
-	particle_t	*particles;
+	int				num_dlights;
+	int				num_entities;
+	int				num_particles;
 };

@@ -514,7 +514,7 @@ Returns true if a cinematic is active, meaning the view rendering
 should be skipped
 ==================
 */
-qboolean SCR_DrawCinematic()
+bool SCR_DrawCinematic()
 {
 	if ( cl.cinematictime <= 0 )
 	{

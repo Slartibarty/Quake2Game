@@ -802,7 +802,7 @@ void CL_AddPacketEntities (clSnapshot_t *frame)
 
 				AngleVectors (ent.angles, forward, NULL, NULL);
 				VectorMA (ent.origin, 64, forward, start);
-				V_AddLight (start, 100, 1, 0, 0);
+				V_AddDLight (start, 100, 1, 0, 0);
 			}
 		}
 		else
@@ -823,13 +823,13 @@ void CL_AddPacketEntities (clSnapshot_t *frame)
 			// FIXME: still pass to refresh
 
 			if (effects & EF_FLAG1)
-				V_AddLight (ent.origin, 225, 1.0, 0.1, 0.1);
+				V_AddDLight (ent.origin, 225, 1.0, 0.1, 0.1);
 			else if (effects & EF_FLAG2)
-				V_AddLight (ent.origin, 225, 0.1, 0.1, 1.0);
+				V_AddDLight (ent.origin, 225, 0.1, 0.1, 1.0);
 			else if (effects & EF_TAGTRAIL)						//PGM
-				V_AddLight (ent.origin, 225, 1.0, 1.0, 0.0);	//PGM
+				V_AddDLight (ent.origin, 225, 1.0, 1.0, 0.0);	//PGM
 			else if (effects & EF_TRACKERTRAIL)					//PGM
-				V_AddLight (ent.origin, 225, -1.0, -1.0, -1.0);	//PGM
+				V_AddDLight (ent.origin, 225, -1.0, -1.0, -1.0);	//PGM
 
 			continue;
 		}

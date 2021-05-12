@@ -1005,8 +1005,8 @@ static void ControlsSetMenuItemValues( void )
 
 	s_options_invertmouse_box.curvalue		= m_pitch->value < 0;
 
-	Cvar_SetValue( "crosshair", Clamp( crosshair->value, 0.0f, 3.0f ) );
-	s_options_crosshair_box.curvalue		= (int)crosshair->value;
+	Cvar_SetValue( "crosshair", Clamp( cl_crosshair->value, 0.0f, 3.0f ) );
+	s_options_crosshair_box.curvalue		= (int)cl_crosshair->value;
 }
 
 static void ControlsResetDefaultsFunc( void *unused )

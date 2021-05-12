@@ -78,7 +78,7 @@ size_t Hunk_End()
 #endif
 
 	++hunkCount;
-	Com_Printf( "hunkCount: %i\n", hunkCount );
+	//Com_Printf( "hunkCount: %i\n", hunkCount );
 
 	return curSize;
 }

@@ -101,7 +101,7 @@ void CL_InitCGame()
 
 	cgi.AddEntity = V_AddEntity;
 	cgi.AddParticle = V_AddParticle;
-	cgi.AddLight = V_AddLight;
+	cgi.AddLight = V_AddDLight;
 	cgi.AddLightStyle = V_AddLightStyle;
 
 	cgi.ReadByte = MSG_ReadByte;

@@ -8,10 +8,9 @@
 
 #include "vid.h"
 #include "screen.h"
-#include "sound.h"
+#include "snd_public.h"
 #include "input.h"
 #include "cl_keys.h"
-#include "cl_console.h"
 #include "cdaudio.h"
 
 #include "keycodes.h"
@@ -222,10 +221,6 @@ extern	entity_state_t	cl_parse_entities[MAX_PARSE_ENTITIES];
 // cvars
 //
 extern	cvar_t	*cl_gun;
-extern	cvar_t	*cl_add_blend;
-extern	cvar_t	*cl_add_lights;
-extern	cvar_t	*cl_add_particles;
-extern	cvar_t	*cl_add_entities;
 extern	cvar_t	*cl_predict;
 extern	cvar_t	*cl_footsteps;
 extern	cvar_t	*cl_noskins;
@@ -290,6 +285,28 @@ extern cgame_export_t	*cge;
 
 void CL_InitCGame();
 void CL_ShutdownCGame();
+
+//
+// cl_console
+//
+void DrawString( int x, int y, const char *s );
+void DrawAltString( int x, int y, const char *s );	// Green
+
+void Con_CheckResize();
+void Con_Init();
+void Con_DrawConsole( float frac );
+void Con_Print( const char *txt );
+void Con_DrawNotify();
+void Con_ClearNotify();
+void Con_ToggleConsole_f();
+
+bool Con_IsInitialized();
+
+// Q3 added
+void Con_PageUp();
+void Con_PageDown();
+void Con_Top();
+void Con_Bottom();
 
 //
 // cl_main
@@ -357,15 +374,16 @@ void CL_Download_f (void);
 //
 // cl_view.c
 //
-extern	int			gun_frame;
-extern	model_t		*gun_model;
+extern int			gun_frame;
+extern model_t *	gun_model;
 
-void V_Init (void);
-void V_RenderView (void);
-void V_AddEntity (entity_t *ent);
-void V_AddParticle (vec3_t org, int color, float alpha);
-void V_AddLight (vec3_t org, float intensity, float r, float g, float b);
-void V_AddLightStyle (int style, float r, float g, float b);
+void V_Init();
+void V_RenderView();
+
+void V_AddEntity( entity_t *ent );
+void V_AddParticle( vec3_t org, int color, float alpha );
+void V_AddDLight( vec3_t org, float intensity, float r, float g, float b );
+void V_AddLightStyle( int style, float r, float g, float b );
 
 //
 // cl_pred.c

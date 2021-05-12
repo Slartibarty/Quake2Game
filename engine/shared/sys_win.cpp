@@ -215,24 +215,6 @@ Send Key_Event calls
 */
 void Sys_SendKeyEvents( void )
 {
-	// slart: wtf were they thinking, doing it in the main loop works just fine...
-	// clean up the view code too, it's so bad
-#if 0
-	MSG msg;
-
-	while ( PeekMessageW( &msg, NULL, 0, 0, PM_NOREMOVE ) )
-	{
-		if ( !GetMessageW( &msg, NULL, 0, 0 ) ) {
-			Com_Quit( EXIT_SUCCESS );
-		}
-		sys_msg_time = msg.time;
-		TranslateMessage( &msg );
-		DispatchMessageW( &msg );
-	}
-
-	// grab frame time
-	sys_frame_time = Sys_Milliseconds(); // FIXME: should this be at start?
-#endif
 }
 
 

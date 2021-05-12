@@ -243,7 +243,7 @@ Con_ClearNotify
 void Con_ClearNotify (void)
 {	
 	for ( int i = 0; i < NUM_CON_TIMES; i++ ) {
-		con.times[i] = 0;
+		con.times[i] = 0.0f;
 	}
 }
 						

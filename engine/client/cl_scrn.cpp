@@ -1,6 +1,19 @@
-// cl_scrn.c -- master for refresh, status bar, console, chat, notify, etc
+/*
+===================================================================================================
+
+	"Screen" operations. Master for refresh, status bar, console, chat, notify, etc.
+
+	Handles updating the screen, calls down into the view functions to render the 3D world,
+	then draws 2D imagery on top (HUD, crosshair, etc). Also parses HUD scripts from the game code
+
+	Ideal candidate to be moved to cgame, alongside cl_view
+
+===================================================================================================
+*/
 
 /*
+
+  id developer's notes:
 
   full screen console
   put up loading plaque
@@ -11,7 +24,7 @@
 
   end of unit intermissions
 
-  */
+*/
 
 #include "client.h"
 
@@ -297,44 +310,6 @@ static void SCR_CalcVrect()
 
 /*
 ========================
-SCR_Sky_f
-
-Set a specific sky and rotation speed
-========================
-*/
-static void SCR_Sky_f()
-{
-	float	rotate;
-	vec3_t	axis;
-
-	if ( Cmd_Argc() < 2 ) {
-		Com_Printf( "Usage: sky <basename> <rotate> <axis x y z>\n" );
-		return;
-	}
-
-	if ( Cmd_Argc() > 2 ) {
-		rotate = (float)atof( Cmd_Argv( 2 ) );
-	} else {
-		rotate = 0.0f;
-	}
-
-	if ( Cmd_Argc() == 6 ) {
-		axis[0] = (float)atof( Cmd_Argv( 3 ) );
-		axis[1] = (float)atof( Cmd_Argv( 4 ) );
-		axis[2] = (float)atof( Cmd_Argv( 5 ) );
-	} else {
-		axis[0] = 0.0f;
-		axis[1] = 0.0f;
-		axis[2] = 1;
-	}
-
-	R_SetSky( Cmd_Argv( 1 ), rotate, axis );
-}
-
-//=================================================================================================
-
-/*
-========================
 SCR_Init
 ========================
 */
@@ -354,7 +329,6 @@ void SCR_Init()
 
 	Cmd_AddCommand( "timerefresh", SCR_TimeRefresh_f );
 	Cmd_AddCommand( "loading", SCR_Loading_f );
-	Cmd_AddCommand( "sky", SCR_Sky_f );
 
 	scr_initialized = true;
 }
@@ -411,6 +385,30 @@ static void SCR_DrawLoading()
 
 	R_DrawGetPicSize( &w, &h, "loading" );
 	R_DrawPic( ( viddef.width - w ) / 2, ( viddef.height - h ) / 2, "loading" );
+}
+
+/*
+========================
+SCR_DrawCrosshair
+========================
+*/
+void SCR_DrawCrosshair()
+{
+	if ( !cl_crosshair->GetBool() ) {
+		return;
+	}
+
+	if ( cl_crosshair->IsModified() ) {
+		cl_crosshair->ClearModified();
+		SCR_TouchPics();
+	}
+
+	if ( !crosshair_pic[0] ) {
+		return;
+	}
+
+	R_DrawPic( scr_vrect.x + ( ( scr_vrect.width - crosshair_width ) >> 1 )
+		, scr_vrect.y + ( ( scr_vrect.height - crosshair_height ) >> 1 ), crosshair_pic );
 }
 
 //=================================================================================================
@@ -727,7 +725,7 @@ Allows rendering code to cache all needed sbar graphics
 */
 void SCR_TouchPics()
 {
-	int		i, j;
+	int i, j;
 
 	for ( i = 0; i < 2; i++ ) {
 		for ( j = 0; j < 11; j++ ) {
@@ -735,13 +733,13 @@ void SCR_TouchPics()
 		}
 	}
 
-	if ( crosshair->value )
+	if ( cl_crosshair->GetBool() )
 	{
-		if ( crosshair->value > 3 || crosshair->value < 0 ) {
-			crosshair->value = 3;
+		if ( cl_crosshair->GetInt32() > 3 || cl_crosshair->GetInt32() < 0 ) {
+			cl_crosshair->value = 3;
 		}
 
-		Q_sprintf_s( crosshair_pic, "ch%i", crosshair->GetInt32() );
+		Q_sprintf_s( crosshair_pic, "ch%i", cl_crosshair->GetInt32() );
 		R_DrawGetPicSize( &crosshair_width, &crosshair_height, crosshair_pic );
 		if ( !crosshair_width ) {
 			crosshair_pic[0] = '\0';
@@ -1118,12 +1116,17 @@ void SCR_UpdateScreen()
 	}
 	else
 	{
-		// do 3D refresh drawing, and then update the screen
-		SCR_CalcVrect ();
+		SCR_CalcVrect();
 
-		V_RenderView ();
+		// draw the game view
 
-		SCR_DrawStats ();
+		V_RenderView();
+
+		// draw 2d elements on top
+
+		SCR_DrawCrosshair();
+
+		SCR_DrawStats();
 		if ( cl.frame.playerstate.stats[STAT_LAYOUTS] & 1 ) {
 			SCR_DrawLayout();
 		}
@@ -1131,8 +1134,8 @@ void SCR_UpdateScreen()
 			CL_DrawInventory();
 		}
 
-		SCR_DrawNet ();
-		SCR_CheckDrawCenterString ();
+		SCR_DrawNet();
+		SCR_CheckDrawCenterString();
 
 		if ( scr_timegraph->value ) {
 			SCR_DebugGraph( cls.frametime * 300, colors::black );
@@ -1142,13 +1145,13 @@ void SCR_UpdateScreen()
 			SCR_DrawDebugGraph();
 		}
 
-		SCR_DrawPause ();
+		SCR_DrawPause();
 
-		SCR_DrawConsole ();
+		SCR_DrawConsole();
 
-		M_Draw ();
+		M_Draw();
 
-		SCR_DrawLoading ();
+		SCR_DrawLoading();
 	}
 
 	R_EndFrame();

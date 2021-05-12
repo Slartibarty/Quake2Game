@@ -1349,23 +1349,20 @@ Specifies the model that will be used as the world
 */
 void R_BeginRegistration( const char *model )
 {
-	char fullname[MAX_QPATH];
 	static cvar_t *flushmap;
 
 	tr.registrationSequence++;
 	r_oldviewcluster = -1;		// force markleafs
-
-	Q_sprintf_s( fullname, "maps/%s.bsp", model );
 
 	// explicitly free the old map if different
 	// this guarantees that mod_known[0] is the world map
 	if ( !flushmap ) {
 		flushmap = Cvar_Get( "flushmap", "0", 0 );
 	}
-	if ( Q_strcmp( mod_known[0].name, fullname ) || flushmap->value ) {
+	if ( Q_strcmp( mod_known[0].name, model ) || flushmap->value ) {
 		Mod_Free( &mod_known[0] );
 	}
-	r_worldmodel = Mod_ForName( fullname, true );
+	r_worldmodel = Mod_ForName( model, true );
 
 	r_viewcluster = -1;
 }
