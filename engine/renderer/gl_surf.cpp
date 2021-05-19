@@ -845,11 +845,13 @@ static bool R_CullBox( vec3_t mins, vec3_t maxs )
 {
 	int i;
 
-	if ( r_nocull->value )
+	if ( r_nocull->value ) {
 		return false;
+	}
 
-	for ( i = 0; i < 4; i++ ) {
-		if ( BOX_ON_PLANE_SIDE( mins, maxs, &frustum[i] ) == 2 ) {
+	for ( i = 0; i < 4; i++ )
+	{
+		if ( BoxOnPlaneSide( mins, maxs, &frustum[i] ) == 2 ) {
 			return true;
 		}
 	}
@@ -949,13 +951,18 @@ void R_RecursiveWorldNode (mnode_t *node)
 	float		dot;
 	material_t	*mat;
 
-	if (node->contents == CONTENTS_SOLID)
-		return;		// solid
+	if ( node->contents == CONTENTS_SOLID ) {
+		// solid
+		return;
+	}
 
-	if (node->visframe != r_visframecount)
+	if ( node->visframe != r_visframecount ) {
 		return;
-	if (R_CullBox (node->minmaxs, node->minmaxs+3))
+	}
+
+	if ( R_CullBox( node->minmaxs, node->minmaxs + 3 ) ) {
 		return;
+	}
 	
 // if a leaf node, draw stuff
 	if (node->contents != -1)
@@ -972,13 +979,10 @@ void R_RecursiveWorldNode (mnode_t *node)
 		mark = pleaf->firstmarksurface;
 		c = pleaf->nummarksurfaces;
 
-		if (c)
+		while ( c-- )
 		{
-			do
-			{
-				(*mark)->visframe = r_framecount;
-				mark++;
-			} while (--c);
+			( *mark )->visframe = r_framecount;
+			mark++;
 		}
 
 		return;
@@ -1001,7 +1005,7 @@ void R_RecursiveWorldNode (mnode_t *node)
 		dot = modelorg[2] - plane->dist;
 		break;
 	default:
-		dot = DotProduct (modelorg, plane->normal) - plane->dist;
+		dot = DotProduct( modelorg, plane->normal ) - plane->dist;
 		break;
 	}
 
@@ -1022,18 +1026,23 @@ void R_RecursiveWorldNode (mnode_t *node)
 	// draw stuff
 	for ( c = node->numsurfaces, surf = r_worldmodel->surfaces + node->firstsurface; c ; c--, surf++)
 	{
-		if (surf->visframe != r_framecount)
+		if ( surf->visframe != r_framecount ) {
 			continue;
+		}
 
-		if ( (surf->flags & SURF_PLANEBACK) != sidebit )
-			continue;		// wrong side
+		if ( ( surf->flags & SURF_PLANEBACK ) != sidebit ) {
+			// wrong side
+			continue;
+		}
 
 		if (surf->texinfo->flags & SURF_SKY)
-		{	// just adds to visible sky bounds
+		{
+			// just adds to visible sky bounds
 			R_AddSkySurface (surf);
 		}
 		else if (surf->texinfo->flags & (SURF_TRANS33|SURF_TRANS66))
-		{	// add to the translucent chain
+		{
+			// add to the translucent chain
 			surf->texturechain = r_alpha_surfaces;
 			r_alpha_surfaces = surf;
 		}
@@ -1090,27 +1099,7 @@ void R_DrawWorld (void)
 	memset (gl_lms.lightmap_surfaces, 0, sizeof(gl_lms.lightmap_surfaces));
 	R_ClearSkyBox ();
 
-	if ( GLEW_ARB_multitexture && r_ext_multitexture->value )
-	{
-		GL_EnableMultitexture( true );
-
-		GL_SelectTexture( GL_TEXTURE0);
-		GL_TexEnv( GL_REPLACE );
-		GL_SelectTexture( GL_TEXTURE1);
-
-		if ( r_lightmap->value )
-			GL_TexEnv( GL_REPLACE );
-		else 
-			GL_TexEnv( GL_MODULATE );
-
-		R_RecursiveWorldNode (r_worldmodel->nodes);
-
-		GL_EnableMultitexture( false );
-	}
-	else
-	{
-		R_RecursiveWorldNode (r_worldmodel->nodes);
-	}
+	R_RecursiveWorldNode (r_worldmodel->nodes);
 
 	/*
 	** theoretically nothing should happen in the next two functions
@@ -1142,24 +1131,26 @@ void R_MarkLeaves (void)
 	mleaf_t	*leaf;
 	int		cluster;
 
-	if (r_oldviewcluster == r_viewcluster && r_oldviewcluster2 == r_viewcluster2 && !r_novis->value && r_viewcluster != -1)
+	if ( r_oldviewcluster == r_viewcluster && r_oldviewcluster2 == r_viewcluster2 && !r_novis->value && r_viewcluster != -1 ) {
 		return;
+	}
 
-	// development aid to let you run around and see exactly where
-	// the pvs ends
-	if (r_lockpvs->value)
+	// lockpvs lets designers walk around to determine the
+	// extent of the current pvs
+	if ( r_lockpvs->value ) {
 		return;
+	}
 
 	r_visframecount++;
 	r_oldviewcluster = r_viewcluster;
 	r_oldviewcluster2 = r_viewcluster2;
 
-	if (r_novis->value || r_viewcluster == -1 || !r_worldmodel->vis)
+	if ( r_novis->value || r_viewcluster == -1 || !r_worldmodel->vis )
 	{
 		// mark everything
-		for (i=0 ; i<r_worldmodel->numleafs ; i++)
+		for ( i = 0; i < r_worldmodel->numleafs; i++ )
 			r_worldmodel->leafs[i].visframe = r_visframecount;
-		for (i=0 ; i<r_worldmodel->numnodes ; i++)
+		for ( i = 0; i < r_worldmodel->numnodes; i++ )
 			r_worldmodel->nodes[i].visframe = r_visframecount;
 		return;
 	}

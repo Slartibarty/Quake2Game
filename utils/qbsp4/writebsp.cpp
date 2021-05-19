@@ -226,6 +226,9 @@ int EmitDrawNode_r (node_t *node)
 	n = &dnodes[numnodes];
 	numnodes++;
 
+	// SlartHack: meh, useless memset
+	memset( n, 0, sizeof( *n ) );
+
 	_VectorCopy (node->mins, n->mins);
 	_VectorCopy (node->maxs, n->maxs);
 

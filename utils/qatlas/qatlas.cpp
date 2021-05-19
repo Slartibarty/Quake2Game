@@ -1,8 +1,5 @@
 
-#include "../../core/core.h"
-#include "../../common/q_formats.h"
-
-#include <vector>
+#include "qatlas.h"
 
 #include "../../thirdparty/xatlas/xatlas.h"
 
@@ -15,6 +12,12 @@ std::vector<dleaf_t>	g_leafs;
 std::vector<uint16>		g_leafFaces;
 std::vector<dedge_t>	g_edges;
 std::vector<int>		g_surfedges;
+
+// new stuff!
+
+std::vector<bspDrawFace_t>		g_drawFaces;
+std::vector<bspDrawVert_t>		g_drawVerts;
+std::vector<bspDrawIndex_t>		g_drawIndices;
 
 static void LoadPlanes( byte *bspBuffer, lump_t *lump )
 {
@@ -54,6 +57,7 @@ static void LoadNodes( byte *bspBuffer, lump_t *lump )
 
 	for ( int i = 0; i < numNodes; ++i )
 	{
+		assert( nodes[i].numfaces > 0 );
 		g_nodes.push_back( nodes[i] );
 	}
 }
@@ -202,41 +206,194 @@ int main( int argc, char **argv )
 	LoadNodes( bspBuffer, &bspHeader->lumps[LUMP_NODES] );
 	LoadTexinfo( bspBuffer, &bspHeader->lumps[LUMP_TEXINFO] );
 	LoadFaces( bspBuffer, &bspHeader->lumps[LUMP_FACES] );
+	LoadLeafs( bspBuffer, &bspHeader->lumps[LUMP_LEAFS] );
 	LoadEdges( bspBuffer, &bspHeader->lumps[LUMP_EDGES] );
 	LoadSurfedges( bspBuffer, &bspHeader->lumps[LUMP_SURFEDGES] );
 
 	free( bspBuffer );
 
-	// Cross ref every vertex
+	Decompose_Main();
+
 #if 0
-	for ( size_t iter1 = 0; iter1 < g_vertices.size(); ++iter1 )
-	{
-		dvertex_t &vertex = g_vertices[iter1];
 
-		for ( size_t iter2 = 0; iter2 < g_vertices.size(); ++iter2 )
-		{
-			if ( iter2 == iter1 )
-			{
-				continue;
-			}
+	std::vector<bspDrawFace_t> bsp_final_faces;			// bsp faces
+	std::vector<bspDrawVert_t> bsp_final_verts;			// bsp verts
+	std::vector<uint16> bsp_final_indices;				// bsp indices
 
-			dvertex_t &vertex2 = g_vertices[iter2];
+	uint offset_verts = 0;		// offset so far for verts
+	uint offset_indices = 0;	// offset so far for indices
 
-			assert( VectorCompare( vertex.point, vertex2.point ) == false );
-		}
-	}
-#endif
-
-	std::vector<uint> triangulated_indices;
-	std::vector<uint> face_indices;
-
-	// for each node
-	for ( size_t iter1 = 0; iter1 < g_nodes.size(); ++iter1, face_indices.clear() )
+	// job: for each node, fill out the new members with correct data, this also completes
+	// the drawfaces, drawverts and drawindices part of the bsp, these are not completed by vbsp
+	// so they are directly appened to the end of the file, the header must be updated too
+	// leafs must be updated accordingly since they contain duplicate data
+	for ( size_t iter1 = 0; iter1 < g_nodes.size(); ++iter1 )
 	{
 		dnode_t node = g_nodes[iter1];
 
-		//node.
+		struct richIndexData_t
+		{
+			int32 texInfo;	// texinfo for this index
+			uint index;
+		};
+
+		struct indexConversionData_t
+		{
+			int32 texInfo;	// texinfo for this index
+			uint index;
+			uint newIndex;
+		};
+
+		std::vector<richIndexData_t> triangulated_indices;
+		std::vector<richIndexData_t> face_indices;
+		std::vector<std::string> face_texinfo_names;	// all texinfos
+		std::vector<int32> face_texinfos;				// save all texinfos used by this node
+
+		std::vector<bspDrawFace_t> final_faces;			// node faces
+		std::vector<bspDrawVert_t> final_verts;			// node verts
+		std::vector<uint16> final_indices;				// node indices
+
+		std::vector<indexConversionData_t> created_verts;	// keep a list of all vertices created, maps to original indexes
+
+		// for each face of this node
+		for ( uint iter2 = 0; iter2 < node.numfaces; ++iter2, face_indices.clear() )
+		{
+			dface_t &face = g_faces[node.firstface + iter2];
+
+			face_texinfos.push_back( face.texinfo );
+
+			int currentEdge = face.firstedge;
+
+			// for each edge of this face
+			for ( int iter2 = 0; iter2 < face.numedges; ++iter2, ++currentEdge )
+			{
+				int currentSurfedge = g_surfedges[currentEdge];
+				int start = currentSurfedge > 0 ? 0 : 1;
+				currentSurfedge = abs( currentSurfedge );
+				dedge_t &edge = g_edges[currentSurfedge];
+
+				face_indices.push_back( { face.texinfo, edge.v[start] } );
+			}
+
+			int numTriangles = face.numedges - 2;
+
+			if ( face.numedges == 3 )
+			{
+				triangulated_indices.push_back( face_indices[0] );
+				triangulated_indices.push_back( face_indices[1] );
+				triangulated_indices.push_back( face_indices[2] );
+				continue;
+			}
+
+			// triangulate it, fan style
+
+			int i;
+			int middle;
+
+			// for every triangle
+			for ( i = 0, middle = 1; i < numTriangles; ++i, ++middle )
+			{
+				triangulated_indices.push_back( face_indices[0] );
+				triangulated_indices.push_back( face_indices[middle] );
+				triangulated_indices.push_back( face_indices[middle + 1] );
+			}
+		}
+
+		final_faces.reserve( face_texinfos.size() );
+		final_indices.reserve( triangulated_indices.size() );
+
+		uint firstIndex = 0;
+
+		// sort index data by texinfo
+		for ( size_t iter2 = 0; iter2 < face_texinfos.size(); ++iter2 )
+		{
+			int texinfo = face_texinfos[iter2];
+
+			// push back every index that corresponds to this index
+			for ( size_t iter3 = 0; iter3 < triangulated_indices.size(); ++iter3 )
+			{
+				if ( triangulated_indices[iter3].texInfo != texinfo )
+				{
+					// skip past this index, it uses a different texture! we'll get to it soon
+					continue;
+				}
+
+				uint index = triangulated_indices[iter3].index;
+
+				// check our created verts to see if we already have a combo for this set
+				for ( size_t iter4 = 0; iter4 < created_verts.size(); ++iter4 )
+				{
+					if ( created_verts[iter4].texInfo == texinfo )
+					{
+						if ( created_verts[iter4].index == index )
+						{
+							// use this
+							final_indices.push_back( created_verts[iter4].newIndex );
+						}
+					}
+				}
+
+				// create a vertex
+
+				texinfo_t &texStruct = g_texinfos[texinfo];
+
+				bspDrawVert_t vert{};
+
+				vert.xyz.SetFromLegacy( g_vertices[index].point );
+				vert.st.x = DotProduct( vert.xyz.Base(), texStruct.vecs[0] ) + texStruct.vecs[0][3];	// must be /= width at runtime
+				vert.st.y = DotProduct( vert.xyz.Base(), texStruct.vecs[1] ) + texStruct.vecs[1][3];	// must be /= height at runtime
+
+				final_verts.push_back( vert );
+
+				final_indices.push_back( (uint16)final_verts.size() );
+				
+				// cache it
+
+				created_verts.push_back( { texinfo, index, (uint)final_verts.size() } );
+
+				++offset_verts;
+				++offset_indices;
+			}
+
+			bspDrawFace_t &face = final_faces.emplace_back();
+
+			Q_strcpy_s( face.materialName, g_texinfos[texinfo].texture );
+			face.firstIndex = (uint16)firstIndex;
+			face.numIndices = (uint16)final_indices.size() - firstIndex;
+
+			firstIndex += (uint)final_indices.size();
+		}
+
+		// done, we now have triangulated vertex data for each face in this node
+
+		bsp_final_faces.reserve( bsp_final_faces.size() + final_faces.size() );
+		bsp_final_verts.reserve( bsp_final_verts.size() + final_verts.size() );
+		bsp_final_indices.reserve( bsp_final_indices.size() + final_indices.size() );
+
+		// add this node's contribution to the main lists
+
+		for ( size_t vecIter = 0; vecIter < final_faces.size(); ++vecIter )
+		{
+			bsp_final_faces.push_back( final_faces[vecIter] );
+		}
+		for ( size_t vecIter = 0; vecIter < final_verts.size(); ++vecIter )
+		{
+			bsp_final_verts.push_back( final_verts[vecIter] );
+		}
+		for ( size_t vecIter = 0; vecIter < final_indices.size(); ++vecIter )
+		{
+			bsp_final_indices.push_back( final_indices[vecIter] );
+		}
+
+		//offset_verts += (uint)bsp_final_verts.size();
+		//offset_indices += (uint)bsp_final_indices.size();
 	}
+
+#endif
+
+	////////////
+
+#if 0
 
 	// For each face
 	for ( size_t iter1 = 0; iter1 < g_faces.size(); ++iter1, face_indices.clear() )
@@ -372,6 +529,6 @@ int main( int argc, char **argv )
 
 		fclose( objHandle );
 	}
-	
+#endif
 	return 0;
 }

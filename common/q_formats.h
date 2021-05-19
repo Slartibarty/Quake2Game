@@ -673,7 +673,7 @@ A few comments on maximum limits:
 
 inline constexpr int IDBSPHEADER = MakeFourCC( 'Q', 'B', 'S', 'P' );
 
-#define BSPVERSION 41
+#define BSPVERSION 42
 
 // almost none of these constants are used by the game
 
@@ -745,9 +745,10 @@ struct lump_t
 #define	LUMP_BRUSHSIDES		15
 #define	LUMP_AREAS			16		// TODO: why doesn't Quake 3 have these?
 #define	LUMP_AREAPORTALS	17		// TODO: why doesn't Quake 3 have these?
-//#define	LUMP_DRAWVERTS		18		// NEW!
-//#define	LUMP_DRAWINDICES	19		// NEW! uint16 indices
-#define	HEADER_LUMPS		18
+#define	LUMP_DRAWFACES		18		// NEW!
+#define	LUMP_DRAWVERTS		19		// NEW!
+#define	LUMP_DRAWINDICES	20		// NEW! uint16 indices
+#define	HEADER_LUMPS		21
 
 struct dheader_t
 {
@@ -798,24 +799,15 @@ struct dplane_t
 
 struct dnode_t
 {
-	int			planenum;
-	int			children[2];	// negative numbers are -(leafs+1), not nodes
-	short		mins[3];		// for frustom culling
-	short		maxs[3];
-	unsigned short	firstface;
-	unsigned short	numfaces;	// counting both sides
-};
-
-struct dnode_new_t
-{
 	int32		planenum;
 	int32		children[2];	// negative numbers are -(leafs+1), not nodes
 	int16		mins[3];		// for frustom culling
 	int16		maxs[3];
 	uint16		firstface;
 	uint16		numfaces;		// counting both sides
-	uint32		newFirstFace;
-	uint32		newNumFaces;
+	// new
+	//uint32		newFirstFace;
+	//uint32		newNumFaces;
 };
 
 
@@ -852,19 +844,22 @@ struct dface_t
 
 struct dleaf_t
 {
-	int				contents;			// OR of all brushes (not needed?)
+	int32		contents;			// OR of all brushes (not needed?)
 
-	short			cluster;
-	short			area;
+	int16		cluster;
+	int16		area;
 
-	short			mins[3];			// for frustum culling
-	short			maxs[3];
+	int16		mins[3];			// for frustum culling
+	int16		maxs[3];
 
-	unsigned short	firstleafface;
-	unsigned short	numleaffaces;
+	uint16		firstleafface;
+	uint16		numleaffaces;
 
-	unsigned short	firstleafbrush;
-	unsigned short	numleafbrushes;
+	uint16		firstleafbrush;
+	uint16		numleafbrushes;
+
+	uint16		newFirstFace;
+	uint16		newNumFaces;
 };
 
 struct dbrushside_t
@@ -909,6 +904,16 @@ struct darea_t
 
 //=============================================================================
 
+#define TEMP_MAX_QPATH 128		// temp bigger qpath
+
+// unique for every node
+struct bspDrawFace_t
+{
+	char	materialName[TEMP_MAX_QPATH];	// TODO: need a string table! the material associated with this polysoup
+	uint16	firstIndex;						// index into draw index list, which is in turn an index into draw verts
+	uint16	numIndices;						// number of indices
+};
+
 struct bspDrawVert_t
 {
 	vec3 xyz;
@@ -916,3 +921,5 @@ struct bspDrawVert_t
 	vec2 st2;
 	//vec3 normal;		// TODO: normals
 };
+
+using bspDrawIndex_t = uint16;
