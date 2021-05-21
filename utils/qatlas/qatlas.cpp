@@ -49,6 +49,8 @@ static void LoadVertices( byte *bspBuffer, lump_t *lump )
 
 static void LoadNodes( byte *bspBuffer, lump_t *lump )
 {
+	assert( !( lump->filelen & sizeof( dnode_t ) ) );
+
 	int numNodes = lump->filelen / sizeof( dnode_t );
 
 	g_nodes.reserve( numNodes );
@@ -57,7 +59,6 @@ static void LoadNodes( byte *bspBuffer, lump_t *lump )
 
 	for ( int i = 0; i < numNodes; ++i )
 	{
-		assert( nodes[i].numfaces > 0 );
 		g_nodes.push_back( nodes[i] );
 	}
 }
@@ -186,7 +187,7 @@ int main( int argc, char **argv )
 	}
 
 	fseek( bspHandle, 0, SEEK_END );
-	int bspLength = ftell( bspHandle );
+	size_t bspLength = (size_t)ftell( bspHandle );
 	fseek( bspHandle, 0, SEEK_SET );
 
 	byte *bspBuffer = (byte *)malloc( bspLength );
@@ -210,7 +211,8 @@ int main( int argc, char **argv )
 	LoadEdges( bspBuffer, &bspHeader->lumps[LUMP_EDGES] );
 	LoadSurfedges( bspBuffer, &bspHeader->lumps[LUMP_SURFEDGES] );
 
-	free( bspBuffer );
+	// freed later
+	//free( bspBuffer );
 
 	Decompose_Main();
 
@@ -530,5 +532,11 @@ int main( int argc, char **argv )
 		fclose( objHandle );
 	}
 #endif
+
+	if ( !Decompose_Write( argv[1], bspBuffer, bspLength ) )
+	{
+		return EXIT_FAILURE;
+	}
+
 	return 0;
 }

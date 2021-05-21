@@ -22,8 +22,8 @@
   
   <!-- Segment heap -->
   <asmv3:application xmlns:asmv3="urn:schemas-microsoft-com:asm.v3">
-    <asmv3:windowsSettings xmlns="http://schemas.microsoft.com/SMI/2020/WindowsSettings">
-      <heapType>SegmentHeap</heapType>
+    <asmv3:windowsSettings>
+      <heapType xmlns="http://schemas.microsoft.com/SMI/2020/WindowsSettings">SegmentHeap</heapType>
     </asmv3:windowsSettings>
   </asmv3:application>
   

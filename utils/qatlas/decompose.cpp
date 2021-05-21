@@ -261,12 +261,12 @@ void Decompose_Main()
 
 				if ( first )
 				{
-					face.firstIndex = (uint16)node_indices.size();
+					face.firstIndex = (uint16)( node_indices.size() - 1 );
 					first = false;
 				}
 			}
 
-			face.numIndices = static_cast<uint16>( ( node_indices.size() - 1 ) - face.firstIndex );	// difference = number of indices
+			face.numIndices = static_cast<uint16>( node_indices.size() - face.firstIndex );	// difference = number of indices
 		}
 
 		// spit into the global bsp array
@@ -287,7 +287,7 @@ void Decompose_Main()
 			g_drawFaces.push_back( node_faces[iFaces] );
 		}
 
-		node.newNumFaces = static_cast<uint32>( ( g_drawFaces.size() - 1 ) - node.newFirstFace );
+		node.newNumFaces = static_cast<uint32>( g_drawFaces.size() - node.newFirstFace );
 
 		for ( uint iVerts = 0; iVerts < (uint)node_verts.size(); ++iVerts )
 		{
@@ -305,4 +305,129 @@ void Decompose_Main()
 	}
 
 	Com_Print( "holy shit\n" );
+}
+
+static void Decompose_WriteOBJ()
+{
+	FILE *objHandle = fopen( "data.obj", "wb" );
+	if ( !objHandle )
+	{
+		return;
+	}
+
+	for ( uint iNode = 0; iNode < (uint)g_nodes.size(); ++iNode )
+	{
+		const dnode_t &node = g_nodes[iNode];
+
+		// write all the verts
+		for ( uint32 iFace = 0; iFace < node.newNumFaces; ++iFace )
+		{
+			const bspDrawFace_t &face = g_drawFaces[node.firstface + iFace];
+
+			uint16 thing = face.numIndices % 3;
+
+			for ( uint32 iIndex = 0; iIndex < face.numIndices; ++iIndex )
+			{
+				bspDrawIndex_t index = g_drawIndices[face.firstIndex + iIndex];
+
+				const bspDrawVert_t vert = g_drawVerts[index];
+
+				fprintf( objHandle, "v %g %g %g\n", vert.xyz.x, vert.xyz.y, vert.xyz.z );
+				fprintf( objHandle, "vt %g %g\n", vert.st.x, vert.st.y );
+			}
+		}
+
+		fprintf( objHandle, "o node%u\n", iNode );
+
+#if 1
+		// write all the faces
+		for ( uint32 iFace = 0; iFace < node.newNumFaces; ++iFace )
+		{
+			const bspDrawFace_t &face = g_drawFaces[node.firstface + iFace];
+
+			if ( face.numIndices % 3 )
+			{
+				Com_Print( "Found a face with bad triangulation\n" );
+				continue;
+			}
+
+			for ( uint32 iIndex = 0; iIndex < face.numIndices; iIndex += 3 )
+			{
+				bspDrawIndex_t index1 = g_drawIndices[face.firstIndex + iIndex + 0];
+				bspDrawIndex_t index2 = g_drawIndices[face.firstIndex + iIndex + 1];
+				bspDrawIndex_t index3 = g_drawIndices[face.firstIndex + iIndex + 2];
+
+				fprintf( objHandle, "f %u/%u %u/%u %u/%u\n", index1, index1, index2, index2, index3, index3 );
+			}
+		}
+#endif
+	}
+
+	fclose( objHandle );
+}
+
+static void Decompose_FixNodes( byte *bspBuffer, lump_t *lump )
+{
+	dnode_t *nodes = (dnode_t *)( bspBuffer + lump->fileofs );
+
+	memcpy( nodes, g_nodes.data(), g_nodes.size() * sizeof( dnode_t ) );
+}
+
+bool Decompose_Write( const char *bspFilename, byte *oldBspBuffer, size_t oldBspLength )
+{
+	Decompose_WriteOBJ();
+
+	// mod the header
+	dheader_t *pHeader = (dheader_t *)oldBspBuffer;
+
+	size_t drawFacesSize = g_drawFaces.size() * sizeof( bspDrawFace_t );
+	size_t drawVertsSize = g_drawVerts.size() * sizeof( bspDrawVert_t );
+	size_t drawIndicesSize = g_drawIndices.size() * sizeof( bspDrawIndex_t );
+
+	pHeader->lumps[LUMP_DRAWFACES].fileofs = static_cast<int>( oldBspLength );
+	pHeader->lumps[LUMP_DRAWFACES].filelen = static_cast<int>( drawFacesSize );
+
+	Com_Printf( "DrawFaces offset: %d\n", pHeader->lumps[LUMP_DRAWFACES].fileofs );
+	Com_Printf( "DrawFaces length: %d\n", pHeader->lumps[LUMP_DRAWFACES].filelen );
+
+	pHeader->lumps[LUMP_DRAWVERTS].fileofs = static_cast<int>( oldBspLength + drawFacesSize );
+	pHeader->lumps[LUMP_DRAWVERTS].filelen = static_cast<int>( drawVertsSize );
+
+	Com_Printf( "DrawVerts offset: %d\n", pHeader->lumps[LUMP_DRAWVERTS].fileofs );
+	Com_Printf( "DrawVerts length: %d\n", pHeader->lumps[LUMP_DRAWVERTS].filelen );
+
+	pHeader->lumps[LUMP_DRAWINDICES].fileofs = static_cast<int>( oldBspLength + drawFacesSize + drawVertsSize );
+	pHeader->lumps[LUMP_DRAWINDICES].filelen = static_cast<int>( drawIndicesSize );
+
+	Com_Printf( "DrawIndices offset: %d\n", pHeader->lumps[LUMP_DRAWINDICES].fileofs );
+	Com_Printf( "DrawIndices length: %d\n", pHeader->lumps[LUMP_DRAWINDICES].filelen );
+
+	// fixup nodes
+
+	Decompose_FixNodes( oldBspBuffer, &pHeader->lumps[LUMP_NODES] );
+
+	size_t newBspLength = oldBspLength + drawFacesSize + drawVertsSize + drawIndicesSize;
+
+	// open and clear the bsp
+
+	FILE *newBspHandle = fopen( bspFilename, "wb" );
+	if ( !newBspHandle )
+	{
+		Com_Printf( "Couldn't open %s for writing\n", bspFilename );
+		return false;
+	}
+
+	// write the initial chunk of the old BSP
+
+	fwrite( oldBspBuffer, oldBspLength, 1, newBspHandle );
+
+	// append the new stuff
+
+	fwrite( g_drawFaces.data(), g_drawFaces.size(), sizeof( bspDrawFace_t ), newBspHandle );
+	fwrite( g_drawVerts.data(), g_drawVerts.size(), sizeof( bspDrawVert_t ), newBspHandle );
+	fwrite( g_drawIndices.data(), g_drawIndices.size(), sizeof( bspDrawIndex_t ), newBspHandle );
+
+	fclose( newBspHandle );
+
+	return true;
 }

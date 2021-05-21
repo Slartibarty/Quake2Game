@@ -806,8 +806,8 @@ struct dnode_t
 	uint16		firstface;
 	uint16		numfaces;		// counting both sides
 	// new
-	//uint32		newFirstFace;
-	//uint32		newNumFaces;
+	uint32		newFirstFace;
+	uint32		newNumFaces;
 };
 
 
