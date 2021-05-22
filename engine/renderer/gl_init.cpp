@@ -304,7 +304,6 @@ void R_Restart()
 	Draw_Shutdown();
 	Mod_FreeAll();
 
-	//GLimp_RestoreGamma();
 	GL_ShutdownImages();
 
 	R_DestroyDebugMesh();
@@ -326,7 +325,6 @@ void R_Restart()
 	tr.registrationSequence = 1;
 
 	GL_InitImages();
-	//GLimp_SetGamma( g_gammatable, g_gammatable, g_gammatable );
 
 	Mod_Init();
 	Draw_Init();
@@ -388,7 +386,6 @@ bool R_Init()
 	R_CreateDebugMesh();
 
 	GL_InitImages();
-	//GLimp_SetGamma( g_gammatable, g_gammatable, g_gammatable );
 
 	Mod_Init();
 	Draw_Init();
@@ -412,7 +409,6 @@ void R_Shutdown()
 	Draw_Shutdown();
 	Mod_FreeAll();
 
-	//GLimp_RestoreGamma();
 	GL_ShutdownImages();
 
 	R_DestroyDebugMesh();

@@ -35,8 +35,8 @@ static GLuint s_drawEBO;
 static std::vector<guiDrawCmd_t> s_drawCmds;
 
 // Used so we can chain consecutive function calls
-static guiDrawCmd_t	*s_currentCmd;
-static uint32		s_lastOffset;
+static guiDrawCmd_t *s_currentCmd;
+static uint32 s_lastOffset;
 
 /*
 ========================

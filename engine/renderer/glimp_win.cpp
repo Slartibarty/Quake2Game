@@ -410,53 +410,6 @@ static void GLimp_DestroyWindow()
 ===================================================================================================
 */
 
-static uint16 s_oldHardwareGamma[3][256];
-
-void GLimp_SetGamma( byte *red, byte *green, byte *blue )
-{
-	uint16 table[3][256];
-
-	for ( int i = 0; i < 256; i++ )
-	{
-		table[0][i] = ( ( (uint16)red[i] ) << 8 ) | red[i];
-		table[1][i] = ( ( (uint16)green[i] ) << 8 ) | green[i];
-		table[2][i] = ( ( (uint16)blue[i] ) << 8 ) | blue[i];
-	}
-
-	// enforce constantly increasing
-	for ( int j = 0; j < 3; j++ )
-	{
-		for ( int i = 1; i < 256; i++ )
-		{
-			if ( table[j][i] < table[j][i - 1] )
-			{
-				table[j][i] = table[j][i - 1];
-			}
-		}
-	}
-
-	HDC hDC = GetDC( nullptr );
-
-	GetDeviceGammaRamp( hDC, s_oldHardwareGamma );
-
-	ReleaseDC( nullptr, hDC );
-
-	BOOL result = SetDeviceGammaRamp( s_glwState.hDC, table );
-	if ( !result )
-	{
-		Com_Printf( "SetDeviceGammaRamp failed!\n" );
-	}
-}
-
-void GLimp_RestoreGamma( void )
-{
-	HDC hDC = GetDC( nullptr );
-
-	SetDeviceGammaRamp( hDC, s_oldHardwareGamma );
-
-	ReleaseDC( nullptr, hDC );
-}
-
 bool GLimp_SetMode( int &width, int &height, int mode, bool fullscreen )
 {
 	Com_Printf( "Setting mode %d:", mode );

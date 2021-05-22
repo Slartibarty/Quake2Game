@@ -122,7 +122,7 @@ void GL_MaterialList_f()
 // We want to mipmap walls, skins and sprites, although never
 // 2D pics or skies
 //-------------------------------------------------------------------------------------------------
-static GLuint GL_Upload32( const byte *pData, int nWidth, int nHeight, imageflags_t flags )
+static GLuint GL_Upload32( const byte *pData, int nWidth, int nHeight, imageFlags_t flags )
 {
 	GLuint id;
 
@@ -211,7 +211,7 @@ static GLuint GL_Upload32( const byte *pData, int nWidth, int nHeight, imageflag
 //-------------------------------------------------------------------------------------------------
 // This is the only function that can create image_t's
 //-------------------------------------------------------------------------------------------------
-static image_t *GL_CreateImage(const char *name, const byte *pic, int width, int height, imageflags_t flags)
+static image_t *GL_CreateImage(const char *name, const byte *pic, int width, int height, imageFlags_t flags)
 {
 	int			i;
 	image_t		*image;
@@ -298,7 +298,7 @@ static byte *GL_LoadImage( const char *pName, int &width, int &height )
 // THIS CHOKES ON TEXTURES WITH THE SAME NAME, STUDIOMODELS CAN HAVE IDENTICAL TEXTURE NAMES THAT ARE
 // DIFFERENT!!! THIS IS BAD!
 //-------------------------------------------------------------------------------------------------
-static image_t *GL_FindImage (const char *name, imageflags_t flags)
+static image_t *GL_FindImage (const char *name, imageFlags_t flags)
 {
 	int i;
 	image_t *image;
@@ -378,7 +378,7 @@ bool ParseMaterial( char *data, material_t *material )
 	char emitTexture[MAX_TOKEN_CHARS];
 	emitTexture[0] = '\0';
 
-	imageflags_t flags = 0;
+	imageFlags_t flags = 0;
 
 	COM_Parse2( &data, &token, sizeof( tokenhack ) );
 	if ( token[0] != '{' )

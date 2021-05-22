@@ -25,7 +25,7 @@ static_assert( DIRECTX_MATH_VERSION >= 316 );
 
 #define MAT_EXT ".mat"
 
-//-------------------------------------------------------------------------------------------------
+//=============================================================================
 
 #include "gl_model.h"
 
@@ -201,28 +201,28 @@ struct image_t;
 #define MAX_GLTEXTURES		2048
 #define MAX_GLMATERIALS		2048
 
-extern material_t	glmaterials[MAX_GLMATERIALS];
-extern int			numglmaterials;
+extern material_t		glmaterials[MAX_GLMATERIALS];
+extern int				numglmaterials;
 
-extern byte			g_gammatable[256];
+extern byte				g_gammatable[256];
 
 extern material_t *		defaultMaterial;
 extern material_t *		blackMaterial;
 extern material_t *		whiteMaterial;
 extern image_t *		flatNormalImage;
 
-extern unsigned		d_8to24table[256];
+extern unsigned			d_8to24table[256];
 
-void		GL_ImageList_f(void);
-void		GL_MaterialList_f(void);
+void		GL_ImageList_f();
+void		GL_MaterialList_f();
 
 material_t	*GL_FindMaterial( const char *name, bool managed = false );
-material_t	*R_RegisterSkin(const char *name);
+material_t	*R_RegisterSkin( const char *name );
 
-void		GL_FreeUnusedMaterials(void);
+void		GL_FreeUnusedMaterials();
 
-void		GL_InitImages(void);
-void		GL_ShutdownImages(void);
+void		GL_InitImages();
+void		GL_ShutdownImages();
 
 // Image flags
 // Mipmaps are opt-out
@@ -235,7 +235,7 @@ void		GL_ShutdownImages(void);
 // referenced without them
 // A solution to this problem is to generate mipmaps when required, but only once
 //
-using imageflags_t = uint8;
+using imageFlags_t = uint8;
 
 #define IF_NONE			0	// Gaben sound pack for FLStudio 6.1
 #define IF_NOMIPS		1	// Do not use or generate mipmaps (infers no anisotropy)
@@ -247,7 +247,7 @@ using imageflags_t = uint8;
 struct image_t
 {
 	char				name[MAX_QPATH];			// game path, including extension
-	imageflags_t		flags;
+	imageFlags_t		flags;
 	int					width, height;				// source image
 	GLuint				texnum;						// gl texture binding
 	int					refcount;
@@ -353,9 +353,9 @@ struct material_t
 ===============================================================================
 */
 
-void R_MarkLights(dlight_t *light, int bit, mnode_t *node);
-void R_PushDlights();
-void R_LightPoint(vec3_t p, vec3_t color);
+void	R_MarkLights( dlight_t *light, int bit, mnode_t *node );
+void	R_PushDlights();
+void	R_LightPoint( vec3_t p, vec3_t color );
 
 /*
 ===============================================================================
@@ -365,15 +365,15 @@ void R_LightPoint(vec3_t p, vec3_t color);
 ===============================================================================
 */
 
-extern	int		c_visible_lightmaps;
-extern	int		c_visible_textures;
+extern int c_visible_lightmaps;
+extern int c_visible_textures;
 
-void R_DrawBrushModel (entity_t *e);
-void R_DrawWorld (void);
-void R_DrawAlphaSurfaces (void);
-void R_RenderBrushPoly (msurface_t *fa);
-void R_RotateForEntity (entity_t *e);
-void R_MarkLeaves (void);
+void	R_DrawBrushModel( entity_t *e );
+void	R_DrawWorld();
+void	R_DrawAlphaSurfaces();
+void	R_RenderBrushPoly( msurface_t *fa );
+void	R_RotateForEntity( entity_t *e );
+void	R_MarkLeaves();
 
 /*
 ===============================================================================
@@ -383,9 +383,9 @@ void R_MarkLeaves (void);
 ===============================================================================
 */
 
-void R_DrawAliasModel( entity_t *e );
-void R_DrawStudioModel( entity_t *e );
-void R_DrawStaticMeshFile( entity_t *e );
+void	R_DrawAliasModel( entity_t *e );
+void	R_DrawStudioModel( entity_t *e );
+void	R_DrawStaticMeshFile( entity_t *e );
 
 /*
 ===============================================================================
@@ -395,12 +395,12 @@ void R_DrawStaticMeshFile( entity_t *e );
 ===============================================================================
 */
 
-void Draw_Init();
-void Draw_Shutdown();
+void	Draw_Init();
+void	Draw_Shutdown();
 
-void R_DrawScreenOverlay( const vec4_t color );
+void	R_DrawScreenOverlay( const vec4_t color );
 
-void Draw_RenderBatches();
+void	Draw_RenderBatches();
 
 /*
 ===============================================================================
@@ -410,12 +410,12 @@ void Draw_RenderBatches();
 ===============================================================================
 */
 
-void GL_SubdivideSurface( msurface_t *fa );
+void	GL_SubdivideSurface( msurface_t *fa );
 
-void EmitWaterPolys( msurface_t *fa );
-void R_AddSkySurface( msurface_t *fa );
-void R_ClearSkyBox();
-void R_DrawSkyBox();
+void	EmitWaterPolys( msurface_t *fa );
+void	R_AddSkySurface( msurface_t *fa );
+void	R_ClearSkyBox();
+void	R_DrawSkyBox();
 
 /*
 ===============================================================================
@@ -435,8 +435,8 @@ struct glProgs_t
 
 extern glProgs_t glProgs;
 
-void Shaders_Init();
-void Shaders_Shutdown();
+void	Shaders_Init();
+void	Shaders_Shutdown();
 
 /*
 ===============================================================================
@@ -448,25 +448,24 @@ void Shaders_Shutdown();
 ===============================================================================
 */
 
-void		GLimp_BeginFrame();
-void		GLimp_EndFrame();
+void	GLimp_BeginFrame();
+void	GLimp_EndFrame();
 
-void		GLimp_SetGamma( byte *red, byte *green, byte *blue );
-void		GLimp_RestoreGamma();
+bool 	GLimp_Init();
+void	GLimp_Shutdown();
 
-bool 		GLimp_Init();
-void		GLimp_Shutdown();
+bool    GLimp_SetMode( int &width, int &height, int mode, bool fullscreen );
 
-bool    	GLimp_SetMode( int &width, int &height, int mode, bool fullscreen );
+void	GLimp_AppActivate( bool active );
 
-void		GLimp_AppActivate( bool active );
+/*
+===============================================================================
 
-//-------------------------------------------------------------------------------------------------
-// Use defines for all imported functions
-// This allows us to use the same names for both static links and dynamic links
-// We could also use forceinline functions
-//-------------------------------------------------------------------------------------------------
+	Functions needed from the main engine
+
+===============================================================================
+*/
 
 // Client functions
-extern bool Sys_GetVidModeInfo( int &width, int &height, int mode );
-extern void VID_NewWindow( int width, int height );
+bool	Sys_GetVidModeInfo( int &width, int &height, int mode );
+void	VID_NewWindow( int width, int height );
