@@ -21,7 +21,7 @@
 
 //-------------------------------------------------------------------------------------------------
 
-material_t *	mat_notexture;			// use for bad textures
+material_t *	defaultMaterial;
 material_t *	blackMaterial;
 material_t *	whiteMaterial;
 image_t *		flatNormalImage;
@@ -349,8 +349,8 @@ static image_t *GL_FindImage (const char *name, imageflags_t flags)
 	//
 	pic = GL_LoadImage( name, width, height );
 	if ( !pic ) {
-		mat_notexture->image->IncrementRefCount();
-		return mat_notexture->image;
+		defaultMaterial->image->IncrementRefCount();
+		return defaultMaterial->image;
 	}
 
 	image = GL_CreateImage( name, pic, width, height, flags );
@@ -420,7 +420,7 @@ bool ParseMaterial( char *data, material_t *material )
 		{
 			COM_Parse2( &data, &token, sizeof( tokenhack ) );
 			material->nextframe = GL_FindMaterial( token );
-			if ( material->nextframe == mat_notexture ) // SLARTHACK: THIS IS REALLY BAD!!! REFCOUNT!!!
+			if ( material->nextframe == defaultMaterial ) // SLARTHACK: THIS IS REALLY BAD!!! REFCOUNT!!!
 			{
 				material->nextframe = nullptr;
 			}
@@ -486,7 +486,7 @@ bool ParseMaterial( char *data, material_t *material )
 	}
 	else
 	{
-		material->image = mat_notexture->image;
+		material->image = defaultMaterial->image;
 		material->image->IncrementRefCount();
 	}
 
@@ -582,7 +582,7 @@ static material_t *GL_CreateMaterial( const char *name )
 	nBufLen = FS_LoadFile( name, (void **)&pBuffer, 1 );
 	if ( !pBuffer )
 	{
-		return mat_notexture;
+		return defaultMaterial;
 	}
 
 	// find a free material_t
@@ -594,7 +594,7 @@ static material_t *GL_CreateMaterial( const char *name )
 	if ( i == numglmaterials )
 	{
 		if ( numglmaterials == MAX_GLMATERIALS )
-			Com_Error("MAX_GLMATERIALS" ); // This can probably just return mat_notexture
+			Com_Error("MAX_GLMATERIALS" ); // This can probably just return defaultMaterial
 		++numglmaterials;
 	}
 	material = &glmaterials[i];
@@ -613,7 +613,7 @@ static material_t *GL_CreateMaterial( const char *name )
 	{
 		FS_FreeFile( pBuffer );
 		memset( material, 0, sizeof( *material ) );
-		return mat_notexture;
+		return defaultMaterial;
 	}
 
 	FS_FreeFile( pBuffer );
@@ -629,7 +629,7 @@ material_t *GL_FindMaterial( const char *name, bool managed /*= false*/ )
 	if ( strstr( name, "players/" ) )
 	{
 		// No, no screw you
-		return mat_notexture;
+		return defaultMaterial;
 	}
 
 	if ( !strstr( name, MAT_EXT ) )
@@ -664,7 +664,7 @@ material_t *GL_FindMaterial( const char *name, bool managed /*= false*/ )
 material_t *R_RegisterSkin( const char *name )
 {
 	// This is only used by the terrible post-release multiplayer code
-	return mat_notexture;
+	return defaultMaterial;
 }
 
 #if 0
@@ -682,7 +682,7 @@ void GL_FreeUnusedImages( void )
 		if ( image->refcount != 0 )
 			continue;		// used this sequence
 
-		if ( image == mat_notexture->image || image == mat_particletexture->image )
+		if ( image == defaultMaterial->image || image == mat_particletexture->image )
 			continue;		// generated texture, delete only at shutdown
 
 		image->Delete();
@@ -854,7 +854,7 @@ static void R_CreateIntrinsicImages()
 		data[x][DEFAULT_SIZE-1][3] = 255;
 	}
 	image_t *defaultImage = GL_CreateImage("***defaultImage***", (byte *)data, DEFAULT_SIZE, DEFAULT_SIZE, IF_NONE);
-	mat_notexture = GL_CreateMaterialFromData( "***defaultMaterial***", defaultImage, whiteImage, flatNormalImage, blackImage );
+	defaultMaterial = GL_CreateMaterialFromData( "***defaultMaterial***", defaultImage, whiteImage, flatNormalImage, blackImage );
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -887,7 +887,7 @@ void GL_ShutdownImages( void )
 //	extern material_t *draw_chars;
 //	draw_chars->Delete();
 //	mat_particletexture->Delete();
-//	mat_notexture->Delete();
+//	defaultMaterial->Delete();
 
 	// Clear materials, images are cleared automatically
 	for ( i = 0, material = glmaterials; i < numglmaterials; ++i, ++material )

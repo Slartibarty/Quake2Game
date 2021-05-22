@@ -474,7 +474,7 @@ static void Mod_LoadTexinfo (lump_t *l)
 
 		Q_sprintf_s( name, "materials/%s.mat", in->texture );
 		out->material = GL_FindMaterial( name );
-		if ( out->material == mat_notexture )
+		if ( out->material == defaultMaterial )
 		{
 			Com_Printf( "Couldn't load %s\n", name );
 		}
@@ -1192,7 +1192,7 @@ void Mod_LoadStudioModel( model_t *pMod, void *pBuffer, int bufferLength )
 		{
 			// strcpy( name, mod->name );
 			// strcpy( name, ptexture[i].name );
-			pMod->skins[i] = mat_notexture;
+			pMod->skins[i] = defaultMaterial;
 			ptexture[i].index = pMod->skins[i]->image->texnum;
 		}
 	}

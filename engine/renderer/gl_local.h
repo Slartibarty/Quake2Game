@@ -206,7 +206,7 @@ extern int			numglmaterials;
 
 extern byte			g_gammatable[256];
 
-extern material_t *		mat_notexture;
+extern material_t *		defaultMaterial;
 extern material_t *		blackMaterial;
 extern material_t *		whiteMaterial;
 extern image_t *		flatNormalImage;
@@ -288,10 +288,10 @@ struct material_t
 	int32				registration_sequence;		// 0 = free, -1 = managed
 
 	// Returns true if this material is the missing texture
-	bool IsMissing() const { return this == mat_notexture; }
+	bool IsMissing() const { return this == defaultMaterial; }
 
 	// Returns true if the image referenced is the missing image
-	bool IsImageMissing() const { return image == mat_notexture->image; }
+	bool IsImageMissing() const { return image == defaultMaterial->image; }
 
 	// Returns true if this material is perfectly okay
 	bool IsOkay() const { return !IsMissing() && !IsImageMissing(); }
