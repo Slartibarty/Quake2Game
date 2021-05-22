@@ -95,17 +95,22 @@ void GL_ImageList_f( void )
 //-------------------------------------------------------------------------------------------------
 void GL_MaterialList_f()
 {
-	int i;
+	int i, managedCount = 0;
 	material_t *material;
 
-	Com_Printf( "------------------\n" );
+	Com_Print( "-------------------------------------------------------------------------------\n" );
 
 	for ( i = 0, material = glmaterials; i < numglmaterials; ++i, ++material )
 	{
 		Com_Printf( "Material: %s\nregistration_sequence = %d\n", material->name, material->registration_sequence );
+		if ( material->registration_sequence == -1 ) {
+			++managedCount;
+		}
 	}
 
-	Com_Printf( "------------------\n" );
+	Com_Printf( "\n%d registered materials\n%d of those are managed\n", numglmaterials, managedCount );
+
+	Com_Print( "-------------------------------------------------------------------------------\n" );
 }
 
 //-------------------------------------------------------------------------------------------------

@@ -24,7 +24,7 @@ struct guiDrawCmd_t
 	uint32 offset, count;
 };
 
-material_t *s_drawChars;
+static material_t *s_drawChars;
 
 static qGUIMeshBuilder s_drawMeshBuilder;
 
@@ -32,7 +32,7 @@ static GLuint s_drawVAO;
 static GLuint s_drawVBO;
 static GLuint s_drawEBO;
 
-std::vector<guiDrawCmd_t> s_drawCmds;
+static std::vector<guiDrawCmd_t> s_drawCmds;
 
 // Used so we can chain consecutive function calls
 static guiDrawCmd_t	*s_currentCmd;
@@ -162,6 +162,7 @@ void R_DrawGetPicSize( int *w, int *h, const char *pic )
 		*w = *h = -1;
 		return;
 	}
+
 	*w = mat->image->width;
 	*h = mat->image->height;
 }
@@ -173,14 +174,12 @@ R_DrawCharColor
 */
 void R_DrawCharColor( int x, int y, int ch, uint32 color )
 {
-	int row, col;
-	float frow, fcol;
-	float size;
-
+	// bound to 0 - 255
 	ch &= 255;
 
-	// temp: remove legacy colour codes
-	ch = ( ch & 127 );
+	// temp: bound to 0 - 127
+	// all chars after 127 are legacy coloured variations
+	ch &= 127;
 
 	if ( ch == 32 ) {
 		// space
@@ -192,12 +191,13 @@ void R_DrawCharColor( int x, int y, int ch, uint32 color )
 		return;
 	}
 
-	row = ch >> 4;
-	col = ch & 15;
+	int row = ch >> 4;
+	int col = ch & 15;
 
-	frow = row * 0.0625f;
-	fcol = col * 0.0625f;
-	size = 0.0625f;
+	constexpr float size = 0.0625f;
+
+	float frow = row * size;
+	float fcol = col * size;
 
 	guiRect_t rect;
 
@@ -262,10 +262,10 @@ void R_DrawChar( int x, int y, int ch )
 
 /*
 ========================
-R_DrawGeneric
+R_DrawMaterial
 ========================
 */
-inline void R_DrawGeneric( int x, int y, int w, int h, material_t *mat )
+static void R_DrawMaterial( int x, int y, int w, int h, material_t *mat )
 {
 	guiRect_t rect;
 
@@ -307,7 +307,7 @@ void R_DrawStretchPic( int x, int y, int w, int h, const char *pic )
 		return;
 	}
 
-	R_DrawGeneric( x, y, w, h, mat );
+	R_DrawMaterial( x, y, w, h, mat );
 }
 
 /*
@@ -325,7 +325,7 @@ void R_DrawPic( int x, int y, const char *pic )
 		return;
 	}
 
-	R_DrawGeneric( x, y, mat->image->width, mat->image->height, mat );
+	R_DrawMaterial( x, y, mat->image->width, mat->image->height, mat );
 }
 
 /*
@@ -338,6 +338,7 @@ refresh window.
 */
 void R_DrawTileClear( int x, int y, int w, int h, const char *pic )
 {
+#if 0
 	material_t *mat;
 
 	mat = R_RegisterPic( pic );
@@ -370,6 +371,7 @@ void R_DrawTileClear( int x, int y, int w, int h, const char *pic )
 	s_drawMeshBuilder.AddElement( rect );
 
 	Draw_CheckChain( mat );
+#endif
 }
 
 /*
@@ -437,7 +439,6 @@ void Draw_RenderBatches()
 
 	if ( s_drawMeshBuilder.HasData() )
 	{
-
 		// profiling code
 	//	double begin = Time_FloatMilliseconds();
 
@@ -490,7 +491,7 @@ void Draw_RenderBatches()
 
 //-------------------------------------------------------------------------------------------------
 
-static unsigned s_rawPalette[256];
+//static unsigned s_rawPalette[256];
 
 /*
 ========================
@@ -501,12 +502,14 @@ Sets the palette used by R_DrawStretchRaw
 */
 void R_SetRawPalette( const unsigned char *palette )
 {
+#if 0
 	// we don't use the raw palette for anything but cinematics, so ignore NULL calls
 	if ( !palette ) {
 		return;
 	}
 
 	memcpy( s_rawPalette, palette, sizeof( s_rawPalette ) );
+#endif
 }
 
 /*

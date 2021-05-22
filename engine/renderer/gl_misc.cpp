@@ -23,11 +23,11 @@ static void GL_Screenshot_Internal( bool png )
 	FILE *handle;
 	byte *pixbuffer;
 	
-// create the screenshots directory if it doesn't exist
+	// create the screenshots directory if it doesn't exist
 	Q_sprintf_s( checkname, "%s/screenshots", FS_Gamedir() );
 	Sys_CreateDirectory( checkname );
 
-// find a file name to save it to
+	// find a file name to save it to
 	Q_sprintf_s( picname, "quake00.%s", png ? "png" : "tga" );
 
 	for ( i = 0; i <= 99; ++i )

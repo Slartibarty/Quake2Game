@@ -143,13 +143,13 @@ static void GLAPIENTRY GL_DebugProc( GLenum source, GLenum type, GLuint id, GLen
 
 /*
 ========================
-GL_SetDefaultState
+R_InitGLState
 
 Sets some OpenGL state variables
 Called only once at init
 ========================
 */
-void GL_SetDefaultState()
+void R_InitGLState()
 {
 	glClearColor( DEFAULT_CLEARCOLOR );
 	glCullFace( GL_BACK );
@@ -319,7 +319,7 @@ void R_Restart()
 	glState.prev_mode = 3;
 
 	// set some default state variables
-	GL_SetDefaultState();
+	R_InitGLState();
 
 	Shaders_Init();
 
@@ -379,7 +379,7 @@ bool R_Init()
 	glState.prev_mode = 3;
 
 	// set some default state variables
-	GL_SetDefaultState();
+	R_InitGLState();
 
 	Shaders_Init();
 
