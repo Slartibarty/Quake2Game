@@ -533,10 +533,12 @@ int main( int argc, char **argv )
 	}
 #endif
 
-	if ( !Decompose_Write( argv[1], bspBuffer, bspLength ) )
-	{
-		return EXIT_FAILURE;
-	}
+	Decompose_WriteOBJ();
+
+	//if ( !Decompose_Write( argv[1], bspBuffer, bspLength ) )
+	//{
+	//	return EXIT_FAILURE;
+	//}
 
 	return 0;
 }

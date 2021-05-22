@@ -176,7 +176,9 @@ void Decompose_Main()
 		std::vector<bspDrawVert_t> node_verts;
 		std::vector<bspDrawIndex_t> node_indices;
 
+#if 0
 		std::vector<bspDrawIndex_t> temp_indices;
+#endif
 
 		node_faces.reserve( node_materials.size() );
 
@@ -187,6 +189,7 @@ void Decompose_Main()
 
 			bool skipVert = false;
 
+#if 0
 			// loop 3: node > indices > new verts
 			for ( uint iFatVerts = 0; iFatVerts < (uint)fatVerts.size(); ++iFatVerts )
 			{
@@ -202,6 +205,7 @@ void Decompose_Main()
 					}
 				}
 			}
+#endif
 
 			if ( skipVert )
 			{
@@ -220,7 +224,9 @@ void Decompose_Main()
 
 			fatVerts.push_back( { drawVert, index } );
 
+#if 0
 			temp_indices.push_back( static_cast<uint16>( fatVerts.size() - 1 ) );
+#endif
 		}
 
 		node_verts.reserve( fatVerts.size() );
@@ -234,6 +240,10 @@ void Decompose_Main()
 
 			node_verts.push_back( fatVert.drawVert );
 		}
+
+		// create the faces
+
+		node_faces.reserve( node_materials.size() );
 
 		// loop 2: node > materials used
 		for ( uint iMats = 0; iMats < (uint)node_materials.size(); ++iMats )
@@ -261,7 +271,7 @@ void Decompose_Main()
 
 				if ( first )
 				{
-					face.firstIndex = (uint16)( node_indices.size() - 1 );
+					face.firstIndex = (bspDrawIndex_t)( node_indices.size() - 1 );
 					first = false;
 				}
 			}
@@ -270,10 +280,6 @@ void Decompose_Main()
 		}
 
 		// spit into the global bsp array
-
-		int offsetFaces = Max( 0, (int)g_drawFaces.size() - 1 );
-		int offsetVerts = Max( 0, (int)g_drawVerts.size() - 1 );
-		int offsetIndices = Max( 0, (int)g_drawIndices.size() - 1 );
 
 		bool first = true;
 
@@ -296,9 +302,9 @@ void Decompose_Main()
 
 		for ( uint iIndices = 0; iIndices < (uint)node_indices.size(); ++iIndices )
 		{
-			auto &index = node_indices[iIndices];
+			uint16 index = node_indices[iIndices];
 
-			index += offsetIndices;
+			index += Max( 0, (int)g_drawIndices.size() - 1 );
 
 			g_drawIndices.push_back( index );
 		}
@@ -307,7 +313,7 @@ void Decompose_Main()
 	Com_Print( "holy shit\n" );
 }
 
-static void Decompose_WriteOBJ()
+void Decompose_WriteOBJ()
 {
 	FILE *objHandle = fopen( "data.obj", "wb" );
 	if ( !objHandle )
@@ -323,8 +329,6 @@ static void Decompose_WriteOBJ()
 		for ( uint32 iFace = 0; iFace < node.newNumFaces; ++iFace )
 		{
 			const bspDrawFace_t &face = g_drawFaces[node.firstface + iFace];
-
-			uint16 thing = face.numIndices % 3;
 
 			for ( uint32 iIndex = 0; iIndex < face.numIndices; ++iIndex )
 			{
@@ -375,8 +379,6 @@ static void Decompose_FixNodes( byte *bspBuffer, lump_t *lump )
 
 bool Decompose_Write( const char *bspFilename, byte *oldBspBuffer, size_t oldBspLength )
 {
-	Decompose_WriteOBJ();
-
 	// mod the header
 	dheader_t *pHeader = (dheader_t *)oldBspBuffer;
 

@@ -28,4 +28,5 @@ extern std::vector<bspDrawIndex_t>		g_drawIndices;
 // decompose
 
 void Decompose_Main();
+void Decompose_WriteOBJ();
 bool Decompose_Write( const char *bspFilename, byte *oldBspBuffer, size_t oldBspLength );
