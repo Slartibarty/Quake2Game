@@ -102,6 +102,8 @@ extern cvar_t *		log_stats;
 
 extern FILE *		log_stats_file;
 
+extern int		curtime;
+
 // host_speeds times
 extern int		time_before_game;
 extern int		time_after_game;

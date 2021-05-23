@@ -188,7 +188,6 @@ int SV_SoundIndex (const char *name);
 int SV_ImageIndex (const char *name);
 
 void SV_ExecuteUserCommand (char *s);
-void SV_InitOperatorCommands (void);
 
 void SV_UserinfoChanged (client_t *cl);
 
@@ -236,7 +235,8 @@ void SV_ExecuteClientMessage (client_t *cl);
 //
 // sv_ccmds.c
 //
-void SV_ReadLevelFile (void);
+void SV_ReadLevelFile();
+void SV_InitOperatorCommands();
 
 //
 // sv_ents.c

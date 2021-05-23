@@ -17,6 +17,7 @@ bool			g_activeApp, g_minimized;
 static HANDLE	hinput, houtput;
 
 unsigned		sys_frame_time;
+int				curtime;
 
 int		g_argc;
 char	**g_argv;
@@ -517,6 +518,7 @@ int main( int argc, char **argv )
 		} while ( time < 1 );
 
 		sys_frame_time = newtime;
+		curtime = newtime;
 
 		Engine_Frame( time );
 

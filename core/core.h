@@ -102,6 +102,7 @@ size_t	Hunk_End();
 */
 
 void	Sys_CopyFile( const char *src, const char *dst );
+void	Sys_DeleteFile( const char *filename );
 void	Sys_CreateDirectory( const char *path );
 
 /*
@@ -109,8 +110,6 @@ void	Sys_CreateDirectory( const char *path );
 	Timing
 =======================================
 */
-
-extern int curtime; // time returned by the last Sys_Milliseconds
 
 void	Time_Init();
 double	Time_FloatSeconds();

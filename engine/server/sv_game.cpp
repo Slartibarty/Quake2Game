@@ -8,7 +8,7 @@ game_export_t *ge;
 ========================
 PF_Unicast
 
-Sends the contents of the mutlicast buffer to a single client
+Sends the contents of the multicast buffer to a single client
 ========================
 */
 static void PF_Unicast( edict_t *ent, qboolean reliable )
@@ -290,12 +290,12 @@ static void PF_StartSound( edict_t *entity, int channel, int sound_num, float vo
 
 // Need these due to zone api changes
 
-static void *Wrap_TagMalloc( int size, int tag )
+static void *PF_TagMalloc( int size, int tag )
 {
 	return Mem_TagAlloc( size, tag );
 }
 
-static void Wrap_TagFreeGroup( int tag )
+static void PF_TagFreeGroup( int tag )
 {
 	Mem_TagFreeGroup( tag );
 }
@@ -354,9 +354,9 @@ void SV_InitGameProgs()
 	gi.WriteDir = PF_WriteDir;
 	gi.WriteAngle = PF_WriteAngle;
 
-	gi.TagMalloc = Wrap_TagMalloc;
+	gi.TagMalloc = PF_TagMalloc;
 	gi.TagFree = Mem_TagFree;
-	gi.FreeTags = Wrap_TagFreeGroup;
+	gi.FreeTags = PF_TagFreeGroup;
 
 	gi.cvar = Cvar_Get;
 	gi.cvar_set = Cvar_Set;

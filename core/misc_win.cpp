@@ -95,12 +95,21 @@ void Hunk_Free( void *base )
 /*
 =======================================
 	Miscellaneous
+
+	TODO: Are there any performance concerns related
+	to using the ANSI versions of these functions?
+	Should we widen the inputs ourselves?
 =======================================
 */
 
 void Sys_CopyFile( const char *src, const char *dst )
 {
 	CopyFileA( src, dst, FALSE );
+}
+
+void Sys_DeleteFile( const char *filename )
+{
+	DeleteFileA( filename );
 }
 
 void Sys_CreateDirectory( const char *path )
@@ -118,8 +127,6 @@ static int64	startTime;
 static double	toSeconds;
 static double	toMilliseconds;
 static double	toMicroseconds;
-
-int curtime;
 
 void Time_Init()
 {
@@ -193,10 +200,7 @@ int Sys_Milliseconds()
 
 	QueryPerformanceCounter( (LARGE_INTEGER *)&currentTime );
 
-	// SlartTodo: Replace int with int64
-	curtime = (int)( ( currentTime - startTime ) * toMilliseconds );
-
-	return curtime;
+	return lround( ( currentTime - startTime ) * toMilliseconds );
 }
 
 /*
