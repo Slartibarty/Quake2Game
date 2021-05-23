@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "sys_types.h"
+
 #define Q_BIG_ENDIAN 0
 
 inline constexpr short ShortSwap( short s )
