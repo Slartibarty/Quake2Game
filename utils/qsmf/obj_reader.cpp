@@ -78,16 +78,23 @@ void OBJReader::Parse( char *buffer )
 			const char *s1, *s2;
 			s1 = token;
 
+#if 1
 			v2.x = static_cast<float>( Clamp( atof( token ), 0.0, 1.0 ) );
 			token = strtok_r( nullptr, Delimiters, &save_ptr );
 			s2 = token;
 			v2.y = static_cast<float>( 1.0 - Clamp( atof( token ), 0.0, 1.0 ) ); // swap for opengl :)
+#else
+			v2.x = static_cast<float>( atof( token ) );
+			token = strtok_r( nullptr, Delimiters, &save_ptr );
+			s2 = token;
+			v2.y = static_cast<float>( atof( token ) ); // swap for opengl :)
+#endif
 			if ( !blenderMode ) {
 				// 3ds max writes an extra 0.0 value
 				token = strtok_r( nullptr, Delimiters, &save_ptr );
 			}
 
-			assert( ( v2.x >= 0.0f && v2.x <= 1.0f ) && ( v2.y >= 0.0f && v2.y <= 1.0f ) );
+			//assert( ( v2.x >= 0.0f && v2.x <= 1.0f ) && ( v2.y >= 0.0f && v2.y <= 1.0f ) );
 
 			rawCoords.push_back( v2 );
 
@@ -172,6 +179,8 @@ void OBJReader::Parse( char *buffer )
 
 	start = Time_FloatMilliseconds();
 
+	uint degenerateDivisors = 0;
+
 	for ( size_t iter1 = 0; iter1 < rawIndices.size(); ++iter1 )
 	{
 		vec3 &p1 = rawPositions[rawIndices[iter1].a.iPosition];
@@ -190,7 +199,14 @@ void OBJReader::Parse( char *buffer )
 		Vec2Subtract( t2, t1, deltaUV1 );
 		Vec2Subtract( t3, t1, deltaUV2 );
 
-		float f = 1.0f / ( ( deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y ) + FLT_EPSILON );
+		float divisor = ( deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y );
+		if ( divisor == 0.0f )
+		{
+			++degenerateDivisors;
+			divisor = FLT_EPSILON;
+		}
+
+		float f = 1.0f / divisor;
 
 		assert( isfinite( f ) );
 
@@ -209,6 +225,10 @@ void OBJReader::Parse( char *buffer )
 	end = Time_FloatMilliseconds();
 
 	Com_Printf( "Generated face tangents in %g milliseconds\n", end - start );
+	if ( degenerateDivisors != 0 )
+	{
+		Com_Printf( "WARNING: %u degenerate divisors\n", degenerateDivisors );
+	}
 
 	//
 	// uncompress everything into a single array
