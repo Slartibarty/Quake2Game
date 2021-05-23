@@ -1,6 +1,8 @@
 
 #include "core.h"
 
+#include <process.h>
+
 #include "threading.h"
 
 /*
@@ -16,19 +18,9 @@
 Sys_SetThreadName
 ========================
 */
-static void Sys_SetThreadName( HANDLE thread, const char *name )
+static void Sys_SetThreadName( HANDLE thread, const platChar_t *name )
 {
-	wchar_t newName[MAX_THREAD_NAME];
-
-	strlen_t length = Max<uint>( Q_strlen( name ), MAX_THREAD_NAME );
-
-	for ( strlen_t i = 0; i < length; ++i )
-	{
-		// blindly expand our ASCII thread name
-		newName[i] = (wchar_t)name[i];
-	}
-
-	SetThreadDescription( thread, newName );
+	SetThreadDescription( thread, name );
 }
 
 /*
@@ -36,7 +28,7 @@ static void Sys_SetThreadName( HANDLE thread, const char *name )
 Sys_SetCurrentThreadName
 ========================
 */
-void Sys_SetCurrentThreadName( const char *name )
+void Sys_SetCurrentThreadName( const platChar_t *name )
 {
 	Sys_SetThreadName( GetCurrentThread(), name );
 }
@@ -46,7 +38,7 @@ void Sys_SetCurrentThreadName( const char *name )
 Sys_Createthread
 ========================
 */
-threadHandle_t Sys_CreateThread( xthread_t function, void *parms, xthreadPriority priority, const char *name, core_t core, size_t stackSize, bool suspended ) {
+threadHandle_t Sys_CreateThread( xthread_t function, void *parms, xthreadPriority priority, const platChar_t *name, core_t core, size_t stackSize, bool suspended ) {
 
 	DWORD flags = ( suspended ? CREATE_SUSPENDED : 0 );
 
@@ -66,9 +58,8 @@ threadHandle_t Sys_CreateThread( xthread_t function, void *parms, xthreadPriorit
 	// project settings, then we would still be reserving 50 x 16 = 800 MB of virtual address space.
 	flags |= STACK_SIZE_PARAM_IS_A_RESERVATION;
 
-	DWORD threadId;
-	HANDLE handle = CreateThread( nullptr, stackSize, (LPTHREAD_START_ROUTINE)function, parms, flags, &threadId );
-	if ( handle == 0 ) {
+	HANDLE handle = CreateThread( nullptr, stackSize, (LPTHREAD_START_ROUTINE)function, parms, flags, nullptr );
+	if ( !handle ) {
 		Com_FatalErrorf( "Sys_CreateThread error: %u", GetLastError() );
 	}
 
@@ -104,7 +95,7 @@ Sys_GetCurrentThreadID
 */
 threadID_t Sys_GetCurrentThreadID()
 {
-	return GetCurrentThreadId();
+	return (threadID_t)GetCurrentThreadId();
 }
 
 /*
@@ -124,10 +115,6 @@ Sys_DestroyThread
 */
 void Sys_DestroyThread( threadHandle_t threadHandle )
 {
-	if ( threadHandle == 0 ) {
-		return;
-	}
-	WaitForSingleObject( (HANDLE)threadHandle, INFINITE );
 	CloseHandle( (HANDLE)threadHandle );
 }
 

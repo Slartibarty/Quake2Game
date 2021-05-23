@@ -14,14 +14,14 @@
 // Not Linux-capable yet
 #ifdef _WIN32
 
+#include <string>
+#include <vector>
+#include <cassert>
+
 // I am so sorry
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <Windows.h>
-
-#include <string>
-#include <vector>
-#include <cassert>
 
 #include "sys_types.h"
 
@@ -84,12 +84,12 @@ threadID_t			Sys_GetCurrentThreadID();
 
 // returns a threadHandle
 threadHandle_t		Sys_CreateThread( xthread_t function, void *parms, xthreadPriority priority,
-									  const char *name, core_t core, size_t stackSize = DEFAULT_THREAD_STACK_SIZE,
+									  const platChar_t *name, core_t core, size_t stackSize = DEFAULT_THREAD_STACK_SIZE,
 									  bool suspended = false );
 
 void				Sys_WaitForThread( threadHandle_t threadHandle );
 void				Sys_DestroyThread( threadHandle_t threadHandle );
-void				Sys_SetCurrentThreadName( const char *name );
+void				Sys_SetCurrentThreadName( const platChar_t *name );
 
 void				Sys_SignalCreate( signalHandle_t &handle, bool manualReset );
 void				Sys_SignalDestroy( signalHandle_t &handle );
@@ -123,6 +123,8 @@ void				Sys_Yield();
 
 ===================================================================================================
 */
+
+#if 0
 
 /*
 ================================================
@@ -306,7 +308,7 @@ public:
 					idSysThread();
 	virtual			~idSysThread();
 
-	const char *	GetName() const { return name; }
+	const platChar_t *	GetName() const { return name; }
 	threadHandle_t	GetThreadHandle() const { return threadHandle; }
 	bool			IsRunning() const { return isRunning; }
 	bool			IsTerminating() const { return isTerminating; }
@@ -315,11 +317,11 @@ public:
 	// Thread Start/Stop/Wait
 	//------------------------
 
-	bool			StartThread( const char * name, core_t core,
+	bool			StartThread( const platChar_t * name, core_t core,
 								 xthreadPriority priority = THREAD_NORMAL,
 								 size_t stackSize = DEFAULT_THREAD_STACK_SIZE );
 
-	bool			StartWorkerThread( const char * name, core_t core,
+	bool			StartWorkerThread( const platChar_t * name, core_t core,
 									   xthreadPriority priority = THREAD_NORMAL,
 									   size_t stackSize = DEFAULT_THREAD_STACK_SIZE );
 
@@ -349,7 +351,7 @@ protected:
 	virtual int		Run();
 
 private:
-	char			name[MAX_THREAD_NAME];
+	platChar_t		name[MAX_THREAD_NAME];
 	threadHandle_t	threadHandle;
 	bool			isWorker;
 	bool			isRunning;
@@ -397,7 +399,7 @@ in that the worker threads won't automatically run on the SPUs.
 template<class threadType>
 class idSysWorkerThreadGroup {
 public:
-					idSysWorkerThreadGroup( const char * name, int numThreads,
+					idSysWorkerThreadGroup( const platChar_t * name, int numThreads,
 											xthreadPriority priority = THREAD_NORMAL,
 											size_t stackSize = DEFAULT_THREAD_STACK_SIZE );
 
@@ -420,7 +422,7 @@ idSysWorkerThreadGroup<threadType>::idSysWorkerThreadGroup
 ========================
 */
 template<class threadType>
-inline idSysWorkerThreadGroup<threadType>::idSysWorkerThreadGroup( const char * name,
+inline idSysWorkerThreadGroup<threadType>::idSysWorkerThreadGroup( const platChar_t * name,
 			int numThreads, xthreadPriority priority, size_t stackSize ) {
 	runOneThreadInline = ( numThreads < 0 );
 	singleThreaded = false;
@@ -552,5 +554,7 @@ idSysThreadSynchronizer::Synchronize
 inline bool idSysThreadSynchronizer::Synchronize( uint threadNum, uint timeout ) {
 	return signals[threadNum]->Wait( timeout );
 }
+
+#endif
 
 #endif

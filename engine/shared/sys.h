@@ -16,7 +16,6 @@ void	*Sys_GetCGameAPI( void *parms );
 
 char	*Sys_ConsoleInput( void );
 void	Sys_ConsoleOutput( const char *string );
-void	Sys_SendKeyEvents( void );
 
 int		Sys_GetNumVidModes();
 bool	Sys_GetVidModeInfo( int &width, int &height, int mode );

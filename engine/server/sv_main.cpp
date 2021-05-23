@@ -1,5 +1,5 @@
 
-#include "server.h"
+#include "sv_local.h"
 
 netadr_t	master_adr[MAX_MASTERS];	// address of group servers
 
@@ -20,8 +20,6 @@ cvar_t	*allow_download_players;
 cvar_t	*allow_download_models;
 cvar_t	*allow_download_sounds;
 cvar_t	*allow_download_maps;
-
-cvar_t	*sv_airaccelerate;
 
 cvar_t	*sv_noreload;			// don't reload level state when reentering
 
@@ -953,8 +951,6 @@ void SV_Init (void)
 	allow_download_maps	  = Cvar_Get ("allow_download_maps", "1", CVAR_ARCHIVE);
 
 	sv_noreload = Cvar_Get ("sv_noreload", "0", 0);
-
-	sv_airaccelerate = Cvar_Get("sv_airaccelerate", "0", CVAR_LATCH);
 
 	public_server = Cvar_Get ("public", "0", 0);
 

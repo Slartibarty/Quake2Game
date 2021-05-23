@@ -1,5 +1,5 @@
 
-#include "server.h"
+#include "sv_local.h"
 
 serverStatic_t	svs;				// persistant server info
 server_t		sv;					// local server

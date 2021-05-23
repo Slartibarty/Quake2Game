@@ -1,6 +1,8 @@
 
 #include "gl_local.h"
+
 #include "../shared/imageloaders.h"
+#include "../../core/threading.h"
 
 /*
 ===================================================================================================
@@ -9,6 +11,34 @@
 
 ===================================================================================================
 */
+
+struct threadData_t
+{
+	char filename[MAX_OSPATH];
+	byte *pixBuffer;
+	int width, height;
+};
+
+static uint32 PNG_ThreadProc( void *params )
+{
+	threadData_t *threadData = (threadData_t *)params;
+
+	FILE *handle = fopen( threadData->filename, "wb" );
+	if ( !handle ) {
+		Mem_Free( threadData->pixBuffer );
+		Mem_Free( threadData );
+		return 1;
+	}
+
+	img::VerticalFlip( threadData->pixBuffer, vid.width, vid.height, 3 );
+	img::WritePNG( vid.width, vid.height, false, threadData->pixBuffer, handle );
+
+	fclose( handle );
+	Mem_Free( threadData->pixBuffer );
+	Mem_Free( threadData );
+
+	return 0;
+}
 
 /*
 ========================
@@ -57,16 +87,25 @@ static void GL_Screenshot_Internal( bool png )
 
 	glReadPixels( 0, 0, vid.width, vid.height, GL_RGB, GL_UNSIGNED_BYTE, pixbuffer + addsize );
 
-	handle = fopen( checkname, "wb" );
-	assert( handle );
-
 	if ( png )
 	{
-		img::VerticalFlip( pixbuffer, vid.width, vid.height, 3 );
-		img::WritePNG( vid.width, vid.height, false, pixbuffer, handle );
+		Com_Printf( "Writing %s\n", picname );
+
+		threadData_t *threadData = (threadData_t *)Mem_Alloc( sizeof( threadData_t ) );
+		strcpy( threadData->filename, checkname );
+		threadData->pixBuffer = pixbuffer;
+		threadData->width = vid.width;
+		threadData->height = vid.height;
+
+		// fire and forget
+		threadHandle_t thread = Sys_CreateThread( PNG_ThreadProc, threadData, THREAD_NORMAL, PLATTEXT( "PNG Screenshot Thread" ), CORE_ANY );
+		Sys_DestroyThread( thread );
 	}
 	else
 	{
+		handle = fopen( checkname, "wb" );
+		assert( handle );
+
 		memset( pixbuffer, 0, 18 );
 		pixbuffer[2] = 2; // uncompressed type
 		pixbuffer[12] = vid.width & 255;
@@ -85,13 +124,12 @@ static void GL_Screenshot_Internal( bool png )
 		}
 
 		fwrite( pixbuffer, 1, c, handle );
+
+		fclose( handle );
+		Mem_Free( pixbuffer );
+
+		Com_Printf( "Wrote %s\n", picname );
 	}
-
-	fclose( handle );
-
-	Mem_Free( pixbuffer );
-
-	Com_Printf( "Wrote %s\n", picname );
 }
 
 void GL_Screenshot_PNG_f()

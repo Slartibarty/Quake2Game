@@ -1,4 +1,3 @@
-// server.h
 
 #pragma once
 
@@ -159,23 +158,22 @@ struct serverStatic_t
 
 //=================================================================================================
 
-extern	netadr_t	net_from;
-extern	sizebuf_t	net_message;
+extern netadr_t		net_from;
+extern sizebuf_t	net_message;
 
-extern	netadr_t	master_adr[MAX_MASTERS];	// address of the master server
+extern netadr_t		master_adr[MAX_MASTERS];	// address of the master server
 
-extern	serverStatic_t	svs;				// persistant server info
-extern	server_t		sv;					// local server
+extern serverStatic_t	svs;				// persistant server info
+extern server_t			sv;					// local server
 
-extern	cvar_t		*sv_paused;
-extern	cvar_t		*maxclients;
-extern	cvar_t		*sv_noreload;			// don't reload level state when reentering
-extern	cvar_t		*sv_airaccelerate;		// don't reload level state when reentering
+extern cvar_t *		sv_paused;
+extern cvar_t *		maxclients;
+extern cvar_t *		sv_noreload;			// don't reload level state when reentering
 											// development tool
-extern	cvar_t		*sv_enforcetime;
+extern cvar_t *		sv_enforcetime;
 
-extern	client_t	*sv_client;
-extern	edict_t		*sv_player;
+extern client_t *	sv_client;
+extern edict_t *	sv_player;
 
 //=================================================================================================
 
@@ -193,7 +191,6 @@ void SV_ExecuteUserCommand (char *s);
 void SV_InitOperatorCommands (void);
 
 void SV_UserinfoChanged (client_t *cl);
-
 
 void Master_Heartbeat (void);
 
@@ -248,21 +245,19 @@ void SV_WriteFrameToClient (client_t *client, sizebuf_t *msg);
 void SV_RecordDemoMessage (void);
 void SV_BuildClientFrame (client_t *client);
 
-
 //
 // sv_game.c
 //
-extern	game_export_t	*ge;
+extern game_export_t *ge;
 
-void SV_InitGameProgs (void);
-void SV_ShutdownGameProgs (void);
+void SV_InitGameProgs();
+void SV_ShutdownGameProgs();
 
-
-
-//============================================================
+//=============================================================================
 
 //
 // high level object sorting to reduce interaction tests
+// sv_world.c
 //
 
 void SV_ClearWorld (void);
@@ -287,7 +282,7 @@ int SV_AreaEdicts (vec3_t mins, vec3_t maxs, edict_t **list, int maxcount, int a
 // returns the number of pointers filled in
 // ??? does this always return the world?
 
-//===================================================================
+//=============================================================================
 
 //
 // functions that interact with everything apropriate

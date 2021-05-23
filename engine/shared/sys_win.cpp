@@ -3,11 +3,12 @@
 #include "engine.h"
 
 #include <process.h>
+
+#include <vector>
+
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include "../client/winquake.h"	// Hack?
-
-#include <vector>
 
 #include "sys.h"
 
@@ -201,18 +202,6 @@ void Sys_ConsoleOutput (const char *string)
 
 	if (console_textlen)
 		WriteFile(houtput, console_text, console_textlen, &dummy, NULL);
-}
-
-
-/*
-================
-Sys_SendKeyEvents
-
-Send Key_Event calls
-================
-*/
-void Sys_SendKeyEvents( void )
-{
 }
 
 
@@ -486,6 +475,8 @@ int main( int argc, char **argv )
 	SetErrorMode( SEM_FAILCRITICALERRORS );
 
 	Time_Init();
+
+	double initStart = Time_FloatMilliseconds();
 
 	Sys_InitVidModes();
 

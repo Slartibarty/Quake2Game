@@ -46,12 +46,13 @@ struct cplane_t
 // utils glue
 #define EQUAL_EPSILON	0.001f
 
-// GNU libc defines this
+// GNU libc defines this, enforce our version
 #undef M_PI
 
 #define M_PI		3.14159265358979323846
 #define M_PI_F		3.14159265358979323846f
 
+// this appears to be an MS extension
 #ifndef FLT_EPSILON
 #define FLT_EPSILON	1.192092896e-07F
 #endif

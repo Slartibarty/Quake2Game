@@ -1,6 +1,6 @@
 // sv_main.c -- server main program
 
-#include "server.h"
+#include "sv_local.h"
 
 /*
 =============================================================================

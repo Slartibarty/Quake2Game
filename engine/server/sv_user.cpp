@@ -1,6 +1,6 @@
 // sv_user.c -- server code for moving users
 
-#include "server.h"
+#include "sv_local.h"
 
 edict_t	*sv_player;
 

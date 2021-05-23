@@ -605,14 +605,16 @@ Key_WriteBindings
 Writes lines containing "bind key value"
 ============
 */
-void Key_WriteBindings (FILE *f)
+void Key_WriteBindings( FILE *f )
 {
-	int i;
+	char buffer[1024];
 
-	for ( i = 0; i < 256; i++ )
+	for ( int i = 0; i < 256; ++i )
 	{
-		if ( keybindings[i] && keybindings[i][0] ) {
-			fprintf( f, "bind %s \"%s\"\n", Key_KeynumToString( i ), keybindings[i] );
+		if ( keybindings[i] && keybindings[i][0] )
+		{
+			Q_sprintf_s( buffer, "bind %s \"%s\"\n", Key_KeynumToString( i ), keybindings[i] );
+			fputs( buffer, f );
 		}
 	}
 }
@@ -945,20 +947,3 @@ void Key_ClearStates (void)
 		key_repeats[i] = 0;
 	}
 }
-
-
-/*
-===================
-Key_GetKey
-===================
-*/
-int Key_GetKey (void)
-{
-	key_waiting = -1;
-
-	while (key_waiting == -1)
-		Sys_SendKeyEvents ();
-
-	return key_waiting;
-}
-

@@ -364,14 +364,11 @@ void Cvar_Set_f()
 // Appends lines containing "set variable value" for all variables
 // with the archive flag set to true.
 //-------------------------------------------------------------------------------------------------
-void Cvar_WriteVariables( const char *path )
+void Cvar_WriteVariables( FILE *f )
 {
-	cvar_t *var;
 	char buffer[1024];
-	FILE *f;
 
-	f = fopen( path, "a" );
-	for ( var = cvar_vars; var; var = var->next )
+	for ( cvar_t *var = cvar_vars; var; var = var->next )
 	{
 		if ( var->flags & CVAR_ARCHIVE )
 		{
@@ -379,7 +376,6 @@ void Cvar_WriteVariables( const char *path )
 			fputs( buffer, f );
 		}
 	}
-	fclose( f );
 }
 
 //-------------------------------------------------------------------------------------------------

@@ -453,7 +453,7 @@ int FS_LoadFile( const char *path, void **buffer, int extradata )
 
 	// look for it in the filesystem or pack files
 	len = FS_FOpenFile( path, &h );
-	if ( !h )
+	if ( len <= 0 )
 	{
 		if ( buffer )
 			*buffer = NULL;

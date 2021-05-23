@@ -66,14 +66,14 @@ static void PrintUsage()
 static void PrintHelp()
 {
 	Com_Print(
-		"Help for qsmf:\n"
-		"  -material <filename>    : The material this smf should use, defaults to materials/models/default.mat\n"
+		"Help:\n"
+		"  -material <filename>    : The material this model should use, defaults to materials/models/default.mat\n"
 	);
 }
 
 int main( int argc, char **argv )
 {
-	Com_Print( "---- QSMF - By Slartibarty ----\n" );
+	Com_Print( "---- QSMF model compiler - By Slartibarty ----\n" );
 
 	if ( argc < 3 )
 	{

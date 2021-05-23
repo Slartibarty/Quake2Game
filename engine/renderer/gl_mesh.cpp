@@ -1526,7 +1526,7 @@ void R_DrawStaticMeshFile( entity_t *e )
 			skipIndices[iter1] = smallestIndex;
 
 			renderLight_t &finalLight = finalLights[iter1];
-			staticLight_t &staticLight = lightsInPVS[smallestIndex];
+			const staticLight_t &staticLight = lightsInPVS[smallestIndex];
 
 			VectorCopy( staticLight.origin, finalLight.position );
 			VectorCopy( staticLight.color, finalLight.color );

@@ -319,7 +319,7 @@ struct material_t
 	// Bind the emission image
 	void BindEmit() const {
 		assert( emitImage->refcount > 0 );
-		GL_Bind( r_emitmaps->GetBool() ? emitImage->texnum : whiteMaterial->image->texnum );
+		GL_Bind( r_emitmaps->GetBool() ? emitImage->texnum : blackMaterial->image->texnum );
 	}
 
 	// Deference the referenced image and clear this struct

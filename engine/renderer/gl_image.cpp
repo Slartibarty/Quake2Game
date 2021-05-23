@@ -801,30 +801,30 @@ static void R_CreateIntrinsicImages()
 	memset( data, 255, sizeof( data ) );
 	image_t *whiteImage = GL_CreateImage( "***whiteImage***", (byte *)data, DEFAULT_SIZE, DEFAULT_SIZE, IF_NOMIPS | IF_NEAREST );
 
-	// flat normal map for default bump mapping
+	// flat normal map
 
-	for ( int i = 0; i < 4; ++i ) {
-		data[0][i][0] = 128;
-		data[0][i][1] = 128;
-		data[0][i][2] = 255;
-		data[0][i][3] = 255;
+	int x, y;
+
+	for ( y = 0; y < DEFAULT_SIZE; ++y ) {
+		for ( x = 0; x < DEFAULT_SIZE; ++x ) {
+			data[y][x][0] = 128;
+			data[y][x][1] = 128;
+			data[y][x][2] = 255;
+			data[y][x][3] = 255;
+		}
 	}
-	flatNormalImage = GL_CreateImage( "***flatNormalImage***", (byte *)data, DEFAULT_SIZE, DEFAULT_SIZE, IF_NOMIPS | IF_NEAREST );
+	flatNormalImage = GL_CreateImage( "***flatNormalImage***", (byte *)data, DEFAULT_SIZE, DEFAULT_SIZE, 0 );
 
 	// black and white materials
 
 	blackMaterial = GL_CreateMaterialFromData( "***blackMaterial***", blackImage, blackImage, flatNormalImage, blackImage );
 	whiteMaterial = GL_CreateMaterialFromData( "***whiteMaterial***", whiteImage, blackImage, flatNormalImage, blackImage );
 
-	//
 	// default texture
-	//
-
-	int x, y;
 
 	// grey center
-	for ( y = 0; y < DEFAULT_SIZE; y++ ) {
-		for ( x = 0; x < DEFAULT_SIZE; x++ ) {
+	for ( y = 0; y < DEFAULT_SIZE; ++y ) {
+		for ( x = 0; x < DEFAULT_SIZE; ++x ) {
 			data[y][x][0] = 32;
 			data[y][x][1] = 32;
 			data[y][x][2] = 32;
@@ -832,7 +832,7 @@ static void R_CreateIntrinsicImages()
 		}
 	}
 	// white border
-	for ( x = 0; x < DEFAULT_SIZE; x++ ) {
+	for ( x = 0; x < DEFAULT_SIZE; ++x ) {
 		data[0][x][0] = 255;
 		data[0][x][1] = 255;
 		data[0][x][2] = 255;

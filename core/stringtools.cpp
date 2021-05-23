@@ -14,16 +14,6 @@
 /*
 ===================================================================================================
 
-	Our string functions
-
-===================================================================================================
-*/
-
-// nothing yet
-
-/*
-===================================================================================================
-
 	Standard library string function replacements
 
 ===================================================================================================
@@ -161,4 +151,26 @@ int Q_strncasecmp( const char *s1, const char *s2, strlen_t n )
 	}
 
 	return 0;
+}
+
+/*
+===================================================================================================
+
+	Our string functions
+
+===================================================================================================
+*/
+
+void Str_NarrowToWide( const char *pNarrowString, wchar_t *pWideString )
+{
+	strlen_t i;
+	strlen_t narrowLength = Q_strlen( pNarrowString );
+
+	for ( i = 0; i < narrowLength; ++i )
+	{
+		// blind expansion
+		pWideString[i] = static_cast<wchar_t>( pNarrowString[i] );
+	}
+
+	pWideString[i] = 0;
 }

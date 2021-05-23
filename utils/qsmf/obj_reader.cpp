@@ -190,7 +190,9 @@ void OBJReader::Parse( char *buffer )
 		Vec2Subtract( t2, t1, deltaUV1 );
 		Vec2Subtract( t3, t1, deltaUV2 );
 
-		float f = 1.0f / ( deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y );
+		float f = 1.0f / ( ( deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y ) + FLT_EPSILON );
+
+		assert( isfinite( f ) );
 
 		// tangent for this set
 		vec3 tangent;

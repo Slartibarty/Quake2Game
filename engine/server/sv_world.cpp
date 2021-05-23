@@ -1,6 +1,6 @@
 // sv_world.c -- world query functions
 
-#include "server.h"
+#include "sv_local.h"
 
 /*
 ===============================================================================

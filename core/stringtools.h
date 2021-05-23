@@ -16,29 +16,6 @@
 /*
 ===================================================================================================
 
-	Our string functions
-
-===================================================================================================
-*/
-
-inline void Str_Substitute( char *pStr, int a, int b )
-{
-	for ( ; *pStr; ++pStr )
-	{
-		if ( *pStr == a )
-		{
-			*pStr = (char)b;
-		}
-	}
-}
-
-inline void Str_FixSlashes( char *pStr ) {
-	Str_Substitute( pStr, '\\', '/' );
-}
-
-/*
-===================================================================================================
-
 	Standard library string function replacements
 
 ===================================================================================================
@@ -148,3 +125,30 @@ inline void Q_strupr( char *dest ) {
 		++dest;
 	}
 }
+
+/*
+===================================================================================================
+
+	Our string functions
+
+===================================================================================================
+*/
+
+inline void Str_Substitute( char *pStr, int a, int b )
+{
+	for ( ; *pStr; ++pStr )
+	{
+		if ( *pStr == a )
+		{
+			*pStr = (char)b;
+		}
+	}
+}
+
+inline void Str_FixSlashes( char *pStr ) {
+	Str_Substitute( pStr, '\\', '/' );
+}
+
+// fast conversion from ANSI to UTF16
+// pWideString must be at least as long as pNarrowString
+void Str_NarrowToWide( const char *pNarrowString, wchar_t *pWideString );

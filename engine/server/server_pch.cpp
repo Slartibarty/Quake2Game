@@ -1,3 +1,0 @@
-// PCH
-
-#include "server.h"

@@ -12,6 +12,8 @@ Contains the vartious ThreadingClass implementations.
 ===================================================================================================
 */
 
+#if 0
+
 /*
 ===================================================================================================
 
@@ -51,12 +53,12 @@ idSysThread::~idSysThread() {
 idSysThread::StartThread
 ========================
 */
-bool idSysThread::StartThread( const char *name_, core_t core, xthreadPriority priority, size_t stackSize ) {
+bool idSysThread::StartThread( const platChar_t *name_, core_t core, xthreadPriority priority, size_t stackSize ) {
 	if ( isRunning ) {
 		return false;
 	}
 
-	Q_strcpy_s( name, name_ );
+	wcscpy_s( name, name_ );
 
 	isTerminating = false;
 
@@ -75,7 +77,7 @@ bool idSysThread::StartThread( const char *name_, core_t core, xthreadPriority p
 idSysThread::StartWorkerThread
 ========================
 */
-bool idSysThread::StartWorkerThread( const char *name_, core_t core, xthreadPriority priority, size_t stackSize ) {
+bool idSysThread::StartWorkerThread( const platChar_t *name_, core_t core, xthreadPriority priority, size_t stackSize ) {
 	if ( isRunning ) {
 		return false;
 	}
@@ -252,7 +254,7 @@ TestThread
 */
 void TestThread() {
 	idMyThread *thread = new idMyThread;
-	thread->StartThread( "myThread", CORE_ANY );
+	thread->StartThread( PLATTEXT( "myThread" ), CORE_ANY );
 }
 
 /*
@@ -261,7 +263,7 @@ TestWorkers
 ========================
 */
 void TestWorkers() {
-	idSysWorkerThreadGroup<idMyThread> workers( "myWorkers", 4 );
+	idSysWorkerThreadGroup<idMyThread> workers( PLATTEXT( "myWorkers" ), 4 );
 	for ( ; ; ) {
 		for ( int i = 0; i < workers.GetNumThreads(); i++ ) {
 			// workers.GetThread( i )-> // setup work for this thread
@@ -269,5 +271,7 @@ void TestWorkers() {
 		workers.SignalWorkAndWait();
 	}
 }
+
+#endif
 
 #endif
