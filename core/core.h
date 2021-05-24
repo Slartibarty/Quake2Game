@@ -175,7 +175,7 @@ void Com_FileSetExtension( const char *in, char *out, const char *extension );
 
 // Parse a token out of a string
 // data is an in/out parm, returns a parsed out token
-char *COM_Parse( char **data_p );
+char *COM_Parse( const char **data_p );
 // version 2, takes a local token
 void COM_Parse2( char **data_p, char **token_p, int tokenlen );
 

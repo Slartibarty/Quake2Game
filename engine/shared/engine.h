@@ -134,5 +134,5 @@ void SCR_BeginLoadingPlaque();
 void SCR_DebugGraph( float value, uint32 color );
 
 void SV_Init( void );
-void SV_Shutdown( const char *finalmsg, qboolean reconnect );
+void SV_Shutdown( const char *finalmsg, bool reconnect );
 void SV_Frame( int msec );

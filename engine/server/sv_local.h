@@ -180,24 +180,24 @@ extern edict_t *	sv_player;
 //
 // sv_main.c
 //
-void SV_FinalMessage (const char *message, qboolean reconnect);
-void SV_DropClient (client_t *drop);
+void SV_FinalMessage( const char *message, bool reconnect );
+void SV_DropClient( client_t *drop );
 
-int SV_ModelIndex (const char *name);
-int SV_SoundIndex (const char *name);
-int SV_ImageIndex (const char *name);
+int SV_ModelIndex( const char *name );
+int SV_SoundIndex( const char *name );
+int SV_ImageIndex( const char *name );
 
-void SV_ExecuteUserCommand (char *s);
+void SV_ExecuteUserCommand( char *s );
 
-void SV_UserinfoChanged (client_t *cl);
+void SV_UserinfoChanged( client_t *cl );
 
-void Master_Heartbeat (void);
+void Master_Heartbeat();
 
 //
 // sv_init.c
 //
-void SV_InitGame (void);
-void SV_Map (qboolean attractloop, char *levelstring, qboolean loadgame);
+void SV_InitGame();
+void SV_Map( bool attractloop, const char *levelstring, bool loadgame );
 
 
 //
@@ -208,29 +208,28 @@ void SV_PrepWorldFrame (void);
 //
 // sv_send.c
 //
-enum redirect_t {RD_NONE, RD_CLIENT, RD_PACKET};
+enum redirect_t { RD_NONE, RD_CLIENT, RD_PACKET };
 #define	SV_OUTPUTBUF_LENGTH	(MAX_MSGLEN - 16)
 
-extern	char	sv_outputbuf[SV_OUTPUTBUF_LENGTH];
+extern char sv_outputbuf[SV_OUTPUTBUF_LENGTH];
 
 void SV_FlushRedirect (int sv_redirected, char *outputbuf);
 
-void SV_DemoCompleted (void);
-void SV_SendClientMessages (void);
+void SV_SendClientMessages();
 
-void SV_Multicast (vec3_t origin, multicast_t to);
-void SV_StartSound (vec3_t origin, edict_t *entity, int channel,
+void SV_Multicast( vec3_t origin, multicast_t to );
+void SV_StartSound( vec3_t origin, edict_t *entity, int channel,
 					int soundindex, float volume,
-					float attenuation, float timeofs);
-void SV_ClientPrintf (client_t *cl, int level, _Printf_format_string_ const char *fmt, ...);
-void SV_BroadcastPrintf (int level, _Printf_format_string_ const char *fmt, ...);
-void SV_BroadcastCommand (_Printf_format_string_ const char *fmt, ...);
+					float attenuation, float timeofs );
+void SV_ClientPrintf( client_t *cl, int level, _Printf_format_string_ const char *fmt, ... );
+void SV_BroadcastPrintf( int level, _Printf_format_string_ const char *fmt, ... );
+void SV_BroadcastCommand( const char *cmd );
 
 //
 // sv_user.c
 //
-void SV_Nextserver (void);
-void SV_ExecuteClientMessage (client_t *cl);
+void SV_Nextserver();
+void SV_ExecuteClientMessage( client_t *cl );
 
 //
 // sv_ccmds.c
