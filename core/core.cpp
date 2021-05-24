@@ -80,12 +80,12 @@ void Com_FileSetExtension( const char *in, char *out, const char *extension )
 	strcpy( out + difference, extension );
 }
 
-char *COM_Parse( const char **data_p )
+char *COM_Parse( char **data_p )
 {
 	static char	com_token[MAX_TOKEN_CHARS];
 	int			c;
 	int			len;
-	const char	*data;
+	char *		data;
 
 	data = *data_p;
 	len = 0;

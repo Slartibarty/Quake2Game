@@ -214,7 +214,7 @@ static void SV_SpawnServer( const char *server, const char *spawnpoint, serverSt
 		Q_sprintf_s( sv.configstrings[CS_MODELS + 1], "maps/%s.bsp", server );
 		sv.models[1] = CM_LoadMap( sv.configstrings[CS_MODELS + 1], false, &checksum );
 	}
-	Q_sprintf_s( sv.configstrings[CS_MAPCHECKSUM], "%u", checksum );
+	Q_sprintf_s( sv.configstrings[CS_MAPCHECKSUM], "%i", checksum );	// can't be %u
 
 	//
 	// clear physics interaction links

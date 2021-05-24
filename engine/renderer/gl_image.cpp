@@ -9,7 +9,7 @@
 //-------------------------------------------------------------------------------------------------
 
 #include "gl_local.h"
-#include "../shared/imageloaders.h"
+#include "../shared/imgtools.h"
 
 #if 0
 #define STB_IMAGE_RESIZE_IMPLEMENTATION

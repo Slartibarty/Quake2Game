@@ -594,9 +594,9 @@ void CL_Disconnect (void)
 	cls.state = ca_disconnected;
 }
 
-void CL_Disconnect_f (void)
+void CL_Disconnect_f()
 {
-	Com_Errorf ("Disconnected from server");
+	Com_Error( "Disconnected from server" );
 }
 
 

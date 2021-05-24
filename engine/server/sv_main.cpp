@@ -581,14 +581,16 @@ static void SV_GiveMsec()
 	int			i;
 	client_t *	cl;
 
-	if ( sv.framenum & 15 ) // SlartTodo: What?
+	if ( sv.framenum & 15 ) {
 		return;
+	}
 
-	for ( i = 0; i < maxclients->value; i++ )
+	for ( i = 0; i < maxclients->GetInt32(); i++ )
 	{
 		cl = &svs.clients[i];
-		if ( cl->state == cs_free )
+		if ( cl->state == cs_free ) {
 			continue;
+		}
 
 		cl->commandMsec = 1800;		// 1600 + some slop
 	}

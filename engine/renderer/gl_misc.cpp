@@ -1,7 +1,7 @@
 
 #include "gl_local.h"
 
-#include "../shared/imageloaders.h"
+#include "../shared/imgtools.h"
 #include "../../core/threading.h"
 
 /*
