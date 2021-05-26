@@ -115,55 +115,11 @@ void GL_MaterialList_f()
 
 //-------------------------------------------------------------------------------------------------
 
-//-------------------------------------------------------------------------------------------------
-// This must NEVER fail
-//
-// Only mipmap select types
-// We want to mipmap walls, skins and sprites, although never
-// 2D pics or skies
-//-------------------------------------------------------------------------------------------------
-static GLuint GL_Upload32( const byte *pData, int nWidth, int nHeight, imageFlags_t flags )
+static void GL_ApplyTextureParameters( imageFlags_t flags )
 {
-	GLuint id;
-
-	// Generate and bind the texture
-	glGenTextures( 1, &id );
-	GL_Bind( id );
-
-	// Upload it
-	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, nWidth, nHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, pData );
-
 	// Mips
 	if ( !( flags & IF_NOMIPS ) )
 	{
-		if ( GLEW_ARB_framebuffer_object )
-		{
-			glGenerateMipmap( GL_TEXTURE_2D );
-		}
-#if 0
-		else
-		{
-			// This sucks even more
-			int nOutWidth = nWidth / 2;
-			int nOutHeight = nHeight / 2;
-			int nLevel = 1;
-
-			byte *pNewData = (byte *)Mem_Alloc( ( nOutWidth * nOutHeight ) * 4 );
-
-			while ( nOutWidth > 1 && nOutHeight > 1 )
-			{
-				stbir_resize_uint8( pData, nWidth, nHeight, 0, pNewData, nOutWidth, nOutHeight, 0, 4 );
-				glTexImage2D( GL_TEXTURE_2D, nLevel, GL_RGBA8, nOutWidth, nOutHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, pNewData );
-
-				++nLevel;
-				nOutWidth /= 2;
-				nOutHeight /= 2;
-			}
-
-			Mem_Free( pNewData );
-		}
-#endif
-
 		if ( flags & IF_NEAREST )
 		{
 			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR );
@@ -177,7 +133,7 @@ static GLuint GL_Upload32( const byte *pData, int nWidth, int nHeight, imageFlag
 
 		if ( GLEW_ARB_texture_filter_anisotropic && !( flags & IF_NOANISO ) )
 		{
-			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, 16.0f ); // Don't hardcode this value
+			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, 16.0f ); // don't hardcode this value
 		}
 	}
 	else
@@ -204,6 +160,101 @@ static GLuint GL_Upload32( const byte *pData, int nWidth, int nHeight, imageFlag
 	{
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE_EXT );
 	}
+}
+
+// for compressed images, pData is the whole file
+// this function is not allowed to fail under any circumstances
+static GLuint GL_UploadCompressed( const byte *pBuffer, imageFlags_t flags )
+{
+	GLuint id;
+
+	glGenTextures( 1, &id );
+	GL_Bind( id );
+
+	// by this point we know several things are for sure:
+	//  1. DDPF_FOURCC is present in ddspf
+	//  2. We have either DXT1, DXT1a, DXT3 or DXT5
+	//  3. The file is longer than 128 bytes, or 128 + 20 if we have the DX10 extensions
+
+	const img::DDS_HEADER *pHeader = (const img::DDS_HEADER *)pBuffer;
+
+	assert( pHeader->mipMapCount >= 1 );
+
+	GLint mipCount = (GLint)pHeader->mipMapCount;
+
+	if ( !( pHeader->flags & DDS_HEADER_FLAGS_MIPMAP ) )
+	{
+		// no mips?
+	}
+
+	GLsizei width = (GLsizei)pHeader->width;
+	GLsizei height = (GLsizei)pHeader->height;
+
+	GLenum format;
+	int blockSize;
+
+	const img::DDS_HEADER_DXT10 *pHeader2 = (const img::DDS_HEADER_DXT10 *)( pBuffer + sizeof( img::DDS_HEADER ) );
+
+	switch ( pHeader2->dxgiFormat )
+	{
+		// Classic DXT1
+	case DXGI_FORMAT_BC1_UNORM:
+		format = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+		blockSize = 8;
+		break;
+		// New BC4 and BC5
+	case DXGI_FORMAT_BC4_UNORM:
+		format = GL_COMPRESSED_RED_RGTC1;
+		blockSize = 8;
+		break;
+	case DXGI_FORMAT_BC5_UNORM:
+		format = GL_COMPRESSED_RG_RGTC2;
+		blockSize = 16;
+		break;
+		// Super mega new (10 years old) BC6 and BC7
+	case DXGI_FORMAT_BC7_UNORM:
+		format = GL_COMPRESSED_RGBA_BPTC_UNORM_ARB;
+		blockSize = 16;
+		break;
+	}
+
+	// mip 0
+	const byte *pMip = pBuffer + sizeof( img::DDS_HEADER ) + sizeof( img::DDS_HEADER_DXT10 );
+
+	for ( GLint level = 0; level < mipCount; ++level )
+	{
+		GLsizei mipSize = Max( 1, ( ( width + 3 ) / 4 ) ) * Max( 1, ( ( height + 3 ) / 4 ) ) * blockSize;
+
+		glCompressedTexImage2D( GL_TEXTURE_2D, level, format, width, height, 0, mipSize, pMip );
+
+		width = Max( 1, width / 2 );
+		height = Max( 1, height / 2 );
+
+		// add the size of the mip to get the offset to the next mip
+		pMip += mipSize;
+	}
+
+	GL_ApplyTextureParameters( flags );
+
+	return id;
+}
+
+static GLuint GL_Upload( const byte *pData, int nWidth, int nHeight, imageFlags_t flags )
+{
+	GLuint id;
+
+	glGenTextures( 1, &id );
+	GL_Bind( id );
+
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, nWidth, nHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, pData );
+
+	// auto-generate mipmaps (FIXME: sad vendor-specific extension)
+	if ( GLEW_ARB_framebuffer_object )
+	{
+		glGenerateMipmap( GL_TEXTURE_2D );
+	}
+
+	GL_ApplyTextureParameters( flags );
 
 	return id;
 }
@@ -211,35 +262,42 @@ static GLuint GL_Upload32( const byte *pData, int nWidth, int nHeight, imageFlag
 //-------------------------------------------------------------------------------------------------
 // This is the only function that can create image_t's
 //-------------------------------------------------------------------------------------------------
-static image_t *GL_CreateImage(const char *name, const byte *pic, int width, int height, imageFlags_t flags)
+static image_t *GL_CreateImage( const char *name, byte *pic, int width, int height, imageFlags_t flags, bool compressed )
 {
 	int			i;
-	image_t		*image;
+	image_t *	image;
 
 	// find a free image_t
-	for (i = 0, image = gltextures; i < numgltextures; i++, image++)
+	for ( i = 0, image = gltextures; i < numgltextures; i++, image++ )
 	{
-		if (!image->texnum)
+		if ( !image->texnum ) {
 			break;
+		}
 	}
-	if (i == numgltextures)
+	if ( i == numgltextures )
 	{
-		if (numgltextures == MAX_GLTEXTURES)
-			Com_Errorf("MAX_GLTEXTURES");
+		if ( numgltextures == MAX_GLTEXTURES ) {
+			Com_Error( "MAX_GLTEXTURES" );
+		}
 		numgltextures++;
 	}
 	image = &gltextures[i];
 
-	Q_strcpy_s(image->name, name);
+	Q_strcpy_s( image->name, name );
 	image->refcount = 0;			// Incremented by GL_FindImage
 
 	image->width = width;
 	image->height = height;
 	image->flags = flags;
 
-	// Upload it!
-	// Pics and skies are never mipmapped (they don't need em)
-	image->texnum = GL_Upload32(pic, width, height, flags);
+	if ( compressed )
+	{
+		image->texnum = GL_UploadCompressed( pic, flags );
+	}
+	else
+	{
+		image->texnum = GL_Upload( pic, width, height, flags );
+	}
 
 	image->sl = 0;
 	image->sh = 1;
@@ -249,10 +307,44 @@ static image_t *GL_CreateImage(const char *name, const byte *pic, int width, int
 	return image;
 }
 
+// ensures that a DDS fits our requirements
+static bool GL_CategorizeDDS( const char *pName, const byte *pBuffer, int bufLen )
+{
+	// first, check we're at least as long as the header
+	if ( bufLen < sizeof( img::DDS_HEADER ) )
+	{
+		Com_Printf( "DDS file %s is smaller than 128 bytes!\n", pName );
+		return false;
+	}
+
+	const img::DDS_HEADER *pHeader = (const img::DDS_HEADER *)pBuffer;
+
+	// second, check to see if we're DX10, we only support DX10
+	if ( !( pHeader->ddspf.flags & DDS_FOURCC ) ||
+		 !( pHeader->ddspf.fourCC == MakeFourCC( 'D', 'X', '1', '0' ) ) )
+	{
+		Com_Printf( "DDS file %s must be DX10 format!\n", pName );
+		return false;
+	}
+
+	// thirdly, make sure we're <larger> than the header plus dx10 ext header
+	if ( bufLen <= sizeof( img::DDS_HEADER ) + sizeof( img::DDS_HEADER_DXT10 ) )
+	{
+		Com_Printf( "DDS file %s is smaller than 128 + 20 bytes!\n", pName );
+		return false;
+	}
+
+	// we are okay!
+	// TODO: account for formats we don't want in the DX10 ext header
+	// TODO: test the ext header for Texture2D, general verification of 2D data
+
+	return true;
+}
+
 //-------------------------------------------------------------------------------------------------
 // Loads any of the supported image types into a cannonical 32 bit format.
 //-------------------------------------------------------------------------------------------------
-static byte *GL_LoadImage( const char *pName, int &width, int &height )
+static bool GL_LoadImage( const char *pName, int &width, int &height, byte *&pPic )
 {
 	byte *pBuffer;
 	int nBufLen;
@@ -260,36 +352,41 @@ static byte *GL_LoadImage( const char *pName, int &width, int &height )
 	nBufLen = FS_LoadFile( pName, (void **)&pBuffer );
 	if ( !pBuffer )
 	{
-		return nullptr;
+		return false;
 	}
 
 	assert( nBufLen > 32 ); // Sanity check
 
-	byte *pPic = nullptr;
-
 	if ( img::TestPNG( pBuffer ) )
 	{
 		pPic = img::LoadPNG( pBuffer, width, height );
+
+		FS_FreeFile( pBuffer );
+		return false;
+	}
+	else if ( img::TestDDS( pBuffer ) )
+	{
+		// if we're a dds, pPic becomes the file buffer
+
+		if ( !GL_CategorizeDDS( pName, pBuffer, nBufLen ) ) {
+			return false;
+		}
+
+		pPic = pBuffer;
+
+		return true;
 	}
 	else
 	{
 		// There is no real test for TGA
 		pPic = img::LoadTGA( pBuffer, nBufLen, width, height );
+
+		FS_FreeFile( pBuffer );
+		return false;
 	}
 	
-	if ( !pPic )
-	{
-		Com_Printf( "GL_LoadImage - %s is an unsupported image format!", pName );
-	}
-
-	FS_FreeFile( pBuffer );
-
-	if ( !pPic )
-	{
-		return nullptr;
-	}
-
-	return pPic;
+	Com_Printf( "GL_LoadImage - %s is an unsupported image format!", pName );
+	return false;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -298,12 +395,11 @@ static byte *GL_LoadImage( const char *pName, int &width, int &height )
 // THIS CHOKES ON TEXTURES WITH THE SAME NAME, STUDIOMODELS CAN HAVE IDENTICAL TEXTURE NAMES THAT ARE
 // DIFFERENT!!! THIS IS BAD!
 //-------------------------------------------------------------------------------------------------
-static image_t *GL_FindImage (const char *name, imageFlags_t flags)
+static image_t *GL_FindImage( const char *name, imageFlags_t flags )
 {
 	int i;
 	image_t *image;
 	int width, height;
-	byte *pic;
 
 	assert( name && name[0] );
 
@@ -317,45 +413,25 @@ static image_t *GL_FindImage (const char *name, imageFlags_t flags)
 		}
 	}
 
-#if 0
-	//
-	// load the pic from an 8-bit buffer (studiomodels)
-	//
-	if ( pic )
-	{
-		int outsize = width * height * 4;
-		byte *pic32 = (byte *)Mem_Alloc( outsize );
-		rgb_t *palette = (rgb_t *)( pic + width * height );
-
-		for ( i = 0, j = 0; i < outsize; i += 4, ++j )
-		{
-			pic32[i+0] = palette[pic[j]].r;
-			pic32[i+1] = palette[pic[j]].g;
-			pic32[i+2] = palette[pic[j]].b;
-			pic32[i+3] = 255; // SlartTodo: Studiomodels can have alphatest transparency
-		}
-		
-		image = GL_CreateImage( name, pic32, width, height, flags );
-
-		Mem_Free( pic32 );
-
-		++image->refcount;
-		return image;
-	}
-#endif
-
 	//
 	// load the pic from disk
 	//
-	pic = GL_LoadImage( name, width, height );
+	byte *pic = nullptr;
+
+	bool compressed = GL_LoadImage( name, width, height, pic );
 	if ( !pic ) {
 		defaultMaterial->image->IncrementRefCount();
 		return defaultMaterial->image;
 	}
 
-	image = GL_CreateImage( name, pic, width, height, flags );
+	image = GL_CreateImage( name, pic, width, height, flags, compressed );
 
-	Mem_Free( pic );
+	// HACK: this is weird
+	if ( compressed ) {
+		Mem_Free( pic );
+	} else {
+		FS_FreeFile( pic );
+	}
 
 	++image->refcount;
 	return image;
@@ -794,12 +870,12 @@ static void R_CreateIntrinsicImages()
 	// black image
 
 	memset( data, 0, sizeof( data ) );
-	image_t *blackImage = GL_CreateImage( "***blackImage***", (byte *)data, DEFAULT_SIZE, DEFAULT_SIZE, IF_NOMIPS | IF_NEAREST );
+	image_t *blackImage = GL_CreateImage( "***blackImage***", (byte *)data, DEFAULT_SIZE, DEFAULT_SIZE, IF_NOMIPS | IF_NEAREST, false );
 
 	// white image
 
 	memset( data, 255, sizeof( data ) );
-	image_t *whiteImage = GL_CreateImage( "***whiteImage***", (byte *)data, DEFAULT_SIZE, DEFAULT_SIZE, IF_NOMIPS | IF_NEAREST );
+	image_t *whiteImage = GL_CreateImage( "***whiteImage***", (byte *)data, DEFAULT_SIZE, DEFAULT_SIZE, IF_NOMIPS | IF_NEAREST, false );
 
 	// flat normal map
 
@@ -813,7 +889,7 @@ static void R_CreateIntrinsicImages()
 			data[y][x][3] = 255;
 		}
 	}
-	flatNormalImage = GL_CreateImage( "***flatNormalImage***", (byte *)data, DEFAULT_SIZE, DEFAULT_SIZE, 0 );
+	flatNormalImage = GL_CreateImage( "***flatNormalImage***", (byte *)data, DEFAULT_SIZE, DEFAULT_SIZE, 0, false );
 
 	// black and white materials
 
@@ -853,7 +929,7 @@ static void R_CreateIntrinsicImages()
 		data[x][DEFAULT_SIZE-1][2] = 255;
 		data[x][DEFAULT_SIZE-1][3] = 255;
 	}
-	image_t *defaultImage = GL_CreateImage("***defaultImage***", (byte *)data, DEFAULT_SIZE, DEFAULT_SIZE, IF_NONE);
+	image_t *defaultImage = GL_CreateImage( "***defaultImage***", (byte *)data, DEFAULT_SIZE, DEFAULT_SIZE, IF_NONE, false );
 	defaultMaterial = GL_CreateMaterialFromData( "***defaultMaterial***", defaultImage, whiteImage, flatNormalImage, blackImage );
 }
 

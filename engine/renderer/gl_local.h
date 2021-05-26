@@ -94,6 +94,8 @@ struct renderSystemGlobals_t
 {
 	int registrationSequence;
 
+	entity_t *pViewmodelEntity;
+
 	GLuint debugMeshVAO;
 	GLuint debugMeshVBO;
 };

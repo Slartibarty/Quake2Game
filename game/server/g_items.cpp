@@ -1278,7 +1278,7 @@ always owned, never in the world
 		Weapon_Blaster,
 		"misc/w_pkup.wav",
 		NULL, 0,
-		"models/weapons/v_blast/tris.md2",
+		"models/weapons/v_pistol.smf",
 /* icon */		"w_blaster",
 /* pickup */	"Blaster",
 		0,

@@ -739,7 +739,7 @@ void R_DrawAliasModel (entity_t *e)
 	glColor4f (1,1,1,1);
 }
 
-#if 1
+#if 0
 
 /*
 =============================================================
@@ -1428,6 +1428,13 @@ void R_DrawStudioModel( entity_t *e )
 ===================================================================================================
 */
 
+#undef countof
+
+#define GLM_FORCE_EXPLICIT_CTOR
+#include "glm/glm/glm.hpp"
+#include "glm/glm/gtc/matrix_transform.hpp"
+#include "glm/glm/gtc/type_ptr.hpp"
+
 // TODO: there needs to be a constant that defines the max boundaries of the map, try to match Q3 eventually
 // pretend that BIG_FLOAT_VALUE is the max distance you can travel from the origin
 #define BIG_FLOAT_VALUE 131072.0f
@@ -1455,16 +1462,33 @@ void R_DrawStaticMeshFile( entity_t *e )
 
 	// Matrices
 
-	float rotate = anglemod( r_newrefdef.time * 50.0f );
+	//float rotate = anglemod( r_newrefdef.time * 50.0f );
 
 	XMMATRIX modelMatrix = XMMatrixMultiply(
-		XMMatrixRotationRollPitchYaw( DEG2RAD( e->angles[PITCH] ), DEG2RAD( e->angles[ROLL] ), DEG2RAD( e->angles[YAW] + rotate ) ),
+		//XMMatrixRotationRollPitchYaw( DEG2RAD( -e->angles[PITCH] ), DEG2RAD( -e->angles[YAW] ), DEG2RAD( e->angles[ROLL] ) ),
+		XMMatrixRotationX( DEG2RAD( e->angles[2] ) ) * XMMatrixRotationY( DEG2RAD( e->angles[0] ) ) * XMMatrixRotationZ( DEG2RAD( e->angles[1] ) ),
 		//XMMatrixRotationRollPitchYaw( 0.0f, 0.0f, 0.0f ),
 		XMMatrixTranslation( e->origin[0], e->origin[1], e->origin[2] )
 	);
 
 	XMFLOAT4X4A modelMatrixStore;
 	XMStoreFloat4x4A( &modelMatrixStore, modelMatrix );
+
+#if 0
+
+	XMMATRIX viewMatrix = XMMatrixTranslation( -r_newrefdef.vieworg[0], -r_newrefdef.vieworg[1], -r_newrefdef.vieworg[2] );
+
+	viewMatrix *= XMMatrixTranspose( XMMatrixRotationX( DEG2RAD( r_newrefdef.viewangles[2] ) ) * XMMatrixRotationY( DEG2RAD( r_newrefdef.viewangles[0] ) ) * XMMatrixRotationZ( DEG2RAD( r_newrefdef.viewangles[1] ) ) );
+
+	XMFLOAT4X4A viewMatrixStore;
+	XMStoreFloat4x4A( &viewMatrixStore, viewMatrix );
+
+	float fov = ( currententity->flags & RF_WEAPONMODEL ) ? 52.0f : r_newrefdef.fov_y;
+
+	XMFLOAT4X4A projMatrixStore;
+	XMStoreFloat4x4A( &projMatrixStore, XMMatrixPerspectiveFovRH( DEG2RAD( fov ), (float)r_newrefdef.width / (float)r_newrefdef.height, 4.0f, 4096.0f ) );
+
+#endif
 
 	float alignas( 16 ) view[16];
 	float alignas( 16 ) proj[16];
@@ -1576,7 +1600,35 @@ void R_DrawStaticMeshFile( entity_t *e )
 
 	glCullFace( GL_BACK ); // TODO: eugh
 
+#if 1
+	if ( currententity->flags & RF_WEAPONMODEL )
+	{
+		extern void MYgluPerspective( GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble zFar );
+
+		glMatrixMode( GL_PROJECTION );
+		glPushMatrix();
+		glLoadIdentity();
+		MYgluPerspective( 52.0, (float)r_newrefdef.width / r_newrefdef.height, 4, 4096 );
+		glMatrixMode( GL_MODELVIEW );
+
+		glGetFloatv( GL_MODELVIEW_MATRIX, view );
+		glGetFloatv( GL_PROJECTION_MATRIX, proj );
+
+		glUniformMatrix4fv( 5, 1, GL_FALSE, (const GLfloat *)&view );
+		glUniformMatrix4fv( 6, 1, GL_FALSE, (const GLfloat *)&proj );
+	}
+#endif
+
 	glDrawElements( GL_TRIANGLES, memSMF->numIndices, GL_UNSIGNED_SHORT, (void *)( 0 ) );
+
+#if 1
+	if ( currententity->flags & RF_WEAPONMODEL )
+	{
+		glMatrixMode( GL_PROJECTION );
+		glPopMatrix();
+		glMatrixMode( GL_MODELVIEW );
+	}
+#endif
 
 	glCullFace( GL_FRONT ); // TODO: eugh
 

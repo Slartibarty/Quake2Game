@@ -370,6 +370,11 @@ static void R_DrawEntities()
 			continue;
 		}
 
+		if ( r_newrefdef.entities[i].flags & RF_DEPTHHACK ) {
+			tr.pViewmodelEntity = r_newrefdef.entities + i;
+			continue;
+		}
+
 		R_DrawEntity( r_newrefdef.entities + i );
 	}
 
@@ -384,10 +389,32 @@ static void R_DrawEntities()
 			continue;
 		}
 
+		if ( r_newrefdef.entities[i].flags & RF_DEPTHHACK ) {
+			tr.pViewmodelEntity = r_newrefdef.entities + i;
+			continue;
+		}
+
 		R_DrawEntity( r_newrefdef.entities + i );
 	}
 
 	glDepthMask( GL_TRUE );		// back to writing
+}
+
+/*
+========================
+R_DrawViewmodel
+
+Draws the viewmodel
+========================
+*/
+static void R_DrawViewmodel()
+{
+	if ( !tr.pViewmodelEntity ) {
+		return;
+	}
+
+	R_DrawEntity( tr.pViewmodelEntity );
+	tr.pViewmodelEntity = nullptr;
 }
 
 /*
@@ -703,7 +730,7 @@ Performs a screen clear
 */
 static void R_Clear()
 {
-	if ( r_clear->value ) {
+	if ( r_clear->GetBool() ) {
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 	} else {
 		glClear( GL_DEPTH_BUFFER_BIT );
@@ -724,7 +751,7 @@ r_newrefdef must be set before the first call
 */
 static void R_RenderView( refdef_t *fd )
 {
-	if ( r_norefresh->value ) {
+	if ( r_norefresh->GetBool() ) {
 		return;
 	}
 
@@ -734,7 +761,7 @@ static void R_RenderView( refdef_t *fd )
 		Com_Error( "R_RenderView: NULL worldmodel" );
 	}
 
-	if ( r_speeds->value )
+	if ( r_speeds->GetBool() )
 	{
 		c_brush_polys = 0;
 		c_alias_polys = 0;
@@ -742,7 +769,7 @@ static void R_RenderView( refdef_t *fd )
 
 	R_PushDlights();
 
-	if ( r_finish->value ) {
+	if ( r_finish->GetBool() ) {
 		glFinish();
 	}
 
@@ -770,6 +797,13 @@ static void R_RenderView( refdef_t *fd )
 
 	// world alpha surfaces
 	R_DrawAlphaSurfaces();
+
+	// all operations from here on out do not need the existing depth buffer
+	// so nuke it, just the viewmodel for now
+	glClear( GL_DEPTH_BUFFER_BIT );
+
+	// the viewmodel
+	R_DrawViewmodel();
 
 	// screen overlay
 	R_DrawScreenOverlay( r_newrefdef.blend );

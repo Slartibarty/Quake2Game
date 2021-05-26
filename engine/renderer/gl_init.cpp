@@ -365,6 +365,10 @@ bool R_Init()
 		// need an error message solution, just a const char *& in the params maybe?
 		return false;
 	}
+	// BC7, BC6H, BC5 and BC4
+	if ( !GLEW_ARB_texture_compression_bptc || !GLEW_ARB_texture_compression_rgtc ) {
+		return false;
+	}
 
 	GL_CheckErrors();
 
