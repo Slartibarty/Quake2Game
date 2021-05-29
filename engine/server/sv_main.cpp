@@ -88,18 +88,15 @@ static char *SV_StatusString()
 	strlen_t		statusLength;
 	strlen_t		playerLength;
 
-	strcpy( status, Cvar_Serverinfo() );
-	strcat( status, "\n" );
-	statusLength = Q_strlen( status );
+	statusLength = Q_sprintf_s( status, "%s\n", Cvar_Serverinfo() );
 
 	for ( i = 0; i < maxclients->GetInt32(); i++ )
 	{
 		cl = &svs.clients[i];
 		if ( cl->state == cs_connected || cl->state == cs_spawned )
 		{
-			Q_sprintf_s( player, "%i %i \"%s\"\n",
+			playerLength = Q_sprintf_s( player, "%i %i \"%s\"\n",
 				cl->edict->client->ps.stats[STAT_FRAGS], cl->ping, cl->name );
-			playerLength = Q_strlen( player );
 			if ( statusLength + playerLength >= sizeof( status ) ) {
 				// can't hold any more
 				break;

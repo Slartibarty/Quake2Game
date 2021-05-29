@@ -40,39 +40,51 @@ inline void Q_strcpy_s( char( &pDest )[nDestSize], const char *pSrc ) {
 	Q_strcpy_s( pDest, nDestSize, pSrc );
 }
 
-void Q_vsprintf_s( char *pDest, strlen_t nDestSize, _Printf_format_string_ const char *pFmt, va_list args );
+int Q_vsprintf_s( char *pDest, strlen_t nDestSize, _Printf_format_string_ const char *pFmt, va_list args );
 
 template< strlen_t nDestSize >
-inline void Q_vsprintf_s( char( &pDest )[nDestSize], _Printf_format_string_ const char *pFmt, va_list args )
+inline int Q_vsprintf_s( char( &pDest )[nDestSize], _Printf_format_string_ const char *pFmt, va_list args )
 {
-	Q_vsprintf_s( pDest, nDestSize, pFmt, args );
+	return Q_vsprintf_s( pDest, nDestSize, pFmt, args );
 }
 
-inline void Q_sprintf_s( char *pDest, strlen_t nDestSize, _Printf_format_string_ const char *pFmt, ... )
+inline int Q_sprintf_s( char *pDest, strlen_t nDestSize, _Printf_format_string_ const char *pFmt, ... )
 {
+	int result;
 	va_list args;
+
 	va_start( args, pFmt );
-	Q_vsprintf_s( pDest, nDestSize, pFmt, args );
+	result = Q_vsprintf_s( pDest, nDestSize, pFmt, args );
 	va_end( args );
+
+	return result;
 }
 
 template< strlen_t nDestSize >
-inline void Q_sprintf_s( char( &pDest )[nDestSize], _Printf_format_string_ const char *pFmt, ... )
+inline int Q_sprintf_s( char( &pDest )[nDestSize], _Printf_format_string_ const char *pFmt, ... )
 {
+	int result;
 	va_list args;
+
 	va_start( args, pFmt );
-	Q_vsprintf_s( pDest, nDestSize, pFmt, args );
+	result = Q_vsprintf_s( pDest, nDestSize, pFmt, args );
 	va_end( args );
+
+	return result;
 }
 
-void Q_vsprintf( char *pDest, _Printf_format_string_ const char *pFmt, va_list args );
+int Q_vsprintf( char *pDest, _Printf_format_string_ const char *pFmt, va_list args );
 
-inline void Q_sprintf( char *pDest, _Printf_format_string_ const char *pFmt, ... )
+inline int Q_sprintf( char *pDest, _Printf_format_string_ const char *pFmt, ... )
 {
+	int result;
 	va_list args;
+
 	va_start( args, pFmt );
-	Q_vsprintf( pDest, pFmt, args );
+	result = Q_vsprintf( pDest, pFmt, args );
 	va_end( args );
+	
+	return result;
 }
 
 /*

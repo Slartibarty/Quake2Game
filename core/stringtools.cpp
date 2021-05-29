@@ -38,14 +38,14 @@ void Q_strcpy_s( char *pDest, strlen_t nDestSize, const char *pSrc )
 	*pDest = '\0';
 }
 
-void Q_vsprintf_s( char *pDest, strlen_t nDestSize, _Printf_format_string_ const char *pFmt, va_list args )
+int Q_vsprintf_s( char *pDest, strlen_t nDestSize, _Printf_format_string_ const char *pFmt, va_list args )
 {
-	stbsp_vsnprintf( pDest, static_cast<int>( nDestSize ), pFmt, args );
+	return stbsp_vsnprintf( pDest, static_cast<int>( nDestSize ), pFmt, args );
 }
 
-void Q_vsprintf( char *pDest, _Printf_format_string_ const char *pFmt, va_list args )
+int Q_vsprintf( char *pDest, _Printf_format_string_ const char *pFmt, va_list args )
 {
-	stbsp_vsprintf( pDest, pFmt, args );
+	return stbsp_vsprintf( pDest, pFmt, args );
 }
 
 /*
