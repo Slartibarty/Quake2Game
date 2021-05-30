@@ -46,38 +46,6 @@ extern int		key_linepos;
 
 /*
 ========================
-DrawString
-
-This shouldn't be here
-========================
-*/
-void DrawString( int x, int y, const char *s )
-{
-	while ( *s ) {
-		R_DrawChar( x, y, *s );
-		x += CONCHAR_WIDTH;
-		s++;
-	}
-}
-
-/*
-========================
-DrawAltString
-
-This shouldn't be here
-========================
-*/
-void DrawAltString( int x, int y, const char *s )
-{
-	while ( *s ) {
-		R_DrawCharColor( x, y, *s, colors::green );
-		x += CONCHAR_WIDTH;
-		s++;
-	}
-}
-
-/*
-========================
 Key_ClearTyping
 ========================
 */
@@ -604,12 +572,12 @@ void Con_DrawNotify()
 	{
 		if (chat_team)
 		{
-			DrawString (8, v, "say_team:");
+			SCR_DrawString (8, v, "say_team:");
 			skip = 11;
 		}
 		else
 		{
-			DrawString (8, v, "say:");
+			SCR_DrawString (8, v, "say:");
 			skip = 5;
 		}
 

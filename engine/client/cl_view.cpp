@@ -182,7 +182,7 @@ static void V_TestParticles()
 		}
 
 		p->color = 8;
-		p->alpha = cl_testparticles->value;
+		p->alpha = cl_testparticles->GetFloat();
 	}
 }
 
@@ -284,7 +284,7 @@ void CL_PrepRefresh()
 	//	cl.image_precache[i] = R_RegisterPic (cl.configstrings[CS_IMAGES+i]); // SlartMaterialSystemTodo
 	}
 	
-	Com_Print ("                                     \r");
+	Com_Print( "                                     \r" );
 
 	for ( int i = 0; i < MAX_CLIENTS; i++ )
 	{
@@ -322,7 +322,7 @@ void CL_PrepRefresh()
 
 	Con_ClearNotify ();
 
-	//SCR_UpdateScreen();
+	SCR_UpdateScreen();
 	cl.refresh_prepped = true;
 	cl.force_refdef = true;			// make sure we have a valid refdef
 
@@ -412,7 +412,7 @@ void V_RenderView()
 		return;
 	}
 
-	if ( cl_timedemo->value ) {
+	if ( cl_timedemo->GetBool() ) {
 		if ( !cl.timedemo_start ) {
 			cl.timedemo_start = Sys_Milliseconds();
 		}
@@ -421,7 +421,7 @@ void V_RenderView()
 
 	// an invalid frame will just use the exact previous refdef
 	// we can't use the old frame if the video mode has changed, though...
-	if ( cl.frame.valid && ( cl.force_refdef || !cl_paused->value ) )
+	if ( cl.frame.valid && ( cl.force_refdef || !cl_paused->GetBool() ) )
 	{
 		cl.force_refdef = false;
 
@@ -432,16 +432,16 @@ void V_RenderView()
 		// v_forward, etc.
 		CL_AddEntities();
 
-		if ( cl_testparticles->value ) {
+		if ( cl_testparticles->GetBool() ) {
 			V_TestParticles();
 		}
-		if ( cl_testentities->value ) {
+		if ( cl_testentities->GetBool() ) {
 			V_TestEntities();
 		}
-		if ( cl_testlights->value ) {
+		if ( cl_testlights->GetBool() ) {
 			V_TestDLights();
 		}
-		if ( cl_testblend->value )
+		if ( cl_testblend->GetBool() )
 		{
 			cl.refdef.blend[0] = 1.0f;
 			cl.refdef.blend[1] = 0.5f;

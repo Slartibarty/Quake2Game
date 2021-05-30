@@ -156,7 +156,7 @@ void SCR_DrawDebugGraph()
 /*
 ===================================================================================================
 
-	Center printing
+	Printing / center printing
 
 ===================================================================================================
 */
@@ -166,6 +166,40 @@ static float	scr_centertime_start;	// for slow victory printing
 static float	scr_centertime_off;
 static int		scr_center_lines;
 static int		scr_erase_center;
+
+/*
+========================
+SCR_DrawString
+========================
+*/
+void SCR_DrawStringColor( int x, int y, const char *s, uint32 color )
+{
+	while ( *s ) {
+		R_DrawCharColor( x, y, *s, color );
+		x += CONCHAR_WIDTH;
+		s++;
+	}
+}
+
+/*
+========================
+SCR_DrawString
+========================
+*/
+void SCR_DrawString( int x, int y, const char *s )
+{
+	SCR_DrawStringColor( x, y, s, colors::defaultText );
+}
+
+/*
+========================
+SCR_DrawString
+========================
+*/
+void SCR_DrawAltString( int x, int y, const char *s )
+{
+	SCR_DrawStringColor( x, y, s, colors::green );
+}
 
 /*
 ========================
@@ -392,7 +426,7 @@ static void SCR_DrawLoading()
 SCR_DrawCrosshair
 ========================
 */
-void SCR_DrawCrosshair()
+static void SCR_DrawCrosshair()
 {
 	if ( !cl_crosshair->GetBool() ) {
 		return;
@@ -851,11 +885,11 @@ static void SCR_ExecuteLayoutString( char *s )
 			token = COM_Parse (&s);
 			time = atoi(token);
 
-			DrawAltString (x+32, y, ci->name);
-			DrawString (x+32, y+8,  "Score: ");
-			DrawAltString (x+32+7*8, y+8,  va("%i", score));
-			DrawString (x+32, y+16, va("Ping:  %i", ping));
-			DrawString (x+32, y+24, va("Time:  %i", time));
+			SCR_DrawAltString (x+32, y, ci->name);
+			SCR_DrawString (x+32, y+8,  "Score: ");
+			SCR_DrawAltString (x+32+7*8, y+8,  va("%i", score));
+			SCR_DrawString (x+32, y+16, va("Ping:  %i", ping));
+			SCR_DrawString (x+32, y+24, va("Time:  %i", time));
 
 			if (!ci->icon)
 				ci = &cl.baseclientinfo;
@@ -890,9 +924,9 @@ static void SCR_ExecuteLayoutString( char *s )
 			Q_sprintf_s(block, "%3d %3d %-12.12s", score, ping, ci->name);
 
 			if (value == cl.playernum)
-				DrawAltString (x, y, block);
+				SCR_DrawAltString (x, y, block);
 			else
-				DrawString (x, y, block);
+				SCR_DrawString (x, y, block);
 			continue;
 		}
 
@@ -981,7 +1015,7 @@ static void SCR_ExecuteLayoutString( char *s )
 			index = cl.frame.playerstate.stats[index];
 			if (index < 0 || index >= MAX_CONFIGSTRINGS)
 				Com_Errorf ("Bad stat_string index");
-			DrawString (x, y, cl.configstrings[index]);
+			SCR_DrawString (x, y, cl.configstrings[index]);
 			continue;
 		}
 
@@ -995,7 +1029,7 @@ static void SCR_ExecuteLayoutString( char *s )
 		if (!Q_strcmp(token, "string"))
 		{
 			token = COM_Parse (&s);
-			DrawString (x, y, token);
+			SCR_DrawString (x, y, token);
 			continue;
 		}
 
@@ -1009,7 +1043,7 @@ static void SCR_ExecuteLayoutString( char *s )
 		if (!Q_strcmp(token, "string2"))
 		{
 			token = COM_Parse (&s);
-			DrawAltString (x, y, token);
+			SCR_DrawAltString (x, y, token);
 			continue;
 		}
 

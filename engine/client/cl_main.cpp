@@ -1428,7 +1428,9 @@ void CL_InitLocal (void)
 
 	Cmd_AddCommand ("rcon", CL_Rcon_f);
 
-// 	Cmd_AddCommand ("packet", CL_Packet_f); // this is dangerous to leave in
+#ifdef Q_DEBUG
+ 	Cmd_AddCommand ("packet", CL_Packet_f); // this is dangerous to leave in
+#endif
 
 	Cmd_AddCommand ("precache", CL_Precache_f);
 
@@ -1448,7 +1450,6 @@ void CL_InitLocal (void)
 	Cmd_AddCommand ("say", NULL);
 	Cmd_AddCommand ("say_team", NULL);
 	Cmd_AddCommand ("info", NULL);
-	Cmd_AddCommand ("prog", NULL);
 	Cmd_AddCommand ("give", NULL);
 	Cmd_AddCommand ("god", NULL);
 	Cmd_AddCommand ("notarget", NULL);

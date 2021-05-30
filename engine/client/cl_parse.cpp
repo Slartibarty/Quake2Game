@@ -47,7 +47,7 @@ Returns true if the file exists, otherwise it attempts
 to start a download from the server.
 ===============
 */
-qboolean	CL_CheckOrDownloadFile (const char *filename)
+bool CL_CheckOrDownloadFile (const char *filename)
 {
 	FILE *fp;
 	char	name[MAX_OSPATH];

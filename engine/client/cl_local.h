@@ -287,9 +287,6 @@ void VID_Shutdown();
 //
 // cl_console
 //
-void DrawString( int x, int y, const char *s );
-void DrawAltString( int x, int y, const char *s );	// Green
-
 void Con_CheckResize();
 void Con_Init();
 void Con_DrawConsole( float frac );
@@ -336,19 +333,19 @@ struct kbutton_t
 	int		state;
 };
 
-void	CL_InitInput();
-void	CL_SendCmd();
+void CL_InitInput();
+void CL_SendCmd();
 
-void	CL_ClearState();
+void CL_ClearState();
 
-void	CL_ReadPackets();
+void CL_ReadPackets();
 
-void	CL_BaseMove( usercmd_t *cmd );
+void CL_BaseMove( usercmd_t *cmd );
 
-void	IN_CenterView();
+void IN_CenterView();
 
-float	CL_KeyState( kbutton_t *key );
-const char *	Key_KeynumToString( int keynum );
+float CL_KeyState( kbutton_t *key );
+const char *Key_KeynumToString( int keynum );
 
 //
 // cl_keys
@@ -391,7 +388,7 @@ void SHOWNET( const char *s );
 void CL_ParseClientinfo( int player );
 void CL_Download_f();
 
-qboolean CL_CheckOrDownloadFile( const char *filename );
+bool CL_CheckOrDownloadFile( const char *filename );
 void CL_RegisterSounds();
 
 //
@@ -413,6 +410,10 @@ extern int crosshair_width, crosshair_height;
 void SCR_Init();
 
 void SCR_UpdateScreen();
+
+void SCR_DrawStringColor( int x, int y, const char *s, uint32 color );
+void SCR_DrawString( int x, int y, const char *s );
+void SCR_DrawAltString( int x, int y, const char *s );
 
 void SCR_CenterPrint( const char *str );
 void SCR_BeginLoadingPlaque();
