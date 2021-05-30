@@ -349,9 +349,10 @@ void Con_Init()
 	Cmd_AddCommand( "clear", Con_Clear_f );
 	Cmd_AddCommand( "condump", Con_Dump_f );
 
-	con.initialized = true;
+	// will never be printed (before con.initialized)
+	Com_Print( "Console initialized\n" );
 
-	Com_Print( "Console initialized.\n" );
+	con.initialized = true;
 }
 
 /*

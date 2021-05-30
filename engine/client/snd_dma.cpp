@@ -97,7 +97,7 @@ void S_Init (void)
 {
 	cvar_t	*cv;
 
-	Com_Printf("\n------- sound initialization -------\n");
+	Com_Printf("------- Initializing SoundSystem --------\n");
 
 	cv = Cvar_Get ("s_initsound", "1", 0);
 	if (!cv->value)
@@ -128,12 +128,12 @@ void S_Init (void)
 		soundtime = 0;
 		paintedtime = 0;
 
-		Com_Printf ("sound sampling rate: %i\n", dma.speed);
+		Com_Printf ("Sound sampling rate: %i\n", dma.speed);
 
 		S_StopAllSounds ();
 	}
 
-	Com_Printf("------------------------------------\n");
+	Com_Print( "SoundSystem initialized\n" "-----------------------------------------\n\n");
 }
 
 

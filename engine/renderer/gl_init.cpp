@@ -300,7 +300,7 @@ R_Restart
 */
 void R_Restart()
 {
-	Com_Print( "------- Restarting RenderSystem --------\n" );
+	Com_Print( "-------- Restarting RenderSystem --------\n" );
 
 	// shutdown everything excluding glimp
 
@@ -336,7 +336,7 @@ void R_Restart()
 
 	GL_CheckErrors();
 
-	Com_Print( "RenderSystem restarted\n" "----------------------------------------\n" );
+	Com_Print( "RenderSystem restarted\n" "-----------------------------------------\n\n" );
 }
 
 /*
@@ -346,7 +346,7 @@ R_Init
 */
 bool R_Init()
 {
-	Com_Print( "------- Initializing RenderSystem --------\n" );
+	Com_Print( "-------- Initializing RenderSystem --------\n" );
 
 	Com_Printf( "Using DirectXMath v%d\n", DIRECTX_MATH_VERSION );
 
@@ -401,7 +401,7 @@ bool R_Init()
 
 	GL_CheckErrors();
 
-	Com_Print( "RenderSystem initialized\n" "------------------------------------------\n" );
+	Com_Print( "RenderSystem initialized\n" "-------------------------------------------\n\n" );
 
 	return true;
 }

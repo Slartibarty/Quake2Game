@@ -22,6 +22,8 @@ namespace utl
 	}
 }
 
+// adapated from old nvidia code
+
 #define SMALL_FLOAT 1e-12f
 
 void CalcTriangleTangentSpace( const vec3 &p0, const vec3 &p1, const vec3 &p2,
@@ -89,7 +91,7 @@ void OBJReader::Parse( char *buffer )
 	rawCoords.reserve( 2048 );
 	rawNormals.reserve( 4096 );
 
-	rawIndices.reserve( 4096 );
+	rawIndices.reserve( 8192 );
 
 	// load everything out of the obj
 

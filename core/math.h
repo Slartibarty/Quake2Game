@@ -580,8 +580,6 @@ int SignbitsForPlane( const cplane_t &in );
 // Returns 1, 2, or 1 + 2
 int BoxOnPlaneSide( const vec3_t emins, const vec3_t emaxs, const cplane_t *plane );
 
-#define BOX_ON_PLANE_SIDE BoxOnPlaneSide
-
 void ProjectPointOnPlane( vec3_t dst, const vec3_t p, const vec3_t normal );
 void PerpendicularVector( vec3_t dst, const vec3_t src );
 void RotatePointAroundVector( vec3_t dst, const vec3_t dir, const vec3_t point, float degrees );

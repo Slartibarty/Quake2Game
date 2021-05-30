@@ -981,8 +981,7 @@ void CM_BoxLeafnums_r( int nodenum )
 
 		node = &cm.nodes.Data( nodenum );
 		plane = node->plane;
-//		s = BoxOnPlaneSide (leaf_mins, leaf_maxs, plane);
-		s = BOX_ON_PLANE_SIDE( leaf_mins, leaf_maxs, plane );
+		s = BoxOnPlaneSide( leaf_mins, leaf_maxs, plane );
 		if ( s == 1 )
 			nodenum = node->children[0];
 		else if ( s == 2 )
