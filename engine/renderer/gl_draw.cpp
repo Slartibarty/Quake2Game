@@ -330,52 +330,6 @@ void R_DrawPic( int x, int y, const char *pic )
 
 /*
 ========================
-R_DrawTileClear
-
-This repeats a 64*64 tile graphic to fill the screen around a sized down
-refresh window.
-========================
-*/
-void R_DrawTileClear( int x, int y, int w, int h, const char *pic )
-{
-#if 0
-	material_t *mat;
-
-	mat = R_RegisterPic( pic );
-	if ( !mat )
-	{
-		Com_Printf( "Can't find pic: %s\n", pic );
-		return;
-	}
-
-	guiRect_t rect;
-
-	uint32 color = PackColor( 255, 255, 255, mat->alpha );
-
-	rect.v1.Position( x, y );
-	rect.v1.TexCoord( x / 64.0f, y / 64.0f );
-	rect.v1.Color( color );
-
-	rect.v2.Position( x + w, y );
-	rect.v2.TexCoord( ( x + w ) / 64.0f, y / 64.0f );
-	rect.v2.Color( color );
-
-	rect.v3.Position( x + w, y + h );
-	rect.v3.TexCoord( ( x + w ) / 64.0f, ( y + h ) / 64.0f );
-	rect.v3.Color( color );
-
-	rect.v4.Position( x, y + h );
-	rect.v4.TexCoord( x / 64.0f, ( y + h ) / 64.0f );
-	rect.v4.Color( color );
-
-	s_drawMeshBuilder.AddElement( rect );
-
-	Draw_CheckChain( mat );
-#endif
-}
-
-/*
-========================
 R_DrawFilled
 
 Fills a box of pixels with a single color
@@ -500,7 +454,7 @@ R_SetRawPalette
 Sets the palette used by R_DrawStretchRaw
 ========================
 */
-void R_SetRawPalette( const unsigned char *palette )
+void R_SetRawPalette( const byte *palette )
 {
 #if 0
 	// we don't use the raw palette for anything but cinematics, so ignore NULL calls

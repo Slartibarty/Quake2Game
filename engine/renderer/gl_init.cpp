@@ -2,7 +2,7 @@
 #include "gl_local.h"
 
 #ifdef Q_DEBUG
-#define Q_DEBUG_GL
+//#define Q_DEBUG_GL
 #endif
 
 glState_t				glState;
@@ -52,6 +52,8 @@ cvar_t *r_gamma;
 cvar_t *r_specmaps;
 cvar_t *r_normmaps;
 cvar_t *r_emitmaps;
+
+cvar_t *r_viewmodelfov;
 
 #ifdef Q_DEBUG_GL
 
@@ -222,6 +224,8 @@ static void R_InitCVars()
 	r_specmaps = Cvar_Get( "r_specmaps", "1", 0 );
 	r_normmaps = Cvar_Get( "r_normmaps", "1", 0 );
 	r_emitmaps = Cvar_Get( "r_emitmaps", "1", 0 );
+
+	r_viewmodelfov = Cvar_Get( "r_viewmodelfov", "54", 0 );
 }
 
 /*

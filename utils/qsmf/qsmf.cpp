@@ -13,6 +13,8 @@
 #include "../../core/core.h"
 #include "../../common/q_formats.h"
 
+#include "cmdlib.h"
+
 #include "obj_reader.h"
 
 struct options_t
@@ -130,6 +132,14 @@ int main( int argc, char **argv )
 				Com_Print( "Material name doesn't end with \".mat\"\n" );
 				return EXIT_FAILURE;
 			}
+
+			continue;
+		}
+
+		if ( Q_stricmp( token, "-verbose" ) == 0 )
+		{
+			verbose = true;
+			continue;
 		}
 	}
 
@@ -163,7 +173,9 @@ int main( int argc, char **argv )
 		.materialName{} // filled below
 	};
 
-	Com_Printf( "Model stats: %u verts, %u faces\n", header.numVerts, header.numIndices / 3 );
+	assert( header.numIndices % 3 == 0 );
+
+	Com_Printf( "Model stats: %u verts, %u faces, %u indices\n", header.numVerts, header.numIndices / 3, header.numIndices );
 
 	Q_strcpy_s( header.materialName, options.materialName );
 

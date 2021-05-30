@@ -94,7 +94,10 @@ struct renderSystemGlobals_t
 {
 	int registrationSequence;
 
-	entity_t *pViewmodelEntity;
+	entity_t *pViewmodelEntity;		// so we can render this particular entity last after everything else, but before the UI
+
+	DirectX::XMFLOAT4X4A projMatrix;		// the projection matrix
+	DirectX::XMFLOAT4X4A viewMatrix;		// the view matrix
 
 	GLuint debugMeshVAO;
 	GLuint debugMeshVBO;
@@ -104,8 +107,6 @@ extern glState_t				glState;
 extern glConfig_t				glConfig;
 extern renderSystemGlobals_t	tr;			// named "tr" to ease porting from other branches
 extern vidDef_t					vid;		// should incorporate this elsewhere eventually, written to by glimp
-
-extern	float	r_world_matrix[16];
 
 extern	model_t *r_worldmodel;
 
@@ -156,6 +157,8 @@ extern cvar_t *r_gamma;
 extern cvar_t *r_specmaps;
 extern cvar_t *r_normmaps;
 extern cvar_t *r_emitmaps;
+
+extern cvar_t *r_viewmodelfov;
 
 /*
 ===============================================================================
@@ -219,7 +222,6 @@ void		GL_ImageList_f();
 void		GL_MaterialList_f();
 
 material_t	*GL_FindMaterial( const char *name, bool managed = false );
-material_t	*R_RegisterSkin( const char *name );
 
 void		GL_FreeUnusedMaterials();
 

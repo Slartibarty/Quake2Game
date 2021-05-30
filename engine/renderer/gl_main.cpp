@@ -26,8 +26,6 @@ vec3_t	vpn;
 vec3_t	vright;
 vec3_t	r_origin;
 
-float	r_world_matrix[16];
-
 //
 // screen size info
 //
@@ -247,17 +245,11 @@ static void R_DrawThingy( const vec3_t origin, const vec3_t angles, uint32 color
 	XMFLOAT4X4 modelMatrixStore;
 	XMStoreFloat4x4( &modelMatrixStore, modelMatrix );
 
-	float view[16];
-	float proj[16];
-
-	glGetFloatv( GL_MODELVIEW_MATRIX, view );
-	glGetFloatv( GL_PROJECTION_MATRIX, proj );
-
 	glUseProgram( glProgs.debugMeshProg );
 
 	glUniformMatrix4fv( 1, 1, GL_FALSE, (const GLfloat *)&modelMatrixStore );
-	glUniformMatrix4fv( 2, 1, GL_FALSE, (const GLfloat *)&view );
-	glUniformMatrix4fv( 3, 1, GL_FALSE, (const GLfloat *)&proj );
+	glUniformMatrix4fv( 2, 1, GL_FALSE, (const GLfloat *)&tr.viewMatrix );
+	glUniformMatrix4fv( 3, 1, GL_FALSE, (const GLfloat *)&tr.projMatrix );
 
 	glBindVertexArray( tr.debugMeshVAO );
 	glBindBuffer( GL_ARRAY_BUFFER, tr.debugMeshVBO );
@@ -459,9 +451,6 @@ void Particles_Init()
 
 	glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, sizeof( partPoint_t ), (void *)( 0 ) );
 	glVertexAttribPointer( 1, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( partPoint_t ), (void *)( 3 * sizeof( GLfloat ) ) );
-
-	// this sucks a little, we'd rather have our own class for this
-	s_partVector.reserve( MAX_PARTICLES / 2 );
 }
 
 /*
@@ -506,19 +495,9 @@ static void R_DrawParticles()
 		point.a = static_cast<byte>( p->alpha * 255.0f );
 	}
 
-	// set up the render state
-//	DirectX::XMMATRIX perspMatrix = DirectX::XMMatrixPerspectiveFovRH( r_newrefdef.fov_y, vid.width / vid.height, 4.0f, 4096.0f );
-//	perspMatrix = DirectX::XMMatrixTranspose( perspMatrix );
-
-	float proj[16];
-	float view[16];
-
-	glGetFloatv( GL_PROJECTION_MATRIX, proj );
-	glGetFloatv( GL_MODELVIEW_MATRIX, view );
-
 	glUseProgram( glProgs.particleProg );
-	glUniformMatrix4fv( 2, 1, GL_FALSE, proj );
-	glUniformMatrix4fv( 3, 1, GL_FALSE, view );
+	glUniformMatrix4fv( 2, 1, GL_FALSE, (const GLfloat *)&tr.projMatrix );
+	glUniformMatrix4fv( 3, 1, GL_FALSE, (const GLfloat *)&tr.viewMatrix );
 
 	glBindVertexArray( s_partVAO );
 	glBindBuffer( GL_ARRAY_BUFFER, s_partVBO );
@@ -670,6 +649,16 @@ void MYgluPerspective(GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble z
 	glFrustum(xmin, xmax, ymin, ymax, zNear, zFar);
 }
 
+// convert from our coordinate system (looking down X)
+// to OpenGL's coordinate system (looking down -Z)
+static const float s_flipMatrix[16]
+{
+	0, 0, -1, 0,
+	-1, 0, 0, 0,
+	0, 1, 0, 0,
+	0, 0, 0, 1
+};
+
 /*
 ========================
 R_SetupGL
@@ -679,38 +668,67 @@ GET RID OF ME!!!
 */
 static void R_SetupGL()
 {
-	//
-	// set up projection matrix
-	//
-	glMatrixMode( GL_PROJECTION );
-	glLoadIdentity();
-	MYgluPerspective( r_newrefdef.fov_y, (GLdouble)r_newrefdef.width / (GLdouble)r_newrefdef.height, 4.0, 4096.0 );
+	using namespace DirectX;
 
-	glCullFace( GL_FRONT );
+	// projection matrix
+
+	XMMATRIX workMatrix = XMMatrixPerspectiveFovRH( DEG2RAD( r_newrefdef.fov_y ), (float)r_newrefdef.width / (float)r_newrefdef.height, 4.0f, 4096.0f );
+	XMStoreFloat4x4A( &tr.projMatrix, workMatrix );
+
+	// send it to the fixed function pipeline
+	glMatrixMode( GL_PROJECTION );
+	glLoadMatrixf( (const GLfloat *)&tr.projMatrix );
+
+	// view matrix
+
+#if 0
+	vec3_t &viewOrg = r_newrefdef.vieworg;
+	vec3_t &viewAng = r_newrefdef.viewangles;
+
+	vec3 forward;
+	forward.x = cos( DEG2RAD( viewAng[YAW] ) ) * cos( DEG2RAD( viewAng[PITCH] ) );
+	forward.y = sin( DEG2RAD( viewAng[PITCH] ) );
+	forward.z = sin( DEG2RAD( viewAng[YAW] ) ) * cos( DEG2RAD( viewAng[PITCH] ) );
+	forward.NormalizeFast();
+
+	XMVECTOR eyePosition = XMVectorSet( viewOrg[0], viewOrg[1], viewOrg[2], 0.0f );
+	XMVECTOR focusPoint = XMVectorSet( viewOrg[0] + forward[0], viewOrg[1] + forward[1], viewOrg[2] + forward[2], 0.0f );
+	XMVECTOR upAxis = XMVectorSet( 0.0f, 0.0f, 1.0f, 0.0f );
+
+	workMatrix = XMMatrixLookAtRH( eyePosition, focusPoint, upAxis );
+
+	//XMMATRIX mulMatrix = XMMatrixSet( s_flipMatrix[0], s_flipMatrix[1], s_flipMatrix[2], s_flipMatrix[3], s_flipMatrix[4], s_flipMatrix[5], s_flipMatrix[6], s_flipMatrix[7], s_flipMatrix[8], s_flipMatrix[9], s_flipMatrix[10], s_flipMatrix[11], s_flipMatrix[12], s_flipMatrix[13], s_flipMatrix[14], s_flipMatrix[15] );
+
+	//workMatrix = XMMatrixMultiply( workMatrix, mulMatrix );
+
+	XMStoreFloat4x4A( &tr.viewMatrix, workMatrix );
+#endif
 
 	glMatrixMode( GL_MODELVIEW );
+
 	glLoadIdentity();
 
-#if 1
 	glRotatef( -90, 1, 0, 0 );	    // put Z going up
 	glRotatef( 90, 0, 0, 1 );	    // put Z going up
 	glRotatef( -r_newrefdef.viewangles[2], 1, 0, 0 );
 	glRotatef( -r_newrefdef.viewangles[0], 0, 1, 0 );
 	glRotatef( -r_newrefdef.viewangles[1], 0, 0, 1 );
 	glTranslatef( -r_newrefdef.vieworg[0], -r_newrefdef.vieworg[1], -r_newrefdef.vieworg[2] );
-#endif
 
-	glGetFloatv( GL_MODELVIEW_MATRIX, r_world_matrix );
+	// TODO: fucking matrices, do this with dxmath
+	glGetFloatv( GL_MODELVIEW_MATRIX, (GLfloat *)&tr.viewMatrix );
 
-	//
 	// set drawing parms
-	//
+
 	if ( r_cullfaces->GetBool() ) {
 		glEnable( GL_CULL_FACE );
 	} else {
 		glDisable( GL_CULL_FACE );
 	}
 
+	glCullFace( GL_FRONT );
+
+	// is modified really necessary here?
 	if ( r_wireframe->IsModified() ) {
 		r_wireframe->ClearModified();
 		glPolygonMode( GL_FRONT_AND_BACK, r_wireframe->GetBool() ? GL_LINE : GL_FILL );

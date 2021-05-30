@@ -79,10 +79,10 @@ void OBJReader::Parse( char *buffer )
 			s1 = token;
 
 #if 1
-			v2.x = static_cast<float>( Clamp( atof( token ), 0.0, 1.0 ) );
+			v2.x = static_cast<float>( atof( token ) );
 			token = strtok_r( nullptr, Delimiters, &save_ptr );
 			s2 = token;
-			v2.y = static_cast<float>( 1.0 - Clamp( atof( token ), 0.0, 1.0 ) ); // swap for opengl :)
+			v2.y = static_cast<float>( 1.0 - atof( token ) ); // swap for opengl :)
 #else
 			v2.x = static_cast<float>( atof( token ) );
 			token = strtok_r( nullptr, Delimiters, &save_ptr );
@@ -167,6 +167,11 @@ void OBJReader::Parse( char *buffer )
 
 	double end = Time_FloatMilliseconds();
 
+	Com_DPrintf( "Obj positions: %zu\n", rawPositions.size() );
+	Com_DPrintf( "Obj texcoords: %zu\n", rawCoords.size() );
+	Com_DPrintf( "Obj normals  : %zu\n", rawNormals.size() );
+	Com_DPrintf( "Obj indices  : %zu\n", rawIndices.size() );
+
 	Com_Printf( "Parsed obj in %g milliseconds\n", end - start );
 
 	//
@@ -203,7 +208,7 @@ void OBJReader::Parse( char *buffer )
 		if ( divisor == 0.0f )
 		{
 			++degenerateDivisors;
-			divisor = FLT_EPSILON;
+			divisor = 1.0f;
 		}
 
 		float f = 1.0f / divisor;
@@ -212,10 +217,10 @@ void OBJReader::Parse( char *buffer )
 
 		// tangent for this set
 		vec3 tangent;
-
 		tangent.x = f * ( deltaUV2.y * edge1.x - deltaUV1.y * edge2.x );
 		tangent.y = f * ( deltaUV2.y * edge1.y - deltaUV1.y * edge2.y );
 		tangent.z = f * ( deltaUV2.y * edge1.z - deltaUV1.y * edge2.z );
+		tangent.NormalizeFast();
 
 		rawTangents.push_back( tangent );
 
@@ -254,7 +259,7 @@ void OBJReader::Parse( char *buffer )
 			// see if this combination already exists
 			// TODO: slooooow
 #if 1
-			for ( size_t k = 0; k < m_vertices.size(); ++k )
+			for ( uint32 k = 0; k < (uint32)m_vertices.size(); ++k )
 			{
 				//if ( memcmp( &newVertex, &m_vertices[k], sizeof( vertex_t ) ) == 0 )
 				if ( Vec3Compare( newVertex.position, m_vertices[k].position ) &&
@@ -265,7 +270,7 @@ void OBJReader::Parse( char *buffer )
 
 					Vec3Add( m_vertices[k].tangent, newVertex.tangent, m_vertices[k].tangent );
 
-					index = static_cast<uint32>( k );
+					index = k;
 				}
 			}
 #endif

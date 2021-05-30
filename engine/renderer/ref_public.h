@@ -1,8 +1,3 @@
-//=================================================================================================
-// Public refresh header
-// 
-// Contains types used both outside and inside of the renderer
-//=================================================================================================
 
 #pragma once
 
@@ -31,14 +26,8 @@ void		R_DrawPic( int x, int y, const char *name );
 void		R_DrawStretchPic( int x, int y, int w, int h, const char *name );
 void		R_DrawCharColor( int x, int y, int ch, uint32 color );
 void		R_DrawChar( int x, int y, int ch );
-void		R_DrawTileClear( int x, int y, int w, int h, const char *name );
 void		R_DrawFilled( int x, int y, int w, int h, uint32 color );
-
-			// Draw raw image data, used by cinematics
 void		R_DrawStretchRaw( int x, int y, int w, int h, int cols, int rows, byte *data );
+void		R_SetRawPalette( const byte *palette );
 
-			// Set the palette used by cinematics
-void		R_SetRawPalette( const unsigned char *palette );
-
-			// Alert this system about the window state changing
 void		R_AppActivate( bool active );

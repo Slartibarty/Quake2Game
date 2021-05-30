@@ -630,19 +630,8 @@ void R_DrawAliasModel (entity_t *e)
 	if (currententity->flags & RF_DEPTHHACK) // hack the depth range to prevent view model from poking into walls
 		glDepthRange (gldepthmin, gldepthmin + 0.3*(gldepthmax-gldepthmin));
 
-	if ( ( currententity->flags & RF_WEAPONMODEL ) && ( r_lefthand->value == 1.0F ) )
-	{
-		extern void MYgluPerspective( GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble zFar );
-
-		glMatrixMode( GL_PROJECTION );
-		glPushMatrix();
-		glLoadIdentity();
-		glScalef( -1, 1, 1 );
-		MYgluPerspective( r_newrefdef.fov_y, ( float ) r_newrefdef.width / r_newrefdef.height,  4,  4096);
-		glMatrixMode( GL_MODELVIEW );
-
-		glCullFace( GL_BACK );
-	}
+	// slart: these was code here that flipped the matrix if the model had RF_WEAPONMODEL
+	// and r_lefthand was true, but I removed it
 
 	glPushMatrix ();
 	e->angles[PITCH] = -e->angles[PITCH];	// sigh.
@@ -705,28 +694,8 @@ void R_DrawAliasModel (entity_t *e)
 
 	glPopMatrix ();
 
-#if 0
-	glDisable( GL_CULL_FACE );
-	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-	glDisable( GL_TEXTURE_2D );
-	glBegin( GL_TRIANGLE_STRIP );
-	for ( i = 0; i < 8; i++ )
-	{
-		glVertex3fv( bbox[i] );
-	}
-	glEnd();
-	glEnable( GL_TEXTURE_2D );
-	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-	glEnable( GL_CULL_FACE );
-#endif
-
-	if ( ( currententity->flags & RF_WEAPONMODEL ) && ( r_lefthand->value == 1.0F ) )
-	{
-		glMatrixMode( GL_PROJECTION );
-		glPopMatrix();
-		glMatrixMode( GL_MODELVIEW );
-		glCullFace( GL_FRONT );
-	}
+	// slart: these was code here that flipped the matrix if the model had RF_WEAPONMODEL
+	// and r_lefthand was true, but I removed it
 
 	if ( currententity->flags & RF_TRANSLUCENT )
 	{
@@ -1428,18 +1397,7 @@ void R_DrawStudioModel( entity_t *e )
 ===================================================================================================
 */
 
-#undef countof
-
-#define GLM_FORCE_EXPLICIT_CTOR
-#include "glm/glm/glm.hpp"
-#include "glm/glm/gtc/matrix_transform.hpp"
-#include "glm/glm/gtc/type_ptr.hpp"
-
-// TODO: there needs to be a constant that defines the max boundaries of the map, try to match Q3 eventually
-// pretend that BIG_FLOAT_VALUE is the max distance you can travel from the origin
-#define BIG_FLOAT_VALUE 131072.0f
-
-#define MAX_LIGHTS	4
+#define MAX_LIGHTS 4
 
 struct renderLight_t
 {
@@ -1454,6 +1412,13 @@ struct checkLight_t
 	int index;
 };
 
+static trace_t R_LightTrace( vec3_t start, vec3_t end )
+{
+	vec3_t mins{}, maxs{};
+
+	return CM_BoxTrace( start, end, mins, maxs, 0, MASK_OPAQUE );
+}
+
 void R_DrawStaticMeshFile( entity_t *e )
 {
 	using namespace DirectX;
@@ -1461,8 +1426,6 @@ void R_DrawStaticMeshFile( entity_t *e )
 	mSMF_t *memSMF = (mSMF_t *)e->model->extradata;
 
 	// Matrices
-
-	//float rotate = anglemod( r_newrefdef.time * 50.0f );
 
 	XMMATRIX modelMatrix = XMMatrixMultiply(
 		//XMMatrixRotationRollPitchYaw( DEG2RAD( -e->angles[PITCH] ), DEG2RAD( -e->angles[YAW] ), DEG2RAD( e->angles[ROLL] ) ),
@@ -1473,28 +1436,6 @@ void R_DrawStaticMeshFile( entity_t *e )
 
 	XMFLOAT4X4A modelMatrixStore;
 	XMStoreFloat4x4A( &modelMatrixStore, modelMatrix );
-
-#if 0
-
-	XMMATRIX viewMatrix = XMMatrixTranslation( -r_newrefdef.vieworg[0], -r_newrefdef.vieworg[1], -r_newrefdef.vieworg[2] );
-
-	viewMatrix *= XMMatrixTranspose( XMMatrixRotationX( DEG2RAD( r_newrefdef.viewangles[2] ) ) * XMMatrixRotationY( DEG2RAD( r_newrefdef.viewangles[0] ) ) * XMMatrixRotationZ( DEG2RAD( r_newrefdef.viewangles[1] ) ) );
-
-	XMFLOAT4X4A viewMatrixStore;
-	XMStoreFloat4x4A( &viewMatrixStore, viewMatrix );
-
-	float fov = ( currententity->flags & RF_WEAPONMODEL ) ? 52.0f : r_newrefdef.fov_y;
-
-	XMFLOAT4X4A projMatrixStore;
-	XMStoreFloat4x4A( &projMatrixStore, XMMatrixPerspectiveFovRH( DEG2RAD( fov ), (float)r_newrefdef.width / (float)r_newrefdef.height, 4.0f, 4096.0f ) );
-
-#endif
-
-	float alignas( 16 ) view[16];
-	float alignas( 16 ) proj[16];
-
-	glGetFloatv( GL_MODELVIEW_MATRIX, view );
-	glGetFloatv( GL_PROJECTION_MATRIX, proj );
 
 	// Ambient colour
 
@@ -1509,6 +1450,8 @@ void R_DrawStaticMeshFile( entity_t *e )
 	std::vector<staticLight_t> lightsInPVS;
 	lightsInPVS.reserve( 32 );
 
+	trace_t trace;
+
 	for ( int i = 0; i < mod_numStaticLights; ++i )
 	{
 		// hack into the server code, this doesn't call any server functions so we're safe, it's just a wrapper
@@ -1516,7 +1459,12 @@ void R_DrawStaticMeshFile( entity_t *e )
 
 		if ( PF_inPVS( e->origin, mod_staticLights[i].origin ) )
 		{
-			lightsInPVS.push_back( mod_staticLights[i] );
+			// TODO: is this really necessary?
+			trace = R_LightTrace( e->origin, mod_staticLights[i].origin );
+			if ( trace.fraction == 1.0f )
+			{
+				lightsInPVS.push_back( mod_staticLights[i] );
+			}
 		}
 	}
 
@@ -1524,29 +1472,38 @@ void R_DrawStaticMeshFile( entity_t *e )
 
 	if ( lightsInPVS.size() != 0 )
 	{
-		int skipIndices[MAX_LIGHTS]{};
+		int skipIndices[MAX_LIGHTS]{ -1, -1, -1, -1 };
 
 		// for all the lights in our PVS, find the four values that have the shortest distance to the origin, do this MAX_LIGHTS times
-		for ( int iter1 = 0; iter1 < MAX_LIGHTS; ++iter1 )
+		for ( int iter1 = 0; iter1 < MAX_LIGHTS && iter1 < (int)lightsInPVS.size(); ++iter1 )
 		{
-			float smallestDistance = BIG_FLOAT_VALUE;
+			float smallestDistance = MAX_TRACE_LENGTH;
 			int smallestIndex = 0;
 
+			// in all our PVS lights, find the smallest distance, then mark it as skippable
 			for ( int iter2 = 0; iter2 < (int)lightsInPVS.size(); ++iter2 )
 			{
 				float distance = VectorDistance( e->origin, lightsInPVS[iter2].origin );
 				if ( distance < smallestDistance )
 				{
-					if ( iter1 > 0 && skipIndices[iter1 - 1] == iter2 )
+					bool skip = false;
+					// check our skip indices
+					for ( int iter3 = 0; iter3 < MAX_LIGHTS; ++iter3 )
 					{
-						// skip, already got it
-						continue;
+						if ( skipIndices[iter3] == iter2 )
+						{
+							skip = true;
+						}
 					}
-					smallestDistance = distance;
-					smallestIndex = iter2;
+					if ( !skip )
+					{
+						smallestDistance = distance;
+						smallestIndex = iter2;
+					}
 				}
 			}
 
+			// mark off the smallest index
 			skipIndices[iter1] = smallestIndex;
 
 			renderLight_t &finalLight = finalLights[iter1];
@@ -1554,15 +1511,15 @@ void R_DrawStaticMeshFile( entity_t *e )
 
 			VectorCopy( staticLight.origin, finalLight.position );
 			VectorCopy( staticLight.color, finalLight.color );
-			finalLight.intensity = static_cast<float>( staticLight.intensity ) * 0.5f; // compensate
+			finalLight.intensity = static_cast<float>( staticLight.intensity ); // compensate
 		}
 	}
 
 	glUseProgram( glProgs.smfMeshProg );
 
 	glUniformMatrix4fv( 4, 1, GL_FALSE, (const GLfloat *)&modelMatrixStore );
-	glUniformMatrix4fv( 5, 1, GL_FALSE, (const GLfloat *)&view );
-	glUniformMatrix4fv( 6, 1, GL_FALSE, (const GLfloat *)&proj );
+	glUniformMatrix4fv( 5, 1, GL_FALSE, (const GLfloat *)&tr.viewMatrix );
+	glUniformMatrix4fv( 6, 1, GL_FALSE, (const GLfloat *)&tr.projMatrix );
 
 	glUniform3fv( 7, 1, r_newrefdef.vieworg );
 	glUniform3fv( 8, 1, ambientColor );
@@ -1600,35 +1557,18 @@ void R_DrawStaticMeshFile( entity_t *e )
 
 	glCullFace( GL_BACK ); // TODO: eugh
 
-#if 1
+	// viewmodel FOV
 	if ( currententity->flags & RF_WEAPONMODEL )
 	{
-		extern void MYgluPerspective( GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble zFar );
+		XMMATRIX newProj = XMMatrixPerspectiveFovRH( DEG2RAD( r_viewmodelfov->GetFloat() ), (float)r_newrefdef.width / (float)r_newrefdef.height, 4.0f, 4096.0f );
+		
+		XMFLOAT4X4A newStore;
+		XMStoreFloat4x4A( &newStore, newProj );
 
-		glMatrixMode( GL_PROJECTION );
-		glPushMatrix();
-		glLoadIdentity();
-		MYgluPerspective( 52.0, (float)r_newrefdef.width / r_newrefdef.height, 4, 4096 );
-		glMatrixMode( GL_MODELVIEW );
-
-		glGetFloatv( GL_MODELVIEW_MATRIX, view );
-		glGetFloatv( GL_PROJECTION_MATRIX, proj );
-
-		glUniformMatrix4fv( 5, 1, GL_FALSE, (const GLfloat *)&view );
-		glUniformMatrix4fv( 6, 1, GL_FALSE, (const GLfloat *)&proj );
+		glUniformMatrix4fv( 6, 1, GL_FALSE, (const GLfloat *)&newStore );
 	}
-#endif
 
 	glDrawElements( GL_TRIANGLES, memSMF->numIndices, GL_UNSIGNED_SHORT, (void *)( 0 ) );
-
-#if 1
-	if ( currententity->flags & RF_WEAPONMODEL )
-	{
-		glMatrixMode( GL_PROJECTION );
-		glPopMatrix();
-		glMatrixMode( GL_MODELVIEW );
-	}
-#endif
 
 	glCullFace( GL_FRONT ); // TODO: eugh
 

@@ -238,43 +238,14 @@ const char *Default_MenuKey( menuframework_s *m, int key )
 
 //=============================================================================
 
-/*
-================
-M_DrawCharacter
-
-Draws one solid graphics character
-cx and cy are in 320*240 coordinates, and will be centered on
-higher res screens.
-================
-*/
-void M_DrawCharacter (int cx, int cy, int num)
+void M_Print( int cx, int cy, const char *str )
 {
-	R_DrawChar ( cx + ((viddef.width - 320)>>1), cy + ((viddef.height - 240)>>1), num);
-}
-
-void M_Print (int cx, int cy, const char *str)
-{
-	while (*str)
+	while ( *str )
 	{
-		M_DrawCharacter (cx, cy, (*str)+128);
+		R_DrawChar( cx, cy, *str );
 		str++;
-		cx += 8;
+		cx += CONCHAR_WIDTH;
 	}
-}
-
-void M_PrintWhite (int cx, int cy, const char *str)
-{
-	while (*str)
-	{
-		M_DrawCharacter (cx, cy, *str);
-		str++;
-		cx += 8;
-	}
-}
-
-void M_DrawPic (int x, int y, const char *pic)
-{
-	R_DrawPic (x + ((viddef.width - 320)>>1), y + ((viddef.height - 240)>>1), pic);
 }
 
 
@@ -317,39 +288,39 @@ void M_DrawTextBox (int x, int y, int width, int lines)
 	// draw left side
 	cx = x;
 	cy = y;
-	M_DrawCharacter (cx, cy, 1);
+	R_DrawChar (cx, cy, 1);
 	for (n = 0; n < lines; n++)
 	{
 		cy += 8;
-		M_DrawCharacter (cx, cy, 4);
+		R_DrawChar (cx, cy, 4);
 	}
-	M_DrawCharacter (cx, cy+8, 7);
+	R_DrawChar (cx, cy+8, 7);
 
 	// draw middle
 	cx += 8;
 	while (width > 0)
 	{
 		cy = y;
-		M_DrawCharacter (cx, cy, 2);
+		R_DrawChar (cx, cy, 2);
 		for (n = 0; n < lines; n++)
 		{
 			cy += 8;
-			M_DrawCharacter (cx, cy, 5);
+			R_DrawChar (cx, cy, 5);
 		}
-		M_DrawCharacter (cx, cy+8, 8);
+		R_DrawChar (cx, cy+8, 8);
 		width -= 1;
 		cx += 8;
 	}
 
 	// draw right side
 	cy = y;
-	M_DrawCharacter (cx, cy, 3);
+	R_DrawChar (cx, cy, 3);
 	for (n = 0; n < lines; n++)
 	{
 		cy += 8;
-		M_DrawCharacter (cx, cy, 6);
+		R_DrawChar (cx, cy, 6);
 	}
-	M_DrawCharacter (cx, cy+8, 9);
+	R_DrawChar (cx, cy+8, 9);
 }
 
 		
@@ -2587,21 +2558,21 @@ void StartServerActionFunc( void *self )
 	spot = NULL;
 	if (s_rules_box.curvalue == 1)		// PGM
 	{
- 		if(Q_stricmp(startmap, "bunk1") == 0)
-  			spot = "start";
- 		else if(Q_stricmp(startmap, "mintro") == 0)
-  			spot = "start";
- 		else if(Q_stricmp(startmap, "fact1") == 0)
-  			spot = "start";
- 		else if(Q_stricmp(startmap, "power1") == 0)
-  			spot = "pstart";
- 		else if(Q_stricmp(startmap, "biggun") == 0)
-  			spot = "bstart";
- 		else if(Q_stricmp(startmap, "hangar1") == 0)
-  			spot = "unitstart";
- 		else if(Q_stricmp(startmap, "city1") == 0)
-  			spot = "unitstart";
- 		else if(Q_stricmp(startmap, "boss1") == 0)
+		if(Q_stricmp(startmap, "bunk1") == 0)
+			spot = "start";
+		else if(Q_stricmp(startmap, "mintro") == 0)
+			spot = "start";
+		else if(Q_stricmp(startmap, "fact1") == 0)
+			spot = "start";
+		else if(Q_stricmp(startmap, "power1") == 0)
+			spot = "pstart";
+		else if(Q_stricmp(startmap, "biggun") == 0)
+			spot = "bstart";
+		else if(Q_stricmp(startmap, "hangar1") == 0)
+			spot = "unitstart";
+		else if(Q_stricmp(startmap, "city1") == 0)
+			spot = "unitstart";
+		else if(Q_stricmp(startmap, "boss1") == 0)
 			spot = "bosstart";
 	}
 

@@ -478,11 +478,6 @@ void R_DrawAlphaSurfaces (void)
 {
 	msurface_t	*s;
 
-	//
-	// go back to the world matrix
-	//
-	glLoadMatrixf (r_world_matrix);
-
 	glEnable (GL_BLEND);
 	GL_TexEnv( GL_MODULATE );
 
