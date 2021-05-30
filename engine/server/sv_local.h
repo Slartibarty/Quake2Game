@@ -158,6 +158,7 @@ struct serverStatic_t
 
 //=================================================================================================
 
+// net_chan
 extern netadr_t		net_from;
 extern sizebuf_t	net_message;
 

@@ -2,7 +2,7 @@
 // This is the menu framework
 //=================================================================================================
 
-#include "client.h"
+#include "cl_local.h"
 #include "qmenu.h"
 
 static void	 Action_DoEnter( menuaction_s *a );

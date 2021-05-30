@@ -1,10 +1,8 @@
 // cl_cgame.c -- client system interaction with client game
 
-#include "client.h"
+#include "cl_local.h"
 
-cgame_export_t	*cge;
-
-extern void CL_ShutdownCGame();
+cgame_export_t *cge;
 
 static centity_t *Wrap_GetEntityAtIndex( int index )
 {
@@ -81,12 +79,23 @@ static const char **Wrap_configstrings()
 	return (const char **)cl.configstrings;
 }
 
+void CL_ShutdownCGame()
+{
+	if ( !cge ) {
+		return;
+	}
+	cge->Shutdown();
+	Sys_UnloadCGame();
+	cge = nullptr;
+}
+
 void CL_InitCGame()
 {
 	cgame_import_t cgi;
 
-	if ( cge )
+	if ( cge ) {
 		CL_ShutdownCGame();
+	}
 
 	cgi.Print = Com_Print;
 	cgi.DPrint = Com_DPrint;
@@ -131,23 +140,14 @@ void CL_InitCGame()
 
 	if ( !cge )
 	{
-		Com_Errorf("failed to load cgame DLL" );
+		Com_Error( "failed to load cgame DLL" );
 	}
 
 	if ( cge->apiversion != CGAME_API_VERSION )
 	{
-		Com_Errorf("cgame is version %d, not %d",
+		Com_Errorf( "cgame is version %d, not %d",
 			cge->apiversion, CGAME_API_VERSION );
 	}
 
 	cge->Init();
-}
-
-void CL_ShutdownCGame()
-{
-	if ( !cge )
-		return;
-	cge->Shutdown();
-	Sys_UnloadCGame();
-	cge = nullptr;
 }

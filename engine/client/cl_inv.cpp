@@ -1,6 +1,6 @@
 // cl_inv.c -- client inventory screen
 
-#include "client.h"
+#include "cl_local.h"
 
 /*
 ================

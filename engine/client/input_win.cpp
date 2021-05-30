@@ -2,7 +2,7 @@
 // Windows mouse code
 //=================================================================================================
 
-#include "client.h"
+#include "cl_local.h"
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <Windows.h>

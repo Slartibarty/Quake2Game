@@ -1,6 +1,6 @@
 // cl_main.c  -- client main loop
 
-#include "client.h"
+#include "cl_local.h"
 
 cvar_t	*adr0;
 cvar_t	*adr1;

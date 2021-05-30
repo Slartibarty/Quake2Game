@@ -2,7 +2,6 @@
 
 #pragma once
 
-// Forward decl for public code
 struct sfx_t;
 
 void	S_Init (void);

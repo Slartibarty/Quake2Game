@@ -1,6 +1,6 @@
 // cl_parse.c  -- parse a message received from the server
 
-#include "client.h"
+#include "cl_local.h"
 
 const char *svc_strings[256] =
 {

@@ -1,3 +1,0 @@
-// PCH
-
-#include "client.h"

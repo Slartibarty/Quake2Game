@@ -233,7 +233,7 @@ project "engine"
 		
 		"engine/renderer/*",
 		
-		"game/client/cgame_public.h",
+		"game/client/cg_public.h",
 		"game/server/game_public.h",
 		
 		zlib_public,

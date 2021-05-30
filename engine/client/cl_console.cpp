@@ -6,7 +6,7 @@
 ===================================================================================================
 */
 
-#include "client.h"
+#include "cl_local.h"
 
 static constexpr uint32 ConsoleTextColor = colors::cyan;
 
@@ -460,7 +460,7 @@ void Con_Print (const char *txt)
 */
 
 /*
-================
+========================
 Con_DrawInput
 
 The input line scrolls horizontally if typing goes beyond the right edge

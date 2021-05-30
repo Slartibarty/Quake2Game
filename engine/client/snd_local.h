@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "client.h"
+#include "cl_local.h"
 
 struct portable_samplepair_t
 {

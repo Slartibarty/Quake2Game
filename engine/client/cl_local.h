@@ -6,12 +6,7 @@
 #include "../renderer/ref_public.h"
 #include "../../game/client/cg_public.h"
 
-#include "vid.h"
-#include "screen.h"
 #include "snd_public.h"
-#include "input.h"
-#include "cl_keys.h"
-#include "cdaudio.h"
 
 #include "keycodes.h"
 
@@ -54,6 +49,7 @@ struct clientinfo_t
 	model_t		*weaponmodel[MAX_CLIENTWEAPONMODELS];
 };
 
+// cl_view
 extern char cl_weaponmodels[MAX_CLIENTWEAPONMODELS][MAX_QPATH];
 extern int num_cl_weaponmodels;
 
@@ -149,7 +145,9 @@ extern clientActive_t	cl;
 ===================================================================================================
 */
 
-enum connstate_t {
+// connection state
+enum connstate_t
+{
 	ca_uninitialized,
 	ca_disconnected, 	// not talking to a server
 	ca_connecting,		// sending request packets to the server
@@ -157,15 +155,17 @@ enum connstate_t {
 	ca_active			// game views should be displayed
 };
 
-enum dltype_t {
+// download type
+enum dltype_t
+{
 	dl_none,
 	dl_model,
 	dl_sound,
 	dl_skin,
 	dl_single
-};				// download type
+};
 
-enum keydest_t {key_game, key_console, key_message, key_menu};
+enum keydest_t { key_game, key_console, key_message, key_menu };
 
 struct clientStatic_t
 {
@@ -214,77 +214,75 @@ extern clientStatic_t	cls;
 // the cl_parse_entities must be large enough to hold UPDATE_BACKUP frames of
 // entities, so that when a delta compressed message arives from the server
 // it can be un-deltad from the original 
-#define	MAX_PARSE_ENTITIES	1024
-extern	entity_state_t	cl_parse_entities[MAX_PARSE_ENTITIES];
+#define	MAX_PARSE_ENTITIES 1024
+extern entity_state_t cl_parse_entities[MAX_PARSE_ENTITIES];
 
 //
 // cvars
 //
-extern	cvar_t	*cl_gun;
-extern	cvar_t	*cl_predict;
-extern	cvar_t	*cl_footsteps;
-extern	cvar_t	*cl_noskins;
-extern	cvar_t	*cl_autoskins;
+extern cvar_t	*cl_gun;
+extern cvar_t	*cl_predict;
+extern cvar_t	*cl_footsteps;
+extern cvar_t	*cl_noskins;
+extern cvar_t	*cl_autoskins;
 
-extern	cvar_t	*cl_upspeed;
-extern	cvar_t	*cl_forwardspeed;
-extern	cvar_t	*cl_sidespeed;
+extern cvar_t	*cl_upspeed;
+extern cvar_t	*cl_forwardspeed;
+extern cvar_t	*cl_sidespeed;
 
-extern	cvar_t	*cl_yawspeed;
-extern	cvar_t	*cl_pitchspeed;
+extern cvar_t	*cl_yawspeed;
+extern cvar_t	*cl_pitchspeed;
 
-extern	cvar_t	*cl_run;
+extern cvar_t	*cl_run;
 
-extern	cvar_t	*cl_anglespeedkey;
+extern cvar_t	*cl_anglespeedkey;
 
-extern	cvar_t	*cl_shownet;
-extern	cvar_t	*cl_showmiss;
-extern	cvar_t	*cl_showclamp;
+extern cvar_t	*cl_shownet;
+extern cvar_t	*cl_showmiss;
+extern cvar_t	*cl_showclamp;
 
-extern	cvar_t	*sensitivity;
+extern cvar_t	*sensitivity;
 
-extern	cvar_t	*m_pitch;
-extern	cvar_t	*m_yaw;
-extern	cvar_t	*m_forward;
-extern	cvar_t	*m_side;
+extern cvar_t	*m_pitch;
+extern cvar_t	*m_yaw;
+extern cvar_t	*m_forward;
+extern cvar_t	*m_side;
 
-extern	cvar_t	*cl_lightlevel;	// FIXME HACK
+extern cvar_t	*cl_lightlevel;	// FIXME HACK
 
-extern	cvar_t	*cl_paused;
-extern	cvar_t	*cl_timedemo;
+extern cvar_t	*cl_paused;
+extern cvar_t	*cl_timedemo;
 
-extern	cvar_t	*cl_vwep;
-
-//=================================================================================================
-
-extern	netadr_t	net_from;
-extern	sizebuf_t	net_message;
-
-qboolean	CL_CheckOrDownloadFile (const char *filename);
-
-void CL_AddNetgraph (void);
+extern cvar_t	*cl_vwep;
 
 //=================================================================================================
 
-int CL_ParseEntityBits (unsigned *bits);
-void CL_ParseDelta (entity_state_t *from, entity_state_t *to, int number, uint bits);
-void CL_ParseFrame (void);
+// net_chan
+extern netadr_t		net_from;
+extern sizebuf_t	net_message;
 
 //=================================================================================================
-
-void CL_PrepRefresh (void);
-void CL_RegisterSounds (void);
-
-void CL_Quit_f (void);
-
 
 //
 // cl_cgame
 //
-extern cgame_export_t	*cge;
+extern cgame_export_t *cge;
 
 void CL_InitCGame();
 void CL_ShutdownCGame();
+
+//
+// cl_vid
+//
+struct viddef_t
+{
+	int width, height;		// coordinates from main game
+};
+
+extern viddef_t viddef;		// global video state
+
+void VID_Init();
+void VID_Shutdown();
 
 //
 // cl_console
@@ -311,68 +309,133 @@ void Con_Bottom();
 //
 // cl_main
 //
-void CL_Init (void);
+void CL_Init();
 
-void CL_FixUpGender(void);
-void CL_Disconnect (void);
-void CL_Disconnect_f (void);
-void CL_PingServers_f (void);
-void CL_Snd_Restart_f (void);
-void CL_RequestNextDownload (void);
+void CL_FixUpGender();
+void CL_Disconnect();
+void CL_Disconnect_f();
+void CL_PingServers_f();
+void CL_Snd_Restart_f();
+void CL_RequestNextDownload();
+
+// demos
+void CL_WriteDemoMessage();
+void CL_Stop_f();
+void CL_Record_f();
+
+void CL_Quit_f();
 
 //
 // cl_input
 //
 struct kbutton_t
 {
-	int			down[2];		// key nums holding it down
-	unsigned	downtime;		// msec timestamp
-	unsigned	msec;			// msec down this frame
-	int			state;
+	int		down[2];		// key nums holding it down
+	uint	downtime;		// msec timestamp
+	uint	msec;			// msec down this frame
+	int		state;
 };
 
-extern kbutton_t in_speed;
+void	CL_InitInput();
+void	CL_SendCmd();
 
-void CL_InitInput (void);
-void CL_SendCmd (void);
+void	CL_ClearState();
 
-void CL_ClearState (void);
+void	CL_ReadPackets();
 
-void CL_ReadPackets (void);
+void	CL_BaseMove( usercmd_t *cmd );
 
-void CL_BaseMove (usercmd_t *cmd);
+void	IN_CenterView();
 
-void IN_CenterView (void);
-
-float CL_KeyState (kbutton_t *key);
-const char *Key_KeynumToString (int keynum);
+float	CL_KeyState( kbutton_t *key );
+const char *	Key_KeynumToString( int keynum );
 
 //
-// cl_ents.c
+// cl_keys
 //
-void CL_ParseFrame (void);
-void CL_AddEntities (void);
+extern char *	keybindings[256];
+extern int		key_repeats[256];
+
+extern int		anykeydown;
+extern char		chat_buffer[];
+extern int		chat_bufferlen;
+extern bool		chat_team;
+
+// called by engine, not client, these declarations are never referenced
+void Key_Init();
+void Key_Shutdown();
+
+void Key_Event( int key, bool down, unsigned time );
+void Key_WriteBindings( FILE *f );
+void Key_SetBinding( int keynum, const char *binding );
+void Key_ClearStates();
 
 //
-// cl_demo.c
+// cl_ents
 //
-void CL_WriteDemoMessage (void);
-void CL_Stop_f (void);
-void CL_Record_f (void);
+void CL_ParseFrame();
+void CL_AddEntities();
+
+int CL_ParseEntityBits( unsigned *bits );
+void CL_ParseDelta( entity_state_t *from, entity_state_t *to, int number, uint bits );
+void CL_ParseFrame();
 
 //
-// cl_parse.c
+// cl_parse
 //
-extern	const char *svc_strings[256];
+extern const char *svc_strings[256];
 
-void CL_ParseServerMessage (void);
-void CL_LoadClientinfo (clientinfo_t *ci, char *s);
-void SHOWNET(const char *s);
-void CL_ParseClientinfo (int player);
-void CL_Download_f (void);
+void CL_ParseServerMessage();
+void CL_LoadClientinfo( clientinfo_t *ci, char *s );
+void SHOWNET( const char *s );
+void CL_ParseClientinfo( int player );
+void CL_Download_f();
+
+qboolean CL_CheckOrDownloadFile( const char *filename );
+void CL_RegisterSounds();
 
 //
-// cl_view.c
+// cl_scrn
+//
+struct vrect_t
+{
+	int x, y, width, height;
+};
+
+extern cvar_t *scr_viewsize;
+extern cvar_t *cl_crosshair;
+
+extern vrect_t scr_vrect;		// position of render window
+
+extern char crosshair_pic[MAX_QPATH];
+extern int crosshair_width, crosshair_height;
+
+void SCR_Init();
+
+void SCR_UpdateScreen();
+
+void SCR_CenterPrint( const char *str );
+void SCR_BeginLoadingPlaque();
+void SCR_EndLoadingPlaque();
+
+void CL_AddNetgraph();
+void SCR_DebugGraph( float value, uint32 color );
+
+void SCR_TouchPics();
+
+void SCR_RunConsole();
+
+//
+// cl_cin
+//
+void SCR_PlayCinematic( const char *name );
+bool SCR_DrawCinematic();
+void SCR_RunCinematic();
+void SCR_StopCinematic();
+void SCR_FinishCinematic();
+
+//
+// cl_view
 //
 extern int			gun_frame;
 extern model_t *	gun_model;
@@ -380,30 +443,59 @@ extern model_t *	gun_model;
 void V_Init();
 void V_RenderView();
 
+void CL_PrepRefresh();
+
 void V_AddEntity( entity_t *ent );
 void V_AddParticle( vec3_t org, int color, float alpha );
 void V_AddDLight( vec3_t org, float intensity, float r, float g, float b );
 void V_AddLightStyle( int style, float r, float g, float b );
 
 //
-// cl_pred.c
+// cl_pred
 //
-void CL_CheckPredictionError (void);
-void CL_PredictMovement (void);
+void CL_CheckPredictionError();
+void CL_PredictMovement();
 
 //
-// menus
+// menu
 //
-void M_Init (void);
-void M_Shutdown (void);
-void M_Keydown (int key);
-void M_Draw (void);
-void M_Menu_Main_f (void);
-void M_ForceMenuOff (void);
-void M_AddToServerList (netadr_t adr, char *info);
+void M_Init();
+void M_Shutdown();
+void M_Keydown( int key );
+void M_Draw();
+void M_Menu_Main_f();
+void M_ForceMenuOff();
+void M_AddToServerList( netadr_t adr, char *info );
 
 //
-// cl_inv.c
+// cl_inv
 //
-void CL_ParseInventory (void);
-void CL_DrawInventory (void);
+void CL_ParseInventory();
+void CL_DrawInventory();
+
+//
+// platform-specific input
+//
+namespace input
+{
+	void Init();
+
+	void Shutdown();
+
+	// oportunity for devices to stick commands on the script buffer
+	void Commands();
+
+	void Frame();
+
+	void Activate( bool active );
+}
+
+//
+// platform-specific cdaudio
+//
+bool CDAudio_Init();
+void CDAudio_Shutdown();
+void CDAudio_Play( int track, bool looping );
+void CDAudio_Stop();
+void CDAudio_Update();
+void CDAudio_Activate( bool active );

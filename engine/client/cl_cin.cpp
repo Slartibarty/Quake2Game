@@ -1,4 +1,4 @@
-#include "client.h"
+#include "cl_local.h"
 
 struct cblock_t
 {

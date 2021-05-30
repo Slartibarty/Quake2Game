@@ -1,6 +1,6 @@
 // cl_ents.c -- entity parsing and management
 
-#include "client.h"
+#include "cl_local.h"
 
 
 extern	model_t			*cl_mod_powerscreen;

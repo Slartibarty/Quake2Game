@@ -1,6 +1,6 @@
 // cl.input.c  -- builds an intended movement command to send to the server
 
-#include "client.h"
+#include "cl_local.h"
 
 cvar_t	*cl_nodelta;
 

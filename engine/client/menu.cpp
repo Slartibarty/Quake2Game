@@ -2,7 +2,7 @@
 // This is the Quake 2 specific menu
 //=================================================================================================
 
-#include "client.h"
+#include "cl_local.h"
 #include "qmenu.h"
 
 static int	m_main_cursor;
