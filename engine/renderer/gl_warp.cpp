@@ -199,10 +199,10 @@ void EmitWaterPolys(msurface_t *fa)
 	int			i;
 	float		s, t, os, ot;
 	float		scroll;
-	float		rdt = r_newrefdef.time;
+	float		rdt = tr.refdef.time;
 
 	if (fa->texinfo->flags & SURF_FLOWING)
-		scroll = -64 * ((r_newrefdef.time * 0.5f) - (int)(r_newrefdef.time * 0.5f));
+		scroll = -64 * ((tr.refdef.time * 0.5f) - (int)(tr.refdef.time * 0.5f));
 	else
 		scroll = 0;
 	for (bp = fa->polys; bp; bp = bp->next)
@@ -215,7 +215,7 @@ void EmitWaterPolys(msurface_t *fa)
 			os = v[3];
 			ot = v[4];
 
-			s = os + r_turbsin[(int)((ot * 0.125f + r_newrefdef.time) * c_turbscale) & 255]; // slart: ftol
+			s = os + r_turbsin[(int)((ot * 0.125f + tr.refdef.time) * c_turbscale) & 255]; // slart: ftol
 
 			s += scroll;
 			s *= (1.0f / 64);
@@ -542,7 +542,7 @@ void R_DrawSkyBox()
 
 	glPushMatrix();
 	glTranslatef( r_origin[0], r_origin[1], r_origin[2] );
-	glRotatef( r_newrefdef.time * skyrotate, skyaxis[0], skyaxis[1], skyaxis[2] );
+	glRotatef( tr.refdef.time * skyrotate, skyaxis[0], skyaxis[1], skyaxis[2] );
 
 	for ( i = 0; i < 6; i++ )
 	{

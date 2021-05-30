@@ -26,11 +26,6 @@ vec3_t	vpn;
 vec3_t	vright;
 vec3_t	r_origin;
 
-//
-// screen size info
-//
-refdef_t	r_newrefdef;
-
 int		r_viewcluster, r_viewcluster2, r_oldviewcluster, r_oldviewcluster2;
 
 // end vars
@@ -300,7 +295,7 @@ static void R_DrawLights()
 
 /*
 ========================
-R_DrawEntitiesOnList
+R_DrawEntity
 
 This actually performs rendering
 ========================
@@ -358,18 +353,18 @@ static void R_DrawEntities()
 
 	// draw non-transparent first
 
-	for ( int i = 0; i < r_newrefdef.num_entities; ++i )
+	for ( int i = 0; i < tr.refdef.num_entities; ++i )
 	{
-		if ( r_newrefdef.entities[i].flags & RF_TRANSLUCENT ) {
+		if ( tr.refdef.entities[i].flags & RF_TRANSLUCENT ) {
 			continue;
 		}
 
-		if ( r_newrefdef.entities[i].flags & RF_DEPTHHACK ) {
-			tr.pViewmodelEntity = r_newrefdef.entities + i;
+		if ( tr.refdef.entities[i].flags & RF_DEPTHHACK ) {
+			tr.pViewmodelEntity = tr.refdef.entities + i;
 			continue;
 		}
 
-		R_DrawEntity( r_newrefdef.entities + i );
+		R_DrawEntity( tr.refdef.entities + i );
 	}
 
 	// draw transparent entities
@@ -377,18 +372,18 @@ static void R_DrawEntities()
 
 	glDepthMask( GL_FALSE );	// no z writes
 
-	for ( int i = 0; i < r_newrefdef.num_entities; ++i )
+	for ( int i = 0; i < tr.refdef.num_entities; ++i )
 	{
-		if ( !( r_newrefdef.entities[i].flags & RF_TRANSLUCENT ) ) {
+		if ( !( tr.refdef.entities[i].flags & RF_TRANSLUCENT ) ) {
 			continue;
 		}
 
-		if ( r_newrefdef.entities[i].flags & RF_DEPTHHACK ) {
-			tr.pViewmodelEntity = r_newrefdef.entities + i;
+		if ( tr.refdef.entities[i].flags & RF_DEPTHHACK ) {
+			tr.pViewmodelEntity = tr.refdef.entities + i;
 			continue;
 		}
 
-		R_DrawEntity( r_newrefdef.entities + i );
+		R_DrawEntity( tr.refdef.entities + i );
 	}
 
 	glDepthMask( GL_TRUE );		// back to writing
@@ -473,7 +468,7 @@ R_DrawParticles
 */
 static void R_DrawParticles()
 {
-	if ( r_newrefdef.num_particles <= 0 ) {
+	if ( tr.refdef.num_particles <= 0 ) {
 		return;
 	}
 
@@ -481,9 +476,9 @@ static void R_DrawParticles()
 	particle_t *p;
 
 	// ensure we have enough room
-	s_partVector.reserve( r_newrefdef.num_particles );
+	s_partVector.reserve( tr.refdef.num_particles );
 
-	for ( i = 0, p = r_newrefdef.particles; i < r_newrefdef.num_particles; i++, p++ )
+	for ( i = 0, p = tr.refdef.particles; i < tr.refdef.num_particles; i++, p++ )
 	{
 		partPoint_t &point = s_partVector.emplace_back();
 
@@ -504,14 +499,14 @@ static void R_DrawParticles()
 	glBindVertexArray( s_partVAO );
 	glBindBuffer( GL_ARRAY_BUFFER, s_partVBO );
 
-	glBufferData( GL_ARRAY_BUFFER, r_newrefdef.num_particles * sizeof( partPoint_t ), (void *)s_partVector.data(), GL_STREAM_DRAW );
+	glBufferData( GL_ARRAY_BUFFER, tr.refdef.num_particles * sizeof( partPoint_t ), (void *)s_partVector.data(), GL_STREAM_DRAW );
 
 	s_partVector.clear();
 
 	glDepthMask( GL_FALSE );
 	glEnable( GL_BLEND );
 
-	glDrawArrays( GL_POINTS, 0, r_newrefdef.num_particles );
+	glDrawArrays( GL_POINTS, 0, tr.refdef.num_particles );
 
 	glDisable( GL_BLEND );
 	glDepthMask( GL_TRUE );
@@ -547,13 +542,13 @@ static void R_SetFrustum()
 	VectorNormalize( frustum[3].normal );
 #else
 	// rotate VPN right by FOV_X/2 degrees
-	RotatePointAroundVector( frustum[0].normal, vup, vpn, -( 90 - r_newrefdef.fov_x / 2 ) );
+	RotatePointAroundVector( frustum[0].normal, vup, vpn, -( 90 - tr.refdef.fov_x / 2 ) );
 	// rotate VPN left by FOV_X/2 degrees
-	RotatePointAroundVector( frustum[1].normal, vup, vpn, 90 - r_newrefdef.fov_x / 2 );
+	RotatePointAroundVector( frustum[1].normal, vup, vpn, 90 - tr.refdef.fov_x / 2 );
 	// rotate VPN up by FOV_X/2 degrees
-	RotatePointAroundVector( frustum[2].normal, vright, vpn, 90 - r_newrefdef.fov_y / 2 );
+	RotatePointAroundVector( frustum[2].normal, vright, vpn, 90 - tr.refdef.fov_y / 2 );
 	// rotate VPN down by FOV_X/2 degrees
-	RotatePointAroundVector( frustum[3].normal, vright, vpn, -( 90 - r_newrefdef.fov_y / 2 ) );
+	RotatePointAroundVector( frustum[3].normal, vright, vpn, -( 90 - tr.refdef.fov_y / 2 ) );
 #endif
 
 	for ( i = 0; i < 4; i++ )
@@ -576,12 +571,12 @@ static void R_SetupFrame()
 	r_framecount++;
 
 	// build the transformation matrix for the given view angles
-	VectorCopy( r_newrefdef.vieworg, r_origin );
+	VectorCopy( tr.refdef.vieworg, r_origin );
 
-	AngleVectors( r_newrefdef.viewangles, vpn, vright, vup );
+	AngleVectors( tr.refdef.viewangles, vpn, vright, vup );
 
 	// current viewcluster
-	if ( !( r_newrefdef.rdflags & RDF_NOWORLDMODEL ) )
+	if ( !( tr.refdef.rdflags & RDF_NOWORLDMODEL ) )
 	{
 		r_oldviewcluster = r_viewcluster;
 		r_oldviewcluster2 = r_viewcluster2;
@@ -619,11 +614,11 @@ static void R_SetupFrame()
 	c_alias_polys = 0;
 
 	// clear out the portion of the screen that the NOWORLDMODEL defines
-	if ( r_newrefdef.rdflags & RDF_NOWORLDMODEL )
+	if ( tr.refdef.rdflags & RDF_NOWORLDMODEL )
 	{
 		glEnable( GL_SCISSOR_TEST );
 		glClearColor( 0.3f, 0.3f, 0.3f, 1.0f );
-		glScissor( r_newrefdef.x, vid.height - r_newrefdef.height - r_newrefdef.y, r_newrefdef.width, r_newrefdef.height );
+		glScissor( tr.refdef.x, vid.height - tr.refdef.height - tr.refdef.y, tr.refdef.width, tr.refdef.height );
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 		glClearColor( DEFAULT_CLEARCOLOR );
 		glDisable( GL_SCISSOR_TEST );
@@ -674,7 +669,7 @@ static void R_SetupGL()
 
 	// projection matrix
 
-	XMMATRIX workMatrix = XMMatrixPerspectiveFovRH( DEG2RAD( r_newrefdef.fov_y ), (float)r_newrefdef.width / (float)r_newrefdef.height, 4.0f, 4096.0f );
+	XMMATRIX workMatrix = XMMatrixPerspectiveFovRH( DEG2RAD( tr.refdef.fov_y ), (float)tr.refdef.width / (float)tr.refdef.height, 4.0f, 4096.0f );
 	XMStoreFloat4x4A( &tr.projMatrix, workMatrix );
 
 	// send it to the fixed function pipeline
@@ -684,8 +679,8 @@ static void R_SetupGL()
 	// view matrix
 
 #if 0
-	vec3_t &viewOrg = r_newrefdef.vieworg;
-	vec3_t &viewAng = r_newrefdef.viewangles;
+	vec3_t &viewOrg = tr.refdef.vieworg;
+	vec3_t &viewAng = tr.refdef.viewangles;
 
 	vec3 forward;
 	forward.x = cos( DEG2RAD( viewAng[YAW] ) ) * cos( DEG2RAD( viewAng[PITCH] ) );
@@ -712,10 +707,10 @@ static void R_SetupGL()
 
 	glRotatef( -90, 1, 0, 0 );	    // put Z going up
 	glRotatef( 90, 0, 0, 1 );	    // put Z going up
-	glRotatef( -r_newrefdef.viewangles[2], 1, 0, 0 );
-	glRotatef( -r_newrefdef.viewangles[0], 0, 1, 0 );
-	glRotatef( -r_newrefdef.viewangles[1], 0, 0, 1 );
-	glTranslatef( -r_newrefdef.vieworg[0], -r_newrefdef.vieworg[1], -r_newrefdef.vieworg[2] );
+	glRotatef( -tr.refdef.viewangles[2], 1, 0, 0 );
+	glRotatef( -tr.refdef.viewangles[0], 0, 1, 0 );
+	glRotatef( -tr.refdef.viewangles[1], 0, 0, 1 );
+	glTranslatef( -tr.refdef.vieworg[0], -tr.refdef.vieworg[1], -tr.refdef.vieworg[2] );
 
 	// TODO: fucking matrices, do this with dxmath
 	glGetFloatv( GL_MODELVIEW_MATRIX, (GLfloat *)&tr.viewMatrix );
@@ -766,7 +761,7 @@ static void R_Clear()
 ========================
 R_RenderView
 
-r_newrefdef must be set before the first call
+tr.refdef must be set before the first call
 ========================
 */
 static void R_RenderView( refdef_t *fd )
@@ -775,9 +770,9 @@ static void R_RenderView( refdef_t *fd )
 		return;
 	}
 
-	r_newrefdef = *fd;
+	tr.refdef = *fd;
 
-	if ( !r_worldmodel && !( r_newrefdef.rdflags & RDF_NOWORLDMODEL ) ) {
+	if ( !r_worldmodel && !( tr.refdef.rdflags & RDF_NOWORLDMODEL ) ) {
 		Com_Error( "R_RenderView: NULL worldmodel" );
 	}
 
@@ -826,7 +821,7 @@ static void R_RenderView( refdef_t *fd )
 	R_DrawViewmodel();
 
 	// screen overlay
-	R_DrawScreenOverlay( r_newrefdef.blend );
+	R_DrawScreenOverlay( tr.refdef.blend );
 
 	if ( r_speeds->value )
 	{
@@ -847,13 +842,13 @@ static void R_SetLightLevel()
 {
 	vec3_t shadelight;
 
-	if ( r_newrefdef.rdflags & RDF_NOWORLDMODEL ) {
+	if ( tr.refdef.rdflags & RDF_NOWORLDMODEL ) {
 		return;
 	}
 
 	// save off light value for server to look at (BIG HACK!)
 
-	R_LightPoint( r_newrefdef.vieworg, shadelight );
+	R_LightPoint( tr.refdef.vieworg, shadelight );
 
 	// pick the greatest component, which should be the same
 	// as the mono value returned by software

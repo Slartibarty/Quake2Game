@@ -72,8 +72,8 @@ void R_PushDlights()
 
 	r_dlightframecount = r_framecount + 1;	// because the count hasn't
 											//  advanced yet for this frame
-	l = r_newrefdef.dlights;
-	for ( i = 0; i < r_newrefdef.num_dlights; i++, l++ ) {
+	l = tr.refdef.dlights;
+	for ( i = 0; i < tr.refdef.num_dlights; i++, l++ ) {
 		R_MarkLights( l, 1 << i, r_worldmodel->nodes );
 	}
 }
@@ -177,7 +177,7 @@ static int RecursiveLightPoint( mnode_t *node, vec3_t start, vec3_t end )
 					maps++)
 			{
 				for (i=0 ; i<3 ; i++)
-					scale[i] = r_modulate->value*r_newrefdef.lightstyles[surf->styles[maps]].rgb[i];
+					scale[i] = r_modulate->value*tr.refdef.lightstyles[surf->styles[maps]].rgb[i];
 
 				pointcolor[0] += lightmap[0] * scale[0] * (1.0f/255);
 				pointcolor[1] += lightmap[1] * scale[1] * (1.0f/255);
@@ -234,8 +234,8 @@ void R_LightPoint( vec3_t p, vec3_t color )
 	// add dynamic lights
 	//
 	light = 0;
-	dl = r_newrefdef.dlights;
-	for (lnum=0 ; lnum<r_newrefdef.num_dlights ; lnum++, dl++)
+	dl = tr.refdef.dlights;
+	for (lnum=0 ; lnum<tr.refdef.num_dlights ; lnum++, dl++)
 	{
 		VectorSubtract (currententity->origin,
 						dl->origin,
@@ -278,12 +278,12 @@ void R_AddDynamicLights (msurface_t *surf)
 	tmax = (surf->extents[1]>>4)+1;
 	tex = surf->texinfo;
 
-	for (lnum=0 ; lnum<r_newrefdef.num_dlights ; lnum++)
+	for (lnum=0 ; lnum<tr.refdef.num_dlights ; lnum++)
 	{
 		if ( !(surf->dlightbits & (1<<lnum) ) )
 			continue;		// not lit by this light
 
-		dl = &r_newrefdef.dlights[lnum];
+		dl = &tr.refdef.dlights[lnum];
 		frad = dl->intensity;
 		fdist = DotProduct (dl->origin, surf->plane->normal) -
 				surf->plane->dist;
@@ -345,7 +345,7 @@ void R_SetCacheState( msurface_t *surf )
 	for (maps = 0 ; maps < MAXLIGHTMAPS && surf->styles[maps] != 255 ;
 		 maps++)
 	{
-		surf->cached_light[maps] = r_newrefdef.lightstyles[surf->styles[maps]].white;
+		surf->cached_light[maps] = tr.refdef.lightstyles[surf->styles[maps]].white;
 	}
 }
 
@@ -386,7 +386,7 @@ void R_BuildLightMap(msurface_t *surf, byte *dest, int stride)
 		for (maps = 0; maps < MAXLIGHTMAPS && surf->styles[maps] != 255;
 			maps++)
 		{
-			style = &r_newrefdef.lightstyles[surf->styles[maps]];
+			style = &tr.refdef.lightstyles[surf->styles[maps]];
 		}
 		goto store;
 	}
@@ -409,7 +409,7 @@ void R_BuildLightMap(msurface_t *surf, byte *dest, int stride)
 			bl = s_blocklights;
 
 			for (i = 0; i < 3; i++)
-				scale[i] = r_modulate->value * r_newrefdef.lightstyles[surf->styles[maps]].rgb[i];
+				scale[i] = r_modulate->value * tr.refdef.lightstyles[surf->styles[maps]].rgb[i];
 
 			if (scale[0] == 1.0F &&
 				scale[1] == 1.0F &&
@@ -446,7 +446,7 @@ void R_BuildLightMap(msurface_t *surf, byte *dest, int stride)
 			bl = s_blocklights;
 
 			for (i = 0; i < 3; i++)
-				scale[i] = r_modulate->value * r_newrefdef.lightstyles[surf->styles[maps]].rgb[i];
+				scale[i] = r_modulate->value * tr.refdef.lightstyles[surf->styles[maps]].rgb[i];
 
 			if (scale[0] == 1.0F &&
 				scale[1] == 1.0F &&

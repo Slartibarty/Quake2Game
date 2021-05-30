@@ -122,7 +122,7 @@ static void DrawGLFlowingPoly (msurface_t *fa)
 
 	p = fa->polys;
 
-	scroll = -64.0f * ( (r_newrefdef.time / 40.0f) - (int)(r_newrefdef.time / 40.0f) );
+	scroll = -64.0f * ( (tr.refdef.time / 40.0f) - (int)(tr.refdef.time / 40.0f) );
 	if(scroll == 0.0f)
 		scroll = -64.0f;
 
@@ -410,7 +410,7 @@ void R_RenderBrushPoly (msurface_t *fa)
 	*/
 	for ( maps = 0; maps < MAXLIGHTMAPS && fa->styles[maps] != 255; maps++ )
 	{
-		if ( r_newrefdef.lightstyles[fa->styles[maps]].white != fa->cached_light[maps] )
+		if ( tr.refdef.lightstyles[fa->styles[maps]].white != fa->cached_light[maps] )
 			goto dynamic;
 	}
 
@@ -592,7 +592,7 @@ static void GL_RenderLightmappedPoly( msurface_t *surf )
 
 	for ( map = 0; map < MAXLIGHTMAPS && surf->styles[map] != 255; map++ )
 	{
-		if ( r_newrefdef.lightstyles[surf->styles[map]].white != surf->cached_light[map] )
+		if ( tr.refdef.lightstyles[surf->styles[map]].white != surf->cached_light[map] )
 			goto dynamic;
 	}
 
@@ -663,7 +663,7 @@ dynamic:
 		{
 			float scroll;
 		
-			scroll = -64.0f * ( (r_newrefdef.time / 40.0f) - (int)(r_newrefdef.time / 40.0f) );
+			scroll = -64.0f * ( (tr.refdef.time / 40.0f) - (int)(tr.refdef.time / 40.0f) );
 			if(scroll == 0.0f)
 				scroll = -64.0f;
 
@@ -711,7 +711,7 @@ dynamic:
 		{
 			float scroll;
 		
-			scroll = -64.f * ( (r_newrefdef.time / 40.0f) - (int)(r_newrefdef.time / 40.0f) );
+			scroll = -64.f * ( (tr.refdef.time / 40.0f) - (int)(tr.refdef.time / 40.0f) );
 			if(scroll == 0.0f)
 				scroll = -64.0f;
 
@@ -768,8 +768,8 @@ void R_DrawInlineBModel (void)
 	// calculate dynamic lighting for bmodel
 	if ( !r_flashblend->value )
 	{
-		lt = r_newrefdef.dlights;
-		for (k=0 ; k<r_newrefdef.num_dlights ; k++, lt++)
+		lt = tr.refdef.dlights;
+		for (k=0 ; k<tr.refdef.num_dlights ; k++, lt++)
 		{
 			R_MarkLights (lt, 1<<k, currentmodel->nodes + currentmodel->firstnode);
 		}
@@ -892,7 +892,7 @@ void R_DrawBrushModel (entity_t *e)
 	glColor3f (1,1,1);
 	memset (gl_lms.lightmap_surfaces, 0, sizeof(gl_lms.lightmap_surfaces));
 
-	VectorSubtract (r_newrefdef.vieworg, e->origin, modelorg);
+	VectorSubtract (tr.refdef.vieworg, e->origin, modelorg);
 	if (rotated)
 	{
 		vec3_t	temp;
@@ -965,9 +965,9 @@ void R_RecursiveWorldNode (mnode_t *node)
 		pleaf = (mleaf_t *)node;
 
 		// check for door connected areas
-		if (r_newrefdef.areabits)
+		if (tr.refdef.areabits)
 		{
-			if (! (r_newrefdef.areabits[pleaf->area>>3] & (1<<(pleaf->area&7)) ) )
+			if (! (tr.refdef.areabits[pleaf->area>>3] & (1<<(pleaf->area&7)) ) )
 				return;		// not visible
 		}
 
@@ -1076,16 +1076,16 @@ void R_DrawWorld (void)
 	if (!r_drawworld->value)
 		return;
 
-	if ( r_newrefdef.rdflags & RDF_NOWORLDMODEL )
+	if ( tr.refdef.rdflags & RDF_NOWORLDMODEL )
 		return;
 
 	currentmodel = r_worldmodel;
 
-	VectorCopy (r_newrefdef.vieworg, modelorg);
+	VectorCopy (tr.refdef.vieworg, modelorg);
 
 	// auto cycle the world frame for texture animation
 	memset (&ent, 0, sizeof(ent));
-	ent.frame = (int)(r_newrefdef.time*2);
+	ent.frame = (int)(tr.refdef.time*2);
 	currententity = &ent;
 
 	glState.currenttextures[0] = glState.currenttextures[1] = -1;
@@ -1441,7 +1441,7 @@ void GL_BeginBuildingLightmaps (model_t *m)
 		lightstyles[i].rgb[2] = 1;
 		lightstyles[i].white = 3;
 	}
-	r_newrefdef.lightstyles = lightstyles;
+	tr.refdef.lightstyles = lightstyles;
 
 	if (!glState.lightmap_textures)
 	{

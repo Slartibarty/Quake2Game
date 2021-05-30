@@ -375,7 +375,7 @@ void R_DrawScreenOverlay( const vec4_t color )
 
 	uint32 newColor = PackColorFromFloats( color[0], color[1], color[2], color[3] );
 
-	R_DrawFilled( 0, 0, r_newrefdef.width, r_newrefdef.height, newColor );
+	R_DrawFilled( 0, 0, tr.refdef.width, tr.refdef.height, newColor );
 }
 
 /*

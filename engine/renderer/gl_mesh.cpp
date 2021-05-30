@@ -589,7 +589,7 @@ void R_DrawAliasModel (entity_t *e)
 		float	scale;
 		float	min;
 
-		scale = 0.1f * sin(r_newrefdef.time*7);
+		scale = 0.1f * sin(tr.refdef.time*7);
 		for (i=0 ; i<3 ; i++)
 		{
 			min = shadelight[i] * 0.8f;
@@ -601,7 +601,7 @@ void R_DrawAliasModel (entity_t *e)
 
 // =================
 // PGM	ir goggles color override
-	if ( r_newrefdef.rdflags & RDF_IRGOGGLES && currententity->flags & RF_IR_VISIBLE)
+	if ( tr.refdef.rdflags & RDF_IRGOGGLES && currententity->flags & RF_IR_VISIBLE)
 	{
 		shadelight[0] = 1.0f;
 		shadelight[1] = 0.0f;
@@ -1372,7 +1372,7 @@ void R_DrawStudioModel( entity_t *e )
 	}
 
 	// Debug
-	Studio_AdvanceFrame( phdr, r_newrefdef.frametime );
+	Studio_AdvanceFrame( phdr, tr.refdef.frametime );
 
 	GL_TexEnv( GL_REPLACE );
 	glShadeModel( GL_FLAT );
@@ -1515,7 +1515,7 @@ void R_DrawStaticMeshFile( entity_t *e )
 	glUniformMatrix4fv( 5, 1, GL_FALSE, (const GLfloat *)&tr.viewMatrix );
 	glUniformMatrix4fv( 6, 1, GL_FALSE, (const GLfloat *)&tr.projMatrix );
 
-	glUniform3fv( 7, 1, r_newrefdef.vieworg );
+	glUniform3fv( 7, 1, tr.refdef.vieworg );
 	glUniform3fv( 8, 1, ambientColor );
 
 	constexpr int startIndex = 9;
@@ -1554,7 +1554,7 @@ void R_DrawStaticMeshFile( entity_t *e )
 	// viewmodel FOV
 	if ( currententity->flags & RF_WEAPONMODEL )
 	{
-		XMMATRIX newProj = XMMatrixPerspectiveFovRH( DEG2RAD( r_viewmodelfov->GetFloat() ), (float)r_newrefdef.width / (float)r_newrefdef.height, 4.0f, 4096.0f );
+		XMMATRIX newProj = XMMatrixPerspectiveFovRH( DEG2RAD( r_viewmodelfov->GetFloat() ), (float)tr.refdef.width / (float)tr.refdef.height, 4.0f, 4096.0f );
 		
 		XMFLOAT4X4A newStore;
 		XMStoreFloat4x4A( &newStore, newProj );

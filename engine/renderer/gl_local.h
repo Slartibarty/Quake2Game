@@ -92,9 +92,10 @@ struct glState_t
 
 struct renderSystemGlobals_t
 {
-	int registrationSequence;
+	refdef_t	refdef;
+	int			registrationSequence;
 
-	entity_t *pViewmodelEntity;		// so we can render this particular entity last after everything else, but before the UI
+	entity_t *	pViewmodelEntity;		// so we can render this particular entity last after everything else, but before the UI
 
 	DirectX::XMFLOAT4X4A projMatrix;		// the projection matrix
 	DirectX::XMFLOAT4X4A viewMatrix;		// the view matrix
@@ -186,7 +187,6 @@ extern	vec3_t	r_origin; // same as vec3_origin
 //
 // screen size info
 //
-extern	refdef_t	r_newrefdef;
 extern	int		r_viewcluster, r_viewcluster2, r_oldviewcluster, r_oldviewcluster2;
 
 // needed by gl_init
