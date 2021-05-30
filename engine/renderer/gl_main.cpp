@@ -38,6 +38,8 @@ int		r_viewcluster, r_viewcluster2, r_oldviewcluster, r_oldviewcluster2;
 /*
 ========================
 R_RotateForEntity
+
+Transform the model matrix for a given entity
 ========================
 */
 void R_RotateForEntity( entity_t *e )

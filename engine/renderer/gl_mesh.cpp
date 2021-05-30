@@ -1406,12 +1406,6 @@ struct renderLight_t
 	float intensity;
 };
 
-struct checkLight_t
-{
-	float distance;
-	int index;
-};
-
 static trace_t R_LightTrace( vec3_t start, vec3_t end )
 {
 	vec3_t mins{}, maxs{};

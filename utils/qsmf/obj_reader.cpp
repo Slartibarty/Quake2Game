@@ -22,6 +22,55 @@ namespace utl
 	}
 }
 
+#define SMALL_FLOAT 1e-12f
+
+void CalcTriangleTangentSpace( const vec3 &p0, const vec3 &p1, const vec3 &p2,
+							   const vec2 &t0, const vec2 &t1, const vec2 &t2,
+							   vec3 &sVect/*, vec3 &tVect */ )
+{
+	// compute the partial derivatives of X, Y, and Z with respect to S and T
+	sVect.Zero();
+	//tVect.Zero();
+
+	// x, s, t
+	vec3 edge01( p1.x - p0.x, t1.x - t0.x, t1.y - t0.y );
+	vec3 edge02( p2.x - p0.x, t2.x - t0.x, t2.y - t0.y );
+
+	vec3 cross;
+	Vec3CrossProduct( edge01, edge02, cross );
+	if ( fabs( cross.x ) > SMALL_FLOAT )
+	{
+		sVect.x += -cross.y / cross.x;
+		//tVect.x += -cross.z / cross.x;
+	}
+
+	// y, s, t
+	edge01.Set( p1.y - p0.y, t1.x - t0.x, t1.y - t0.y );
+	edge02.Set( p2.y - p0.y, t2.x - t0.x, t2.y - t0.y );
+
+	Vec3CrossProduct( edge01, edge02, cross );
+	if ( fabs( cross.x ) > SMALL_FLOAT )
+	{
+		sVect.y += -cross.y / cross.x;
+		//tVect.y += -cross.z / cross.x;
+	}
+
+	// z, s, t
+	edge01.Set( p1.z - p0.z, t1.x - t0.x, t1.y - t0.y );
+	edge02.Set( p2.z - p0.z, t2.x - t0.x, t2.y - t0.y );
+
+	Vec3CrossProduct( edge01, edge02, cross );
+	if ( fabs( cross.x ) > SMALL_FLOAT )
+	{
+		sVect.z += -cross.y / cross.x;
+		//tVect.z += -cross.z / cross.x;
+	}
+
+	// normalize sVect and tVect
+	sVect.NormalizeFast();
+	//tVect.NormalizeFast();
+}
+
 void OBJReader::Parse( char *buffer )
 {
 	if ( Q_strncmp( buffer, "# Blender ", 10 ) == 0 ) {
@@ -196,6 +245,7 @@ void OBJReader::Parse( char *buffer )
 		vec2 &t2 = rawCoords[rawIndices[iter1].b.iTexcoord];
 		vec2 &t3 = rawCoords[rawIndices[iter1].c.iTexcoord];
 
+#if 1
 		vec3 edge1, edge2;
 		vec2 deltaUV1, deltaUV2;
 
@@ -208,11 +258,10 @@ void OBJReader::Parse( char *buffer )
 		if ( divisor == 0.0f )
 		{
 			++degenerateDivisors;
-			divisor = 1.0f;
+			divisor = FLT_EPSILON;
 		}
 
 		float f = 1.0f / divisor;
-
 		assert( isfinite( f ) );
 
 		// tangent for this set
@@ -221,6 +270,11 @@ void OBJReader::Parse( char *buffer )
 		tangent.y = f * ( deltaUV2.y * edge1.y - deltaUV1.y * edge2.y );
 		tangent.z = f * ( deltaUV2.y * edge1.z - deltaUV1.y * edge2.z );
 		tangent.NormalizeFast();
+#else
+		vec3 tangent;
+
+		CalcTriangleTangentSpace( p1, p2, p3, t1, t2, t3, tangent );
+#endif
 
 		rawTangents.push_back( tangent );
 

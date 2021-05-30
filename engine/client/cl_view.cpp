@@ -218,7 +218,7 @@ void CL_PrepRefresh()
 
 	R_BeginRegistration( mapName );
 
-	Com_Print( "                                     \r" );	
+	Com_Print( "                                     \r" );
 
 	// precache scr pics
 
