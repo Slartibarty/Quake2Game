@@ -408,6 +408,7 @@ extern char crosshair_pic[MAX_QPATH];
 extern int crosshair_width, crosshair_height;
 
 void SCR_Init();
+void SCR_Shutdown();
 
 void SCR_UpdateScreen();
 

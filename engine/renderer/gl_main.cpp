@@ -4,6 +4,10 @@
 
 #include <vector>
 
+#include "imgui.h"
+#include "backends/imgui_impl_opengl3.h"
+#include "../client/q_imgui_imp.h"
+
 model_t		*r_worldmodel;
 
 double		gldepthmin, gldepthmax;
@@ -907,12 +911,19 @@ R_BeginFrame
 Public
 ========================
 */
-void R_BeginFrame()
+void R_BeginFrame( bool imgui )
 {
 	GLimp_BeginFrame();
 
 	// check if we need to set modes
 	R_SetMode();
+
+	// tell imgui we're starting a new frame
+	if ( imgui ) {
+		ImGui_ImplOpenGL3_NewFrame();
+		qImGui::OSImp_NewFrame();
+		ImGui::NewFrame();
+	}
 
 	R_Clear();
 }
@@ -937,9 +948,16 @@ R_EndFrame
 Public
 ========================
 */
-void R_EndFrame()
+void R_EndFrame( bool imgui )
 {
+	// draw our UI
 	Draw_RenderBatches();
+
+	// draw imgui, if applicable
+	if ( imgui ) {
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData( ImGui::GetDrawData() );
+	}
 
 	GL_CheckErrors();
 

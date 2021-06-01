@@ -35,7 +35,7 @@ void ReleaseMappedBuffer (LPVOID pBuffer);
 BOOL GetScreenBufferLines (int *piLines);
 BOOL SetScreenBufferLines (int iLines);
 BOOL ReadText (LPTSTR pszText, int iBeginLine, int iEndLine);
-BOOL WriteText (LPCTSTR szText);
+BOOL WriteText (LPTSTR szText);
 int CharToCode (char c);
 BOOL SetConsoleCXCY(HANDLE hStdout, int cx, int cy);
 
@@ -173,7 +173,7 @@ unsigned __stdcall RequestProc (void *arg)
 		{
 			case CCOM_WRITE_TEXT:
 			// Param1 : Text
-				pBuffer[0] = WriteText ((LPCTSTR) (pBuffer + 1));
+				pBuffer[0] = WriteText ((LPTSTR) (pBuffer + 1));
 				break;
 
 			case CCOM_GET_TEXT:
@@ -267,13 +267,14 @@ BOOL ReadText (LPTSTR pszText, int iBeginLine, int iEndLine)
 }
 
 
-BOOL WriteText (LPCTSTR szText)
+BOOL WriteText (LPTSTR szText)
 {
 	DWORD			dwWritten;
 	INPUT_RECORD	rec;
-	char			upper, *sz;
+	TCHAR			upper;
+	LPTSTR			sz;
 
-	sz = (LPTSTR) szText;
+	sz = szText;
 
 	while (*sz)
 	{
@@ -281,7 +282,7 @@ BOOL WriteText (LPCTSTR szText)
 		if (*sz == 10)
 			*sz = 13;
 
-		upper = toupper(*sz);
+		upper = (TCHAR)towupper((wint_t)*sz);
 
 		rec.EventType = KEY_EVENT;
 		rec.Event.KeyEvent.bKeyDown = TRUE;

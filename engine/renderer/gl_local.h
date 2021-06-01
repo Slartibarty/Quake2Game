@@ -1,6 +1,7 @@
 
 #pragma once
 
+// we are part of the client, but we opt to recieve input from it via refdef_t instead
 #include "../shared/engine.h"
 
 #include "ref_types.h"

@@ -494,6 +494,12 @@ void GLimp_EndFrame()
 	SwapBuffers( s_glwState.hDC );
 }
 
+// helper for client code (phasing out cl_hwnd)
+void *R_GetWindowHandle()
+{
+	return reinterpret_cast<void *>( s_glwState.hWnd );
+}
+
 void GLimp_AppActivate( bool active )
 {
 #if 0

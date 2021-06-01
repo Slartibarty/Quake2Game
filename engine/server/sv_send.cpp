@@ -490,7 +490,7 @@ void SV_SendClientMessages()
 	// read the next demo message if needed
 	if ( sv.state == ss_demo && sv.demofile )
 	{
-		if ( sv_paused->value )
+		if ( sv_paused->GetBool() )
 		{
 			msglen = 0;
 		}

@@ -3,10 +3,14 @@
 //=================================================================================================
 
 #include "cl_local.h"
+
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <Windows.h>
 #include "winquake.h"
+
+#include "imgui.h"
+#include "q_imgui_imp.h"
 
 HWND cl_hwnd;
 
@@ -124,11 +128,54 @@ namespace input
 		S_Activate( g_activeApp );
 	}
 
+	static void HandleKeyboardInput_ImGui( RAWKEYBOARD &raw )
+	{
+		assert( raw.VKey < 256 );
+
+		ImGuiIO &io = ImGui::GetIO();
+
+		io.KeysDown[raw.VKey] = !( raw.Flags & RI_KEY_BREAK );
+	}
+
 	static void HandleKeyboardInput( RAWKEYBOARD &raw )
 	{
 		Key_Event( MapKey( raw.MakeCode ), !( raw.Flags & RI_KEY_BREAK ), sys_frame_time );
 	}
 
+	static void HandleMouseInput_ImGui( RAWMOUSE &raw )
+	{
+		ImGuiIO &io = ImGui::GetIO();
+
+		// Always process BUTTONS!
+		switch ( raw.usButtonFlags )
+		{
+		case RI_MOUSE_LEFT_BUTTON_DOWN:
+			io.MouseDown[0] = true;
+			break;
+		case RI_MOUSE_LEFT_BUTTON_UP:
+			io.MouseDown[0] = false;
+			break;
+		case RI_MOUSE_RIGHT_BUTTON_DOWN:
+			io.MouseDown[1] = true;
+			break;
+		case RI_MOUSE_RIGHT_BUTTON_UP:
+			io.MouseDown[1] = false;
+			break;
+		case RI_MOUSE_MIDDLE_BUTTON_DOWN:
+			io.MouseDown[2] = true;
+			break;
+		case RI_MOUSE_MIDDLE_BUTTON_UP:
+			io.MouseDown[2] = false;
+			break;
+		case RI_MOUSE_WHEEL:
+			io.MouseWheel += (float)(short)raw.usButtonData / (float)WHEEL_DELTA;
+			break;
+		case RI_MOUSE_HWHEEL:
+			io.MouseWheelH += (float)(short)raw.usButtonData / (float)WHEEL_DELTA;
+			break;
+		}
+	}
+	
 	static void HandleMouseInput( RAWMOUSE &raw )
 	{
 		// Always process BUTTONS!
@@ -291,17 +338,41 @@ LRESULT CALLBACK MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		// Now read into the buffer
 		GetRawInputData( (HRAWINPUT)lParam, RID_INPUT, &raw, &dwSize, sizeof( RAWINPUTHEADER ) );
 
+		ImGuiIO &io = ImGui::GetIO();
+
+		// if imgui is focused, we should not send keyboard input to the game
 		switch ( raw.header.dwType )
 		{
 		case RIM_TYPEKEYBOARD:
-			HandleKeyboardInput( raw.data.keyboard );
+			HandleKeyboardInput_ImGui( raw.data.keyboard );
+			if ( !io.WantCaptureKeyboard ) {
+				HandleKeyboardInput( raw.data.keyboard );
+			}
 			break;
 		case RIM_TYPEMOUSE:
-			HandleMouseInput( raw.data.mouse );
+			HandleMouseInput_ImGui( raw.data.mouse );
+			if ( !io.WantCaptureMouse ) {
+				HandleMouseInput( raw.data.mouse );
+			}
 			break;
 		}
 	}
 	return 0;
+
+	case WM_CHAR:
+		// You can also use ToAscii()+GetKeyboardState() to retrieve characters.
+		if ( wParam > 0 && wParam < 0x10000 ) {
+			ImGuiIO &io = ImGui::GetIO();
+			io.AddInputCharacterUTF16( (ImWchar16)wParam );
+		}
+		break;
+
+	// for ImGui
+	case WM_SETCURSOR:
+		if ( LOWORD( lParam ) == HTCLIENT && qImGui::OSImp_UpdateMouseCursor() ) {
+			return 1;
+		}
+		break;
 
 	case WM_ACTIVATE:
 	{

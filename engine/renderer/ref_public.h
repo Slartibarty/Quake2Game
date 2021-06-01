@@ -16,9 +16,9 @@ void		R_SetSky( const char *name, float rotate, vec3_t axis );
 void		R_EndRegistration();
 
 			// Render entry points
-void		R_BeginFrame();
+void		R_BeginFrame( bool imgui = false );
 void		R_RenderFrame( refdef_t *fd );
-void		R_EndFrame();
+void		R_EndFrame( bool imgui = false );
 
 			// 2D elements, occurs after world and entities
 void		R_DrawGetPicSize( int *w, int *h, const char *name );
@@ -30,4 +30,5 @@ void		R_DrawFilled( int x, int y, int w, int h, uint32 color );
 void		R_DrawStretchRaw( int x, int y, int w, int h, int cols, int rows, byte *data );
 void		R_SetRawPalette( const byte *palette );
 
+void *		R_GetWindowHandle();
 void		R_AppActivate( bool active );

@@ -28,10 +28,14 @@
 
 #include "cl_local.h"
 
+#include "imgui.h"
+#include "backends/imgui_impl_opengl3.h"
+#include "q_imgui_imp.h"
+
 float		scr_con_current;	// aproaches scr_conlines at scr_conspeed
 float		scr_conlines;		// 0.0 to 1.0 lines of console to display
 
-bool		scr_initialized;		// ready to draw
+bool		scr_initialized;	// ready to draw
 
 int			scr_draw_loading;
 
@@ -55,6 +59,11 @@ int			crosshair_width, crosshair_height;
 
 void SCR_TimeRefresh_f();
 void SCR_Loading_f();
+
+struct screenGlobals_t
+{
+	bool	imgui_showdemo;
+} scr;
 
 /*
 ===================================================================================================
@@ -342,6 +351,37 @@ static void SCR_CalcVrect()
 
 //=================================================================================================
 
+static bool SCR_InitImGui()
+{
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO &io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	io.IniFilename = nullptr;
+
+	ImGui::StyleColorsDark();
+
+	qImGui::OSImp_Init( R_GetWindowHandle() );
+	ImGui_ImplOpenGL3_Init( /*"#version 330 core"*/ );
+
+	io.Fonts->AddFontDefault();
+
+	return true;
+}
+
+static void SCR_ShutdownImGui()
+{
+	ImGui_ImplOpenGL3_Shutdown();
+	qImGui::OSImp_Shutdown();
+	ImGui::DestroyContext();
+}
+
+// toggles the imgui demo UI
+static void SCR_ToggleImGuiDemo()
+{
+	scr.imgui_showdemo = !scr.imgui_showdemo;
+}
+
 /*
 ========================
 SCR_Init
@@ -364,7 +404,21 @@ void SCR_Init()
 	Cmd_AddCommand( "timerefresh", SCR_TimeRefresh_f );
 	Cmd_AddCommand( "loading", SCR_Loading_f );
 
+	Cmd_AddCommand( "scr_imguidemo", SCR_ToggleImGuiDemo );
+
+	SCR_InitImGui();
+
 	scr_initialized = true;
+}
+
+/*
+========================
+SCR_Shutdown
+========================
+*/
+void SCR_Shutdown()
+{
+	SCR_ShutdownImGui();
 }
 
 /*
@@ -478,6 +532,20 @@ void SCR_RunConsole()
 	}
 }
 
+static void SCR_DrawImGui()
+{
+	bool render = false;
+
+	if ( scr.imgui_showdemo ) {
+		ImGui::ShowDemoWindow( &scr.imgui_showdemo );
+		render = true;
+	}
+
+	if ( render ) {
+		ImGui::Render();
+	}
+}
+
 /*
 ========================
 SCR_DrawConsole
@@ -490,17 +558,20 @@ static void SCR_DrawConsole()
 	if ( cls.state == ca_disconnected || cls.state == ca_connecting ) {
 		// forced full screen console
 		Con_DrawConsole( 1.0f );
+		SCR_DrawImGui();
 		return;
 	}
 
 	if ( cls.state != ca_active || !cl.refresh_prepped ) {
 		// connected, but can't render
 		Con_DrawConsole( 0.5f );
+		SCR_DrawImGui();
 		return;
 	}
 
 	if ( scr_con_current ) {
 		Con_DrawConsole( scr_con_current );
+		SCR_DrawImGui();
 	} else {
 		if ( cls.key_dest == key_game || cls.key_dest == key_message ) {
 			// only draw notify in game
@@ -1119,7 +1190,7 @@ void SCR_UpdateScreen()
 		return;
 	}
 
-	R_BeginFrame();
+	R_BeginFrame( true );
 
 	if ( scr_draw_loading == 2 )
 	{
@@ -1188,5 +1259,5 @@ void SCR_UpdateScreen()
 		SCR_DrawLoading();
 	}
 
-	R_EndFrame();
+	R_EndFrame( true );
 }

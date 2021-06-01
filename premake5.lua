@@ -37,7 +37,7 @@ staticruntime "On"
 cppdialect "C++20"
 warnings "Default"
 floatingpoint "Fast"
-characterset "ASCII"
+characterset "Unicode"
 exceptionhandling "Off"
 editandcontinue "Off"
 	
@@ -177,6 +177,22 @@ local uvatlas_sources = {
 	"thirdparty/UVAtlas/UVAtlas/isochart/*.h"
 }
 
+local imgui_public = {
+	"thirdparty/imgui/imgui.h",
+	"thirdparty/imgui/imconfig.h"
+}
+
+local imgui_sources = {
+	"thirdparty/imgui/imgui_internal.h",
+	"thirdparty/imgui/imgui.cpp",
+	"thirdparty/imgui/imgui_demo.cpp",
+	"thirdparty/imgui/imgui_draw.cpp",
+	"thirdparty/imgui/imgui_tables.cpp",
+	"thirdparty/imgui/imgui_widgets.cpp",
+	
+	"thirdparty/imgui/backends/imgui_impl_opengl3.*"
+}
+
 -------------------------------------------------------------------------------
 
 group "support"
@@ -211,8 +227,8 @@ project "engine"
 	targetname "q2game"
 	language "C++"
 	targetdir "../game"
-	includedirs { "thirdparty/glew/include", "thirdparty/zlib", "thirdparty/libpng", "thirdparty/libpng_config" }
-	defines { "GLEW_STATIC", "GLEW_NO_GLU" }
+	includedirs { "thirdparty/glew/include", "thirdparty/zlib", "thirdparty/libpng", "thirdparty/libpng_config", "thirdparty/imgui" }
+	defines { "GLEW_STATIC", "GLEW_NO_GLU", "IMGUI_USER_CONFIG=\"../../engine/client/q_imconfig.h\"", "IMGUI_IMPL_WIN32_DISABLE_GAMEPAD" }
 	links { "core" }
 	filter "system:windows"
 		linkoptions { "/ENTRY:mainCRTStartup" }
@@ -239,6 +255,9 @@ project "engine"
 		zlib_public,
 		
 		libpng_public,
+		
+		imgui_public,
+		imgui_sources,
 		
 		glew_public,
 		glew_sources,

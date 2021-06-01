@@ -1721,7 +1721,7 @@ void CL_Init (void)
 	net_message.data = net_message_buffer;
 	net_message.maxsize = sizeof(net_message_buffer);
 
-	M_Init ();	
+	M_Init ();
 	
 	SCR_Init ();
 	cls.disable_screen = true;	// don't draw yet
@@ -1766,6 +1766,7 @@ void CL_Shutdown(void)
 	CDAudio_Shutdown ();
 	S_Shutdown();
 	input::Shutdown ();
+	SCR_Shutdown();
 	VID_Shutdown();
 }
 
