@@ -57,6 +57,10 @@ struct texInfoMisc_t
 
 void Decompose_Main()
 {
+	// the size of the global index buffer is added to this at the end of each node loop
+	uint32 indexOffset = 0;
+	uint32 indexOffset2 = 0;
+
 	// loop 1: every node
 	for ( uint iNode = 0; iNode < (uint)g_nodes.size(); ++iNode )
 	{
@@ -251,7 +255,8 @@ void Decompose_Main()
 			auto &mat = node_materials[iMats];
 			auto &face = node_faces.emplace_back();
 
-			bool first = true;
+			face.firstIndex = (bspDrawIndex_t)( indexOffset2 );
+			face.numIndices = 0;
 
 			// loop 3: node > faces > fat verts
 			for ( uint iFatVerts = 0; iFatVerts < (uint)fatVerts.size(); ++iFatVerts )
@@ -268,15 +273,12 @@ void Decompose_Main()
 				}
 
 				node_indices.push_back( iFatVerts );
-
-				if ( first )
-				{
-					face.firstIndex = (bspDrawIndex_t)( node_indices.size() - 1 );
-					first = false;
-				}
+				++face.numIndices;
+				++indexOffset2;
 			}
 
-			face.numIndices = static_cast<uint16>( node_indices.size() - face.firstIndex );	// difference = number of indices
+
+			int fuck = 0;
 		}
 
 		// spit into the global bsp array
@@ -304,10 +306,13 @@ void Decompose_Main()
 		{
 			uint16 index = node_indices[iIndices];
 
-			index += Max( 0, (int)g_drawIndices.size() - 1 );
+			index += indexOffset; // HACK
 
 			g_drawIndices.push_back( index );
 		}
+
+		assert( indexOffset2 == (uint32)g_drawIndices.size() );
+		indexOffset += (uint32)g_drawIndices.size();
 	}
 
 	Com_Print( "holy shit\n" );
@@ -328,7 +333,7 @@ void Decompose_WriteOBJ()
 		// write all the verts
 		for ( uint32 iFace = 0; iFace < node.newNumFaces; ++iFace )
 		{
-			const bspDrawFace_t &face = g_drawFaces[node.firstface + iFace];
+			const bspDrawFace_t &face = g_drawFaces[node.newFirstFace + iFace];
 
 			for ( uint32 iIndex = 0; iIndex < face.numIndices; ++iIndex )
 			{
@@ -347,7 +352,7 @@ void Decompose_WriteOBJ()
 		// write all the faces
 		for ( uint32 iFace = 0; iFace < node.newNumFaces; ++iFace )
 		{
-			const bspDrawFace_t &face = g_drawFaces[node.firstface + iFace];
+			const bspDrawFace_t &face = g_drawFaces[node.newFirstFace + iFace];
 
 			if ( face.numIndices % 3 )
 			{
