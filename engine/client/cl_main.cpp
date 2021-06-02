@@ -22,7 +22,7 @@ cvar_t	*cl_timeout;
 cvar_t	*cl_predict;
 //cvar_t	*cl_minfps;
 cvar_t	*cl_maxfps;
-cvar_t	*cl_gun;
+cvar_t	*cl_drawviewmodel;
 
 cvar_t	*cl_shownet;
 cvar_t	*cl_showmiss;
@@ -1352,7 +1352,7 @@ void CL_InitLocal (void)
 //
 // register our variables
 //
-	cl_gun = Cvar_Get ("cl_gun", "1", 0);
+	cl_drawviewmodel = Cvar_Get ("cl_drawviewmodel", "1", 0);
 	cl_footsteps = Cvar_Get ("cl_footsteps", "1", 0);
 	cl_noskins = Cvar_Get ("cl_noskins", "0", 0);
 	cl_autoskins = Cvar_Get ("cl_autoskins", "0", 0);

@@ -33,7 +33,7 @@ void CL_CheckPredictionError()
 	len = fabs(delta[0]) + fabs(delta[1]) + fabs(delta[2]);
 	if (len > 80.0f)
 	{	// a teleport or something
-		VectorClear (cl.prediction_error);
+		VectorClear (cl.predError);
 	}
 	else
 	{
@@ -44,7 +44,7 @@ void CL_CheckPredictionError()
 		VectorCopy (cl.frame.playerstate.pmove.origin, cl.predicted_origins[frame]);
 
 		// save for error interpolation
-		VectorCopy( delta, cl.prediction_error );
+		VectorCopy( delta, cl.predError );
 	}
 }
 
@@ -201,7 +201,7 @@ void CL_PredictMovement()
 		// just set angles
 		for ( int i = 0; i < 3; ++i )
 		{
-			cl.predicted_angles[i] = cl.viewangles[i] + cl.frame.playerstate.pmove.delta_angles[i];
+			cl.predAngles[i] = cl.viewangles[i] + cl.frame.playerstate.pmove.delta_angles[i];
 		}
 		return;
 	}
@@ -257,7 +257,8 @@ void CL_PredictMovement()
 		cl.predicted_step_time = cls.realtime - ( cls.frametime * 100.0f );
 	}
 
+	cl.predMove = pm.s;
+
 	// copy results out for rendering
-	VectorCopy( pm.s.origin, cl.predicted_origin );
-	VectorCopy( pm.viewangles, cl.predicted_angles );
+	VectorCopy( pm.viewangles, cl.predAngles );
 }

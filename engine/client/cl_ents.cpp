@@ -2,6 +2,16 @@
 
 #include "cl_local.h"
 
+static constexpr float MaxViewmodelLag = 1.5f;
+static_assert( MaxViewmodelLag > 0.0f );
+
+static constexpr float cl_bobcycle = 0.8f;
+static constexpr float cl_bob = 0.01f;
+static constexpr float cl_bobup = 0.5f;
+
+static constexpr float cl_rollangle = 2.0f;
+static constexpr float cl_rollspeed = 200.0f;
+
 //extern model_t *cl_mod_powerscreen;
 
 /*
@@ -629,8 +639,8 @@ void CL_ParseFrame()
 		{
 			cls.state = ca_active;
 			cl.force_refdef = true;
-			VectorCopy( cl.frame.playerstate.pmove.origin, cl.predicted_origin );
-			VectorCopy( cl.frame.playerstate.viewangles, cl.predicted_angles );
+			VectorCopy( cl.frame.playerstate.pmove.origin, cl.predMove.origin );
+			VectorCopy( cl.frame.playerstate.viewangles, cl.predAngles );
 
 			if ( cls.disable_servercount != cl.servercount && cl.refresh_prepped ) {
 				// get rid of loading plaque
@@ -1013,176 +1023,302 @@ static void CL_AddPacketEntities( clSnapshot_t *frame )
 	}
 }
 
+#define	HL2_BOB_CYCLE_MIN	1.0f
+#define	HL2_BOB_CYCLE_MAX	0.45f
+#define	HL2_BOB				0.002f
+#define	HL2_BOB_UP			0.5f
+
+inline float fsel( float a, float b, float c )
+{
+	return a >= 0.0f ? b : c;
+}
+
+inline float RemapVal( float val, float A, float B, float C, float D )
+{
+	if ( A == B ) {
+		return fsel( val - B, D, C );
+	}
+	return C + ( D - C ) * ( val - A ) / ( B - A );
+}
+
+static void CL_CalcViewmodelBob( vec3_t velocity, float &verticalBob, float &lateralBob )
+{
+	static float bobtime;
+	float cycle;
+	
+	if ( cls.frametime == 0.0f )
+	{
+		return;
+	}
+
+	float speed = sqrt( velocity[0]*velocity[0] + velocity[1]*velocity[1] );
+
+	speed = Clamp( speed, -320.0f, 320.0f );
+
+	float bob_offset = RemapVal( speed, 0.0f, 320.0f, 0.0f, 1.0f );
+	
+	bobtime += cls.frametime * bob_offset;
+
+	//Calculate the vertical bob
+	cycle = bobtime - (int)(bobtime/HL2_BOB_CYCLE_MAX)*HL2_BOB_CYCLE_MAX;
+	cycle /= HL2_BOB_CYCLE_MAX;
+
+	if ( cycle < HL2_BOB_UP )
+	{
+		cycle = M_PI_F * cycle / HL2_BOB_UP;
+	}
+	else
+	{
+		cycle = M_PI_F + M_PI_F*(cycle-HL2_BOB_UP)/(1.0f - HL2_BOB_UP);
+	}
+	
+	verticalBob = speed*0.005f;
+	verticalBob = verticalBob*0.3f + verticalBob*0.7f*sin( cycle );
+	verticalBob = Clamp( verticalBob, -7.0f, 4.0f );
+
+	//Calculate the lateral bob
+	cycle = bobtime - (int)( bobtime/HL2_BOB_CYCLE_MAX*2 )*HL2_BOB_CYCLE_MAX*2;
+	cycle /= HL2_BOB_CYCLE_MAX*2;
+
+	if ( cycle < HL2_BOB_UP )
+	{
+		cycle = M_PI_F * cycle / HL2_BOB_UP;
+	}
+	else
+	{
+		cycle = M_PI_F + M_PI_F*( cycle-HL2_BOB_UP )/( 1.0f - HL2_BOB_UP );
+	}
+
+	lateralBob = speed*0.005f;
+	lateralBob = lateralBob*0.3f + lateralBob*0.7f*sin( cycle );
+	lateralBob = Clamp( lateralBob, -7.0f, 4.0f );
+}
+
+static void CL_AddViewmodelBob( vec3_t origin, vec3_t angles )
+{
+	float verticalBob, lateralBob;
+	CL_CalcViewmodelBob( cl.predMove.velocity, verticalBob, lateralBob );
+
+	// Apply bob, but scaled down to 40%
+	VectorMA( origin, verticalBob * 0.1f, cl.v_forward, origin );
+
+	// Z bob a bit more
+	origin[2] += verticalBob * 0.1f;
+
+	// bob the angles
+	angles[ROLL] += verticalBob * 0.5f;
+	angles[PITCH] -= verticalBob * 0.4f;
+
+	angles[YAW] -= lateralBob * 0.3f;
+
+	VectorMA( origin, lateralBob * 0.8f, cl.v_right, origin );
+}
+
+static void CL_CalcViewModelLag( vec3_t origin, const vec3_t angles )
+{
+	static vec3_t lastFacing;
+
+	vec3_t forward;
+	AngleVectors( angles, forward, nullptr, nullptr );
+
+	if ( cls.frametime != 0.0f )
+	{
+		vec3_t difference;
+		VectorSubtract( forward, lastFacing, difference );
+
+		float speed = 5.0f;
+
+		// If we start to lag too far behind, we'll increase the "catch up" speed.  Solves the problem with fast cl_yawspeed, m_yaw or joysticks
+		//  rotating quickly.  The old code would slam lastfacing with origin causing the viewmodel to pop to a new position
+		float distance = VectorLength( difference );
+		if ( distance > MaxViewmodelLag && MaxViewmodelLag > 0.0f )
+		{
+			speed *= distance / MaxViewmodelLag;
+		}
+
+		VectorMA( lastFacing, speed * cls.frametime, difference, lastFacing );
+		VectorNormalize( lastFacing );
+
+		vec3_t vDiff2;
+		VectorCopy( difference, vDiff2 );
+		vDiff2[0] *= -1.0f;
+		vDiff2[1] *= -1.0f;
+		vDiff2[2] *= -1.0f;
+		VectorMA( origin, 5.0f, vDiff2, origin );
+	}
+
+	vec3_t right, up;
+	AngleVectors( angles, forward, right, up );
+
+	float pitch = angles[PITCH];
+	if ( pitch > 180.0f ) {
+		pitch -= 360.0f;
+	}
+	else if ( pitch < -180.0f ) {
+		pitch += 360.0f;
+	}
+
+	VectorMA( origin, -pitch * 0.035f, forward, origin );
+	VectorMA( origin, -pitch * 0.03f, right, origin );
+	VectorMA( origin, -pitch * 0.02f, up, origin );
+}
+
 /*
 ========================
 CL_AddViewWeapon
+
+Adds the viewmodel entity
 ========================
 */
-static void CL_AddViewWeapon( player_state_t *ps, player_state_t *ops )
+static void CL_AddViewWeapon( player_state_t *ps, player_state_t *ops, float bob )
 {
-	entity_t	gun;
-	int			i;
+	entity_t	view;
 
 	// allow the gun to be completely removed
-	if ( !cl_gun->value ) {
+	if ( !cl_drawviewmodel->GetBool() ) {
 		return;
 	}
 
-	memset( &gun, 0, sizeof( gun ) );
+	memset( &view, 0, sizeof( view ) );
 
 	if ( gun_model ) {
 		// development tool
-		gun.model = gun_model;
+		view.model = gun_model;
 	} else {
-		gun.model = cl.model_draw[ps->gunindex];
+		view.model = cl.model_draw[ps->gunindex];
 	}
 
-	if ( !gun.model ) {
+	if ( !view.model ) {
 		return;
 	}
 
-	// set up gun position
-	for ( i = 0; i < 3; i++ )
+#if 0
+
+	for ( int i = 0; i < 3; i++ )
 	{
-		gun.origin[i] = cl.refdef.vieworg[i] + ops->gunoffset[i]
-			+ cl.lerpfrac * ( ps->gunoffset[i] - ops->gunoffset[i] );
-		gun.angles[i] = cl.refdef.viewangles[i] + LerpAngle( ops->gunangles[i],
-			ps->gunangles[i], cl.lerpfrac );
+		view.origin[i] = cl.refdef.vieworg[i] + ( bob * 0.4f * cl.v_forward[i] );
+		view.angles[i] = cl.refdef.viewangles[i];
 	}
+
+	// throw in a little tilt
+	view.angles[PITCH] -= bob * 0.3f;
+	view.angles[YAW]   -= bob * 0.5f;
+	view.angles[ROLL]  -= bob * 1.0f;
+
+	// pushing the view origin down off of the same X/Z plane as the ent's origin will give the
+	// gun a very nice 'shifting' effect when the player looks up/down. If there is a problem
+	// with view model distortion, this may be a cause. (SJB). 
+	view.origin[2] -= 1.0f;
+
+#else
+
+	VectorCopy( cl.refdef.vieworg, view.origin );
+	VectorCopy( cl.refdef.viewangles, view.angles );
+
+	CL_AddViewmodelBob( view.origin, view.angles );
+	CL_CalcViewModelLag( view.origin, view.angles );
+
+#endif
 
 	if ( gun_frame )
 	{
-		gun.frame = gun_frame;		// development tool
-		gun.oldframe = gun_frame;	// development tool
+		view.frame = gun_frame;		// development tool
+		view.oldframe = gun_frame;	// development tool
 	}
 	else
 	{
-		gun.frame = ps->gunframe;
-		if ( gun.frame == 0 ) {
+		view.frame = ps->gunframe;
+		if ( view.frame == 0 ) {
 			// just changed weapons, don't lerp from old
-			gun.oldframe = 0;
+			view.oldframe = 0;
 		} else {
-			gun.oldframe = ops->gunframe;
+			view.oldframe = ops->gunframe;
 		}
 	}
 
-	gun.flags = RF_MINLIGHT | RF_DEPTHHACK | RF_WEAPONMODEL;
-	gun.backlerp = 1.0f - cl.lerpfrac;
-	VectorCopy( gun.origin, gun.oldorigin );	// don't lerp at all
-	V_AddEntity( &gun );
-}
+	view.flags = RF_MINLIGHT | RF_DEPTHHACK | RF_WEAPONMODEL;
+	view.backlerp = 1.0f - cl.lerpfrac;
+	VectorCopy( view.origin, view.oldorigin );	// don't lerp at all
 
-#if 0
-
-float	xyspeed;
-
-float	bobmove;
-int		bobcycle;		// odd cycles are right foot going forward
-float	bobfracsin;		// sin(bobfrac*M_PI)
-
-int bobtime;
-
-/*
-===============
-V_CalcBob
-
-===============
-*/
-float V_CalcBob ( player_state_t *ps )
-{
-	float	bob;
-	float	cycle;
-	
-	cycle = cl.time - (int)(cl.time/0.6f)*0.6f;
-	cycle /= 0.6f;
-	if (cycle < 0.02f )
-		cycle = M_PI * cycle / 0.02f;
-	else
-		cycle = M_PI + M_PI*(cycle-0.02f)/(1.0 - 0.02f);
-
-// bob is proportional to velocity in the xy plane
-// (don't count Z, or jumping messes it up)
-
-	bob = sqrt( ps->pmove.velocity[0]* ps->pmove.velocity[0] + ps->pmove.velocity[1]* ps->pmove.velocity[1]) * 0.02f;
-//Con_Printf ("speed: %5.1f\n", Length(cl.velocity));
-	bob = bob*0.3 + bob*0.7*sin(cycle);
-	if (bob > 4)
-		bob = 4;
-	else if (bob < -7)
-		bob = -7;
-	return bob;
-	
+	V_AddEntity( &view );
 }
 
 /*
-==============
-SV_CalcGunOffset
-==============
+========================
+CL_CalcBob
+========================
 */
-static void SV_CalcGunOffset( player_state_t *ps, player_state_t *ops )
+static float CL_CalcBob( vec3_t velocity )
 {
-	float	scale;
-	float	fracsin;
-
-	vec3_t &origin = ps->gunoffset;
-	vec3_t &angles = ps->gunangles;
-
-	VectorClear( origin );
-	VectorClear( angles );
-
+	return 0.0f;
 #if 0
-	//
-	// calculate speed and cycle to be used for
-	// all cyclic walking effects
-	//
-	xyspeed = sqrt( ps->pmove.velocity[0] * ps->pmove.velocity[0] + ps->pmove.velocity[1] * ps->pmove.velocity[1] );
+	static float bobtime;
+	static float bob;
+	float cycle;
 
-	if ( xyspeed < 5 )
+	static int lasttime;
+	
+	if ( cl.time == lasttime )
 	{
-		bobmove = 0;
-		bobtime = 0;	// start at beginning of cycle again
-	}
-	else if ( ps->pmove.pm_flags & PMF_ON_GROUND )
-	{	// so bobbing only cycles when on ground
-		if ( xyspeed > 210 )
-			bobmove = 0.25f;
-		else if ( xyspeed > 100 )
-			bobmove = 0.125f;
-		else
-			bobmove = 0.0625f;
+		// just use old value
+		return bob;	
 	}
 
-	bobtime += bobmove;
+	lasttime = cl.time;
 
-	if ( ps->pmove.pm_flags & PMF_DUCKED )
-		bobtime *= 4;
-
-	bobcycle = (int)bobtime;
-	bobfracsin = fabs( sin( bobtime * M_PI_F ) );
-
-	// on odd legs, invert some angles
-	if ( bobcycle & 1 ) {
-		scale = -xyspeed;
+	bobtime += cls.frametime;
+	cycle = bobtime - (int)( bobtime / cl_bobcycle ) * cl_bobcycle;
+	cycle /= cl_bobcycle;
+	
+	if ( cycle < cl_bobup )
+	{
+		cycle = M_PI_F * cycle / cl_bobup;
 	}
-	else {
-		scale = xyspeed;
+	else
+	{
+		cycle = M_PI_F + M_PI_F*( cycle - cl_bobup )/( 1.0f - cl_bobup );
 	}
+
+	// bob is proportional to simulated velocity in the xy plane
+	// (don't count Z, or jumping messes it up)
+
+	bob = sqrt( velocity[0]*velocity[0] + velocity[1]*velocity[1] ) * cl_bob;
+	bob = bob*0.3f + bob*0.7f*sin( cycle );
+	bob = Clamp( bob, -7.0f, 4.0f );
+
+	return bob;
 #endif
-
-	// gun angles from bobbing
-	angles[PITCH] += xyspeed * bobfracsin * 0.005f;
-	angles[YAW] += scale * bobfracsin * 0.01f;
-	angles[ROLL] += scale * bobfracsin * 0.005f;
-
-	// idle drift
-	scale = xyspeed + 40.0f;
-	fracsin = sin( cl.time );
-	angles[PITCH] += scale * fracsin * 0.01f;
-	angles[YAW] += scale * fracsin * 0.01f;
-	angles[ROLL] += scale * fracsin * 0.01f;
 }
 
+/*
+========================
+CL_CalcRoll
+========================
+*/
+static float CL_CalcRoll( vec3_t angles, vec3_t velocity )
+{
+	return 0.0f;
+#if 0
+	float sign;
+	float side;
+	float value;
+	vec3_t right;
+
+	AngleVectors( angles, nullptr, right, nullptr );
+	side = DotProduct( velocity, right );
+	sign = side < 0 ? -1 : 1;
+	side = fabs( side );
+
+	value = cl_rollangle;
+	if ( side < cl_rollspeed ) {
+		side = side * value / cl_rollspeed;
+	} else {
+		side = value;
+	}
+
+	return side * sign;
 #endif
+}
 
 /*
 ========================
@@ -1193,11 +1329,11 @@ Sets cl.refdef view values
 */
 void CL_CalcViewValues()
 {
-	int i;
-	float lerp, backlerp;
-	centity_t *ent;
-	clSnapshot_t *oldframe;
-	player_state_t *ps, *ops;
+	int				i;
+	float			lerp, backlerp;
+	centity_t *		ent;
+	clSnapshot_t *	oldframe;
+	player_state_t	*ps, *ops;
 
 	// find the previous frame to interpolate from
 	ps = &cl.frame.playerstate;
@@ -1228,9 +1364,9 @@ void CL_CalcViewValues()
 
 		for ( i = 0; i < 3; i++ )
 		{
-			cl.refdef.vieworg[i] = cl.predicted_origin[i] + ops->viewoffset[i]
+			cl.refdef.vieworg[i] = cl.predMove.origin[i] + ops->viewoffset[i]
 				+ cl.lerpfrac * ( ps->viewoffset[i] - ops->viewoffset[i] )
-				- backlerp * cl.prediction_error[i];
+				- backlerp * cl.predError[i];
 		}
 
 		// smooth out stair climbing
@@ -1253,13 +1389,17 @@ void CL_CalcViewValues()
 		}
 	}
 
+	float bob = CL_CalcBob( cl.predMove.velocity );
+
+	cl.refdef.vieworg[2] += bob;
+
 	// if not running a demo or on a locked frame, add the local angle movement
 	if ( cl.frame.playerstate.pmove.pm_type < PM_DEAD )
 	{
 		// use predicted values
 		for ( i = 0; i < 3; i++ )
 		{
-			cl.refdef.viewangles[i] = cl.predicted_angles[i];
+			cl.refdef.viewangles[i] = cl.predAngles[i];
 		}
 	}
 	else
@@ -1276,6 +1416,8 @@ void CL_CalcViewValues()
 		cl.refdef.viewangles[i] += LerpAngle( ops->kick_angles[i], ps->kick_angles[i], lerp );
 	}
 
+	cl.refdef.viewangles[2] += CL_CalcRoll( cl.refdef.viewangles, cl.predMove.velocity );
+
 	AngleVectors( cl.refdef.viewangles, cl.v_forward, cl.v_right, cl.v_up );
 
 	// interpolate field of view
@@ -1290,7 +1432,7 @@ void CL_CalcViewValues()
 	//SV_CalcGunOffset( ps, ops );
 
 	// add the weapon
-	CL_AddViewWeapon( ps, ops );
+	CL_AddViewWeapon( ps, ops, bob );
 }
 
 /*

@@ -1347,7 +1347,7 @@ always owned, never in the world
 		Weapon_Machinegun,
 		"misc/w_pkup.wav",
 		"models/weapons/g_machn/tris.md2", EF_ROTATE,
-		"models/weapons/v_machn/tris.md2",
+		"models/weapons/v_smg.smf",
 /* icon */		"w_machinegun",
 /* pickup */	"Machinegun",
 		0,
