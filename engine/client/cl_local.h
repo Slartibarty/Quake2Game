@@ -373,7 +373,7 @@ void Key_ClearStates();
 void CL_ParseFrame();
 void CL_AddEntities();
 
-int CL_ParseEntityBits( unsigned *bits );
+int CL_ParseEntityBits( uint *bits );
 void CL_ParseDelta( entity_state_t *from, entity_state_t *to, int number, uint bits );
 void CL_ParseFrame();
 

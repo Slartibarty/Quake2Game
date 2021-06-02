@@ -1034,7 +1034,7 @@ void ClientEndServerFrame (edict_t *ent)
 	P_DamageFeedback (ent);
 
 	// determine the view offsets
-#if 1
+#if 0
 	SV_CalcViewOffset (ent);
 
 	// determine the gun offsets

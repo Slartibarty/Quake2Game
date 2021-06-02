@@ -106,7 +106,6 @@ model_t	*cl_mod_grapple_cable;
 model_t	*cl_mod_parasite_tip;
 model_t	*cl_mod_explo4;
 model_t	*cl_mod_bfg_explo;
-model_t	*cl_mod_powerscreen;
 
 //ROGUE
 sfx_t	*cl_sfx_lightning;
@@ -173,7 +172,6 @@ void CL_RegisterTEntModels()
 	cl_mod_parasite_tip = cgi.RegisterModel( "models/monsters/parasite/tip/tris.md2" );
 	cl_mod_explo4 = cgi.RegisterModel( "models/objects/r_explode/tris.md2" );
 	cl_mod_bfg_explo = cgi.RegisterModel( "sprites/s_bfg2.sp2" );
-	cl_mod_powerscreen = cgi.RegisterModel( "models/items/armor/effect/tris.md2" );
 
 	cgi.RegisterModel( "models/objects/laser/tris.md2" );
 	cgi.RegisterModel( "models/objects/grenade2/tris.md2" );
