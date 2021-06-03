@@ -49,6 +49,7 @@ cvar_t *r_lockpvs;
 cvar_t *r_fullscreen;
 cvar_t *r_gamma;
 
+cvar_t *r_basemaps;
 cvar_t *r_specmaps;
 cvar_t *r_normmaps;
 cvar_t *r_emitmaps;
@@ -221,11 +222,12 @@ static void R_InitCVars()
 	r_fullscreen = Cvar_Get( "r_fullscreen", "0", CVAR_ARCHIVE );
 	r_gamma = Cvar_Get( "r_gamma", "1", CVAR_ARCHIVE );
 
+	r_basemaps = Cvar_Get( "r_basemaps", "1", 0 );
 	r_specmaps = Cvar_Get( "r_specmaps", "1", 0 );
 	r_normmaps = Cvar_Get( "r_normmaps", "1", 0 );
 	r_emitmaps = Cvar_Get( "r_emitmaps", "1", 0 );
 
-	r_viewmodelfov = Cvar_Get( "r_viewmodelfov", "54", 0 );
+	r_viewmodelfov = Cvar_Get( "r_viewmodelfov", "42", 0 );
 }
 
 /*

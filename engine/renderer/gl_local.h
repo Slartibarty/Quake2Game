@@ -156,6 +156,7 @@ extern cvar_t *r_lockpvs;
 extern cvar_t *r_fullscreen;
 extern cvar_t *r_gamma;
 
+extern cvar_t *r_basemaps;
 extern cvar_t *r_specmaps;
 extern cvar_t *r_normmaps;
 extern cvar_t *r_emitmaps;
@@ -306,7 +307,7 @@ struct material_t
 	// Bind the referenced image
 	void Bind() const {
 		assert( image->refcount > 0 );
-		GL_Bind( image->texnum );
+		GL_Bind( r_basemaps->GetBool() ? image->texnum : whiteMaterial->image->texnum );
 	}
 
 	// Bind the spec image
