@@ -238,6 +238,34 @@ struct vec3
 		x = 0.0f; y = 0.0f; z = 0.0f;
 	}
 
+	void Negate()
+	{
+		x = -x;
+		y = -y;
+		z = -z;
+	}
+
+	void Add( const vec3 &v )
+	{
+		x += v.x;
+		y += v.y;
+		z += v.z;
+	}
+
+	void Subtract( const vec3 &v )
+	{
+		x -= v.x;
+		y -= v.y;
+		z -= v.z;
+	}
+
+	void Multiply( const vec3 &v )
+	{
+		x *= v.x;
+		y *= v.y;
+		z *= v.z;
+	}
+
 	float Length() const
 	{
 		return sqrt( x*x + y*y + z*z );

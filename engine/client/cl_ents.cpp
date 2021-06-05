@@ -1060,7 +1060,7 @@ static void CL_CalcViewmodelBob( vec3_t velocity, float &verticalBob, float &lat
 	bobtime += cls.frametime * bob_offset;
 
 	//Calculate the vertical bob
-	cycle = bobtime - (int)(bobtime/HL2_BOB_CYCLE_MAX)*HL2_BOB_CYCLE_MAX;
+	cycle = bobtime - (int)( bobtime/HL2_BOB_CYCLE_MAX )*HL2_BOB_CYCLE_MAX;
 	cycle /= HL2_BOB_CYCLE_MAX;
 
 	if ( cycle < HL2_BOB_UP )
@@ -1069,7 +1069,7 @@ static void CL_CalcViewmodelBob( vec3_t velocity, float &verticalBob, float &lat
 	}
 	else
 	{
-		cycle = M_PI_F + M_PI_F*(cycle-HL2_BOB_UP)/(1.0f - HL2_BOB_UP);
+		cycle = M_PI_F + M_PI_F*( cycle-HL2_BOB_UP )/( 1.0f - HL2_BOB_UP );
 	}
 	
 	verticalBob = speed*0.005f;
@@ -1077,8 +1077,8 @@ static void CL_CalcViewmodelBob( vec3_t velocity, float &verticalBob, float &lat
 	verticalBob = Clamp( verticalBob, -7.0f, 4.0f );
 
 	//Calculate the lateral bob
-	cycle = bobtime - (int)( bobtime/HL2_BOB_CYCLE_MAX*2 )*HL2_BOB_CYCLE_MAX*2;
-	cycle /= HL2_BOB_CYCLE_MAX*2;
+	cycle = bobtime - (int)( bobtime/HL2_BOB_CYCLE_MAX*2.0f )*HL2_BOB_CYCLE_MAX*2.0f;
+	cycle /= HL2_BOB_CYCLE_MAX*2.0f;
 
 	if ( cycle < HL2_BOB_UP )
 	{
@@ -1139,16 +1139,17 @@ static void CL_CalcViewModelLag( vec3_t origin, const vec3_t angles )
 		VectorMA( lastFacing, speed * cls.frametime, difference, lastFacing );
 		VectorNormalize( lastFacing );
 
-		vec3_t vDiff2;
-		VectorCopy( difference, vDiff2 );
-		vDiff2[0] *= -1.0f;
-		vDiff2[1] *= -1.0f;
-		vDiff2[2] *= -1.0f;
-		VectorMA( origin, 5.0f, vDiff2, origin );
+		VectorNegate( difference, difference );
+		VectorMA( origin, 5.0f, difference, origin );
 	}
+
+	vec3_t oldForward; // DEBUG
+	VectorCopy( forward, oldForward ); // DEBUG
 
 	vec3_t right, up;
 	AngleVectors( angles, forward, right, up );
+
+	assert( VectorCompare( forward, oldForward ) );
 
 	float pitch = angles[PITCH];
 	if ( pitch > 180.0f ) {
@@ -1172,7 +1173,7 @@ Adds the viewmodel entity
 */
 static void CL_AddViewWeapon( player_state_t *ps, player_state_t *ops, float bob )
 {
-	entity_t	view;
+	entity_t view;
 
 	// allow the gun to be completely removed
 	if ( !cl_drawviewmodel->GetBool() ) {

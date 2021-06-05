@@ -193,6 +193,10 @@ local imgui_sources = {
 	"thirdparty/imgui/backends/imgui_impl_opengl3.*"
 }
 
+local fbxsdk_dir = os.getenv( "FBXSDK_DIR" )
+local fbxsdk_include_dir = fbxsdk_dir .. "/include"
+local fbxsdk_lib_dir = fbxsdk_dir .. "/lib/vs2019/x64"
+
 -------------------------------------------------------------------------------
 
 group "support"
@@ -535,7 +539,15 @@ project "qsmf"
 	floatingpoint "Default"
 	targetdir "../game"
 	links { "core" }
-	includedirs { "utils/common2" }
+	includedirs { "utils/common2", fbxsdk_include_dir }
+	
+	-- link to the FBX SDK
+	filter( filter_dbg )
+		links { fbxsdk_lib_dir .. "/debug/libfbxsdk-mt" }
+	filter {}
+	filter( filter_rel_or_rtl )
+		links { fbxsdk_lib_dir .. "/release/libfbxsdk-mt" }
+	filter {}
 	
 	files {
 		"common/windows_default.manifest",

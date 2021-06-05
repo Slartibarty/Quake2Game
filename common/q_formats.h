@@ -468,12 +468,15 @@ namespace
 // .SMF Static Mesh Format
 // 
 // Indices are shorts
+// 
+// Version 2 added tangents
+// Version 3 added seperate meshes
 //-------------------------------------------------------------------------------------------------
 
 namespace fmtSMF
 {
 	inline constexpr int32 fourCC = MakeFourCC( 'B', 'R', 'U', 'H' );
-	inline constexpr int32 version = 2;
+	inline constexpr int32 version = 3;
 
 	struct header_t
 	{
@@ -483,7 +486,8 @@ namespace fmtSMF
 		uint32 offsetVerts;		// offset in file to vertex data
 		uint32 numIndices;
 		uint32 offsetIndices;	// offset in file to index data
-		char materialName[256];	// "materials/models/alien01/grimbles.mat"
+		uint32 numMeshes;
+		uint32 offsetMeshes;
 	};
 
 	struct vertex_t
@@ -495,6 +499,13 @@ namespace fmtSMF
 	};
 
 	using index_t = uint16;
+
+	struct mesh_t
+	{
+		char materialName[256];	// "materials/models/alien01/grimbles.mat"
+		uint32 offsetIndices;	// offset into the index buffer
+		uint32 countIndices;	// number of indices 
+	};
 }
 
 //-------------------------------------------------------------------------------------------------

@@ -15,6 +15,8 @@
 
 #include "cmdlib.h"
 
+#include "fbxsdk.h"
+
 #include "obj_reader.h"
 
 struct options_t
@@ -69,7 +71,8 @@ static void PrintHelp()
 {
 	Com_Print(
 		"Help:\n"
-		"  -material <filename>    : The material this model should use, defaults to materials/models/default.mat\n"
+		"  -material <filename> : The material this model should use, defaults to materials/models/default.mat\n"
+		"  -verbose             : If present, this parameter enables verbose (debug) printing\n"
 	);
 }
 
@@ -170,14 +173,11 @@ int main( int argc, char **argv )
 		.offsetVerts = sizeof( header ),
 		.numIndices = (uint32)objReader.GetNumIndices(),
 		.offsetIndices = (uint32)( sizeof( header ) + objReader.GetVerticesSize() ),
-		.materialName{} // filled below
 	};
 
 	assert( header.numIndices % 3 == 0 );
 
 	Com_Printf( "Model stats: %u verts, %u faces, %u indices\n", header.numVerts, header.numIndices / 3, header.numIndices );
-
-	Q_strcpy_s( header.materialName, options.materialName );
 
 	fwrite( &header, sizeof( header ), 1, outFile );
 	header.offsetVerts = (uint32)ftell( outFile );

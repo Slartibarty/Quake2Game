@@ -86,12 +86,17 @@ void OBJReader::Parse( char *buffer )
 
 	std::vector<index3_t> rawIndices;	// raw indices
 
+	std::vector<objMesh_t> rawMeshes;	// meshes
+	objMesh_t *lastRawMesh = nullptr;
+
 	// waste of memory? maybe
 	rawPositions.reserve( 2048 );
 	rawCoords.reserve( 2048 );
 	rawNormals.reserve( 4096 );
 
 	rawIndices.reserve( 8192 );
+
+	rawMeshes.reserve( 4 );
 
 	// load everything out of the obj
 
@@ -141,7 +146,7 @@ void OBJReader::Parse( char *buffer )
 			v2.y = static_cast<float>( atof( token ) ); // swap for opengl :)
 #endif
 			if ( !blenderMode ) {
-				// 3ds max writes an extra 0.0 value
+				// 3ds max writes UVW, Blender writes just UV
 				token = strtok_r( nullptr, Delimiters, &save_ptr );
 			}
 
@@ -196,6 +201,27 @@ void OBJReader::Parse( char *buffer )
 			repeat( index.c );
 
 			rawIndices.push_back( index );
+
+			continue;
+		}
+		if ( Q_strcmp( token, "usemtl" ) == 0 )
+		{
+			// materials
+			// Skip past 'usemtl'
+			token = strtok_r( nullptr, Delimiters, &save_ptr );
+
+			objMesh_t &mesh = rawMeshes.emplace_back();
+
+			Q_strcpy_s( mesh.materialName, token );
+
+			mesh.offsetIndices = Max<uint32>( 0, (uint32)rawIndices.size() );
+
+			// if we have a last mesh, set its count to be the difference
+			if ( lastRawMesh )
+			{
+				lastRawMesh->countIndices = mesh.offsetIndices - lastRawMesh->offsetIndices;
+			}
+			lastRawMesh = &mesh;
 
 			continue;
 		}
@@ -324,7 +350,7 @@ void OBJReader::Parse( char *buffer )
 				{
 					// average the tangents
 
-					Vec3Add( m_vertices[k].tangent, newVertex.tangent, m_vertices[k].tangent );
+					m_vertices[k].tangent.Add( newVertex.tangent );
 
 					index = k;
 				}

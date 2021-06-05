@@ -32,6 +32,14 @@ struct index3_t
 	index_t a, b, c;
 };
 
+// mirrors an SMF mesh
+struct objMesh_t
+{
+	char materialName[256];	// "materials/models/alien01/grimbles.mat"
+	uint32 offsetIndices;	// offset into the index buffer
+	uint32 countIndices;	// number of indices 
+};
+
 class OBJReader
 {
 private:
