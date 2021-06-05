@@ -538,24 +538,26 @@ project "qsmf"
 	language "C++"
 	floatingpoint "Default"
 	targetdir "../game"
-	links { "core" }
+	links { "core", "zlib" }
 	includedirs { "utils/common2", fbxsdk_include_dir }
 	
 	-- link to the FBX SDK
 	filter( filter_dbg )
 		links { fbxsdk_lib_dir .. "/debug/libfbxsdk-mt" }
+		links { fbxsdk_lib_dir .. "/debug/libxml2-mt" }
 	filter {}
 	filter( filter_rel_or_rtl )
 		links { fbxsdk_lib_dir .. "/release/libfbxsdk-mt" }
+		links { fbxsdk_lib_dir .. "/release/libxml2-mt" }
 	filter {}
-	
+		
 	files {
 		"common/windows_default.manifest",
 		"common/q_formats.h",
-	
+			
 		"utils/common2/cmdlib.*",
 		
-		"utils/qsmf/*",
+		"utils/qsmf/qsmf.cpp",
 	}
 	
 --[[

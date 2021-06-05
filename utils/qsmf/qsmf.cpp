@@ -21,123 +21,46 @@
 
 struct options_t
 {
-	char materialName[MAX_OSPATH];
-
-	char objName[MAX_OSPATH];
+	char srcName[MAX_OSPATH];
 	char smfName[MAX_OSPATH];
 };
 
-static size_t GetFileSize( FILE *handle )
+static options_t g_options;
+
+static void PrintUsage( const char *name )
 {
-	long oldpos, newpos;
-
-	oldpos = ftell( handle );
-	fseek( handle, 0, SEEK_END );
-	newpos = ftell( handle );
-	fseek( handle, oldpos, SEEK_SET );
-
-	return static_cast<size_t>( newpos );
-}
-
-// Load a file into a buffer
-static size_t LoadFile( const char *filename, byte **buffer, size_t extradata = 0 )
-{
-	FILE *handle = fopen( filename, "rb" );
-	if ( !handle ) {
-		*buffer = nullptr;
-		return 0;
-	}
-
-	size_t bufsize = GetFileSize( handle ) + extradata;
-
-	*buffer = reinterpret_cast<byte *>( malloc( bufsize ) );
-	fread( *buffer, 1, bufsize, handle );
-	fclose( handle );
-
-	if ( extradata > 0 )
-	{
-		memset( *buffer + bufsize - extradata, 0, extradata );
-	}
-
-	return bufsize;
-}
-
-static void PrintUsage()
-{
-	Com_Print( "Usage: qsmf [options] input.obj output.smf\n" );
+	Com_Printf( "Usage: %s [options] input.obj output.smf\n", name );
 }
 
 static void PrintHelp()
 {
 	Com_Print(
 		"Help:\n"
-		"  -material <filename> : The material this model should use, defaults to materials/models/default.mat\n"
 		"  -verbose             : If present, this parameter enables verbose (debug) printing\n"
 	);
 }
 
-int main( int argc, char **argv )
+static void ParseCommandLine( int argc, char **argv )
 {
-	Com_Print( "---- QSMF model compiler - By Slartibarty ----\n" );
-
 	if ( argc < 3 )
 	{
 		// need at least input and output
-		PrintUsage();
+		PrintUsage( argv[0] );
 		PrintHelp();
-		return EXIT_FAILURE;
+		exit( EXIT_FAILURE );
 	}
 
 	Time_Init();
 
-	options_t options;
-
-	Q_strcpy_s( options.materialName, "materials/models/default.mat" );
-
-	Q_strcpy_s( options.objName, argv[argc - 2] );
-	Str_FixSlashes( options.objName );
-	Q_strcpy_s( options.smfName, argv[argc - 1] );
-	Str_FixSlashes( options.smfName );
+	Q_strcpy_s( g_options.srcName, argv[argc - 2] );
+	Str_FixSlashes( g_options.srcName );
+	Q_strcpy_s( g_options.smfName, argv[argc - 1] );
+	Str_FixSlashes( g_options.smfName );
 
 	int argIter;
 	for ( argIter = 1; argIter < argc; ++argIter )
 	{
 		const char *token = argv[argIter];
-
-		if ( Q_stricmp( token, "-material" ) == 0 )
-		{
-			if ( ++argIter >= argc )
-			{
-				Com_Printf( "Expected an argument after %s\n", token );
-				return EXIT_FAILURE;
-			}
-
-			Q_strcpy_s( options.materialName, argv[argIter] );
-			Str_FixSlashes( options.materialName );
-
-			char *ext = strrchr( options.materialName, '.' );
-			if ( !ext )
-			{
-				// append .mat
-				Com_Print( "Automatically appending \".mat\" to -material's argument\n" );
-				strcat( options.materialName, ".mat" );		// TODO: NEED SAFE STRCAT
-			}
-			if ( Q_stricmp( ext, ".mat" ) != 0 )
-			{
-				// we have an extension, but it's not .mat, replace with .mat
-				Com_Print( "Replacing \"%s\" with \".mat\" in the -material argument\n" );
-				strcpy( ext, ".mat" );
-			}
-
-			strlen_t matExtension = Q_strlen( options.materialName ) - 4;
-			if ( Q_stricmp( options.materialName + matExtension, ".mat" ) != 0 )
-			{
-				Com_Print( "Material name doesn't end with \".mat\"\n" );
-				return EXIT_FAILURE;
-			}
-
-			continue;
-		}
 
 		if ( Q_stricmp( token, "-verbose" ) == 0 )
 		{
@@ -146,47 +69,196 @@ int main( int argc, char **argv )
 		}
 	}
 
-	FILE *outFile = fopen( options.smfName, "wb" );
+	// prematurely open our output file so we are sure we can write to it
+	// if compilation fails this means we're left with a 0kb file, but that's okay for now
+	FILE *outFile = fopen( g_options.smfName, "wb" );
 	if ( !outFile )
 	{
-		Com_Printf( "Couldn't open %s\n", options.smfName );
-		return EXIT_FAILURE;
+		Com_Printf( "Couldn't open %s for writing\n", g_options.smfName );
+		exit( EXIT_FAILURE );
 	}
-
-	char *buffer;
-	size_t fileSize = LoadFile( options.objName, (byte **)&buffer );
-	if ( !buffer )
-	{
-		Com_Printf( "Couldn't open %s\n", options.objName );
-		return EXIT_FAILURE;
-	}
-
-	OBJReader objReader( buffer );
-
-	free( buffer );
-
-	fmtSMF::header_t header
-	{
-		.fourCC = fmtSMF::fourCC,
-		.version = fmtSMF::version,
-		.numVerts = (uint32)objReader.GetNumVertices(),
-		.offsetVerts = sizeof( header ),
-		.numIndices = (uint32)objReader.GetNumIndices(),
-		.offsetIndices = (uint32)( sizeof( header ) + objReader.GetVerticesSize() ),
-	};
-
-	assert( header.numIndices % 3 == 0 );
-
-	Com_Printf( "Model stats: %u verts, %u faces, %u indices\n", header.numVerts, header.numIndices / 3, header.numIndices );
-
-	fwrite( &header, sizeof( header ), 1, outFile );
-	header.offsetVerts = (uint32)ftell( outFile );
-	assert( header.offsetVerts = sizeof( header ) );
-	fwrite( objReader.GetVertices(), objReader.GetVerticesSize(), 1, outFile );
-	header.offsetIndices = (uint32)ftell( outFile );
-	fwrite( objReader.GetIndices(), objReader.GetIndicesSize(), 1, outFile );
-
 	fclose( outFile );
+}
 
-	Com_Printf( "Successfully wrote %s\n", options.smfName );
+#if 0
+
+static int s_numTabs = 0;
+
+static void PrintTabs()
+{
+	for ( int i = 0; i < s_numTabs; i++ )
+	{
+		Com_Print( "\t" );
+	}
+}
+
+static const char *GetAttributeTypeName( FbxNodeAttribute::EType type )
+{
+	switch ( type )
+	{
+	case FbxNodeAttribute::eUnknown: return "unidentified";
+	case FbxNodeAttribute::eNull: return "null";
+	case FbxNodeAttribute::eMarker: return "marker";
+	case FbxNodeAttribute::eSkeleton: return "skeleton";
+	case FbxNodeAttribute::eMesh: return "mesh";
+	case FbxNodeAttribute::eNurbs: return "nurbs";
+	case FbxNodeAttribute::ePatch: return "patch";
+	case FbxNodeAttribute::eCamera: return "camera";
+	case FbxNodeAttribute::eCameraStereo: return "stereo";
+	case FbxNodeAttribute::eCameraSwitcher: return "camera switcher";
+	case FbxNodeAttribute::eLight: return "light";
+	case FbxNodeAttribute::eOpticalReference: return "optical reference";
+	case FbxNodeAttribute::eOpticalMarker: return "marker";
+	case FbxNodeAttribute::eNurbsCurve: return "nurbs curve";
+	case FbxNodeAttribute::eTrimNurbsSurface: return "trim nurbs surface";
+	case FbxNodeAttribute::eBoundary: return "boundary";
+	case FbxNodeAttribute::eNurbsSurface: return "nurbs surface";
+	case FbxNodeAttribute::eShape: return "shape";
+	case FbxNodeAttribute::eLODGroup: return "lodgroup";
+	case FbxNodeAttribute::eSubDiv: return "subdiv";
+	default: return "unknown";
+	}
+}
+
+static void PrintAttribute( FbxNodeAttribute *pAttribute )
+{
+	if ( !pAttribute )
+	{
+		return;
+	}
+
+	PrintTabs();
+
+	const char *pTypeName = GetAttributeTypeName( pAttribute->GetAttributeType() );
+	const char *pAttrName = pAttribute->GetName();
+
+	Com_Printf( "<attribute type='%s' name='%s'/>\n", pTypeName, pAttrName );
+}
+
+static void PrintNode( FbxNode *pNode )
+{
+	PrintTabs();
+	const char *nodeName = pNode->GetName();
+	FbxDouble3 translation = pNode->LclTranslation.Get();
+	FbxDouble3 rotation = pNode->LclRotation.Get();
+	FbxDouble3 scaling = pNode->LclScaling.Get();
+
+	// Print the contents of the node.
+	Com_Printf( "<node name='%s' translation='(%f, %f, %f)' rotation='(%f, %f, %f)' scaling='(%f, %f, %f)'>\n",
+		nodeName,
+		translation[0], translation[1], translation[2],
+		rotation[0], rotation[1], rotation[2],
+		scaling[0], scaling[1], scaling[2]
+	);
+	++s_numTabs;
+
+	// Print the node's attributes.
+	for ( int i = 0; i < pNode->GetNodeAttributeCount(); ++i )
+	{
+		PrintAttribute( pNode->GetNodeAttributeByIndex( i ) );
+	}
+
+	// Recursively print the children.
+	for ( int i = 0; i < pNode->GetChildCount(); ++i )
+	{
+		PrintNode( pNode->GetChild( i ) );
+	}
+
+	--s_numTabs;
+	PrintTabs();
+	Com_Print( "</node>\n" );
+}
+
+#endif
+
+static void OperateOnNode( FbxNode *pNode )
+{
+	bool isMesh = false;
+	for ( int i = 0; i < pNode->GetNodeAttributeCount(); ++i )
+	{
+		FbxNodeAttribute *pAttr = pNode->GetNodeAttributeByIndex( i );
+
+		if ( pAttr->GetAttributeType() == FbxNodeAttribute::eMesh )
+		{
+			isMesh = true;
+			break;
+		}
+	}
+
+	if ( !isMesh )
+	{
+		return;
+	}
+
+	FbxMesh *pMesh = pNode->GetMesh();
+
+	if ( !pMesh->IsTriangleMesh() )
+	{
+		Com_Print( "Found a non-triangulated mesh... Ignoring\n" );
+		return;
+	}
+
+}
+
+static FbxScene *ImportFBXScene( FbxManager *pManager )
+{
+	FbxImporter *pImporter = FbxImporter::Create( pManager, "" );
+
+	Com_Printf( "Importing scene: %s\n", g_options.srcName );
+
+	if ( !pImporter->Initialize( g_options.srcName, -1, pManager->GetIOSettings() ) )
+	{
+		Com_Print( "FbxImporter::Initialize failed\n" );
+		Com_Printf( "Error returned: %s\n", pImporter->GetStatus().GetErrorString() );
+		return nullptr;
+	}
+
+	FbxScene *pScene = FbxScene::Create( pManager, "" );
+
+	if ( pScene )
+	{
+		pImporter->Import( pScene );
+	}
+	pImporter->Destroy();
+
+	return pScene;
+}
+
+static int Operate()
+{
+	FbxManager *pManager = FbxManager::Create();
+	FbxIOSettings *pIOSettings = FbxIOSettings::Create( pManager, IOSROOT );
+	pManager->SetIOSettings( pIOSettings );
+
+	FbxScene *pScene = ImportFBXScene( pManager );
+	if ( !pScene )
+	{
+		pManager->Destroy();
+		return EXIT_FAILURE;
+	}
+
+	FbxNode *pRootNode = pScene->GetRootNode();
+	if ( pRootNode )
+	{
+		for ( int i = 0; i < pRootNode->GetChildCount(); ++i )
+		{
+			//PrintNode( pRootNode->GetChild( i ) );
+			OperateOnNode( pRootNode->GetChild( i ) );
+		}
+	}
+
+	pManager->Destroy();
+
+	return EXIT_SUCCESS;
+}
+
+int main( int argc, char **argv )
+{
+	Com_Print( "---- QSMF model compiler - By Slartibarty ----\n" );
+
+	Com_Print( "Using FBX SDK " FBXSDK_VERSION_STRING "\n" );
+
+	ParseCommandLine( argc, argv );
+
+	return Operate();
 }
