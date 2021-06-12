@@ -302,7 +302,11 @@ struct material_t
 	// Returns true if this material is perfectly okay
 	bool IsOkay() const { return !IsMissing() && !IsImageMissing(); }
 
-	void Register() { registration_sequence = tr.registrationSequence; }
+	void Register() {
+		if ( IsOkay() ) {
+			registration_sequence = tr.registrationSequence;
+		}
+	}
 
 	// Bind the referenced image
 	void Bind() const {

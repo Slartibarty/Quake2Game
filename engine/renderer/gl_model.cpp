@@ -1220,11 +1220,21 @@ void Mod_LoadSMFModel( model_t *pMod, void *pBuffer, [[maybe_unused]] int buffer
 		Com_Errorf( "%s has wrong version number (%i should be %i)", pMod->name, header->version, fmtSMF::version );
 	}
 
-	mSMF_t *memSMF = (mSMF_t *)Hunk_Alloc( sizeof( mSMF_t ) );
+	size_t allocSize = ( sizeof( mSMF_t ) ) + ( sizeof( mSMFMesh_t ) * header->numMeshes );
 
-	memSMF->material = GL_FindMaterial( header->materialName );
+	mSMF_t *memSMF = (mSMF_t *)Hunk_Alloc( allocSize );
 
-	memSMF->numIndices = header->numIndices;
+	memSMF->numMeshes = header->numMeshes;
+
+	mSMFMesh_t *memMeshes = reinterpret_cast<mSMFMesh_t *>( (byte *)memSMF + sizeof( mSMF_t ) );
+	fmtSMF::mesh_t *meshes = reinterpret_cast<fmtSMF::mesh_t *>( (byte *)pBuffer + header->offsetMeshes );
+
+	for ( uint32 i = 0; i < header->numMeshes; ++i )
+	{
+		memMeshes[i].offset = meshes[i].offsetIndices;
+		memMeshes[i].count = meshes[i].countIndices;
+		memMeshes[i].material = GL_FindMaterial( meshes[i].materialName );
+	}
 
 	glGenVertexArrays( 1, &memSMF->vao );
 	glGenBuffers( 1, &memSMF->vbo );
@@ -1378,7 +1388,8 @@ model_t *R_RegisterModel( const char *name )
 	model_t *			pModel;
 	dsprite_t *			pSpriteHeader;
 	dmdl_t *			pAliasHeader;
-	mSMF_t *			pMemSMF;
+	mSMF_t *			pSMF;
+	mSMFMesh_t *		pSMFMeshes;
 
 	pModel = Mod_ForName( name, false );
 	if ( pModel )
@@ -1388,11 +1399,11 @@ model_t *R_RegisterModel( const char *name )
 		switch ( pModel->type )
 		{
 		case mod_smf:
-			pMemSMF = (mSMF_t *)pModel->extradata;
-			// don't register if we're the missing material
-			if ( !pMemSMF->material->IsMissing() )
+			pSMF = reinterpret_cast<mSMF_t *>( (byte *)pModel->extradata );
+			pSMFMeshes = reinterpret_cast<mSMFMesh_t *>( (byte *)pModel->extradata + sizeof( mSMF_t ) );
+			for ( uint32 i = 0; i < pSMF->numMeshes; ++i )
 			{
-				pMemSMF->material->Register();
+				pSMFMeshes[i].material->Register();
 			}
 			break;
 

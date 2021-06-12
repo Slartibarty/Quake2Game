@@ -9,7 +9,7 @@ local conf_rtl = "retail"
 
 local plat_64bit = "x64"
 
-local build_dir = "../build"
+local build_dir = "build"
 
 local filter_dbg = "configurations:" .. conf_dbg
 local filter_rel_or_rtl = "configurations:release or retail" -- TODO: This shouldn't be necessary
@@ -193,6 +193,14 @@ local imgui_sources = {
 	"thirdparty/imgui/backends/imgui_impl_opengl3.*"
 }
 
+local meshoptimizer_public = {
+	"thirdparty/meshoptimizer/src/meshoptimizer.h"
+}
+
+local meshoptimizer_sources = {
+	"thirdparty/meshoptimizer/src/*.cpp",
+}
+
 local fbxsdk_dir = os.getenv( "FBXSDK_DIR" )
 local fbxsdk_include_dir = fbxsdk_dir .. "/include"
 local fbxsdk_lib_dir = fbxsdk_dir .. "/lib/vs2019/x64"
@@ -231,6 +239,7 @@ project "engine"
 	targetname "q2game"
 	language "C++"
 	targetdir "../game"
+	debugdir "../game"
 	includedirs { "thirdparty/glew/include", "thirdparty/zlib", "thirdparty/libpng", "thirdparty/libpng_config", "thirdparty/imgui" }
 	defines { "GLEW_STATIC", "GLEW_NO_GLU", "IMGUI_USER_CONFIG=\"../../engine/client/q_imconfig.h\"", "IMGUI_IMPL_WIN32_DISABLE_GAMEPAD" }
 	links { "core" }
@@ -372,6 +381,7 @@ project "qbsp4"
 	language "C++"
 	floatingpoint "Default"
 	targetdir "../game"
+	debugdir "../game"
 	links { "core" }
 	includedirs { "utils/common2", "common" }
 	
@@ -402,50 +412,13 @@ project "qbsp4"
 		}
 	filter {}
 
---[[
-project "qbsp5"
-	kind "ConsoleApp"
-	targetname "qbsp5"
-	language "C++"
-	floatingpoint "Default"
-	targetdir "../game"
-	links { "core" }
-	includedirs { "utils/common2", "common" }
-	
-	files {
-		"common/windows_default.manifest",
-		
-		"common/*.cpp",
-		"common/*.h",
-		
-		"utils/common2/cmdlib.*",
-		"utils/common2/mathlib.*",
-		"utils/common2/scriplib.*",
-		"utils/common2/polylib.*",
-		"utils/common2/threads.*",
-		"utils/common2/bspfile.*",
-			
-		"utils/qbsp5/*"
-	}
-	
-	filter "system:windows"
-		removefiles {
-			"**/*_linux.*"
-		}
-	filter {}
-	filter "system:linux"
-		removefiles {
-			"**/*_win.*"
-		}
-	filter {}
---]]
-
 project "qvis4"
 	kind "ConsoleApp"
 	targetname "qvis4"
 	language "C++"
 	floatingpoint "Default"
 	targetdir "../game"
+	debugdir "../game"
 	links { "core" }
 	includedirs { "utils/common2", "common" }
 	
@@ -481,6 +454,7 @@ project "qrad4"
 	language "C++"
 	floatingpoint "Default"
 	targetdir "../game"
+	debugdir "../game"
 	links { "core" }
 	includedirs { "utils/common2", "common", "thirdparty/stb" }
 	
@@ -517,6 +491,7 @@ project "qatlas"
 	language "C++"
 	floatingpoint "Default"
 	targetdir "../game"
+	debugdir "../game"
 	links { "core" }
 	includedirs { "utils/common2", "thirdparty/xatlas" }
 	
@@ -538,8 +513,9 @@ project "qsmf"
 	language "C++"
 	floatingpoint "Default"
 	targetdir "../game"
+	debugdir "../game"
 	links { "core", "zlib" }
-	includedirs { "utils/common2", fbxsdk_include_dir }
+	includedirs { "utils/common2", "thirdparty/meshoptimizer/src", fbxsdk_include_dir }
 	
 	-- link to the FBX SDK
 	filter( filter_dbg )
@@ -557,80 +533,12 @@ project "qsmf"
 			
 		"utils/common2/cmdlib.*",
 		
-		"utils/qsmf/qsmf.cpp",
+		"utils/qsmf/*",
 	}
 	
---[[
-project "light"
-	kind "ConsoleApp"
-	targetname "light"
-	language "C"
-	floatingpoint "Default"
-	targetdir "../game"
-	defines { "QE4" } -- We want the alternate VectorNormalize
-	includedirs { "utils/common" }
-	
-	files {
-		"common/windows_default.manifest",
-	
-		"utils/common/cmdlib.*",
-		"utils/common/mathlib.*",
-		"utils/common/scriplib.*",
-		"utils/common/threads.*",
-		"utils/common/bspfile.*",
-	
-		"utils/qrad3/trace.c",
-		"utils/light/*"
+	removefiles {
+		"utils/qsmf/obj_reader.*"
 	}
-	
-project "qdata"
-	kind "ConsoleApp"
-	targetname "qdata"
-	language "C"
-	floatingpoint "Default"
-	targetdir "../game"
-	includedirs { "utils/common", "thirdparty/stb" }
-	
-	files {
-		"common/windows_default.manifest",
-	
-		"utils/common/cmdlib.*",
-		"utils/common/scriplib.*",
-		"utils/common/mathlib.*",
-		"utils/common/trilib.*",
-		"utils/common/lbmlib.*",
-		"utils/common/threads.*",
-		"utils/common/l3dslib.*",
-		"utils/common/bspfile.*",
-		"utils/common/md4.*",
-	
-		"utils/qdata/*"
-	}
-
-project "qe4"
-	kind "WindowedApp"
-	targetname "qe4"
-	language "C"
-	floatingpoint "Default"
-	targetdir "../game"
-	defines { "WIN_ERROR", "QE4" }
-	includedirs { "utils/common", "thirdparty/stb" }
-	links { "opengl32", "glu32" }
-	
-	files {
-		"common/*.manifest",
-		
-		"utils/common/cmdlib.*",
-		"utils/common/mathlib.*",
-		"utils/common/bspfile.h",
-		"utils/common/lbmlib.*",
-		"utils/common/qfiles.*",
-		
-		"utils/qe4/*"
-	}
-
-filter {}
---]]
 
 filter {}
 
@@ -643,7 +551,7 @@ project "zlib"
 	targetname "zlib"
 	language "C"
 	defines { "_CRT_NONSTDC_NO_WARNINGS" }
-	
+		
 	disablewarnings { "4267" }
 	
 	files {
@@ -656,12 +564,24 @@ project "libpng"
 	targetname "libpng"
 	language "C"
 	includedirs { "thirdparty/libpng_config", "thirdparty/zlib" }
-	
+		
 	files {
 		libpng_public,
 		libpng_sources,
 		
 		"thirdparty/libpng_config/pnglibconf.h"
+	}
+
+project "meshoptimizer"
+	kind "StaticLib"
+	targetname "meshoptimizer"
+	language "C++"
+	
+	vpaths { ["code"] = "*" }
+	
+	files {
+		meshoptimizer_public,
+		meshoptimizer_sources,
 	}
 
 --[[

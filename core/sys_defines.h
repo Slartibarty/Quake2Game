@@ -18,10 +18,10 @@
 #error countf was previously defined by another library
 #endif
 
-#define countof( a )		( sizeof( a ) / sizeof( *a ) )
+#define countof(a)			(sizeof(a)/sizeof(*a))
 
-#define STRINGIFY_( a )		#a
-#define STRINGIFY( a )		STRINGIFY_(a)
+#define STRINGIFY_(a)		#a
+#define STRINGIFY(a)		STRINGIFY_(a)
 
 // max lengths of absolute paths
 // win32 has a limit of 256, plus 3 for "C:\" and 1 for the null terminator
@@ -36,19 +36,32 @@
 
 #define WIN32_MAX_PATH		260
 #define UNIX_MAX_PATH		1024
+#define LONG_MAX_PATH		UNIX_MAX_PATH		// when we need a long pathname and don't care about os crap
 
 #ifdef _WIN32
 
-#define MAX_OSPATH			260		// max length of a filesystem pathname
+#define MAX_OSPATH			WIN32_MAX_PATH		// max length of a filesystem pathname
 
 #define DLLEXPORT			__declspec(dllexport)
 #define FORCEINLINE			__forceinline
+#define ASSUME_(x)			__assume(x)
 
 #else
 
-#define MAX_OSPATH			1024
+#define MAX_OSPATH			UNIX_MAX_PATH
 
 #define DLLEXPORT			__attribute__((visibility("default")))
 #define FORCEINLINE			inline
+#define ASSUME_(x)
+
+#endif
+
+#ifdef Q_DEBUG
+
+#define ASSUME(x)			assert(x)
+
+#else
+
+#define ASSUME(x)			ASSUME_(x)
 
 #endif

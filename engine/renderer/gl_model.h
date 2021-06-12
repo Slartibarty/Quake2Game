@@ -138,12 +138,18 @@ struct mleaf_t
 ===================================================================================================
 */
 
+struct mSMFMesh_t
+{
+	uint32			offset, count;
+	material_t *	material;
+};
+
 // in-memory SMF data
 struct mSMF_t
 {
-	GLuint			vao, vbo, ebo;
-	uint32			numIndices;
-	material_t		*material;
+	GLuint		vao, vbo, ebo;
+	uint32		numMeshes;
+	// followed by a variable number of meshes
 };
 
 

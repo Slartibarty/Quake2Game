@@ -871,18 +871,6 @@ void R_DrawStaticMeshFile( entity_t *e )
 	glBindBuffer( GL_ARRAY_BUFFER, memSMF->vbo );
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, memSMF->ebo );
 
-	// HACK: this should go away when bsp rendering is nuked
-	glActiveTexture( GL_TEXTURE0 );
-	memSMF->material->Bind();
-	glActiveTexture( GL_TEXTURE1 );
-	memSMF->material->BindSpec();
-	glActiveTexture( GL_TEXTURE2 );
-	memSMF->material->BindNorm();
-	glActiveTexture( GL_TEXTURE3 );
-	memSMF->material->BindEmit();
-
-	glCullFace( GL_BACK ); // TODO: eugh
-
 	// viewmodel FOV
 	if ( currententity->flags & RF_WEAPONMODEL )
 	{
@@ -894,7 +882,24 @@ void R_DrawStaticMeshFile( entity_t *e )
 		glUniformMatrix4fv( 6, 1, GL_FALSE, (const GLfloat *)&newStore );
 	}
 
-	glDrawElements( GL_TRIANGLES, memSMF->numIndices, GL_UNSIGNED_SHORT, (void *)( 0 ) );
+	glCullFace( GL_BACK ); // TODO: eugh
+
+	mSMFMesh_t *meshes = reinterpret_cast<mSMFMesh_t *>( (byte *)memSMF + sizeof( mSMF_t ) );
+	
+	for ( uint32 i = 0; i < memSMF->numMeshes; ++i )
+	{
+		// HACK: this should go away when bsp rendering is nuked
+		glActiveTexture( GL_TEXTURE0 );
+		meshes[i].material->Bind();
+		glActiveTexture( GL_TEXTURE1 );
+		meshes[i].material->BindSpec();
+		glActiveTexture( GL_TEXTURE2 );
+		meshes[i].material->BindNorm();
+		glActiveTexture( GL_TEXTURE3 );
+		meshes[i].material->BindEmit();
+
+		glDrawElements( GL_TRIANGLES, meshes[i].count, GL_UNSIGNED_SHORT, (void *)( meshes[i].offset * 3 ) );
+	}
 
 	glCullFace( GL_FRONT ); // TODO: eugh
 

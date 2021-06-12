@@ -482,30 +482,31 @@ namespace fmtSMF
 	{
 		int32 fourCC;
 		int32 version;
-		uint32 numVerts;
-		uint32 offsetVerts;		// offset in file to vertex data
-		uint32 numIndices;
-		uint32 offsetIndices;	// offset in file to index data
 		uint32 numMeshes;
 		uint32 offsetMeshes;
+		uint32 numVerts;
+		uint32 offsetVerts;			// offset in file to vertex data
+		uint32 numIndices;
+		uint32 offsetIndices;		// offset in file to index data
+	};
+
+	// a mesh represents a single draw call, a model can have multiple draw meshes
+	struct mesh_t
+	{
+		char materialName[256];		// "materials/models/alien01/grimbles.mat"
+		uint32 offsetIndices;		// offset into the index buffer
+		uint32 countIndices;		// number of indices 
 	};
 
 	struct vertex_t
 	{
-		vec3 xyz;
+		vec3 pos;
 		vec2 st;
 		vec3 normal;
 		vec3 tangent;
 	};
 
 	using index_t = uint16;
-
-	struct mesh_t
-	{
-		char materialName[256];	// "materials/models/alien01/grimbles.mat"
-		uint32 offsetIndices;	// offset into the index buffer
-		uint32 countIndices;	// number of indices 
-	};
 }
 
 //-------------------------------------------------------------------------------------------------
