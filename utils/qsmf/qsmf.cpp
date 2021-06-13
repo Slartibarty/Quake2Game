@@ -47,10 +47,9 @@ struct fatVertex_t
 	int materialID;
 };
 
-// stores persistent information about the data a FbxMesh contributed to this SMF
-struct meshContribution_t
+struct range_t
 {
-	std::vector<fatVertex_t> vertices;
+	uint32 offset, count;
 };
 
 using mesh_t = fmtSMF::mesh_t;
@@ -234,19 +233,20 @@ static int SortFatVertices( const void *p1, const void *p2 )
 	return 0;
 }
 
-static void AddMeshContribution( FbxMesh *pMesh, meshContribution_t &contribution, std::vector<std::string> &materialNames )
+static void AddMeshContribution( FbxMesh *pMesh, std::vector<fatVertex_t> &contribution, std::vector<std::string> &materialNames )
 {
 	constexpr int polygonSize = 3;
 
 	const FbxNode *pNode = pMesh->GetNode();
 
 	const int polygonCount = pMesh->GetPolygonCount();
+	assert( polygonCount > 0 );
 	const FbxVector4 *pControlPoints = pMesh->GetControlPoints();
 
 	const FbxGeometryElementMaterial *pMaterial = pMesh->GetElementMaterial( 0 );
 	assert( pMaterial );
 
-	contribution.vertices.reserve( polygonCount * polygonSize );
+	contribution.reserve( contribution.size() + polygonCount * polygonSize );
 
 	int vertexID = 0;
 	int lastMatID = -1;
@@ -261,7 +261,7 @@ static void AddMeshContribution( FbxMesh *pMesh, meshContribution_t &contributio
 				continue;
 			}
 
-			fatVertex_t &vertex = contribution.vertices.emplace_back();
+			fatVertex_t &vertex = contribution.emplace_back();
 
 			const FbxVector4 controlPoint = pControlPoints[controlPointIndex];
 			vertex.pos.x = static_cast<float>( controlPoint[0] );
@@ -270,7 +270,7 @@ static void AddMeshContribution( FbxMesh *pMesh, meshContribution_t &contributio
 
 			const FbxVector2 uv = FBX_GetUV( pMesh, polyIter, vertIter );
 			vertex.st.x = static_cast<float>( uv[0] );
-			vertex.st.y = static_cast<float>( uv[1] );
+			vertex.st.y = static_cast<float>( 1.0 - uv[1] );
 
 			const FbxVector4 normal = FBX_GetNormal( pMesh, vertexID );
 			vertex.normal.x = static_cast<float>( normal[0] );
@@ -283,7 +283,7 @@ static void AddMeshContribution( FbxMesh *pMesh, meshContribution_t &contributio
 			vertex.tangent.z = static_cast<float>( tangent[2] );
 
 			// find the name for this vertex, then match it to the array, if it doesn't exist, add it
-			const int materialID = pMaterial->GetIndexArray().GetAt( vertexID );
+			const int materialID = pMaterial->GetIndexArray().GetAt( polyIter );
 			const FbxSurfaceMaterial *pLocalMat = pNode->GetMaterial( materialID );
 			assert( pLocalMat );
 			const char *pName = pLocalMat->GetName();
@@ -310,6 +310,8 @@ static void AddMeshContribution( FbxMesh *pMesh, meshContribution_t &contributio
 	}
 
 	// rawVertices is now full of complete vertex data
+
+	// transform and scale the vertices
 
 	//SetupMeshes( pMesh, rawMeshes, rawVertices, rawIndices );
 }
@@ -349,6 +351,109 @@ static void MeshifyTriSoup(
 }
 #endif
 
+static void ListMaterialIDs( std::vector<fatVertex_t> &contributions )
+{
+	for ( uint i = 0; i < (uint)contributions.size(); ++i )
+	{
+		Com_Printf( "%d", contributions[i].materialID );
+		// every 20 characters, print a newline
+		if ( i % 80 == 0 && i != 0 )
+		{
+			Com_Print( "\n" );
+		}
+	}
+	Com_Print( "\n" );
+}
+
+static void SortVertices( std::vector<fatVertex_t> &contributions )
+{
+	if ( verbose )
+	{
+		ListMaterialIDs( contributions );
+	}
+
+	qsort( contributions.data(), contributions.size(), sizeof( fatVertex_t ), SortFatVertices );
+
+	if ( verbose )
+	{
+		ListMaterialIDs( contributions );
+	}
+
+#if 0
+	const size_t indexCount = contributions.size();
+	uint32 *pRemapTable = (uint32 *)malloc( sizeof( uint32 ) * indexCount );
+
+	size_t vertexCount = (uint32)meshopt_generateVertexRemap( pRemapTable, nullptr, indexCount, contributions.data(), indexCount, sizeof( fatVertex_t ) );
+
+	uint32 *pTempOutIndices = (uint32 *)malloc( sizeof( uint32 ) * indexCount );
+
+	outVertices.resize( vertexCount );
+
+	meshopt_remapIndexBuffer( pTempOutIndices, nullptr, indexCount, pRemapTable );
+	meshopt_remapVertexBuffer( outVertices.data(), contributions.data(), indexCount, sizeof( fatVertex_t ), pRemapTable );
+
+	for ( size_t i = 0; i < indexCount; ++i )
+	{
+
+	}
+
+	// TODO
+	outIndices.resize( indexCount );
+
+	free( pTempOutIndices );
+	free( pRemapTable );
+#endif
+}
+
+static void IndexMesh(
+	const std::vector<fatVertex_t> &fatVertices,
+	std::vector<vertex_t> &vertices,
+	std::vector<index_t> &indices )
+{
+	vertices.reserve( fatVertices.size() );
+	indices.reserve( fatVertices.size() ); // TODO: is it faster to do resize() then direct access?
+
+	for ( uint fatIter = 0; fatIter < (uint)fatVertices.size(); ++fatIter )
+	{
+		const fatVertex_t &fatVertex = fatVertices[fatIter];
+
+		// create an index for this vertex
+		uint32 index = UINT32_MAX;
+
+		// check all vertices to see if we have already created a vertex that is
+		// close enough to this one
+		for ( uint vertIter = 0; vertIter < (uint)vertices.size(); ++vertIter )
+		{
+			vertex_t &vertex = vertices[vertIter];
+
+			if ( Vec3Compare( fatVertex.pos, vertex.pos ) &&
+				 Vec2Compare( fatVertex.st, vertex.st ) &&
+				 Vec3Compare( fatVertex.normal, vertex.normal ) )
+			{
+				// average the tangents
+				vertex.tangent.Add( fatVertex.tangent );
+
+				index = vertIter;
+			}
+		}
+
+		if ( index == UINT32_MAX )
+		{
+			// new vertex
+			vertex_t &vertex = vertices.emplace_back();
+
+			vertex.pos = fatVertices[fatIter].pos;
+			vertex.st = fatVertices[fatIter].st;
+			vertex.normal = fatVertices[fatIter].normal;
+			vertex.tangent = fatVertices[fatIter].tangent;
+
+			index = static_cast<uint32>( vertices.size() - 1 );
+		}
+
+		indices.push_back( static_cast<index_t>( index ) );
+	}
+}
+
 static int Operate()
 {
 	FbxManager *pManager = FbxManager::Create();
@@ -365,13 +470,13 @@ static int Operate()
 	FbxNode *pRootNode = pScene->GetRootNode();
 	if ( pRootNode )
 	{
-		int nodeCount = pRootNode->GetChildCount( true );
+		const int nodeCount = pRootNode->GetChildCount( true );
 
 		Com_Printf( "Scene has %d node%s\n", nodeCount, nodeCount != 1 ? "s" : "" );
 
 		// final vertices
 		std::vector<std::string> materialNames;
-		std::vector<meshContribution_t> contributions;
+		std::vector<fatVertex_t> contributions;
 
 		for ( int i = 0; i < pRootNode->GetChildCount( false ); ++i )
 		{
@@ -390,56 +495,52 @@ static int Operate()
 				continue;
 			}
 
-			meshContribution_t &contribution = contributions.emplace_back();
-
-			AddMeshContribution( pMesh, contribution, materialNames );
+			AddMeshContribution( pMesh, contributions, materialNames );
 		}
 
 		Com_Printf(
-			"Collected trisoup contributions from %zu meshes\n"
 			"Scene contains %zu active materials\n",
-			contributions.size(), materialNames.size()
+			//"Collected trisoup contributions from %zu meshes\n",
+			materialNames.size()//, contributions.size()
 		);
 
-		/*if ( verbose )
+		SortVertices( contributions );
+
+		std::vector<mesh_t> ranges;
+
+		// create mesh ranges
+		uint32 iterVert = 0;
+		int lastID = -1;
+		int lastIndex = -1;
+		for ( ; iterVert < (uint32)contributions.size(); ++iterVert )
 		{
-			for ( uint i = 0; i < (uint)rawVertices.size(); ++i )
+			const auto &contribution = contributions[iterVert];
+
+			if ( contribution.materialID != lastID )
 			{
-				Com_Printf( "%u", rawVertices[i].materialID );
-				// every 20 characters, print a newline
-				if ( i % 80 == 0 && i != 0 )
+				mesh_t &range = ranges.emplace_back();
+
+				Q_strcpy_s( range.materialName, materialNames[contribution.materialID].c_str() );
+				range.offsetIndices = iterVert * sizeof( fmtSMF::index_t ); // GL offset is in bytes
+
+				if ( lastIndex != -1 )
 				{
-					Com_Print( "\n" );
+					ranges[lastIndex].countIndices = iterVert - ranges[lastIndex].offsetIndices;
 				}
+
+				lastID = contribution.materialID;
+				lastIndex = static_cast<int>( ranges.size() - 1 );
 			}
-			Com_Print( "\n" );
 		}
+		
+		ranges[lastIndex].countIndices = iterVert - ranges[lastIndex].offsetIndices;
 
-		qsort( rawVertices.data(), rawVertices.size(), sizeof( fatVertex_t ), SortFatVertices );
-
-		if ( verbose )
-		{
-			for ( uint i = 0; i < (uint)rawVertices.size(); ++i )
-			{
-				Com_Printf( "%u", rawVertices[i].materialID );
-				// every 20 characters, print a newline
-				if ( i % 80 == 0 && i != 0 )
-				{
-					Com_Print( "\n" );
-				}
-			}
-			Com_Print( "\n" );
-		}*/
-
-		/*
-		std::vector<mesh_t> outMeshes;
 		std::vector<vertex_t> outVertices;
 		std::vector<index_t> outIndices;
 
-		MeshifyTriSoup( outMeshes, outVertices, outIndices, rawVertices, pFirstMesh );
-		*/
+		IndexMesh( contributions, outVertices, outIndices );
 
-		//WriteSMF( rawMeshes, rawVertices, rawIndices );
+		WriteSMF( ranges, outVertices, outIndices );
 	}
 
 	pManager->Destroy();

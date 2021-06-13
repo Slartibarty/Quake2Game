@@ -898,7 +898,7 @@ void R_DrawStaticMeshFile( entity_t *e )
 		glActiveTexture( GL_TEXTURE3 );
 		meshes[i].material->BindEmit();
 
-		glDrawElements( GL_TRIANGLES, meshes[i].count, GL_UNSIGNED_SHORT, (void *)( meshes[i].offset * 3 ) );
+		glDrawElements( GL_TRIANGLES, meshes[i].count, GL_UNSIGNED_SHORT, (void *)( (uintptr_t)meshes[i].offset ) );
 	}
 
 	glCullFace( GL_FRONT ); // TODO: eugh
