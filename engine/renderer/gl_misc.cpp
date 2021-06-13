@@ -12,11 +12,13 @@
 ===================================================================================================
 */
 
+static constexpr size_t MaxScreenshots = 999;
+
 struct threadData_t
 {
-	char filename[MAX_OSPATH];
-	byte *pixBuffer;
-	int width, height;
+	char	filename[MAX_OSPATH];
+	byte *	pixBuffer;
+	int		width, height;
 };
 
 static uint32 PNG_ThreadProc( void *params )
@@ -46,33 +48,33 @@ GL_Screenshot_Internal
 ========================
 */
 static void GL_Screenshot_Internal( bool png )
-{
-	size_t i;
-	char checkname[MAX_OSPATH];
-	char picname[64];
-	FILE *handle;
-	byte *pixbuffer;
-	
+{	
 	// create the screenshots directory if it doesn't exist
+	char checkname[MAX_QPATH];
 	Q_sprintf_s( checkname, "%s/screenshots", FS_Gamedir() );
 	Sys_CreateDirectory( checkname );
 
 	// find a file name to save it to
+	char picname[16];
 	Q_sprintf_s( picname, "quake00.%s", png ? "png" : "tga" );
 
-	for ( i = 0; i <= 99; ++i )
+	size_t i;
+
+	for ( i = 0; i <= MaxScreenshots; ++i )
 	{
 		picname[5] = i / 10 + '0';
 		picname[6] = i % 10 + '0';
 		Q_sprintf_s( checkname, "%s/screenshots/%s", FS_Gamedir(), picname );
-		handle = fopen( checkname, "rb" );
-		if ( !handle )
-			break;	// file doesn't exist
+		FILE *handle = fopen( checkname, "rb" );
+		if ( !handle ) {
+			// file doesn't exist
+			break;
+		}
 		fclose( handle );
 	}
-	if ( i == 100 )
+	if ( i == MaxScreenshots + 1 )
 	{
-		Com_Printf( "GL_ScreenShot_f: Couldn't create a file\n" );
+		Com_Print( "GL_Screenshot: Couldn't create a file\n" );
 		return;
 	}
 
@@ -83,7 +85,7 @@ static void GL_Screenshot_Internal( bool png )
 		addsize = 18; // TGA Header
 		c += addsize;
 	}
-	pixbuffer = (byte *)Mem_Alloc( c );
+	byte *pixbuffer = (byte *)Mem_Alloc( c );
 
 	glReadPixels( 0, 0, vid.width, vid.height, GL_RGB, GL_UNSIGNED_BYTE, pixbuffer + addsize );
 
@@ -103,7 +105,7 @@ static void GL_Screenshot_Internal( bool png )
 	}
 	else
 	{
-		handle = fopen( checkname, "wb" );
+		FILE *handle = fopen( checkname, "wb" );
 		assert( handle );
 
 		memset( pixbuffer, 0, 18 );
