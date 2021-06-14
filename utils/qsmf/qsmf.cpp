@@ -32,6 +32,7 @@
 #include <unordered_map>
 
 // external libs
+#include "Inc/DirectXMath.h"
 #include "fbxsdk.h"
 #include "meshoptimizer.h"
 
@@ -45,11 +46,6 @@ struct fatVertex_t
 	vec3 normal;
 	vec3 tangent;
 	int materialID;
-};
-
-struct range_t
-{
-	uint32 offset, count;
 };
 
 using mesh_t = fmtSMF::mesh_t;
@@ -160,57 +156,6 @@ static void WriteSMF(
 	Com_Printf( "Successfully wrote %s\n", g_options.smfName );
 }
 
-static void SetupMeshes( FbxMesh *pMesh,
-	std::vector<mesh_t> &rawMeshes,
-	std::vector<vertex_t> &rawVertices,
-	std::vector<index_t> &rawIndices )
-{
-	FbxGeometryElementMaterial *pMaterial = pMesh->GetElementMaterial( 0 );
-
-	const int triangleCount = static_cast<int>( rawIndices.size() / 3 );
-
-	int indexIter = 0, triIter = 0;
-	int lastID = -1;
-	int lastMeshIndex = -1;
-	int lastOffset = 0;
-	for ( ; indexIter < rawIndices.size(); indexIter += 3, ++triIter )
-	{
-		int id = pMaterial->GetIndexArray().GetAt( triIter );
-
-		if ( id != lastID )
-		{
-			// new mesh
-			mesh_t &mesh = rawMeshes.emplace_back();
-
-			FbxSurfaceMaterial *pLocalMat = pMesh->GetNode()->GetMaterial( id );
-
-			assert( pLocalMat );
-
-			// *trollface*
-			const char *materialName = pLocalMat->GetName();
-
-			Q_strcpy_s( mesh.materialName, materialName );
-
-			mesh.offsetIndices = static_cast<uint32>( indexIter );
-			mesh.countIndices = 0;
-
-			if ( lastMeshIndex != -1 )
-			{
-				rawMeshes[lastMeshIndex].countIndices = ( indexIter - lastOffset ) * 3;
-			}
-
-			lastID = id;
-			lastMeshIndex = static_cast<uint32>( rawMeshes.size() - 1 );
-			lastOffset = indexIter;
-		}
-	}
-
-	if ( rawMeshes[lastMeshIndex].countIndices == 0 )
-	{
-		rawMeshes[lastMeshIndex].countIndices = static_cast<uint32>( rawIndices.size() - lastOffset );
-	}
-}
-
 static int SortFatVertices( const void *p1, const void *p2 )
 {
 	const fatVertex_t *v1 = reinterpret_cast<const fatVertex_t *>( p1 );
@@ -233,8 +178,18 @@ static int SortFatVertices( const void *p1, const void *p2 )
 	return 0;
 }
 
+static void TransformContribution( const FbxNode *pNode, fatVertex_t *vertices, uint32 numVertices )
+{
+	FbxDouble3 translation = pNode->LclTranslation.Get();
+	FbxDouble3 rotation = pNode->LclRotation.Get();
+	FbxDouble3 scaling = pNode->LclScaling.Get();
+}
+
+static DirectX::XMVECTORF32 g_XMZUp = { { { 0.0f, 0.0f, 1.0f, 0.0f } } };
+
 static void AddMeshContribution( FbxMesh *pMesh, std::vector<fatVertex_t> &contribution, std::vector<std::string> &materialNames )
 {
+	using namespace DirectX;
 	constexpr int polygonSize = 3;
 
 	const FbxNode *pNode = pMesh->GetNode();
@@ -246,7 +201,36 @@ static void AddMeshContribution( FbxMesh *pMesh, std::vector<fatVertex_t> &contr
 	const FbxGeometryElementMaterial *pMaterial = pMesh->GetElementMaterial( 0 );
 	assert( pMaterial );
 
+#if 0
+
+	FbxDouble3 dblTranslation = pNode->LclTranslation.Get();
+	FbxDouble3 dblRotation = pNode->LclRotation.Get();
+	FbxDouble3 dblScaling = pNode->LclScaling.Get();
+
+	float fltTranslation[3];
+	fltTranslation[0] = dblTranslation[0];
+	fltTranslation[1] = dblTranslation[1];
+	fltTranslation[2] = dblTranslation[2];
+	float fltRotation[3];
+	fltRotation[0] = dblRotation[0];
+	fltRotation[1] = dblRotation[1];
+	fltRotation[2] = dblRotation[2];
+	float fltScaling[3];
+	fltScaling[0] = dblScaling[0];
+	fltScaling[1] = dblScaling[1];
+	fltScaling[2] = dblScaling[2];
+
 	contribution.reserve( contribution.size() + polygonCount * polygonSize );
+
+	XMVECTOR xmTranslation = XMLoadFloat3( (XMFLOAT3 *)&fltTranslation );
+	XMVECTOR xmRotation = XMLoadFloat3( (XMFLOAT3 *)&fltRotation );
+	XMVECTOR xmScaling = XMLoadFloat3( (XMFLOAT3 *)&fltScaling );
+
+	XMMATRIX transformMatrix = XMMatrixTransformation( g_XMZero, g_XMZero, g_XMZero, g_XMZero, g_XMZero, xmTranslation );
+	//XMMATRIX transformMatrix = XMMatrixTranslation( translation[0], translation[1], translation[2] );
+	//XMMATRIX transformMatrix = XMMatrixRotationRollPitchYaw( fltRotation[0], fltRotation[1], fltRotation[2] );
+
+#endif
 
 	int vertexID = 0;
 	int lastMatID = -1;
@@ -263,10 +247,30 @@ static void AddMeshContribution( FbxMesh *pMesh, std::vector<fatVertex_t> &contr
 
 			fatVertex_t &vertex = contribution.emplace_back();
 
-			const FbxVector4 controlPoint = pControlPoints[controlPointIndex];
-			vertex.pos.x = static_cast<float>( controlPoint[0] );
-			vertex.pos.y = static_cast<float>( controlPoint[1] );
-			vertex.pos.z = static_cast<float>( controlPoint[2] );
+#if 0
+
+			float fltControl[3];
+			fltControl[0] = pControlPoints[controlPointIndex][0];
+			fltControl[1] = pControlPoints[controlPointIndex][1];
+			fltControl[2] = pControlPoints[controlPointIndex][2];
+
+			XMVECTOR xmVertex = XMLoadFloat3( (XMFLOAT3 *)&fltControl );
+			xmVertex = XMVector3Transform( xmVertex, transformMatrix );
+
+			XMFLOAT3 newControlPoint;
+			XMStoreFloat3( &newControlPoint, xmVertex );
+
+			vertex.pos.x = static_cast<float>( newControlPoint.x );
+			vertex.pos.y = static_cast<float>( newControlPoint.y );
+			vertex.pos.z = static_cast<float>( newControlPoint.z );
+
+#else
+
+			vertex.pos.x = static_cast<float>( pControlPoints[controlPointIndex][0] );
+			vertex.pos.y = static_cast<float>( pControlPoints[controlPointIndex][1] );
+			vertex.pos.z = static_cast<float>( pControlPoints[controlPointIndex][2] );
+
+#endif
 
 			const FbxVector2 uv = FBX_GetUV( pMesh, polyIter, vertIter );
 			vertex.st.x = static_cast<float>( uv[0] );
@@ -312,44 +316,10 @@ static void AddMeshContribution( FbxMesh *pMesh, std::vector<fatVertex_t> &contr
 	// rawVertices is now full of complete vertex data
 
 	// transform and scale the vertices
+	//TransformContribution( pNode, contribution.data() + oldSize, contribution.size() - oldSize );
 
 	//SetupMeshes( pMesh, rawMeshes, rawVertices, rawIndices );
 }
-
-#if 0
-static void MeshifyTriSoup(
-	std::vector<mesh_t> &outMeshes,
-	std::vector<vertex_t> &outVertices,
-	std::vector<index_t> &outIndices,
-	std::vector<fatVertex_t> &inVertices,
-	FbxMesh *pMesh )
-{
-	std::vector<mesh_t> tempMeshes;
-
-	// set up meshes, we'll use these to merge identical vertices individually
-	{
-		uint i = 0;
-		int32 lastID = -1;
-		for ( ; i < (uint)inVertices.size(); ++i )
-		{
-			const fatVertex_t &fatVertex = inVertices[i];
-
-			if ( fatVertex.materialID != lastID )
-			{
-				// new material
-				mesh_t &mesh = tempMeshes.emplace_back();
-
-				// *trollface*
-				const char *materialName = pMesh->GetNode()->GetMaterial( fatVertex.materialID )->GetName();
-
-				Q_strcpy_s( mesh.materialName, materialName );
-
-				lastID = fatVertex.materialID;
-			}
-		}
-	}
-}
-#endif
 
 static void ListMaterialIDs( std::vector<fatVertex_t> &contributions )
 {
@@ -378,37 +348,12 @@ static void SortVertices( std::vector<fatVertex_t> &contributions )
 	{
 		ListMaterialIDs( contributions );
 	}
-
-#if 0
-	const size_t indexCount = contributions.size();
-	uint32 *pRemapTable = (uint32 *)malloc( sizeof( uint32 ) * indexCount );
-
-	size_t vertexCount = (uint32)meshopt_generateVertexRemap( pRemapTable, nullptr, indexCount, contributions.data(), indexCount, sizeof( fatVertex_t ) );
-
-	uint32 *pTempOutIndices = (uint32 *)malloc( sizeof( uint32 ) * indexCount );
-
-	outVertices.resize( vertexCount );
-
-	meshopt_remapIndexBuffer( pTempOutIndices, nullptr, indexCount, pRemapTable );
-	meshopt_remapVertexBuffer( outVertices.data(), contributions.data(), indexCount, sizeof( fatVertex_t ), pRemapTable );
-
-	for ( size_t i = 0; i < indexCount; ++i )
-	{
-
-	}
-
-	// TODO
-	outIndices.resize( indexCount );
-
-	free( pTempOutIndices );
-	free( pRemapTable );
-#endif
 }
 
 static void IndexMesh(
 	const std::vector<fatVertex_t> &fatVertices,
 	std::vector<vertex_t> &vertices,
-	std::vector<index_t> &indices )
+	std::vector<uint32> &indices )
 {
 	vertices.reserve( fatVertices.size() );
 	indices.reserve( fatVertices.size() ); // TODO: is it faster to do resize() then direct access?
@@ -450,7 +395,7 @@ static void IndexMesh(
 			index = static_cast<uint32>( vertices.size() - 1 );
 		}
 
-		indices.push_back( static_cast<index_t>( index ) );
+		indices.push_back( index );
 	}
 }
 
@@ -521,7 +466,7 @@ static int Operate()
 				mesh_t &range = ranges.emplace_back();
 
 				Q_strcpy_s( range.materialName, materialNames[contribution.materialID].c_str() );
-				range.offsetIndices = iterVert * sizeof( fmtSMF::index_t ); // GL offset is in bytes
+				range.offsetIndices = iterVert;
 
 				if ( lastIndex != -1 )
 				{
@@ -536,9 +481,43 @@ static int Operate()
 		ranges[lastIndex].countIndices = iterVert - ranges[lastIndex].offsetIndices;
 
 		std::vector<vertex_t> outVertices;
-		std::vector<index_t> outIndices;
+		std::vector<uint32> tmpIndices;
 
-		IndexMesh( contributions, outVertices, outIndices );
+		IndexMesh( contributions, outVertices, tmpIndices );
+
+		for ( uint i = 0; i < (uint)ranges.size(); ++i )
+		{
+			uint32 *pOffsetIndices = tmpIndices.data() + ranges[i].offsetIndices;
+
+			meshopt_optimizeVertexCache(
+				pOffsetIndices, pOffsetIndices,
+				ranges[i].countIndices, outVertices.size() );
+
+			meshopt_optimizeOverdraw(
+				pOffsetIndices, pOffsetIndices,
+				ranges[i].countIndices, (const float *)outVertices.data(), outVertices.size(), sizeof( vertex_t ), 1.05f );
+		}
+
+		size_t numVertices = meshopt_optimizeVertexFetch(
+			outVertices.data(), tmpIndices.data(),
+			tmpIndices.size(), outVertices.data(), outVertices.size(), sizeof( vertex_t ) );
+
+		outVertices.resize( numVertices );
+
+		std::vector<index_t> outIndices;
+		outIndices.resize( tmpIndices.size() );
+
+		// make the indices small
+		for ( uint i = 0; i < (uint)tmpIndices.size(); ++i )
+		{
+			outIndices[i] = static_cast<index_t>( tmpIndices[i] );
+		}
+
+		// optimise the range offsets for GL, so we don't do a * sizeof(index_t) every draw, haha
+		for ( uint i = 0; i < (uint)ranges.size(); ++i )
+		{
+			ranges[i].offsetIndices *= sizeof( index_t );
+		}
 
 		WriteSMF( ranges, outVertices, outIndices );
 	}

@@ -514,7 +514,7 @@ project "qsmf"
 	floatingpoint "Default"
 	targetdir "../game"
 	debugdir "../game"
-	links { "core", "zlib" }
+	links { "core", "zlib", "meshoptimizer" }
 	includedirs { "utils/common2", "thirdparty/meshoptimizer/src", fbxsdk_include_dir }
 	
 	-- link to the FBX SDK
