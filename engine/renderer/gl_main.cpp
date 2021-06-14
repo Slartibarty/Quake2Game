@@ -238,7 +238,7 @@ static void R_DrawThingy( const vec3_t origin, const vec3_t angles, uint32 color
 	using namespace DirectX;
 
 	XMMATRIX modelMatrix = XMMatrixMultiply(
-		XMMatrixRotationRollPitchYaw( DEG2RAD( angles[PITCH] ), DEG2RAD( angles[ROLL] ), DEG2RAD( angles[YAW] ) ),
+		XMMatrixRotationX( DEG2RAD( angles[ROLL] ) ) * XMMatrixRotationY( DEG2RAD( angles[PITCH] ) ) * XMMatrixRotationZ( DEG2RAD( angles[YAW] ) ),
 		//XMMatrixRotationRollPitchYaw( 0.0f, 0.0f, 0.0f ),
 		XMMatrixTranslation( origin[0], origin[1], origin[2] )
 	);
@@ -278,7 +278,7 @@ static void R_DrawNullModel( entity_t *e )
 
 /*
 ========================
-R_DrawLight
+R_DrawLights
 
 Draws all lights in the staticlights structure
 ========================
@@ -289,11 +289,13 @@ static void R_DrawLights()
 		return;
 	}
 
+	vec3_t noAngle{};
+
 	for ( int i = 0; i < mod_numStaticLights; ++i )
 	{
 		staticLight_t &light = mod_staticLights[i];
 
-		R_DrawThingy( light.origin, vec3_origin, colors::white );
+		R_DrawThingy( light.origin, noAngle, colors::white );
 	}
 }
 

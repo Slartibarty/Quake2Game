@@ -254,7 +254,7 @@ R_Init
 */
 static void R_CreateDebugMesh()
 {
-#if 0
+#if 1
 	glGenVertexArrays( 1, &tr.debugMeshVAO );
 	glGenBuffers( 1, &tr.debugMeshVBO );
 
@@ -289,7 +289,7 @@ R_DestroyDebugMesh
 */
 static void R_DestroyDebugMesh()
 {
-#if 0
+#if 1
 	glDeleteBuffers( 1, &tr.debugMeshVBO );
 	glDeleteVertexArrays( 1, &tr.debugMeshVAO );
 #endif

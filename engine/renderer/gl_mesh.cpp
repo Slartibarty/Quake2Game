@@ -755,7 +755,7 @@ void R_DrawStaticMeshFile( entity_t *e )
 
 	XMMATRIX modelMatrix = XMMatrixMultiply(
 		//XMMatrixRotationRollPitchYaw( DEG2RAD( -e->angles[PITCH] ), DEG2RAD( -e->angles[YAW] ), DEG2RAD( e->angles[ROLL] ) ),
-		XMMatrixRotationX( DEG2RAD( e->angles[2] ) ) * XMMatrixRotationY( DEG2RAD( e->angles[0] ) ) * XMMatrixRotationZ( DEG2RAD( e->angles[1] ) ),
+		XMMatrixRotationX( DEG2RAD( e->angles[ROLL] ) ) * XMMatrixRotationY( DEG2RAD( e->angles[PITCH] ) ) * XMMatrixRotationZ( DEG2RAD( e->angles[YAW] ) ),
 		//XMMatrixRotationRollPitchYaw( 0.0f, 0.0f, 0.0f ),
 		XMMatrixTranslation( e->origin[0], e->origin[1], e->origin[2] )
 	);

@@ -39,6 +39,9 @@
 // local
 #include "fbxutils.h"
 
+// comment out to disable meshoptimizer optimisations
+#define USE_MESHOPT
+
 struct fatVertex_t
 {
 	vec3 pos;
@@ -62,14 +65,14 @@ static options_t g_options;
 
 static void PrintUsage()
 {
-	Com_Print( "Usage: qsmf [options] input.obj output.smf\n" );
+	Com_Print( "Usage: qsmf [options] input.fbx output.smf\n" );
 }
 
 static void PrintHelp()
 {
 	Com_Print(
 		"Help:\n"
-		"  -verbose             : If present, this parameter enables verbose (debug) printing\n"
+		"  -verbose      : If present, this parameter enables verbose (debug) printing\n"
 	);
 }
 
@@ -84,15 +87,13 @@ static bool ParseCommandLine( int argc, char **argv )
 		return false;
 	}
 
-	Time_Init();
-
 	Q_strcpy_s( g_options.srcName, argv[argc - 2] );
 	Str_FixSlashes( g_options.srcName );
 	Q_strcpy_s( g_options.smfName, argv[argc - 1] );
 	Str_FixSlashes( g_options.smfName );
 
 	int argIter;
-	for ( argIter = 1; argIter < argc; ++argIter )
+	for ( argIter = 1; argIter < argc - 2; ++argIter )
 	{
 		const char *token = argv[argIter];
 
@@ -101,6 +102,9 @@ static bool ParseCommandLine( int argc, char **argv )
 			verbose = true;
 			continue;
 		}
+
+		Com_Printf( "Unrecognised token: %s\n", token );
+		return false;
 	}
 
 	// prematurely open our output file so we are sure we can write to it
@@ -128,7 +132,7 @@ static void WriteSMF(
 		return;
 	}
 
-	fmtSMF::header_t header;
+	fmtSMF::header_t header{};
 
 	uint32 depth = sizeof( header );
 
@@ -145,7 +149,7 @@ static void WriteSMF(
 
 	assert( header.numIndices % 3 == 0 );
 
-	Com_Printf( "Model stats: %u verts, %u faces, %u indices\n", header.numVerts, header.numIndices / 3, header.numIndices );
+	Com_Printf( "Model stats: %u verts, %u triangles, %u indices\n", header.numVerts, header.numIndices / 3, header.numIndices );
 
 	fwrite( &header, sizeof( header ), 1, handle );
 	fwrite( rawMeshes.data(), rawMeshes.size() * sizeof( mesh_t ), 1, handle );
@@ -154,35 +158,6 @@ static void WriteSMF(
 	fclose( handle );
 
 	Com_Printf( "Successfully wrote %s\n", g_options.smfName );
-}
-
-static int SortFatVertices( const void *p1, const void *p2 )
-{
-	const fatVertex_t *v1 = reinterpret_cast<const fatVertex_t *>( p1 );
-	const fatVertex_t *v2 = reinterpret_cast<const fatVertex_t *>( p2 );
-
-	if ( v1->materialID < v2->materialID )
-	{
-		return -1;
-	}
-	if ( v1->materialID == v2->materialID )
-	{
-		return 0;
-	}
-	if ( v1->materialID > v2->materialID )
-	{
-		return 1;
-	}
-
-	ASSUME( 0 );
-	return 0;
-}
-
-static void TransformContribution( const FbxNode *pNode, fatVertex_t *vertices, uint32 numVertices )
-{
-	FbxDouble3 translation = pNode->LclTranslation.Get();
-	FbxDouble3 rotation = pNode->LclRotation.Get();
-	FbxDouble3 scaling = pNode->LclScaling.Get();
 }
 
 static DirectX::XMVECTORF32 g_XMZUp = { { { 0.0f, 0.0f, 1.0f, 0.0f } } };
@@ -233,7 +208,6 @@ static void AddMeshContribution( FbxMesh *pMesh, std::vector<fatVertex_t> &contr
 #endif
 
 	int vertexID = 0;
-	int lastMatID = -1;
 	for ( int polyIter = 0; polyIter < polygonCount; ++polyIter )
 	{
 		for ( int vertIter = 0; vertIter < polygonSize; ++vertIter, ++vertexID )
@@ -312,21 +286,14 @@ static void AddMeshContribution( FbxMesh *pMesh, std::vector<fatVertex_t> &contr
 			vertex.materialID = matchID;
 		}
 	}
-
-	// rawVertices is now full of complete vertex data
-
-	// transform and scale the vertices
-	//TransformContribution( pNode, contribution.data() + oldSize, contribution.size() - oldSize );
-
-	//SetupMeshes( pMesh, rawMeshes, rawVertices, rawIndices );
 }
 
-static void ListMaterialIDs( std::vector<fatVertex_t> &contributions )
+static void ListMaterialIDs( const std::vector<fatVertex_t> &contributions )
 {
 	for ( uint i = 0; i < (uint)contributions.size(); ++i )
 	{
 		Com_Printf( "%d", contributions[i].materialID );
-		// every 20 characters, print a newline
+		// every 80 characters, print a newline
 		if ( i % 80 == 0 && i != 0 )
 		{
 			Com_Print( "\n" );
@@ -335,8 +302,37 @@ static void ListMaterialIDs( std::vector<fatVertex_t> &contributions )
 	Com_Print( "\n" );
 }
 
-static void SortVertices( std::vector<fatVertex_t> &contributions )
+// UNUSED
+static int SortFatVertices( const void *p1, const void *p2 )
 {
+	const fatVertex_t *v1 = reinterpret_cast<const fatVertex_t *>( p1 );
+	const fatVertex_t *v2 = reinterpret_cast<const fatVertex_t *>( p2 );
+
+	if ( v1->materialID < v2->materialID )
+	{
+		return -1;
+	}
+	if ( v1->materialID == v2->materialID )
+	{
+		return 0;
+	}
+	if ( v1->materialID > v2->materialID )
+	{
+		return 1;
+	}
+
+	ASSUME( 0 );
+	return 0;
+}
+
+static void SortVertices(
+	const std::vector<fatVertex_t> &contributions,
+	const std::vector<std::string> &materialNames,
+	std::vector<vertex_t> &sortedVertices,
+	std::vector<mesh_t> &ranges)
+{
+#if 0
+
 	if ( verbose )
 	{
 		ListMaterialIDs( contributions );
@@ -348,10 +344,64 @@ static void SortVertices( std::vector<fatVertex_t> &contributions )
 	{
 		ListMaterialIDs( contributions );
 	}
+
+#else
+
+	const int materialCount = (int)materialNames.size();
+
+	sortedVertices.reserve( contributions.size() );
+
+	// sort vertices into the new array, by material ID
+	for ( int matIter = 0; matIter < materialCount; ++matIter )
+	{
+		uint32 rangeStart = UINT32_MAX;
+
+		for ( uint vertIter = 0; vertIter < (uint)contributions.size(); ++vertIter )
+		{
+			const fatVertex_t &fatVertex = contributions[vertIter];
+
+			if ( fatVertex.materialID == matIter )
+			{
+				vertex_t &vertex = sortedVertices.emplace_back();
+
+				// stash off the first index
+				if ( rangeStart == UINT32_MAX )
+				{
+					rangeStart = static_cast<uint32>( sortedVertices.size() - 1 );
+				}
+
+				vertex.pos = fatVertex.pos;
+				vertex.st = fatVertex.st;
+				vertex.normal = fatVertex.normal;
+				vertex.tangent = fatVertex.tangent;
+			}
+		}
+
+		uint32 rangeEnd = static_cast<uint32>( sortedVertices.size() );
+		assert( rangeStart != rangeEnd );
+
+		uint32 rangeCount = rangeEnd - rangeStart;
+		assert( rangeCount >= 3 );
+
+		mesh_t &range = ranges.emplace_back();
+
+		Q_strcpy_s( range.materialName, materialNames[matIter].c_str() );
+		range.offsetIndices = rangeStart;
+		range.countIndices = rangeCount;
+	}
+
+	assert( sortedVertices.size() == contributions.size() );
+
+#endif
 }
 
+//
+// TODO: This is the slowest function in the entire program
+// 
+// the input vertices used to be fat, now they're not, hence the name
+//
 static void IndexMesh(
-	const std::vector<fatVertex_t> &fatVertices,
+	const std::vector<vertex_t> &fatVertices,
 	std::vector<vertex_t> &vertices,
 	std::vector<uint32> &indices )
 {
@@ -360,7 +410,7 @@ static void IndexMesh(
 
 	for ( uint fatIter = 0; fatIter < (uint)fatVertices.size(); ++fatIter )
 	{
-		const fatVertex_t &fatVertex = fatVertices[fatIter];
+		const vertex_t &fatVertex = fatVertices[fatIter];
 
 		// create an index for this vertex
 		uint32 index = UINT32_MAX;
@@ -387,15 +437,40 @@ static void IndexMesh(
 			// new vertex
 			vertex_t &vertex = vertices.emplace_back();
 
-			vertex.pos = fatVertices[fatIter].pos;
-			vertex.st = fatVertices[fatIter].st;
-			vertex.normal = fatVertices[fatIter].normal;
-			vertex.tangent = fatVertices[fatIter].tangent;
+			vertex.pos = fatVertex.pos;
+			vertex.st = fatVertex.st;
+			vertex.normal = fatVertex.normal;
+			vertex.tangent = fatVertex.tangent;
 
 			index = static_cast<uint32>( vertices.size() - 1 );
 		}
 
 		indices.push_back( index );
+	}
+}
+
+// UNUSED
+static void Dbg_IndexMesh(
+	const std::vector<fatVertex_t> &fatVertices,
+	std::vector<vertex_t> &vertices,
+	std::vector<uint32> &indices )
+{
+	vertices.reserve( fatVertices.size() );
+	indices.reserve( fatVertices.size() );
+
+	for ( uint fatIter = 0; fatIter < (uint)fatVertices.size(); ++fatIter )
+	{
+		const fatVertex_t &fatVertex = fatVertices[fatIter];
+
+		// new vertex
+		vertex_t &vertex = vertices.emplace_back();
+
+		vertex.pos = fatVertex.pos;
+		vertex.st = fatVertex.st;
+		vertex.normal = fatVertex.normal;
+		vertex.tangent = fatVertex.tangent;
+
+		indices.push_back( fatIter );
 	}
 }
 
@@ -449,41 +524,17 @@ static int Operate()
 			materialNames.size()//, contributions.size()
 		);
 
-		SortVertices( contributions );
-
+		std::vector<vertex_t> sortedVertices;
 		std::vector<mesh_t> ranges;
 
-		// create mesh ranges
-		uint32 iterVert = 0;
-		int lastID = -1;
-		int lastIndex = -1;
-		for ( ; iterVert < (uint32)contributions.size(); ++iterVert )
-		{
-			const auto &contribution = contributions[iterVert];
-
-			if ( contribution.materialID != lastID )
-			{
-				mesh_t &range = ranges.emplace_back();
-
-				Q_strcpy_s( range.materialName, materialNames[contribution.materialID].c_str() );
-				range.offsetIndices = iterVert;
-
-				if ( lastIndex != -1 )
-				{
-					ranges[lastIndex].countIndices = iterVert - ranges[lastIndex].offsetIndices;
-				}
-
-				lastID = contribution.materialID;
-				lastIndex = static_cast<int>( ranges.size() - 1 );
-			}
-		}
-		
-		ranges[lastIndex].countIndices = iterVert - ranges[lastIndex].offsetIndices;
+		SortVertices( contributions, materialNames, sortedVertices, ranges );
 
 		std::vector<vertex_t> outVertices;
-		std::vector<uint32> tmpIndices;
+		std::vector<uint32> tmpIndices;			// uint32 indices, so we can optimise with meshopt
 
-		IndexMesh( contributions, outVertices, tmpIndices );
+		IndexMesh( sortedVertices, outVertices, tmpIndices );
+
+#ifdef USE_MESHOPT
 
 		for ( uint i = 0; i < (uint)ranges.size(); ++i )
 		{
@@ -493,9 +544,12 @@ static int Operate()
 				pOffsetIndices, pOffsetIndices,
 				ranges[i].countIndices, outVertices.size() );
 
+			// TODO: what do we gain from doing this?
+			/*
 			meshopt_optimizeOverdraw(
 				pOffsetIndices, pOffsetIndices,
 				ranges[i].countIndices, (const float *)outVertices.data(), outVertices.size(), sizeof( vertex_t ), 1.05f );
+			*/
 		}
 
 		size_t numVertices = meshopt_optimizeVertexFetch(
@@ -504,12 +558,15 @@ static int Operate()
 
 		outVertices.resize( numVertices );
 
+#endif
+
 		std::vector<index_t> outIndices;
 		outIndices.resize( tmpIndices.size() );
 
 		// make the indices small
 		for ( uint i = 0; i < (uint)tmpIndices.size(); ++i )
 		{
+			assert( tmpIndices[i] < UINT16_MAX );
 			outIndices[i] = static_cast<index_t>( tmpIndices[i] );
 		}
 
