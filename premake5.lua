@@ -533,6 +533,8 @@ project "qsmf"
 			
 		"utils/common2/cmdlib.*",
 		
+		meshoptimizer_public,
+		
 		"utils/qsmf/*",
 	}
 	

@@ -32,7 +32,6 @@
 #include <unordered_map>
 
 // external libs
-#include "Inc/DirectXMath.h"
 #include "fbxsdk.h"
 #include "meshoptimizer.h"
 
@@ -160,11 +159,8 @@ static void WriteSMF(
 	Com_Printf( "Successfully wrote %s\n", g_options.smfName );
 }
 
-static DirectX::XMVECTORF32 g_XMZUp = { { { 0.0f, 0.0f, 1.0f, 0.0f } } };
-
 static void AddMeshContribution( FbxMesh *pMesh, std::vector<fatVertex_t> &contribution, std::vector<std::string> &materialNames )
 {
-	using namespace DirectX;
 	constexpr int polygonSize = 3;
 
 	const FbxNode *pNode = pMesh->GetNode();
@@ -176,36 +172,7 @@ static void AddMeshContribution( FbxMesh *pMesh, std::vector<fatVertex_t> &contr
 	const FbxGeometryElementMaterial *pMaterial = pMesh->GetElementMaterial( 0 );
 	assert( pMaterial );
 
-#if 0
-
-	FbxDouble3 dblTranslation = pNode->LclTranslation.Get();
-	FbxDouble3 dblRotation = pNode->LclRotation.Get();
-	FbxDouble3 dblScaling = pNode->LclScaling.Get();
-
-	float fltTranslation[3];
-	fltTranslation[0] = dblTranslation[0];
-	fltTranslation[1] = dblTranslation[1];
-	fltTranslation[2] = dblTranslation[2];
-	float fltRotation[3];
-	fltRotation[0] = dblRotation[0];
-	fltRotation[1] = dblRotation[1];
-	fltRotation[2] = dblRotation[2];
-	float fltScaling[3];
-	fltScaling[0] = dblScaling[0];
-	fltScaling[1] = dblScaling[1];
-	fltScaling[2] = dblScaling[2];
-
-	contribution.reserve( contribution.size() + polygonCount * polygonSize );
-
-	XMVECTOR xmTranslation = XMLoadFloat3( (XMFLOAT3 *)&fltTranslation );
-	XMVECTOR xmRotation = XMLoadFloat3( (XMFLOAT3 *)&fltRotation );
-	XMVECTOR xmScaling = XMLoadFloat3( (XMFLOAT3 *)&fltScaling );
-
-	XMMATRIX transformMatrix = XMMatrixTransformation( g_XMZero, g_XMZero, g_XMZero, g_XMZero, g_XMZero, xmTranslation );
-	//XMMATRIX transformMatrix = XMMatrixTranslation( translation[0], translation[1], translation[2] );
-	//XMMATRIX transformMatrix = XMMatrixRotationRollPitchYaw( fltRotation[0], fltRotation[1], fltRotation[2] );
-
-#endif
+	const FbxMatrix transformMatrix( pNode->LclTranslation.Get(), pNode->LclRotation.Get(), pNode->LclScaling.Get() );
 
 	int vertexID = 0;
 	for ( int polyIter = 0; polyIter < polygonCount; ++polyIter )
@@ -221,30 +188,11 @@ static void AddMeshContribution( FbxMesh *pMesh, std::vector<fatVertex_t> &contr
 
 			fatVertex_t &vertex = contribution.emplace_back();
 
-#if 0
+			FbxVector4 finalControlPoint = transformMatrix.MultNormalize( pControlPoints[controlPointIndex] );
 
-			float fltControl[3];
-			fltControl[0] = pControlPoints[controlPointIndex][0];
-			fltControl[1] = pControlPoints[controlPointIndex][1];
-			fltControl[2] = pControlPoints[controlPointIndex][2];
-
-			XMVECTOR xmVertex = XMLoadFloat3( (XMFLOAT3 *)&fltControl );
-			xmVertex = XMVector3Transform( xmVertex, transformMatrix );
-
-			XMFLOAT3 newControlPoint;
-			XMStoreFloat3( &newControlPoint, xmVertex );
-
-			vertex.pos.x = static_cast<float>( newControlPoint.x );
-			vertex.pos.y = static_cast<float>( newControlPoint.y );
-			vertex.pos.z = static_cast<float>( newControlPoint.z );
-
-#else
-
-			vertex.pos.x = static_cast<float>( pControlPoints[controlPointIndex][0] );
-			vertex.pos.y = static_cast<float>( pControlPoints[controlPointIndex][1] );
-			vertex.pos.z = static_cast<float>( pControlPoints[controlPointIndex][2] );
-
-#endif
+			vertex.pos.x = static_cast<float>( finalControlPoint[0] );
+			vertex.pos.y = static_cast<float>( finalControlPoint[1] );
+			vertex.pos.z = static_cast<float>( finalControlPoint[2] );
 
 			const FbxVector2 uv = FBX_GetUV( pMesh, polyIter, vertIter );
 			vertex.st.x = static_cast<float>( uv[0] );
@@ -302,51 +250,12 @@ static void ListMaterialIDs( const std::vector<fatVertex_t> &contributions )
 	Com_Print( "\n" );
 }
 
-// UNUSED
-static int SortFatVertices( const void *p1, const void *p2 )
-{
-	const fatVertex_t *v1 = reinterpret_cast<const fatVertex_t *>( p1 );
-	const fatVertex_t *v2 = reinterpret_cast<const fatVertex_t *>( p2 );
-
-	if ( v1->materialID < v2->materialID )
-	{
-		return -1;
-	}
-	if ( v1->materialID == v2->materialID )
-	{
-		return 0;
-	}
-	if ( v1->materialID > v2->materialID )
-	{
-		return 1;
-	}
-
-	ASSUME( 0 );
-	return 0;
-}
-
 static void SortVertices(
 	const std::vector<fatVertex_t> &contributions,
 	const std::vector<std::string> &materialNames,
 	std::vector<vertex_t> &sortedVertices,
 	std::vector<mesh_t> &ranges)
 {
-#if 0
-
-	if ( verbose )
-	{
-		ListMaterialIDs( contributions );
-	}
-
-	qsort( contributions.data(), contributions.size(), sizeof( fatVertex_t ), SortFatVertices );
-
-	if ( verbose )
-	{
-		ListMaterialIDs( contributions );
-	}
-
-#else
-
 	const int materialCount = (int)materialNames.size();
 
 	sortedVertices.reserve( contributions.size() );
@@ -391,8 +300,6 @@ static void SortVertices(
 	}
 
 	assert( sortedVertices.size() == contributions.size() );
-
-#endif
 }
 
 //
@@ -446,31 +353,6 @@ static void IndexMesh(
 		}
 
 		indices.push_back( index );
-	}
-}
-
-// UNUSED
-static void Dbg_IndexMesh(
-	const std::vector<fatVertex_t> &fatVertices,
-	std::vector<vertex_t> &vertices,
-	std::vector<uint32> &indices )
-{
-	vertices.reserve( fatVertices.size() );
-	indices.reserve( fatVertices.size() );
-
-	for ( uint fatIter = 0; fatIter < (uint)fatVertices.size(); ++fatIter )
-	{
-		const fatVertex_t &fatVertex = fatVertices[fatIter];
-
-		// new vertex
-		vertex_t &vertex = vertices.emplace_back();
-
-		vertex.pos = fatVertex.pos;
-		vertex.st = fatVertex.st;
-		vertex.normal = fatVertex.normal;
-		vertex.tangent = fatVertex.tangent;
-
-		indices.push_back( fatIter );
 	}
 }
 
