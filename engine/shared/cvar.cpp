@@ -1,7 +1,7 @@
 /*
 ===================================================================================================
 
-	Console commands
+	Console variables
 
 ===================================================================================================
 */
@@ -10,13 +10,9 @@
 
 #include "cvar.h"
 
-#define CVAR_USAGE_STR		1
-#define CVAR_USAGE_DBL		2
-#define CVAR_USAGE_I64		4
-
-using cvarUsage_t = uint8;
-
 cvar_t *cvar_vars;
+
+bool userinfo_modified;
 
 static char cvar_null_string[1]; // lame
 
@@ -35,36 +31,22 @@ static bool Cvar_InfoValidate( const char *s )
 	return true;
 }
 
+static void Cvar_SetDerivatives( cvar_t *var )
+{
+	var->fltValue = static_cast<float>( atof( var->pString.c_str() ) );
+	var->intValue = atoi( var->pString.c_str() );
+}
+
 cvar_t *Cvar_Find( const char *name )
 {
-	for ( cvar_t *var = cvar_vars; var; var = var->next )
+	for ( cvar_t *var = cvar_vars; var; var = var->pNext )
 	{
-		if ( Q_strcmp( name, var->pName ) == 0 ) {
+		if ( Q_strcmp( name, var->pName.c_str() ) == 0 ) {
 			return var;
 		}
 	}
 
 	return nullptr;
-}
-
-float Cvar_VariableValue( const char *name )
-{
-	cvar_t *var = Cvar_Find( name );
-	if ( !var ) {
-		return 0.0f;
-	}
-
-	return var->GetFloat();
-}
-
-char *Cvar_VariableString( const char *name )
-{
-	cvar_t *var = Cvar_Find( name );
-	if ( !var ) {
-		return cvar_null_string;
-	}
-
-	return var->pString;
 }
 
 char *Cvar_CompleteVariable( const char *partial )
@@ -76,33 +58,30 @@ char *Cvar_CompleteVariable( const char *partial )
 	}
 
 	// check exact match
-	for ( cvar_t *cvar = cvar_vars; cvar; cvar = cvar->next )
+	for ( cvar_t *cvar = cvar_vars; cvar; cvar = cvar->pNext )
 	{
-		if ( Q_strcmp( partial, cvar->pName ) == 0 ) {
-			return cvar->pName;
+		if ( Q_strcmp( partial, cvar->pName.c_str() ) == 0 ) {
+			return cvar->pName.data();
 		}
 	}
 
 	// check partial match
-	for ( cvar_t *cvar = cvar_vars; cvar; cvar = cvar->next )
+	for ( cvar_t *cvar = cvar_vars; cvar; cvar = cvar->pNext )
 	{
-		if ( Q_strncmp( partial, cvar->pName, len ) == 0 ) {
-			return cvar->pName;
+		if ( Q_strncmp( partial, cvar->pName.c_str(), len ) == 0 ) {
+			return cvar->pName.data();
 		}
 	}
 
 	return nullptr;
 }
 
+//=================================================================================================
+
 // If the variable already exists, the value will not be set
 // The flags will be or'ed in if the variable exists.
-cvar_t *Cvar_Get( const char *name, const char *value, uint32 flags )
+cvar_t *Cvar_Get( const char *name, const char * value, uint32 flags )
 {
-	if ( Q_strcmp( name, "s_volume" ) == 0  )
-	{
-		__debugbreak();
-	}
-
 	if ( flags & ( CVAR_USERINFO | CVAR_SERVERINFO ) )
 	{
 		if ( !Cvar_InfoValidate( name ) )
@@ -113,8 +92,7 @@ cvar_t *Cvar_Get( const char *name, const char *value, uint32 flags )
 	}
 
 	cvar_t *var = Cvar_Find( name );
-	if ( var )
-	{
+	if ( var ) {
 		var->flags |= flags;
 		return var;
 	}
@@ -133,13 +111,14 @@ cvar_t *Cvar_Get( const char *name, const char *value, uint32 flags )
 	}
 
 	var = (cvar_t *)Mem_ClearedAlloc( sizeof( cvar_t ) );
-	var->pName = Mem_CopyString( name );
-	var->pString = Mem_CopyString( value );
-	var->dblValue = atof( var->pString );
-	var->i64Value = atoll( var->pString );
+
+	var->pName.assign( name );
+	var->pString.assign( value );
+
+	Cvar_SetDerivatives( var );
 
 	// link the variable in
-	var->next = cvar_vars;
+	var->pNext = cvar_vars;
 	cvar_vars = var;
 
 	var->flags = flags;
@@ -149,7 +128,29 @@ cvar_t *Cvar_Get( const char *name, const char *value, uint32 flags )
 	return var;
 }
 
-static cvar_t *Cvar_SetInternal( cvar_t *var, const char *value, bool force )
+float Cvar_FindGetFloat( const char *name )
+{
+	cvar_t *var = Cvar_Find( name );
+	if ( !var ) {
+		return 0.0f;
+	}
+
+	return var->GetFloat();
+}
+
+char *Cvar_FindGetString( const char *name )
+{
+	cvar_t *var = Cvar_Find( name );
+	if ( !var ) {
+		return cvar_null_string;
+	}
+
+	return var->pString.data();
+}
+
+//=================================================================================================
+
+static cvar_t *Cvar_Set_Internal( cvar_t *var, const char *value, bool force )
 {
 	if ( var->flags & ( CVAR_USERINFO | CVAR_SERVERINFO ) )
 	{
@@ -164,101 +165,60 @@ static cvar_t *Cvar_SetInternal( cvar_t *var, const char *value, bool force )
 	{
 		if ( var->flags & CVAR_NOSET )
 		{
-			Com_Printf( "%s is write protected.\n", var->pName );
+			Com_Printf( "%s is write protected.\n", var->pName.c_str() );
 			return var;
 		}
 
 		if ( var->flags & CVAR_LATCH )
 		{
-			if ( var->pLatchedString )
+			if ( !var->pLatchedString.empty() )
 			{
-				if ( Q_strcmp( value, var->pLatchedString ) == 0 ) {
+				if ( Q_strcmp( value, var->pLatchedString.c_str() ) == 0 ) {
 					return var;
 				}
-				Mem_Free( var->pLatchedString );
+				var->pLatchedString.clear();
 			}
 			else
 			{
-				if ( Q_strcmp( value, var->pString ) == 0 ) {
+				if ( Q_strcmp( value, var->pString.c_str() ) == 0 ) {
 					return var;
 				}
 			}
 
 			if ( Com_ServerState() )
 			{
-				Com_Printf( "%s will be changed for next game.\n", var->pName );
-				var->pLatchedString = Mem_CopyString( value );
+				Com_Printf( "%s will be changed for next game.\n", var->pName.c_str() );
+
+				var->pLatchedString.assign( value );
 			}
 			else
 			{
-				var->pString = Mem_CopyString( value );
-				var->dblValue = atof( var->pString );
-				var->i64Value = atoll( var->pString );
+				var->pString.assign( value );
+				Cvar_SetDerivatives( var );
 
 				// Hack?
-				if ( Q_strcmp( var->pName, "game" ) == 0 )
+				if ( Q_strcmp( var->pName.c_str(), "game" ) == 0 )
 				{
-					FS_SetGamedir( var->pString, true );
+					FS_SetGamedir( var->pString.c_str(), true );
 					FS_ExecAutoexec();
 				}
 			}
+
 			return var;
 		}
 	}
 	else
 	{
-		if ( var->pLatchedString )
+		// forcing change... kill our latched data
+		if ( !var->pLatchedString.empty() )
 		{
-			Mem_Free( var->pLatchedString );
-			var->pLatchedString = NULL;
+			var->pLatchedString.clear();
 		}
 	}
 
-	if ( Q_strcmp( value, var->pString ) == 0 )
-		return var;		// not changed
-
-	if ( var->flags & CVAR_USERINFO )
-		userinfo_modified = true;	// transmit at next oportunity
-
-	Mem_Free( var->pString );	// free the old value string
-
-	var->pString = Mem_CopyString( value );
-	var->dblValue = atof( var->pString );
-	var->i64Value = atoll( var->pString );
-
-	var->SetModified();
-
-	return var;
-}
-
-cvar_t *Cvar_ForceSet( const char *name, const char *value )
-{
-	cvar_t *var = Cvar_Find( name );
-	if ( !var ) {
-		// create it
-		return Cvar_Get( name, value, 0 );
-	}
-
-	return Cvar_SetInternal( var, value, true );
-}
-
-cvar_t *Cvar_Set( const char *name, const char *value )
-{
-	cvar_t *var = Cvar_Find( name );
-	if ( !var ) {
-		// create it
-		return Cvar_Get( name, value, 0 );
-	}
-
-	return Cvar_SetInternal( var, value, false );
-}
-
-cvar_t *Cvar_FullSet( const char *name, const char *value, uint32 flags )
-{
-	cvar_t *var = Cvar_Find( name );
-	if ( !var ) {
-		// create it
-		return Cvar_Get( name, value, flags );
+	if ( Q_strcmp( value, var->pString.c_str() ) == 0 ) {
+		// not changed
+		return var;
 	}
 
 	if ( var->flags & CVAR_USERINFO ) {
@@ -266,77 +226,160 @@ cvar_t *Cvar_FullSet( const char *name, const char *value, uint32 flags )
 		userinfo_modified = true;
 	}
 
-	Mem_Free( var->pString );	// free the old value string
-
-	var->pString = Mem_CopyString( value );
-	var->dblValue = atof( var->pString );
-	var->i64Value = atoll( var->pString );
-
-	var->flags = flags;
+	var->pString.assign( value );
+	Cvar_SetDerivatives( var );
 
 	var->SetModified();
 
 	return var;
 }
 
-void Cvar_SetValue( const char *var_name, float value )
+void Cvar_ForceSet( cvar_t *var, const char *value )
 {
-	char val[128];
+	Cvar_Set_Internal( var, value, true );
+}
 
-	if ( value == (int)value ) {
-		Q_sprintf( val, "%d", (int)value );
-	} else {
-		Q_sprintf( val, "%f", value );
+void Cvar_FullSet( const char *name, const char *value, uint32 flags )
+{
+	cvar_t *var = Cvar_Find( name );
+	if ( !var ) {
+		// create it
+		Cvar_Get( name, value, flags );
+		return;
 	}
 
-	Cvar_Set( var_name, val );
+	if ( var->flags & CVAR_USERINFO ) {
+		// transmit at next opportunity
+		userinfo_modified = true;
+	}
+
+	var->pString.assign( value );
+
+	Cvar_SetDerivatives( var );
+
+	var->flags = flags;
+
+	var->SetModified();
 }
 
-void Cvar_SetInt64( cvar_t *var, int64 value )
+//=================================================================================================
+
+void Cvar_SetString( cvar_t *var, const char *value )
 {
-
-}
-
-void Cvar_SetInt32( cvar_t *var, int32 value )
-{
-	Cvar_SetInt64( var, value );
-}
-
-void Cvar_SetDouble( cvar_t *var, double value )
-{
-
+	Cvar_Set_Internal( var, value, false );
 }
 
 void Cvar_SetFloat( cvar_t *var, float value )
 {
-	Cvar_SetDouble( var, value );
+	char str[32];
+	Q_sprintf_s( str, "%f", value); // %.6f
+	Cvar_Set_Internal( var, str, false );
 }
+
+void Cvar_SetInt( cvar_t *var, int value )
+{
+	char str[16];
+	Q_sprintf( str, "%d", value ); // safe
+	Cvar_Set_Internal( var, str, false );
+}
+
+void Cvar_SetBool( cvar_t *var, bool value )
+{
+	char str[2]{ (char)value + '0', '\0'};
+	Cvar_Set_Internal( var, str, false );
+}
+
+//=================================================================================================
+
+void Cvar_FindSetString( const char *name, const char *value )
+{
+	cvar_t *var = Cvar_Find( name );
+	if ( !var ) {
+		// create it
+		Cvar_Get( name, value, 0 );
+		return;
+	}
+
+	Cvar_Set_Internal( var, value, false );
+}
+
+void Cvar_FindSetFloat( const char *name, float value )
+{
+	char str[128];
+	Q_sprintf_s( str, "%f", value); // %.6f
+
+	cvar_t *var = Cvar_Find( name );
+	if ( !var ) {
+		// create it
+		Cvar_Get( name, str, 0 );
+		return;
+	}
+
+	Cvar_Set_Internal( var, str, false );
+}
+
+void Cvar_FindSetInt( const char *name, int value )
+{
+	char str[16];
+	Q_sprintf( str, "%d", value ); // safe
+
+	cvar_t *var = Cvar_Find( name );
+	if ( !var ) {
+		// create it
+		Cvar_Get( name, str, 0 );
+		return;
+	}
+
+	Cvar_Set_Internal( var, str, false );
+}
+
+void Cvar_FindSetBool( const char *name, bool value )
+{
+	char str[2]{ (char)value, '\0' };
+
+	cvar_t *var = Cvar_Find( name );
+	if ( !var ) {
+		// create it
+		Cvar_Get( name, str, 0 );
+		return;
+	}
+
+	Cvar_Set_Internal( var, str, false );
+}
+
+// LEGACY
+void Cvar_Set( const char *name, const char *value )
+{
+	return Cvar_FindSetString( name, value );
+}
+
+//=================================================================================================
 
 // Any variables with latched values will now be updated
 void Cvar_GetLatchedVars()
 {
-	for ( cvar_t *var = cvar_vars; var; var = var->next )
+	for ( cvar_t *var = cvar_vars; var; var = var->pNext )
 	{
-		if ( !var->pLatchedString ) {
+		if ( var->pLatchedString.empty() ) {
 			continue;
 		}
 
-		Mem_Free( var->pString );
-		var->pString = var->pLatchedString;
-		var->pLatchedString = nullptr;
-		var->dblValue = atof( var->pString );
-		var->i64Value = atoll( var->pString );
+		var->pString = std::move( var->pLatchedString );
+		//Mem_Free( var->pString );
+		//var->pString = var->pLatchedString;
+		//var->pLatchedString = nullptr;
+
+		Cvar_SetDerivatives( var );
 
 		// Hack?
-		if ( Q_strcmp( var->pName, "game" ) == 0 )
+		if ( Q_strcmp( var->pName.c_str(), "game" ) == 0 )
 		{
-			FS_SetGamedir( var->pString, true );
+			FS_SetGamedir( var->pString.c_str(), true );
 			FS_ExecAutoexec();
 		}
 	}
 }
 
-// Handles variable inspection and changing from the console
 bool Cvar_Command()
 {
 	// check variables
@@ -348,26 +391,24 @@ bool Cvar_Command()
 	// perform a variable print or set
 	if ( Cmd_Argc() == 1 )
 	{
-		Com_Printf( "\"%s\" is \"%s\"\n", var->pName, var->pString );
+		Com_Printf( "\"%s\" is \"%s\"\n", var->pName.c_str(), var->pString.c_str() );
 		return true;
 	}
 
-	Cvar_Set( var->pName, Cmd_Argv( 1 ) );
+	Cvar_Set( var->pName.c_str(), Cmd_Argv( 1 ) );
 
 	return true;
 }
 
-// Appends lines containing "set variable value" for all variables
-// with the archive flag set to true.
 void Cvar_WriteVariables( FILE *f )
 {
 	char buffer[1024];
 
-	for ( cvar_t *var = cvar_vars; var; var = var->next )
+	for ( cvar_t *var = cvar_vars; var; var = var->pNext )
 	{
 		if ( var->flags & CVAR_ARCHIVE )
 		{
-			Q_sprintf_s( buffer, "set %s \"%s\"\n", var->pName, var->pString );
+			Q_sprintf_s( buffer, "set %s \"%s\"\n", var->pName.c_str(), var->pString.c_str() );
 			fputs( buffer, f );
 		}
 	}
@@ -375,31 +416,27 @@ void Cvar_WriteVariables( FILE *f )
 
 //=================================================================================================
 
-bool userinfo_modified;
-
-char *Cvar_BitInfo( uint32 bit )
+static char *Cvar_BitInfo( uint32 bit )
 {
 	static char info[MAX_INFO_STRING];
 
 	info[0] = 0;
 
-	for ( cvar_t *var = cvar_vars; var; var = var->next )
+	for ( cvar_t *var = cvar_vars; var; var = var->pNext )
 	{
 		if ( var->flags & bit ) {
-			Info_SetValueForKey( info, var->pName, var->pString );
+			Info_SetValueForKey( info, var->pName.c_str(), var->pString.c_str() );
 		}
 	}
 
 	return info;
 }
 
-// returns an info string containing all the CVAR_USERINFO cvars
 char *Cvar_Userinfo()
 {
 	return Cvar_BitInfo( CVAR_USERINFO );
 }
 
-// returns an info string containing all the CVAR_SERVERINFO cvars
 char *Cvar_Serverinfo()
 {
 	return Cvar_BitInfo( CVAR_SERVERINFO );
@@ -446,7 +483,7 @@ static void Cvar_List_f()
 	cvar_t *var = cvar_vars;
 	int i = 0;
 
-	for ( ; var; var = var->next, ++i )
+	for ( ; var; var = var->pNext, ++i )
 	{
 		if ( var->flags & CVAR_ARCHIVE ) {
 			Com_Printf( "*" );
@@ -475,7 +512,7 @@ static void Cvar_List_f()
 			Com_Printf( " " );
 		}
 
-		Com_Printf( " %s \"%s\"\n", var->pName, var->pString );
+		Com_Printf( " %s \"%s\"\n", var->pName.c_str(), var->pString.c_str() );
 	}
 
 	Com_Printf( "%d cvars\n", i );
@@ -492,17 +529,16 @@ void Cvar_Shutdown()
 	cvar_t *var = cvar_vars;
 	cvar_t *lastVar = nullptr;
 
-	for ( ; var; var = var->next )
+	for ( ; var; var = var->pNext )
 	{
 		if ( lastVar ) {
 			Mem_Free( lastVar );
 		}
 
+		var->pName.~string();
+		var->pString.~string();
+		var->pLatchedString.~string();
 		lastVar = var;
-
-		Mem_Free( var->pName );
-		Mem_Free( var->pString );
-		Mem_Free( var->pLatchedString );
 	}
 	Mem_Free( lastVar );
 }

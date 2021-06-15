@@ -65,7 +65,7 @@ static void SV_New_f()
 	// serverdata needs to go over for all types of servers
 	// to make sure the protocol is right, and to set the gamedir
 	//
-	gamedir = Cvar_VariableString( "gamedir" );
+	gamedir = Cvar_FindGetString( "gamedir" );
 
 	// send the serverdata
 	MSG_WriteByte( &sv_client->netchan.message, svc_serverdata );
@@ -398,13 +398,13 @@ void SV_Nextserver()
 	char *v;
 
 	//ZOID, ss_pic can be nextserver'd in coop mode
-	if ( sv.state == ss_game || ( sv.state == ss_pic && !Cvar_VariableValue( "coop" ) ) ) {
+	if ( sv.state == ss_game || ( sv.state == ss_pic && !Cvar_FindGetFloat( "coop" ) ) ) {
 		// can't nextserver while playing a normal game
 		return;
 	}
 
 	svs.spawncount++;	// make sure another doesn't sneak in
-	v = Cvar_VariableString( "nextserver" );
+	v = Cvar_FindGetString( "nextserver" );
 	if ( !v[0] )
 	{
 		Cbuf_AddText( "killserver\n" );
@@ -414,7 +414,7 @@ void SV_Nextserver()
 		Cbuf_AddText( v );
 		Cbuf_AddText( "\n" );
 	}
-	Cvar_Set( "nextserver", "" );
+	Cvar_FindSetString( "nextserver", "" );
 }
 
 /*

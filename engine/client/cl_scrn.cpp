@@ -865,7 +865,7 @@ void SCR_TouchPics()
 	if ( cl_crosshair->GetBool() )
 	{
 		if ( cl_crosshair->GetInt32() > 3 || cl_crosshair->GetInt32() < 0 ) {
-			Cvar_SetInt64( cl_crosshair, 3 );
+			Cvar_SetInt( cl_crosshair, 3 );
 		}
 
 		Q_sprintf_s( crosshair_pic, "ch%i", cl_crosshair->GetInt32() );

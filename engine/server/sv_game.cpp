@@ -359,7 +359,7 @@ void SV_InitGameProgs()
 	gi.FreeTags = PF_TagFreeGroup;
 
 	gi.cvar = Cvar_Get;
-	gi.cvar_set = Cvar_Set;
+	gi.cvar_set = Cvar_FindSetString;
 	gi.cvar_forceset = Cvar_ForceSet;
 
 	gi.argc = Cmd_Argc;

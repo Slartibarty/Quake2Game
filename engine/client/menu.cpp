@@ -5,6 +5,28 @@
 #include "cl_local.h"
 #include "qmenu.h"
 
+// cvars from elsewhere
+
+// client
+extern cvar_t *rate;
+extern cvar_t *hand;
+
+// sound
+extern cvar_t *s_volume;
+extern cvar_t *s_loadas8bit;
+
+// scrn
+extern cvar_t *scr_viewsize;
+
+// renderer
+extern cvar_t *r_gamma;
+extern cvar_t *r_picmip;
+extern cvar_t *r_fullscreen;
+extern cvar_t *r_finish;
+extern cvar_t *r_mode;
+
+//
+
 static int	m_main_cursor;
 
 #define NUM_CURSOR_FRAMES 15
@@ -65,9 +87,11 @@ void M_PushMenu ( void (*draw) (void), const char *(*key) (int k) )
 {
 	int		i;
 
-	if (Cvar_VariableValue ("maxclients") == 1 
-		&& Com_ServerState ())
-		Cvar_Set ("paused", "1");
+	if ( Cvar_FindGetFloat( "maxclients" ) == 1
+		&& Com_ServerState() )
+	{
+		Cvar_SetBool( cl_paused, true );
+	}
 
 	// if this menu is already present, drop back to that level
 	// to avoid stacking menus by hotkeys
@@ -102,7 +126,7 @@ void M_ForceMenuOff (void)
 	cls.key_dest = key_game;
 	m_menudepth = 0;
 	Key_ClearStates ();
-	Cvar_Set ("paused", "0");
+	Cvar_SetBool( cl_paused, false );
 }
 
 void M_PopMenu (void)
@@ -939,14 +963,11 @@ static menulist_s		s_options_alwaysrun_box;
 static menulist_s		s_options_invertmouse_box;
 static menulist_s		s_options_crosshair_box;
 static menuslider_s		s_options_sfxvolume_slider;
-static menulist_s		s_options_cdvolume_box;
-static menulist_s		s_options_quality_list;
-static menulist_s		s_options_compatibility_list;
 static menulist_s		s_options_console_action;
 
 static void CrosshairFunc( void *unused )
 {
-	Cvar_SetValue( "crosshair", (float)s_options_crosshair_box.curvalue );
+	Cvar_SetInt( cl_crosshair, s_options_crosshair_box.curvalue );
 }
 
 static void CustomizeControlsFunc( void *unused )
@@ -956,27 +977,25 @@ static void CustomizeControlsFunc( void *unused )
 
 static void AlwaysRunFunc( void *unused )
 {
-	Cvar_SetValue( "cl_run", (float)s_options_alwaysrun_box.curvalue );
+	Cvar_SetInt( cl_run, s_options_alwaysrun_box.curvalue );
 }
 
 static void MouseSpeedFunc( void *unused )
 {
-	Cvar_SetValue( "sensitivity", s_options_sensitivity_slider.curvalue / 2.0F );
+	Cvar_SetFloat( sensitivity, s_options_sensitivity_slider.curvalue / 2.0f );
 }
 
 static void ControlsSetMenuItemValues( void )
 {
-	s_options_sfxvolume_slider.curvalue		= Cvar_VariableValue( "s_volume" ) * 10;
-	s_options_cdvolume_box.curvalue 		= !Cvar_VariableValue("cd_nocd");
-	s_options_quality_list.curvalue			= !Cvar_VariableValue( "s_loadas8bit" );
-	s_options_sensitivity_slider.curvalue	= ( sensitivity->GetFloat() ) * 2;
+	s_options_sfxvolume_slider.curvalue		= s_volume->GetFloat() * 10;
+	s_options_sensitivity_slider.curvalue	= sensitivity->GetFloat() * 2;
 
-	Cvar_SetInt64( cl_run, Clamp<int64>( cl_run->GetInt64(), 0, 1 ) );
+	Cvar_SetInt( cl_run, Clamp<int64>( cl_run->GetInt64(), 0, 1 ) );
 	s_options_alwaysrun_box.curvalue		= cl_run->GetInt32();
 
 	s_options_invertmouse_box.curvalue		= m_pitch->GetInt64() < 0;
 
-	Cvar_SetInt64( cl_crosshair, Clamp<int64>( cl_crosshair->GetInt64(), 0, 3 ) );
+	Cvar_SetInt( cl_crosshair, Clamp<int64>( cl_crosshair->GetInt64(), 0, 3 ) );
 	s_options_crosshair_box.curvalue		= cl_crosshair->GetInt32();
 }
 
@@ -990,17 +1009,12 @@ static void ControlsResetDefaultsFunc( void *unused )
 
 static void InvertMouseFunc( void *unused )
 {
-	Cvar_SetDouble( m_pitch, -m_pitch->GetDouble() );
+	Cvar_SetFloat( m_pitch, -m_pitch->GetFloat() );
 }
 
 static void UpdateVolumeFunc( void *unused )
 {
-	Cvar_SetDouble( Cvar_Find( "s_volume" ), s_options_sfxvolume_slider.curvalue / 10 );
-}
-
-static void UpdateCDVolumeFunc( void *unused )
-{
-	Cvar_SetValue( "cd_nocd", !s_options_cdvolume_box.curvalue );
+	Cvar_SetFloat( s_volume, s_options_sfxvolume_slider.curvalue / 10 );
 }
 
 static void ConsoleFunc( void *unused )
@@ -1023,50 +1037,8 @@ static void ConsoleFunc( void *unused )
 	cls.key_dest = key_console;
 }
 
-static void UpdateSoundQualityFunc( void *unused )
-{
-	if ( s_options_quality_list.curvalue )
-	{
-		Cvar_SetValue( "s_khz", 44 ); // 22
-		Cvar_SetValue( "s_loadas8bit", false );
-	}
-	else
-	{
-		Cvar_SetValue( "s_khz", 11 );
-		Cvar_SetValue( "s_loadas8bit", true );
-	}
-	
-	Cvar_SetValue( "s_primary", (float)s_options_compatibility_list.curvalue );
-
-	M_DrawTextBox( 8, 120 - 48, 36, 3 );
-	M_Print( 16 + 16, 120 - 48 + 8,  "Restarting the sound system. This" );
-	M_Print( 16 + 16, 120 - 48 + 16, "could take up to a minute, so" );
-	M_Print( 16 + 16, 120 - 48 + 24, "please be patient." );
-
-	// the text box won't show up unless we do a buffer swap
-	R_EndFrame();
-
-	CL_Snd_Restart_f();
-}
-
 void Options_MenuInit( void )
 {
-	static const char *cd_music_items[] =
-	{
-		"disabled",
-		"enabled",
-		0
-	};
-	static const char *quality_items[] =
-	{
-		"low", "high", 0
-	};
-
-	static const char *compatibility_items[] =
-	{
-		"max compatibility", "max performance", 0
-	};
-
 	static const char *yesno_names[] =
 	{
 		"no",
@@ -1093,35 +1065,11 @@ void Options_MenuInit( void )
 	s_options_sfxvolume_slider.generic.type	= MTYPE_SLIDER;
 	s_options_sfxvolume_slider.generic.x	= 0;
 	s_options_sfxvolume_slider.generic.y	= 0;
-	s_options_sfxvolume_slider.generic.name	= "effects volume";
+	s_options_sfxvolume_slider.generic.name	= "master volume";
 	s_options_sfxvolume_slider.generic.callback	= UpdateVolumeFunc;
 	s_options_sfxvolume_slider.minvalue		= 0;
 	s_options_sfxvolume_slider.maxvalue		= 10;
-	s_options_sfxvolume_slider.curvalue		= Cvar_VariableValue( "s_volume" ) * 10;
-
-	s_options_cdvolume_box.generic.type	= MTYPE_SPINCONTROL;
-	s_options_cdvolume_box.generic.x		= 0;
-	s_options_cdvolume_box.generic.y		= 10;
-	s_options_cdvolume_box.generic.name	= "CD music";
-	s_options_cdvolume_box.generic.callback	= UpdateCDVolumeFunc;
-	s_options_cdvolume_box.itemnames		= cd_music_items;
-	s_options_cdvolume_box.curvalue 		= !Cvar_VariableValue("cd_nocd");
-
-	s_options_quality_list.generic.type	= MTYPE_SPINCONTROL;
-	s_options_quality_list.generic.x		= 0;
-	s_options_quality_list.generic.y		= 20;
-	s_options_quality_list.generic.name		= "sound quality";
-	s_options_quality_list.generic.callback = UpdateSoundQualityFunc;
-	s_options_quality_list.itemnames		= quality_items;
-	s_options_quality_list.curvalue			= !Cvar_VariableValue( "s_loadas8bit" );
-
-	s_options_compatibility_list.generic.type	= MTYPE_SPINCONTROL;
-	s_options_compatibility_list.generic.x		= 0;
-	s_options_compatibility_list.generic.y		= 30;
-	s_options_compatibility_list.generic.name	= "sound compatibility";
-	s_options_compatibility_list.generic.callback = UpdateSoundQualityFunc;
-	s_options_compatibility_list.itemnames		= compatibility_items;
-	s_options_compatibility_list.curvalue		= (int)Cvar_VariableValue( "s_primary" );
+	s_options_sfxvolume_slider.curvalue		= s_volume->GetFloat() * 10;
 
 	s_options_sensitivity_slider.generic.type	= MTYPE_SLIDER;
 	s_options_sensitivity_slider.generic.x		= 0;
@@ -1151,14 +1099,7 @@ void Options_MenuInit( void )
 	s_options_crosshair_box.generic.name	= "crosshair";
 	s_options_crosshair_box.generic.callback = CrosshairFunc;
 	s_options_crosshair_box.itemnames = crosshair_names;
-/*
-	s_options_noalttab_box.generic.type = MTYPE_SPINCONTROL;
-	s_options_noalttab_box.generic.x	= 0;
-	s_options_noalttab_box.generic.y	= 110;
-	s_options_noalttab_box.generic.name	= "disable alt-tab";
-	s_options_noalttab_box.generic.callback = NoAltTabFunc;
-	s_options_noalttab_box.itemnames = yesno_names;
-*/
+
 	s_options_customize_options_action.generic.type	= MTYPE_ACTION;
 	s_options_customize_options_action.generic.x		= 0;
 	s_options_customize_options_action.generic.y		= 140;
@@ -1180,9 +1121,6 @@ void Options_MenuInit( void )
 	ControlsSetMenuItemValues();
 
 	Menu_AddItem( &s_options_menu, ( void * ) &s_options_sfxvolume_slider );
-	Menu_AddItem( &s_options_menu, ( void * ) &s_options_cdvolume_box );
-	Menu_AddItem( &s_options_menu, ( void * ) &s_options_quality_list );
-	Menu_AddItem( &s_options_menu, ( void * ) &s_options_compatibility_list );
 	Menu_AddItem( &s_options_menu, ( void * ) &s_options_sensitivity_slider );
 	Menu_AddItem( &s_options_menu, ( void * ) &s_options_alwaysrun_box );
 	Menu_AddItem( &s_options_menu, ( void * ) &s_options_invertmouse_box );
@@ -1245,7 +1183,7 @@ static void ScreenSizeCallback( void *s )
 {
 	menuslider_s *slider = (menuslider_s *)s;
 
-	Cvar_SetValue( "viewsize", slider->curvalue * 10 );
+	Cvar_SetFloat( scr_viewsize, slider->curvalue * 10 );
 }
 
 static void BrightnessCallback( void *s )
@@ -1267,11 +1205,11 @@ static void ApplyChanges( void *unused )
 	*/
 	gamma = ( 0.8f - ( s_brightness_slider.curvalue / 10.0f - 0.5f ) ) + 0.5f;
 
-	Cvar_SetValue( "r_gamma", gamma );
-	Cvar_SetValue( "r_picmip", 3 - s_tq_slider.curvalue );
-	Cvar_SetValue( "r_fullscreen", s_fs_box.curvalue );
-	Cvar_SetValue( "r_finish", s_finish_box.curvalue );
-	Cvar_SetValue( "r_mode", s_mode_list.curvalue );
+	Cvar_SetFloat( r_gamma, gamma );
+	Cvar_SetFloat( r_picmip, 3 - s_tq_slider.curvalue );
+	Cvar_SetInt( r_fullscreen, s_fs_box.curvalue );
+	Cvar_SetInt( r_finish, s_finish_box.curvalue );
+	Cvar_SetInt( r_mode, s_mode_list.curvalue );
 
 	//M_ForceMenuOff();
 }
@@ -1978,10 +1916,8 @@ static void StartGame( void )
 	// disable updates and start the cinematic going
 	cl.servercount = -1;
 	M_ForceMenuOff ();
-	Cvar_SetValue( "deathmatch", 0 );
-	Cvar_SetValue( "coop", 0 );
-
-	Cvar_SetValue( "gamerules", 0 );		//PGM
+	Cvar_FindSetBool( "deathmatch", false );
+	Cvar_FindSetBool( "coop", false );
 
 	Cbuf_AddText ("loading ; killserver ; wait ; newgame\n");
 	cls.key_dest = key_game;
@@ -1989,19 +1925,19 @@ static void StartGame( void )
 
 static void EasyGameFunc( void *data )
 {
-	Cvar_ForceSet( "skill", "0" );
+	Cvar_ForceSet( Cvar_Find( "skill" ), "0" );
 	StartGame();
 }
 
 static void MediumGameFunc( void *data )
 {
-	Cvar_ForceSet( "skill", "1" );
+	Cvar_ForceSet( Cvar_Find( "skill" ), "1" );
 	StartGame();
 }
 
 static void HardGameFunc( void *data )
 {
-	Cvar_ForceSet( "skill", "2" );
+	Cvar_ForceSet( Cvar_Find( "skill" ), "2" );
 	StartGame();
 }
 
@@ -2521,25 +2457,21 @@ void StartServerActionFunc( void *self )
 	timelimit	= atoi( s_timelimit_field.buffer );
 	fraglimit	= atoi( s_fraglimit_field.buffer );
 
-	Cvar_SetValue( "maxclients", (float)Max( 0, maxclients ) );
-	Cvar_SetValue ("timelimit", (float)Max( 0, timelimit ) );
-	Cvar_SetValue ("fraglimit", (float)Max( 0, fraglimit ) );
-	Cvar_Set("hostname", s_hostname_field.buffer );
-//	Cvar_SetValue ("deathmatch", !s_rules_box.curvalue );
-//	Cvar_SetValue ("coop", s_rules_box.curvalue );
+	Cvar_FindSetInt( "maxclients", Max( 0, maxclients ) );
+	Cvar_FindSetInt( "timelimit", Max( 0, timelimit ) );
+	Cvar_FindSetInt( "fraglimit", Max( 0, fraglimit ) );
+	Cvar_FindSetString( "hostname", s_hostname_field.buffer );
 
 //PGM
 	if((s_rules_box.curvalue < 2) || (Developer_searchpath() != 2))
 	{
-		Cvar_SetValue ("deathmatch", !s_rules_box.curvalue );
-		Cvar_SetValue ("coop", (float)s_rules_box.curvalue );
-		Cvar_SetValue ("gamerules", 0 );
+		Cvar_FindSetInt("deathmatch", !s_rules_box.curvalue );
+		Cvar_FindSetInt("coop", s_rules_box.curvalue );
 	}
 	else
 	{
-		Cvar_SetValue ("deathmatch", 1 );	// deathmatch is always true for rogue games, right?
-		Cvar_SetValue ("coop", 0 );			// FIXME - this might need to depend on which game we're running
-		Cvar_SetValue ("gamerules", (float)s_rules_box.curvalue );
+		Cvar_FindSetInt("deathmatch", 1 );	// deathmatch is always true for rogue games, right?
+		Cvar_FindSetInt("coop", 0 );			// FIXME - this might need to depend on which game we're running
 	}
 //PGM
 
@@ -2694,7 +2626,7 @@ void StartServer_MenuInit( void )
 		s_rules_box.itemnames = dm_coop_names;
 //PGM
 
-	if (Cvar_VariableValue("coop"))
+	if (Cvar_FindGetFloat("coop"))
 		s_rules_box.curvalue = 1;
 	else
 		s_rules_box.curvalue = 0;
@@ -2708,7 +2640,7 @@ void StartServer_MenuInit( void )
 	s_timelimit_field.generic.statusbar = "0 = no limit";
 	s_timelimit_field.length = 3;
 	s_timelimit_field.visible_length = 3;
-	strcpy( s_timelimit_field.buffer, Cvar_VariableString("timelimit") );
+	strcpy( s_timelimit_field.buffer, Cvar_FindGetString("timelimit") );
 
 	s_fraglimit_field.generic.type = MTYPE_FIELD;
 	s_fraglimit_field.generic.name = "frag limit";
@@ -2718,7 +2650,7 @@ void StartServer_MenuInit( void )
 	s_fraglimit_field.generic.statusbar = "0 = no limit";
 	s_fraglimit_field.length = 3;
 	s_fraglimit_field.visible_length = 3;
-	strcpy( s_fraglimit_field.buffer, Cvar_VariableString("fraglimit") );
+	strcpy( s_fraglimit_field.buffer, Cvar_FindGetString("fraglimit") );
 
 	/*
 	** maxclients determines the maximum number of players that can join
@@ -2734,10 +2666,10 @@ void StartServer_MenuInit( void )
 	s_maxclients_field.generic.statusbar = NULL;
 	s_maxclients_field.length = 3;
 	s_maxclients_field.visible_length = 3;
-	if ( Cvar_VariableValue( "maxclients" ) == 1 )
+	if ( Cvar_FindGetFloat( "maxclients" ) == 1 )
 		strcpy( s_maxclients_field.buffer, "8" );
 	else 
-		strcpy( s_maxclients_field.buffer, Cvar_VariableString("maxclients") );
+		strcpy( s_maxclients_field.buffer, Cvar_FindGetString("maxclients") );
 
 	s_hostname_field.generic.type = MTYPE_FIELD;
 	s_hostname_field.generic.name = "hostname";
@@ -2747,7 +2679,7 @@ void StartServer_MenuInit( void )
 	s_hostname_field.generic.statusbar = NULL;
 	s_hostname_field.length = 12;
 	s_hostname_field.visible_length = 12;
-	strcpy( s_hostname_field.buffer, Cvar_VariableString("hostname") );
+	strcpy( s_hostname_field.buffer, Cvar_FindGetString("hostname") );
 
 	s_startserver_dmoptions_action.generic.type = MTYPE_ACTION;
 	s_startserver_dmoptions_action.generic.name	= " deathmatch flags";
@@ -2849,7 +2781,7 @@ static void DMFlagCallback( void *self )
 	int flags;
 	int bit = 0;
 
-	flags = (int)Cvar_VariableValue( "dmflags" );
+	flags = (int)Cvar_FindGetFloat( "dmflags" );
 
 	if ( f == &s_friendlyfire_box )
 	{
@@ -2980,7 +2912,7 @@ static void DMFlagCallback( void *self )
 	}
 
 setvalue:
-	Cvar_SetValue ("dmflags", (float)flags);
+	Cvar_FindSetInt ("dmflags", flags);
 
 	Q_sprintf_s( dmoptions_statusbar, "dmflags = %d", flags );
 
@@ -2996,7 +2928,7 @@ void DMOptions_MenuInit( void )
 	{
 		"disabled", "by skin", "by model", 0
 	};
-	int dmflags = (int)Cvar_VariableValue( "dmflags" );
+	int dmflags = (int)Cvar_FindGetFloat( "dmflags" );
 	int y = 0;
 
 	s_dmoptions_menu.x = viddef.width * 0.50f;
@@ -3234,27 +3166,27 @@ static void DownloadCallback( void *self )
 
 	if (f == &s_allow_download_box)
 	{
-		Cvar_SetValue("allow_download", (float)f->curvalue);
+		Cvar_FindSetInt("allow_download", f->curvalue);
 	}
 
 	else if (f == &s_allow_download_maps_box)
 	{
-		Cvar_SetValue("allow_download_maps", (float)f->curvalue);
+		Cvar_FindSetInt("allow_download_maps", f->curvalue);
 	}
 
 	else if (f == &s_allow_download_models_box)
 	{
-		Cvar_SetValue("allow_download_models", (float)f->curvalue);
+		Cvar_FindSetInt("allow_download_models", f->curvalue);
 	}
 
 	else if (f == &s_allow_download_players_box)
 	{
-		Cvar_SetValue("allow_download_players", (float)f->curvalue);
+		Cvar_FindSetInt("allow_download_players", f->curvalue);
 	}
 
 	else if (f == &s_allow_download_sounds_box)
 	{
-		Cvar_SetValue("allow_download_sounds", (float)f->curvalue);
+		Cvar_FindSetInt("allow_download_sounds", f->curvalue);
 	}
 }
 
@@ -3280,7 +3212,7 @@ void DownloadOptions_MenuInit( void )
 	s_allow_download_box.generic.name	= "allow downloading";
 	s_allow_download_box.generic.callback = DownloadCallback;
 	s_allow_download_box.itemnames = yes_no_names;
-	s_allow_download_box.curvalue = (Cvar_VariableValue("allow_download") != 0);
+	s_allow_download_box.curvalue = (Cvar_FindGetFloat("allow_download") != 0);
 
 	s_allow_download_maps_box.generic.type = MTYPE_SPINCONTROL;
 	s_allow_download_maps_box.generic.x	= 0;
@@ -3288,7 +3220,7 @@ void DownloadOptions_MenuInit( void )
 	s_allow_download_maps_box.generic.name	= "maps";
 	s_allow_download_maps_box.generic.callback = DownloadCallback;
 	s_allow_download_maps_box.itemnames = yes_no_names;
-	s_allow_download_maps_box.curvalue = (Cvar_VariableValue("allow_download_maps") != 0);
+	s_allow_download_maps_box.curvalue = (Cvar_FindGetFloat("allow_download_maps") != 0);
 
 	s_allow_download_players_box.generic.type = MTYPE_SPINCONTROL;
 	s_allow_download_players_box.generic.x	= 0;
@@ -3296,7 +3228,7 @@ void DownloadOptions_MenuInit( void )
 	s_allow_download_players_box.generic.name	= "player models/skins";
 	s_allow_download_players_box.generic.callback = DownloadCallback;
 	s_allow_download_players_box.itemnames = yes_no_names;
-	s_allow_download_players_box.curvalue = (Cvar_VariableValue("allow_download_players") != 0);
+	s_allow_download_players_box.curvalue = (Cvar_FindGetFloat("allow_download_players") != 0);
 
 	s_allow_download_models_box.generic.type = MTYPE_SPINCONTROL;
 	s_allow_download_models_box.generic.x	= 0;
@@ -3304,7 +3236,7 @@ void DownloadOptions_MenuInit( void )
 	s_allow_download_models_box.generic.name	= "models";
 	s_allow_download_models_box.generic.callback = DownloadCallback;
 	s_allow_download_models_box.itemnames = yes_no_names;
-	s_allow_download_models_box.curvalue = (Cvar_VariableValue("allow_download_models") != 0);
+	s_allow_download_models_box.curvalue = (Cvar_FindGetFloat("allow_download_models") != 0);
 
 	s_allow_download_sounds_box.generic.type = MTYPE_SPINCONTROL;
 	s_allow_download_sounds_box.generic.x	= 0;
@@ -3312,7 +3244,7 @@ void DownloadOptions_MenuInit( void )
 	s_allow_download_sounds_box.generic.name	= "sounds";
 	s_allow_download_sounds_box.generic.callback = DownloadCallback;
 	s_allow_download_sounds_box.itemnames = yes_no_names;
-	s_allow_download_sounds_box.curvalue = (Cvar_VariableValue("allow_download_sounds") != 0);
+	s_allow_download_sounds_box.curvalue = (Cvar_FindGetFloat("allow_download_sounds") != 0);
 
 	Menu_AddItem( &s_downloadoptions_menu, &s_download_title );
 	Menu_AddItem( &s_downloadoptions_menu, &s_allow_download_box );
@@ -3398,7 +3330,7 @@ const char *AddressBook_MenuKey( int key )
 		for ( index = 0; index < NUM_ADDRESSBOOK_ENTRIES; index++ )
 		{
 			Q_sprintf_s( buffer, "adr%d", index );
-			Cvar_Set( buffer, s_addressbook_fields[index].buffer );
+			Cvar_FindSetString( buffer, s_addressbook_fields[index].buffer );
 		}
 	}
 	return Default_MenuKey( &s_addressbook_menu, key );
@@ -3461,13 +3393,13 @@ void DownloadOptionsFunc( void *self )
 
 static void HandednessCallback( void *unused )
 {
-	Cvar_SetValue( "hand", (float)s_player_handedness_box.curvalue );
+	Cvar_SetInt( hand, s_player_handedness_box.curvalue );
 }
 
 static void RateCallback( void *unused )
 {
 	if (s_player_rate_box.curvalue != sizeof(rate_tbl) / sizeof(*rate_tbl) - 1)
-		Cvar_SetValue( "rate", (float)rate_tbl[s_player_rate_box.curvalue] );
+		Cvar_SetInt( rate, rate_tbl[s_player_rate_box.curvalue] );
 }
 
 static void ModelCallback( void *unused )
@@ -3695,7 +3627,9 @@ qboolean PlayerConfig_MenuInit( void )
 		return false;
 
 	if ( hand->GetInt64() < 0 || hand->GetInt64() > 2 )
-		Cvar_SetValue( "hand", 0 );
+	{
+		Cvar_SetInt( hand, 0 );
+	}
 
 	strcpy( currentdirectory, skin->GetString() );
 
@@ -3790,11 +3724,11 @@ qboolean PlayerConfig_MenuInit( void )
 	s_player_handedness_box.generic.name	= 0;
 	s_player_handedness_box.generic.cursor_offset = -48;
 	s_player_handedness_box.generic.callback = HandednessCallback;
-	s_player_handedness_box.curvalue = (int)Cvar_VariableValue( "hand" );
+	s_player_handedness_box.curvalue = (int)Cvar_FindGetFloat( "hand" );
 	s_player_handedness_box.itemnames = handedness;
 
 	for (i = 0; i < sizeof(rate_tbl) / sizeof(*rate_tbl) - 1; i++)
-		if ((int)Cvar_VariableValue("rate") == rate_tbl[i])
+		if ((int)Cvar_FindGetFloat("rate") == rate_tbl[i])
 			break;
 
 	s_player_rate_title.generic.type = MTYPE_SEPARATOR;
@@ -3904,13 +3838,13 @@ const char *PlayerConfig_MenuKey (int key)
 	{
 		char scratch[1024];
 
-		Cvar_Set( "name", s_player_name_field.buffer );
+		Cvar_FindSetString( "name", s_player_name_field.buffer );
 
 		Q_sprintf_s( scratch, "%s/%s", 
 			s_pmi[s_player_model_box.curvalue].directory, 
 			s_pmi[s_player_model_box.curvalue].skindisplaynames[s_player_skin_box.curvalue] );
 
-		Cvar_Set( "skin", scratch );
+		Cvar_FindSetString( "skin", scratch );
 
 		for ( i = 0; i < s_numplayermodels; i++ )
 		{

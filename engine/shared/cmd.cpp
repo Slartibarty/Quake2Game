@@ -460,7 +460,7 @@ void Cmd_Toggle_f()
 		return;
 	}
 
-	Cvar_SetValue( cmdName, var->GetBool() ? 0.0f : 1.0f );
+	Cvar_SetBool( var, !var->GetBool() );
 
 	Com_Printf( "Toggled %s to %s\n", var->GetName(), var->GetBool() ? "true" : "false" );
 }
@@ -562,7 +562,7 @@ char *Cmd_MacroExpandString (char *text)
 		if (!start)
 			continue;
 	
-		token = Cvar_VariableString (token);
+		token = Cvar_FindGetString (token);
 
 		j = strlen(token);
 		len += j;
@@ -680,7 +680,7 @@ void	Cmd_AddCommand (const char *cmd_name, xcommand_t function)
 	cmd_function_t	*cmd;
 	
 // fail if the command is a variable name
-	if (Cvar_VariableString(cmd_name)[0])
+	if (Cvar_FindGetString(cmd_name)[0])
 	{
 		Com_Printf ("Cmd_AddCommand: %s already defined as a var\n", cmd_name);
 		return;

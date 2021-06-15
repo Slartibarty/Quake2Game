@@ -142,8 +142,8 @@ struct game_import_t
 
 	// console variable interaction
 	cvar_t	*(*cvar) (const char *var_name, const char *value, uint32 flags);
-	cvar_t	*(*cvar_set) (const char *var_name, const char *value);
-	cvar_t	*(*cvar_forceset) (const char *var_name, const char *value);
+	void	(*cvar_set) (const char *var_name, const char *value);
+	void	(*cvar_forceset) (cvar_t *var, const char *value);
 
 	// ClientCommand and ServerCommand parameter access
 	int		(*argc) (void);

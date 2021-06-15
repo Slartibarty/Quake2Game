@@ -670,7 +670,7 @@ cmodel_t *CM_LoadMap( const char *name, bool clientload, unsigned *checksum )
 	}
 #endif
 
-	if ( Q_strcmp( cm.name, name ) == 0 && ( clientload || !Cvar_VariableValue( "flushmap" ) ) )
+	if ( Q_strcmp( cm.name, name ) == 0 && ( clientload || !Cvar_FindGetFloat( "flushmap" ) ) )
 	{
 		*checksum = last_checksum;
 		if ( !clientload )

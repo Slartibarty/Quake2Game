@@ -896,7 +896,7 @@ static void R_SetMode()
 		}
 		else
 		{
-			Cvar_SetValue( "r_mode", glState.prev_mode );
+			Cvar_SetInt( r_mode, glState.prev_mode );
 			r_mode->ClearModified();
 			Com_Printf( "R_SetMode: invalid mode\n" );
 

@@ -43,14 +43,19 @@
 #include "sal.h"
 #endif
 
+// entirely inline
 #include "sys_defines.h"
 #include "sys_types.h"
 #include "utilities.h"
 #include "color.h"
 
+// partially inline
 #include "math.h"			// blahhh, nasty filename?
 #include "byteswap.h"
 #include "stringtools.h"
+
+// classes
+#include "labstring.h"
 
 // optional, since it includes windows.h 
 //#include "threading.h"

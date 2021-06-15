@@ -309,7 +309,7 @@ void CL_ParseServerData (void)
 	if ( ( str && *str ) && Q_strcmp( str, fs_gamedirvar->GetString() ) != 0 )
 	{
 		Q_strcpy_s( cl.gamedir, str );
-		Cvar_Set( "game", str );
+		Cvar_FindSetString( "game", str );
 	}
 	else
 	{

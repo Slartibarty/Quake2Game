@@ -29,7 +29,7 @@ static void SV_SetMaster_f()
 	}
 
 	// make sure the server is listed public
-	Cvar_Set( "public", "1" );
+	Cvar_FindSetBool( "public", true );
 
 	for ( i = 1; i < MAX_MASTERS; i++ ) {
 		memset( &master_adr[i], 0, sizeof( master_adr[i] ) );
@@ -311,7 +311,7 @@ static void SV_WriteServerFile( qboolean autosave )
 
 	// write all CVAR_LATCH cvars
 	// these will be things like coop, skill, deathmatch, etc
-	for (var = cvar_vars ; var ; var=var->GetNext())
+	for (var = cvar_vars ; var ; var=var->pNext)
 	{
 		if (!(var->GetFlags() & CVAR_LATCH))
 			continue;
@@ -372,7 +372,7 @@ static void SV_ReadServerFile()
 		}
 		FS_Read( string, sizeof( string ), f );
 		Com_DPrintf( "Set %s = %s\n", name, string );
-		Cvar_ForceSet( name, string );
+		Cvar_ForceSet( Cvar_Find( name ), string );
 	}
 
 	fclose( f );
@@ -575,7 +575,7 @@ static void SV_Savegame_f()
 		return;
 	}
 
-	if ( Cvar_VariableValue( "deathmatch" ) ) {
+	if ( Cvar_FindGetFloat( "deathmatch" ) ) {
 		Com_Print( "Can't savegame in a deathmatch\n" );
 		return;
 	}
@@ -848,7 +848,7 @@ static void SV_ServerRecord_f()
 	MSG_WriteLong (&buf, svs.spawncount);
 	// 2 means server demo
 	MSG_WriteByte (&buf, 2);	// demos are always attract loops
-	MSG_WriteString (&buf, Cvar_VariableString ("gamedir"));
+	MSG_WriteString (&buf, Cvar_FindGetString ("gamedir"));
 	MSG_WriteShort (&buf, -1);
 	// send full levelname
 	MSG_WriteString (&buf, sv.configstrings[CS_NAME]);

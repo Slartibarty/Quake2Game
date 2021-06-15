@@ -563,7 +563,7 @@ static void NET_OpenIP()
 
 	ip = Cvar_Get( "ip", "localhost", CVAR_NOSET );
 
-	dedicated = (bool)Cvar_VariableValue( "dedicated" );
+	dedicated = (bool)Cvar_FindGetFloat( "dedicated" );
 
 	if ( !ip_sockets[NS_SERVER] )
 	{

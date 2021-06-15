@@ -596,7 +596,7 @@ void FS_ExecAutoexec()
 	char *dir;
 	char name[MAX_QPATH];
 
-	dir = Cvar_VariableString( "gamedir" );
+	dir = Cvar_FindGetString( "gamedir" );
 	if ( *dir )
 		Q_sprintf_s( name, "%s/%s/autoexec.cfg", fs_basedir->GetString(), dir );
 	else

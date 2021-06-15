@@ -298,16 +298,16 @@ void CL_ForwardToServer_f (void)
 CL_Pause_f
 ==================
 */
-void CL_Pause_f (void)
+void CL_Pause_f()
 {
 	// never pause in multiplayer
-	if (Cvar_VariableValue ("maxclients") > 1 || !Com_ServerState ())
+	if ( Cvar_FindGetFloat( "maxclients" ) > 1 || !Com_ServerState() )
 	{
-		Cvar_SetValue ("paused", 0);
+		Cvar_SetBool( cl_paused, false );
 		return;
 	}
 
-	Cvar_SetValue ("paused", !cl_paused->GetBool());
+	Cvar_SetBool( cl_paused, !cl_paused->GetBool() );
 }
 
 /*
@@ -365,7 +365,7 @@ void CL_SendConnectPacket (void)
 	if (adr.port == 0)
 		adr.port = BigShort (PORT_SERVER);
 
-	port = (int)Cvar_VariableValue ("qport");
+	port = (int)Cvar_FindGetFloat ("qport");
 	userinfo_modified = false;
 
 	Netchan_OutOfBandPrint (NS_CLIENT, adr, "connect %i %i %i \"%s\"\n",
@@ -765,7 +765,7 @@ void CL_PingServers_f (void)
 	for (i=0 ; i<16 ; i++)
 	{
 		Q_sprintf_s (name, "adr%i", i);
-		adrstring = Cvar_VariableString (name);
+		adrstring = Cvar_FindGetString (name);
 		if (!adrstring || !adrstring[0])
 			continue;
 
@@ -998,11 +998,11 @@ void CL_FixUpGender(void)
 		if ((p = strchr(sk, '/')) != NULL)
 			*p = 0;
 		if (Q_stricmp(sk, "male") == 0 || Q_stricmp(sk, "cyborg") == 0)
-			Cvar_Set ("gender", "male");
+			Cvar_FindSetString("gender", "male");
 		else if (Q_stricmp(sk, "female") == 0 || Q_stricmp(sk, "crackhor") == 0)
-			Cvar_Set ("gender", "female");
+			Cvar_FindSetString("gender", "female");
 		else
-			Cvar_Set ("gender", "none");
+			Cvar_FindSetString("gender", "none");
 		gender->ClearModified();
 	}
 }
@@ -1562,7 +1562,7 @@ void CL_FixCvarCheats (void)
 	{
 		if ( Q_strcmp (var->var->GetString(), var->value) )
 		{
-			Cvar_Set (var->name, var->value);
+			Cvar_FindSetString (var->name, var->value);
 		}
 	}
 }

@@ -1,7 +1,7 @@
 /*
 ===================================================================================================
 
-	Console commands
+	Console variables
 
 	Id developer notes:
 
@@ -24,40 +24,49 @@ extern cvar_t *cvar_vars;
 
 cvar_t *	Cvar_Find( const char *name );
 
-			// returns 0 if not defined or non numeric
-float		Cvar_VariableValue( const char *name );
-
-			// returns an empty string if not defined
-char *		Cvar_VariableString( const char *name );
-
 			// attempts to match a partial variable name for command line completion
 			// returns NULL if nothing fits
 char *		Cvar_CompleteVariable( const char *partial );
+
+//=================================================================================================
 
 			// creates the variable if it doesn't exist, or returns the existing one
 			// if it exists, the value will not be changed, but flags will be ORed in
 			// that allows variables to be unarchived without needing bitflags
 cvar_t *	Cvar_Get( const char *name, const char *value, uint32 flags );
 
-			// will create the variable if it doesn't exist
-cvar_t *	Cvar_Set( const char *name, const char *value );
+			// returns 0 if not defined or non numeric
+float		Cvar_FindGetFloat( const char *name );
+
+			// returns an empty string if not defined
+char *		Cvar_FindGetString( const char *name );
+
+//=================================================================================================
 
 			// will set the variable even if NOSET or LATCH
-cvar_t *	Cvar_ForceSet( const char *name, const char *value );
+void		Cvar_ForceSet( cvar_t *var, const char *value );
 
-cvar_t *	Cvar_FullSet( const char *name, const char *value, uint32 flags );
+void		Cvar_FullSet( const char *name, const char *value, uint32 flags );
 
 			// expands value to a string and calls Cvar_Set
-void		Cvar_SetValue( const char *name, float value );
-void		Cvar_SetInt64( cvar_t *name, int64 value );
-void		Cvar_SetInt32( cvar_t *name, int32 value );
-void		Cvar_SetDouble( cvar_t *name, double value );
-void		Cvar_SetFloat( cvar_t *name, float value );
-void		Cvar_SetBool( cvar_t *name, bool value );
+void		Cvar_SetString( cvar_t *var, const char *string );
+void		Cvar_SetFloat( cvar_t *var, float value );
+void		Cvar_SetInt( cvar_t *var, int value );
+void		Cvar_SetBool( cvar_t *var, bool value );
+
+			// finds a variable, creates it if it doesn't exist, and sets the value
+void		Cvar_FindSetString( const char *name, const char *value );
+void		Cvar_FindSetFloat( const char *name, float value );
+void		Cvar_FindSetInt( const char *name, int value );
+void		Cvar_FindSetBool( const char *name, bool value );
+
+//=================================================================================================
 
 			// any CVAR_LATCHED variables that have been set will now take effect
 void		Cvar_GetLatchedVars();
 
+			// Handles variable inspection and changing from the console
+			//
 			// called by Cmd_ExecuteString when Cmd_Argv(0) doesn't match a known
 			// command.  Returns true if the command was a variable reference that
 			// was handled. (print or change)

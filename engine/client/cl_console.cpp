@@ -89,14 +89,14 @@ void Con_ToggleConsole_f()
 
 	if ( cls.key_dest == key_console ) {
 		M_ForceMenuOff();
-		Cvar_Set( "paused", "0" );
+		Cvar_SetBool( cl_paused, false );
 	}
 	else {
 		M_ForceMenuOff();
 		cls.key_dest = key_console;
 
-		if ( Cvar_VariableValue( "maxclients" ) == 1 && Com_ServerState() ) {
-			Cvar_Set( "paused", "1" );
+		if ( Cvar_FindGetFloat( "maxclients" ) == 1 && Com_ServerState() ) {
+			Cvar_SetBool( cl_paused, true );
 		}
 	}
 }

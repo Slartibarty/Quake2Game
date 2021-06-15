@@ -109,7 +109,7 @@ static void SV_CheckForSavegame()
 		return;
 	}
 
-	if ( Cvar_VariableValue( "deathmatch" ) ) {
+	if ( Cvar_FindGetFloat( "deathmatch" ) ) {
 		return;
 	}
 
@@ -161,7 +161,7 @@ static void SV_SpawnServer( const char *server, const char *spawnpoint, serverSt
 	uint		checksum;
 
 	if ( attractloop ) {
-		Cvar_Set( "paused", "0" );
+		Cvar_SetBool( sv_paused, false );
 	}
 
 	Com_Print( "------- Server Initialization -------\n" );
@@ -286,7 +286,7 @@ void SV_InitGame()
 
 	svs.initialized = true;
 
-	if ( Cvar_VariableValue( "coop" ) && Cvar_VariableValue( "deathmatch" ) )
+	if ( Cvar_FindGetFloat( "coop" ) && Cvar_FindGetFloat( "deathmatch" ) )
 	{
 		Com_Print( "Deathmatch and Coop both set, disabling Coop\n" );
 		Cvar_FullSet( "coop", "0", CVAR_SERVERINFO | CVAR_LATCH );
@@ -296,13 +296,13 @@ void SV_InitGame()
 	// so unless they explicity set coop, force it to deathmatch
 	if ( dedicated->GetBool() )
 	{
-		if ( !Cvar_VariableValue( "coop" ) ) {
+		if ( !Cvar_FindGetFloat( "coop" ) ) {
 			Cvar_FullSet( "deathmatch", "1", CVAR_SERVERINFO | CVAR_LATCH );
 		}
 	}
 
 	// init clients
-	if ( Cvar_VariableValue( "deathmatch" ) )
+	if ( Cvar_FindGetFloat( "deathmatch" ) )
 	{
 		if ( maxclients->GetInt32() <= 1 ) {
 			Cvar_FullSet( "maxclients", "8", CVAR_SERVERINFO | CVAR_LATCH );
@@ -311,7 +311,7 @@ void SV_InitGame()
 			Cvar_FullSet( "maxclients", va( "%i", MAX_CLIENTS ), CVAR_SERVERINFO | CVAR_LATCH );
 		}
 	}
-	else if ( Cvar_VariableValue( "coop" ) )
+	else if ( Cvar_FindGetFloat( "coop" ) )
 	{
 		if ( maxclients->GetInt32() <= 1 || maxclients->GetInt32() > 4 ) {
 			Cvar_FullSet( "maxclients", "4", CVAR_SERVERINFO | CVAR_LATCH );
@@ -381,14 +381,14 @@ void SV_Map( bool attractloop, const char *levelstring, bool loadgame )
 	char *ch = strstr( level, "+" );
 	if ( ch ) {
 		*ch = 0;
-		Cvar_Set( "nextserver", va( "gamemap \"%s\"", ch + 1 ) );
+		Cvar_FindSetString( "nextserver", va( "gamemap \"%s\"", ch + 1 ) );
 	} else {
-		Cvar_Set( "nextserver", "" );
+		Cvar_FindSetString( "nextserver", "" );
 	}
 
 	//ZOID special hack for end game screen in coop mode
-	if ( Cvar_VariableValue( "coop" ) && !Q_stricmp( level, "victory.pcx" ) ) {
-		Cvar_Set( "nextserver", "gamemap \"*base1\"" );
+	if ( Cvar_FindGetFloat( "coop" ) && !Q_stricmp( level, "victory.pcx" ) ) {
+		Cvar_FindSetString( "nextserver", "gamemap \"*base1\"" );
 	}
 
 	// if there is a $, use the remainder as a spawnpoint

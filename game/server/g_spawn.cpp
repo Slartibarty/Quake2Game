@@ -539,9 +539,25 @@ void SpawnEntities (const char *mapname, char *entities, const char *spawnpoint)
 	int			skill_level;
 
 	skill_level = Clamp( skill->GetInt32(), 0, 3 );
-	if ( skill->GetInt32() != skill_level ) {
-		// intify it
-		gi.cvar_forceset( "skill", va( "%d", skill_level ) );
+	if ( skill->GetInt32() != skill_level )
+	{
+		const char *value;
+		switch ( skill_level )
+		{
+		case 0:
+			value = "0";
+			break;
+		case 1:
+			value = "1";
+			break;
+		case 2:
+			value = "2";
+			break;
+		case 3:
+			value = "3";
+			break;
+		}
+		gi.cvar_forceset( skill, value );
 	}
 
 	SaveClientData ();

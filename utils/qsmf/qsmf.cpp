@@ -237,6 +237,7 @@ static void ListMaterialIDs( const std::vector<fatVertex_t> &contributions )
 			Com_Print( "\n" );
 		}
 	}
+
 	Com_Print( "\n" );
 }
 
