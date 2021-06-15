@@ -146,7 +146,7 @@ void R_DrawTriangleOutlines (void)
 	int			i, j;
 	glpoly_t	*p;
 
-	if (!r_showtris->value)
+	if (!r_showtris->GetBool())
 		return;
 
 	glDisable (GL_TEXTURE_2D);
@@ -229,7 +229,7 @@ void R_BlendLightmaps (void)
 	msurface_t	*surf, *newdrawsurf = NULL;
 
 	// don't bother if we're set to fullbright
-	if (r_fullbright->value)
+	if (r_fullbright->GetBool())
 		return;
 	if (!r_worldmodel->lightdata)
 		return;
@@ -241,11 +241,11 @@ void R_BlendLightmaps (void)
 	** set the appropriate blending mode unless we're only looking at the
 	** lightmaps.
 	*/
-	if (!r_lightmap->value)
+	if (!r_lightmap->GetBool())
 	{
 		glEnable(GL_BLEND);
 
-		if (r_overbright->value)
+		if (r_overbright->GetBool())
 		{
 			glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
 		}
@@ -280,7 +280,7 @@ void R_BlendLightmaps (void)
 	/*
 	** render dynamic lightmaps
 	*/
-	if ( r_dynamic->value )
+	if ( r_dynamic->GetBool() )
 	{
 		LM_InitBlock();
 
@@ -418,7 +418,7 @@ void R_RenderBrushPoly (msurface_t *fa)
 	if ( fa->dlightframe == r_framecount )
 	{
 dynamic:
-		if ( r_dynamic->value )
+		if ( r_dynamic->GetBool() )
 		{
 			if (!( fa->texinfo->flags & (SURFMASK_UNLIT ) ) )
 			{
@@ -521,7 +521,7 @@ void DrawTextureChains (void)
 
 //	GL_TexEnv( GL_REPLACE );
 
-	if ( !GLEW_ARB_multitexture || !r_ext_multitexture->value )
+	if ( !GLEW_ARB_multitexture || !r_ext_multitexture->GetBool() )
 	{
 		for ( i = 0, mat=glmaterials ; i<numglmaterials ; i++,mat++)
 		{
@@ -600,7 +600,7 @@ static void GL_RenderLightmappedPoly( msurface_t *surf )
 	if ( surf->dlightframe == r_framecount )
 	{
 dynamic:
-		if ( r_dynamic->value )
+		if ( r_dynamic->GetBool() )
 		{
 			if ( !(surf->texinfo->flags & (SURFMASK_UNLIT ) ) )
 			{
@@ -766,7 +766,7 @@ void R_DrawInlineBModel (void)
 	dlight_t	*lt;
 
 	// calculate dynamic lighting for bmodel
-	if ( !r_flashblend->value )
+	if ( !r_flashblend->GetBool() )
 	{
 		lt = tr.refdef.dlights;
 		for (k=0 ; k<tr.refdef.num_dlights ; k++, lt++)
@@ -803,7 +803,7 @@ void R_DrawInlineBModel (void)
 				psurf->texturechain = r_alpha_surfaces;
 				r_alpha_surfaces = psurf;
 			}
-			else if ( ( GLEW_ARB_multitexture && r_ext_multitexture->value ) && !( psurf->flags & SURF_DRAWTURB ) )
+			else if ( ( GLEW_ARB_multitexture && r_ext_multitexture->GetBool() ) && !( psurf->flags & SURF_DRAWTURB ) )
 			{
 				GL_RenderLightmappedPoly( psurf );
 			}
@@ -818,7 +818,7 @@ void R_DrawInlineBModel (void)
 
 	if ( !(currententity->flags & RF_TRANSLUCENT) )
 	{
-		if ( !GLEW_ARB_multitexture || !r_ext_multitexture->value )
+		if ( !GLEW_ARB_multitexture || !r_ext_multitexture->GetBool() )
 			R_BlendLightmaps ();
 	}
 	else
@@ -840,7 +840,7 @@ static bool R_CullBox( vec3_t mins, vec3_t maxs )
 {
 	int i;
 
-	if ( r_nocull->value ) {
+	if ( r_nocull->GetBool() ) {
 		return false;
 	}
 
@@ -1043,7 +1043,7 @@ void R_RecursiveWorldNode (mnode_t *node)
 		}
 		else
 		{
-			if ( ( GLEW_ARB_multitexture && r_ext_multitexture->value ) && !( surf->flags & SURF_DRAWTURB ) )
+			if ( ( GLEW_ARB_multitexture && r_ext_multitexture->GetBool() ) && !( surf->flags & SURF_DRAWTURB ) )
 			{
 				GL_RenderLightmappedPoly( surf );
 			}
@@ -1073,7 +1073,7 @@ void R_DrawWorld (void)
 {
 	entity_t	ent;
 
-	if (!r_drawworld->value)
+	if (!r_drawworld->GetBool())
 		return;
 
 	if ( tr.refdef.rdflags & RDF_NOWORLDMODEL )
@@ -1126,13 +1126,13 @@ void R_MarkLeaves (void)
 	mleaf_t	*leaf;
 	int		cluster;
 
-	if ( r_oldviewcluster == r_viewcluster && r_oldviewcluster2 == r_viewcluster2 && !r_novis->value && r_viewcluster != -1 ) {
+	if ( r_oldviewcluster == r_viewcluster && r_oldviewcluster2 == r_viewcluster2 && !r_novis->GetBool() && r_viewcluster != -1 ) {
 		return;
 	}
 
 	// lockpvs lets designers walk around to determine the
 	// extent of the current pvs
-	if ( r_lockpvs->value ) {
+	if ( r_lockpvs->GetBool() ) {
 		return;
 	}
 
@@ -1140,7 +1140,7 @@ void R_MarkLeaves (void)
 	r_oldviewcluster = r_viewcluster;
 	r_oldviewcluster2 = r_viewcluster2;
 
-	if ( r_novis->value || r_viewcluster == -1 || !r_worldmodel->vis )
+	if ( r_novis->GetBool() || r_viewcluster == -1 || !r_worldmodel->vis )
 	{
 		// mark everything
 		for ( i = 0; i < r_worldmodel->numleafs; i++ )

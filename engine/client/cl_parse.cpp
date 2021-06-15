@@ -304,16 +304,16 @@ void CL_ParseServerData (void)
 
 	// game directory
 	str = MSG_ReadString (&net_message);
-	assert( fs_gamedirvar->string && *fs_gamedirvar->string );
+	assert( fs_gamedirvar->GetString() && *fs_gamedirvar->GetString() );
 	// set gamedir
-	if ( ( str && *str ) && Q_strcmp( str, fs_gamedirvar->string ) != 0 )
+	if ( ( str && *str ) && Q_strcmp( str, fs_gamedirvar->GetString() ) != 0 )
 	{
 		Q_strcpy_s( cl.gamedir, str );
 		Cvar_Set( "game", str );
 	}
 	else
 	{
-		Q_strcpy_s( cl.gamedir, fs_gamedirvar->string );
+		Q_strcpy_s( cl.gamedir, fs_gamedirvar->GetString() );
 	}
 
 	// parse player entity number
@@ -386,7 +386,7 @@ void CL_LoadClientinfo (clientinfo_t *ci, char *s)
 		s = t+1;
 	}
 
-	if (cl_noskins->value || *s == 0)
+	if (cl_noskins->GetBool() || *s == 0)
 	{
 		strcpy (model_filename, "players/male/tris.md2");
 		strcpy (weapon_filename, "players/male/weapon.md2");
@@ -457,7 +457,7 @@ void CL_LoadClientinfo (clientinfo_t *ci, char *s)
 				Q_sprintf_s (weapon_filename, "players/male/%s", cl_weaponmodels[i]);
 				ci->weaponmodel[i] = R_RegisterModel(weapon_filename);
 			}
-			if (!cl_vwep->value)
+			if (!cl_vwep->GetBool())
 				break; // only one when vwep is off
 		}
 
@@ -633,7 +633,7 @@ void CL_ParseStartSoundPacket(void)
 
 void SHOWNET(const char *s)
 {
-	if (cl_shownet->value>=2)
+	if (cl_shownet->GetInt32()>=2)
 		Com_Printf ("%3i:%s\n", net_message.readcount-1, s);
 }
 
@@ -651,9 +651,9 @@ void CL_ParseServerMessage (void)
 //
 // if recording demos, copy the message out
 //
-	if (cl_shownet->value == 1)
+	if (cl_shownet->GetInt32() == 1)
 		Com_Printf ("%i ",net_message.cursize);
-	else if (cl_shownet->value >= 2)
+	else if (cl_shownet->GetInt32() >= 2)
 		Com_Printf ("------------------\n");
 
 
@@ -676,7 +676,7 @@ void CL_ParseServerMessage (void)
 			break;
 		}
 
-		if (cl_shownet->value>=2)
+		if (cl_shownet->GetInt32()>=2)
 		{
 			if (!svc_strings[cmd])
 				Com_Printf ("%3i:BAD CMD %i\n", net_message.readcount-1,cmd);

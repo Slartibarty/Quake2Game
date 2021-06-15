@@ -83,7 +83,7 @@ void Killed (edict_t *targ, edict_t *inflictor, edict_t *attacker, int damage, v
 		if (!(targ->monsterinfo.aiflags & AI_GOOD_GUY))
 		{
 			level.killed_monsters++;
-			if (coop->value && attacker->client)
+			if (coop->GetBool() && attacker->client)
 				attacker->client->resp.score++;
 			// medics won't heal monsters that they kill themselves
 			if (Q_strcmp(attacker->classname, "monster_medic") == 0)
@@ -370,11 +370,11 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 	// friendly fire avoidance
 	// if enabled you can't hurt teammates (but you can hurt yourself)
 	// knockback still occurs
-	if ((targ != attacker) && ((deathmatch->value && ((int)(dmflags->value) & (DF_MODELTEAMS | DF_SKINTEAMS))) || coop->value))
+	if ((targ != attacker) && ((deathmatch->GetBool() && (dmflags->GetInt32() & (DF_MODELTEAMS | DF_SKINTEAMS))) || coop->GetBool()))
 	{
 		if (OnSameTeam (targ, attacker))
 		{
-			if ((int)(dmflags->value) & DF_NO_FRIENDLY_FIRE)
+			if (dmflags->GetInt32() & DF_NO_FRIENDLY_FIRE)
 				damage = 0;
 			else
 				mod |= MOD_FRIENDLY_FIRE;
@@ -383,7 +383,7 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 	meansOfDeath = mod;
 
 	// easy mode takes half damage
-	if (skill->value == 0 && deathmatch->value == 0 && targ->client)
+	if (skill->GetInt32() == 0 && !deathmatch->GetBool() && targ->client)
 	{
 		damage /= 2;
 		if (!damage)
@@ -491,7 +491,7 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 		{
 			targ->pain (targ, attacker, knockback, take);
 			// nightmare mode monsters don't go into pain frames often
-			if (skill->value == 3)
+			if (skill->GetInt32() == 3)
 				targ->pain_debounce_time = level.time + 5;
 		}
 	}

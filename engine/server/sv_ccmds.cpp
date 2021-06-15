@@ -23,7 +23,7 @@ static void SV_SetMaster_f()
 	int i, slot;
 
 	// only dedicated servers send heartbeats
-	if ( !dedicated->value ) {
+	if ( !dedicated->GetBool() ) {
 		Com_Print( "Only dedicated servers use masters.\n" );
 		return;
 	}
@@ -84,7 +84,7 @@ static bool SV_SetPlayer()
 	if ( s[0] >= '0' && s[0] <= '9' )
 	{
 		idnum = atoi( Cmd_Argv( 1 ) );
-		if ( idnum < 0 || idnum >= maxclients->value )
+		if ( idnum < 0 || idnum >= maxclients->GetInt32() )
 		{
 			Com_Printf( "Bad client slot: %i\n", idnum );
 			return false;
@@ -101,7 +101,7 @@ static bool SV_SetPlayer()
 	}
 
 	// check for a name match
-	for ( i = 0, cl = svs.clients; i < maxclients->value; i++, cl++ )
+	for ( i = 0, cl = svs.clients; i < maxclients->GetInt32(); i++, cl++ )
 	{
 		if ( !cl->state )
 			continue;
@@ -311,20 +311,20 @@ static void SV_WriteServerFile( qboolean autosave )
 
 	// write all CVAR_LATCH cvars
 	// these will be things like coop, skill, deathmatch, etc
-	for (var = cvar_vars ; var ; var=var->next)
+	for (var = cvar_vars ; var ; var=var->GetNext())
 	{
-		if (!(var->flags & CVAR_LATCH))
+		if (!(var->GetFlags() & CVAR_LATCH))
 			continue;
-		if (strlen(var->name) >= sizeof(name)-1
-			|| strlen(var->string) >= sizeof(string)-1)
+		if (strlen(var->GetName()) >= sizeof(name)-1
+			|| strlen(var->GetString()) >= sizeof(string)-1)
 		{
-			Com_Printf ("Cvar too long: %s = %s\n", var->name, var->string);
+			Com_Printf ("Cvar too long: %s = %s\n", var->GetName(), var->GetString());
 			continue;
 		}
 		memset (name, 0, sizeof(name));
 		memset (string, 0, sizeof(string));
-		strcpy (name, var->name);
-		strcpy (string, var->string);
+		strcpy (name, var->GetName());
+		strcpy (string, var->GetString());
 		fwrite (name, 1, sizeof(name), f);
 		fwrite (string, 1, sizeof(string), f);
 	}
@@ -449,8 +449,8 @@ static void SV_GameMap_f()
 			// clear all the client inuse flags before saving so that
 			// when the level is re-entered, the clients will spawn
 			// at spawn points instead of occupying body shells
-			bool *savedInuse = (bool*)Mem_StackAlloc(maxclients->value * sizeof(bool));
-			for (i=0,cl=svs.clients ; i<maxclients->value; i++,cl++)
+			bool *savedInuse = (bool*)Mem_StackAlloc(maxclients->GetInt64() * sizeof(bool));
+			for (i=0,cl=svs.clients ; i<maxclients->GetInt32(); i++,cl++)
 			{
 				savedInuse[i] = cl->edict->inuse;
 				cl->edict->inuse = false;
@@ -459,7 +459,7 @@ static void SV_GameMap_f()
 			SV_WriteLevelFile ();
 
 			// we must restore these for clients to transfer over correctly
-			for (i=0,cl=svs.clients ; i<maxclients->value; i++,cl++)
+			for (i=0,cl=svs.clients ; i<maxclients->GetInt32(); i++,cl++)
 				cl->edict->inuse = savedInuse[i];
 			//Mem_Free (savedInuse);
 		}
@@ -472,7 +472,7 @@ static void SV_GameMap_f()
 	Q_strcpy_s (svs.mapcmd, Cmd_Argv(1));
 
 	// copy off the level to the autosave slot
-	if (!dedicated->value)
+	if (!dedicated->GetBool())
 	{
 		SV_WriteServerFile (true);
 		SV_CopySaveGame ("current", "save0");
@@ -585,7 +585,7 @@ static void SV_Savegame_f()
 		return;
 	}
 
-	if ( maxclients->value == 1 && svs.clients[0].edict->client->ps.stats[STAT_HEALTH] <= 0 ) {
+	if ( maxclients->GetInt64() == 1 && svs.clients[0].edict->client->ps.stats[STAT_HEALTH] <= 0 ) {
 		Com_Print( "\nCan't savegame while dead!\n" );
 		return;
 	}
@@ -665,7 +665,7 @@ static void SV_Status_f()
 
 	Com_Print ("num score ping name            lastmsg address               qport \n");
 	Com_Print ("--- ----- ---- --------------- ------- --------------------- ------\n");
-	for (i=0,cl=svs.clients ; i<maxclients->value; i++,cl++)
+	for (i=0,cl=svs.clients ; i<maxclients->GetInt32(); i++,cl++)
 	{
 		if (!cl->state)
 			continue;
@@ -728,7 +728,7 @@ static void SV_ConSay_f()
 
 	strcat(text, p);
 
-	for (j = 0, client = svs.clients; j < maxclients->value; j++, client++)
+	for (j = 0, client = svs.clients; j < maxclients->GetInt32(); j++, client++)
 	{
 		if (client->state != cs_spawned)
 			continue;
@@ -945,7 +945,7 @@ void SV_InitOperatorCommands()
 	Cmd_AddCommand( "gamemap", SV_GameMap_f );
 	Cmd_AddCommand( "setmaster", SV_SetMaster_f );
 
-	if ( dedicated->value ) {
+	if ( dedicated->GetBool() ) {
 		Cmd_AddCommand( "say", SV_ConSay_f );
 	}
 

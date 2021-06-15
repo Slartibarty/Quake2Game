@@ -211,7 +211,7 @@ void trigger_key_use (edict_t *self, edict_t *other, edict_t *activator)
 	}
 
 	gi.sound (activator, CHAN_AUTO, gi.soundindex ("misc/keyuse.wav"), 1, ATTN_NORM, 0);
-	if (coop->value)
+	if (coop->GetBool())
 	{
 		int		player;
 		edict_t	*ent;

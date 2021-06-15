@@ -311,19 +311,19 @@ static void SV_BeginDownload_f()
 
 	// hacked by zoid to allow more conrol over download
 	// first off, no .. or global allow check
-	if ( strstr( name, ".." ) || !allow_download->value
+	if ( strstr( name, ".." ) || !allow_download->GetBool()
 		// leading dot is no good
 		|| *name == '.'
 		// leading slash bad as well, must be in subdir
 		|| *name == '/'
 		// next up, skin check
-		|| ( Q_strncmp( name, "players/", 6 ) == 0 && !allow_download_players->value )
+		|| ( Q_strncmp( name, "players/", 6 ) == 0 && !allow_download_players->GetBool() )
 		// now models
-		|| ( Q_strncmp( name, "models/", 6 ) == 0 && !allow_download_models->value )
+		|| ( Q_strncmp( name, "models/", 6 ) == 0 && !allow_download_models->GetBool() )
 		// now sounds
-		|| ( Q_strncmp( name, "sound/", 6 ) == 0 && !allow_download_sounds->value )
+		|| ( Q_strncmp( name, "sound/", 6 ) == 0 && !allow_download_sounds->GetBool() )
 		// now maps (note special case for maps, must not be in pak)
-		|| ( Q_strncmp( name, "maps/", 6 ) == 0 && !allow_download_maps->value )
+		|| ( Q_strncmp( name, "maps/", 6 ) == 0 && !allow_download_maps->GetBool() )
 		// MUST be in a subdirectory	
 		|| !strstr( name, "/" ) )
 	{
@@ -506,7 +506,7 @@ static void SV_ClientThink( client_t *cl, usercmd_t *cmd )
 {
 	cl->commandMsec -= cmd->msec;
 
-	if ( cl->commandMsec < 0 && sv_enforcetime->value )
+	if ( cl->commandMsec < 0 && sv_enforcetime->GetBool() )
 	{
 		Com_DPrintf( "commandMsec underflow from %s\n", cl->name );
 		return;

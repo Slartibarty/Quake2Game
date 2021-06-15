@@ -28,11 +28,11 @@ VID_Restart
 */
 static void VID_Restart_f()
 {
-	cls.disable_screen = true;
+	cls.disable_screen = 1.0f;
 
 	R_Restart();
 
-	cls.disable_screen = false;
+	cls.disable_screen = 0.0f;
 
 	cl.refresh_prepped = false;
 }
@@ -86,14 +86,14 @@ void VID_Init()
 {
 	Cmd_AddCommand( "vid_restart", VID_Restart_f );
 	
-	cls.disable_screen = true;
+	cls.disable_screen = 1.0f;
 
 	if ( !VID_LoadRefresh() )
 	{
 		Com_FatalError( "Couldn't load renderer!" );
 	}
 
-	cls.disable_screen = false;
+	cls.disable_screen = 0.0f;
 
 	cl.refresh_prepped = false;
 }

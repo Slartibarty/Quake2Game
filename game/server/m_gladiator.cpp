@@ -238,7 +238,7 @@ void gladiator_pain (edict_t *self, edict_t *other, float kick, int damage)
 	else
 		gi.sound (self, CHAN_VOICE, sound_pain2, 1, ATTN_NORM, 0);
 
-	if (skill->value == 3)
+	if (skill->GetInt32() == 3)
 		return;		// no pain anims in nightmare
 
 	if (self->velocity[2] > 100)
@@ -319,7 +319,7 @@ void gladiator_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int da
 */
 void SP_monster_gladiator (edict_t *self)
 {
-	if (deathmatch->value)
+	if (deathmatch->GetBool())
 	{
 		G_FreeEdict (self);
 		return;

@@ -66,7 +66,7 @@ void R_PushDlights()
 	int			i;
 	dlight_t	*l;
 
-	if ( r_flashblend->value ) {
+	if ( r_flashblend->GetBool() ) {
 		return;
 	}
 
@@ -177,7 +177,7 @@ static int RecursiveLightPoint( mnode_t *node, vec3_t start, vec3_t end )
 					maps++)
 			{
 				for (i=0 ; i<3 ; i++)
-					scale[i] = r_modulate->value*tr.refdef.lightstyles[surf->styles[maps]].rgb[i];
+					scale[i] = r_modulate->GetFloat()*tr.refdef.lightstyles[surf->styles[maps]].rgb[i];
 
 				pointcolor[0] += lightmap[0] * scale[0] * (1.0f/255);
 				pointcolor[1] += lightmap[1] * scale[1] * (1.0f/255);
@@ -209,7 +209,7 @@ void R_LightPoint( vec3_t p, vec3_t color )
 	vec3_t		dist;
 	float		add;
 	
-	if (!r_worldmodel->lightdata || r_fullbright->value)
+	if (!r_worldmodel->lightdata || r_fullbright->GetBool())
 	{
 		color[0] = color[1] = color[2] = 1.0f;
 		return;
@@ -248,7 +248,7 @@ void R_LightPoint( vec3_t p, vec3_t color )
 		}
 	}
 
-	VectorScale (color, r_modulate->value, color);
+	VectorScale (color, r_modulate->GetFloat(), color);
 }
 
 
@@ -409,7 +409,7 @@ void R_BuildLightMap(msurface_t *surf, byte *dest, int stride)
 			bl = s_blocklights;
 
 			for (i = 0; i < 3; i++)
-				scale[i] = r_modulate->value * tr.refdef.lightstyles[surf->styles[maps]].rgb[i];
+				scale[i] = r_modulate->GetFloat() * tr.refdef.lightstyles[surf->styles[maps]].rgb[i];
 
 			if (scale[0] == 1.0F &&
 				scale[1] == 1.0F &&
@@ -446,7 +446,7 @@ void R_BuildLightMap(msurface_t *surf, byte *dest, int stride)
 			bl = s_blocklights;
 
 			for (i = 0; i < 3; i++)
-				scale[i] = r_modulate->value * tr.refdef.lightstyles[surf->styles[maps]].rgb[i];
+				scale[i] = r_modulate->GetFloat() * tr.refdef.lightstyles[surf->styles[maps]].rgb[i];
 
 			if (scale[0] == 1.0F &&
 				scale[1] == 1.0F &&

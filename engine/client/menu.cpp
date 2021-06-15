@@ -969,20 +969,20 @@ static void ControlsSetMenuItemValues( void )
 	s_options_sfxvolume_slider.curvalue		= Cvar_VariableValue( "s_volume" ) * 10;
 	s_options_cdvolume_box.curvalue 		= !Cvar_VariableValue("cd_nocd");
 	s_options_quality_list.curvalue			= !Cvar_VariableValue( "s_loadas8bit" );
-	s_options_sensitivity_slider.curvalue	= ( sensitivity->value ) * 2;
+	s_options_sensitivity_slider.curvalue	= ( sensitivity->GetFloat() ) * 2;
 
-	Cvar_SetValue( "cl_run", Clamp( cl_run->value, 0.0f, 1.0f ) );
-	s_options_alwaysrun_box.curvalue		= (int)cl_run->value;
+	Cvar_SetInt64( cl_run, Clamp<int64>( cl_run->GetInt64(), 0, 1 ) );
+	s_options_alwaysrun_box.curvalue		= cl_run->GetInt32();
 
-	s_options_invertmouse_box.curvalue		= m_pitch->value < 0;
+	s_options_invertmouse_box.curvalue		= m_pitch->GetInt64() < 0;
 
-	Cvar_SetValue( "crosshair", Clamp( cl_crosshair->value, 0.0f, 3.0f ) );
-	s_options_crosshair_box.curvalue		= (int)cl_crosshair->value;
+	Cvar_SetInt64( cl_crosshair, Clamp<int64>( cl_crosshair->GetInt64(), 0, 3 ) );
+	s_options_crosshair_box.curvalue		= cl_crosshair->GetInt32();
 }
 
 static void ControlsResetDefaultsFunc( void *unused )
 {
-	Cbuf_AddText ("exec default.cfg\n");
+	Cbuf_AddText( "exec default.cfg\n" );
 	Cbuf_Execute();
 
 	ControlsSetMenuItemValues();
@@ -990,12 +990,12 @@ static void ControlsResetDefaultsFunc( void *unused )
 
 static void InvertMouseFunc( void *unused )
 {
-	Cvar_SetValue( "m_pitch", -m_pitch->value );
+	Cvar_SetDouble( m_pitch, -m_pitch->GetDouble() );
 }
 
 static void UpdateVolumeFunc( void *unused )
 {
-	Cvar_SetValue( "s_volume", s_options_sfxvolume_slider.curvalue / 10 );
+	Cvar_SetDouble( Cvar_Find( "s_volume" ), s_options_sfxvolume_slider.curvalue / 10 );
 }
 
 static void UpdateCDVolumeFunc( void *unused )
@@ -1273,18 +1273,6 @@ static void ApplyChanges( void *unused )
 	Cvar_SetValue( "r_finish", s_finish_box.curvalue );
 	Cvar_SetValue( "r_mode", s_mode_list.curvalue );
 
-	/*
-	** update appropriate stuff if we're running OpenGL and gamma
-	** has been modified
-	*/
-	if ( r_gamma->modified )
-	{
-		// SLARTTODO
-		//vid_ref->modified = true;
-	}
-
-	// UPDATE RESOLUTION HERE
-
 	//M_ForceMenuOff();
 }
 
@@ -1358,14 +1346,14 @@ void VID_MenuInit( void )
 	if ( !r_finish )
 		r_finish = Cvar_Get( "r_finish", "0", CVAR_ARCHIVE );
 
-	s_mode_list.curvalue = r_mode->value;
+	s_mode_list.curvalue = r_mode->GetInt64();
 
 	if ( !scr_viewsize )
 		scr_viewsize = Cvar_Get ("viewsize", "100", CVAR_ARCHIVE);
 
-	s_screensize_slider.curvalue = scr_viewsize->value/10;
+	s_screensize_slider.curvalue = scr_viewsize->GetDouble() / 10.0;
 
-	s_vid_menu.x = viddef.width * 0.50f;
+	s_vid_menu.x = viddef.width / 2;
 	s_vid_menu.nitems = 0;
 
 	s_mode_list.generic.type = MTYPE_SPINCONTROL;
@@ -1389,14 +1377,14 @@ void VID_MenuInit( void )
 	s_brightness_slider.generic.callback = BrightnessCallback;
 	s_brightness_slider.minvalue = 5;
 	s_brightness_slider.maxvalue = 13;
-	s_brightness_slider.curvalue = ( 1.3f - r_gamma->value + 0.5f ) * 10;
+	s_brightness_slider.curvalue = ( 1.3 - r_gamma->GetDouble() + 0.5 ) * 10.0;
 
 	s_fs_box.generic.type = MTYPE_SPINCONTROL;
 	s_fs_box.generic.x	= 0;
 	s_fs_box.generic.y	= 40;
 	s_fs_box.generic.name	= "fullscreen";
 	s_fs_box.itemnames = yesno_names;
-	s_fs_box.curvalue = r_fullscreen->value;
+	s_fs_box.curvalue = r_fullscreen->GetInt64();
 
 	s_defaults_action.generic.type = MTYPE_ACTION;
 	s_defaults_action.generic.name = "reset to defaults";
@@ -1416,13 +1404,13 @@ void VID_MenuInit( void )
 	s_tq_slider.generic.name	= "texture quality";
 	s_tq_slider.minvalue = 0;
 	s_tq_slider.maxvalue = 3;
-	s_tq_slider.curvalue = 3-r_picmip->value;
+	s_tq_slider.curvalue = 3 - r_picmip->GetInt64();
 
 	s_finish_box.generic.type = MTYPE_SPINCONTROL;
 	s_finish_box.generic.x	= 0;
 	s_finish_box.generic.y	= 80;
 	s_finish_box.generic.name	= "sync every frame";
-	s_finish_box.curvalue = r_finish->value;
+	s_finish_box.curvalue = r_finish->GetInt64();
 	s_finish_box.itemnames = yesno_names;
 
 	Menu_AddItem( &s_vid_menu, ( void * ) &s_mode_list );
@@ -3394,7 +3382,7 @@ void AddressBook_MenuInit( void )
 		s_addressbook_fields[i].length			= 60;
 		s_addressbook_fields[i].visible_length	= 30;
 
-		strcpy( s_addressbook_fields[i].buffer, adr->string );
+		strcpy( s_addressbook_fields[i].buffer, adr->GetString() );
 
 		Menu_AddItem( &s_addressbook_menu, &s_addressbook_fields[i] );
 	}
@@ -3706,10 +3694,10 @@ qboolean PlayerConfig_MenuInit( void )
 	if (s_numplayermodels == 0)
 		return false;
 
-	if ( hand->value < 0 || hand->value > 2 )
+	if ( hand->GetInt64() < 0 || hand->GetInt64() > 2 )
 		Cvar_SetValue( "hand", 0 );
 
-	strcpy( currentdirectory, skin->string );
+	strcpy( currentdirectory, skin->GetString() );
 
 	if ( strchr( currentdirectory, '/' ) )
 	{
@@ -3761,8 +3749,8 @@ qboolean PlayerConfig_MenuInit( void )
 	s_player_name_field.generic.y		= 0;
 	s_player_name_field.length	= 20;
 	s_player_name_field.visible_length = 20;
-	strcpy( s_player_name_field.buffer, name->string );
-	s_player_name_field.cursor = (int)strlen( name->string );
+	Q_strcpy_s( s_player_name_field.buffer, name->GetString() );
+	s_player_name_field.cursor = (int)strlen( name->GetString() );
 
 	s_player_model_title.generic.type = MTYPE_SEPARATOR;
 	s_player_model_title.generic.name = "model";

@@ -453,7 +453,7 @@ void Cmd_Toggle_f()
 	}
 
 	const char *cmdName = Cmd_Argv( 1 );
-	cvar_t *var = Cvar_FindVar( cmdName );
+	cvar_t *var = Cvar_Find( cmdName );
 	if ( !var )
 	{
 		Com_Printf( "Cvar \"%s\" does not exist\n", cmdName );

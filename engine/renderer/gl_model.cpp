@@ -1369,7 +1369,7 @@ void R_BeginRegistration( const char *model )
 	if ( !flushmap ) {
 		flushmap = Cvar_Get( "flushmap", "0", 0 );
 	}
-	if ( Q_strcmp( mod_known[0].name, model ) || flushmap->value ) {
+	if ( Q_strcmp( mod_known[0].name, model ) || flushmap->GetBool() ) {
 		Mod_Free( &mod_known[0] );
 	}
 	r_worldmodel = Mod_ForName( model, true );

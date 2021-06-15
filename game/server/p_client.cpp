@@ -89,7 +89,7 @@ The normal starting point for a level.
 */
 void SP_info_player_start(edict_t *self)
 {
-	if (!coop->value)
+	if (!coop->GetBool())
 		return;
 	// SlartHack
 	if(Q_stricmp(level.mapname, "security") == 0)
@@ -105,7 +105,7 @@ potential spawning position for deathmatch games
 */
 void SP_info_player_deathmatch(edict_t *self)
 {
-	if (!deathmatch->value)
+	if (!deathmatch->GetBool())
 	{
 		G_FreeEdict (self);
 		return;
@@ -119,7 +119,7 @@ potential spawning position for coop games
 
 void SP_info_player_coop(edict_t *self)
 {
-	if (!coop->value)
+	if (!coop->GetBool())
 	{
 		G_FreeEdict (self);
 		return;
@@ -198,10 +198,10 @@ void ClientObituary (edict_t *self, edict_t *inflictor, edict_t *attacker)
 	const char	*message, *message2;
 	qboolean	ff;
 
-	if (coop->value && attacker->client)
+	if (coop->GetBool() && attacker->client)
 		meansOfDeath |= MOD_FRIENDLY_FIRE;
 
-	if (deathmatch->value || coop->value)
+	if (deathmatch->GetBool() || coop->GetBool())
 	{
 		ff = meansOfDeath & MOD_FRIENDLY_FIRE;
 		mod = meansOfDeath & ~MOD_FRIENDLY_FIRE;
@@ -287,7 +287,7 @@ void ClientObituary (edict_t *self, edict_t *inflictor, edict_t *attacker)
 		if (message)
 		{
 			gi.bprintf (PRINT_MEDIUM, "%s %s.\n", self->client->pers.netname, message);
-			if (deathmatch->value)
+			if (deathmatch->GetBool())
 				self->client->resp.score--;
 			self->enemy = NULL;
 			return;
@@ -370,7 +370,7 @@ void ClientObituary (edict_t *self, edict_t *inflictor, edict_t *attacker)
 			if (message)
 			{
 				gi.bprintf (PRINT_MEDIUM,"%s %s %s%s\n", self->client->pers.netname, message, attacker->client->pers.netname, message2);
-				if (deathmatch->value)
+				if (deathmatch->GetBool())
 				{
 					if (ff)
 						attacker->client->resp.score--;
@@ -383,7 +383,7 @@ void ClientObituary (edict_t *self, edict_t *inflictor, edict_t *attacker)
 	}
 
 	gi.bprintf (PRINT_MEDIUM,"%s died.\n", self->client->pers.netname);
-	if (deathmatch->value)
+	if (deathmatch->GetBool())
 		self->client->resp.score--;
 }
 
@@ -397,7 +397,7 @@ void TossClientWeapon (edict_t *self)
 	qboolean	quad;
 	float		spread;
 
-	if (!deathmatch->value)
+	if (!deathmatch->GetBool())
 		return;
 
 	item = self->client->pers.weapon;
@@ -406,7 +406,7 @@ void TossClientWeapon (edict_t *self)
 	if (item && (Q_strcmp (item->pickup_name, "Blaster") == 0))
 		item = NULL;
 
-	if (!((int)(dmflags->value) & DF_QUAD_DROP))
+	if (!(dmflags->GetInt32() & DF_QUAD_DROP))
 		quad = false;
 	else
 		quad = (self->client->quad_framenum > (level.framenum + 10));
@@ -510,14 +510,14 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 		self->client->ps.pmove.pm_type = PM_DEAD;
 		ClientObituary (self, inflictor, attacker);
 		TossClientWeapon (self);
-		if (deathmatch->value)
+		if (deathmatch->GetBool())
 			Cmd_Help_f (self);		// show scores
 
 		// clear inventory
 		// this is kind of ugly, but it's how we want to handle keys in coop
 		for (n = 0; n < game.num_items; n++)
 		{
-			if (coop->value && itemlist[n].flags & IT_KEY)
+			if (coop->GetBool() && itemlist[n].flags & IT_KEY)
 				self->client->resp.coop_respawn.inventory[n] = self->client->pers.inventory[n];
 			self->client->pers.inventory[n] = 0;
 		}
@@ -643,7 +643,7 @@ void SaveClientData (void)
 		game.clients[i].pers.health = ent->health;
 		game.clients[i].pers.max_health = ent->max_health;
 		game.clients[i].pers.savedFlags = (ent->flags & (FL_GODMODE|FL_NOTARGET|FL_POWER_ARMOR));
-		if (coop->value)
+		if (coop->GetBool())
 			game.clients[i].pers.score = ent->client->resp.score;
 	}
 }
@@ -653,7 +653,7 @@ void FetchClientEntData (edict_t *ent)
 	ent->health = ent->client->pers.health;
 	ent->max_health = ent->client->pers.max_health;
 	ent->flags |= ent->client->pers.savedFlags;
-	if (coop->value)
+	if (coop->GetBool())
 		ent->client->resp.score = ent->client->pers.score;
 }
 
@@ -685,7 +685,7 @@ float	PlayersRangeFromSpot (edict_t *spot)
 
 	bestplayerdistance = 9999999;
 
-	for (n = 1; n <= maxclients->value; n++)
+	for (n = 1; n <= maxclients->GetInt32(); n++)
 	{
 		player = &g_edicts[n];
 
@@ -804,7 +804,7 @@ edict_t *SelectFarthestDeathmatchSpawnPoint (void)
 
 edict_t *SelectDeathmatchSpawnPoint (void)
 {
-	if ( (int)(dmflags->value) & DF_SPAWN_FARTHEST)
+	if ( dmflags->GetInt32() & DF_SPAWN_FARTHEST)
 		return SelectFarthestDeathmatchSpawnPoint ();
 	else
 		return SelectRandomDeathmatchSpawnPoint ();
@@ -859,9 +859,9 @@ void	SelectSpawnPoint (edict_t *ent, vec3_t origin, vec3_t angles)
 {
 	edict_t	*spot = NULL;
 
-	if (deathmatch->value)
+	if (deathmatch->GetBool())
 		spot = SelectDeathmatchSpawnPoint ();
-	else if (coop->value)
+	else if (coop->GetBool())
 		spot = SelectCoopSpawnPoint (ent);
 
 	// find a single player start spot
@@ -935,7 +935,7 @@ void CopyToBodyQue (edict_t *ent)
 	edict_t		*body;
 
 	// grab a body que and cycle to the next one
-	body = &g_edicts[(int)maxclients->value + level.body_que + 1];
+	body = &g_edicts[(int)maxclients->GetInt32() + level.body_que + 1];
 	level.body_que = (level.body_que + 1) % BODY_QUEUE_SIZE;
 
 	// FIXME: send an effect on the removed body
@@ -966,7 +966,7 @@ void CopyToBodyQue (edict_t *ent)
 
 void respawn (edict_t *self)
 {
-	if (deathmatch->value || coop->value)
+	if (deathmatch->GetBool() || coop->GetBool())
 	{
 		// spectator's don't leave bodies
 		if (self->movetype != MOVETYPE_NOCLIP)
@@ -1003,9 +1003,9 @@ void spectator_respawn (edict_t *ent)
 
 	if (ent->client->pers.spectator) {
 		char *value = Info_ValueForKey (ent->client->pers.userinfo, "spectator");
-		if (*spectator_password->string && 
-			Q_strcmp(spectator_password->string, "none") && 
-			Q_strcmp(spectator_password->string, value)) {
+		if (*spectator_password->GetString() && 
+			Q_strcmp(spectator_password->GetString(), "none") && 
+			Q_strcmp(spectator_password->GetString(), value)) {
 			gi.cprintf(ent, PRINT_HIGH, "Spectator password incorrect.\n");
 			ent->client->pers.spectator = false;
 			gi.WriteByte (svc_stufftext);
@@ -1015,11 +1015,11 @@ void spectator_respawn (edict_t *ent)
 		}
 
 		// count spectators
-		for (i = 1, numspec = 0; i <= maxclients->value; i++)
+		for (i = 1, numspec = 0; i <= maxclients->GetInt32(); i++)
 			if (g_edicts[i].inuse && g_edicts[i].client->pers.spectator)
 				numspec++;
 
-		if (numspec >= maxspectators->value) {
+		if (numspec >= maxspectators->GetInt32()) {
 			gi.cprintf(ent, PRINT_HIGH, "Server spectator limit is full.");
 			ent->client->pers.spectator = false;
 			// reset his spectator var
@@ -1032,8 +1032,8 @@ void spectator_respawn (edict_t *ent)
 		// he was a spectator and wants to join the game
 		// he must have the right password
 		char *value = Info_ValueForKey (ent->client->pers.userinfo, "password");
-		if (*password->string && Q_strcmp(password->string, "none") &&
-			Q_strcmp(password->string, value)) {
+		if (*password->GetString() && Q_strcmp(password->GetString(), "none") &&
+			Q_strcmp(password->GetString(), value)) {
 			gi.cprintf(ent, PRINT_HIGH, "Password incorrect.\n");
 			ent->client->pers.spectator = true;
 			gi.WriteByte (svc_stufftext);
@@ -1101,7 +1101,7 @@ void PutClientInServer (edict_t *ent)
 	client = ent->client;
 
 	// deathmatch wipes most client data every spawn
-	if (deathmatch->value)
+	if (deathmatch->GetBool())
 	{
 		char		userinfo[MAX_INFO_STRING];
 
@@ -1110,7 +1110,7 @@ void PutClientInServer (edict_t *ent)
 		InitClientPersistant (client);
 		ClientUserinfoChanged (ent, userinfo);
 	}
-	else if (coop->value)
+	else if (coop->GetBool())
 	{
 //		int			n;
 		char		userinfo[MAX_INFO_STRING];
@@ -1176,7 +1176,7 @@ void PutClientInServer (edict_t *ent)
 
 	VectorCopy( spawn_origin, client->ps.pmove.origin );
 
-	if (deathmatch->value && ((int)dmflags->value & DF_FIXED_FOV))
+	if (deathmatch->GetBool() && (dmflags->GetInt32() & DF_FIXED_FOV))
 	{
 		client->ps.fov = 90;
 	}
@@ -1293,7 +1293,7 @@ void ClientBegin (edict_t *ent)
 
 	ent->client = game.clients + (ent - g_edicts - 1);
 
-	if (deathmatch->value)
+	if (deathmatch->GetBool())
 	{
 		ClientBeginDeathmatch (ent);
 		return;
@@ -1372,7 +1372,7 @@ void ClientUserinfoChanged (edict_t *ent, char *userinfo)
 	// set spectator
 	s = Info_ValueForKey (userinfo, "spectator");
 	// spectators are only supported in deathmatch
-	if (deathmatch->value && *s && Q_strcmp(s, "0"))
+	if (deathmatch->GetBool() && *s && Q_strcmp(s, "0"))
 		ent->client->pers.spectator = true;
 	else
 		ent->client->pers.spectator = false;
@@ -1386,7 +1386,7 @@ void ClientUserinfoChanged (edict_t *ent, char *userinfo)
 	gi.configstring (CS_PLAYERSKINS+playernum, va("%s\\%s", ent->client->pers.netname, s) );
 
 	// fov
-	if (deathmatch->value && ((int)dmflags->value & DF_FIXED_FOV))
+	if (deathmatch->GetBool() && (dmflags->GetInt32() & DF_FIXED_FOV))
 	{
 		ent->client->ps.fov = 90;
 	}
@@ -1436,30 +1436,30 @@ qboolean ClientConnect (edict_t *ent, char *userinfo)
 
 	// check for a spectator
 	value = Info_ValueForKey (userinfo, "spectator");
-	if (deathmatch->value && *value && Q_strcmp(value, "0")) {
+	if (deathmatch->GetBool() && *value && Q_strcmp(value, "0")) {
 		int i, numspec;
 
-		if (*spectator_password->string && 
-			Q_strcmp(spectator_password->string, "none") &&
-			Q_strcmp(spectator_password->string, value)) {
+		if (*spectator_password->GetString() && 
+			Q_strcmp(spectator_password->GetString(), "none") &&
+			Q_strcmp(spectator_password->GetString(), value)) {
 			Info_SetValueForKey(userinfo, "rejmsg", "Spectator password required or incorrect.");
 			return false;
 		}
 
 		// count spectators
-		for (i = numspec = 0; i < maxclients->value; i++)
+		for (i = numspec = 0; i < maxclients->GetInt32(); i++)
 			if (g_edicts[i+1].inuse && g_edicts[i+1].client->pers.spectator)
 				numspec++;
 
-		if (numspec >= maxspectators->value) {
+		if (numspec >= maxspectators->GetInt32()) {
 			Info_SetValueForKey(userinfo, "rejmsg", "Server spectator limit is full.");
 			return false;
 		}
 	} else {
 		// check for a password
 		value = Info_ValueForKey (userinfo, "password");
-		if (*password->string && Q_strcmp(password->string, "none") &&
-			Q_strcmp(password->string, value)) {
+		if (*password->GetString() && Q_strcmp(password->GetString(), "none") &&
+			Q_strcmp(password->GetString(), value)) {
 			Info_SetValueForKey(userinfo, "rejmsg", "Password required or incorrect.");
 			return false;
 		}
@@ -1606,7 +1606,7 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 		else
 			client->ps.pmove.pm_type = PM_NORMAL;
 
-		client->ps.pmove.gravity = sv_gravity->value;
+		client->ps.pmove.gravity = sv_gravity->GetInt32(); // TODO: RIP FLOATING POINT
 		pm.s = client->ps.pmove;
 
 		VectorCopy( ent->s.origin, pm.s.origin );
@@ -1722,7 +1722,7 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 	}
 
 	// update chase cam if being followed
-	for (i = 1; i <= maxclients->value; i++) {
+	for (i = 1; i <= maxclients->GetInt32(); i++) {
 		other = g_edicts + i;
 		if (other->inuse && other->client->chase_target == ent)
 			UpdateChaseCam(other);
@@ -1748,7 +1748,7 @@ void ClientBeginServerFrame (edict_t *ent)
 
 	client = ent->client;
 
-	if (deathmatch->value &&
+	if (deathmatch->GetBool() &&
 		client->pers.spectator != client->resp.spectator &&
 		(level.time - client->respawn_time) >= 5) {
 		spectator_respawn(ent);
@@ -1767,13 +1767,13 @@ void ClientBeginServerFrame (edict_t *ent)
 		if ( level.time > client->respawn_time)
 		{
 			// in deathmatch, only wait for attack button
-			if (deathmatch->value)
+			if (deathmatch->GetBool())
 				buttonMask = BUTTON_ATTACK;
 			else
 				buttonMask = -1;
 
 			if ( ( client->latched_buttons & buttonMask ) ||
-				(deathmatch->value && ((int)dmflags->value & DF_FORCE_RESPAWN) ) )
+				(deathmatch->GetBool() && (dmflags->GetInt32() & DF_FORCE_RESPAWN) ) )
 			{
 				respawn(ent);
 				client->latched_buttons = 0;
@@ -1783,7 +1783,7 @@ void ClientBeginServerFrame (edict_t *ent)
 	}
 
 	// add player trail so monsters can follow
-	if (!deathmatch->value)
+	if (!deathmatch->GetBool())
 		if (!visible (ent, PlayerTrail_LastSpot() ) )
 			PlayerTrail_Add (ent->s.old_origin);
 

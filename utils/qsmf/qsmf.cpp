@@ -62,27 +62,17 @@ struct options_t
 
 static options_t g_options;
 
-static void PrintUsage()
-{
-	Com_Print( "Usage: qsmf [options] input.fbx output.smf\n" );
-}
-
-static void PrintHelp()
-{
-	Com_Print(
-		"Help:\n"
-		"  -verbose      : If present, this parameter enables verbose (debug) printing\n"
-	);
-}
-
 // parses the command line and spits out results into g_options
 static bool ParseCommandLine( int argc, char **argv )
 {
 	if ( argc < 3 )
 	{
 		// need at least input and output
-		PrintUsage();
-		PrintHelp();
+		Com_Print( "Usage: qsmf [options] input.fbx output.smf\n" );
+		Com_Print(
+			"Help:\n"
+			"  -verbose      : If present, this parameter enables verbose (debug) printing\n"
+		);
 		return false;
 	}
 

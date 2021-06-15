@@ -127,12 +127,12 @@ void Com_Print( const char *msg )
 	Sys_ConsoleOutput( newMsg );
 
 	// logfile
-	if ( logfile_active && logfile_active->value ) {
+	if ( logfile_active && logfile_active->GetBool() ) {
 		char name[MAX_QPATH];
 
 		if ( !logfile ) {
 			Q_sprintf_s( name, "%s/qconsole.log", FS_Gamedir() );
-			if ( logfile_active->value > 2 ) {
+			if ( logfile_active->GetInt64() > 2 ) {
 				logfile = fopen( name, "a" );
 			}
 			else {
@@ -142,7 +142,7 @@ void Com_Print( const char *msg )
 		if ( logfile ) {
 			fputs( newMsg, logfile );
 		}
-		if ( logfile_active->value > 1 ) {
+		if ( logfile_active->GetInt64() > 1 ) {
 			// force it to save every time
 			fflush( logfile );
 		}
@@ -171,7 +171,7 @@ A Com_Print that only shows up if the "developer" cvar is set
 
 void Com_DPrint( const char *msg )
 {
-	if ( !developer || !developer->value ) {
+	if ( !developer || !developer->GetBool() ) {
 		return;
 	}
 
@@ -180,7 +180,7 @@ void Com_DPrint( const char *msg )
 
 void Com_DPrintf( _Printf_format_string_ const char *fmt, ... )
 {
-	if ( !developer || !developer->value ) {
+	if ( !developer || !developer->GetBool() ) {
 		return;
 	}
 
@@ -601,7 +601,7 @@ void Engine_Init( int argc, char **argv )
 	// create the version convar
 	Cvar_Get( "version", va( "%s - %s, %s", BLD_STRING, __DATE__, __TIME__ ), CVAR_SERVERINFO | CVAR_NOSET );
 
-	if ( dedicated->value ) {
+	if ( dedicated->GetBool() ) {
 		Cmd_AddCommand( "quit", Com_Quit_f );
 	}
 
@@ -616,7 +616,7 @@ void Engine_Init( int argc, char **argv )
 	// add + commands from command line
 	if ( !Cbuf_AddLateCommands( argc, argv ) ) {
 		// if the user didn't give any commands, run default action
-		if ( !dedicated->value ) {
+		if ( !dedicated->GetBool() ) {
 			Cbuf_AddText( "d1\n" );
 		} else {
 			Cbuf_AddText( "dedicated_start\n" );
@@ -646,37 +646,44 @@ void Engine_Frame( int msec )
 		return;
 	}
 
-	if ( log_stats->modified ) {
-		log_stats->modified = false;
-		if ( log_stats->value ) {
-			if ( log_stats_file ) {
+	if ( log_stats->IsModified() )
+	{
+		log_stats->ClearModified();
+		if ( log_stats->GetBool() )
+		{
+			if ( log_stats_file )
+			{
 				fclose( log_stats_file );
 				log_stats_file = nullptr;
 			}
 			log_stats_file = fopen( "stats.log", "w" );
-			if ( log_stats_file ) {
+			if ( log_stats_file )
+			{
 				fputs( "entities,dlights,parts,frame time\n", log_stats_file );
 			}
 		}
-		else {
-			if ( log_stats_file ) {
+		else
+		{
+			if ( log_stats_file )
+			{
 				fclose( log_stats_file );
 				log_stats_file = nullptr;
 			}
 		}
 	}
 
-	if ( fixedtime->value != 0.0f ) {
-		msec = fixedtime->value;
+	if ( fixedtime->GetFloat() != 0.0f ) {
+		msec = fixedtime->GetInt32();
 	}
-	else if ( timescale->value != 1.0f ) {
-		msec *= timescale->value;
+	else if ( timescale->GetFloat() != 1.0f ) {
+		msec *= timescale->GetInt32();
 		if ( msec < 1 ) {
 			msec = 1;
 		}
 	}
 
-	if ( showtrace->value ) {
+	if ( showtrace->GetBool() )
+	{
 		// cmodel
 		extern int c_traces, c_brush_traces;
 		extern int c_pointcontents;
@@ -687,7 +694,8 @@ void Engine_Frame( int msec )
 		c_pointcontents = 0;
 	}
 
-	do {
+	do
+	{
 		s = Sys_ConsoleInput();
 		if ( s ) {
 			Cbuf_AddText( va( "%s\n", s ) );
@@ -695,23 +703,23 @@ void Engine_Frame( int msec )
 	} while ( s );
 	Cbuf_Execute();
 
-	if ( host_speeds->value ) {
+	if ( host_speeds->GetBool() ) {
 		time_before = Sys_Milliseconds();
 	}
 
 	SV_Frame( msec );
 
-	if ( host_speeds->value ) {
+	if ( host_speeds->GetBool() ) {
 		time_between = Sys_Milliseconds();
 	}
 
 	CL_Frame( msec );
 
-	if ( host_speeds->value ) {
+	if ( host_speeds->GetBool() ) {
 		time_after = Sys_Milliseconds();
 	}
 
-	if ( host_speeds->value ) {
+	if ( host_speeds->GetBool() ) {
 		int all, sv, gm, cl, rf;
 
 		all = time_after - time_before;

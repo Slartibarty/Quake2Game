@@ -31,10 +31,10 @@ static float SV_CalcRoll (vec3_t angles, vec3_t velocity)
 	sign = side < 0 ? -1 : 1;
 	side = fabs(side);
 	
-	value = sv_rollangle->value;
+	value = sv_rollangle->GetFloat();
 
-	if (side < sv_rollspeed->value)
-		side = side * value / sv_rollspeed->value;
+	if (side < sv_rollspeed->GetFloat())
+		side = side * value / sv_rollspeed->GetFloat();
 	else
 		side = value;
 	
@@ -266,23 +266,23 @@ void SV_CalcViewOffset( edict_t *ent )
 		// add angles based on velocity
 
 		delta = DotProduct( ent->velocity, forward );
-		angles[PITCH] += delta * run_pitch->value;
+		angles[PITCH] += delta * run_pitch->GetFloat();
 
 		delta = DotProduct( ent->velocity, right );
-		angles[ROLL] += delta * run_roll->value;
+		angles[ROLL] += delta * run_roll->GetFloat();
 
 		// add angles based on bob
 
 		// make sure the bob is visible even at low speeds
 		speed = xyspeed; // ( xyspeed > 200 ) ? xyspeed : 200
 
-		delta = bobfracsin * bob_pitch->value * speed;
+		delta = bobfracsin * bob_pitch->GetFloat() * speed;
 		if ( ent->client->ps.pmove.pm_flags & PMF_DUCKED ) {
 			// crouching
 			delta *= 3;
 		}
 		angles[PITCH] += delta;
-		delta = bobfracsin * bob_roll->value * speed;
+		delta = bobfracsin * bob_roll->GetFloat() * speed;
 		if ( ent->client->ps.pmove.pm_flags & PMF_DUCKED ) {
 			// crouching
 			delta *= 3;
@@ -306,7 +306,7 @@ void SV_CalcViewOffset( edict_t *ent )
 
 	// add bob height
 
-	bob = bobfracsin * xyspeed * bob_up->value;
+	bob = bobfracsin * xyspeed * bob_up->GetFloat();
 	if ( bob > 6 ) {
 		bob = 6;
 	}
@@ -552,7 +552,7 @@ void P_FallingDamage (edict_t *ent)
 		}
 		VectorSet (dir, 0, 0, 1);
 
-		if ( !deathmatch->value || !( (int)dmflags->value & DF_NO_FALLING ) ) {
+		if ( !deathmatch->GetBool() || !( dmflags->GetInt32() & DF_NO_FALLING ) ) {
 			T_Damage( ent, world, world, dir, ent->s.origin, vec3_origin, damage, 0, 0, MOD_FALLING );
 		}
 	}

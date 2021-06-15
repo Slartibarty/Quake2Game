@@ -80,7 +80,7 @@ static void S_TransferPaintBuffer(int endtime)
 
 	pbuf = (unsigned long *)dma.buffer;
 
-	if (s_testsound->value)
+	if (s_testsound->GetBool())
 	{
 		int		i;
 		int		count;
@@ -210,7 +210,7 @@ void S_PaintChannels(int endtime)
 	int		ltime, count;
 	playsound_t	*ps;
 
-	snd_vol = s_volume->value*256;
+	snd_vol = static_cast<int>( s_volume->GetDouble() * 256.0 );
 
 //Com_Printf ("%i to %i\n", paintedtime, endtime);
 	while (paintedtime < endtime)

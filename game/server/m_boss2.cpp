@@ -616,7 +616,7 @@ qboolean Boss2_CheckAttack (edict_t *self)
 */
 void SP_monster_boss2 (edict_t *self)
 {
-	if (deathmatch->value)
+	if (deathmatch->GetBool())
 	{
 		G_FreeEdict (self);
 		return;

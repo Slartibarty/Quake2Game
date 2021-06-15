@@ -133,7 +133,7 @@ void GL_DrawAliasFrameLerp (dmdl_t *paliashdr, float backlerp)
 
 	GL_LerpVerts( paliashdr->num_xyz, v, ov, verts, lerp, move, frontv, backv );
 
-	if ( r_vertex_arrays->value )
+	if ( r_vertex_arrays->GetBool() )
 	{
 		static float colorArray[MAX_VERTS*4];
 
@@ -164,7 +164,7 @@ void GL_DrawAliasFrameLerp (dmdl_t *paliashdr, float backlerp)
 			}
 		}
 
-		if ( GLEW_EXT_compiled_vertex_array && r_ext_compiled_vertex_array->value )
+		if ( GLEW_EXT_compiled_vertex_array && r_ext_compiled_vertex_array->GetBool() )
 			glLockArraysEXT( 0, paliashdr->num_xyz );
 
 		while (1)
@@ -216,7 +216,7 @@ void GL_DrawAliasFrameLerp (dmdl_t *paliashdr, float backlerp)
 			glEnd ();
 		}
 
-		if ( GLEW_EXT_compiled_vertex_array && r_ext_compiled_vertex_array->value )
+		if ( GLEW_EXT_compiled_vertex_array && r_ext_compiled_vertex_array->GetBool() )
 			glUnlockArraysEXT();
 	}
 	else
@@ -441,7 +441,7 @@ void R_DrawAliasModel (entity_t *e)
 
 	if ( e->flags & RF_WEAPONMODEL )
 	{
-		if ( r_lefthand->value == 2 )
+		if ( r_lefthand->GetInt64() == 2 )
 			return;
 	}
 
@@ -551,23 +551,26 @@ void R_DrawAliasModel (entity_t *e)
 		// big hack!
 		if ( currententity->flags & RF_WEAPONMODEL )
 		{
+			float value;
+
 			// pick the greatest component, which should be the same
 			// as the mono value returned by software
-			if (shadelight[0] > shadelight[1])
+			if ( shadelight[0] > shadelight[1] )
 			{
-				if (shadelight[0] > shadelight[2])
-					r_lightlevel->value = 150*shadelight[0];
+				if ( shadelight[0] > shadelight[2] )
+					value = 150.0f * shadelight[0];
 				else
-					r_lightlevel->value = 150*shadelight[2];
+					value = 150.0f * shadelight[2];
 			}
 			else
 			{
-				if (shadelight[1] > shadelight[2])
-					r_lightlevel->value = 150*shadelight[1];
+				if ( shadelight[1] > shadelight[2] )
+					value = 150.0f * shadelight[1];
 				else
-					r_lightlevel->value = 150*shadelight[2];
+					value = 150.0f * shadelight[2];
 			}
 
+			Cvar_SetFloat( r_lightlevel, value );
 		}
 	}
 
@@ -685,7 +688,7 @@ void R_DrawAliasModel (entity_t *e)
 		currententity->oldframe = 0;
 	}
 
-	if ( !r_lerpmodels->value )
+	if ( !r_lerpmodels->GetBool() )
 		currententity->backlerp = 0;
 	GL_DrawAliasFrameLerp (paliashdr, currententity->backlerp);
 

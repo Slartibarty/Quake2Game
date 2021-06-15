@@ -829,7 +829,7 @@ static void R_RenderView( refdef_t *fd )
 	// screen overlay
 	R_DrawScreenOverlay( tr.refdef.blend );
 
-	if ( r_speeds->value )
+	if ( r_speeds->GetBool() )
 	{
 		Com_Printf( "%4i wpoly %4i epoly %i tex %i lmaps\n",
 			c_brush_polys,
@@ -844,7 +844,7 @@ static void R_RenderView( refdef_t *fd )
 R_SetLightLevel
 ========================
 */
-static void R_SetLightLevel()
+void R_SetLightLevel()
 {
 	vec3_t shadelight;
 
@@ -856,23 +856,26 @@ static void R_SetLightLevel()
 
 	R_LightPoint( tr.refdef.vieworg, shadelight );
 
+	float value;
+
 	// pick the greatest component, which should be the same
 	// as the mono value returned by software
 	if ( shadelight[0] > shadelight[1] )
 	{
 		if ( shadelight[0] > shadelight[2] )
-			r_lightlevel->value = 150 * shadelight[0];
+			value = 150.0f * shadelight[0];
 		else
-			r_lightlevel->value = 150 * shadelight[2];
+			value = 150.0f * shadelight[2];
 	}
 	else
 	{
 		if ( shadelight[1] > shadelight[2] )
-			r_lightlevel->value = 150 * shadelight[1];
+			value = 150.0f * shadelight[1];
 		else
-			r_lightlevel->value = 150 * shadelight[2];
+			value = 150.0f * shadelight[2];
 	}
 
+	Cvar_SetFloat( r_lightlevel, value );
 }
 
 /*

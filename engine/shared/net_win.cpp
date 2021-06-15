@@ -567,16 +567,16 @@ static void NET_OpenIP()
 
 	if ( !ip_sockets[NS_SERVER] )
 	{
-		port = Cvar_Get( "ip_hostport", "0", CVAR_NOSET )->value;
+		port = Cvar_Get( "ip_hostport", "0", CVAR_NOSET )->GetInt32();
 		if ( !port )
 		{
-			port = Cvar_Get( "hostport", "0", CVAR_NOSET )->value;
+			port = Cvar_Get( "hostport", "0", CVAR_NOSET )->GetInt32();
 			if ( !port )
 			{
-				port = Cvar_Get( "port", STRINGIFY( PORT_SERVER ), CVAR_NOSET )->value;
+				port = Cvar_Get( "port", STRINGIFY( PORT_SERVER ), CVAR_NOSET )->GetInt32();
 			}
 		}
-		ip_sockets[NS_SERVER] = NET_IPSocket( ip->string, port );
+		ip_sockets[NS_SERVER] = NET_IPSocket( ip->GetString(), port );
 		if ( !ip_sockets[NS_SERVER] && dedicated ) {
 			Com_FatalError("Couldn't allocate dedicated server IP port" );
 		}
@@ -588,17 +588,17 @@ static void NET_OpenIP()
 
 	if ( !ip_sockets[NS_CLIENT] )
 	{
-		port = Cvar_Get( "ip_clientport", "0", CVAR_NOSET )->value;
+		port = Cvar_Get( "ip_clientport", "0", CVAR_NOSET )->GetInt32();
 		if ( !port )
 		{
-			port = Cvar_Get( "clientport", va( "%i", PORT_CLIENT ), CVAR_NOSET )->value;
+			port = Cvar_Get( "clientport", va( "%i", PORT_CLIENT ), CVAR_NOSET )->GetInt32();
 			if ( !port ) {
 				port = PORT_ANY;
 			}
 		}
-		ip_sockets[NS_CLIENT] = NET_IPSocket( ip->string, port );
+		ip_sockets[NS_CLIENT] = NET_IPSocket( ip->GetString(), port );
 		if ( !ip_sockets[NS_CLIENT] ) {
-			ip_sockets[NS_CLIENT] = NET_IPSocket( ip->string, PORT_ANY );
+			ip_sockets[NS_CLIENT] = NET_IPSocket( ip->GetString(), PORT_ANY );
 		}
 	}
 }
@@ -634,7 +634,7 @@ void NET_Config( bool multiplayer )
 	}
 	else
 	{	// open sockets
-		if ( !noudp->value ) {
+		if ( !noudp->GetBool() ) {
 			NET_OpenIP();
 		}
 	}

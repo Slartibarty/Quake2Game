@@ -315,7 +315,7 @@ void dog_die( edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, 
 
 void SP_monster_dog( edict_t *self )
 {
-	if ( deathmatch->value )
+	if ( deathmatch->GetBool() )
 	{
 		G_FreeEdict( self );
 		return;

@@ -190,7 +190,7 @@ static void SV_SpawnServer( const char *server, const char *spawnpoint, serverSt
 	Q_strcpy_s( sv.name, server );
 
 	// leave slots at start for clients only
-	for ( i = 0; i < maxclients->value; i++ )
+	for ( i = 0; i < maxclients->GetInt32(); i++ )
 	{
 		// needs to reconnect
 		if ( svs.clients[i].state > cs_connected ) {

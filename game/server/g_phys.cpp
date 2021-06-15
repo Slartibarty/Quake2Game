@@ -61,11 +61,11 @@ static void SV_CheckVelocity( edict_t *ent )
 //
 	for ( i = 0; i < 3; i++ )
 	{
-		if ( ent->velocity[i] > sv_maxvelocity->value ) {
-			ent->velocity[i] = sv_maxvelocity->value;
+		if ( ent->velocity[i] > sv_maxvelocity->GetFloat() ) {
+			ent->velocity[i] = sv_maxvelocity->GetFloat();
 		}
-		else if ( ent->velocity[i] < -sv_maxvelocity->value ) {
-			ent->velocity[i] = -sv_maxvelocity->value;
+		else if ( ent->velocity[i] < -sv_maxvelocity->GetFloat() ) {
+			ent->velocity[i] = -sv_maxvelocity->GetFloat();
 		}
 	}
 }
@@ -301,7 +301,7 @@ SV_AddGravity
 */
 static void SV_AddGravity( edict_t *ent )
 {
-	ent->velocity[2] -= ent->gravity * sv_gravity->value * FRAMETIME;
+	ent->velocity[2] -= ent->gravity * sv_gravity->GetFloat() * FRAMETIME;
 }
 
 /*
@@ -831,7 +831,7 @@ void SV_Physics_Step( edict_t *ent )
 		if ( !( ent->flags & FL_FLY ) )
 			if ( !( ( ent->flags & FL_SWIM ) && ( ent->waterlevel > 2 ) ) )
 			{
-				if ( ent->velocity[2] < sv_gravity->value * -0.1f )
+				if ( ent->velocity[2] < sv_gravity->GetFloat() * -0.1f )
 					hitsound = true;
 				if ( ent->waterlevel == 0 )
 					SV_AddGravity( ent );

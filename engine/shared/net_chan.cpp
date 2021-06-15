@@ -232,7 +232,7 @@ void Netchan_Transmit (netchan_t *chan, int length, byte *data)
 
 	// send the qport if we are a client
 	if (chan->sock == NS_CLIENT)
-		MSG_WriteShort (&send, qport->value);
+		MSG_WriteShort (&send, qport->GetInt32());
 
 // copy the reliable message to the packet first
 	if (send_reliable)
@@ -250,7 +250,7 @@ void Netchan_Transmit (netchan_t *chan, int length, byte *data)
 // send the datagram
 	NET_SendPacket (chan->sock, send.cursize, send.data, chan->remote_address);
 
-	if (showpackets->value)
+	if (showpackets->GetBool())
 	{
 		if (send_reliable)
 			Com_Printf ("send %4i : s=%i reliable=%i ack=%i rack=%i\n"
@@ -297,7 +297,7 @@ qboolean Netchan_Process (netchan_t *chan, sizebuf_t *msg)
 	sequence &= ~(1<<31);
 	sequence_ack &= ~(1<<31);	
 
-	if (showpackets->value)
+	if (showpackets->GetBool())
 	{
 		if (reliable_message)
 			Com_Printf ("recv %4i : s=%i reliable=%i ack=%i rack=%i\n"
@@ -319,7 +319,7 @@ qboolean Netchan_Process (netchan_t *chan, sizebuf_t *msg)
 //
 	if (sequence <= (unsigned)chan->incoming_sequence)
 	{
-		if (showdrop->value)
+		if (showdrop->GetBool())
 			Com_Printf ("%s:Out of order packet %i at %i\n"
 				, NET_NetadrToString (chan->remote_address)
 				,  sequence
@@ -333,7 +333,7 @@ qboolean Netchan_Process (netchan_t *chan, sizebuf_t *msg)
 	chan->dropped = sequence - (chan->incoming_sequence+1);
 	if (chan->dropped > 0)
 	{
-		if (showdrop->value)
+		if (showdrop->GetBool())
 			Com_Printf ("%s:Dropped %i packets at %i\n"
 			, NET_NetadrToString (chan->remote_address)
 			, chan->dropped

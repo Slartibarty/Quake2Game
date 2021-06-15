@@ -1771,7 +1771,7 @@ void	CM_SetAreaPortalState (int portalnum, qboolean open)
 
 qboolean	CM_AreasConnected (int area1, int area2)
 {
-	if (cm_noareas->value)
+	if (cm_noareas->GetBool())
 		return true;
 
 	if (area1 > cm.areas.Count() || area2 > cm.areas.Count())
@@ -1801,7 +1801,7 @@ int CM_WriteAreaBits (byte *buffer, int area)
 
 	bytes = (cm.areas.Count()+7)>>3;
 
-	if (cm_noareas->value)
+	if (cm_noareas->GetBool())
 	{	// for debugging, send everything
 		memset (buffer, 255, bytes);
 	}

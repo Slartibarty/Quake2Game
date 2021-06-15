@@ -264,7 +264,7 @@ void chick_pain (edict_t *self, edict_t *other, float kick, int damage)
 	else
 		gi.sound (self, CHAN_VOICE, sound_pain3, 1, ATTN_NORM, 0);
 
-	if (skill->value == 3)
+	if (skill->GetInt32() == 3)
 		return;		// no pain anims in nightmare
 
 	if (damage <= 10)
@@ -608,7 +608,7 @@ void chick_sight(edict_t *self, edict_t *other)
 */
 void SP_monster_chick (edict_t *self)
 {
-	if (deathmatch->value)
+	if (deathmatch->GetBool())
 	{
 		G_FreeEdict (self);
 		return;

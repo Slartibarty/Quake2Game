@@ -78,18 +78,18 @@ struct menuslider_s
 {
 	menucommon_s generic;
 
-	float minvalue;
-	float maxvalue;
-	float curvalue;
+	double minvalue;
+	double maxvalue;
+	double curvalue;
 
-	float range;
+	double range;
 };
 
 struct menulist_s
 {
 	menucommon_s generic;
 
-	int curvalue;
+	int64 curvalue;
 
 	const char **itemnames;
 };
@@ -113,7 +113,7 @@ void	Menu_Draw( menuframework_s *menu );
 void	*Menu_ItemAtCursor( menuframework_s *m );
 qboolean Menu_SelectItem( menuframework_s *s );
 void	Menu_SetStatusBar( menuframework_s *s, const char *string );
-void	Menu_SlideItem( menuframework_s *s, int dir );
+void	Menu_SlideItem( menuframework_s *s, int64 dir );
 int		Menu_TallySlots( menuframework_s *menu );
 
 void	 Menu_DrawString( int, int, const char * );

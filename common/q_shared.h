@@ -65,37 +65,41 @@ bool	Info_Validate (const char *s);
 // CVARS - cvars.cpp
 //-------------------------------------------------------------------------------------------------
 
-#define	CVAR_ARCHIVE		1	// set to cause it to be saved to vars.rc
-#define	CVAR_USERINFO		2	// added to userinfo  when changed
+#define	CVAR_ARCHIVE		1	// will be written to config.cfg
+#define	CVAR_USERINFO		2	// added to userinfo when changed
 #define	CVAR_SERVERINFO		4	// added to serverinfo when changed
-#define	CVAR_NOSET			8	// don't allow change from console at all,
-								// but can be set from the command line
+#define	CVAR_NOSET			8	// don't allow change from console at all, but can be set via command line
 #define	CVAR_LATCH			16	// save changes until server restart
+#define CVAR_CHEAT			32	// var cannot be changed unless sv_cheats is true (or singleplayer)
+#define CVAR_MODIFIED		64	// set each time the cvar is changed
 
 // nothing outside the Cvar_*() functions should modify these fields!
 struct cvar_t
 {
-	char *		name;
-	char *		string;
-	char *		latched_string;		// for CVAR_LATCH vars
+	char *		pName;
+	char *		pString;
+	char *		pLatchedString;		// for CVAR_LATCH vars
+	double		dblValue;
+	int64		i64Value;
 	uint32		flags;
-	bool		modified;			// set each time the cvar is changed
-	float		value;
 	cvar_t *	next;
 
-	const char *	GetName() const		{ return name; }
+	const char *	GetName() const		{ return pName; }
+
+	bool			IsModified() const	{ return ( flags & CVAR_MODIFIED ) != 0; }
+	void			SetModified()		{ flags |= CVAR_MODIFIED; }
+	void			ClearModified()		{ flags &= ~CVAR_MODIFIED; }
+
+	const char *	GetString() const	{ return pString; }
+	int64			GetInt64() const	{ return i64Value; }
+	int32			GetInt32() const	{ return static_cast<int32>( i64Value ); }
+	double			GetDouble() const	{ return dblValue; }
+	float			GetFloat() const	{ return static_cast<float>( dblValue ); }
+	bool			GetBool() const		{ return i64Value; }
+
 	uint32			GetFlags() const	{ return flags; }
 
-	bool			IsModified() const	{ return modified; }
-	void			SetModified()		{ modified = true; }
-	void			ClearModified()		{ modified = false; }
-
-	const char *	GetString() const	{ return string; }
-	int64			GetInt64() const	{ return static_cast<int64>( value ); }
-	int32			GetInt32() const	{ return static_cast<int32>( value ); }
-	double			GetDouble() const	{ return static_cast<double>( value ); }
-	float			GetFloat() const	{ return value; }
-	bool			GetBool() const		{ return value != 0.0f; }
+	cvar_t *		GetNext()			{ return next; }
 };
 
 //-------------------------------------------------------------------------------------------------

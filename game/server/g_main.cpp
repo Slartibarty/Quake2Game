@@ -213,7 +213,7 @@ void ClientEndServerFrames (void)
 
 	// calc the player views now that all pushing
 	// and damage has been added
-	for (i=0 ; i<maxclients->value ; i++)
+	for (i=0 ; i<maxclients->GetInt32(); i++)
 	{
 		ent = g_edicts + 1 + i;
 		if (!ent->inuse || !ent->client)
@@ -255,17 +255,17 @@ void EndDMLevel (void)
 	const char *seps = " ,\n\r";
 
 	// stay on same level flag
-	if ((int)dmflags->value & DF_SAME_LEVEL)
+	if (dmflags->GetInt32() & DF_SAME_LEVEL)
 	{
 		BeginIntermission (CreateTargetChangeLevel (level.mapname) );
 		return;
 	}
 
 	// see if it's in the map list
-	if (*sv_maplist->string) {
+	if (sv_maplist->GetString()[0]) {
 		// Copy the string
-		s = (char *)G_StackAlloc( strlen( sv_maplist->string ) );
-		strcpy( s, sv_maplist->string );
+		s = (char *)G_StackAlloc( strlen( sv_maplist->GetString() ) );
+		strcpy( s, sv_maplist->GetString() );
 		f = NULL;
 		t = strtok(s, seps);
 		while (t != NULL) {
@@ -315,15 +315,16 @@ void CheckNeedPass (void)
 
 	// if password or spectator_password has changed, update needpass
 	// as needed
-	if (password->modified || spectator_password->modified) 
+	if (password->IsModified() || spectator_password->IsModified()) 
 	{
-		password->modified = spectator_password->modified = false;
+		password->ClearModified();
+		spectator_password->ClearModified();
 
 		need = 0;
 
-		if (*password->string && Q_stricmp(password->string, "none"))
+		if (*password->GetString() && Q_stricmp(password->GetString(), "none"))
 			need |= 1;
-		if (*spectator_password->string && Q_stricmp(spectator_password->string, "none"))
+		if (*spectator_password->GetString() && Q_stricmp(spectator_password->GetString(), "none"))
 			need |= 2;
 
 		gi.cvar_set("needpass", va("%d", need));
@@ -343,12 +344,12 @@ void CheckDMRules (void)
 	if (level.intermissiontime)
 		return;
 
-	if (!deathmatch->value)
+	if (!deathmatch->GetBool())
 		return;
 
-	if (timelimit->value)
+	if (timelimit->GetBool())
 	{
-		if (level.time >= timelimit->value*60)
+		if (level.time >= timelimit->GetFloat()*60)
 		{
 			gi.bprintf (PRINT_HIGH, "Timelimit hit.\n");
 			EndDMLevel ();
@@ -356,15 +357,15 @@ void CheckDMRules (void)
 		}
 	}
 
-	if (fraglimit->value)
+	if (fraglimit->GetBool())
 	{
-		for (i=0 ; i<maxclients->value ; i++)
+		for (i=0 ; i<maxclients->GetInt32() ; i++)
 		{
 			cl = game.clients + i;
 			if (!g_edicts[i+1].inuse)
 				continue;
 
-			if (cl->resp.score >= fraglimit->value)
+			if (cl->resp.score >= fraglimit->GetInt32())
 			{
 				gi.bprintf (PRINT_HIGH, "Fraglimit hit.\n");
 				EndDMLevel ();
@@ -394,7 +395,7 @@ void ExitLevel (void)
 	ClientEndServerFrames ();
 
 	// clear some things before going to next level
-	for (i=0 ; i<maxclients->value ; i++)
+	for (i=0 ; i<maxclients->GetInt32() ; i++)
 	{
 		ent = g_edicts + 1 + i;
 		if (!ent->inuse)
@@ -455,7 +456,7 @@ void G_RunFrame (void)
 			}
 		}
 
-		if (i > 0 && i <= maxclients->value)
+		if (i > 0 && i <= maxclients->GetInt32())
 		{
 			ClientBeginServerFrame (ent);
 			continue;

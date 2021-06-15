@@ -319,15 +319,15 @@ void FS_Init()
 	//
 	// start up with base by default
 	//
-	FS_AddGameDirectory( va( "%s/" BASEDIRNAME, fs_basedir->string ) );
+	FS_AddGameDirectory( va( "%s/" BASEDIRNAME, fs_basedir->GetString() ) );
 
 	// any set gamedirs will be freed up to here
 	fs_base_searchpaths = fs_searchpaths;
 
 	// check for game override
 	fs_gamedirvar = Cvar_Get( "game", BASEDIRNAME, CVAR_LATCH | CVAR_SERVERINFO );
-	if ( Q_strcmp( fs_gamedirvar->string, BASEDIRNAME ) != 0 )
-		FS_SetGamedir( fs_gamedirvar->string, false );
+	if ( Q_strcmp( fs_gamedirvar->GetString(), BASEDIRNAME ) != 0 )
+		FS_SetGamedir( fs_gamedirvar->GetString(), false );
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -546,10 +546,10 @@ void FS_SetGamedir( const char *dir, bool flush )
 	//
 	// optionally flush all data, so it will be forced to reload
 	//
-	if ( flush && ( dedicated && !dedicated->value ) )
+	if ( flush && ( dedicated && !dedicated->GetString() ) )
 		Cbuf_AddText( "vid_restart\nsnd_restart\n" );
 
-	Q_sprintf_s( fs_gamedir, "%s/%s", fs_basedir->string, dir );
+	Q_sprintf_s( fs_gamedir, "%s/%s", fs_basedir->GetString(), dir );
 
 	if ( Q_strcmp( dir, BASEDIRNAME ) == 0 || *dir == '\0' )
 	{
@@ -559,7 +559,7 @@ void FS_SetGamedir( const char *dir, bool flush )
 	else
 	{
 		Cvar_FullSet( "gamedir", dir, CVAR_SERVERINFO | CVAR_NOSET );
-		FS_AddGameDirectory( va( "%s/%s", fs_basedir->string, dir ) );
+		FS_AddGameDirectory( va( "%s/%s", fs_basedir->GetString(), dir ) );
 	}
 }
 
@@ -598,9 +598,9 @@ void FS_ExecAutoexec()
 
 	dir = Cvar_VariableString( "gamedir" );
 	if ( *dir )
-		Q_sprintf_s( name, "%s/%s/autoexec.cfg", fs_basedir->string, dir );
+		Q_sprintf_s( name, "%s/%s/autoexec.cfg", fs_basedir->GetString(), dir );
 	else
-		Q_sprintf_s( name, "%s/%s/autoexec.cfg", fs_basedir->string, BASEDIRNAME );
+		Q_sprintf_s( name, "%s/%s/autoexec.cfg", fs_basedir->GetString(), BASEDIRNAME );
 	if ( Sys_FindFirst( name, 0, SFF_SUBDIR | SFF_HIDDEN | SFF_SYSTEM ) )
 		Cbuf_AddText( "exec autoexec.cfg\n" );
 	Sys_FindClose();

@@ -305,7 +305,7 @@ void medic_pain (edict_t *self, edict_t *other, float kick, int damage)
 
 	self->pain_debounce_time = level.time + 3;
 
-	if (skill->value == 3)
+	if (skill->GetInt32() == 3)
 		return;		// no pain anims in nightmare
 
 	if (random() < 0.5)
@@ -696,7 +696,7 @@ qboolean medic_checkattack (edict_t *self)
 */
 void SP_monster_medic (edict_t *self)
 {
-	if (deathmatch->value)
+	if (deathmatch->GetBool())
 	{
 		G_FreeEdict (self);
 		return;

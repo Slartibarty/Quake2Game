@@ -369,7 +369,7 @@ Fills the whole screen with floating point color
 */
 void R_DrawScreenOverlay( const vec4_t color )
 {
-	if ( !r_polyblend->value || color[3] <= 0.0f ) {
+	if ( !r_polyblend->GetBool() || color[3] <= 0.0f ) {
 		return;
 	}
 

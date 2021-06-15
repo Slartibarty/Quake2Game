@@ -123,6 +123,8 @@ bool Engine_IsMainThread();
 ===================================================================================================
 */
 
+// client
+
 void CL_Init();
 void CL_Drop();
 void CL_Shutdown();
@@ -132,6 +134,8 @@ void SCR_BeginLoadingPlaque();
 
 // this is in the client code, but can be used for debugging from server
 void SCR_DebugGraph( float value, uint32 color );
+
+// server
 
 void SV_Init( void );
 void SV_Shutdown( const char *finalmsg, bool reconnect );

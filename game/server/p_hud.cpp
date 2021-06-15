@@ -12,7 +12,7 @@ INTERMISSION
 
 void MoveClientToIntermission (edict_t *ent)
 {
-	if (deathmatch->value || coop->value)
+	if (deathmatch->GetBool() || coop->GetBool())
 		ent->client->showscores = true;
 	VectorCopy (level.intermission_origin, ent->s.origin);
 	VectorCopy (level.intermission_origin, ent->client->ps.pmove.origin);
@@ -41,7 +41,7 @@ void MoveClientToIntermission (edict_t *ent)
 
 	// add the layout
 
-	if (deathmatch->value || coop->value)
+	if (deathmatch->GetBool() || coop->GetBool())
 	{
 		DeathmatchScoreboardMessage (ent, NULL);
 		gi.unicast (ent, true);
@@ -60,7 +60,7 @@ void BeginIntermission (edict_t *targ)
 	game.autosaved = false;
 
 	// respawn any dead clients
-	for (i=0 ; i<maxclients->value ; i++)
+	for (i=0 ; i<maxclients->GetInt32() ; i++)
 	{
 		client = g_edicts + 1 + i;
 		if (!client->inuse)
@@ -74,9 +74,9 @@ void BeginIntermission (edict_t *targ)
 
 	if (strstr(level.changemap, "*"))
 	{
-		if (coop->value)
+		if (coop->GetBool())
 		{
-			for (i=0 ; i<maxclients->value ; i++)
+			for (i=0 ; i<maxclients->GetInt32() ; i++)
 			{
 				client = g_edicts + 1 + i;
 				if (!client->inuse)
@@ -92,7 +92,7 @@ void BeginIntermission (edict_t *targ)
 	}
 	else
 	{
-		if (!deathmatch->value)
+		if (!deathmatch->GetBool())
 		{
 			level.exitintermission = 1;		// go immediately to the next level
 			return;
@@ -124,7 +124,7 @@ void BeginIntermission (edict_t *targ)
 	VectorCopy (ent->s.angles, level.intermission_angle);
 
 	// move all clients to the intermission point
-	for (i=0 ; i<maxclients->value ; i++)
+	for (i=0 ; i<maxclients->GetInt32() ; i++)
 	{
 		client = g_edicts + 1 + i;
 		if (!client->inuse)
@@ -257,7 +257,7 @@ void Cmd_Score_f (edict_t *ent)
 	ent->client->showinventory = false;
 	ent->client->showhelp = false;
 
-	if (!deathmatch->value && !coop->value)
+	if (!deathmatch->GetBool() && !coop->GetBool())
 		return;
 
 	if (ent->client->showscores)
@@ -283,11 +283,11 @@ void HelpComputer (edict_t *ent)
 	char		string[1024];
 	const char	*sk;
 
-	if (skill->value == 0)
+	if (skill->GetInt32() == 0)
 		sk = "easy";
-	else if (skill->value == 1)
+	else if (skill->GetInt32() == 1)
 		sk = "medium";
-	else if (skill->value == 2)
+	else if (skill->GetInt32() == 2)
 		sk = "hard";
 	else
 		sk = "hard+";
@@ -325,7 +325,7 @@ Display the current help message
 void Cmd_Help_f (edict_t *ent)
 {
 	// this is for backwards compatability
-	if (deathmatch->value)
+	if (deathmatch->GetBool())
 	{
 		Cmd_Score_f (ent);
 		return;
@@ -466,7 +466,7 @@ void G_SetStats (edict_t *ent)
 	//
 	ent->client->ps.stats[STAT_LAYOUTS] = 0;
 
-	if (deathmatch->value)
+	if (deathmatch->GetBool())
 	{
 		if (ent->client->pers.health <= 0 || level.intermissiontime
 			|| ent->client->showscores)
@@ -511,7 +511,7 @@ void G_CheckChaseStats (edict_t *ent)
 	int i;
 	gclient_t *cl;
 
-	for (i = 1; i <= maxclients->value; i++) {
+	for (i = 1; i <= maxclients->GetInt32(); i++) {
 		cl = g_edicts[i].client;
 		if (!g_edicts[i].inuse || cl->chase_target != ent)
 			continue;

@@ -212,15 +212,15 @@ void CL_AdjustAngles (void)
 	float	up, down;
 	
 	if (in_speed.state & 1)
-		speed = cls.frametime * cl_anglespeedkey->value;
+		speed = cls.frametime * cl_anglespeedkey->GetFloat();
 	else
 		speed = cls.frametime;
 	
 	up = CL_KeyState (&in_lookup);
 	down = CL_KeyState(&in_lookdown);
 	
-	cl.viewangles[PITCH] -= speed*cl_pitchspeed->value * up;
-	cl.viewangles[PITCH] += speed*cl_pitchspeed->value * down;
+	cl.viewangles[PITCH] -= speed*cl_pitchspeed->GetFloat() * up;
+	cl.viewangles[PITCH] += speed*cl_pitchspeed->GetFloat() * down;
 }
 
 /*
@@ -238,19 +238,19 @@ void CL_BaseMove (usercmd_t *cmd)
 	
 	VectorCopy (cl.viewangles, cmd->angles);
 
-	cmd->forwardmove += cl_forwardspeed->value * CL_KeyState( &in_forward );
-	cmd->forwardmove -= cl_forwardspeed->value * CL_KeyState( &in_back );
+	cmd->forwardmove += cl_forwardspeed->GetFloat() * CL_KeyState( &in_forward );
+	cmd->forwardmove -= cl_forwardspeed->GetFloat() * CL_KeyState( &in_back );
 
-	cmd->sidemove += cl_sidespeed->value * CL_KeyState (&in_moveright);
-	cmd->sidemove -= cl_sidespeed->value * CL_KeyState (&in_moveleft);
+	cmd->sidemove += cl_sidespeed->GetFloat() * CL_KeyState (&in_moveright);
+	cmd->sidemove -= cl_sidespeed->GetFloat() * CL_KeyState (&in_moveleft);
 
-	cmd->upmove += cl_upspeed->value * CL_KeyState (&in_up);
-	cmd->upmove -= cl_upspeed->value * CL_KeyState (&in_down);
+	cmd->upmove += cl_upspeed->GetFloat() * CL_KeyState (&in_up);
+	cmd->upmove -= cl_upspeed->GetFloat() * CL_KeyState (&in_down);
 
 //
 // adjust for speed key / running
 //
-	if ( (in_speed.state & 1) ^ (int)(cl_run->value) )
+	if ( (in_speed.state & 1) ^ (int)(cl_run->GetBool()) )
 	{
 		cmd->forwardmove *= 2;
 		cmd->sidemove *= 2;
@@ -312,7 +312,7 @@ void CL_FinishMove (usercmd_t *cmd)
 		cmd->angles[i] = ANGLE2SHORT(cl.viewangles[i]);
 
 // send the ambient light level at the player's current position
-	cmd->lightlevel = (byte)cl_lightlevel->value;
+	cmd->lightlevel = (byte)cl_lightlevel->GetInt32();
 }
 
 /*
@@ -451,7 +451,7 @@ void CL_SendCmd (void)
 
 	// let the server know what the last frame we
 	// got was, so the next message can be delta compressed
-	if (cl_nodelta->value || !cl.frame.valid || cls.demowaiting)
+	if (cl_nodelta->GetBool() || !cl.frame.valid || cls.demowaiting)
 		MSG_WriteLong (&buf, -1);	// no compression
 	else
 		MSG_WriteLong (&buf, cl.frame.serverframe);

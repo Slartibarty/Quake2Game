@@ -520,7 +520,7 @@ void flyer_pain (edict_t *self, edict_t *other, float kick, int damage)
 		return;
 
 	self->pain_debounce_time = level.time + 3;
-	if (skill->value == 3)
+	if (skill->GetInt32() == 3)
 		return;		// no pain anims in nightmare
 
 	n = rand() % 3;
@@ -553,7 +553,7 @@ void flyer_die(edict_t *self, edict_t *inflictor, edict_t *attacker, int damage,
 */
 void SP_monster_flyer (edict_t *self)
 {
-	if (deathmatch->value)
+	if (deathmatch->GetBool())
 	{
 		G_FreeEdict (self);
 		return;

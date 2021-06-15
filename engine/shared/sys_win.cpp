@@ -83,7 +83,7 @@ Sys_Init
 */
 void Sys_Init (void)
 {
-	if (dedicated->value)
+	if (dedicated->GetBool())
 	{
 		if (!AllocConsole ())
 			Com_FatalErrorf("Couldn't create dedicated server console");
@@ -109,7 +109,7 @@ char *Sys_ConsoleInput (void)
 	DWORD numread, numevents, dummy;
 	int ch;
 
-	if (!dedicated || !dedicated->value)
+	if (!dedicated || !dedicated->GetBool())
 		return NULL;
 
 	for ( ;; )
@@ -187,7 +187,7 @@ void Sys_ConsoleOutput (const char *string)
 	DWORD	dummy;
 	char	text[256];
 
-	if (!dedicated || !dedicated->value)
+	if (!dedicated || !dedicated->GetBool())
 		return;
 
 	if (console_textlen)
@@ -495,7 +495,7 @@ int main( int argc, char **argv )
 	while ( 1 )
 	{
 		// if at a full screen console, don't update unless needed
-		if ( !g_activeApp || ( dedicated && dedicated->value ) )
+		if ( !g_activeApp || ( dedicated && dedicated->GetBool() ) )
 		{
 			Sleep( 1 );
 		}

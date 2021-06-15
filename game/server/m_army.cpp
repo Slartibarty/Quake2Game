@@ -292,7 +292,7 @@ void army_sight( edict_t *self, edict_t *other )
 
 void SP_monster_army( edict_t *self )
 {
-	if ( deathmatch->value )
+	if ( deathmatch->GetBool() )
 	{
 		G_FreeEdict( self );
 		return;

@@ -125,9 +125,9 @@ qboolean SV_FilterPacket (const char *from)
 
 	for (i=0 ; i<numipfilters ; i++)
 		if ( (in & ipfilters[i].mask) == ipfilters[i].compare)
-			return (int)filterban->value;
+			return filterban->GetBool();
 
-	return (int)!filterban->value;
+	return !filterban->GetBool();
 }
 
 
@@ -226,10 +226,10 @@ void SVCmd_WriteIP_f (void)
 
 	game = gi.cvar("game", "", 0);
 
-	if (!*game->string)
+	if (!game->GetString()[0])
 		Q_sprintf (name, "%s/listip.cfg", GAMEVERSION);
 	else
-		Q_sprintf (name, "%s/listip.cfg", game->string);
+		Q_sprintf (name, "%s/listip.cfg", game->GetString());
 
 	gi.cprintf (NULL, PRINT_HIGH, "Writing %s.\n", name);
 
@@ -240,7 +240,7 @@ void SVCmd_WriteIP_f (void)
 		return;
 	}
 	
-	fprintf(f, "set filterban %d\n", (int)filterban->value);
+	fprintf(f, "set filterban %d\n", filterban->GetInt32());
 
 	for (i=0 ; i<numipfilters ; i++)
 	{

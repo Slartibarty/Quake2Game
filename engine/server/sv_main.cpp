@@ -159,19 +159,19 @@ static void SVC_Info()
 
 	if ( version != PROTOCOL_VERSION )
 	{
-		Q_sprintf_s( string, "%s: wrong version\n", hostname->string );
+		Q_sprintf_s( string, "%s: wrong version\n", hostname->GetString() );
 	}
 	else
 	{
 		count = 0;
-		for ( i = 0; i < maxclients->value; i++ )
+		for ( i = 0; i < maxclients->GetInt32(); i++ )
 		{
 			if ( svs.clients[i].state >= cs_connected ) {
 				count++;
 			}
 		}
 
-		Q_sprintf_s( string, "%16s %8s %2i/%2i\n", hostname->string, sv.name, count, (int)maxclients->value );
+		Q_sprintf_s( string, "%16s %8s %2i/%2i\n", hostname->GetString(), sv.name, count, maxclients->GetInt32() );
 	}
 
 	Netchan_OutOfBandPrint( NS_SERVER, net_from, "info\n%s", string );
@@ -313,7 +313,7 @@ static void SVC_DirectConnect()
 	memset( newcl, 0, sizeof( client_t ) );
 
 	// if there is already a slot for this ip, reuse it
-	for ( i = 0, cl = svs.clients; i < maxclients->value; i++, cl++ )
+	for ( i = 0, cl = svs.clients; i < maxclients->GetInt32(); i++, cl++ )
 	{
 		if ( cl->state == cs_free ) {
 			continue;
@@ -322,7 +322,7 @@ static void SVC_DirectConnect()
 			&& ( cl->netchan.qport == qport
 				|| adr.port == cl->netchan.remote_address.port ) )
 		{
-			if ( !NET_IsLocalAddress( adr ) && ( svs.realtime - cl->lastconnect ) < ( (int)sv_reconnect_limit->value * 1000 ) )
+			if ( !NET_IsLocalAddress( adr ) && ( svs.realtime - cl->lastconnect ) < ( SEC2MS( sv_reconnect_limit->GetInt32() ) ) )
 			{
 				Com_DPrintf( "%s:reconnect rejected : too soon\n", NET_NetadrToString( adr ) );
 				return;
@@ -335,7 +335,7 @@ static void SVC_DirectConnect()
 
 	// find a client slot
 	newcl = nullptr;
-	for ( i = 0, cl = svs.clients; i < maxclients->value; i++, cl++ )
+	for ( i = 0, cl = svs.clients; i < maxclients->GetInt32(); i++, cl++ )
 	{
 		if ( cl->state == cs_free )
 		{
@@ -523,7 +523,7 @@ static void SV_CalcPings ()
 	client_t *	cl;
 	int			total, count;
 
-	for ( i = 0; i < maxclients->value; i++ )
+	for ( i = 0; i < maxclients->GetInt32(); i++ )
 	{
 		cl = &svs.clients[i];
 		if ( cl->state != cs_spawned ) {
@@ -621,7 +621,7 @@ static void SV_ReadPackets()
 		qport = MSG_ReadShort( &net_message ) & 0xffff;
 
 		// check for packets from connected clients
-		for ( i = 0, cl = svs.clients; i < maxclients->value; i++, cl++ )
+		for ( i = 0, cl = svs.clients; i < maxclients->GetInt32(); i++, cl++ )
 		{
 			if ( cl->state == cs_free ) {
 				continue;
@@ -650,7 +650,7 @@ static void SV_ReadPackets()
 			break;
 		}
 
-		if ( i != maxclients->value ) {
+		if ( i != maxclients->GetInt32() ) {
 			continue;
 		}
 	}
@@ -679,7 +679,7 @@ static void SV_CheckTimeouts()
 	droppoint = svs.realtime - 1000 * timeout->GetInt32();
 	zombiepoint = svs.realtime - 1000 * zombietime->GetInt32();
 
-	for ( i = 0, cl = svs.clients; i < maxclients->value; i++, cl++ )
+	for ( i = 0, cl = svs.clients; i < maxclients->GetInt32(); i++, cl++ )
 	{
 		// message times may be wrong across a changelevel
 		if ( cl->lastmessage > svs.realtime ) {
@@ -749,7 +749,7 @@ static void SV_RunGameFrame()
 		// never get more than one tic behind
 		if ( sv.time < (unsigned)svs.realtime )
 		{
-			if ( sv_showclamp->value ) {
+			if ( sv_showclamp->GetBool() ) {
 				Com_Print( "sv highclamp\n" );
 			}
 			svs.realtime = sv.time;
@@ -787,13 +787,14 @@ void SV_Frame( int msec )
 	SV_ReadPackets();
 
 	// move autonomous things around if enough time has passed
-	if ( !sv_timedemo->value && (unsigned)svs.realtime < sv.time )
+	if ( !sv_timedemo->GetBool() && (unsigned)svs.realtime < sv.time )
 	{
 		// never let the time get too far off
 		if ( sv.time - svs.realtime > 100 )
 		{
-			if ( sv_showclamp->value )
+			if ( sv_showclamp->GetBool() ) {
 				Com_Printf( "sv lowclamp\n" );
+			}
 			svs.realtime = sv.time - 100;
 		}
 		NET_Sleep( sv.time - svs.realtime );
@@ -1026,7 +1027,7 @@ void SV_FinalMessage( const char *message, bool reconnect )
 	// send it twice
 	// stagger the packets to crutch operating system limited buffers
 
-	for ( i = 0, cl = svs.clients; i < maxclients->value; i++, cl++ )
+	for ( i = 0, cl = svs.clients; i < maxclients->GetInt32(); i++, cl++ )
 	{
 		if ( cl->state >= cs_connected ) {
 			Netchan_Transmit( &cl->netchan, net_message.cursize
@@ -1034,7 +1035,7 @@ void SV_FinalMessage( const char *message, bool reconnect )
 		}
 	}
 
-	for ( i = 0, cl = svs.clients; i < maxclients->value; i++, cl++ )
+	for ( i = 0, cl = svs.clients; i < maxclients->GetInt32(); i++, cl++ )
 	{
 		if ( cl->state >= cs_connected ) {
 			Netchan_Transmit( &cl->netchan, net_message.cursize

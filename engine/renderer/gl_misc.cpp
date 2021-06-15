@@ -404,7 +404,7 @@ void R_UpgradeWals_f()
 
 void GL_EnableMultitexture(bool enable)
 {
-	if (!GLEW_ARB_multitexture || !r_ext_multitexture->value)
+	if (!GLEW_ARB_multitexture || !r_ext_multitexture->GetBool())
 		return;
 
 	if (enable)
@@ -425,7 +425,7 @@ void GL_EnableMultitexture(bool enable)
 
 void GL_SelectTexture(GLenum texture)
 {
-	if (!GLEW_ARB_multitexture || !r_ext_multitexture->value)
+	if (!GLEW_ARB_multitexture || !r_ext_multitexture->GetBool())
 		return;
 
 	int tmu;

@@ -195,6 +195,8 @@ extern	int		r_viewcluster, r_viewcluster2, r_oldviewcluster, r_oldviewcluster2;
 void Particles_Init();
 void Particles_Shutdown();
 
+void R_SetLightLevel();
+
 /*
 ===============================================================================
 

@@ -304,7 +304,7 @@ static void CL_ParsePacketEntities( clSnapshot_t *oldframe, clSnapshot_t *newfra
 		if ( bits & U_REMOVE )
 		{
 			// the entity present in oldframe is not in the current frame
-			if ( cl_shownet->value == 3 ) {
+			if ( cl_shownet->GetInt64() == 3 ) {
 				Com_Printf( "   remove: %i\n", newnum );
 			}
 			if ( oldnum != newnum ) {
@@ -966,7 +966,7 @@ static void CL_AddPacketEntities( clSnapshot_t *frame )
 				// custom weapon
 				ci = &cl.clientinfo[s1->skinnum & 0xff];
 				i = ( s1->skinnum >> 8 ); // 0 is default weapon model
-				if ( !cl_vwep->value || i > MAX_CLIENTWEAPONMODELS - 1 ) {
+				if ( !cl_vwep->GetBool() || i > MAX_CLIENTWEAPONMODELS - 1 ) {
 					i = 0;
 				}
 				ent.model = ci->weaponmodel[i];

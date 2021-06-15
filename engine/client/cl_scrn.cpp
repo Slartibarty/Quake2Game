@@ -62,7 +62,8 @@ void SCR_Loading_f();
 
 struct screenGlobals_t
 {
-	bool	imgui_showdemo;
+	bool	imgui_showDemo;
+	bool	imgui_debugGraph;
 } scr;
 
 /*
@@ -88,21 +89,25 @@ void CL_AddNetgraph()
 
 	// if using the debuggraph for something else, don't
 	// add the net lines
-	if (scr_debuggraph->value || scr_timegraph->value)
+	if ( scr_debuggraph->GetBool() || scr_timegraph->GetBool() ) {
 		return;
+	}
 
-	for (i=0 ; i<cls.netchan.dropped ; i++)
+	for ( i = 0; i < cls.netchan.dropped; i++ ) {
 		SCR_DebugGraph( 30, PackColor( 167, 59, 43, 255 ) );
+	}
 
-	for (i=0 ; i<cl.surpressCount ; i++)
+	for ( i = 0; i < cl.surpressCount; i++ ) {
 		SCR_DebugGraph( 30, PackColor( 255, 191, 15, 255 ) );
+	}
 
 	// see what the latency was on this packet
-	in = cls.netchan.incoming_acknowledged & (CMD_BACKUP-1);
+	in = cls.netchan.incoming_acknowledged & ( CMD_BACKUP - 1 );
 	ping = cls.realtime - cl.cmd_time[in];
 	ping /= 30;
-	if (ping > 30)
+	if ( ping > 30 ) {
 		ping = 30;
+	}
 	SCR_DebugGraph( (float)ping, colors::green );
 }
 
@@ -124,7 +129,8 @@ void SCR_DebugGraph( float value, uint32 color )
 {
 	values[current & 1023].value = value;
 	values[current & 1023].color = color;
-	current++;
+
+	++current;
 }
 
 /*
@@ -132,8 +138,9 @@ void SCR_DebugGraph( float value, uint32 color )
 SCR_DrawDebugGraph
 ========================
 */
-void SCR_DrawDebugGraph()
+static void SCR_DrawDebugGraph()
 {
+#if 0
 	int		a, x, y, w, i, h;
 	float	v;
 	uint32	color;
@@ -160,6 +167,23 @@ void SCR_DrawDebugGraph()
 		h = (int)v % scr_graphheight->GetInt32();
 		R_DrawFilled(x+w-1-a, y - h, 1, h, color);
 	}
+#else
+	if ( ImGui::BeginMainMenuBar() )
+	{
+		if ( ImGui::BeginMenu( "DevUI" ) )
+		{
+			ImGui::Checkbox( "ImGui demo", &scr.imgui_showDemo );
+			ImGui::Checkbox( "Debug graph", &scr.imgui_debugGraph );
+
+			ImGui::EndMenu();
+		}
+		if ( ImGui::BeginMenu( "Engine" ) )
+		{
+			ImGui::EndMenu();
+		}
+		ImGui::EndMainMenuBar();
+	}
+#endif
 }
 
 /*
@@ -225,7 +249,7 @@ void SCR_CenterPrint( const char *str )
 	int			i, j, l;
 
 	Q_strcpy_s( scr_centerstring, str );
-	scr_centertime_off = scr_centertime->value;
+	scr_centertime_off = scr_centertime->GetFloat();
 	scr_centertime_start = static_cast<float>( cl.time );
 
 	// count the number of lines for centering
@@ -379,7 +403,7 @@ static void SCR_ShutdownImGui()
 // toggles the imgui demo UI
 static void SCR_ToggleImGuiDemo()
 {
-	scr.imgui_showdemo = !scr.imgui_showdemo;
+	scr.imgui_showDemo = !scr.imgui_showDemo;
 }
 
 /*
@@ -536,8 +560,8 @@ static void SCR_DrawImGui()
 {
 	bool render = false;
 
-	if ( scr.imgui_showdemo ) {
-		ImGui::ShowDemoWindow( &scr.imgui_showdemo );
+	if ( scr.imgui_showDemo ) {
+		ImGui::ShowDemoWindow( &scr.imgui_showDemo );
 		render = true;
 	}
 
@@ -593,7 +617,7 @@ void SCR_BeginLoadingPlaque()
 	cl.sound_prepped = false;		// don't play ambients
 	CDAudio_Stop();
 
-	if ( cls.disable_screen ) {
+	if ( cls.disable_screen != 0.0f ) {
 		return;
 	}
 	if ( developer->GetBool() ) {
@@ -841,7 +865,7 @@ void SCR_TouchPics()
 	if ( cl_crosshair->GetBool() )
 	{
 		if ( cl_crosshair->GetInt32() > 3 || cl_crosshair->GetInt32() < 0 ) {
-			cl_crosshair->value = 3;
+			Cvar_SetInt64( cl_crosshair, 3 );
 		}
 
 		Q_sprintf_s( crosshair_pic, "ch%i", cl_crosshair->GetInt32() );
@@ -1176,9 +1200,10 @@ void SCR_UpdateScreen()
 {
 	// if the screen is disabled (loading plaque is up, or vid mode changing)
 	// do nothing at all
-	if ( cls.disable_screen )
+	if ( cls.disable_screen != 0.0f )
 	{
-		if ( Time_FloatMilliseconds() - cls.disable_screen > 120000.0f ) {
+		if ( Time_FloatMilliseconds() - cls.disable_screen > 120000.0f )
+		{
 			cls.disable_screen = 0.0f;
 			Com_Print( "Loading plaque timed out.\n" );
 		}
@@ -1206,17 +1231,17 @@ void SCR_UpdateScreen()
 	{
 		// if a cinematic is supposed to be running, handle menus and console specially
 
-		if ( cls.key_dest == key_menu )
+		switch ( cls.key_dest )
 		{
+		case key_menu:
 			M_Draw();
-		}
-		else if ( cls.key_dest == key_console )
-		{
+			break;
+		case key_console:
 			SCR_DrawConsole();
-		}
-		else
-		{
+			break;
+		default:
 			SCR_DrawCinematic();
+			break;
 		}
 	}
 	else
@@ -1242,11 +1267,11 @@ void SCR_UpdateScreen()
 		SCR_DrawNet();
 		SCR_CheckDrawCenterString();
 
-		if ( scr_timegraph->value ) {
+		if ( scr_timegraph->GetBool() ) {
 			SCR_DebugGraph( cls.frametime * 300, colors::black );
 		}
 
-		if ( scr_debuggraph->value || scr_timegraph->value || scr_netgraph->value ) {
+		if ( scr_debuggraph->GetBool() || scr_timegraph->GetBool() || scr_netgraph->GetBool() ) {
 			SCR_DrawDebugGraph();
 		}
 

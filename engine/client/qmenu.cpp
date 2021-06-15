@@ -11,11 +11,11 @@ static void  Menu_DrawStatusBar( const char *string );
 static void	 Menulist_DoEnter( menulist_s *l );
 static void	 MenuList_Draw( menulist_s *l );
 static void	 Separator_Draw( menuseparator_s *s );
-static void	 Slider_DoSlide( menuslider_s *s, int dir );
+static void	 Slider_DoSlide( menuslider_s *s, int64 dir );
 static void	 Slider_Draw( menuslider_s *s );
 static void	 SpinControl_DoEnter( menulist_s *s );
 static void	 SpinControl_Draw( menulist_s *s );
-static void	 SpinControl_DoSlide( menulist_s *s, int dir );
+static void	 SpinControl_DoSlide( menulist_s *s, int64 dir );
 
 #define RCOLUMN_OFFSET  16
 #define LCOLUMN_OFFSET -16
@@ -485,7 +485,7 @@ void Menu_SetStatusBar( menuframework_s *m, const char *string )
 	m->statusbar = string;
 }
 
-void Menu_SlideItem( menuframework_s *s, int dir )
+void Menu_SlideItem( menuframework_s *s, int64 dir )
 {
 	menucommon_s *item = ( menucommon_s * ) Menu_ItemAtCursor( s );
 
@@ -566,7 +566,7 @@ void Separator_Draw( menuseparator_s *s )
 		Menu_DrawStringR2LDark( s->generic.x + s->generic.parent->x, s->generic.y + s->generic.parent->y, s->generic.name );
 }
 
-void Slider_DoSlide( menuslider_s *s, int dir )
+void Slider_DoSlide( menuslider_s *s, int64 dir )
 {
 	s->curvalue += dir;
 
@@ -589,7 +589,7 @@ void Slider_Draw( menuslider_s *s )
 		                s->generic.y + s->generic.parent->y, 
 						s->generic.name );
 
-	s->range = ( s->curvalue - s->minvalue ) / ( float ) ( s->maxvalue - s->minvalue );
+	s->range = ( s->curvalue - s->minvalue ) / ( s->maxvalue - s->minvalue );
 
 	if ( s->range < 0)
 		s->range = 0;
@@ -612,7 +612,7 @@ void SpinControl_DoEnter( menulist_s *s )
 		s->generic.callback( s );
 }
 
-void SpinControl_DoSlide( menulist_s *s, int dir )
+void SpinControl_DoSlide( menulist_s *s, int64 dir )
 {
 	s->curvalue += dir;
 

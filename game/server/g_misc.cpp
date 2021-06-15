@@ -454,7 +454,7 @@ void point_combat_touch (edict_t *self, edict_t *other, cplane_t *plane, csurfac
 
 void SP_point_combat (edict_t *self)
 {
-	if (deathmatch->value)
+	if (deathmatch->GetBool())
 	{
 		G_FreeEdict (self);
 		return;
@@ -539,7 +539,7 @@ static void light_use (edict_t *self, edict_t *other, edict_t *activator)
 void SP_light (edict_t *self)
 {
 	// no targeted lights in deathmatch, because they cause global messages
-	if (!self->targetname || deathmatch->value)
+	if (!self->targetname || deathmatch->GetBool())
 	{
 		G_FreeEdict (self);
 		return;
@@ -802,7 +802,7 @@ void func_explosive_spawn (edict_t *self, edict_t *other, edict_t *activator)
 
 void SP_func_explosive (edict_t *self)
 {
-	if (deathmatch->value)
+	if (deathmatch->GetBool())
 	{	// auto-remove for deathmatch
 		G_FreeEdict (self);
 		return;
@@ -953,7 +953,7 @@ void barrel_delay (edict_t *self, edict_t *inflictor, edict_t *attacker, int dam
 
 void SP_misc_explobox (edict_t *self)
 {
-	if (deathmatch->value)
+	if (deathmatch->GetBool())
 	{	// auto-remove for deathmatch
 		G_FreeEdict (self);
 		return;
@@ -1209,7 +1209,7 @@ void misc_deadsoldier_die (edict_t *self, edict_t *inflictor, edict_t *attacker,
 
 void SP_misc_deadsoldier (edict_t *ent)
 {
-	if (deathmatch->value)
+	if (deathmatch->GetBool())
 	{	// auto-remove for deathmatch
 		G_FreeEdict (ent);
 		return;

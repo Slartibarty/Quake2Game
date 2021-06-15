@@ -100,7 +100,7 @@ void S_Init (void)
 	Com_Printf("------- Initializing SoundSystem --------\n");
 
 	cv = Cvar_Get ("s_initsound", "1", 0);
-	if (!cv->value)
+	if (!cv->GetBool())
 		Com_Printf ("not initializing.\n");
 	else
 	{
@@ -539,7 +539,7 @@ void S_IssuePlaysound (playsound_t *ps)
 	channel_t	*ch;
 	sfxcache_t	*sc;
 
-	if (s_show->value)
+	if (s_show->GetBool())
 		Com_Printf ("Issue %i\n", ps->begin);
 	// pick a channel to play on
 	ch = S_PickChannel(ps->entnum, ps->entchannel);
@@ -815,7 +815,7 @@ void S_AddLoopSounds (void)
 	int			num;
 	entity_state_t	*ent;
 
-	if (cl_paused->value)
+	if (cl_paused->GetBool())
 		return;
 
 	if (cls.state != ca_active)
@@ -1003,17 +1003,17 @@ void S_Update(vec3_t origin, vec3_t forward, vec3_t right, vec3_t up)
 	if (!sound_started)
 		return;
 
-	// if the laoding plaque is up, clear everything
+	// if the loading plaque is up, clear everything
 	// out to make sure we aren't looping a dirty
 	// dma buffer while loading
-	if (cls.disable_screen)
+	if ( cls.disable_screen != 0.0f )
 	{
-		S_ClearBuffer ();
+		S_ClearBuffer();
 		return;
 	}
 
 	// rebuild scale tables if volume is modified
-	if (s_volume->modified)
+	if (s_volume->IsModified())
 		S_InitScaletable ();
 
 	VectorCopy(origin, listener_origin);
@@ -1048,7 +1048,7 @@ void S_Update(vec3_t origin, vec3_t forward, vec3_t right, vec3_t up)
 	//
 	// debugging output
 	//
-	if (s_show->value)
+	if (s_show->GetBool())
 	{
 		total = 0;
 		ch = channels;
@@ -1115,12 +1115,12 @@ void S_Update_(void)
 // check to make sure that we haven't overshot
 	if (paintedtime < soundtime)
 	{
-		Com_DPrintf ("S_Update_ : overflow\n");
+		Com_DPrint( "S_Update_ : overflow\n" );
 		paintedtime = soundtime;
 	}
 
 // mix ahead of current position
-	endtime = soundtime + s_mixahead->value * dma.speed;
+	endtime = soundtime + s_mixahead->GetFloat() * dma.speed;
 //endtime = (soundtime + 4096) & ~4095;
 
 	// mix to an even submission block size

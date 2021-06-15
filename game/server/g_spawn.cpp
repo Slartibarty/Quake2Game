@@ -538,8 +538,8 @@ void SpawnEntities (const char *mapname, char *entities, const char *spawnpoint)
 	int			i;
 	int			skill_level;
 
-	skill_level = Clamp( (int)skill->value, 0, 3 );
-	if ( skill->value != skill_level ) {
+	skill_level = Clamp( skill->GetInt32(), 0, 3 );
+	if ( skill->GetInt32() != skill_level ) {
 		// intify it
 		gi.cvar_forceset( "skill", va( "%d", skill_level ) );
 	}
@@ -580,21 +580,21 @@ void SpawnEntities (const char *mapname, char *entities, const char *spawnpoint)
 		// remove things (except the world) from different skill levels or deathmatch
 		if (ent != g_edicts)
 		{
-			if (deathmatch->value)
+			if (deathmatch->GetBool())
 			{
 				if ( ent->spawnflags & SPAWNFLAG_NOT_DEATHMATCH )
 				{
-					G_FreeEdict (ent);	
+					G_FreeEdict (ent);
 					inhibit++;
 					continue;
 				}
 			}
 			else
 			{
-				if ( /* ((coop->value) && (ent->spawnflags & SPAWNFLAG_NOT_COOP)) || */
-					((skill->value == 0) && (ent->spawnflags & SPAWNFLAG_NOT_EASY)) ||
-					((skill->value == 1) && (ent->spawnflags & SPAWNFLAG_NOT_MEDIUM)) ||
-					(((skill->value == 2) || (skill->value == 3)) && (ent->spawnflags & SPAWNFLAG_NOT_HARD))
+				if ( /* ((coop->GetBool()) && (ent->spawnflags & SPAWNFLAG_NOT_COOP)) || */
+					((skill->GetInt32() == 0) && (ent->spawnflags & SPAWNFLAG_NOT_EASY)) ||
+					((skill->GetInt32() == 1) && (ent->spawnflags & SPAWNFLAG_NOT_MEDIUM)) ||
+					(((skill->GetInt32() == 2) || (skill->GetInt32() == 3)) && (ent->spawnflags & SPAWNFLAG_NOT_HARD))
 					)
 					{
 						G_FreeEdict (ent);	
@@ -840,10 +840,10 @@ void SP_worldspawn (edict_t *ent)
 
 	gi.configstring (CS_CDTRACK, va("%i", ent->sounds) );
 
-	gi.configstring (CS_MAXCLIENTS, va("%i", (int)(maxclients->value) ) );
+	gi.configstring (CS_MAXCLIENTS, va("%i", maxclients->GetInt32()));
 
 	// status bar program
-	if (deathmatch->value)
+	if (deathmatch->GetBool())
 		gi.configstring (CS_STATUSBAR, dm_statusbar);
 	else
 		gi.configstring (CS_STATUSBAR, single_statusbar);

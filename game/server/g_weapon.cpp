@@ -18,7 +18,7 @@ static void check_dodge (edict_t *self, vec3_t start, vec3_t dir, int speed)
 	float	eta;
 
 	// easy mode only ducks one quarter the time
-	if (skill->value == 0)
+	if (skill->GetInt32() == 0)
 	{
 		if (random() > 0.25)
 			return;
@@ -574,7 +574,7 @@ void rocket_touch (edict_t *ent, edict_t *other, cplane_t *plane, csurface_t *su
 	else
 	{
 		// don't throw any debris in net games
-		if (!deathmatch->value && !coop->value)
+		if (!deathmatch->GetBool() && !coop->GetBool())
 		{
 			if ((surf) && !(surf->flags & (SURF_WARP|SURF_TRANS33|SURF_TRANS66|SURF_FLOWING)))
 			{
@@ -795,7 +795,7 @@ void bfg_think (edict_t *self)
 	int		dmg;
 	trace_t	tr;
 
-	if (deathmatch->value)
+	if (deathmatch->GetBool())
 		dmg = 5;
 	else
 		dmg = 10;

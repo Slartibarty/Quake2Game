@@ -307,7 +307,7 @@ void CL_Pause_f (void)
 		return;
 	}
 
-	Cvar_SetValue ("paused", !cl_paused->value);
+	Cvar_SetValue ("paused", !cl_paused->GetBool());
 }
 
 /*
@@ -470,7 +470,7 @@ void CL_Rcon_f (void)
 	int		i;
 	netadr_t	to;
 
-	if (!rcon_client_password->string)
+	if (!rcon_client_password->GetString()[0])
 	{
 		Com_Printf ("You must set 'rcon_password' before\n"
 					"issuing an rcon command.\n");
@@ -487,7 +487,7 @@ void CL_Rcon_f (void)
 
 	strcat (message, "rcon ");
 
-	strcat (message, rcon_client_password->string);
+	strcat (message, rcon_client_password->GetString());
 	strcat (message, " ");
 
 	for (i=1 ; i<Cmd_Argc() ; i++)
@@ -500,7 +500,7 @@ void CL_Rcon_f (void)
 		to = cls.netchan.remote_address;
 	else
 	{
-		if (!strlen(rcon_address->string))
+		if (!strlen(rcon_address->GetString()))
 		{
 			Com_Printf ("You must either be connected,\n"
 						"or set the 'rcon_address' cvar\n"
@@ -508,7 +508,7 @@ void CL_Rcon_f (void)
 
 			return;
 		}
-		NET_StringToNetadr (rcon_address->string, to);
+		NET_StringToNetadr (rcon_address->GetString(), to);
 		if (to.port == 0)
 			to.port = BigShort (PORT_SERVER);
 	}
@@ -553,7 +553,7 @@ void CL_Disconnect (void)
 	if (cls.state == ca_disconnected)
 		return;
 
-	if (cl_timedemo && cl_timedemo->value)
+	if (cl_timedemo && cl_timedemo->GetBool())
 	{
 		int	time;
 		
@@ -683,29 +683,37 @@ The server is changing levels
 */
 void CL_Reconnect_f (void)
 {
-	//ZOID
-	//if we are downloading, we don't change!  This so we don't suddenly stop downloading a map
-	if (cls.download)
-		return;
-
-	S_StopAllSounds ();
-	if (cls.state == ca_connected) {
-		Com_Printf ("reconnecting...\n");
-		cls.state = ca_connected;
-		MSG_WriteChar (&cls.netchan.message, clc_stringcmd);
-		MSG_WriteString (&cls.netchan.message, "new");		
+	// ZOID
+	// if we are downloading, we don't change!  This so we don't suddenly stop downloading a map
+	if ( cls.download ) {
 		return;
 	}
 
-	if (*cls.servername) {
-		if (cls.state >= ca_connected) {
+	S_StopAllSounds();
+	if ( cls.state == ca_connected )
+	{
+		Com_Print( "reconnecting...\n" );
+		cls.state = ca_connected;
+		MSG_WriteChar( &cls.netchan.message, clc_stringcmd );
+		MSG_WriteString( &cls.netchan.message, "new" );
+		return;
+	}
+
+	if ( cls.servername[0] )
+	{
+		if ( cls.state >= ca_connected )
+		{
 			CL_Disconnect();
-			cls.connect_time = (float)(cls.realtime - 1500);
-		} else
-			cls.connect_time = -99999; // fire immediately
+			cls.connect_time = (float)( cls.realtime - 1500 );
+		}
+		else
+		{
+			// fire immediately
+			cls.connect_time = -99999;
+		}
 
 		cls.state = ca_connecting;
-		Com_Printf ("reconnecting...\n");
+		Com_Print( "reconnecting...\n" );
 	}
 }
 
@@ -746,7 +754,7 @@ void CL_PingServers_f (void)
 	Com_Printf ("pinging broadcast...\n");
 
 	noudp = Cvar_Get ("noudp", "0", CVAR_NOSET);
-	if (!noudp->value)
+	if (!noudp->GetBool())
 	{
 		adr.type = NA_BROADCAST;
 		adr.port = BigShort(PORT_SERVER);
@@ -951,7 +959,7 @@ void CL_ReadPackets (void)
 	// check timeout
 	//
 	if (cls.state >= ca_connected
-	 && cls.realtime - cls.netchan.last_received > cl_timeout->value*1000)
+		&& cls.realtime - cls.netchan.last_received > SEC2MS(cl_timeout->GetInt32()))
 	{
 		if (++cl.timeoutcount > 5)	// timeoutcount saves debugger
 		{
@@ -978,15 +986,15 @@ void CL_FixUpGender(void)
 	char *p;
 	char sk[80];
 
-	if (gender_auto->value) {
+	if (gender_auto->GetBool()) {
 
-		if (gender->modified) {
+		if (gender->IsModified()) {
 			// was set directly, don't override the user
-			gender->modified = false;
+			gender->ClearModified();
 			return;
 		}
 
-		Q_strcpy_s(sk, skin->string);
+		Q_strcpy_s(sk, skin->GetString());
 		if ((p = strchr(sk, '/')) != NULL)
 			*p = 0;
 		if (Q_stricmp(sk, "male") == 0 || Q_stricmp(sk, "cyborg") == 0)
@@ -995,7 +1003,7 @@ void CL_FixUpGender(void)
 			Cvar_Set ("gender", "female");
 		else
 			Cvar_Set ("gender", "none");
-		gender->modified = false;
+		gender->ClearModified();
 	}
 }
 
@@ -1049,18 +1057,18 @@ void CL_RequestNextDownload (void)
 	if (cls.state != ca_connected)
 		return;
 
-	if (!allow_download->value && precache_check < ENV_CNT)
+	if (!allow_download->GetBool() && precache_check < ENV_CNT)
 		precache_check = ENV_CNT;
 
 //ZOID
 	if (precache_check == CS_MODELS) { // confirm map
 		precache_check = CS_MODELS+2; // 0 isn't used
-		if (allow_download_maps->value)
+		if (allow_download_maps->GetBool())
 			if (!CL_CheckOrDownloadFile(cl.configstrings[CS_MODELS+1]))
 				return; // started a download
 	}
 	if (precache_check >= CS_MODELS && precache_check < CS_MODELS+MAX_MODELS) {
-		if (allow_download_models->value) {
+		if (allow_download_models->GetBool()) {
 			while (precache_check < CS_MODELS+MAX_MODELS &&
 				cl.configstrings[precache_check][0]) {
 				if (cl.configstrings[precache_check][0] == '*' ||
@@ -1123,7 +1131,7 @@ void CL_RequestNextDownload (void)
 		precache_check = CS_SOUNDS;
 	}
 	if (precache_check >= CS_SOUNDS && precache_check < CS_SOUNDS+MAX_SOUNDS) { 
-		if (allow_download_sounds->value) {
+		if (allow_download_sounds->GetBool()) {
 			if (precache_check == CS_SOUNDS)
 				precache_check++; // zero is blank
 			while (precache_check < CS_SOUNDS+MAX_SOUNDS &&
@@ -1154,7 +1162,7 @@ void CL_RequestNextDownload (void)
 	// model, weapon model and skin
 	// so precache_check is now *3
 	if (precache_check >= CS_PLAYERSKINS && precache_check < CS_PLAYERSKINS + MAX_CLIENTS * PLAYER_MULT) {
-		if (allow_download_players->value) {
+		if (allow_download_players->GetBool()) {
 			while (precache_check < CS_PLAYERSKINS + MAX_CLIENTS * PLAYER_MULT) {
 				int i, n;
 				char model[MAX_QPATH], skin[MAX_QPATH], *p;
@@ -1247,7 +1255,7 @@ void CL_RequestNextDownload (void)
 	}
 
 	if (precache_check > ENV_CNT && precache_check < TEXTURE_CNT) {
-		if (allow_download->value && allow_download_maps->value) {
+		if (allow_download->GetBool() && allow_download_maps->GetBool()) {
 			while (precache_check < TEXTURE_CNT) {
 				int n = precache_check++ - ENV_CNT - 1;
 
@@ -1400,7 +1408,7 @@ void CL_InitLocal (void)
 	fov = Cvar_Get ("fov", "90", CVAR_USERINFO | CVAR_ARCHIVE);
 	gender = Cvar_Get ("gender", "male", CVAR_USERINFO | CVAR_ARCHIVE);
 	gender_auto = Cvar_Get ("gender_auto", "1", CVAR_ARCHIVE);
-	gender->modified = false; // clear this so we know when user sets it manually
+	gender->ClearModified(); // clear this so we know when user sets it manually
 
 	cl_vwep = Cvar_Get ("cl_vwep", "1", CVAR_ARCHIVE);
 
@@ -1552,7 +1560,7 @@ void CL_FixCvarCheats (void)
 	// make sure they are all set to the proper values
 	for (i=0, var = cheatvars ; i<numcheatvars ; i++, var++)
 	{
-		if ( Q_strcmp (var->var->string, var->value) )
+		if ( Q_strcmp (var->var->GetString(), var->value) )
 		{
 			Cvar_Set (var->name, var->value);
 		}
@@ -1597,18 +1605,18 @@ void CL_Frame (int msec)
 	static int	extratime;
 	static int  lasttimecalled;
 
-	if (dedicated->value)
+	if (dedicated->GetBool())
 		return;
 
 	extratime += msec;
 
-	if ( !cl_timedemo->value )
+	if ( !cl_timedemo->GetBool() )
 	{
 		if ( cls.state == ca_connected && extratime < 100 ) {
 			// don't flood packets out while connecting
 			return;
 		}
-		if ( extratime < 1000.0f / cl_maxfps->value ) {		// 1000.0f = seconds to milliseconds
+		if ( extratime < 1000.0f / cl_maxfps->GetFloat() ) {		// 1000.0f = seconds to milliseconds
 			// framerate is too high
 			return;
 		}
@@ -1649,10 +1657,10 @@ void CL_Frame (int msec)
 	}
 
 	// update the screen
-	if (host_speeds->value)
+	if (host_speeds->GetBool())
 		time_before_ref = Sys_Milliseconds ();
 	SCR_UpdateScreen ();
-	if (host_speeds->value)
+	if (host_speeds->GetBool())
 		time_after_ref = Sys_Milliseconds ();
 
 	// update audio
@@ -1670,7 +1678,7 @@ void CL_Frame (int msec)
 
 	cls.framecount++;
 
-	if ( log_stats->value )
+	if ( log_stats->GetBool() )
 	{
 		if ( cls.state == ca_active )
 		{
@@ -1702,7 +1710,7 @@ CL_Init
 */
 void CL_Init (void)
 {
-	if (dedicated->value)
+	if (dedicated->GetBool())
 		return;		// nothing running on the client
 
 	// all archived variables will now be loaded
@@ -1724,7 +1732,7 @@ void CL_Init (void)
 	M_Init ();
 	
 	SCR_Init ();
-	cls.disable_screen = true;	// don't draw yet
+	cls.disable_screen = 1.0f;	// don't draw yet
 
 	CDAudio_Init ();
 	CL_InitLocal ();
