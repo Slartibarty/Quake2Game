@@ -589,6 +589,8 @@ static void SCR_DrawTestbed( bool *p_open )
 ===================================================================================================
 */
 
+#if 0
+
 static struct console_t
 {
 	char	editLine[256];
@@ -697,6 +699,8 @@ static void SCR_ShowConsoleWindow( bool *p_open )
 	ImGui::End();
 }
 
+#endif
+
 //=================================================================================================
 
 /*
@@ -743,9 +747,9 @@ static void SCR_DrawImGui()
 		SCR_DrawTestbed( &scr.imgui_testbed );
 	}
 
-	if ( scr.imgui_console ) {
+	/*if ( scr.imgui_console ) {
 		scr_console.ShowConsoleWindow( &scr.imgui_console );
-	}
+	}*/
 
 	if ( render ) {
 		ImGui::Render();

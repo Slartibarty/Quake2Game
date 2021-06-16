@@ -224,7 +224,7 @@ void SVCmd_WriteIP_f (void)
 	int		i;
 	cvar_t	*game;
 
-	game = gi.cvar("game", "", 0);
+	game = gi.cvar("fs_game", "", 0);
 
 	if (!game->GetString()[0])
 		Q_sprintf (name, "%s/listip.cfg", GAMEVERSION);

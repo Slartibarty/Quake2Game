@@ -736,48 +736,51 @@ void CL_ParseStatusMessage (void)
 
 
 /*
-=================
+========================
 CL_PingServers_f
-=================
+========================
 */
-void CL_PingServers_f (void)
+void CL_PingServers_f()
 {
-	int			i;
-	netadr_t	adr;
-	char		name[32];
-	char		*adrstring;
-	cvar_t		*noudp;
+	int				i;
+	netadr_t		adr;
+	char			name[32];
+	const char *	adrstring;
+	cvar_t *		noudp;
 
-	NET_Config (true);		// allow remote
+	// allow remote
+	NET_Config( true );
 
 	// send a broadcast packet
-	Com_Printf ("pinging broadcast...\n");
+	Com_Printf( "pinging broadcast...\n" );
 
-	noudp = Cvar_Get ("noudp", "0", CVAR_NOSET);
-	if (!noudp->GetBool())
+	noudp = Cvar_Get( "noudp", "0", CVAR_NOSET );
+	if ( !noudp->GetBool() )
 	{
 		adr.type = NA_BROADCAST;
-		adr.port = BigShort(PORT_SERVER);
-		Netchan_OutOfBandPrint (NS_CLIENT, adr, va("info %i", PROTOCOL_VERSION));
+		adr.port = BigShort( PORT_SERVER );
+		Netchan_OutOfBandPrint( NS_CLIENT, adr, "info " STRINGIFY( PROTOCOL_VERSION ) );
 	}
 
 	// send a packet to each address book entry
-	for (i=0 ; i<16 ; i++)
+	for ( i = 0; i < 16; i++ )
 	{
-		Q_sprintf_s (name, "adr%i", i);
-		adrstring = Cvar_FindGetString (name);
-		if (!adrstring || !adrstring[0])
-			continue;
-
-		Com_Printf ("pinging %s...\n", adrstring);
-		if (!NET_StringToNetadr (adrstring, adr))
-		{
-			Com_Printf ("Bad address: %s\n", adrstring);
+		Q_sprintf_s( name, "adr%i", i );
+		adrstring = Cvar_FindGetString( name );
+		if ( !adrstring || !adrstring[0] ) {
 			continue;
 		}
-		if (!adr.port)
-			adr.port = BigShort(PORT_SERVER);
-		Netchan_OutOfBandPrint (NS_CLIENT, adr, va("info %i", PROTOCOL_VERSION));
+
+		Com_Printf( "pinging %s...\n", adrstring );
+		if ( !NET_StringToNetadr( adrstring, adr ) )
+		{
+			Com_Printf( "Bad address: %s\n", adrstring );
+			continue;
+		}
+		if ( !adr.port ) {
+			adr.port = BigShort( PORT_SERVER );
+		}
+		Netchan_OutOfBandPrint( NS_CLIENT, adr, va( "info %i", PROTOCOL_VERSION ) );
 	}
 }
 
@@ -1437,7 +1440,7 @@ void CL_InitLocal (void)
 	Cmd_AddCommand ("rcon", CL_Rcon_f);
 
 #ifdef Q_DEBUG
- 	Cmd_AddCommand ("packet", CL_Packet_f); // this is dangerous to leave in
+	Cmd_AddCommand ("packet", CL_Packet_f); // this is dangerous to leave in
 #endif
 
 	Cmd_AddCommand ("precache", CL_Precache_f);

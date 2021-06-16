@@ -33,15 +33,15 @@ static bool Cvar_InfoValidate( const char *s )
 
 static void Cvar_SetDerivatives( cvar_t *var )
 {
-	var->fltValue = static_cast<float>( atof( var->pString.c_str() ) );
-	var->intValue = atoi( var->pString.c_str() );
+	var->fltValue = static_cast<float>( atof( var->value.c_str() ) );
+	var->intValue = atoi( var->value.c_str() );
 }
 
 cvar_t *Cvar_Find( const char *name )
 {
 	for ( cvar_t *var = cvar_vars; var; var = var->pNext )
 	{
-		if ( Q_strcmp( name, var->pName.c_str() ) == 0 ) {
+		if ( Q_strcmp( name, var->name.c_str() ) == 0 ) {
 			return var;
 		}
 	}
@@ -60,16 +60,16 @@ char *Cvar_CompleteVariable( const char *partial )
 	// check exact match
 	for ( cvar_t *cvar = cvar_vars; cvar; cvar = cvar->pNext )
 	{
-		if ( Q_strcmp( partial, cvar->pName.c_str() ) == 0 ) {
-			return cvar->pName.data();
+		if ( Q_strcmp( partial, cvar->name.c_str() ) == 0 ) {
+			return cvar->name.data();
 		}
 	}
 
 	// check partial match
 	for ( cvar_t *cvar = cvar_vars; cvar; cvar = cvar->pNext )
 	{
-		if ( Q_strncmp( partial, cvar->pName.c_str(), len ) == 0 ) {
-			return cvar->pName.data();
+		if ( Q_strncmp( partial, cvar->name.c_str(), len ) == 0 ) {
+			return cvar->name.data();
 		}
 	}
 
@@ -112,8 +112,8 @@ cvar_t *Cvar_Get( const char *name, const char * value, uint32 flags )
 
 	var = (cvar_t *)Mem_ClearedAlloc( sizeof( cvar_t ) );
 
-	var->pName.assign( name );
-	var->pString.assign( value );
+	var->name.assign( name );
+	var->value.assign( value );
 
 	Cvar_SetDerivatives( var );
 
@@ -128,14 +128,14 @@ cvar_t *Cvar_Get( const char *name, const char * value, uint32 flags )
 	return var;
 }
 
-char *Cvar_FindGetString( const char *name )
+const char *Cvar_FindGetString( const char *name )
 {
 	cvar_t *var = Cvar_Find( name );
 	if ( !var ) {
-		return cvar_null_string;
+		return "";
 	}
 
-	return var->value.data();
+	return var->value.c_str();
 }
 
 float Cvar_FindGetFloat( const char *name )
@@ -180,41 +180,41 @@ static cvar_t *Cvar_Set_Internal( cvar_t *var, const char *value, bool force )
 	{
 		if ( var->flags & CVAR_NOSET )
 		{
-			Com_Printf( "%s is write protected.\n", var->pName.c_str() );
+			Com_Printf( "%s is write protected.\n", var->name.c_str() );
 			return var;
 		}
 
 		if ( var->flags & CVAR_LATCH )
 		{
-			if ( !var->pLatchedString.empty() )
+			if ( !var->latchedValue.empty() )
 			{
-				if ( Q_strcmp( value, var->pLatchedString.c_str() ) == 0 ) {
+				if ( Q_strcmp( value, var->latchedValue.c_str() ) == 0 ) {
 					return var;
 				}
-				var->pLatchedString.clear();
+				var->latchedValue.clear();
 			}
 			else
 			{
-				if ( Q_strcmp( value, var->pString.c_str() ) == 0 ) {
+				if ( Q_strcmp( value, var->value.c_str() ) == 0 ) {
 					return var;
 				}
 			}
 
 			if ( Com_ServerState() )
 			{
-				Com_Printf( "%s will be changed for next game.\n", var->pName.c_str() );
+				Com_Printf( "%s will be changed for next game.\n", var->name.c_str() );
 
-				var->pLatchedString.assign( value );
+				var->latchedValue.assign( value );
 			}
 			else
 			{
-				var->pString.assign( value );
+				var->value.assign( value );
 				Cvar_SetDerivatives( var );
 
 				// Hack?
-				if ( Q_strcmp( var->pName.c_str(), "game" ) == 0 )
+				if ( Q_strcmp( var->name.c_str(), "fs_game" ) == 0 )
 				{
-					FS_SetGamedir( var->pString.c_str(), true );
+					FS_SetGamedir( var->value.c_str(), true );
 					FS_ExecAutoexec();
 				}
 			}
@@ -225,13 +225,13 @@ static cvar_t *Cvar_Set_Internal( cvar_t *var, const char *value, bool force )
 	else
 	{
 		// forcing change... kill our latched data
-		if ( !var->pLatchedString.empty() )
+		if ( !var->latchedValue.empty() )
 		{
-			var->pLatchedString.clear();
+			var->latchedValue.clear();
 		}
 	}
 
-	if ( Q_strcmp( value, var->pString.c_str() ) == 0 ) {
+	if ( Q_strcmp( value, var->value.c_str() ) == 0 ) {
 		// not changed
 		return var;
 	}
@@ -241,7 +241,7 @@ static cvar_t *Cvar_Set_Internal( cvar_t *var, const char *value, bool force )
 		userinfo_modified = true;
 	}
 
-	var->pString.assign( value );
+	var->value.assign( value );
 	Cvar_SetDerivatives( var );
 
 	var->SetModified();
@@ -268,7 +268,7 @@ void Cvar_FullSet( const char *name, const char *value, uint32 flags )
 		userinfo_modified = true;
 	}
 
-	var->pString.assign( value );
+	var->value.assign( value );
 
 	Cvar_SetDerivatives( var );
 
@@ -375,21 +375,21 @@ void Cvar_GetLatchedVars()
 {
 	for ( cvar_t *var = cvar_vars; var; var = var->pNext )
 	{
-		if ( var->pLatchedString.empty() ) {
+		if ( var->latchedValue.empty() ) {
 			continue;
 		}
 
-		var->pString = std::move( var->pLatchedString );
-		//Mem_Free( var->pString );
-		//var->pString = var->pLatchedString;
-		//var->pLatchedString = nullptr;
+		var->value = std::move( var->latchedValue );
+		//Mem_Free( var->value );
+		//var->value = var->latchedValue;
+		//var->latchedValue = nullptr;
 
 		Cvar_SetDerivatives( var );
 
 		// Hack?
-		if ( Q_strcmp( var->pName.c_str(), "game" ) == 0 )
+		if ( Q_strcmp( var->name.c_str(), "fs_game" ) == 0 )
 		{
-			FS_SetGamedir( var->pString.c_str(), true );
+			FS_SetGamedir( var->value.c_str(), true );
 			FS_ExecAutoexec();
 		}
 	}
@@ -406,11 +406,11 @@ bool Cvar_Command()
 	// perform a variable print or set
 	if ( Cmd_Argc() == 1 )
 	{
-		Com_Printf( "\"%s\" is \"%s\"\n", var->pName.c_str(), var->pString.c_str() );
+		Com_Printf( "\"%s\" is \"%s\"\n", var->name.c_str(), var->value.c_str() );
 		return true;
 	}
 
-	Cvar_Set( var->pName.c_str(), Cmd_Argv( 1 ) );
+	Cvar_Set( var->name.c_str(), Cmd_Argv( 1 ) );
 
 	return true;
 }
@@ -423,7 +423,7 @@ void Cvar_WriteVariables( FILE *f )
 	{
 		if ( var->flags & CVAR_ARCHIVE )
 		{
-			Q_sprintf_s( buffer, "set %s \"%s\"\n", var->pName.c_str(), var->pString.c_str() );
+			Q_sprintf_s( buffer, "set %s \"%s\"\n", var->name.c_str(), var->value.c_str() );
 			fputs( buffer, f );
 		}
 	}
@@ -440,7 +440,7 @@ static char *Cvar_BitInfo( uint32 bit )
 	for ( cvar_t *var = cvar_vars; var; var = var->pNext )
 	{
 		if ( var->flags & bit ) {
-			Info_SetValueForKey( info, var->pName.c_str(), var->pString.c_str() );
+			Info_SetValueForKey( info, var->name.c_str(), var->value.c_str() );
 		}
 	}
 
@@ -527,7 +527,7 @@ static void Cvar_List_f()
 			Com_Printf( " " );
 		}
 
-		Com_Printf( " %s \"%s\"\n", var->pName.c_str(), var->pString.c_str() );
+		Com_Printf( " %s \"%s\"\n", var->name.c_str(), var->value.c_str() );
 	}
 
 	Com_Printf( "%d cvars\n", i );
@@ -550,9 +550,9 @@ void Cvar_Shutdown()
 			Mem_Free( lastVar );
 		}
 
-		var->pName.~string();
-		var->pString.~string();
-		var->pLatchedString.~string();
+		var->name.~string();
+		var->value.~string();
+		var->latchedValue.~string();
 		lastVar = var;
 	}
 	Mem_Free( lastVar );

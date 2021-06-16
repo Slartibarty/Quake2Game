@@ -42,7 +42,7 @@ char *		Cvar_CompleteVariable( const char *partial );
 cvar_t *	Cvar_Get( const char *name, const char *value, uint32 flags );
 
 			// finds and returns the value of a variable
-char *		Cvar_FindGetString( const char *name );			// returns an empty string if not found
+const char *Cvar_FindGetString( const char *name );			// returns an empty string if not found
 float		Cvar_FindGetFloat( const char *name );
 int			Cvar_FindGetInt( const char *name );
 bool		Cvar_FindGetBool( const char *name );

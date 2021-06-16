@@ -42,7 +42,7 @@ This will be sent on the initial connection and upon each server load.
 */
 static void SV_New_f()
 {
-	char *gamedir;
+	const char *gamedir;
 	int playernum;
 	edict_t *ent;
 
@@ -395,8 +395,6 @@ static void SV_ShowServerinfo_f()
 
 void SV_Nextserver()
 {
-	char *v;
-
 	//ZOID, ss_pic can be nextserver'd in coop mode
 	if ( sv.state == ss_game || ( sv.state == ss_pic && !Cvar_FindGetFloat( "coop" ) ) ) {
 		// can't nextserver while playing a normal game
@@ -404,7 +402,7 @@ void SV_Nextserver()
 	}
 
 	svs.spawncount++;	// make sure another doesn't sneak in
-	v = Cvar_FindGetString( "nextserver" );
+	const char *v = Cvar_FindGetString( "nextserver" );
 	if ( !v[0] )
 	{
 		Cbuf_AddText( "killserver\n" );

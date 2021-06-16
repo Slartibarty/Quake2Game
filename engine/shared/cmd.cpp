@@ -529,12 +529,13 @@ Cmd_MacroExpandString
 */
 char *Cmd_MacroExpandString (char *text)
 {
-	int		i, j, count, len;
-	bool	inquote;
-	char	*scan;
-	static char expanded[MAX_STRING_CHARS];
-	char	temporary[MAX_STRING_CHARS];
-	char	*token, *start;
+	int			i, j, count, len;
+	bool		inquote;
+	char *		scan;
+	static char	expanded[MAX_STRING_CHARS];
+	char		temporary[MAX_STRING_CHARS];
+	const char *token;
+	char *		start;
 
 	inquote = false;
 	scan = text;
@@ -679,14 +680,14 @@ void	Cmd_AddCommand (const char *cmd_name, xcommand_t function)
 {
 	cmd_function_t	*cmd;
 	
-// fail if the command is a variable name
-	if (Cvar_FindGetString(cmd_name)[0])
+	// fail if the command is a variable name
+	if (Cvar_Find(cmd_name))
 	{
 		Com_Printf ("Cmd_AddCommand: %s already defined as a var\n", cmd_name);
 		return;
 	}
 	
-// fail if the command already exists
+	// fail if the command already exists
 	for (cmd=cmd_functions ; cmd ; cmd=cmd->next)
 	{
 		if (!Q_strcmp (cmd_name, cmd->name))
