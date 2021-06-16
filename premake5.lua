@@ -257,7 +257,7 @@ project "engine"
 		"common/*",
 		"engine/client/*",
 		"engine/server/*",
-		"engine/res/*",
+		"engine/winres/*",
 		"engine/shared/*",
 		
 		"engine/renderer/*",
@@ -285,7 +285,7 @@ project "engine"
 		removefiles {
 			"**/*_win.*",
 			"**/conproc.*",
-			"**/*.rc"
+			"engine/winres/*"
 		}
 	filter {}
 	

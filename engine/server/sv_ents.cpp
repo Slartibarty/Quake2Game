@@ -212,9 +212,7 @@ static void SV_WritePlayerstateToClient( clientSnapshot_t *from, clientSnapshot_
 		pflags |= PS_RDFLAGS;
 	}
 
-	if ( ps->gunframe != ops->gunframe
-		|| !VectorCompare( ps->gunoffset, ops->gunoffset )
-		|| !VectorCompare( ps->gunangles, ops->gunangles ) )
+	if ( ps->gunframe != ops->gunframe )
 	{
 		pflags |= PS_WEAPONFRAME;
 	}
@@ -299,12 +297,6 @@ static void SV_WritePlayerstateToClient( clientSnapshot_t *from, clientSnapshot_
 	if ( pflags & PS_WEAPONFRAME )
 	{
 		MSG_WriteByte( msg, ps->gunframe );
-		MSG_WriteChar( msg, ps->gunoffset[0] * 4 );
-		MSG_WriteChar( msg, ps->gunoffset[1] * 4 );
-		MSG_WriteChar( msg, ps->gunoffset[2] * 4 );
-		MSG_WriteChar( msg, ps->gunangles[0] * 4 );
-		MSG_WriteChar( msg, ps->gunangles[1] * 4 );
-		MSG_WriteChar( msg, ps->gunangles[2] * 4 );
 	}
 
 	if ( pflags & PS_BLEND )

@@ -81,8 +81,8 @@ int Q_strcasecmp( const char *s1, const char *s2 )
 			{
 				return c1 - c2;
 			}
-			c1 = Q_tolower( c1 );
-			c2 = Q_tolower( c2 );
+			c1 = Q_tolower_fast( c1 );
+			c2 = Q_tolower_fast( c2 );
 			if ( c1 != c2 )
 			{
 				return c1 - c2;
@@ -103,8 +103,8 @@ int Q_strcasecmp( const char *s1, const char *s2 )
 			{
 				return c1 - c2;
 			}
-			c1 = Q_tolower( c1 );
-			c2 = Q_tolower( c2 );
+			c1 = Q_tolower_fast( c1 );
+			c2 = Q_tolower_fast( c2 );
 			if ( c1 != c2 )
 			{
 				return c1 - c2;
@@ -141,8 +141,8 @@ int Q_strncasecmp( const char *s1, const char *s2, strlen_t n )
 			{
 				return c1 - c2;
 			}
-			c1 = Q_tolower( c1 );
-			c2 = Q_tolower( c2 );
+			c1 = Q_tolower_fast( c1 );
+			c2 = Q_tolower_fast( c2 );
 			if ( c1 != c2 )
 			{
 				return c1 - c2;

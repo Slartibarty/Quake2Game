@@ -499,8 +499,6 @@ struct player_state_t
 	vec3_t		kick_angles;	// add to view direction to get render angles
 								// set by weapon kicks, pain effects, etc
 
-	vec3_t		gunangles;
-	vec3_t		gunoffset;
 	int			gunindex;
 	int			gunframe;
 

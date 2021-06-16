@@ -28,7 +28,7 @@
 
 #include "cl_local.h"
 
-#include <array>
+#include <vector>
 
 #include "imgui.h"
 #include "backends/imgui_impl_opengl3.h"
@@ -589,59 +589,65 @@ static void SCR_DrawTestbed( bool *p_open )
 ===================================================================================================
 */
 
-#if 0
-
-static struct console_t
+struct editLine_t
 {
-	char	editLine[256];
-	char	historyLines[32][256];		// Stores anything typed and submitted in the input window
-	int		history_size = 0;			// position of the next history line. if 32, overwrites last
-	int		history_pos = -1;			// A position in the history array
+	char data[256];
+};
+
+static struct console2_t
+{
+	editLine_t				editLine;
+	std::vector<editLine_t>	historyLines;
+	int						historyPosition = -1;
 
 } con;
 
-static int TextEditCallback( ImGuiInputTextCallbackData *data )
+static int Con2_TextEditCallback( ImGuiInputTextCallbackData *data )
 {
 	switch ( data->EventFlag )
 	{
 	case ImGuiInputTextFlags_CallbackCompletion:
 	{
-		char *fullVar = Cvar_CompleteVariable( data->Buf );
-		if ( fullVar )
+		const char *cmd = Cmd_CompleteCommand( data->Buf );
+		if ( !cmd ) {
+			cmd = Cvar_CompleteVariable( data->Buf );
+		}
+
+		if ( cmd )
 		{
 			// replace entire buffer
 			data->DeleteChars( 0, data->BufTextLen );
-			data->InsertChars( data->CursorPos, fullVar );
+			data->InsertChars( data->CursorPos, cmd );
 		}
 	}
 	break;
 	case ImGuiInputTextFlags_CallbackHistory:
 	{
-		if ( con.historyLines[0][0] )
+		if ( !con.historyLines.empty() )
 		{
 			switch ( data->EventKey )
 			{
 			case ImGuiKey_UpArrow:
-				if ( con.history_pos == -1 ) {
+				if ( con.historyPosition == -1 ) {
 					// Start at the end
-					con.history_pos = (int64)con.history.size() - 1;
+					con.historyPosition = (int64)con.historyLines.size() - 1;
 				}
-				else if ( con.history_pos > 0 ) {
+				else if ( con.historyPosition > 0 ) {
 					// Decrement
-					--con.history_pos;
+					--con.historyPosition;
 				}
 				break;
 			case ImGuiKey_DownArrow:
-				if ( con.history_pos < (int64)con.history.size() ) {
-					++con.history_pos;
+				if ( con.historyPosition < (int64)con.historyLines.size() ) {
+					++con.historyPosition;
 				}
-				if ( con.history_pos == (int64)con.history.size() ) {
-					con.history_pos -= 1;
+				if ( con.historyPosition == (int64)con.historyLines.size() ) {
+					con.historyPosition -= 1;
 				}
 				break;
 			}
 
-			const char *history_str = con.history_pos >= 0 ? con.history[con.history_pos] : "";
+			const char *history_str = con.historyPosition >= 0 ? con.historyLines[con.historyPosition].data : "";
 			data->DeleteChars( 0, data->BufTextLen );
 			data->InsertChars( 0, history_str );
 		}
@@ -652,19 +658,13 @@ static int TextEditCallback( ImGuiInputTextCallbackData *data )
 	return 0;
 }
 
-static void History_PushBack( const char *string )
+static void Con2_Init()
 {
-	// reset pos
-	con.history_pos = -1;
-
-	if ( con.history_size < 32 )
-	{
-		con.historyLines[con.history_size];
-	}
-	con.history
+	// reserve 16 history slots
+	con.historyLines.reserve( 16 );
 }
 
-static void SCR_ShowConsoleWindow( bool *p_open )
+static void Con2_Show( bool *p_open )
 {
 	ImGui::SetNextWindowPos( ImVec2( 40, 40 ), ImGuiCond_FirstUseEver );
 	ImGui::SetNextWindowSize( ImVec2( 560, 400 ), ImGuiCond_FirstUseEver );
@@ -681,25 +681,25 @@ static void SCR_ShowConsoleWindow( bool *p_open )
 	ImGui::EndChild();
 
 	// input line
-	bool reclaim_focus = false;
+	bool reclaimFocus = false;
 	ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory;
-	memset( con.inBuf, 0, sizeof( con.inBuf ) );
+	memset( con.editLine.data, 0, sizeof( con.editLine.data ) );
 
-	if ( ImGui::InputText( "Input", con.inBuf, sizeof( con.inBuf ), flags, TextEditCallback, nullptr ) )
+	if ( ImGui::InputText( nullptr, con.editLine.data, sizeof( con.editLine.data ), flags, Con2_TextEditCallback, nullptr ) )
 	{
-		History_PushBack( con.inBuf );
+		con.historyLines.push_back( con.editLine );
+
+		reclaimFocus = true;
 	}
 
 	// auto-focus on window apparition
 	ImGui::SetItemDefaultFocus();
-	if ( reclaim_focus ) {
+	if ( reclaimFocus ) {
 		ImGui::SetKeyboardFocusHere( -1 ); // Auto focus previous widget
 	}
 
 	ImGui::End();
 }
-
-#endif
 
 //=================================================================================================
 

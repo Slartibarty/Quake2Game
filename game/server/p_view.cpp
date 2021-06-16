@@ -329,62 +329,6 @@ void SV_CalcViewOffset( edict_t *ent )
 	VectorAdd( origin, ent->client->kick_origin, origin );
 }
 
-/*
-==============
-SV_CalcGunOffset
-==============
-*/
-void SV_CalcGunOffset( edict_t *ent )
-{
-	float	scale;
-	float	delta;
-	float	fracsin;
-
-	vec3_t	&origin = ent->client->ps.gunoffset;
-	vec3_t	&angles = ent->client->ps.gunangles;
-
-	VectorClear( origin );
-	VectorClear( angles );
-
-	// on odd legs, invert some angles
-	if ( bobcycle & 1 ) {
-		scale = -xyspeed;
-	} else {
-		scale = xyspeed;
-	}
-
-	// gun angles from bobbing
-	angles[PITCH]	+= xyspeed * bobfracsin * 0.005f;
-	angles[YAW]		+= scale * bobfracsin * 0.01f;
-	angles[ROLL]	+= scale * bobfracsin * 0.005f;
-
-	// drop the weapon when landing
-	delta = level.time - ent->client->fall_time;
-	if ( delta < LAND_DEFLECT_TIME ) {
-		origin[2] += ent->client->fall_value * 0.25f * delta / LAND_DEFLECT_TIME;
-	} else if ( delta < LAND_DEFLECT_TIME + LAND_RETURN_TIME ) {
-		origin[2] += ent->client->fall_value * 0.25f *
-			( LAND_DEFLECT_TIME + LAND_RETURN_TIME - delta ) / LAND_RETURN_TIME;
-	}
-
-	// idle drift
-	scale = xyspeed + 40.0f;
-	fracsin = sin( level.time );
-	angles[PITCH]	+= scale * fracsin * 0.01f;
-	angles[YAW]		+= scale * fracsin * 0.01f;
-	angles[ROLL]	+= scale * fracsin * 0.01f;
-
-	// gun_x / gun_y / gun_z are development tools
-#if 0
-	for (i=0 ; i<3 ; i++)
-	{
-		origin[i] += forward[i]*(gun_y->value);
-		origin[i] += right[i]*gun_x->value;
-		origin[i] += up[i]* (-gun_z->value);
-	}
-#endif
-}
-
 
 /*
 =============

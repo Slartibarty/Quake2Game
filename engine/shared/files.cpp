@@ -6,13 +6,10 @@
 
 #include "files.h"
 
-/*
-=============================================================================
+char	fs_gamedir[MAX_OSPATH];
 
-QUAKE FILESYSTEM
-
-=============================================================================
-*/
+cvar_t *fs_basedir;			// "." by default
+cvar_t *fs_gamedirvar;		// 
 
 //
 // in memory
@@ -31,10 +28,6 @@ struct pack_t
 	int		numfiles;
 	packfile_t	*files;
 };
-
-char	fs_gamedir[MAX_OSPATH];
-cvar_t	*fs_basedir;
-cvar_t	*fs_gamedirvar;
 
 struct searchpath_t
 {

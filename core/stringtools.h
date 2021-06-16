@@ -13,6 +13,10 @@
 
 #include "sys_types.h"
 
+// ASCII only tolower/toupper
+#define Q_tolower_fast(c) ( ( ( (c) >= 'A' ) && ( (c) <= 'Z' ) ) ? ( (c) + 32 ) : (c) )
+#define Q_toupper_fast(c) ( ( ( (c) >= 'a' ) && ( (c) <= 'z' ) ) ? ( (c) - 32 ) : (c) )
+
 /*
 ===================================================================================================
 
@@ -114,18 +118,18 @@ inline int Q_stricmp( const char *s1, const char *s2 ) {
 =======================================
 */
 
-inline int Q_tolower( int ch ) {
+inline constexpr int Q_tolower( int ch ) {
 	return ( ch <= 'Z' && ch >= 'A' ) ? ( ch + ( 'a' - 'A' ) ) : ch;
 }
 
-inline int Q_toupper( int ch ) {
+inline constexpr int Q_toupper( int ch ) {
 	return ( ch >= 'a' && ch <= 'z' ) ? ( ch - ( 'a' - 'A' ) ) : ch;
 }
 
 inline void Q_strlwr( char *dest ) {
 	while ( *dest )
 	{
-		*dest = Q_tolower( *dest );
+		*dest = Q_tolower_fast( *dest );
 		++dest;
 	}
 }
@@ -133,7 +137,7 @@ inline void Q_strlwr( char *dest ) {
 inline void Q_strupr( char *dest ) {
 	while ( *dest )
 	{
-		*dest = Q_toupper( *dest );
+		*dest = Q_toupper_fast( *dest );
 		++dest;
 	}
 }
@@ -145,6 +149,66 @@ inline void Q_strupr( char *dest ) {
 
 ===================================================================================================
 */
+
+//
+// Hashing
+//
+
+inline uint32 HashString( const char* s )
+{
+	uint32 h = 2166136261u;
+	for ( ; *s; ++s )
+	{
+		uint32 c = (unsigned char) *s;
+		h = (h ^ c) * 16777619;
+	}
+	return (h ^ (h << 17)) + (h >> 21);
+}
+
+inline uint32 HashStringInsensitive( const char* s )
+{
+	uint32 h = 2166136261u;
+	for ( ; *s; ++s )
+	{
+		uint32 c = (unsigned char) *s;
+		c += (((('A'-1) - c) & (c - ('Z'+1))) >> 26) & 32;
+		h = (h ^ c) * 16777619;
+	}
+	return (h ^ (h << 17)) + (h >> 21);
+}
+
+//
+// Consteval hashing
+//
+
+template< strlen_t cnt >
+inline consteval uint32 ConstHashString( const char( &s )[cnt] )
+{
+	uint32 h = 2166136261u;
+	for ( uint32 i = 0; i < cnt-1; ++i )
+	{
+		uint32 c = (unsigned char) s[i];
+		h = (h ^ c) * 16777619;
+	}
+	return (h ^ (h << 17)) + (h >> 21);
+}
+
+template< strlen_t cnt >
+inline consteval uint32 ConstHashStringInsensitive( const char( &s )[cnt] )
+{
+	uint32 h = 2166136261u;
+	for ( uint32 i = 0; i < cnt-1; ++i )
+	{
+		uint32 c = (unsigned char) s[i];
+		c += (((('A'-1) - c) & (c - ('Z'+1))) >> 26) & 32;
+		h = (h ^ c) * 16777619;
+	}
+	return (h ^ (h << 17)) + (h >> 21);
+}
+
+//
+// Misc
+//
 
 inline void Str_Substitute( char *pStr, int a, int b )
 {

@@ -39,6 +39,7 @@ static void Cvar_SetDerivatives( cvar_t *var )
 
 cvar_t *Cvar_Find( const char *name )
 {
+	// hashing doesn't help here, in fact it's somehow slower
 	for ( cvar_t *var = cvar_vars; var; var = var->pNext )
 	{
 		if ( Q_strcmp( name, var->name.c_str() ) == 0 ) {

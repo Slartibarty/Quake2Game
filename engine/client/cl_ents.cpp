@@ -12,6 +12,11 @@ static constexpr float cl_bobup = 0.5f;
 static constexpr float cl_rollangle = 2.0f;
 static constexpr float cl_rollspeed = 200.0f;
 
+#define	HL2_BOB_CYCLE_MIN	1.0f
+#define	HL2_BOB_CYCLE_MAX	0.45f
+#define	HL2_BOB				0.002f
+#define	HL2_BOB_UP			0.5f
+
 //extern model_t *cl_mod_powerscreen;
 
 /*
@@ -481,12 +486,6 @@ void CL_ParsePlayerstate( clSnapshot_t *oldframe, clSnapshot_t *newframe )
 	if ( flags & PS_WEAPONFRAME )
 	{
 		state->gunframe = MSG_ReadByte( &net_message );
-		state->gunoffset[0] = MSG_ReadChar( &net_message ) * 0.25f;
-		state->gunoffset[1] = MSG_ReadChar( &net_message ) * 0.25f;
-		state->gunoffset[2] = MSG_ReadChar( &net_message ) * 0.25f;
-		state->gunangles[0] = MSG_ReadChar( &net_message ) * 0.25f;
-		state->gunangles[1] = MSG_ReadChar( &net_message ) * 0.25f;
-		state->gunangles[2] = MSG_ReadChar( &net_message ) * 0.25f;
 	}
 
 	if ( flags & PS_BLEND )
@@ -1023,11 +1022,6 @@ static void CL_AddPacketEntities( clSnapshot_t *frame )
 	}
 }
 
-#define	HL2_BOB_CYCLE_MIN	1.0f
-#define	HL2_BOB_CYCLE_MAX	0.45f
-#define	HL2_BOB				0.002f
-#define	HL2_BOB_UP			0.5f
-
 inline float fsel( float a, float b, float c )
 {
 	return a >= 0.0f ? b : c;
@@ -1041,7 +1035,7 @@ inline float RemapVal( float val, float A, float B, float C, float D )
 	return C + ( D - C ) * ( val - A ) / ( B - A );
 }
 
-static void CL_CalcViewmodelBob( vec3_t velocity, float &verticalBob, float &lateralBob )
+static void CL_CalcViewmodelBob( const vec3_t velocity, float &verticalBob, float &lateralBob )
 {
 	static float bobtime;
 	float cycle;
@@ -1114,24 +1108,26 @@ static void CL_AddViewmodelBob( vec3_t origin, vec3_t angles )
 	VectorMA( origin, lateralBob * 0.8f, cl.v_right, origin );
 }
 
+/*
+========================
+CL_CalcViewModelLag
+========================
+*/
 static void CL_CalcViewModelLag( vec3_t origin, const vec3_t angles )
 {
 	static vec3_t lastFacing;
 
-	vec3_t forward;
-	AngleVectors( angles, forward, nullptr, nullptr );
-
 	if ( cls.frametime != 0.0f )
 	{
 		vec3_t difference;
-		VectorSubtract( forward, lastFacing, difference );
+		VectorSubtract( cl.v_forward, lastFacing, difference );
 
 		float speed = 5.0f;
 
 		// If we start to lag too far behind, we'll increase the "catch up" speed.  Solves the problem with fast cl_yawspeed, m_yaw or joysticks
 		//  rotating quickly.  The old code would slam lastfacing with origin causing the viewmodel to pop to a new position
 		float distance = VectorLength( difference );
-		if ( distance > MaxViewmodelLag && MaxViewmodelLag > 0.0f )
+		if ( distance > MaxViewmodelLag )
 		{
 			speed *= distance / MaxViewmodelLag;
 		}
@@ -1140,16 +1136,8 @@ static void CL_CalcViewModelLag( vec3_t origin, const vec3_t angles )
 		VectorNormalize( lastFacing );
 
 		VectorNegate( difference, difference );
-		VectorMA( origin, 5.0f, difference, origin );
+		VectorMA( origin, 2.0f, difference, origin );
 	}
-
-	vec3_t oldForward; // DEBUG
-	VectorCopy( forward, oldForward ); // DEBUG
-
-	vec3_t right, up;
-	AngleVectors( angles, forward, right, up );
-
-	assert( VectorCompare( forward, oldForward ) );
 
 	float pitch = angles[PITCH];
 	if ( pitch > 180.0f ) {
@@ -1159,9 +1147,9 @@ static void CL_CalcViewModelLag( vec3_t origin, const vec3_t angles )
 		pitch += 360.0f;
 	}
 
-	VectorMA( origin, -pitch * 0.035f, forward, origin );
-	VectorMA( origin, -pitch * 0.03f, right, origin );
-	VectorMA( origin, -pitch * 0.02f, up, origin );
+	VectorMA( origin, -pitch * 0.035f, cl.v_forward, origin );
+	VectorMA( origin, -pitch * 0.03f, cl.v_right, origin );
+	VectorMA( origin, -pitch * 0.02f, cl.v_up, origin );
 }
 
 /*
@@ -1247,9 +1235,11 @@ static void CL_AddViewWeapon( player_state_t *ps, player_state_t *ops, float bob
 /*
 ========================
 CL_CalcBob
+
+Applies Half-Life 1 style view bob
 ========================
 */
-static float CL_CalcBob( vec3_t velocity )
+static float CL_CalcBob( const vec3_t velocity )
 {
 	return 0.0f;
 #if 0
@@ -1294,9 +1284,11 @@ static float CL_CalcBob( vec3_t velocity )
 /*
 ========================
 CL_CalcRoll
+
+Applies Half-Life 1 style view roll
 ========================
 */
-static float CL_CalcRoll( vec3_t angles, vec3_t velocity )
+static float CL_CalcRoll( const vec3_t angles, const vec3_t velocity )
 {
 	return 0.0f;
 #if 0
