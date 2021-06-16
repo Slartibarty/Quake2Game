@@ -370,11 +370,11 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 	// friendly fire avoidance
 	// if enabled you can't hurt teammates (but you can hurt yourself)
 	// knockback still occurs
-	if ((targ != attacker) && ((deathmatch->GetBool() && (dmflags->GetInt32() & (DF_MODELTEAMS | DF_SKINTEAMS))) || coop->GetBool()))
+	if ((targ != attacker) && ((deathmatch->GetBool() && (dmflags->GetInt() & (DF_MODELTEAMS | DF_SKINTEAMS))) || coop->GetBool()))
 	{
 		if (OnSameTeam (targ, attacker))
 		{
-			if (dmflags->GetInt32() & DF_NO_FRIENDLY_FIRE)
+			if (dmflags->GetInt() & DF_NO_FRIENDLY_FIRE)
 				damage = 0;
 			else
 				mod |= MOD_FRIENDLY_FIRE;
@@ -383,7 +383,7 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 	meansOfDeath = mod;
 
 	// easy mode takes half damage
-	if (skill->GetInt32() == 0 && !deathmatch->GetBool() && targ->client)
+	if (skill->GetInt() == 0 && !deathmatch->GetBool() && targ->client)
 	{
 		damage /= 2;
 		if (!damage)
@@ -491,7 +491,7 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 		{
 			targ->pain (targ, attacker, knockback, take);
 			// nightmare mode monsters don't go into pain frames often
-			if (skill->GetInt32() == 3)
+			if (skill->GetInt() == 3)
 				targ->pain_debounce_time = level.time + 5;
 		}
 	}

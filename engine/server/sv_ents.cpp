@@ -63,7 +63,7 @@ static void SV_EmitPacketEntities( clientSnapshot_t *from, clientSnapshot_t *to,
 			// note that players are always 'newentities', this updates their oldorigin always
 			// and prevents warping
 			assert( oldent ); assert( newent );
-			MSG_WriteDeltaEntity( oldent, newent, msg, false, newent->number <= maxclients->GetInt32() );
+			MSG_WriteDeltaEntity( oldent, newent, msg, false, newent->number <= maxclients->GetInt() );
 			oldindex++;
 			newindex++;
 			continue;

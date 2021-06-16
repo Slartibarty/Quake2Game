@@ -567,13 +567,13 @@ static void NET_OpenIP()
 
 	if ( !ip_sockets[NS_SERVER] )
 	{
-		port = Cvar_Get( "ip_hostport", "0", CVAR_NOSET )->GetInt32();
+		port = Cvar_Get( "ip_hostport", "0", CVAR_NOSET )->GetInt();
 		if ( !port )
 		{
-			port = Cvar_Get( "hostport", "0", CVAR_NOSET )->GetInt32();
+			port = Cvar_Get( "hostport", "0", CVAR_NOSET )->GetInt();
 			if ( !port )
 			{
-				port = Cvar_Get( "port", STRINGIFY( PORT_SERVER ), CVAR_NOSET )->GetInt32();
+				port = Cvar_Get( "port", STRINGIFY( PORT_SERVER ), CVAR_NOSET )->GetInt();
 			}
 		}
 		ip_sockets[NS_SERVER] = NET_IPSocket( ip->GetString(), port );
@@ -588,10 +588,10 @@ static void NET_OpenIP()
 
 	if ( !ip_sockets[NS_CLIENT] )
 	{
-		port = Cvar_Get( "ip_clientport", "0", CVAR_NOSET )->GetInt32();
+		port = Cvar_Get( "ip_clientport", "0", CVAR_NOSET )->GetInt();
 		if ( !port )
 		{
-			port = Cvar_Get( "clientport", va( "%i", PORT_CLIENT ), CVAR_NOSET )->GetInt32();
+			port = Cvar_Get( "clientport", va( "%i", PORT_CLIENT ), CVAR_NOSET )->GetInt();
 			if ( !port ) {
 				port = PORT_ANY;
 			}

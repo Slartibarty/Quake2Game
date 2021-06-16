@@ -312,7 +312,7 @@ void CL_FinishMove (usercmd_t *cmd)
 		cmd->angles[i] = ANGLE2SHORT(cl.viewangles[i]);
 
 // send the ambient light level at the player's current position
-	cmd->lightlevel = (byte)cl_lightlevel->GetInt32();
+	cmd->lightlevel = (byte)cl_lightlevel->GetInt();
 }
 
 /*

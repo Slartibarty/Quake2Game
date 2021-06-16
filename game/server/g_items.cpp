@@ -142,7 +142,7 @@ qboolean Pickup_Powerup (edict_t *ent, edict_t *other)
 	int		quantity;
 
 	quantity = other->client->pers.inventory[ITEM_INDEX(ent->item)];
-	if ((skill->GetInt32() == 1 && quantity >= 2) || (skill->GetInt32() >= 2 && quantity >= 1))
+	if ((skill->GetInt() == 1 && quantity >= 2) || (skill->GetInt() >= 2 && quantity >= 1))
 		return false;
 
 	if ((coop->GetBool()) && (ent->item->flags & IT_STAY_COOP) && (quantity > 0))
@@ -154,7 +154,7 @@ qboolean Pickup_Powerup (edict_t *ent, edict_t *other)
 	{
 		if (!(ent->spawnflags & DROPPED_ITEM) )
 			SetRespawn (ent, ent->item->quantity);
-		if ((dmflags->GetInt32() & DF_INSTANT_ITEMS) || ((ent->item->use == Use_Quad) && (ent->spawnflags & DROPPED_PLAYER_ITEM)))
+		if ((dmflags->GetInt() & DF_INSTANT_ITEMS) || ((ent->item->use == Use_Quad) && (ent->spawnflags & DROPPED_PLAYER_ITEM)))
 		{
 			if ((ent->item->use == Use_Quad) && (ent->spawnflags & DROPPED_PLAYER_ITEM))
 				quad_drop_timeout_hack = (ent->nextthink - level.time) / FRAMETIME;
@@ -468,7 +468,7 @@ qboolean Pickup_Ammo (edict_t *ent, edict_t *other)
 	qboolean	weapon;
 
 	weapon = (ent->item->flags & IT_WEAPON);
-	if ( (weapon) && ( dmflags->GetInt32() & DF_INFINITE_AMMO ) )
+	if ( (weapon) && ( dmflags->GetInt() & DF_INFINITE_AMMO ) )
 		count = 1000;
 	else if (ent->count)
 		count = ent->count;
@@ -1056,7 +1056,7 @@ void SpawnItem (edict_t *ent, gitem_t *item)
 	// some items will be prevented in deathmatch
 	if (deathmatch->GetBool())
 	{
-		if ( dmflags->GetInt32() & DF_NO_ARMOR )
+		if ( dmflags->GetInt() & DF_NO_ARMOR )
 		{
 			if (item->pickup == Pickup_Armor || item->pickup == Pickup_PowerArmor)
 			{
@@ -1064,7 +1064,7 @@ void SpawnItem (edict_t *ent, gitem_t *item)
 				return;
 			}
 		}
-		if ( dmflags->GetInt32() & DF_NO_ITEMS )
+		if ( dmflags->GetInt() & DF_NO_ITEMS )
 		{
 			if (item->pickup == Pickup_Powerup)
 			{
@@ -1072,7 +1072,7 @@ void SpawnItem (edict_t *ent, gitem_t *item)
 				return;
 			}
 		}
-		if ( dmflags->GetInt32() & DF_NO_HEALTH )
+		if ( dmflags->GetInt() & DF_NO_HEALTH )
 		{
 			if (item->pickup == Pickup_Health || item->pickup == Pickup_Adrenaline || item->pickup == Pickup_AncientHead)
 			{
@@ -1080,7 +1080,7 @@ void SpawnItem (edict_t *ent, gitem_t *item)
 				return;
 			}
 		}
-		if ( dmflags->GetInt32() & DF_INFINITE_AMMO )
+		if ( dmflags->GetInt() & DF_INFINITE_AMMO )
 		{
 			if ( (item->flags == IT_AMMO) || (Q_strcmp(ent->classname, "weapon_bfg") == 0) )
 			{
@@ -2102,7 +2102,7 @@ tank commander's head
 */
 void SP_item_health (edict_t *self)
 {
-	if ( deathmatch->GetBool() && (dmflags->GetInt32() & DF_NO_HEALTH) )
+	if ( deathmatch->GetBool() && (dmflags->GetInt() & DF_NO_HEALTH) )
 	{
 		G_FreeEdict (self);
 		return;
@@ -2118,7 +2118,7 @@ void SP_item_health (edict_t *self)
 */
 void SP_item_health_small (edict_t *self)
 {
-	if ( deathmatch->GetBool() && (dmflags->GetInt32() & DF_NO_HEALTH) )
+	if ( deathmatch->GetBool() && (dmflags->GetInt() & DF_NO_HEALTH) )
 	{
 		G_FreeEdict (self);
 		return;
@@ -2135,7 +2135,7 @@ void SP_item_health_small (edict_t *self)
 */
 void SP_item_health_large (edict_t *self)
 {
-	if ( deathmatch->GetBool() && (dmflags->GetInt32() & DF_NO_HEALTH) )
+	if ( deathmatch->GetBool() && (dmflags->GetInt() & DF_NO_HEALTH) )
 	{
 		G_FreeEdict (self);
 		return;
@@ -2151,7 +2151,7 @@ void SP_item_health_large (edict_t *self)
 */
 void SP_item_health_mega (edict_t *self)
 {
-	if ( deathmatch->GetBool() && (dmflags->GetInt32() & DF_NO_HEALTH) )
+	if ( deathmatch->GetBool() && (dmflags->GetInt() & DF_NO_HEALTH) )
 	{
 		G_FreeEdict (self);
 		return;

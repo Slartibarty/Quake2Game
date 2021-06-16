@@ -128,6 +128,16 @@ cvar_t *Cvar_Get( const char *name, const char * value, uint32 flags )
 	return var;
 }
 
+char *Cvar_FindGetString( const char *name )
+{
+	cvar_t *var = Cvar_Find( name );
+	if ( !var ) {
+		return cvar_null_string;
+	}
+
+	return var->value.data();
+}
+
 float Cvar_FindGetFloat( const char *name )
 {
 	cvar_t *var = Cvar_Find( name );
@@ -138,14 +148,19 @@ float Cvar_FindGetFloat( const char *name )
 	return var->GetFloat();
 }
 
-char *Cvar_FindGetString( const char *name )
+int Cvar_FindGetInt( const char *name )
 {
 	cvar_t *var = Cvar_Find( name );
 	if ( !var ) {
-		return cvar_null_string;
+		return 0;
 	}
 
-	return var->pString.data();
+	return var->GetInt();
+}
+
+bool Cvar_FindGetBool( const char *name )
+{
+	return Cvar_FindGetInt( name ) != 0;
 }
 
 //=================================================================================================

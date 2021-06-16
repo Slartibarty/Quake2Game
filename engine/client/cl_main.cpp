@@ -959,7 +959,7 @@ void CL_ReadPackets (void)
 	// check timeout
 	//
 	if (cls.state >= ca_connected
-		&& cls.realtime - cls.netchan.last_received > SEC2MS(cl_timeout->GetInt32()))
+		&& cls.realtime - cls.netchan.last_received > SEC2MS(cl_timeout->GetInt()))
 	{
 		if (++cl.timeoutcount > 5)	// timeoutcount saves debugger
 		{

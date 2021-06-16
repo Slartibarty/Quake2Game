@@ -238,7 +238,7 @@ void gladiator_pain (edict_t *self, edict_t *other, float kick, int damage)
 	else
 		gi.sound (self, CHAN_VOICE, sound_pain2, 1, ATTN_NORM, 0);
 
-	if (skill->GetInt32() == 3)
+	if (skill->GetInt() == 3)
 		return;		// no pain anims in nightmare
 
 	if (self->velocity[2] > 100)

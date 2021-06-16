@@ -530,9 +530,9 @@ Cmd_MacroExpandString
 char *Cmd_MacroExpandString (char *text)
 {
 	int		i, j, count, len;
-	qboolean	inquote;
+	bool	inquote;
 	char	*scan;
-	static	char	expanded[MAX_STRING_CHARS];
+	static char expanded[MAX_STRING_CHARS];
 	char	temporary[MAX_STRING_CHARS];
 	char	*token, *start;
 

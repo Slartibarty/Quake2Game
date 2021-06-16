@@ -552,7 +552,7 @@ void P_FallingDamage (edict_t *ent)
 		}
 		VectorSet (dir, 0, 0, 1);
 
-		if ( !deathmatch->GetBool() || !( dmflags->GetInt32() & DF_NO_FALLING ) ) {
+		if ( !deathmatch->GetBool() || !( dmflags->GetInt() & DF_NO_FALLING ) ) {
 			T_Damage( ent, world, world, dir, ent->s.origin, vec3_origin, damage, 0, 0, MOD_FALLING );
 		}
 	}

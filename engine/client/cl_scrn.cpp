@@ -28,6 +28,8 @@
 
 #include "cl_local.h"
 
+#include <array>
+
 #include "imgui.h"
 #include "backends/imgui_impl_opengl3.h"
 #include "q_imgui_imp.h"
@@ -63,8 +65,14 @@ void SCR_Loading_f();
 struct screenGlobals_t
 {
 	bool	imgui_showDemo;
-	bool	imgui_debugGraph;
+	bool	imgui_testbed;
+	bool	imgui_console;
 } scr;
+
+struct qHistoryStack
+{
+
+};
 
 /*
 ===================================================================================================
@@ -140,7 +148,7 @@ SCR_DrawDebugGraph
 */
 static void SCR_DrawDebugGraph()
 {
-#if 0
+#if 1
 	int		a, x, y, w, i, h;
 	float	v;
 	uint32	color;
@@ -152,19 +160,19 @@ static void SCR_DrawDebugGraph()
 
 	x = scr_vrect.x;
 	y = scr_vrect.y + scr_vrect.height;
-	R_DrawFilled( x, y - scr_graphheight->GetInt32(), w, scr_graphheight->GetInt32(), colors::dkGray );
+	R_DrawFilled( x, y - scr_graphheight->GetInt(), w, scr_graphheight->GetInt(), colors::dkGray );
 
 	for (a=0 ; a<w ; a++)
 	{
 		i = (current-1-a+1024) & 1023;
 		v = values[i].value;
 		color = values[i].color;
-		v = v*scr_graphscale->value + scr_graphshift->value;
+		v = v*scr_graphscale->GetFloat() + scr_graphshift->GetFloat();
 		
 		if ( v < 0.0f ) {
-			v += scr_graphheight->GetInt32() * (1+(int)(-v/scr_graphheight->value));
+			v += scr_graphheight->GetInt() * (1+(int)(-v/scr_graphheight->GetFloat()));
 		}
-		h = (int)v % scr_graphheight->GetInt32();
+		h = (int)v % scr_graphheight->GetInt();
 		R_DrawFilled(x+w-1-a, y - h, 1, h, color);
 	}
 #else
@@ -388,7 +396,10 @@ static bool SCR_InitImGui()
 	qImGui::OSImp_Init( R_GetWindowHandle() );
 	ImGui_ImplOpenGL3_Init( /*"#version 330 core"*/ );
 
+	ImFontConfig fontConfig;
+
 	io.Fonts->AddFontDefault();
+	//io.Fonts->AddFontFromFileTTF( va( "%s/fonts/tahoma.ttf", FS_Gamedir() ), 16.0f, &fontConfig );
 
 	return true;
 }
@@ -404,6 +415,18 @@ static void SCR_ShutdownImGui()
 static void SCR_ToggleImGuiDemo()
 {
 	scr.imgui_showDemo = !scr.imgui_showDemo;
+}
+
+// toggles the imgui testbed
+static void SCR_ToggleImGuiTestbed()
+{
+	scr.imgui_testbed = !scr.imgui_testbed;
+}
+
+// toggles the imgui console
+static void SCR_ToggleImGuiConsole()
+{
+	scr.imgui_console = !scr.imgui_console;
 }
 
 /*
@@ -429,6 +452,8 @@ void SCR_Init()
 	Cmd_AddCommand( "loading", SCR_Loading_f );
 
 	Cmd_AddCommand( "scr_imguidemo", SCR_ToggleImGuiDemo );
+	Cmd_AddCommand( "scr_imguitestbed", SCR_ToggleImGuiTestbed );
+	Cmd_AddCommand( "scr_imguiconsole", SCR_ToggleImGuiConsole );
 
 	SCR_InitImGui();
 
@@ -523,6 +548,155 @@ static void SCR_DrawCrosshair()
 		, scr_vrect.y + ( ( scr_vrect.height - crosshair_height ) >> 1 ), crosshair_pic );
 }
 
+/*
+===================================================================================================
+
+	ImGui testbed
+
+===================================================================================================
+*/
+
+static void SCR_DrawTestbed( bool *p_open )
+{
+	ImGuiWindowFlags windowsFlags =
+		ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove;
+
+	const ImGuiViewport *main_viewport = ImGui::GetMainViewport();
+	ImGui::SetNextWindowPos( ImVec2( main_viewport->WorkPos.x + 650, main_viewport->WorkPos.y + 680 ), ImGuiCond_FirstUseEver );
+	ImGui::SetNextWindowSize( ImVec2( 550, 680 ), ImGuiCond_FirstUseEver );
+
+	if ( !ImGui::Begin( "Quake 2", p_open, windowsFlags ) )
+	{
+		// Early out if the window is collapsed, as an optimization.
+		ImGui::End();
+		return;
+	}
+
+	ImGui::Button( "Multiplayer", ImVec2( 99, 32 ) );
+	ImGui::Button( "Options", ImVec2( 99, 32 ) );
+	ImGui::Button( "Video", ImVec2( 99, 32 ) );
+	ImGui::Button( "Quit", ImVec2( 99, 32 ) );
+	ImGui::Spacing();
+
+	ImGui::End();
+}
+
+/*
+===================================================================================================
+
+	ImGui console
+
+===================================================================================================
+*/
+
+static struct console_t
+{
+	char	editLine[256];
+	char	historyLines[32][256];		// Stores anything typed and submitted in the input window
+	int		history_size = 0;			// position of the next history line. if 32, overwrites last
+	int		history_pos = -1;			// A position in the history array
+
+} con;
+
+static int TextEditCallback( ImGuiInputTextCallbackData *data )
+{
+	switch ( data->EventFlag )
+	{
+	case ImGuiInputTextFlags_CallbackCompletion:
+	{
+		char *fullVar = Cvar_CompleteVariable( data->Buf );
+		if ( fullVar )
+		{
+			// replace entire buffer
+			data->DeleteChars( 0, data->BufTextLen );
+			data->InsertChars( data->CursorPos, fullVar );
+		}
+	}
+	break;
+	case ImGuiInputTextFlags_CallbackHistory:
+	{
+		if ( con.historyLines[0][0] )
+		{
+			switch ( data->EventKey )
+			{
+			case ImGuiKey_UpArrow:
+				if ( con.history_pos == -1 ) {
+					// Start at the end
+					con.history_pos = (int64)con.history.size() - 1;
+				}
+				else if ( con.history_pos > 0 ) {
+					// Decrement
+					--con.history_pos;
+				}
+				break;
+			case ImGuiKey_DownArrow:
+				if ( con.history_pos < (int64)con.history.size() ) {
+					++con.history_pos;
+				}
+				if ( con.history_pos == (int64)con.history.size() ) {
+					con.history_pos -= 1;
+				}
+				break;
+			}
+
+			const char *history_str = con.history_pos >= 0 ? con.history[con.history_pos] : "";
+			data->DeleteChars( 0, data->BufTextLen );
+			data->InsertChars( 0, history_str );
+		}
+	}
+	break;
+	}
+
+	return 0;
+}
+
+static void History_PushBack( const char *string )
+{
+	// reset pos
+	con.history_pos = -1;
+
+	if ( con.history_size < 32 )
+	{
+		con.historyLines[con.history_size];
+	}
+	con.history
+}
+
+static void SCR_ShowConsoleWindow( bool *p_open )
+{
+	ImGui::SetNextWindowPos( ImVec2( 40, 40 ), ImGuiCond_FirstUseEver );
+	ImGui::SetNextWindowSize( ImVec2( 560, 400 ), ImGuiCond_FirstUseEver );
+	if ( !ImGui::Begin( "Console", p_open ) )
+	{
+		ImGui::End();
+		return;
+	}
+
+	// Reserve enough left-over height for 1 separator + 1 input text
+	const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
+	ImGui::BeginChild( "ScrollingRegion", ImVec2( 0, -footer_height_to_reserve ), true, ImGuiWindowFlags_HorizontalScrollbar );
+
+	ImGui::EndChild();
+
+	// input line
+	bool reclaim_focus = false;
+	ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory;
+	memset( con.inBuf, 0, sizeof( con.inBuf ) );
+
+	if ( ImGui::InputText( "Input", con.inBuf, sizeof( con.inBuf ), flags, TextEditCallback, nullptr ) )
+	{
+		History_PushBack( con.inBuf );
+	}
+
+	// auto-focus on window apparition
+	ImGui::SetItemDefaultFocus();
+	if ( reclaim_focus ) {
+		ImGui::SetKeyboardFocusHere( -1 ); // Auto focus previous widget
+	}
+
+	ImGui::End();
+}
+
 //=================================================================================================
 
 /*
@@ -563,6 +737,14 @@ static void SCR_DrawImGui()
 	if ( scr.imgui_showDemo ) {
 		ImGui::ShowDemoWindow( &scr.imgui_showDemo );
 		render = true;
+	}
+
+	if ( scr.imgui_testbed ) {
+		SCR_DrawTestbed( &scr.imgui_testbed );
+	}
+
+	if ( scr.imgui_console ) {
+		scr_console.ShowConsoleWindow( &scr.imgui_console );
 	}
 
 	if ( render ) {
@@ -864,11 +1046,11 @@ void SCR_TouchPics()
 
 	if ( cl_crosshair->GetBool() )
 	{
-		if ( cl_crosshair->GetInt32() > 3 || cl_crosshair->GetInt32() < 0 ) {
+		if ( cl_crosshair->GetInt() > 3 || cl_crosshair->GetInt() < 0 ) {
 			Cvar_SetInt( cl_crosshair, 3 );
 		}
 
-		Q_sprintf_s( crosshair_pic, "ch%i", cl_crosshair->GetInt32() );
+		Q_sprintf_s( crosshair_pic, "ch%i", cl_crosshair->GetInt() );
 		R_DrawGetPicSize( &crosshair_width, &crosshair_height, crosshair_pic );
 		if ( !crosshair_width ) {
 			crosshair_pic[0] = '\0';

@@ -890,9 +890,9 @@ static void R_SetMode()
 		r_mode->ClearModified();
 		r_fullscreen->ClearModified();
 
-		if ( GLimp_SetMode( vid.width, vid.height, r_mode->GetInt32(), r_fullscreen->GetBool() ) == true )
+		if ( GLimp_SetMode( vid.width, vid.height, r_mode->GetInt(), r_fullscreen->GetBool() ) == true )
 		{
-			glState.prev_mode = r_mode->GetInt32();
+			glState.prev_mode = r_mode->GetInt();
 		}
 		else
 		{

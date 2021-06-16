@@ -20,13 +20,13 @@ char *ClientTeam (edict_t *ent)
 	if (!p)
 		return value;
 
-	if (dmflags->GetInt32() & DF_MODELTEAMS)
+	if (dmflags->GetInt() & DF_MODELTEAMS)
 	{
 		*p = 0;
 		return value;
 	}
 
-	// if (dmflags->GetInt32() & DF_SKINTEAMS)
+	// if (dmflags->GetInt() & DF_SKINTEAMS)
 	return ++p;
 }
 
@@ -35,7 +35,7 @@ qboolean OnSameTeam (edict_t *ent1, edict_t *ent2)
 	char	ent1Team[512];
 	char	ent2Team[512];
 
-	if ( !( dmflags->GetInt32() & ( DF_MODELTEAMS | DF_SKINTEAMS ) ) ) {
+	if ( !( dmflags->GetInt() & ( DF_MODELTEAMS | DF_SKINTEAMS ) ) ) {
 		return false;
 	}
 
@@ -734,7 +734,7 @@ void Cmd_Players_f (edict_t *ent)
 	int		index[256];
 
 	count = 0;
-	for ( i = 0; i < maxclients->GetInt32(); i++ )
+	for ( i = 0; i < maxclients->GetInt(); i++ )
 	{
 		if ( game.clients[i].pers.connected )
 		{
@@ -832,7 +832,7 @@ void Cmd_Say_f (edict_t *ent, qboolean team, qboolean arg0)
 	if (gi.argc () < 2 && !arg0)
 		return;
 
-	if ( !( dmflags->GetInt32() & ( DF_MODELTEAMS | DF_SKINTEAMS ) ) ) {
+	if ( !( dmflags->GetInt() & ( DF_MODELTEAMS | DF_SKINTEAMS ) ) ) {
 		team = false;
 	}
 
@@ -873,14 +873,14 @@ void Cmd_Say_f (edict_t *ent, qboolean team, qboolean arg0)
 				(int)(cl->flood_locktill - level.time));
             return;
         }
-        i = cl->flood_whenhead - flood_msgs->GetInt32() + 1;
+        i = cl->flood_whenhead - flood_msgs->GetInt() + 1;
         if (i < 0)
             i = (sizeof(cl->flood_when)/sizeof(cl->flood_when[0])) + i;
 		if (cl->flood_when[i] && 
 			level.time - cl->flood_when[i] < flood_persecond->GetFloat()) {
 			cl->flood_locktill = level.time + flood_waitdelay->GetFloat();
 			gi.cprintf(ent, PRINT_CHAT, "Flood protection:  You can't talk for %d seconds.\n",
-				flood_waitdelay->GetInt32());
+				flood_waitdelay->GetInt());
             return;
         }
 		cl->flood_whenhead = (cl->flood_whenhead + 1) %
@@ -916,7 +916,7 @@ void Cmd_PlayerList_f(edict_t *ent)
 
 	// connect time, ping, score, name
 	*text = 0;
-	for (i = 0, e2 = g_edicts + 1; i < maxclients->GetInt32(); i++, e2++) {
+	for (i = 0, e2 = g_edicts + 1; i < maxclients->GetInt(); i++, e2++) {
 		if (!e2->inuse)
 			continue;
 

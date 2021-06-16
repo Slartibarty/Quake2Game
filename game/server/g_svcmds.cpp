@@ -240,7 +240,7 @@ void SVCmd_WriteIP_f (void)
 		return;
 	}
 	
-	fprintf(f, "set filterban %d\n", filterban->GetInt32());
+	fprintf(f, "set filterban %d\n", filterban->GetInt());
 
 	for (i=0 ; i<numipfilters ; i++)
 	{

@@ -538,8 +538,8 @@ void SpawnEntities (const char *mapname, char *entities, const char *spawnpoint)
 	int			i;
 	int			skill_level;
 
-	skill_level = Clamp( skill->GetInt32(), 0, 3 );
-	if ( skill->GetInt32() != skill_level )
+	skill_level = Clamp( skill->GetInt(), 0, 3 );
+	if ( skill->GetInt() != skill_level )
 	{
 		const char *value;
 		switch ( skill_level )
@@ -608,9 +608,9 @@ void SpawnEntities (const char *mapname, char *entities, const char *spawnpoint)
 			else
 			{
 				if ( /* ((coop->GetBool()) && (ent->spawnflags & SPAWNFLAG_NOT_COOP)) || */
-					((skill->GetInt32() == 0) && (ent->spawnflags & SPAWNFLAG_NOT_EASY)) ||
-					((skill->GetInt32() == 1) && (ent->spawnflags & SPAWNFLAG_NOT_MEDIUM)) ||
-					(((skill->GetInt32() == 2) || (skill->GetInt32() == 3)) && (ent->spawnflags & SPAWNFLAG_NOT_HARD))
+					((skill->GetInt() == 0) && (ent->spawnflags & SPAWNFLAG_NOT_EASY)) ||
+					((skill->GetInt() == 1) && (ent->spawnflags & SPAWNFLAG_NOT_MEDIUM)) ||
+					(((skill->GetInt() == 2) || (skill->GetInt() == 3)) && (ent->spawnflags & SPAWNFLAG_NOT_HARD))
 					)
 					{
 						G_FreeEdict (ent);	
@@ -856,7 +856,7 @@ void SP_worldspawn (edict_t *ent)
 
 	gi.configstring (CS_CDTRACK, va("%i", ent->sounds) );
 
-	gi.configstring (CS_MAXCLIENTS, va("%i", maxclients->GetInt32()));
+	gi.configstring (CS_MAXCLIENTS, va("%i", maxclients->GetInt()));
 
 	// status bar program
 	if (deathmatch->GetBool())

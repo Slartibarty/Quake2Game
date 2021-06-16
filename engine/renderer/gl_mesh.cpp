@@ -441,7 +441,7 @@ void R_DrawAliasModel (entity_t *e)
 
 	if ( e->flags & RF_WEAPONMODEL )
 	{
-		if ( r_lefthand->GetInt64() == 2 )
+		if ( r_lefthand->GetInt() == 2 )
 			return;
 	}
 

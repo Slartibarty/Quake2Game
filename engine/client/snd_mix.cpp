@@ -210,7 +210,7 @@ void S_PaintChannels(int endtime)
 	int		ltime, count;
 	playsound_t	*ps;
 
-	snd_vol = static_cast<int>( s_volume->GetDouble() * 256.0 );
+	snd_vol = static_cast<int>( s_volume->GetFloat() * 256.0f );
 
 //Com_Printf ("%i to %i\n", paintedtime, endtime);
 	while (paintedtime < endtime)

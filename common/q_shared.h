@@ -65,8 +65,6 @@ bool	Info_Validate (const char *s);
 // CVARS - cvars.cpp
 //-------------------------------------------------------------------------------------------------
 
-struct latchData_t;
-
 #define	CVAR_ARCHIVE		1	// will be written to config.cfg
 #define	CVAR_USERINFO		2	// added to userinfo when changed
 #define	CVAR_SERVERINFO		4	// added to serverinfo when changed
@@ -78,25 +76,23 @@ struct latchData_t;
 // nothing outside the Cvar_*() functions should modify these fields!
 struct cvar_t
 {
-	lab::string		pName;
-	lab::string		pString;
-	lab::string		pLatchedString;		// pointer to a latchedCvar_t structure that holds latch data
+	lab::string		name;
+	lab::string		value;
+	lab::string		latchedValue;
+	uint32			flags;
 	float			fltValue;
 	int				intValue;
-	uint32			flags;
 	cvar_t *		pNext;
 
-	const char *	GetName() const		{ return pName.c_str(); }
+	const char *	GetName() const		{ return name.c_str(); }
 
 	bool			IsModified() const	{ return ( flags & CVAR_MODIFIED ) != 0; }
 	void			SetModified()		{ flags |= CVAR_MODIFIED; }
 	void			ClearModified()		{ flags &= ~CVAR_MODIFIED; }
 
-	const char *	GetString() const	{ return pString.c_str(); }
-	int64			GetInt64() const	{ return intValue; }
-	int32			GetInt32() const	{ return intValue; }
-	double			GetDouble() const	{ return fltValue; }
+	const char *	GetString() const	{ return value.c_str(); }
 	float			GetFloat() const	{ return fltValue; }
+	int				GetInt() const		{ return intValue; }
 	bool			GetBool() const		{ return intValue != 0; }
 
 	uint32			GetFlags() const	{ return flags; }

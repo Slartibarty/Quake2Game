@@ -132,7 +132,7 @@ void Com_Print( const char *msg )
 
 		if ( !logfile ) {
 			Q_sprintf_s( name, "%s/qconsole.log", FS_Gamedir() );
-			if ( logfile_active->GetInt64() > 2 ) {
+			if ( logfile_active->GetInt() > 2 ) {
 				logfile = fopen( name, "a" );
 			}
 			else {
@@ -142,7 +142,7 @@ void Com_Print( const char *msg )
 		if ( logfile ) {
 			fputs( newMsg, logfile );
 		}
-		if ( logfile_active->GetInt64() > 1 ) {
+		if ( logfile_active->GetInt() > 1 ) {
 			// force it to save every time
 			fflush( logfile );
 		}
@@ -673,10 +673,10 @@ void Engine_Frame( int msec )
 	}
 
 	if ( fixedtime->GetFloat() != 0.0f ) {
-		msec = fixedtime->GetInt32();
+		msec = fixedtime->GetInt();
 	}
 	else if ( timescale->GetFloat() != 1.0f ) {
-		msec *= timescale->GetInt32();
+		msec *= timescale->GetInt();
 		if ( msec < 1 ) {
 			msec = 1;
 		}

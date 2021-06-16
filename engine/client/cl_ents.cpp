@@ -283,7 +283,7 @@ static void CL_ParsePacketEntities( clSnapshot_t *oldframe, clSnapshot_t *newfra
 		while ( oldnum < newnum )
 		{
 			// one or more entities from the old packet are unchanged
-			if ( cl_shownet->GetInt32() == 3 ) {
+			if ( cl_shownet->GetInt() == 3 ) {
 				Com_Printf( "   unchanged: %i\n", oldnum );
 			}
 			CL_DeltaEntity( newframe, oldnum, oldstate, 0 );
@@ -304,7 +304,7 @@ static void CL_ParsePacketEntities( clSnapshot_t *oldframe, clSnapshot_t *newfra
 		if ( bits & U_REMOVE )
 		{
 			// the entity present in oldframe is not in the current frame
-			if ( cl_shownet->GetInt64() == 3 ) {
+			if ( cl_shownet->GetInt() == 3 ) {
 				Com_Printf( "   remove: %i\n", newnum );
 			}
 			if ( oldnum != newnum ) {
@@ -327,7 +327,7 @@ static void CL_ParsePacketEntities( clSnapshot_t *oldframe, clSnapshot_t *newfra
 
 		if ( oldnum == newnum )
 		{	// delta from previous state
-			if ( cl_shownet->GetInt32() == 3 ) {
+			if ( cl_shownet->GetInt() == 3 ) {
 				Com_Printf( "   delta: %i\n", newnum );
 			}
 			CL_DeltaEntity( newframe, newnum, oldstate, bits );
@@ -349,7 +349,7 @@ static void CL_ParsePacketEntities( clSnapshot_t *oldframe, clSnapshot_t *newfra
 		if ( oldnum > newnum )
 		{
 			// delta from baseline
-			if ( cl_shownet->GetInt32() == 3 ) {
+			if ( cl_shownet->GetInt() == 3 ) {
 				Com_Printf( "   baseline: %i\n", newnum );
 			}
 			CL_DeltaEntity( newframe, newnum, &cl_entities[newnum].baseline, bits );
@@ -362,7 +362,7 @@ static void CL_ParsePacketEntities( clSnapshot_t *oldframe, clSnapshot_t *newfra
 	while ( oldnum != 99999 )
 	{
 		// one or more entities from the old packet are unchanged
-		if ( cl_shownet->GetInt32() == 3 ) {
+		if ( cl_shownet->GetInt() == 3 ) {
 			Com_Printf( "   unchanged: %i\n", oldnum );
 		}
 		CL_DeltaEntity( newframe, oldnum, oldstate, 0 );
@@ -562,7 +562,7 @@ void CL_ParseFrame()
 		cl.surpressCount = MSG_ReadByte( &net_message );
 	}
 
-	if ( cl_shownet->GetInt32() == 3 ) {
+	if ( cl_shownet->GetInt() == 3 ) {
 		Com_Printf( "   frame:%i  delta:%i\n", cl.frame.serverframe, cl.frame.deltaframe );
 	}
 

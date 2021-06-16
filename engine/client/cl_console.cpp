@@ -544,7 +544,7 @@ void Con_DrawNotify()
 			continue;
 		}
 		time = cls.realtime - time;
-		if ( time > static_cast<int>( SEC2MS( con_notifytime->GetDouble() ) ) ) {
+		if ( time > static_cast<int>( SEC2MS( con_notifytime->GetFloat() ) ) ) {
 			continue;
 		}
 		text = con.text + (i % con.totallines)*con.linewidth;

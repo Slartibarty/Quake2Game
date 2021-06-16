@@ -445,13 +445,13 @@ void supertank_pain (edict_t *self, edict_t *other, float kick, int damage)
 			return;
 
 	// Don't go into pain if he's firing his rockets
-	if (skill->GetInt32() >= 2)
+	if (skill->GetInt() >= 2)
 		if ( (self->s.frame >= FRAME_attak2_1) && (self->s.frame <= FRAME_attak2_14) )
 			return;
 
 	self->pain_debounce_time = level.time + 3;
 
-	if (skill->GetInt32() == 3)
+	if (skill->GetInt() == 3)
 		return;		// no pain anims in nightmare
 
 	if (damage <= 10)

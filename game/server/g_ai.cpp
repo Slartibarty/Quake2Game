@@ -611,7 +611,7 @@ qboolean M_CheckAttack (edict_t *self)
 	if (enemy_range == RANGE_MELEE)
 	{
 		// don't always melee in easy mode
-		if (skill->GetInt32() == 0 && (rand()&3) )
+		if (skill->GetInt() == 0 && (rand()&3) )
 			return false;
 		if (self->monsterinfo.melee)
 			self->monsterinfo.attack_state = AS_MELEE;
@@ -651,9 +651,9 @@ qboolean M_CheckAttack (edict_t *self)
 		return false;
 	}
 
-	if (skill->GetInt32() == 0)
+	if (skill->GetInt() == 0)
 		chance *= 0.5;
-	else if (skill->GetInt32() >= 2)
+	else if (skill->GetInt() >= 2)
 		chance *= 2;
 
 	if (random () < chance)

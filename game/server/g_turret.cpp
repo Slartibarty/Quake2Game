@@ -73,7 +73,7 @@ void turret_breach_fire (edict_t *self)
 	VectorMA (start, self->move_origin[2], u, start);
 
 	damage = 100 + random() * 50;
-	speed = 550 + 50 * skill->GetInt32();
+	speed = 550 + 50 * skill->GetInt();
 	fire_rocket (self->teammaster->owner, start, f, damage, speed, 150, damage);
 	gi.positioned_sound (start, self, CHAN_WEAPON, gi.soundindex("weapons/rocklf1a.wav"), 1, ATTN_NORM, 0);
 }
@@ -327,7 +327,7 @@ void turret_driver_think (edict_t *self)
 	if (level.time < self->monsterinfo.attack_finished)
 		return;
 
-	reaction_time = (3 - skill->GetInt32()) * 1.0f;
+	reaction_time = (3 - skill->GetInt()) * 1.0f;
 	if ((level.time - self->monsterinfo.trail_time) < reaction_time)
 		return;
 

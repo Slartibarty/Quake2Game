@@ -305,7 +305,7 @@ void medic_pain (edict_t *self, edict_t *other, float kick, int damage)
 
 	self->pain_debounce_time = level.time + 3;
 
-	if (skill->GetInt32() == 3)
+	if (skill->GetInt() == 3)
 		return;		// no pain anims in nightmare
 
 	if (random() < 0.5)

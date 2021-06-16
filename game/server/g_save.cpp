@@ -194,13 +194,13 @@ void InitGame (void)
 	game.helpmessage2[0] = '\0';
 
 	// initialize all entities for this game
-	game.maxentities = maxentities->GetInt32();
+	game.maxentities = maxentities->GetInt();
 	g_edicts = (edict_t*)gi.TagMalloc (game.maxentities * sizeof(g_edicts[0]), TAG_GAME);
 	globals.edicts = g_edicts;
 	globals.max_edicts = game.maxentities;
 
 	// initialize all clients for this game
-	game.maxclients = maxclients->GetInt32();
+	game.maxclients = maxclients->GetInt();
 	game.clients = (gclient_t*)gi.TagMalloc (game.maxclients * sizeof(game.clients[0]), TAG_GAME);
 	globals.num_edicts = game.maxclients+1;
 }
@@ -681,7 +681,7 @@ void ReadLevel (char *filename)
 
 	// wipe all the entities
 	memset (g_edicts, 0, game.maxentities*sizeof(g_edicts[0]));
-	globals.num_edicts = maxclients->GetInt32() + 1;
+	globals.num_edicts = maxclients->GetInt() + 1;
 
 	// check edict size
 	fread (&i, sizeof(i), 1, f);
@@ -730,7 +730,7 @@ void ReadLevel (char *filename)
 	fclose (f);
 
 	// mark all clients as unconnected
-	for (i=0 ; i<maxclients->GetInt32() ; i++)
+	for (i=0 ; i<maxclients->GetInt() ; i++)
 	{
 		ent = &g_edicts[i+1];
 		ent->client = game.clients + i;

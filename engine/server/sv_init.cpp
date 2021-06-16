@@ -190,7 +190,7 @@ static void SV_SpawnServer( const char *server, const char *spawnpoint, serverSt
 	Q_strcpy_s( sv.name, server );
 
 	// leave slots at start for clients only
-	for ( i = 0; i < maxclients->GetInt32(); i++ )
+	for ( i = 0; i < maxclients->GetInt(); i++ )
 	{
 		// needs to reconnect
 		if ( svs.clients[i].state > cs_connected ) {
@@ -304,16 +304,16 @@ void SV_InitGame()
 	// init clients
 	if ( Cvar_FindGetFloat( "deathmatch" ) )
 	{
-		if ( maxclients->GetInt32() <= 1 ) {
+		if ( maxclients->GetInt() <= 1 ) {
 			Cvar_FullSet( "maxclients", "8", CVAR_SERVERINFO | CVAR_LATCH );
 		}
-		else if ( maxclients->GetInt32() > MAX_CLIENTS ) {
+		else if ( maxclients->GetInt() > MAX_CLIENTS ) {
 			Cvar_FullSet( "maxclients", va( "%i", MAX_CLIENTS ), CVAR_SERVERINFO | CVAR_LATCH );
 		}
 	}
 	else if ( Cvar_FindGetFloat( "coop" ) )
 	{
-		if ( maxclients->GetInt32() <= 1 || maxclients->GetInt32() > 4 ) {
+		if ( maxclients->GetInt() <= 1 || maxclients->GetInt() > 4 ) {
 			Cvar_FullSet( "maxclients", "4", CVAR_SERVERINFO | CVAR_LATCH );
 		}
 	}
@@ -323,12 +323,12 @@ void SV_InitGame()
 	}
 
 	svs.spawncount = rand();
-	svs.clients = (client_t *)Mem_ClearedAlloc( sizeof( client_t ) * maxclients->GetInt32() );
-	svs.num_client_entities = maxclients->GetInt32() * UPDATE_BACKUP * 64;
+	svs.clients = (client_t *)Mem_ClearedAlloc( sizeof( client_t ) * maxclients->GetInt() );
+	svs.num_client_entities = maxclients->GetInt() * UPDATE_BACKUP * 64;
 	svs.client_entities = (entity_state_t *)Mem_ClearedAlloc( sizeof( entity_state_t ) * svs.num_client_entities );
 
 	// init network stuff
-	NET_Config( ( maxclients->GetInt32() > 1 ) );
+	NET_Config( ( maxclients->GetInt() > 1 ) );
 
 	// heartbeats will always be sent to the id master
 	svs.last_heartbeat = -99999;		// send immediately
@@ -337,7 +337,7 @@ void SV_InitGame()
 	// init game
 	SV_InitGameProgs();
 
-	for ( i = 0; i < maxclients->GetInt32(); i++ )
+	for ( i = 0; i < maxclients->GetInt(); i++ )
 	{
 		ent = EDICT_NUM( i + 1 );
 		ent->s.number = i + 1;

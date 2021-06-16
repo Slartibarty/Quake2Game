@@ -276,7 +276,7 @@ void gunner_pain (edict_t *self, edict_t *other, float kick, int damage)
 	else
 		gi.sound (self, CHAN_VOICE, sound_pain2, 1, ATTN_NORM, 0);
 
-	if (skill->GetInt32() == 3)
+	if (skill->GetInt() == 3)
 		return;		// no pain anims in nightmare
 
 	if (damage <= 10)
@@ -346,7 +346,7 @@ void gunner_duck_down (edict_t *self)
 	if (self->monsterinfo.aiflags & AI_DUCKED)
 		return;
 	self->monsterinfo.aiflags |= AI_DUCKED;
-	if (skill->GetInt32() >= 2)
+	if (skill->GetInt() >= 2)
 	{
 		if (random() > 0.5)
 			GunnerGrenade (self);

@@ -418,7 +418,7 @@ void soldier_pain (edict_t *self, edict_t *other, float kick, int damage)
 		return;
 	}
 
-	if (skill->GetInt32() == 3)
+	if (skill->GetInt() == 3)
 		return;		// no pain anims in nightmare
 
 	r = random();
@@ -519,7 +519,7 @@ void soldier_attack1_refire1 (edict_t *self)
 	if (self->enemy->health <= 0)
 		return;
 
-	if ( ((skill->GetInt32() == 3) && (random() < 0.5)) || (range(self, self->enemy) == RANGE_MELEE) )
+	if ( ((skill->GetInt() == 3) && (random() < 0.5)) || (range(self, self->enemy) == RANGE_MELEE) )
 		self->monsterinfo.nextframe = FRAME_attak102;
 	else
 		self->monsterinfo.nextframe = FRAME_attak110;
@@ -533,7 +533,7 @@ void soldier_attack1_refire2 (edict_t *self)
 	if (self->enemy->health <= 0)
 		return;
 
-	if ( ((skill->GetInt32() == 3) && (random() < 0.5)) || (range(self, self->enemy) == RANGE_MELEE) )
+	if ( ((skill->GetInt() == 3) && (random() < 0.5)) || (range(self, self->enemy) == RANGE_MELEE) )
 		self->monsterinfo.nextframe = FRAME_attak102;
 }
 
@@ -569,7 +569,7 @@ void soldier_attack2_refire1 (edict_t *self)
 	if (self->enemy->health <= 0)
 		return;
 
-	if ( ((skill->GetInt32() == 3) && (random() < 0.5)) || (range(self, self->enemy) == RANGE_MELEE) )
+	if ( ((skill->GetInt() == 3) && (random() < 0.5)) || (range(self, self->enemy) == RANGE_MELEE) )
 		self->monsterinfo.nextframe = FRAME_attak204;
 	else
 		self->monsterinfo.nextframe = FRAME_attak216;
@@ -583,7 +583,7 @@ void soldier_attack2_refire2 (edict_t *self)
 	if (self->enemy->health <= 0)
 		return;
 
-	if ( ((skill->GetInt32() == 3) && (random() < 0.5)) || (range(self, self->enemy) == RANGE_MELEE) )
+	if ( ((skill->GetInt() == 3) && (random() < 0.5)) || (range(self, self->enemy) == RANGE_MELEE) )
 		self->monsterinfo.nextframe = FRAME_attak204;
 }
 
@@ -666,7 +666,7 @@ void soldier_fire4 (edict_t *self)
 //	if (self->enemy->health <= 0)
 //		return;
 //
-//	if ( ((skill->GetInt32() == 3) && (random() < 0.5)) || (range(self, self->enemy) == RANGE_MELEE) )
+//	if ( ((skill->GetInt() == 3) && (random() < 0.5)) || (range(self, self->enemy) == RANGE_MELEE) )
 //		self->monsterinfo.nextframe = FRAME_attak402;
 }
 
@@ -694,7 +694,7 @@ void soldier_attack5_refire (edict_t *self)
 	if (self->enemy->health <= 0)
 		return;
 
-	if ( ((skill->GetInt32() == 3) && (random() < 0.5)) || (range(self, self->enemy) == RANGE_MELEE) )
+	if ( ((skill->GetInt() == 3) && (random() < 0.5)) || (range(self, self->enemy) == RANGE_MELEE) )
 		self->monsterinfo.nextframe = FRAME_attak505;
 }
 
@@ -727,7 +727,7 @@ void soldier_attack6_refire (edict_t *self)
 	if (range(self, self->enemy) < RANGE_MID)
 		return;
 
-	if (skill->GetInt32() == 3)
+	if (skill->GetInt() == 3)
 		self->monsterinfo.nextframe = FRAME_runs03;
 }
 
@@ -777,7 +777,7 @@ void soldier_sight(edict_t *self, edict_t *other)
 	else
 		gi.sound (self, CHAN_VOICE, sound_sight2, 1, ATTN_NORM, 0);
 
-	if ((skill->GetInt32() > 0) && (range(self, self->enemy) >= RANGE_MID))
+	if ((skill->GetInt() > 0) && (range(self, self->enemy) >= RANGE_MID))
 	{
 		if (random() > 0.5)
 			self->monsterinfo.currentmove = &soldier_move_attack6;
@@ -817,7 +817,7 @@ void soldier_dodge (edict_t *self, edict_t *attacker, float eta)
 	if (!self->enemy)
 		self->enemy = attacker;
 
-	if (skill->GetInt32() == 0)
+	if (skill->GetInt() == 0)
 	{
 		self->monsterinfo.currentmove = &soldier_move_duck;
 		return;
@@ -826,7 +826,7 @@ void soldier_dodge (edict_t *self, edict_t *attacker, float eta)
 	self->monsterinfo.pausetime = level.time + eta + 0.3f;
 	r = random();
 
-	if (skill->GetInt32() == 1)
+	if (skill->GetInt() == 1)
 	{
 		if (r > 0.33f)
 			self->monsterinfo.currentmove = &soldier_move_duck;
@@ -835,7 +835,7 @@ void soldier_dodge (edict_t *self, edict_t *attacker, float eta)
 		return;
 	}
 
-	if (skill->GetInt32() >= 2)
+	if (skill->GetInt() >= 2)
 	{
 		if (r > 0.66f)
 			self->monsterinfo.currentmove = &soldier_move_duck;

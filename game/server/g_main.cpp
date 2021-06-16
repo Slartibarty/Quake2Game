@@ -213,7 +213,7 @@ void ClientEndServerFrames (void)
 
 	// calc the player views now that all pushing
 	// and damage has been added
-	for (i=0 ; i<maxclients->GetInt32(); i++)
+	for (i=0 ; i<maxclients->GetInt(); i++)
 	{
 		ent = g_edicts + 1 + i;
 		if (!ent->inuse || !ent->client)
@@ -255,7 +255,7 @@ void EndDMLevel (void)
 	const char *seps = " ,\n\r";
 
 	// stay on same level flag
-	if (dmflags->GetInt32() & DF_SAME_LEVEL)
+	if (dmflags->GetInt() & DF_SAME_LEVEL)
 	{
 		BeginIntermission (CreateTargetChangeLevel (level.mapname) );
 		return;
@@ -359,13 +359,13 @@ void CheckDMRules (void)
 
 	if (fraglimit->GetBool())
 	{
-		for (i=0 ; i<maxclients->GetInt32() ; i++)
+		for (i=0 ; i<maxclients->GetInt() ; i++)
 		{
 			cl = game.clients + i;
 			if (!g_edicts[i+1].inuse)
 				continue;
 
-			if (cl->resp.score >= fraglimit->GetInt32())
+			if (cl->resp.score >= fraglimit->GetInt())
 			{
 				gi.bprintf (PRINT_HIGH, "Fraglimit hit.\n");
 				EndDMLevel ();
@@ -395,7 +395,7 @@ void ExitLevel (void)
 	ClientEndServerFrames ();
 
 	// clear some things before going to next level
-	for (i=0 ; i<maxclients->GetInt32() ; i++)
+	for (i=0 ; i<maxclients->GetInt() ; i++)
 	{
 		ent = g_edicts + 1 + i;
 		if (!ent->inuse)
@@ -456,7 +456,7 @@ void G_RunFrame (void)
 			}
 		}
 
-		if (i > 0 && i <= maxclients->GetInt32())
+		if (i > 0 && i <= maxclients->GetInt())
 		{
 			ClientBeginServerFrame (ent);
 			continue;

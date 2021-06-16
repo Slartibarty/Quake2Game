@@ -990,13 +990,13 @@ static void ControlsSetMenuItemValues( void )
 	s_options_sfxvolume_slider.curvalue		= s_volume->GetFloat() * 10;
 	s_options_sensitivity_slider.curvalue	= sensitivity->GetFloat() * 2;
 
-	Cvar_SetInt( cl_run, Clamp<int64>( cl_run->GetInt64(), 0, 1 ) );
-	s_options_alwaysrun_box.curvalue		= cl_run->GetInt32();
+	Cvar_SetInt( cl_run, Clamp<int64>( cl_run->GetInt(), 0, 1 ) );
+	s_options_alwaysrun_box.curvalue		= cl_run->GetInt();
 
-	s_options_invertmouse_box.curvalue		= m_pitch->GetInt64() < 0;
+	s_options_invertmouse_box.curvalue		= m_pitch->GetInt() < 0;
 
-	Cvar_SetInt( cl_crosshair, Clamp<int64>( cl_crosshair->GetInt64(), 0, 3 ) );
-	s_options_crosshair_box.curvalue		= cl_crosshair->GetInt32();
+	Cvar_SetInt( cl_crosshair, Clamp<int64>( cl_crosshair->GetInt(), 0, 3 ) );
+	s_options_crosshair_box.curvalue		= cl_crosshair->GetInt();
 }
 
 static void ControlsResetDefaultsFunc( void *unused )
@@ -1284,12 +1284,12 @@ void VID_MenuInit( void )
 	if ( !r_finish )
 		r_finish = Cvar_Get( "r_finish", "0", CVAR_ARCHIVE );
 
-	s_mode_list.curvalue = r_mode->GetInt64();
+	s_mode_list.curvalue = r_mode->GetInt();
 
 	if ( !scr_viewsize )
 		scr_viewsize = Cvar_Get ("viewsize", "100", CVAR_ARCHIVE);
 
-	s_screensize_slider.curvalue = scr_viewsize->GetDouble() / 10.0;
+	s_screensize_slider.curvalue = scr_viewsize->GetFloat() / 10.0f;
 
 	s_vid_menu.x = viddef.width / 2;
 	s_vid_menu.nitems = 0;
@@ -1315,14 +1315,14 @@ void VID_MenuInit( void )
 	s_brightness_slider.generic.callback = BrightnessCallback;
 	s_brightness_slider.minvalue = 5;
 	s_brightness_slider.maxvalue = 13;
-	s_brightness_slider.curvalue = ( 1.3 - r_gamma->GetDouble() + 0.5 ) * 10.0;
+	s_brightness_slider.curvalue = ( 1.3f - r_gamma->GetFloat() + 0.5f ) * 10.0f;
 
 	s_fs_box.generic.type = MTYPE_SPINCONTROL;
 	s_fs_box.generic.x	= 0;
 	s_fs_box.generic.y	= 40;
 	s_fs_box.generic.name	= "fullscreen";
 	s_fs_box.itemnames = yesno_names;
-	s_fs_box.curvalue = r_fullscreen->GetInt64();
+	s_fs_box.curvalue = r_fullscreen->GetInt();
 
 	s_defaults_action.generic.type = MTYPE_ACTION;
 	s_defaults_action.generic.name = "reset to defaults";
@@ -1342,13 +1342,13 @@ void VID_MenuInit( void )
 	s_tq_slider.generic.name	= "texture quality";
 	s_tq_slider.minvalue = 0;
 	s_tq_slider.maxvalue = 3;
-	s_tq_slider.curvalue = 3 - r_picmip->GetInt64();
+	s_tq_slider.curvalue = 3 - r_picmip->GetInt();
 
 	s_finish_box.generic.type = MTYPE_SPINCONTROL;
 	s_finish_box.generic.x	= 0;
 	s_finish_box.generic.y	= 80;
 	s_finish_box.generic.name	= "sync every frame";
-	s_finish_box.curvalue = r_finish->GetInt64();
+	s_finish_box.curvalue = r_finish->GetInt();
 	s_finish_box.itemnames = yesno_names;
 
 	Menu_AddItem( &s_vid_menu, ( void * ) &s_mode_list );
@@ -3626,7 +3626,7 @@ qboolean PlayerConfig_MenuInit( void )
 	if (s_numplayermodels == 0)
 		return false;
 
-	if ( hand->GetInt64() < 0 || hand->GetInt64() > 2 )
+	if ( hand->GetInt() < 0 || hand->GetInt() > 2 )
 	{
 		Cvar_SetInt( hand, 0 );
 	}

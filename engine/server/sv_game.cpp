@@ -21,7 +21,7 @@ static void PF_Unicast( edict_t *ent, qboolean reliable )
 	}
 
 	p = NUM_FOR_EDICT( ent );
-	if ( p < 1 || p > maxclients->GetInt32() ) {
+	if ( p < 1 || p > maxclients->GetInt() ) {
 		return;
 	}
 
@@ -70,7 +70,7 @@ static void PF_cprintf( edict_t *ent, int level, const char *fmt, ... )
 
 	if ( ent ) {
 		n = NUM_FOR_EDICT( ent );
-		if ( n < 1 || n > maxclients->GetInt32() ) {
+		if ( n < 1 || n > maxclients->GetInt() ) {
 			Com_Error( "cprintf to a non-client" );
 		}
 	}
@@ -100,7 +100,7 @@ static void PF_centerprintf( edict_t *ent, const char *fmt, ... )
 	int n;
 
 	n = NUM_FOR_EDICT( ent );
-	if ( n < 1 || n > maxclients->GetInt32() ) {
+	if ( n < 1 || n > maxclients->GetInt() ) {
 		return;	// Com_Error ("centerprintf to a non-client");
 	}
 

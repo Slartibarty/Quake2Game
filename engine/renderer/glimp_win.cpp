@@ -368,7 +368,7 @@ static void GLimp_CreateWindow( WNDPROC wndproc, int width, int height, bool ful
 
 	if ( WGLEW_EXT_swap_control )
 	{
-		wglSwapIntervalEXT( r_swapinterval->GetInt32() );
+		wglSwapIntervalEXT( r_swapinterval->GetInt() );
 	}
 
 	// let the sound and input subsystems know about the new window
@@ -449,7 +449,7 @@ bool GLimp_Init()
 	GLimp_DestroyDummyWindow( dvars );
 
 	int width, height;
-	if ( !Sys_GetVidModeInfo( width, height, r_mode->GetInt32() ) )
+	if ( !Sys_GetVidModeInfo( width, height, r_mode->GetInt() ) )
 	{
 		Com_Printf( "GLimp_Init() - invalid mode\n" );
 		return false;
@@ -484,7 +484,7 @@ void GLimp_BeginFrame()
 
 		if ( WGLEW_EXT_swap_control )
 		{
-			wglSwapIntervalEXT( r_swapinterval->GetInt32() );
+			wglSwapIntervalEXT( r_swapinterval->GetInt() );
 		}
 	}
 }

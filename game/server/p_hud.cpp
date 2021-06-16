@@ -60,7 +60,7 @@ void BeginIntermission (edict_t *targ)
 	game.autosaved = false;
 
 	// respawn any dead clients
-	for (i=0 ; i<maxclients->GetInt32() ; i++)
+	for (i=0 ; i<maxclients->GetInt() ; i++)
 	{
 		client = g_edicts + 1 + i;
 		if (!client->inuse)
@@ -76,7 +76,7 @@ void BeginIntermission (edict_t *targ)
 	{
 		if (coop->GetBool())
 		{
-			for (i=0 ; i<maxclients->GetInt32() ; i++)
+			for (i=0 ; i<maxclients->GetInt() ; i++)
 			{
 				client = g_edicts + 1 + i;
 				if (!client->inuse)
@@ -124,7 +124,7 @@ void BeginIntermission (edict_t *targ)
 	VectorCopy (ent->s.angles, level.intermission_angle);
 
 	// move all clients to the intermission point
-	for (i=0 ; i<maxclients->GetInt32() ; i++)
+	for (i=0 ; i<maxclients->GetInt() ; i++)
 	{
 		client = g_edicts + 1 + i;
 		if (!client->inuse)
@@ -283,11 +283,11 @@ void HelpComputer (edict_t *ent)
 	char		string[1024];
 	const char	*sk;
 
-	if (skill->GetInt32() == 0)
+	if (skill->GetInt() == 0)
 		sk = "easy";
-	else if (skill->GetInt32() == 1)
+	else if (skill->GetInt() == 1)
 		sk = "medium";
-	else if (skill->GetInt32() == 2)
+	else if (skill->GetInt() == 2)
 		sk = "hard";
 	else
 		sk = "hard+";
@@ -511,7 +511,7 @@ void G_CheckChaseStats (edict_t *ent)
 	int i;
 	gclient_t *cl;
 
-	for (i = 1; i <= maxclients->GetInt32(); i++) {
+	for (i = 1; i <= maxclients->GetInt(); i++) {
 		cl = g_edicts[i].client;
 		if (!g_edicts[i].inuse || cl->chase_target != ent)
 			continue;

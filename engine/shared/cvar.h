@@ -20,12 +20,18 @@
 
 #pragma once
 
+// singly-linked list of all cvars
 extern cvar_t *cvar_vars;
 
+// this is set each time a CVAR_USERINFO variable is changed
+// so that the client knows to send it to the server
+extern bool userinfo_modified;
+
+			// finds and returns a variable by name, returns null if it doesn't exist
 cvar_t *	Cvar_Find( const char *name );
 
-			// attempts to match a partial variable name for command line completion
-			// returns NULL if nothing fits
+			// attempts to match a partially complete variable name to an existing
+			// variable, returns null when no matches were found
 char *		Cvar_CompleteVariable( const char *partial );
 
 //=================================================================================================
@@ -35,11 +41,11 @@ char *		Cvar_CompleteVariable( const char *partial );
 			// that allows variables to be unarchived without needing bitflags
 cvar_t *	Cvar_Get( const char *name, const char *value, uint32 flags );
 
-			// returns 0 if not defined or non numeric
+			// finds and returns the value of a variable
+char *		Cvar_FindGetString( const char *name );			// returns an empty string if not found
 float		Cvar_FindGetFloat( const char *name );
-
-			// returns an empty string if not defined
-char *		Cvar_FindGetString( const char *name );
+int			Cvar_FindGetInt( const char *name );
+bool		Cvar_FindGetBool( const char *name );
 
 //=================================================================================================
 
@@ -83,7 +89,3 @@ char *		Cvar_Serverinfo();
 
 void		Cvar_Init();
 void		Cvar_Shutdown();
-
-// this is set each time a CVAR_USERINFO variable is changed
-// so that the client knows to send it to the server
-extern bool userinfo_modified;

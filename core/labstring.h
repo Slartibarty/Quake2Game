@@ -3,7 +3,7 @@
 
 	Lab string
 
-	Weakly satisfies select parts of the std::string spec
+	Weakly based on std::string
 
 ===================================================================================================
 */
@@ -23,10 +23,9 @@ namespace lab
 	private:
 		char *		m_pData;		// the string
 		uint32		m_length;		// length of the current string
-		uint32		m_capacity;	// allocated size
+		uint32		m_capacity;		// allocated size
 
 	public:
-
 		string( string && ) = default;
 		string &operator=( string && ) = default;
 
@@ -77,13 +76,13 @@ namespace lab
 
 		// capacity
 
-		[[nodiscard]] bool empty() {
+		[[nodiscard]] bool empty() const {
 			return m_length == 0;
 		}
 
 		// NOT implementing size()
 
-		[[nodiscard]] uint32 length() {
+		[[nodiscard]] uint32 length() const {
 			return m_length;
 		}
 
@@ -102,7 +101,7 @@ namespace lab
 			m_pData = (char *)malloc( newCapacity );
 		}
 
-		[[nodiscard]] uint32 capacity() {
+		[[nodiscard]] uint32 capacity() const {
 			return m_capacity;
 		}
 
@@ -119,7 +118,7 @@ namespace lab
 
 		void clear() {
 #ifdef LABSTR_PARANOID
-			memset( pData, 0, length );
+			memset( m_pData, 0, m_length );
 #else
 			m_pData[0] = '\0';
 #endif

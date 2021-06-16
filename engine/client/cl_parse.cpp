@@ -633,7 +633,7 @@ void CL_ParseStartSoundPacket(void)
 
 void SHOWNET(const char *s)
 {
-	if (cl_shownet->GetInt32()>=2)
+	if (cl_shownet->GetInt()>=2)
 		Com_Printf ("%3i:%s\n", net_message.readcount-1, s);
 }
 
@@ -651,9 +651,9 @@ void CL_ParseServerMessage (void)
 //
 // if recording demos, copy the message out
 //
-	if (cl_shownet->GetInt32() == 1)
+	if (cl_shownet->GetInt() == 1)
 		Com_Printf ("%i ",net_message.cursize);
-	else if (cl_shownet->GetInt32() >= 2)
+	else if (cl_shownet->GetInt() >= 2)
 		Com_Printf ("------------------\n");
 
 
@@ -676,7 +676,7 @@ void CL_ParseServerMessage (void)
 			break;
 		}
 
-		if (cl_shownet->GetInt32()>=2)
+		if (cl_shownet->GetInt()>=2)
 		{
 			if (!svc_strings[cmd])
 				Com_Printf ("%3i:BAD CMD %i\n", net_message.readcount-1,cmd);

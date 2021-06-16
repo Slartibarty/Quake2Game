@@ -444,7 +444,7 @@ void brain_tentacle_attack (edict_t *self)
 	vec3_t	aim;
 
 	VectorSet (aim, MELEE_DISTANCE, 0, 8);
-	if (fire_hit (self, aim, (10 + (rand() %5)), -600) && skill->GetInt32() > 0)
+	if (fire_hit (self, aim, (10 + (rand() %5)), -600) && skill->GetInt() > 0)
 		self->spawnflags |= 65536;
 	gi.sound (self, CHAN_WEAPON, sound_tentacles_retract, 1, ATTN_NORM, 0);
 }
@@ -531,7 +531,7 @@ void brain_pain (edict_t *self, edict_t *other, float kick, int damage)
 		return;
 
 	self->pain_debounce_time = level.time + 3;
-	if (skill->GetInt32() == 3)
+	if (skill->GetInt() == 3)
 		return;		// no pain anims in nightmare
 
 	r = random();

@@ -232,7 +232,7 @@ void Netchan_Transmit (netchan_t *chan, int length, byte *data)
 
 	// send the qport if we are a client
 	if (chan->sock == NS_CLIENT)
-		MSG_WriteShort (&send, qport->GetInt32());
+		MSG_WriteShort (&send, qport->GetInt());
 
 // copy the reliable message to the packet first
 	if (send_reliable)

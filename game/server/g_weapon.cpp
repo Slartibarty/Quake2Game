@@ -18,7 +18,7 @@ static void check_dodge (edict_t *self, vec3_t start, vec3_t dir, int speed)
 	float	eta;
 
 	// easy mode only ducks one quarter the time
-	if (skill->GetInt32() == 0)
+	if (skill->GetInt() == 0)
 	{
 		if (random() > 0.25)
 			return;

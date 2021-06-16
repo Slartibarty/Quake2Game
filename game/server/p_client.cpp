@@ -406,7 +406,7 @@ void TossClientWeapon (edict_t *self)
 	if (item && (Q_strcmp (item->pickup_name, "Blaster") == 0))
 		item = NULL;
 
-	if (!(dmflags->GetInt32() & DF_QUAD_DROP))
+	if (!(dmflags->GetInt() & DF_QUAD_DROP))
 		quad = false;
 	else
 		quad = (self->client->quad_framenum > (level.framenum + 10));
@@ -685,7 +685,7 @@ float	PlayersRangeFromSpot (edict_t *spot)
 
 	bestplayerdistance = 9999999;
 
-	for (n = 1; n <= maxclients->GetInt32(); n++)
+	for (n = 1; n <= maxclients->GetInt(); n++)
 	{
 		player = &g_edicts[n];
 
@@ -804,7 +804,7 @@ edict_t *SelectFarthestDeathmatchSpawnPoint (void)
 
 edict_t *SelectDeathmatchSpawnPoint (void)
 {
-	if ( dmflags->GetInt32() & DF_SPAWN_FARTHEST)
+	if ( dmflags->GetInt() & DF_SPAWN_FARTHEST)
 		return SelectFarthestDeathmatchSpawnPoint ();
 	else
 		return SelectRandomDeathmatchSpawnPoint ();
@@ -935,7 +935,7 @@ void CopyToBodyQue (edict_t *ent)
 	edict_t		*body;
 
 	// grab a body que and cycle to the next one
-	body = &g_edicts[(int)maxclients->GetInt32() + level.body_que + 1];
+	body = &g_edicts[(int)maxclients->GetInt() + level.body_que + 1];
 	level.body_que = (level.body_que + 1) % BODY_QUEUE_SIZE;
 
 	// FIXME: send an effect on the removed body
@@ -1015,11 +1015,11 @@ void spectator_respawn (edict_t *ent)
 		}
 
 		// count spectators
-		for (i = 1, numspec = 0; i <= maxclients->GetInt32(); i++)
+		for (i = 1, numspec = 0; i <= maxclients->GetInt(); i++)
 			if (g_edicts[i].inuse && g_edicts[i].client->pers.spectator)
 				numspec++;
 
-		if (numspec >= maxspectators->GetInt32()) {
+		if (numspec >= maxspectators->GetInt()) {
 			gi.cprintf(ent, PRINT_HIGH, "Server spectator limit is full.");
 			ent->client->pers.spectator = false;
 			// reset his spectator var
@@ -1176,7 +1176,7 @@ void PutClientInServer (edict_t *ent)
 
 	VectorCopy( spawn_origin, client->ps.pmove.origin );
 
-	if (deathmatch->GetBool() && (dmflags->GetInt32() & DF_FIXED_FOV))
+	if (deathmatch->GetBool() && (dmflags->GetInt() & DF_FIXED_FOV))
 	{
 		client->ps.fov = 90;
 	}
@@ -1386,7 +1386,7 @@ void ClientUserinfoChanged (edict_t *ent, char *userinfo)
 	gi.configstring (CS_PLAYERSKINS+playernum, va("%s\\%s", ent->client->pers.netname, s) );
 
 	// fov
-	if (deathmatch->GetBool() && (dmflags->GetInt32() & DF_FIXED_FOV))
+	if (deathmatch->GetBool() && (dmflags->GetInt() & DF_FIXED_FOV))
 	{
 		ent->client->ps.fov = 90;
 	}
@@ -1447,11 +1447,11 @@ qboolean ClientConnect (edict_t *ent, char *userinfo)
 		}
 
 		// count spectators
-		for (i = numspec = 0; i < maxclients->GetInt32(); i++)
+		for (i = numspec = 0; i < maxclients->GetInt(); i++)
 			if (g_edicts[i+1].inuse && g_edicts[i+1].client->pers.spectator)
 				numspec++;
 
-		if (numspec >= maxspectators->GetInt32()) {
+		if (numspec >= maxspectators->GetInt()) {
 			Info_SetValueForKey(userinfo, "rejmsg", "Server spectator limit is full.");
 			return false;
 		}
@@ -1606,7 +1606,7 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 		else
 			client->ps.pmove.pm_type = PM_NORMAL;
 
-		client->ps.pmove.gravity = sv_gravity->GetInt32(); // TODO: RIP FLOATING POINT
+		client->ps.pmove.gravity = sv_gravity->GetInt(); // TODO: RIP FLOATING POINT
 		pm.s = client->ps.pmove;
 
 		VectorCopy( ent->s.origin, pm.s.origin );
@@ -1722,7 +1722,7 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 	}
 
 	// update chase cam if being followed
-	for (i = 1; i <= maxclients->GetInt32(); i++) {
+	for (i = 1; i <= maxclients->GetInt(); i++) {
 		other = g_edicts + i;
 		if (other->inuse && other->client->chase_target == ent)
 			UpdateChaseCam(other);
@@ -1773,7 +1773,7 @@ void ClientBeginServerFrame (edict_t *ent)
 				buttonMask = -1;
 
 			if ( ( client->latched_buttons & buttonMask ) ||
-				(deathmatch->GetBool() && (dmflags->GetInt32() & DF_FORCE_RESPAWN) ) )
+				(deathmatch->GetBool() && (dmflags->GetInt() & DF_FORCE_RESPAWN) ) )
 			{
 				respawn(ent);
 				client->latched_buttons = 0;
