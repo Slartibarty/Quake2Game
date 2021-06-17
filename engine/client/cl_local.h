@@ -439,8 +439,8 @@ void SCR_FinishCinematic();
 //
 // cl_view
 //
-extern int			gun_frame;
-extern model_t *	gun_model;
+extern int			g_gunFrame;
+extern model_t *	g_gunModel;
 
 void V_Init();
 void V_RenderView();

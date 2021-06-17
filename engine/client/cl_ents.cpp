@@ -1170,9 +1170,9 @@ static void CL_AddViewWeapon( player_state_t *ps, player_state_t *ops, float bob
 
 	memset( &view, 0, sizeof( view ) );
 
-	if ( gun_model ) {
+	if ( g_gunModel ) {
 		// development tool
-		view.model = gun_model;
+		view.model = g_gunModel;
 	} else {
 		view.model = cl.model_draw[ps->gunindex];
 	}
@@ -1209,10 +1209,10 @@ static void CL_AddViewWeapon( player_state_t *ps, player_state_t *ops, float bob
 
 #endif
 
-	if ( gun_frame )
+	if ( g_gunFrame )
 	{
-		view.frame = gun_frame;		// development tool
-		view.oldframe = gun_frame;	// development tool
+		view.frame = g_gunFrame;		// development tool
+		view.oldframe = g_gunFrame;	// development tool
 	}
 	else
 	{

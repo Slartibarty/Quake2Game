@@ -16,8 +16,8 @@ static cvar_t *	cl_testblend;
 static cvar_t *	cl_stats;
 
 // development tools for weapons
-int			gun_frame;
-model_t *	gun_model;
+int			g_gunFrame;
+model_t *	g_gunModel;
 
 char		cl_weaponmodels[MAX_CLIENTWEAPONMODELS][MAX_QPATH];
 int			num_cl_weaponmodels;
@@ -27,7 +27,7 @@ int			num_cl_weaponmodels;
 
 	The scene / view
 
-	Struct that represents a scene that is sent to the renderer,
+	This struct represents a scene that is sent to the renderer,
 	the renderer sources its own BSP.
 
 	If we ever need more than one view this can be easily stuck into a class.
@@ -357,31 +357,37 @@ float CalcFov( float fov_x, float width, float height )
 
 void V_Gun_Next_f()
 {
-	++gun_frame;
+	++g_gunFrame;
 
-	Com_Printf( "frame %i\n", gun_frame );
+	Com_Printf( "frame %i\n", g_gunFrame );
 }
 
 void V_Gun_Prev_f()
 {
-	--gun_frame;
+	--g_gunFrame;
 
-	if ( gun_frame < 0 ) {
-		gun_frame = 0;
+	if ( g_gunFrame < 0 ) {
+		g_gunFrame = 0;
 	}
 
-	Com_Printf( "frame %i\n", gun_frame );
+	Com_Printf( "frame %i\n", g_gunFrame );
 }
 
 void V_Gun_Model_f()
 {
 	if ( Cmd_Argc() != 2 )
 	{
-		gun_model = nullptr;
+		g_gunModel = nullptr;
 		return;
 	}
 
-	gun_model = R_RegisterModel( Cmd_Argv( 1 ) );
+	g_gunModel = R_RegisterModel( Cmd_Argv( 1 ) );
+}
+
+void V_Gun_Reset_f()
+{
+	g_gunFrame = 0;
+	g_gunModel = nullptr;
 }
 
 //=================================================================================================
@@ -399,6 +405,8 @@ static int entitycmpfnc( const entity_t *a, const entity_t *b )
 /*
 ========================
 V_RenderView
+
+Renders the 3D scene
 ========================
 */
 void V_RenderView()
@@ -502,7 +510,7 @@ void V_RenderView()
 	if ( cl_stats->GetBool() ) {
 		Com_Printf( "ent:%i  lt:%i  part:%i\n", clView.numEntities, clView.numDLights, clView.numParticles );
 	}
-	if ( log_stats->GetBool() && ( log_stats_file != 0 ) ) {
+	if ( log_stats->GetBool() && ( log_stats_file != nullptr ) ) {
 		fprintf( log_stats_file, "%i,%i,%i,", clView.numEntities, clView.numDLights, clView.numParticles );
 	}
 }
@@ -537,7 +545,7 @@ static void V_Sky_f()
 	} else {
 		axis[0] = 0.0f;
 		axis[1] = 0.0f;
-		axis[2] = 1;
+		axis[2] = 1.0f;
 	}
 
 	R_SetSky( Cmd_Argv( 1 ), rotate, axis );
@@ -583,6 +591,7 @@ void V_Init()
 	Cmd_AddCommand( "cl_gun_next", V_Gun_Next_f );
 	Cmd_AddCommand( "cl_gun_prev", V_Gun_Prev_f );
 	Cmd_AddCommand( "cl_gun_model", V_Gun_Model_f );
+	Cmd_AddCommand( "cl_gun_reset", V_Gun_Model_f );
 
 	Cmd_AddCommand( "cl_sky", V_Sky_f );
 	Cmd_AddCommand( "cl_viewpos", V_Viewpos_f );
