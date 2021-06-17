@@ -44,6 +44,9 @@
 #*.png   binary
 #*.gif   binary
 *.ico   binary
+*.bmp   binary
+*.png   binary
+*.psd   binary
 
 ###############################################################################
 # diff behavior for common document formats
