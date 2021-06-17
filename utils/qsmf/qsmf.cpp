@@ -7,15 +7,6 @@
 
 	Builds an SMF (Static Mesh File) from an OBJ
 
-	FBX NOTES:
-	The HL2 pistol mesh uses two materials, but there is a rogue polygon somewhere. I'm not
-	gonna write the code to deal with that right now, it requires re-ordering the vertex and index
-	buffers
-
-	TODO:
-	Re-organise the vertex array, check for each index, insert it into the list, then go again,
-	should eventually have a fully sorted vertex array, just set up meshes there, it'll be easier
-
 ===================================================================================================
 */
 
@@ -29,7 +20,6 @@
 // c++
 #include <vector>
 #include <string>
-#include <unordered_map>
 
 // external libs
 #include "fbxsdk.h"
@@ -294,7 +284,8 @@ static void SortVertices(
 }
 
 //
-// TODO: This is the slowest function in the entire program
+// NOTE: this function is sloooooow in debug, it's the slowest part of the program
+// due to the search through "vertices"
 // 
 // the input vertices used to be fat, now they're not, hence the name
 //
@@ -360,6 +351,23 @@ static int Operate()
 		return EXIT_FAILURE;
 	}
 
+	// pre-triangulate our meshes
+	{
+		FbxGeometryConverter geoConverter( pManager );
+
+		NodeList *pNodeList;
+		geoConverter.RemoveBadPolygonsFromMeshes( pScene, pNodeList );
+		if ( pNodeList->Size() != -)
+		{
+			Com_Printf( "Removed bad polygons from %d meshes\n" );
+		}
+
+		if ( !geoConverter.Triangulate( pScene, true ) )
+		{
+			Com_Print( "Warning: failed to triangulate some meshes, there may be errors!\n" );
+		}
+	}
+
 	FbxNode *pRootNode = pScene->GetRootNode();
 	if ( pRootNode )
 	{
@@ -382,11 +390,11 @@ static int Operate()
 				continue;
 			}
 
-			if ( !pMesh->IsTriangleMesh() )
+			/*if ( !pMesh->IsTriangleMesh() )
 			{
 				Com_Printf( "%s is a non-triangulated mesh. You must export with triangulated meshes enabled!\n", pNode->GetName() );
 				continue;
-			}
+			}*/
 
 			AddMeshContribution( pMesh, contributions, materialNames );
 		}
