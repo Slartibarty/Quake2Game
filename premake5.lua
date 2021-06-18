@@ -255,9 +255,10 @@ project "engine"
 
 	files {
 		"common/*",
+		"resources/*",
+		
 		"engine/client/*",
 		"engine/server/*",
-		"engine/winres/*",
 		"engine/shared/*",
 		
 		"engine/renderer/*",
@@ -285,7 +286,7 @@ project "engine"
 		removefiles {
 			"**/*_win.*",
 			"**/conproc.*",
-			"engine/winres/*"
+			"resources/*"
 		}
 	filter {}
 	
@@ -329,10 +330,6 @@ project "cgame"
 		}
 	filter {}
 	
-	removefiles {
-		"**.manifest",
-	}
-	
 project "game"
 	kind "SharedLib"
 	targetname "game"
@@ -365,10 +362,6 @@ project "game"
 		}
 	filter {}
 	
-	removefiles {
-		"**.manifest",
-	}
-	
 -- Utils
 
 filter "system:windows"
@@ -386,10 +379,9 @@ project "qbsp4"
 	includedirs { "utils/common2", "common" }
 	
 	files {
-		"common/windows_default.manifest",
+		"resources/windows_default.manifest",
 		
-		"common/*.cpp",
-		"common/*.h",
+		"common/*",
 		
 		"utils/common2/cmdlib.*",
 		"utils/common2/mathlib.*",
@@ -423,10 +415,9 @@ project "qvis4"
 	includedirs { "utils/common2", "common" }
 	
 	files {
-		"common/windows_default.manifest",
+		"resources/windows_default.manifest",
 		
-		"common/*.cpp",
-		"common/*.h",
+		"common/*",
 
 		"utils/common2/cmdlib.*",
 		"utils/common2/mathlib.*",
@@ -459,10 +450,9 @@ project "qrad4"
 	includedirs { "utils/common2", "common", "thirdparty/stb" }
 	
 	files {
-		"common/windows_default.manifest",
+		"resources/windows_default.manifest",
 		
-		"common/*.cpp",
-		"common/*.h",
+		"common/*",
 	
 		"utils/common2/cmdlib.*",
 		"utils/common2/mathlib.*",
@@ -496,7 +486,7 @@ project "qatlas"
 	includedirs { "utils/common2", "thirdparty/xatlas" }
 	
 	files {
-		"common/windows_default.manifest",
+		"resources/windows_default.manifest",
 		"common/q_formats.h",
 	
 		"utils/common2/cmdlib.*",
@@ -528,7 +518,7 @@ project "qsmf"
 	filter {}
 		
 	files {
-		"common/windows_default.manifest",
+		"resources/windows_default.manifest",
 		"common/q_formats.h",
 			
 		"utils/common2/cmdlib.*",
