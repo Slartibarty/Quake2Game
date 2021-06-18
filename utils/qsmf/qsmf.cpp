@@ -289,7 +289,7 @@ static void SortVertices(
 // 
 // the input vertices used to be fat, now they're not, hence the name
 //
-static void IndexMesh(
+static bool IndexMesh(
 	const std::vector<vertex_t> &fatVertices,
 	std::vector<vertex_t> &vertices,
 	std::vector<uint32> &indices )
@@ -336,6 +336,20 @@ static void IndexMesh(
 
 		indices.push_back( index );
 	}
+
+	if ( vertices.size() >= UINT16_MAX )
+	{
+		Com_Printf(
+			"Error: All meshes combined culminated to %zu vertices.\n"
+			"This means that the index buffer can't use 16-bit integers to store\n"
+			"vertex indices. Tell Slarti to add code to handle very large meshes!\n"
+			"Alternatively you can split the mesh into multiple pieces, but that is shit.\n",
+			vertices.size()
+		);
+		return false;
+	}
+
+	return true;
 }
 
 static int Operate()
@@ -355,11 +369,15 @@ static int Operate()
 	{
 		FbxGeometryConverter geoConverter( pManager );
 
-		NodeList *pNodeList;
-		geoConverter.RemoveBadPolygonsFromMeshes( pScene, pNodeList );
-		if ( pNodeList->Size() != -)
+		NodeList nodeList;
+		geoConverter.RemoveBadPolygonsFromMeshes( pScene, &nodeList );
+		if ( nodeList.Size() != 0)
 		{
-			Com_Printf( "Removed bad polygons from %d meshes\n" );
+			Com_Printf( "Removed bad polygons from the following %d nodes:\n", nodeList.Size() );
+			for ( int i = 0; i < nodeList.Size(); ++i )
+			{
+				Com_Printf( "    %s\n", nodeList[i]->GetName() );
+			}
 		}
 
 		if ( !geoConverter.Triangulate( pScene, true ) )
@@ -390,11 +408,7 @@ static int Operate()
 				continue;
 			}
 
-			/*if ( !pMesh->IsTriangleMesh() )
-			{
-				Com_Printf( "%s is a non-triangulated mesh. You must export with triangulated meshes enabled!\n", pNode->GetName() );
-				continue;
-			}*/
+			Com_Printf( "Gathering contribution for %s\n", pNode->GetName() );
 
 			AddMeshContribution( pMesh, contributions, materialNames );
 		}
@@ -413,7 +427,10 @@ static int Operate()
 		std::vector<vertex_t> outVertices;
 		std::vector<uint32> tmpIndices;			// uint32 indices, so we can optimise with meshopt
 
-		IndexMesh( sortedVertices, outVertices, tmpIndices );
+		if ( !IndexMesh( sortedVertices, outVertices, tmpIndices ) )
+		{
+			return EXIT_FAILURE;
+		}
 
 #ifdef USE_MESHOPT
 
@@ -447,7 +464,6 @@ static int Operate()
 		// make the indices small
 		for ( uint i = 0; i < (uint)tmpIndices.size(); ++i )
 		{
-			assert( tmpIndices[i] < UINT16_MAX );
 			outIndices[i] = static_cast<index_t>( tmpIndices[i] );
 		}
 
