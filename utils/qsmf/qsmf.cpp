@@ -102,7 +102,8 @@ static bool ParseCommandLine( int argc, char **argv )
 static void WriteSMF(
 	std::vector<mesh_t> &rawMeshes,
 	std::vector<vertex_t> &rawVertices,
-	std::vector<index_t> &rawIndices )
+	std::vector<uint32> &rawIndices,
+	uint32 indexSize )
 {
 	FILE *handle = fopen( g_options.smfName, "wb" );
 	if ( !handle )
@@ -111,12 +112,40 @@ static void WriteSMF(
 		return;
 	}
 
+	// start index slimming
+
+	void *pIndexData = rawIndices.data();
+
+	std::vector<index_t> outIndices;
+
+	// slim down the indices if needed
+	if ( indexSize == sizeof( uint16 ) )
+	{
+		outIndices.resize( rawIndices.size() );
+
+		// make the indices small
+		for ( uint i = 0; i < (uint)rawIndices.size(); ++i )
+		{
+			outIndices[i] = static_cast<index_t>( rawIndices[i] );
+		}
+
+		pIndexData = outIndices.data();
+	}
+
+	// end index slimming
+
 	fmtSMF::header_t header{};
 
 	uint32 depth = sizeof( header );
 
 	header.fourCC = fmtSMF::fourCC;
 	header.version = fmtSMF::version;
+
+	if ( indexSize == sizeof( uint32 ) )
+	{
+		header.flags |= fmtSMF::eBigIndices;
+	}
+
 	header.numMeshes = static_cast<uint32>( rawMeshes.size() );
 	header.offsetMeshes = depth;
 	depth += static_cast<uint32>( rawMeshes.size() * sizeof( mesh_t ) );
@@ -133,7 +162,7 @@ static void WriteSMF(
 	fwrite( &header, sizeof( header ), 1, handle );
 	fwrite( rawMeshes.data(), rawMeshes.size() * sizeof( mesh_t ), 1, handle );
 	fwrite( rawVertices.data(), rawVertices.size() * sizeof( vertex_t ), 1, handle );
-	fwrite( rawIndices.data(), rawIndices.size() * sizeof( index_t ), 1, handle );
+	fwrite( pIndexData, rawIndices.size() * indexSize, 1, handle );
 	fclose( handle );
 
 	Com_Printf( "Successfully wrote %s\n", g_options.smfName );
@@ -144,6 +173,12 @@ static void AddMeshContribution( FbxMesh *pMesh, std::vector<fatVertex_t> &contr
 	constexpr int polygonSize = 3;
 
 	const FbxNode *pNode = pMesh->GetNode();
+
+	// make sure we have tangents
+	if ( pMesh->GenerateTangentsData( 0, false, false ) )
+	{
+		Com_Printf( "Built tangents for %s\n", pNode->GetName() );
+	}
 
 	const int polygonCount = pMesh->GetPolygonCount();
 	assert( polygonCount > 0 );
@@ -216,21 +251,6 @@ static void AddMeshContribution( FbxMesh *pMesh, std::vector<fatVertex_t> &contr
 	}
 }
 
-static void ListMaterialIDs( const std::vector<fatVertex_t> &contributions )
-{
-	for ( uint i = 0; i < (uint)contributions.size(); ++i )
-	{
-		Com_Printf( "%d", contributions[i].materialID );
-		// every 80 characters, print a newline
-		if ( i % 80 == 0 && i != 0 )
-		{
-			Com_Print( "\n" );
-		}
-	}
-
-	Com_Print( "\n" );
-}
-
 static void SortVertices(
 	const std::vector<fatVertex_t> &contributions,
 	const std::vector<std::string> &materialNames,
@@ -289,7 +309,7 @@ static void SortVertices(
 // 
 // the input vertices used to be fat, now they're not, hence the name
 //
-static bool IndexMesh(
+static uint32 IndexMesh(
 	const std::vector<vertex_t> &fatVertices,
 	std::vector<vertex_t> &vertices,
 	std::vector<uint32> &indices )
@@ -339,17 +359,10 @@ static bool IndexMesh(
 
 	if ( vertices.size() >= UINT16_MAX )
 	{
-		Com_Printf(
-			"Error: All meshes combined culminated to %zu vertices.\n"
-			"This means that the index buffer can't use 16-bit integers to store\n"
-			"vertex indices. Tell Slarti to add code to handle very large meshes!\n"
-			"Alternatively you can split the mesh into multiple pieces, but that is shit.\n",
-			vertices.size()
-		);
-		return false;
+		return sizeof( uint32 );
 	}
 
-	return true;
+	return sizeof( uint16 );
 }
 
 static int Operate()
@@ -400,6 +413,13 @@ static int Operate()
 		for ( int i = 0; i < pRootNode->GetChildCount( false ); ++i )
 		{
 			FbxNode *pNode = pRootNode->GetChild( i );
+
+			if ( pNode->GetAllObjectFlags() & FbxNode::eHidden )
+			{
+				// disregard hidden objects
+				continue;
+			}
+
 			FbxMesh *pMesh = pNode->GetMesh();
 
 			if ( !pMesh )
@@ -427,10 +447,7 @@ static int Operate()
 		std::vector<vertex_t> outVertices;
 		std::vector<uint32> tmpIndices;			// uint32 indices, so we can optimise with meshopt
 
-		if ( !IndexMesh( sortedVertices, outVertices, tmpIndices ) )
-		{
-			return EXIT_FAILURE;
-		}
+		uint32 indexSize = IndexMesh( sortedVertices, outVertices, tmpIndices );
 
 #ifdef USE_MESHOPT
 
@@ -458,22 +475,13 @@ static int Operate()
 
 #endif
 
-		std::vector<index_t> outIndices;
-		outIndices.resize( tmpIndices.size() );
-
-		// make the indices small
-		for ( uint i = 0; i < (uint)tmpIndices.size(); ++i )
-		{
-			outIndices[i] = static_cast<index_t>( tmpIndices[i] );
-		}
-
 		// optimise the range offsets for GL, so we don't do a * sizeof(index_t) every draw, haha
 		for ( uint i = 0; i < (uint)ranges.size(); ++i )
 		{
-			ranges[i].offsetIndices *= sizeof( index_t );
+			ranges[i].offsetIndices *= indexSize;
 		}
 
-		WriteSMF( ranges, outVertices, outIndices );
+		WriteSMF( ranges, outVertices, tmpIndices, indexSize );
 	}
 
 	pManager->Destroy();

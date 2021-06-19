@@ -291,6 +291,7 @@ project "engine"
 	filter {}
 	
 	removefiles {
+		"engine/client/cl_console.cpp",
 		"engine/client/cd_win.*",
 		"**/cd_vorbis.cpp",
 		"**.def",

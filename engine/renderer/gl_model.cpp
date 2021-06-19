@@ -1236,6 +1236,8 @@ void Mod_LoadSMFModel( model_t *pMod, void *pBuffer, [[maybe_unused]] int buffer
 		memMeshes[i].material = GL_FindMaterial( meshes[i].materialName );
 	}
 
+	memSMF->type = ( header->flags & fmtSMF::eBigIndices ) ? GL_UNSIGNED_INT : GL_UNSIGNED_SHORT;
+
 	glGenVertexArrays( 1, &memSMF->vao );
 	glGenBuffers( 1, &memSMF->vbo );
 	glGenBuffers( 1, &memSMF->ebo );
@@ -1257,8 +1259,10 @@ void Mod_LoadSMFModel( model_t *pMod, void *pBuffer, [[maybe_unused]] int buffer
 	const byte *vertexData = (byte *)pBuffer + header->offsetVerts;
 	const byte *indexData = (byte *)pBuffer + header->offsetIndices;
 
+	const uint32 indexSize = ( header->flags & fmtSMF::eBigIndices ) ? sizeof( uint32 ) : sizeof( uint16 );
+
 	glBufferData( GL_ARRAY_BUFFER, header->numVerts * sizeof( fmtSMF::vertex_t ), vertexData, GL_STATIC_DRAW );
-	glBufferData( GL_ELEMENT_ARRAY_BUFFER, header->numIndices * sizeof( uint16 ), indexData, GL_STATIC_DRAW );
+	glBufferData( GL_ELEMENT_ARRAY_BUFFER, header->numIndices * indexSize, indexData, GL_STATIC_DRAW );
 
 	pMod->type = mod_smf;
 

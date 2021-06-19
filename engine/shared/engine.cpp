@@ -121,7 +121,7 @@ void Com_Print( const char *msg )
 		return;
 	}
 
-	Con_Print( msg );
+	Con2_Print( newMsg );
 
 	// also echo to debugging console
 	Sys_ConsoleOutput( newMsg );
@@ -521,9 +521,9 @@ static void Com_Error_f()
 {
 	if ( Cmd_Argc() == 2 )
 	{
-		Com_FatalErrorf( Cmd_Argv( 1 ) );
+		Com_FatalError( Cmd_Argv( 1 ) );
 	}
-	Com_FatalErrorf( "Error test" );
+	Com_FatalError( "Error test" );
 }
 
 /*

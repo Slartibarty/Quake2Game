@@ -129,7 +129,7 @@ void CL_Init();
 void CL_Drop();
 void CL_Shutdown();
 void CL_Frame( int msec );
-void Con_Print( const char *text );
+void Con2_Print( const char *text );
 void SCR_BeginLoadingPlaque();
 
 // this is in the client code, but can be used for debugging from server

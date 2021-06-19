@@ -148,6 +148,7 @@ struct mSMFMesh_t
 struct mSMF_t
 {
 	GLuint		vao, vbo, ebo;
+	GLenum		type;			// index type
 	uint32		numMeshes;
 	// followed by a variable number of meshes
 };

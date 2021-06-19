@@ -1017,26 +1017,6 @@ static void UpdateVolumeFunc( void *unused )
 	Cvar_SetFloat( s_volume, s_options_sfxvolume_slider.curvalue / 10 );
 }
 
-static void ConsoleFunc( void *unused )
-{
-	/*
-	** the proper way to do this is probably to have ToggleConsole_f accept a parameter
-	*/
-	extern void Key_ClearTyping( void );
-
-	if ( cl.attractloop )
-	{
-		Cbuf_AddText ("killserver\n");
-		return;
-	}
-
-	Key_ClearTyping ();
-	Con_ClearNotify ();
-
-	M_ForceMenuOff ();
-	cls.key_dest = key_console;
-}
-
 void Options_MenuInit( void )
 {
 	static const char *yesno_names[] =
@@ -1111,12 +1091,6 @@ void Options_MenuInit( void )
 	s_options_defaults_action.generic.y		= 150;
 	s_options_defaults_action.generic.name	= "reset defaults";
 	s_options_defaults_action.generic.callback = ControlsResetDefaultsFunc;
-
-	s_options_console_action.generic.type	= MTYPE_ACTION;
-	s_options_console_action.generic.x		= 0;
-	s_options_console_action.generic.y		= 160;
-	s_options_console_action.generic.name	= "go to console";
-	s_options_console_action.generic.callback = ConsoleFunc;
 
 	ControlsSetMenuItemValues();
 

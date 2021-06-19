@@ -888,6 +888,8 @@ void R_DrawStaticMeshFile( entity_t *e )
 	glCullFace( GL_BACK ); // TODO: eugh
 
 	mSMFMesh_t *meshes = reinterpret_cast<mSMFMesh_t *>( (byte *)memSMF + sizeof( mSMF_t ) );
+
+	GLenum type = memSMF->type;
 	
 	for ( uint32 i = 0; i < memSMF->numMeshes; ++i )
 	{
@@ -901,7 +903,7 @@ void R_DrawStaticMeshFile( entity_t *e )
 		glActiveTexture( GL_TEXTURE3 );
 		meshes[i].material->BindEmit();
 
-		glDrawElements( GL_TRIANGLES, meshes[i].count, GL_UNSIGNED_SHORT, (void *)( (uintptr_t)meshes[i].offset ) );
+		glDrawElements( GL_TRIANGLES, meshes[i].count, type, (void *)( (uintptr_t)meshes[i].offset ) );
 	}
 
 	glCullFace( GL_FRONT ); // TODO: eugh

@@ -321,6 +321,17 @@ namespace input
 		in_appactive = active;
 	}
 
+	void SendQuitMessage()
+	{
+		static bool sent = false;
+
+		// don't send twice, I have a feeling it's totally fine to call this twice anyway
+		if ( !sent ) {
+			PostQuitMessage( 0 );
+			sent = true;
+		}
+	}
+
 }
 
 LRESULT CALLBACK MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )

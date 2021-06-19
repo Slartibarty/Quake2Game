@@ -471,17 +471,24 @@ namespace
 // 
 // Version 2 added tangents
 // Version 3 added seperate meshes
+// Version 4 added the flags member, and changed the fourcc to QSMF
 //-------------------------------------------------------------------------------------------------
 
 namespace fmtSMF
 {
-	inline constexpr int32 fourCC = MakeFourCC( 'B', 'R', 'U', 'H' );
-	inline constexpr int32 version = 3;
+	inline constexpr int32 fourCC = MakeFourCC( 'Q', 'S', 'M', 'F' );
+	inline constexpr int32 version = 4;
+
+	enum flags_t
+	{
+		eBigIndices = 1
+	};
 
 	struct header_t
 	{
 		int32 fourCC;
 		int32 version;
+		uint32 flags;
 		uint32 numMeshes;
 		uint32 offsetMeshes;
 		uint32 numVerts;
@@ -495,7 +502,7 @@ namespace fmtSMF
 	{
 		char materialName[256];		// "materials/models/alien01/grimbles.mat"
 		uint32 offsetIndices;		// offset into the index buffer
-		uint32 countIndices;		// number of indices 
+		uint32 countIndices;		// number of indices
 	};
 
 	struct vertex_t

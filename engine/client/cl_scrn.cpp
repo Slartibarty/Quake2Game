@@ -64,8 +64,8 @@ void SCR_Loading_f();
 
 struct screenGlobals_t
 {
+	bool	imgui_devui;
 	bool	imgui_showDemo;
-	bool	imgui_testbed;
 	bool	imgui_console;
 } scr;
 
@@ -303,7 +303,7 @@ void SCR_CenterPrint( const char *str )
 	}
 
 	Com_Print( "\n\n\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\37\n\n" );
-	Con_ClearNotify();
+	Con2_ClearNotify();
 }
 
 static void SCR_DrawCenterString()
@@ -398,8 +398,8 @@ static bool SCR_InitImGui()
 
 	ImFontConfig fontConfig;
 
-	io.Fonts->AddFontDefault();
-	//io.Fonts->AddFontFromFileTTF( va( "%s/fonts/tahoma.ttf", FS_Gamedir() ), 16.0f, &fontConfig );
+	//io.Fonts->AddFontDefault();
+	io.Fonts->AddFontFromFileTTF( va( "%s/fonts/Roboto-Medium.ttf", FS_Gamedir() ), 16.0f, &fontConfig );
 
 	return true;
 }
@@ -409,24 +409,6 @@ static void SCR_ShutdownImGui()
 	ImGui_ImplOpenGL3_Shutdown();
 	qImGui::OSImp_Shutdown();
 	ImGui::DestroyContext();
-}
-
-// toggles the imgui demo UI
-static void SCR_ToggleImGuiDemo()
-{
-	scr.imgui_showDemo = !scr.imgui_showDemo;
-}
-
-// toggles the imgui testbed
-static void SCR_ToggleImGuiTestbed()
-{
-	scr.imgui_testbed = !scr.imgui_testbed;
-}
-
-// toggles the imgui console
-static void SCR_ToggleImGuiConsole()
-{
-	scr.imgui_console = !scr.imgui_console;
 }
 
 /*
@@ -451,11 +433,9 @@ void SCR_Init()
 	Cmd_AddCommand( "timerefresh", SCR_TimeRefresh_f );
 	Cmd_AddCommand( "loading", SCR_Loading_f );
 
-	Cmd_AddCommand( "scr_imguidemo", SCR_ToggleImGuiDemo );
-	Cmd_AddCommand( "scr_imguitestbed", SCR_ToggleImGuiTestbed );
-	Cmd_AddCommand( "scr_imguiconsole", SCR_ToggleImGuiConsole );
-
 	SCR_InitImGui();
+
+	scr.imgui_console = true;
 
 	scr_initialized = true;
 }
@@ -551,154 +531,32 @@ static void SCR_DrawCrosshair()
 /*
 ===================================================================================================
 
-	ImGui testbed
+	ImGui devmenu
 
 ===================================================================================================
 */
 
-static void SCR_DrawTestbed( bool *p_open )
+static void SCR_DrawDevMenu()
 {
-	ImGuiWindowFlags windowsFlags =
-		ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove;
-
-	const ImGuiViewport *main_viewport = ImGui::GetMainViewport();
-	ImGui::SetNextWindowPos( ImVec2( main_viewport->WorkPos.x + 650, main_viewport->WorkPos.y + 680 ), ImGuiCond_FirstUseEver );
-	ImGui::SetNextWindowSize( ImVec2( 550, 680 ), ImGuiCond_FirstUseEver );
-
-	if ( !ImGui::Begin( "Quake 2", p_open, windowsFlags ) )
+	if ( ImGui::BeginMainMenuBar() )
 	{
-		// Early out if the window is collapsed, as an optimization.
-		ImGui::End();
-		return;
-	}
-
-	ImGui::Button( "Multiplayer", ImVec2( 99, 32 ) );
-	ImGui::Button( "Options", ImVec2( 99, 32 ) );
-	ImGui::Button( "Video", ImVec2( 99, 32 ) );
-	ImGui::Button( "Quit", ImVec2( 99, 32 ) );
-	ImGui::Spacing();
-
-	ImGui::End();
-}
-
-/*
-===================================================================================================
-
-	ImGui console
-
-===================================================================================================
-*/
-
-struct editLine_t
-{
-	char data[256];
-};
-
-static struct console2_t
-{
-	editLine_t				editLine;
-	std::vector<editLine_t>	historyLines;
-	int						historyPosition = -1;
-
-} con;
-
-static int Con2_TextEditCallback( ImGuiInputTextCallbackData *data )
-{
-	switch ( data->EventFlag )
-	{
-	case ImGuiInputTextFlags_CallbackCompletion:
-	{
-		const char *cmd = Cmd_CompleteCommand( data->Buf );
-		if ( !cmd ) {
-			cmd = Cvar_CompleteVariable( data->Buf );
-		}
-
-		if ( cmd )
+		if ( ImGui::BeginMenu( "DevUI" ) )
 		{
-			// replace entire buffer
-			data->DeleteChars( 0, data->BufTextLen );
-			data->InsertChars( data->CursorPos, cmd );
+			ImGui::Checkbox( "Demo", &scr.imgui_showDemo );
+			ImGui::Checkbox( "Console", &scr.imgui_console );
+
+			ImGui::EndMenu();
 		}
-	}
-	break;
-	case ImGuiInputTextFlags_CallbackHistory:
-	{
-		if ( !con.historyLines.empty() )
+		if ( ImGui::BeginMenu( "Engine" ) )
 		{
-			switch ( data->EventKey )
+			if ( ImGui::MenuItem( "Quit", "ALT+F4" ) )
 			{
-			case ImGuiKey_UpArrow:
-				if ( con.historyPosition == -1 ) {
-					// Start at the end
-					con.historyPosition = (int64)con.historyLines.size() - 1;
-				}
-				else if ( con.historyPosition > 0 ) {
-					// Decrement
-					--con.historyPosition;
-				}
-				break;
-			case ImGuiKey_DownArrow:
-				if ( con.historyPosition < (int64)con.historyLines.size() ) {
-					++con.historyPosition;
-				}
-				if ( con.historyPosition == (int64)con.historyLines.size() ) {
-					con.historyPosition -= 1;
-				}
-				break;
+				input::SendQuitMessage();
 			}
-
-			const char *history_str = con.historyPosition >= 0 ? con.historyLines[con.historyPosition].data : "";
-			data->DeleteChars( 0, data->BufTextLen );
-			data->InsertChars( 0, history_str );
+			ImGui::EndMenu();
 		}
+		ImGui::EndMainMenuBar();
 	}
-	break;
-	}
-
-	return 0;
-}
-
-static void Con2_Init()
-{
-	// reserve 16 history slots
-	con.historyLines.reserve( 16 );
-}
-
-static void Con2_Show( bool *p_open )
-{
-	ImGui::SetNextWindowPos( ImVec2( 40, 40 ), ImGuiCond_FirstUseEver );
-	ImGui::SetNextWindowSize( ImVec2( 560, 400 ), ImGuiCond_FirstUseEver );
-	if ( !ImGui::Begin( "Console", p_open ) )
-	{
-		ImGui::End();
-		return;
-	}
-
-	// Reserve enough left-over height for 1 separator + 1 input text
-	const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
-	ImGui::BeginChild( "ScrollingRegion", ImVec2( 0, -footer_height_to_reserve ), true, ImGuiWindowFlags_HorizontalScrollbar );
-
-	ImGui::EndChild();
-
-	// input line
-	bool reclaimFocus = false;
-	ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory;
-	memset( con.editLine.data, 0, sizeof( con.editLine.data ) );
-
-	if ( ImGui::InputText( nullptr, con.editLine.data, sizeof( con.editLine.data ), flags, Con2_TextEditCallback, nullptr ) )
-	{
-		con.historyLines.push_back( con.editLine );
-
-		reclaimFocus = true;
-	}
-
-	// auto-focus on window apparition
-	ImGui::SetItemDefaultFocus();
-	if ( reclaimFocus ) {
-		ImGui::SetKeyboardFocusHere( -1 ); // Auto focus previous widget
-	}
-
-	ImGui::End();
 }
 
 //=================================================================================================
@@ -734,60 +592,83 @@ void SCR_RunConsole()
 	}
 }
 
+void SCR_ToggleDevUI()
+{
+	SCR_EndLoadingPlaque(); // get rid of loading plaque
+
+	if ( cl.attractloop ) {
+		Cbuf_AddText( "killserver\n" );
+		return;
+	}
+
+	if ( cls.state == ca_disconnected ) {
+		// start the demo loop again
+		Cbuf_AddText( "d1\n" );
+		return;
+	}
+
+	Con2_ClearNotify();
+
+	if ( cls.key_dest == key_console )
+	{
+		M_ForceMenuOff();
+		Cvar_SetBool( cl_paused, false );
+	}
+	else
+	{
+		M_ForceMenuOff();
+		cls.key_dest = key_console;
+
+		if ( Cvar_FindGetFloat( "maxclients" ) == 1 && Com_ServerState() ) {
+			Cvar_SetBool( cl_paused, true );
+		}
+	}
+
+	scr.imgui_devui = !scr.imgui_devui;
+}
+
 static void SCR_DrawImGui()
 {
-	bool render = false;
+	SCR_DrawDevMenu();
 
 	if ( scr.imgui_showDemo ) {
 		ImGui::ShowDemoWindow( &scr.imgui_showDemo );
-		render = true;
 	}
 
-	if ( scr.imgui_testbed ) {
-		SCR_DrawTestbed( &scr.imgui_testbed );
+	if ( scr.imgui_console ) {
+		Con2_ShowConsole( &scr.imgui_console );
 	}
 
-	/*if ( scr.imgui_console ) {
-		scr_console.ShowConsoleWindow( &scr.imgui_console );
-	}*/
-
-	if ( render ) {
-		ImGui::Render();
-	}
+	ImGui::Render();
 }
 
 /*
 ========================
-SCR_DrawConsole
+SCR_DrawDevUI
+
+The DevUI refers to the DevMenu, and any elements activated by it
 ========================
 */
-static void SCR_DrawConsole()
+static void SCR_DrawDevUI()
 {
-	Con_CheckResize();
-
-	if ( cls.state == ca_disconnected || cls.state == ca_connecting ) {
-		// forced full screen console
-		Con_DrawConsole( 1.0f );
-		SCR_DrawImGui();
+	if ( !scr.imgui_devui ) {
 		return;
 	}
 
-	if ( cls.state != ca_active || !cl.refresh_prepped ) {
-		// connected, but can't render
-		Con_DrawConsole( 0.5f );
-		SCR_DrawImGui();
-		return;
+	cls.key_dest = key_console; // HACK
+
+	// dev menu is always active in dev UI mode
+	SCR_DrawDevMenu();
+
+	if ( scr.imgui_showDemo ) {
+		ImGui::ShowDemoWindow( &scr.imgui_showDemo );
 	}
 
-	if ( scr_con_current ) {
-		Con_DrawConsole( scr_con_current );
-		SCR_DrawImGui();
-	} else {
-		if ( cls.key_dest == key_game || cls.key_dest == key_message ) {
-			// only draw notify in game
-			Con_DrawNotify();
-		}
+	if ( scr.imgui_console ) {
+		Con2_ShowConsole( &scr.imgui_console );
 	}
+
+	ImGui::Render();
 }
 
 //=================================================================================================
@@ -838,7 +719,7 @@ SCR_EndLoadingPlaque
 void SCR_EndLoadingPlaque()
 {
 	cls.disable_screen = 0.0f;
-	Con_ClearNotify();
+	Con2_ClearNotify();
 }
 
 /*
@@ -1396,7 +1277,7 @@ void SCR_UpdateScreen()
 		return;
 	}
 
-	if ( !scr_initialized || !Con_IsInitialized() ) {
+	if ( !scr_initialized ) {
 		// not initialized yet
 		return;
 	}
@@ -1423,7 +1304,7 @@ void SCR_UpdateScreen()
 			M_Draw();
 			break;
 		case key_console:
-			SCR_DrawConsole();
+			SCR_DrawDevUI();
 			break;
 		default:
 			SCR_DrawCinematic();
@@ -1463,7 +1344,7 @@ void SCR_UpdateScreen()
 
 		SCR_DrawPause();
 
-		SCR_DrawConsole();
+		SCR_DrawDevUI();
 
 		M_Draw();
 

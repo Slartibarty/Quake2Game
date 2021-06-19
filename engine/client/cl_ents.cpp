@@ -1117,27 +1117,27 @@ static void CL_CalcViewModelLag( vec3_t origin, const vec3_t angles )
 {
 	static vec3_t lastFacing;
 
-	if ( cls.frametime != 0.0f )
+//	vec3_t forward, right, up;
+//	AngleVectors( angles, forward, right, up );
+
+	vec3_t difference;
+	VectorSubtract( cl.v_forward, lastFacing, difference );
+
+	float speed = 5.0f;
+
+	// If we start to lag too far behind, we'll increase the "catch up" speed.  Solves the problem with fast cl_yawspeed, m_yaw or joysticks
+	//  rotating quickly.  The old code would slam lastfacing with origin causing the viewmodel to pop to a new position
+	float distance = VectorLength( difference );
+	if ( distance > MaxViewmodelLag )
 	{
-		vec3_t difference;
-		VectorSubtract( cl.v_forward, lastFacing, difference );
-
-		float speed = 5.0f;
-
-		// If we start to lag too far behind, we'll increase the "catch up" speed.  Solves the problem with fast cl_yawspeed, m_yaw or joysticks
-		//  rotating quickly.  The old code would slam lastfacing with origin causing the viewmodel to pop to a new position
-		float distance = VectorLength( difference );
-		if ( distance > MaxViewmodelLag )
-		{
-			speed *= distance / MaxViewmodelLag;
-		}
-
-		VectorMA( lastFacing, speed * cls.frametime, difference, lastFacing );
-		VectorNormalize( lastFacing );
-
-		VectorNegate( difference, difference );
-		VectorMA( origin, 2.0f, difference, origin );
+		speed *= distance / MaxViewmodelLag;
 	}
+
+	VectorMA( lastFacing, speed * cls.frametime, difference, lastFacing );
+	VectorNormalize( lastFacing );
+
+	VectorNegate( difference, difference );
+	VectorMA( origin, 5.0f, difference, origin );
 
 	float pitch = angles[PITCH];
 	if ( pitch > 180.0f ) {

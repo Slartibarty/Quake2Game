@@ -372,7 +372,10 @@ static void SV_ReadServerFile()
 		}
 		FS_Read( string, sizeof( string ), f );
 		Com_DPrintf( "Set %s = %s\n", name, string );
-		Cvar_ForceSet( Cvar_Find( name ), string );
+		cvar_t *var = Cvar_Find( name );
+		if ( var ) {
+			Cvar_ForceSet( var, string );
+		}
 	}
 
 	fclose( f );

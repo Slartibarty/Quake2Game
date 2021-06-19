@@ -287,6 +287,7 @@ void VID_Shutdown();
 //
 // cl_console
 //
+#if 0
 void Con_CheckResize();
 void Con_Init();
 void Con_DrawConsole( float frac );
@@ -302,6 +303,18 @@ void Con_PageUp();
 void Con_PageDown();
 void Con_Top();
 void Con_Bottom();
+#endif
+
+//
+// cl_console2
+//
+
+void Con2_Init();
+void Con2_ShowConsole( bool *pOpen );
+void Con2_ShowNotify();
+void Con2_ClearNotify();
+
+void Con2_Print( const char *txt );
 
 //
 // cl_main
@@ -426,6 +439,7 @@ void SCR_DebugGraph( float value, uint32 color );
 void SCR_TouchPics();
 
 void SCR_RunConsole();
+void SCR_ToggleDevUI();
 
 //
 // cl_cin
@@ -490,6 +504,9 @@ namespace input
 	void Frame();
 
 	void Activate( bool active );
+
+	// when called, the game will Com_Quit at the beginning of the next frame
+	void SendQuitMessage();
 }
 
 //
