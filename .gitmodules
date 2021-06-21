@@ -15,7 +15,7 @@
 	url = https://github.com/microsoft/DirectXMath.git
 [submodule "thirdparty/imgui"]
 	path = thirdparty/imgui
-	url = https://github.com/ocornut/imgui.git
+	url = https://github.com/Slartibarty/imgui_colorcodes.git
 [submodule "thirdparty/meshoptimizer"]
 	path = thirdparty/meshoptimizer
 	url = https://github.com/zeux/meshoptimizer.git
