@@ -13,7 +13,15 @@
 
 #include "imgui.h"
 
+#define NUM_NOTIFIES	8
+
 static cvar_t *con_notifytime;
+
+struct notify_t
+{
+	char		message[256];
+	float		timeLeft;
+};
 
 struct editLine_t
 {
@@ -32,6 +40,8 @@ struct console2_t
 	editLine_t				editLine;
 	std::vector<editLine_t>	historyLines;
 	int						historyPosition = -1;
+
+	notify_t				notifies[NUM_NOTIFIES];	// cls.realtime time the line was generated, for transparent notify lines
 
 	bool					scrollToBottom;
 
@@ -121,6 +131,15 @@ void Con2_Init()
 	con_notifytime = Cvar_Get( "con_notifytime", "3", 0 );
 
 	Cmd_AddCommand( "clear", Con2_Clear_f );
+
+	static bool once;
+
+	if ( !once )
+	{
+		strcpy( con.notifies[0].message, "BROTHER\n" );
+		con.notifies[0].timeLeft = SEC2MS( con_notifytime->GetFloat() );
+		once = true;
+	}
 }
 
 /*
@@ -166,7 +185,7 @@ Draws the console using ImGui
 void Con2_ShowConsole( bool *pOpen )
 {
 	//ImGui::SetNextWindowPos( ImVec2( 40, 40 ), ImGuiCond_FirstUseEver );
-	ImGui::SetNextWindowSize( ImVec2( 560, 400 ), ImGuiCond_FirstUseEver );
+	ImGui::SetNextWindowSize( ImVec2( 600, 800 ), ImGuiCond_FirstUseEver );
 	if ( !ImGui::Begin( "Console", pOpen ) )
 	{
 		ImGui::End();
@@ -174,11 +193,21 @@ void Con2_ShowConsole( bool *pOpen )
 	}
 
 	// Reserve enough left-over height for 1 separator + 1 input text
-	const float scrollWidth = ImGui::GetWindowContentRegionWidth();
-	const float scrollHeight = -( ImGui::GetFrameHeightWithSpacing() - ImGui::GetStyle().ItemSpacing.y );
-	ImGui::BeginChild( "ScrollingRegion", ImVec2( 0, scrollHeight ), true );
+	const float scrollHeight = ImGui::GetFrameHeightWithSpacing() + ImGui::GetStyle().ItemSpacing.y;
+	ImGui::BeginChild( "ScrollingRegion", ImVec2( 0.0f, -scrollHeight ), true );
 
-	ImGui::TextUnformatted( con.buffer.c_str() );
+	ImGui::PushTextWrapPos( 0.0f );
+
+	ImGuiListClipper clipper;
+	clipper.Begin( con.buffer.length() + 1, ImGui::GetTextLineHeightWithSpacing() );
+
+	while ( clipper.Step() )
+	{
+		ImGui::TextUnformatted( con.buffer.c_str() + clipper.DisplayStart, con.buffer.c_str() + clipper.DisplayEnd );
+	}
+
+	//ImGui::TextUnformatted( con.buffer.c_str() );
+	ImGui::PopTextWrapPos();
 
 	if ( con.scrollToBottom || ImGui::GetScrollY() >= ImGui::GetScrollMaxY() )
 	{
@@ -211,5 +240,73 @@ void Con2_ShowConsole( bool *pOpen )
 	ImGui::End();
 }
 
-void Con2_ShowNotify() {}
-void Con2_ClearNotify() {}
+/*
+===============================================================================
+
+	Notify
+
+===============================================================================
+*/
+
+void Con2_ShowNotify()
+{
+	// only draw in dev mode
+	if ( !developer->GetBool() )
+	{
+		return;
+	}
+
+	constexpr float PAD = 40.0f;
+
+	ImGuiWindowFlags windowFlags =
+		ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_AlwaysAutoResize |
+		ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoMove;
+
+#if 0
+	{
+		const ImGuiViewport* viewport = ImGui::GetMainViewport();
+		ImVec2 workPos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
+		ImVec2 windowPos;
+		windowPos.x = workPos.x + PAD;
+		windowPos.y = workPos.y + PAD;
+		ImGui::SetNextWindowPos( workPos, ImGuiCond_Always );
+		windowFlags |= ImGuiWindowFlags_NoMove;
+	}
+#endif
+
+	ImGui::Begin( "Notify Area", nullptr, windowFlags );
+
+	for ( int i = 0; i < NUM_NOTIFIES; ++i )
+	{
+		notify_t &notify = con.notifies[i];
+
+		double timeLeft = notify.timeLeft;
+
+		uint32 alpha = 255;
+
+		if ( timeLeft <= 0.5 )
+		{
+			float fltAlpha = Clamp( timeLeft, 0.0, 0.5 ) / 0.5;
+
+			alpha = static_cast<uint32>( fltAlpha * 255.0 );
+
+			if ( i == 0 && fltAlpha < 0.2 )
+			{
+				//y -= fontTall * ( 1.0f - f / 0.2f );
+			}
+		}
+
+		ImGui::TextUnformatted( notify.message );
+
+	}
+
+	ImGui::End();
+}
+
+void Con2_ClearNotify()
+{
+	for ( int i = 0; i < NUM_NOTIFIES; ++i )
+	{
+		con.notifies[i].timeLeft = 0.0;
+	}
+}

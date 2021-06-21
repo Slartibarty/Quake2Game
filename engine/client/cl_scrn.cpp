@@ -398,8 +398,8 @@ static bool SCR_InitImGui()
 
 	ImFontConfig fontConfig;
 
-	//io.Fonts->AddFontDefault();
-	io.Fonts->AddFontFromFileTTF( va( "%s/fonts/Roboto-Medium.ttf", FS_Gamedir() ), 16.0f, &fontConfig );
+	//io.Fonts->AddFontFromFileTTF( va( "%s/fonts/Roboto-Medium.ttf", FS_Gamedir() ), 16.0f, &fontConfig );
+	io.Fonts->AddFontDefault();
 
 	return true;
 }
@@ -435,6 +435,7 @@ void SCR_Init()
 
 	SCR_InitImGui();
 
+	// always show the console by default
 	scr.imgui_console = true;
 
 	scr_initialized = true;
@@ -561,37 +562,7 @@ static void SCR_DrawDevMenu()
 
 //=================================================================================================
 
-/*
-========================
-SCR_RunConsole
-
-Scroll it up or down
-========================
-*/
-void SCR_RunConsole()
-{
-	// decide on the height of the console
-	if ( cls.key_dest == key_console ) {
-		// half screen
-		scr_conlines = 0.5f;
-	} else {
-		// none visible
-		scr_conlines = 0.0f;
-	}
-
-	if ( scr_conlines < scr_con_current ) {
-		scr_con_current -= scr_conspeed->GetFloat() * cls.frametime;
-		if ( scr_conlines > scr_con_current ) {
-			scr_con_current = scr_conlines;
-		}
-	} else if ( scr_conlines > scr_con_current ) {
-		scr_con_current += scr_conspeed->GetFloat() * cls.frametime;
-		if ( scr_conlines < scr_con_current ) {
-			scr_con_current = scr_conlines;
-		}
-	}
-}
-
+// toggles the dev UI on or off
 void SCR_ToggleDevUI()
 {
 	SCR_EndLoadingPlaque(); // get rid of loading plaque
@@ -627,35 +598,20 @@ void SCR_ToggleDevUI()
 	scr.imgui_devui = !scr.imgui_devui;
 }
 
-static void SCR_DrawImGui()
-{
-	SCR_DrawDevMenu();
-
-	if ( scr.imgui_showDemo ) {
-		ImGui::ShowDemoWindow( &scr.imgui_showDemo );
-	}
-
-	if ( scr.imgui_console ) {
-		Con2_ShowConsole( &scr.imgui_console );
-	}
-
-	ImGui::Render();
-}
-
 /*
 ========================
-SCR_DrawDevUI
+SCR_DrawImGui
 
-The DevUI refers to the DevMenu, and any elements activated by it
+Draws ImGui elements of the screen
 ========================
 */
-static void SCR_DrawDevUI()
+static void SCR_DrawImGui()
 {
 	if ( !scr.imgui_devui ) {
+		// if we're not drawing the dev UI, draw the console notify area
+		Con2_ShowNotify();
 		return;
 	}
-
-	cls.key_dest = key_console; // HACK
 
 	// dev menu is always active in dev UI mode
 	SCR_DrawDevMenu();
@@ -1304,7 +1260,7 @@ void SCR_UpdateScreen()
 			M_Draw();
 			break;
 		case key_console:
-			SCR_DrawDevUI();
+			SCR_DrawImGui();
 			break;
 		default:
 			SCR_DrawCinematic();
@@ -1344,7 +1300,7 @@ void SCR_UpdateScreen()
 
 		SCR_DrawPause();
 
-		SCR_DrawDevUI();
+		SCR_DrawImGui();
 
 		M_Draw();
 

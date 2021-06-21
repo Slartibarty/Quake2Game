@@ -1675,7 +1675,6 @@ void CL_Frame (int msec)
 	cge->Frame();
 
 	SCR_RunCinematic ();
-	SCR_RunConsole ();
 
 //	Com_Printf( "Time:  %d %d %f\n", cl.time, cls.realtime, cls.frametime );
 

@@ -438,7 +438,6 @@ void SCR_DebugGraph( float value, uint32 color );
 
 void SCR_TouchPics();
 
-void SCR_RunConsole();
 void SCR_ToggleDevUI();
 
 //
