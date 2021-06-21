@@ -11,7 +11,7 @@
 
 #include "imgui.h"
 
-#define USE_STEAM_SKIN
+//#define USE_STEAM_SKIN
 
 //-------------------------------------------------------------------------------------------------
 // Windows renderer-agnostic implementation for ImGui, based on the example backend

@@ -398,7 +398,7 @@ static bool SCR_InitImGui()
 
 	ImFontConfig fontConfig;
 
-	//io.Fonts->AddFontFromFileTTF( va( "%s/fonts/Roboto-Medium.ttf", FS_Gamedir() ), 16.0f, &fontConfig );
+	//io.Fonts->AddFontFromFileTTF( va( "%s/fonts/consola.ttf", FS_Gamedir() ), 16.0f, &fontConfig );
 	io.Fonts->AddFontDefault();
 
 	return true;
@@ -583,16 +583,16 @@ void SCR_ToggleDevUI()
 	if ( cls.key_dest == key_console )
 	{
 		M_ForceMenuOff();
-		Cvar_SetBool( cl_paused, false );
+	//	Cvar_SetBool( cl_paused, false );
 	}
 	else
 	{
 		M_ForceMenuOff();
 		cls.key_dest = key_console;
 
-		if ( Cvar_FindGetFloat( "maxclients" ) == 1 && Com_ServerState() ) {
-			Cvar_SetBool( cl_paused, true );
-		}
+	//	if ( Cvar_FindGetFloat( "maxclients" ) == 1 && Com_ServerState() ) {
+	//		Cvar_SetBool( cl_paused, true );
+	//	}
 	}
 
 	scr.imgui_devui = !scr.imgui_devui;

@@ -121,7 +121,7 @@ void Com_Print( const char *msg )
 		return;
 	}
 
-	Con2_Print( newMsg );
+	Con2_Print( msg );
 
 	// also echo to debugging console
 	Sys_ConsoleOutput( newMsg );

@@ -12,10 +12,18 @@
 #include <string>
 
 #include "imgui.h"
+#include "q_imgui_imp.h"
 
 #define NUM_NOTIFIES	8
 
 static cvar_t *con_notifytime;
+
+class qCircularBuffer
+{
+	uint m_count;
+	uint m_start;
+	uint m_end;
+};
 
 struct notify_t
 {
@@ -35,21 +43,21 @@ struct editLine_t
 
 struct console2_t
 {
-	std::string				buffer;					// TODO: this is going to be painfully slow to clear since it memsets the entire buffer...
+	std::string				buffer;
 
 	editLine_t				editLine;
 	std::vector<editLine_t>	historyLines;
 	int						historyPosition = -1;
 
-	notify_t				notifies[NUM_NOTIFIES];	// cls.realtime time the line was generated, for transparent notify lines
+	notify_t				notifies[NUM_NOTIFIES];		// cls.realtime time the line was generated, for transparent notify lines
 
 	bool					scrollToBottom;
 
 	// so we can use the console instantly from main
 	console2_t()
 	{
-		// reserve 32768 chars by default
-		buffer.reserve( 32768 );
+		// reserve 16384 characters by default
+		buffer.reserve( 16384 );
 		historyLines.reserve( 32 );
 	}
 
@@ -120,7 +128,6 @@ static int Con2_TextEditCallback( ImGuiInputTextCallbackData *data )
 	return 0;
 }
 
-// clears the edit line
 static void Con2_Clear_f()
 {
 	con.buffer.clear();
@@ -152,7 +159,14 @@ Submits the text stored in con.editLine, then clears it
 */
 static void Con2_Submit()
 {
-	con.historyLines.push_back( con.editLine );
+	con.historyPosition = -1;
+
+	// don't push back if the last history content was this very command
+	// (mimics cmd)
+	if ( con.historyLines.empty() || Q_strcmp( con.historyLines.back().data, con.editLine.data ) != 0 )
+	{
+		con.historyLines.push_back( con.editLine );
+	}
 
 	con.scrollToBottom = true;
 
@@ -184,29 +198,91 @@ Draws the console using ImGui
 */
 void Con2_ShowConsole( bool *pOpen )
 {
-	//ImGui::SetNextWindowPos( ImVec2( 40, 40 ), ImGuiCond_FirstUseEver );
-	ImGui::SetNextWindowSize( ImVec2( 600, 800 ), ImGuiCond_FirstUseEver );
+	ImGui::PushStyleVar( ImGuiStyleVar_WindowMinSize, ImVec2( 330.0f, 250.0f ) );
+
+	ImGui::SetNextWindowSize( ImVec2( 600.0f, 800.0f ), ImGuiCond_FirstUseEver );
 	if ( !ImGui::Begin( "Console", pOpen ) )
 	{
 		ImGui::End();
 		return;
 	}
 
+	if ( ImGui::BeginPopupContextItem() )
+	{
+		if ( ImGui::MenuItem( "Close Console" ) )
+		{
+			*pOpen = false;
+		}
+		ImGui::EndPopup();
+	}
+
 	// Reserve enough left-over height for 1 separator + 1 input text
-	const float scrollHeight = ImGui::GetFrameHeightWithSpacing() + ImGui::GetStyle().ItemSpacing.y;
-	ImGui::BeginChild( "ScrollingRegion", ImVec2( 0.0f, -scrollHeight ), true );
+	ImGui::BeginChild( "ScrollingRegion", ImVec2( 0.0f, -ImGui::GetFrameHeightWithSpacing() ), true, ImGuiWindowFlags_AlwaysAutoResize );
 
 	ImGui::PushTextWrapPos( 0.0f );
 
-	ImGuiListClipper clipper;
-	clipper.Begin( con.buffer.length() + 1, ImGui::GetTextLineHeightWithSpacing() );
-
-	while ( clipper.Step() )
+	if ( !con.buffer.empty() )
 	{
-		ImGui::TextUnformatted( con.buffer.c_str() + clipper.DisplayStart, con.buffer.c_str() + clipper.DisplayEnd );
+		const char *bufferStart = con.buffer.c_str();
+		const char *bufferEnd = con.buffer.c_str() + con.buffer.size() - 1;
+
+		const int bufferSize = (int)con.buffer.size() - 1; // skip nul
+
+		if ( bufferSize > 16384 )
+		{
+			// draw the buffer in 16384 chunks so we can avoid over-running the max vertex count of 65536
+			// (16384 * 4 == 65536)
+			// TODO: ImGui's TextUnformatted prints to a new line
+			const char *newStart = bufferStart;
+
+			int chunkSize = 16384;
+			int amountLeft = bufferSize;
+
+			ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, ImVec2( 0.0f, 0.0f ) );
+
+			while ( true )
+			{
+				// starting from the end of the chunk we're supposed to be drawing now, step back to find a newline
+				// then use that as the end instead, and subsequently the start of the next chunk
+				// this goes under the assumption that there's a newline somewhere... With more than 16384 chars
+				// in the buffer this will *always* be true
+
+				const char *newEnd = newStart + chunkSize;
+
+				for ( const char *i = newEnd; i > newStart; --i )
+				{
+					if ( *i == '\n' )
+					{
+						chunkSize -= ( chunkSize - static_cast<int>( i - newStart ) );
+						newEnd = i;
+						break;
+					}
+				}
+
+				ImGui::TextUnformatted( newStart, newEnd );
+
+				amountLeft -= chunkSize;
+				newStart += chunkSize + 1;
+
+				if ( amountLeft <= 0 )
+				{
+					break;
+				}
+
+				if ( amountLeft < 16384 )
+				{
+					chunkSize = amountLeft;
+				}
+			}
+
+			ImGui::PopStyleVar();
+		}
+		else
+		{
+			ImGui::TextUnformatted( bufferStart, bufferEnd );
+		}
 	}
 
-	//ImGui::TextUnformatted( con.buffer.c_str() );
 	ImGui::PopTextWrapPos();
 
 	if ( con.scrollToBottom || ImGui::GetScrollY() >= ImGui::GetScrollMaxY() )
@@ -222,14 +298,23 @@ void Con2_ShowConsole( bool *pOpen )
 	bool reclaimFocus = false;
 	ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory;
 
-	if ( ImGui::InputText( "", con.editLine.data, sizeof( con.editLine.data ), inputFlags, Con2_TextEditCallback, nullptr ) )
+	ImGui::PushItemWidth( ImGui::GetWindowContentRegionWidth() - 64.0f );
+
+	if ( ImGui::InputText( "##Input", con.editLine.data, sizeof( con.editLine.data ), inputFlags, Con2_TextEditCallback, nullptr ) )
 	{
 		Con2_Submit();
 
 		reclaimFocus = true;
 	}
 
+	ImGui::PopItemWidth();
+
 	ImGui::SameLine();
+
+	if ( ImGui::Button( "Submit" ) )
+	{
+		Con2_Submit();
+	}
 
 	// auto-focus on window apparition
 	ImGui::SetItemDefaultFocus();
@@ -238,6 +323,8 @@ void Con2_ShowConsole( bool *pOpen )
 	}
 
 	ImGui::End();
+
+	ImGui::PopStyleVar();
 }
 
 /*
