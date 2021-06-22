@@ -15,9 +15,6 @@ extern cvar_t *hand;
 extern cvar_t *s_volume;
 extern cvar_t *s_loadas8bit;
 
-// scrn
-extern cvar_t *scr_viewsize;
-
 // renderer
 extern cvar_t *r_gamma;
 extern cvar_t *r_picmip;
@@ -1132,7 +1129,6 @@ VIDEO MENU
 
 extern cvar_t *r_fullscreen;
 extern cvar_t *r_gamma;
-extern cvar_t *scr_viewsize;
 
 extern cvar_t *r_mode;
 extern cvar_t *r_picmip;
@@ -1142,7 +1138,6 @@ static menuframework_s	s_vid_menu;
 
 static menulist_s		s_mode_list;
 static menuslider_s		s_tq_slider;
-static menuslider_s		s_screensize_slider;
 static menuslider_s		s_brightness_slider;
 static menulist_s  		s_fs_box;
 static menulist_s  		s_finish_box;
@@ -1151,13 +1146,6 @@ static menuaction_s		s_defaults_action;
 
 static void DriverCallback( void *unused )
 {
-}
-
-static void ScreenSizeCallback( void *s )
-{
-	menuslider_s *slider = (menuslider_s *)s;
-
-	Cvar_SetFloat( scr_viewsize, slider->curvalue * 10 );
 }
 
 static void BrightnessCallback( void *s )
@@ -1260,11 +1248,6 @@ void VID_MenuInit( void )
 
 	s_mode_list.curvalue = r_mode->GetInt();
 
-	if ( !scr_viewsize )
-		scr_viewsize = Cvar_Get ("viewsize", "100", CVAR_ARCHIVE);
-
-	s_screensize_slider.curvalue = scr_viewsize->GetFloat() / 10.0f;
-
 	s_vid_menu.x = viddef.width / 2;
 	s_vid_menu.nitems = 0;
 
@@ -1273,14 +1256,6 @@ void VID_MenuInit( void )
 	s_mode_list.generic.x = 0;
 	s_mode_list.generic.y = 10;
 	s_mode_list.itemnames = (const char**)resolutions;
-
-	s_screensize_slider.generic.type	= MTYPE_SLIDER;
-	s_screensize_slider.generic.x		= 0;
-	s_screensize_slider.generic.y		= 20;
-	s_screensize_slider.generic.name	= "screen size";
-	s_screensize_slider.minvalue = 3;
-	s_screensize_slider.maxvalue = 12;
-	s_screensize_slider.generic.callback = ScreenSizeCallback;
 
 	s_brightness_slider.generic.type	= MTYPE_SLIDER;
 	s_brightness_slider.generic.x	= 0;
@@ -1326,7 +1301,6 @@ void VID_MenuInit( void )
 	s_finish_box.itemnames = yesno_names;
 
 	Menu_AddItem( &s_vid_menu, ( void * ) &s_mode_list );
-	Menu_AddItem( &s_vid_menu, ( void * ) &s_screensize_slider );
 	Menu_AddItem( &s_vid_menu, ( void * ) &s_brightness_slider );
 	Menu_AddItem( &s_vid_menu, ( void * ) &s_fs_box );
 	Menu_AddItem( &s_vid_menu, ( void * ) &s_tq_slider );

@@ -43,11 +43,8 @@ int			scr_draw_loading;
 
 vrect_t		scr_vrect;		// position of render window on screen
 
-cvar_t		*scr_viewsize;
-cvar_t		*scr_conspeed;
 cvar_t		*scr_centertime;
 cvar_t		*scr_showpause;
-cvar_t		*scr_printspeed;
 
 cvar_t		*scr_netgraph;
 cvar_t		*scr_timegraph;
@@ -55,6 +52,8 @@ cvar_t		*scr_debuggraph;
 cvar_t		*scr_graphheight;
 cvar_t		*scr_graphscale;
 cvar_t		*scr_graphshift;
+
+cvar_t		*scr_devpause;
 
 char		crosshair_pic[MAX_QPATH];
 int			crosshair_width, crosshair_height;
@@ -418,17 +417,16 @@ SCR_Init
 */
 void SCR_Init()
 {
-	scr_viewsize = Cvar_Get( "viewsize", "100", CVAR_ARCHIVE );
-	scr_conspeed = Cvar_Get( "scr_conspeed", "3", 0 );
 	scr_showpause = Cvar_Get( "scr_showpause", "1", 0 );
 	scr_centertime = Cvar_Get( "scr_centertime", "2.5", 0 );
-	scr_printspeed = Cvar_Get( "scr_printspeed", "8", 0 );
-	scr_netgraph = Cvar_Get( "netgraph", "0", 0 );
-	scr_timegraph = Cvar_Get( "timegraph", "0", 0 );
-	scr_debuggraph = Cvar_Get( "debuggraph", "0", 0 );
-	scr_graphheight = Cvar_Get( "graphheight", "32", 0 );
-	scr_graphscale = Cvar_Get( "graphscale", "1", 0 );
-	scr_graphshift = Cvar_Get( "graphshift", "0", 0 );
+	scr_netgraph = Cvar_Get( "scr_netgraph", "0", 0 );
+	scr_timegraph = Cvar_Get( "scr_timegraph", "0", 0 );
+	scr_debuggraph = Cvar_Get( "scr_debuggraph", "0", 0 );
+	scr_graphheight = Cvar_Get( "scr_graphheight", "32", 0 );
+	scr_graphscale = Cvar_Get( "scr_graphscale", "1", 0 );
+	scr_graphshift = Cvar_Get( "scr_graphshift", "0", 0 );
+
+	scr_devpause = Cvar_Get( "scr_devpause", "0", 0 );
 
 	Cmd_AddCommand( "timerefresh", SCR_TimeRefresh_f );
 	Cmd_AddCommand( "loading", SCR_Loading_f );
@@ -583,16 +581,18 @@ void SCR_ToggleDevUI()
 	if ( cls.key_dest == key_console )
 	{
 		M_ForceMenuOff();
-	//	Cvar_SetBool( cl_paused, false );
+		if ( scr_devpause->GetBool() ) {
+			Cvar_SetBool( cl_paused, false );
+		}
 	}
 	else
 	{
 		M_ForceMenuOff();
 		cls.key_dest = key_console;
 
-	//	if ( Cvar_FindGetFloat( "maxclients" ) == 1 && Com_ServerState() ) {
-	//		Cvar_SetBool( cl_paused, true );
-	//	}
+		if ( scr_devpause->GetBool() && Cvar_FindGetFloat( "maxclients" ) == 1 && Com_ServerState() ) {
+			Cvar_SetBool( cl_paused, true );
+		}
 	}
 
 	scr.imgui_devui = !scr.imgui_devui;

@@ -52,6 +52,7 @@ struct console2_t
 	notify_t				notifies[NUM_NOTIFIES];		// cls.realtime time the line was generated, for transparent notify lines
 
 	bool					scrollToBottom;
+	bool					completionPopup;
 
 	// so we can use the console instantly from main
 	console2_t()
@@ -76,6 +77,22 @@ static int Con2_TextEditCallback( ImGuiInputTextCallbackData *data )
 {
 	switch ( data->EventFlag )
 	{
+	case ImGuiInputTextFlags_CallbackAlways:
+	{
+		ImGui::BeginTooltip();
+
+		// find all potential matches
+		for ( cvar_t *pVar = cvar_vars; pVar; pVar = pVar->pNext )
+		{
+			if ( Q_strncmp( data->Buf, pVar->name.c_str(), data->BufTextLen ) == 0 )
+			{
+				ImGui::TextUnformatted( pVar->name.c_str() );
+			}
+		}
+
+		ImGui::EndTooltip();
+	}
+	break;
 	case ImGuiInputTextFlags_CallbackCompletion:
 	{
 		const char *cmd = Cmd_CompleteCommand( data->Buf );
@@ -253,7 +270,7 @@ void Con2_ShowConsole( bool *pOpen )
 				{
 					if ( *i == '\n' )
 					{
-						chunkSize -= ( chunkSize - static_cast<int>( i - newStart ) );
+						chunkSize -= ( chunkSize - static_cast<int>( i - newStart ) ) - 1;
 						newEnd = i;
 						break;
 					}
@@ -262,7 +279,7 @@ void Con2_ShowConsole( bool *pOpen )
 				ImGui::TextUnformatted( newStart, newEnd );
 
 				amountLeft -= chunkSize;
-				newStart += chunkSize + 1;
+				newStart += chunkSize;
 
 				if ( amountLeft <= 0 )
 				{
@@ -295,8 +312,11 @@ void Con2_ShowConsole( bool *pOpen )
 	ImGui::EndChild();
 
 	// input line
+	const ImGuiInputTextFlags inputFlags =
+		ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion |
+		ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackAlways;
+
 	bool reclaimFocus = false;
-	ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory;
 
 	ImGui::PushItemWidth( ImGui::GetWindowContentRegionWidth() - 64.0f );
 
@@ -309,17 +329,17 @@ void Con2_ShowConsole( bool *pOpen )
 
 	ImGui::PopItemWidth();
 
+	// auto-focus on window apparition
+	ImGui::SetItemDefaultFocus();
+	if ( reclaimFocus ) {
+		ImGui::SetKeyboardFocusHere( -1 ); // Auto focus previous widget
+	}
+
 	ImGui::SameLine();
 
 	if ( ImGui::Button( "Submit" ) )
 	{
 		Con2_Submit();
-	}
-
-	// auto-focus on window apparition
-	ImGui::SetItemDefaultFocus();
-	if ( reclaimFocus ) {
-		ImGui::SetKeyboardFocusHere( -1 ); // Auto focus previous widget
 	}
 
 	ImGui::End();

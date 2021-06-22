@@ -412,7 +412,6 @@ struct vrect_t
 	int x, y, width, height;
 };
 
-extern cvar_t *scr_viewsize;
 extern cvar_t *cl_crosshair;
 
 extern vrect_t scr_vrect;		// position of render window
