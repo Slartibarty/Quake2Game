@@ -1,14 +1,20 @@
-//=================================================================================================
-// Quake script command processing module
-//
-// Provides command text buffering (Cbuf) and command execution (Cmd)
-//=================================================================================================
+/*
+===================================================================================================
+
+	Quake script command processing module
+
+	Provides command text buffering (Cbuf) and command execution (Cmd)
+
+===================================================================================================
+*/
 
 #pragma once
 
-//-------------------------------------------------------------------------------------------------
-// Command buffer
-//-------------------------------------------------------------------------------------------------
+/*
+===============================================================================
+	Command buffer
+===============================================================================
+*/
 
 /*
 
@@ -53,9 +59,11 @@ void Cbuf_InsertFromDefer( void );
 // These two functions are used to defer any pending commands while a map
 // is being loaded
 
-//-------------------------------------------------------------------------------------------------
-// Command Execution
-//-------------------------------------------------------------------------------------------------
+/*
+===============================================================================
+	Command execution
+===============================================================================
+*/
 
 /*
 
@@ -65,6 +73,18 @@ then searches for a command or variable that matches the first token.
 */
 
 typedef void ( *xcommand_t ) ( void );
+
+// HACK: would be nice to find a way to iterate through commands without having this be visible
+// this is only here to satisfy the console
+struct cmd_function_t
+{
+	cmd_function_t *	next;
+	const char *		name;
+	xcommand_t			function;
+};
+
+// possible commands to execute
+extern cmd_function_t *cmd_functions;
 
 void	Cmd_Init();
 void	Cmd_Shutdown();

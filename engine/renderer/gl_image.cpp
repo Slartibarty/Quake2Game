@@ -729,6 +729,8 @@ material_t *GL_FindMaterial( const char *name, bool managed /*= false*/ )
 		}
 	}
 
+	// TODO: Managed materials get their registration sequence melted here
+
 	material = GL_CreateMaterial( newname );
 	material->registration_sequence = managed ? -1 : tr.registrationSequence;
 

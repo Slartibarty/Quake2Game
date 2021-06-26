@@ -217,12 +217,8 @@ void Com_Error( const char *msg )
 
 	recursive = true;
 
-	// SLARTHACK: need to do something about the console and multi-line errors with colour tags
-	Com_Printf(
-		S_COLOR_RED "*******************************************************************************\n"
-		S_COLOR_RED "ERROR: %s\n"
-		S_COLOR_RED "*******************************************************************************\n", msg
-	);
+	Com_Printf( S_COLOR_RED "ERROR: %s\n", msg );
+
 	SV_Shutdown( va( S_COLOR_RED "Server crashed: %s\n", msg ), false );
 	CL_Drop();
 

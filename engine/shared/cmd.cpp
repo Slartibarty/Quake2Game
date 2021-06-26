@@ -466,26 +466,19 @@ void Cmd_Toggle_f()
 }
 
 /*
-=============================================================================
+===================================================================================================
 
-					COMMAND EXECUTION
+	Command execution
 
-=============================================================================
+===================================================================================================
 */
 
-struct cmd_function_t
-{
-	cmd_function_t	*next;
-	const char		*name;
-	xcommand_t		function;
-};
+static int		cmd_argc;
+static char *	cmd_argv[MAX_STRING_TOKENS];
+static char		cmd_args[MAX_STRING_CHARS];
 
-
-static	int			cmd_argc;
-static	char		*cmd_argv[MAX_STRING_TOKENS];
-static	char		cmd_args[MAX_STRING_CHARS];
-
-static	cmd_function_t	*cmd_functions;		// possible commands to execute
+// possible commands to execute
+cmd_function_t *cmd_functions;
 
 /*
 ============

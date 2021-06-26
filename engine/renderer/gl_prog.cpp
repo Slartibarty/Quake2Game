@@ -46,7 +46,7 @@ static bool CheckShader( GLuint shader, const char *filename )
 	if ( status == GL_TRUE ) {
 		Com_Printf( "Successfully compiled \"%s\"\n", filename );
 	} else {
-		Com_Printf( "ERROR: failed to compile shader \"%s\"\n", filename );
+		Com_Printf( S_COLOR_RED "ERROR: failed to compile shader \"%s\"\n", filename );
 	}
 
 	if ( logLength > 1 ) {

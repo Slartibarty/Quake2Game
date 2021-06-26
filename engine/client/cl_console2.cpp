@@ -3,6 +3,9 @@
 
 	ImGui console
 
+	FIXME: you can only browse history after you've submitted something, this is due to the
+	placement of con.completionPopup after Con2_Submit
+
 ===================================================================================================
 */
 
@@ -10,14 +13,20 @@
 
 #include <vector>
 #include <string>
+#include <array>
+#include <algorithm>
 
 #include "imgui.h"
 #include "q_imgui_imp.h"
 
-#define NUM_NOTIFIES	8
+#define MAX_MATCHES		9
+#define MAX_NOTIFIES	8
+
+static constexpr uint32 CmdColor = colors::green; // PackColor( 192, 255, 192, 255 )
 
 static cvar_t *con_notifytime;
 
+// Unfinished
 class qCircularBuffer
 {
 	uint m_count;
@@ -41,18 +50,28 @@ struct editLine_t
 	}
 };
 
+// TODO: Experiment with a circular buffer for the history lines and main buffer
 struct console2_t
 {
+	// the main console buffer, infinitely expanding (bad?)
 	std::string				buffer;
 
+	// our input line, and infinitely expanding history (bad?)
 	editLine_t				editLine;
 	std::vector<editLine_t>	historyLines;
 	int						historyPosition = -1;
 
-	notify_t				notifies[NUM_NOTIFIES];		// cls.realtime time the line was generated, for transparent notify lines
+	// alphabetically sorted lists of matching commands and cvars
+	std::vector<std::string_view>	entryMatches;
+	uint					beginCvars = 0;				// contains the offset to the cvars in the matches list, so we can sort seperately
+	int						completionPosition = -1;
+
+	notify_t				notifies[MAX_NOTIFIES];		// cls.realtime time the line was generated, for transparent notify lines
 
 	bool					scrollToBottom;
 	bool					completionPopup;
+	bool					wordWrap;
+	bool					ignoreEdit;					// when true, CallbackEdit will be ignored once
 
 	// so we can use the console instantly from main
 	console2_t()
@@ -60,6 +79,8 @@ struct console2_t
 		// reserve 16384 characters by default
 		buffer.reserve( 16384 );
 		historyLines.reserve( 32 );
+
+		entryMatches.reserve( 64 );
 	}
 
 };
@@ -77,20 +98,15 @@ static int Con2_TextEditCallback( ImGuiInputTextCallbackData *data )
 {
 	switch ( data->EventFlag )
 	{
-	case ImGuiInputTextFlags_CallbackAlways:
+	case ImGuiInputTextFlags_CallbackEdit:
 	{
-		ImGui::BeginTooltip();
-
-		// find all potential matches
-		for ( cvar_t *pVar = cvar_vars; pVar; pVar = pVar->pNext )
+		if ( !con.ignoreEdit && data->BufTextLen != 0 )
 		{
-			if ( Q_strncmp( data->Buf, pVar->name.c_str(), data->BufTextLen ) == 0 )
-			{
-				ImGui::TextUnformatted( pVar->name.c_str() );
-			}
+			con.completionPosition = -1;
+			// FIXME: THIS IS NEVER SET TO FALSE EVER AGAIN! SO THE USER CANT BROWSE HISTORY!!!!!
+			con.completionPopup = true;
 		}
-
-		ImGui::EndTooltip();
+		con.ignoreEdit = false;
 	}
 	break;
 	case ImGuiInputTextFlags_CallbackCompletion:
@@ -110,7 +126,37 @@ static int Con2_TextEditCallback( ImGuiInputTextCallbackData *data )
 	break;
 	case ImGuiInputTextFlags_CallbackHistory:
 	{
-		if ( !con.historyLines.empty() )
+		if ( con.completionPopup )
+		{
+			con.ignoreEdit = true;
+
+			switch ( data->EventKey )
+			{
+			case ImGuiKey_UpArrow:
+				if ( con.completionPosition == -1 ) {
+					// Start at the end
+					con.completionPosition = (int64)con.entryMatches.size() - 1;
+				}
+				else if ( con.completionPosition > 0 ) {
+					// Decrement
+					--con.completionPosition;
+				}
+				break;
+			case ImGuiKey_DownArrow:
+				if ( con.completionPosition < (int64)con.entryMatches.size() ) {
+					++con.completionPosition;
+				}
+				if ( con.completionPosition == (int64)con.entryMatches.size() ) {
+					--con.completionPosition;
+				}
+				break;
+			}
+
+			const char *match_str = con.completionPosition >= 0 ? con.entryMatches[con.completionPosition].data() : "";
+			data->DeleteChars( 0, data->BufTextLen );
+			data->InsertChars( 0, match_str );
+		}
+		else if ( !con.historyLines.empty() )
 		{
 			switch ( data->EventKey )
 			{
@@ -176,6 +222,7 @@ Submits the text stored in con.editLine, then clears it
 */
 static void Con2_Submit()
 {
+	con.completionPopup = false;
 	con.historyPosition = -1;
 
 	// don't push back if the last history content was this very command
@@ -206,6 +253,59 @@ static void Con2_Submit()
 	con.editLine.Clear();
 }
 
+int StringSort( const void *p1, const void *p2 )
+{
+	return Q_strcmp( (const char *)p1, (const char *)p2 );
+}
+
+/*
+========================
+Con2_RegenerateMatches
+
+Finds all matches for a given partially complete string
+========================
+*/
+void Con2_RegenerateMatches( const char *partial )
+{
+	ASSUME( partial );
+
+	con.entryMatches.clear();
+
+	if ( !partial[0] )
+	{
+		return;
+	}
+
+	strlen_t partialLength = Q_strlen( partial );
+
+	// find command matches
+	for ( cmd_function_t *pCmd = cmd_functions; pCmd; pCmd = pCmd->next )
+	{
+		if ( Q_strncmp( partial, pCmd->name, partialLength ) == 0 )
+		{
+			con.entryMatches.push_back( pCmd->name );
+		}
+	}
+
+	std::sort( con.entryMatches.begin(), con.entryMatches.end() );
+
+	// index to the first cvar
+	con.beginCvars = static_cast<uint>( con.entryMatches.size() );
+
+	// find cvar matches
+	for ( cvar_t *pVar = cvar_vars; pVar; pVar = pVar->pNext )
+	{
+		if ( Q_strncmp( partial, pVar->GetName(), partialLength ) == 0 )
+		{
+			con.entryMatches.push_back( pVar->GetName() );
+		}
+	}
+
+	std::sort( con.entryMatches.begin() + con.beginCvars, con.entryMatches.end() );
+
+	//qsort( matches, numMatches, sizeof( const char * ), StringSort );
+}
+
 /*
 ========================
 Con2_ShowConsole
@@ -220,9 +320,15 @@ void Con2_ShowConsole( bool *pOpen )
 	ImGui::SetNextWindowSize( ImVec2( 600.0f, 800.0f ), ImGuiCond_FirstUseEver );
 	if ( !ImGui::Begin( "Console", pOpen ) )
 	{
+		ImGui::PopStyleVar();
 		ImGui::End();
 		return;
 	}
+
+	ImGui::PopStyleVar();
+
+	// stash the bottom of this window for the completion prompt
+	float windowBottom = ImGui::GetItemRectMax().y;
 
 	if ( ImGui::BeginPopupContextItem() )
 	{
@@ -233,10 +339,25 @@ void Con2_ShowConsole( bool *pOpen )
 		ImGui::EndPopup();
 	}
 
-	// Reserve enough left-over height for 1 separator + 1 input text
-	ImGui::BeginChild( "ScrollingRegion", ImVec2( 0.0f, -ImGui::GetFrameHeightWithSpacing() ), true, ImGuiWindowFlags_AlwaysAutoResize );
+	// save the old wordwrap state
+	bool wordWrap = con.wordWrap;
 
-	ImGui::PushTextWrapPos( 0.0f );
+	ImGuiWindowFlags scrollFlags = ImGuiWindowFlags_AlwaysAutoResize;
+	scrollFlags |= wordWrap ? 0 : ImGuiWindowFlags_HorizontalScrollbar;
+
+	// Reserve enough left-over height for 1 separator + 1 input text
+	ImGui::BeginChild( "ScrollingRegion", ImVec2( 0.0f, -ImGui::GetFrameHeightWithSpacing() ), true, scrollFlags );
+
+	if ( ImGui::BeginPopupContextWindow() )
+	{
+		ImGui::Checkbox( "Word wrap", &con.wordWrap );
+		ImGui::EndPopup();
+	}
+
+	if ( wordWrap )
+	{
+		ImGui::PushTextWrapPos( 0.0f );
+	}
 
 	if ( !con.buffer.empty() )
 	{
@@ -249,7 +370,6 @@ void Con2_ShowConsole( bool *pOpen )
 		{
 			// draw the buffer in 16384 chunks so we can avoid over-running the max vertex count of 65536
 			// (16384 * 4 == 65536)
-			// TODO: ImGui's TextUnformatted prints to a new line
 			const char *newStart = bufferStart;
 
 			int chunkSize = 16384;
@@ -300,7 +420,10 @@ void Con2_ShowConsole( bool *pOpen )
 		}
 	}
 
-	ImGui::PopTextWrapPos();
+	if ( wordWrap )
+	{
+		ImGui::PopTextWrapPos();
+	}
 
 	if ( con.scrollToBottom || ImGui::GetScrollY() >= ImGui::GetScrollMaxY() )
 	{
@@ -314,7 +437,7 @@ void Con2_ShowConsole( bool *pOpen )
 	// input line
 	const ImGuiInputTextFlags inputFlags =
 		ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion |
-		ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackAlways;
+		ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackEdit;
 
 	bool reclaimFocus = false;
 
@@ -342,9 +465,58 @@ void Con2_ShowConsole( bool *pOpen )
 		Con2_Submit();
 	}
 
-	ImGui::End();
+	if ( con.completionPopup )
+	{
+		const ImGuiWindowFlags popFlags =
+			ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus |
+			ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize;
 
-	ImGui::PopStyleVar();
+		ImVec2 popupPosition = ImVec2( ImGui::GetItemRectMin().x, ImGui::GetItemRectMin().y );
+		//ImGui::SetNextWindowPos( popupPosition );
+		//ImGui::SetNextWindowSize( ImVec2( 200.0f, 200.0f ) );
+
+		if ( !con.ignoreEdit )
+		{
+			Con2_RegenerateMatches( con.editLine.data );
+		}
+
+		const uint totalMatches = static_cast<uint>( con.entryMatches.size() );
+
+		// the command popup should only list the first n entries, starting with commands
+		if ( totalMatches != 0 && ImGui::Begin( "CommandPopup", nullptr, popFlags ) )
+		{
+			uint i = 0;
+
+			// loop for the cmds, they're printed green
+			ImGui::PushStyleColor( ImGuiCol_Text, CmdColor );
+			for ( ; i < (uint)con.beginCvars && i < MAX_MATCHES; ++i )
+			{
+				ImGui::Selectable( con.entryMatches[i].data() );
+			}
+			ImGui::PopStyleColor();
+
+			// loop for the cvars
+			for ( ; i < (uint)con.entryMatches.size() && i < MAX_MATCHES; ++i )
+			{
+				ImGui::Selectable( con.entryMatches[i].data() );
+			}
+
+			if ( i >= MAX_MATCHES )
+			{
+				ImGui::Selectable( "...", false, ImGuiSelectableFlags_Disabled );
+			}
+		}
+		if ( totalMatches != 0 )
+		{
+			ImGui::End();
+		}
+	}
+	/*else
+	{
+		// TODO: show history?
+	}*/
+
+	ImGui::End();
 }
 
 /*
@@ -383,7 +555,7 @@ void Con2_ShowNotify()
 
 	ImGui::Begin( "Notify Area", nullptr, windowFlags );
 
-	for ( int i = 0; i < NUM_NOTIFIES; ++i )
+	for ( int i = 0; i < MAX_NOTIFIES; ++i )
 	{
 		notify_t &notify = con.notifies[i];
 
@@ -412,7 +584,7 @@ void Con2_ShowNotify()
 
 void Con2_ClearNotify()
 {
-	for ( int i = 0; i < NUM_NOTIFIES; ++i )
+	for ( int i = 0; i < MAX_NOTIFIES; ++i )
 	{
 		con.notifies[i].timeLeft = 0.0;
 	}
