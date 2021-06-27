@@ -285,38 +285,6 @@ void VID_Init();
 void VID_Shutdown();
 
 //
-// cl_console
-//
-#if 0
-void Con_CheckResize();
-void Con_Init();
-void Con_DrawConsole( float frac );
-void Con_Print( const char *txt );
-void Con_DrawNotify();
-void Con_ClearNotify();
-void Con_ToggleConsole_f();
-
-bool Con_IsInitialized();
-
-// Q3 added
-void Con_PageUp();
-void Con_PageDown();
-void Con_Top();
-void Con_Bottom();
-#endif
-
-//
-// cl_console2
-//
-
-void Con2_Init();
-void Con2_ShowConsole( bool *pOpen );
-void Con2_ShowNotify();
-void Con2_ClearNotify();
-
-void Con2_Print( const char *txt );
-
-//
 // cl_main
 //
 void CL_Init();
@@ -516,3 +484,39 @@ void CDAudio_Play( int track, bool looping );
 void CDAudio_Stop();
 void CDAudio_Update();
 void CDAudio_Activate( bool active );
+
+/*
+===================================================================================================
+
+	Graphical user interface elements
+
+===================================================================================================
+*/
+
+/*
+=======================================
+	Console
+=======================================
+*/
+
+namespace UI::Console
+{
+	void Init();
+	void ShowConsole( bool *pOpen );
+
+	void ShowNotify();
+	void ClearNotify();
+
+	void Print( const char *txt );
+}
+
+/*
+=======================================
+	Material Editor
+=======================================
+*/
+
+namespace UI::MatEdit
+{
+	void ShowMaterialEditor( bool *pOpen );
+}

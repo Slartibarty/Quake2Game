@@ -9,6 +9,7 @@
 #include "core.h"
 
 #include <io.h>
+
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <Windows.h>
@@ -114,7 +115,13 @@ void Sys_DeleteFile( const char *filename )
 
 void Sys_CreateDirectory( const char *path )
 {
-	CreateDirectoryA( path, NULL );
+	CreateDirectoryA( path, nullptr );
+}
+
+void Sys_GetWorkingDirectory( char *path, uint length )
+{
+	GetCurrentDirectoryA( length, path );
+	Str_FixSlashes( path );
 }
 
 /*
@@ -251,9 +258,9 @@ char *Sys_FindFirst (const char *path, unsigned musthave, unsigned canthave )
 	COM_FilePath (path, findbase);
 	findhandle = _findfirst (path, &findinfo);
 	if (findhandle == -1)
-		return NULL;
+		return nullptr;
 	if ( !CompareAttributes( findinfo.attrib, musthave, canthave ) )
-		return NULL;
+		return nullptr;
 	Q_sprintf_s (findpath, "%s/%s", findbase, findinfo.name);
 	return findpath;
 }
@@ -263,11 +270,11 @@ char *Sys_FindNext (unsigned musthave, unsigned canthave)
 	struct _finddata_t findinfo;
 
 	if (findhandle == -1)
-		return NULL;
+		return nullptr;
 	if (_findnext (findhandle, &findinfo) == -1)
-		return NULL;
+		return nullptr;
 	if ( !CompareAttributes( findinfo.attrib, musthave, canthave ) )
-		return NULL;
+		return nullptr;
 
 	Q_sprintf_s (findpath, "%s/%s", findbase, findinfo.name);
 	return findpath;
@@ -278,4 +285,66 @@ void Sys_FindClose (void)
 	if (findhandle != -1)
 		_findclose (findhandle);
 	findhandle = 0;
+}
+
+/*
+=======================================
+	File dialog
+=======================================
+*/
+
+void Sys_FileDialog()
+{
+#if 0
+	IFileOpenDialog *pDialog;
+	HRESULT hr = CoCreateInstance(
+		CLSID_FileOpenDialog,
+		nullptr,
+		CLSCTX_INPROC_SERVER,
+		IID_PPV_ARGS( &pDialog ) );
+
+	const COMDLG_FILTERSPEC fileDialogSaveTypes
+	{
+		L"JaffaQuake Material (*.mat)", L"*.mat"
+	};
+
+	if ( SUCCEEDED( hr ) )
+	{
+		DWORD flags;
+		hr = pDialog->GetOptions( &flags );
+		flags |= FOS_FORCEFILESYSTEM;
+		hr = pDialog->SetOptions( flags );
+		hr = pDialog->SetFileTypes( 1, &fileDialogSaveTypes );
+
+		//hr = pDialog->SetFileTypeIndex( INDEX_WORDDOC );
+
+		//hr = pDialog->SetDefaultExtension( L"mat" );
+
+		hr = pDialog->Show( nullptr );
+		if ( SUCCEEDED( hr ) )
+		{
+			IShellItem *pResult;
+			hr = pDialog->GetResult( &pResult );
+			if ( SUCCEEDED( hr ) )
+			{
+				LPWSTR pFilePath = nullptr;
+				hr = pResult->GetDisplayName( SIGDN_FILESYSPATH, &pFilePath );
+				if ( SUCCEEDED( hr ) )
+				{
+					TaskDialog( nullptr,
+						nullptr,
+						L"CommonFileDialogApp",
+						pFilePath,
+						nullptr,
+						TDCBF_OK_BUTTON,
+						TD_INFORMATION_ICON,
+						nullptr );
+					CoTaskMemFree( pFilePath );
+				}
+				pResult->Release();
+			}
+		}
+		pDialog->Release();
+	}
+#endif
 }

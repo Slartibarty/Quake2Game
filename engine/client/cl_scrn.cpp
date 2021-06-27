@@ -63,9 +63,10 @@ void SCR_Loading_f();
 
 struct screenGlobals_t
 {
-	bool	imgui_devui;
-	bool	imgui_showDemo;
-	bool	imgui_console;
+	bool	ui_devui;
+	bool	ui_showDemo;
+	bool	ui_console;
+	bool	ui_matEdit;
 } scr;
 
 struct qHistoryStack
@@ -302,7 +303,7 @@ void SCR_CenterPrint( const char *str )
 	}
 
 	Com_Print( "\n\n\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\37\n\n" );
-	Con2_ClearNotify();
+	UI::Console::ClearNotify();
 }
 
 static void SCR_DrawCenterString()
@@ -434,7 +435,7 @@ void SCR_Init()
 	SCR_InitImGui();
 
 	// always show the console by default
-	scr.imgui_console = true;
+	scr.ui_console = true;
 
 	scr_initialized = true;
 }
@@ -541,8 +542,9 @@ static void SCR_DrawDevMenu()
 	{
 		if ( ImGui::BeginMenu( "DevUI" ) )
 		{
-			ImGui::Checkbox( "Demo", &scr.imgui_showDemo );
-			ImGui::Checkbox( "Console", &scr.imgui_console );
+			ImGui::MenuItem( "Demo", nullptr, &scr.ui_showDemo );
+			ImGui::MenuItem( "Console", nullptr, &scr.ui_console );
+			ImGui::MenuItem( "Material Editor", nullptr, &scr.ui_matEdit );
 
 			ImGui::EndMenu();
 		}
@@ -576,7 +578,7 @@ void SCR_ToggleDevUI()
 		return;
 	}
 
-	Con2_ClearNotify();
+	UI::Console::ClearNotify();
 
 	if ( cls.key_dest == key_console )
 	{
@@ -595,7 +597,7 @@ void SCR_ToggleDevUI()
 		}
 	}
 
-	scr.imgui_devui = !scr.imgui_devui;
+	scr.ui_devui = !scr.ui_devui;
 }
 
 /*
@@ -607,21 +609,25 @@ Draws ImGui elements of the screen
 */
 static void SCR_DrawImGui()
 {
-	if ( !scr.imgui_devui ) {
+	if ( !scr.ui_devui ) {
 		// if we're not drawing the dev UI, draw the console notify area
-		Con2_ShowNotify();
+		UI::Console::ShowNotify();
 		return;
 	}
 
 	// dev menu is always active in dev UI mode
 	SCR_DrawDevMenu();
 
-	if ( scr.imgui_showDemo ) {
-		ImGui::ShowDemoWindow( &scr.imgui_showDemo );
+	if ( scr.ui_showDemo ) {
+		ImGui::ShowDemoWindow( &scr.ui_showDemo );
 	}
 
-	if ( scr.imgui_console ) {
-		Con2_ShowConsole( &scr.imgui_console );
+	if ( scr.ui_console ) {
+		UI::Console::ShowConsole( &scr.ui_console );
+	}
+
+	if ( scr.ui_matEdit ) {
+		UI::MatEdit::ShowMaterialEditor( &scr.ui_matEdit );
 	}
 
 	ImGui::Render();
@@ -675,7 +681,7 @@ SCR_EndLoadingPlaque
 void SCR_EndLoadingPlaque()
 {
 	cls.disable_screen = 0.0f;
-	Con2_ClearNotify();
+	UI::Console::ClearNotify();
 }
 
 /*

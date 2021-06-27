@@ -1717,7 +1717,7 @@ void CL_Init (void)
 
 	// all archived variables will now be loaded
 
-	Con2_Init();
+	UI::Console::Init();
 #if defined __linux__ || defined __sgi
 	S_Init();
 	VID_Init();

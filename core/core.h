@@ -109,6 +109,7 @@ size_t	Hunk_End();
 void	Sys_CopyFile( const char *src, const char *dst );
 void	Sys_DeleteFile( const char *filename );
 void	Sys_CreateDirectory( const char *path );
+void	Sys_GetWorkingDirectory( char *path, uint length );
 
 /*
 =======================================
@@ -145,6 +146,14 @@ int		Sys_Milliseconds();
 char *	Sys_FindFirst( const char *path, unsigned musthave, unsigned canthave );
 char *	Sys_FindNext( unsigned musthave, unsigned canthave );
 void	Sys_FindClose( void );
+
+/*
+=======================================
+	File dialog
+=======================================
+*/
+
+
 
 /*
 ===================================================================================================

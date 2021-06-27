@@ -8,6 +8,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <CommCtrl.h>
 #include "../client/winquake.h"	// Hack?
 
 #include "sys.h"
@@ -42,6 +43,16 @@ void Sys_OutputDebugString( const char *msg )
 void Sys_Error( const char *msg )
 {
 	Sys_OutputDebugString( msg );
+
+	/*TaskDialog(
+		nullptr,
+		nullptr,
+		L"Engine Error",
+		L"The game crashed!",
+		L"Bruh",
+		TDCBF_OK_BUTTON,
+		TD_ERROR_ICON,
+		nullptr );*/
 
 	MessageBoxA( nullptr, msg, "Engine Error", MB_OK | MB_ICONERROR | MB_TOPMOST );
 

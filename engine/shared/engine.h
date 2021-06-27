@@ -129,8 +129,12 @@ void CL_Init();
 void CL_Drop();
 void CL_Shutdown();
 void CL_Frame( int msec );
-void Con2_Print( const char *text );
 void SCR_BeginLoadingPlaque();
+
+namespace UI::Console
+{
+	void Print( const char *text );
+}
 
 // this is in the client code, but can be used for debugging from server
 void SCR_DebugGraph( float value, uint32 color );

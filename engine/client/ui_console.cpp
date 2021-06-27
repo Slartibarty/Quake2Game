@@ -1,7 +1,7 @@
 /*
 ===================================================================================================
 
-	ImGui console
+	ImGui console and notify area
 
 	FIXME: you can only browse history after you've submitted something, this is due to the
 	placement of con.completionPopup after Con2_Submit
@@ -19,14 +19,17 @@
 #include "imgui.h"
 #include "q_imgui_imp.h"
 
-#define MAX_MATCHES		9
-#define MAX_NOTIFIES	8
+namespace UI::Console
+{
+
+static constexpr uint MAX_MATCHES		= 9;	// 10th match is "..."
+static constexpr uint MAX_NOTIFIES		= 8;	// should be a cvar
 
 static constexpr uint32 CmdColor = colors::green; // PackColor( 192, 255, 192, 255 )
 
 static cvar_t *con_notifytime;
 
-// Unfinished
+// unfinished
 class qCircularBuffer
 {
 	uint m_count;
@@ -89,12 +92,12 @@ static console2_t con;
 
 //=================================================================================================
 
-void Con2_Print( const char *txt )
+void Print( const char *txt )
 {
 	con.buffer.append( txt );
 }
 
-static int Con2_TextEditCallback( ImGuiInputTextCallbackData *data )
+static int TextEditCallback( ImGuiInputTextCallbackData *data )
 {
 	switch ( data->EventFlag )
 	{
@@ -103,7 +106,6 @@ static int Con2_TextEditCallback( ImGuiInputTextCallbackData *data )
 		if ( !con.ignoreEdit && data->BufTextLen != 0 )
 		{
 			con.completionPosition = -1;
-			// FIXME: THIS IS NEVER SET TO FALSE EVER AGAIN! SO THE USER CANT BROWSE HISTORY!!!!!
 			con.completionPopup = true;
 		}
 		con.ignoreEdit = false;
@@ -191,16 +193,16 @@ static int Con2_TextEditCallback( ImGuiInputTextCallbackData *data )
 	return 0;
 }
 
-static void Con2_Clear_f()
+static void Clear_f()
 {
 	con.buffer.clear();
 }
 
-void Con2_Init()
+void Init()
 {
 	con_notifytime = Cvar_Get( "con_notifytime", "3", 0 );
 
-	Cmd_AddCommand( "clear", Con2_Clear_f );
+	Cmd_AddCommand( "clear", Clear_f );
 
 	static bool once;
 
@@ -214,13 +216,13 @@ void Con2_Init()
 
 /*
 ========================
-Con2_Submit
+Submit
 Public
 
 Submits the text stored in con.editLine, then clears it
 ========================
 */
-static void Con2_Submit()
+static void Submit()
 {
 	con.completionPopup = false;
 	con.historyPosition = -1;
@@ -260,12 +262,12 @@ int StringSort( const void *p1, const void *p2 )
 
 /*
 ========================
-Con2_RegenerateMatches
+RegenerateMatches
 
 Finds all matches for a given partially complete string
 ========================
 */
-void Con2_RegenerateMatches( const char *partial )
+static void RegenerateMatches( const char *partial )
 {
 	ASSUME( partial );
 
@@ -308,12 +310,12 @@ void Con2_RegenerateMatches( const char *partial )
 
 /*
 ========================
-Con2_ShowConsole
+ShowConsole
 
 Draws the console using ImGui
 ========================
 */
-void Con2_ShowConsole( bool *pOpen )
+void ShowConsole( bool *pOpen )
 {
 	ImGui::PushStyleVar( ImGuiStyleVar_WindowMinSize, ImVec2( 330.0f, 250.0f ) );
 
@@ -327,9 +329,6 @@ void Con2_ShowConsole( bool *pOpen )
 
 	ImGui::PopStyleVar();
 
-	// stash the bottom of this window for the completion prompt
-	float windowBottom = ImGui::GetItemRectMax().y;
-
 	if ( ImGui::BeginPopupContextItem() )
 	{
 		if ( ImGui::MenuItem( "Close Console" ) )
@@ -342,8 +341,7 @@ void Con2_ShowConsole( bool *pOpen )
 	// save the old wordwrap state
 	bool wordWrap = con.wordWrap;
 
-	ImGuiWindowFlags scrollFlags = ImGuiWindowFlags_AlwaysAutoResize;
-	scrollFlags |= wordWrap ? 0 : ImGuiWindowFlags_HorizontalScrollbar;
+	ImGuiWindowFlags scrollFlags = wordWrap ? 0 : ImGuiWindowFlags_HorizontalScrollbar;
 
 	// Reserve enough left-over height for 1 separator + 1 input text
 	ImGui::BeginChild( "ScrollingRegion", ImVec2( 0.0f, -ImGui::GetFrameHeightWithSpacing() ), true, scrollFlags );
@@ -439,30 +437,36 @@ void Con2_ShowConsole( bool *pOpen )
 		ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion |
 		ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackEdit;
 
-	bool reclaimFocus = false;
+	// steal focus from the window upon opening, no matter what
+	bool focusOnInput = ImGui::IsWindowAppearing() ? true : false;
 
 	ImGui::PushItemWidth( ImGui::GetWindowContentRegionWidth() - 64.0f );
 
-	if ( ImGui::InputText( "##Input", con.editLine.data, sizeof( con.editLine.data ), inputFlags, Con2_TextEditCallback, nullptr ) )
+	if ( ImGui::InputText( "##Input", con.editLine.data, sizeof( con.editLine.data ), inputFlags, TextEditCallback, nullptr ) )
 	{
-		Con2_Submit();
-
-		reclaimFocus = true;
+		Submit();
+		focusOnInput = true;
 	}
 
 	ImGui::PopItemWidth();
 
-	// auto-focus on window apparition
+	// set the input text as the default item
 	ImGui::SetItemDefaultFocus();
-	if ( reclaimFocus ) {
-		ImGui::SetKeyboardFocusHere( -1 ); // Auto focus previous widget
-	}
+
+	// store the bottom left position of the input window, then add the spacing X Y
+	const ImVec2 popupPosition( ImGui::GetItemRectMin().x - ImGui::GetStyle().ItemSpacing.x, ImGui::GetItemRectMax().y + ImGui::GetStyle().ItemSpacing.y + 5.0f );
 
 	ImGui::SameLine();
 
 	if ( ImGui::Button( "Submit" ) )
 	{
-		Con2_Submit();
+		Submit();
+		focusOnInput = true;
+	}
+
+	if ( focusOnInput )
+	{
+		ImGui::SetKeyboardFocusHere( 2 );
 	}
 
 	if ( con.completionPopup )
@@ -471,43 +475,42 @@ void Con2_ShowConsole( bool *pOpen )
 			ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus |
 			ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize;
 
-		ImVec2 popupPosition = ImVec2( ImGui::GetItemRectMin().x, ImGui::GetItemRectMin().y );
-		//ImGui::SetNextWindowPos( popupPosition );
-		//ImGui::SetNextWindowSize( ImVec2( 200.0f, 200.0f ) );
-
 		if ( !con.ignoreEdit )
 		{
-			Con2_RegenerateMatches( con.editLine.data );
+			RegenerateMatches( con.editLine.data );
 		}
 
 		const uint totalMatches = static_cast<uint>( con.entryMatches.size() );
 
-		// the command popup should only list the first n entries, starting with commands
-		if ( totalMatches != 0 && ImGui::Begin( "CommandPopup", nullptr, popFlags ) )
-		{
-			uint i = 0;
-
-			// loop for the cmds, they're printed green
-			ImGui::PushStyleColor( ImGuiCol_Text, CmdColor );
-			for ( ; i < (uint)con.beginCvars && i < MAX_MATCHES; ++i )
-			{
-				ImGui::Selectable( con.entryMatches[i].data() );
-			}
-			ImGui::PopStyleColor();
-
-			// loop for the cvars
-			for ( ; i < (uint)con.entryMatches.size() && i < MAX_MATCHES; ++i )
-			{
-				ImGui::Selectable( con.entryMatches[i].data() );
-			}
-
-			if ( i >= MAX_MATCHES )
-			{
-				ImGui::Selectable( "...", false, ImGuiSelectableFlags_Disabled );
-			}
-		}
 		if ( totalMatches != 0 )
 		{
+			ImGui::SetNextWindowPos( popupPosition );
+
+			// the command popup should only list the first n entries, starting with commands
+			if ( ImGui::Begin( "CommandPopup", nullptr, popFlags ) )
+			{
+				uint i = 0;
+
+				// loop for the cmds, they're printed green
+				ImGui::PushStyleColor( ImGuiCol_Text, CmdColor );
+				for ( ; i < con.beginCvars && i < MAX_MATCHES; ++i )
+				{
+					ImGui::Selectable( con.entryMatches[i].data() );
+				}
+				ImGui::PopStyleColor();
+
+				// loop for the cvars
+				for ( ; i < (uint)con.entryMatches.size() && i < MAX_MATCHES; ++i )
+				{
+					ImGui::Selectable( con.entryMatches[i].data() );
+				}
+
+				if ( i >= MAX_MATCHES )
+				{
+					ImGui::Selectable( "...", false, ImGuiSelectableFlags_Disabled );
+				}
+			}
+
 			ImGui::End();
 		}
 	}
@@ -527,7 +530,7 @@ void Con2_ShowConsole( bool *pOpen )
 ===============================================================================
 */
 
-void Con2_ShowNotify()
+void ShowNotify()
 {
 	// only draw in dev mode
 	if ( !developer->GetBool() )
@@ -555,7 +558,7 @@ void Con2_ShowNotify()
 
 	ImGui::Begin( "Notify Area", nullptr, windowFlags );
 
-	for ( int i = 0; i < MAX_NOTIFIES; ++i )
+	for ( uint i = 0; i < MAX_NOTIFIES; ++i )
 	{
 		notify_t &notify = con.notifies[i];
 
@@ -582,10 +585,12 @@ void Con2_ShowNotify()
 	ImGui::End();
 }
 
-void Con2_ClearNotify()
+void ClearNotify()
 {
-	for ( int i = 0; i < MAX_NOTIFIES; ++i )
+	for ( uint i = 0; i < MAX_NOTIFIES; ++i )
 	{
 		con.notifies[i].timeLeft = 0.0;
 	}
 }
+
+} // namespace ui::console

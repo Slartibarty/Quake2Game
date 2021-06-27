@@ -320,7 +320,7 @@ void CL_PrepRefresh()
 
 	// clear any lines of console text
 
-	Con2_ClearNotify ();
+	UI::Console::ClearNotify ();
 
 	SCR_UpdateScreen();
 	cl.refresh_prepped = true;

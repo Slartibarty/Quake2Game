@@ -433,6 +433,15 @@ static int Operate()
 			AddMeshContribution( pMesh, contributions, materialNames );
 		}
 
+		// ensure the materials have .mat appended to them
+		for ( uint i = 0; i < (uint)materialNames.size(); ++i )
+		{
+			if ( !materialNames[i].ends_with( ".mat" ) )
+			{
+				materialNames[i].append( ".mat" );
+			}
+		}
+
 		Com_Printf(
 			"Scene contains %zu active materials\n",
 			//"Collected trisoup contributions from %zu meshes\n",
