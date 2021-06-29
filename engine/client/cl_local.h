@@ -400,8 +400,8 @@ void SCR_CenterPrint( const char *str );
 void SCR_BeginLoadingPlaque();
 void SCR_EndLoadingPlaque();
 
-void CL_AddNetgraph();
 void SCR_DebugGraph( float value, uint32 color );
+void CL_AddNetgraph();
 
 void SCR_TouchPics();
 

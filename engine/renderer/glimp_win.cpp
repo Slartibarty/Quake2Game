@@ -311,7 +311,7 @@ static void GLimp_CreateWindow( WNDPROC wndproc, int width, int height, bool ful
 	// Intel HD Graphics 3000 chips (my laptop) don't support this function
 	if ( WGLEW_ARB_pixel_format )
 	{
-		int multiSamples = 8;
+		const int multiSamples = Clamp( r_multisamples->GetInt(), 0, 8 );
 
 		const int attriblist[]
 		{

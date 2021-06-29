@@ -82,6 +82,28 @@ struct qHistoryStack
 ===================================================================================================
 */
 
+struct graphsamp_t
+{
+	float	value;
+	uint32	color;
+};
+
+static int			current;
+static graphsamp_t	values[1024];
+
+/*
+========================
+SCR_DebugGraph
+========================
+*/
+void SCR_DebugGraph( float value, uint32 color )
+{
+	values[current & 1023].value = value;
+	values[current & 1023].color = color;
+
+	++current;
+}
+
 /*
 ========================
 CL_AddNetgraph
@@ -117,28 +139,6 @@ void CL_AddNetgraph()
 		ping = 30;
 	}
 	SCR_DebugGraph( (float)ping, colors::green );
-}
-
-struct graphsamp_t
-{
-	float	value;
-	uint32	color;
-};
-
-static int			current;
-static graphsamp_t	values[1024];
-
-/*
-========================
-SCR_DebugGraph
-========================
-*/
-void SCR_DebugGraph( float value, uint32 color )
-{
-	values[current & 1023].value = value;
-	values[current & 1023].color = color;
-
-	++current;
 }
 
 /*
@@ -565,18 +565,10 @@ static void SCR_DrawDevMenu()
 // toggles the dev UI on or off
 void SCR_ToggleDevUI()
 {
-	SCR_EndLoadingPlaque(); // get rid of loading plaque
+	scr.ui_devui = !scr.ui_devui;
 
-	if ( cl.attractloop ) {
-		Cbuf_AddText( "killserver\n" );
-		return;
-	}
-
-	if ( cls.state == ca_disconnected ) {
-		// start the demo loop again
-		Cbuf_AddText( "d1\n" );
-		return;
-	}
+	// get rid of loading plaque
+	SCR_EndLoadingPlaque();
 
 	UI::Console::ClearNotify();
 
@@ -596,8 +588,6 @@ void SCR_ToggleDevUI()
 			Cvar_SetBool( cl_paused, true );
 		}
 	}
-
-	scr.ui_devui = !scr.ui_devui;
 }
 
 /*

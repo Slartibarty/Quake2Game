@@ -960,7 +960,6 @@ static menulist_s		s_options_alwaysrun_box;
 static menulist_s		s_options_invertmouse_box;
 static menulist_s		s_options_crosshair_box;
 static menuslider_s		s_options_sfxvolume_slider;
-static menulist_s		s_options_console_action;
 
 static void CrosshairFunc( void *unused )
 {
@@ -1098,7 +1097,6 @@ void Options_MenuInit( void )
 	Menu_AddItem( &s_options_menu, ( void * ) &s_options_crosshair_box );
 	Menu_AddItem( &s_options_menu, ( void * ) &s_options_customize_options_action );
 	Menu_AddItem( &s_options_menu, ( void * ) &s_options_defaults_action );
-	Menu_AddItem( &s_options_menu, ( void * ) &s_options_console_action );
 }
 
 void Options_MenuDraw (void)

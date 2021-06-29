@@ -279,10 +279,10 @@ void GL_DrawAliasFrameLerp (dmdl_t *paliashdr, float backlerp)
 /*
 ** R_CullAliasModel
 */
-static bool R_CullAliasModel( vec3_t bbox[8], entity_t *e )
+static bool R_CullAliasModel( vec3_t mins, vec3_t maxs, entity_t *e )
 {
 	int i;
-	vec3_t		mins, maxs;
+	vec3_t		bbox[8];
 	dmdl_t		*paliashdr;
 	vec3_t		vectors[3];
 	vec3_t		thismins, oldmins, thismaxs, oldmaxs;
@@ -430,12 +430,12 @@ void R_DrawAliasModel (entity_t *e)
 	int			i;
 	dmdl_t		*paliashdr;
 	float		an;
-	vec3_t		bbox[8];
+	vec3_t		mins, maxs;
 	material_t	*skin;
 
 	if ( !( e->flags & RF_WEAPONMODEL ) )
 	{
-		if ( R_CullAliasModel( bbox, e ) )
+		if ( R_CullAliasModel( mins, maxs, e ) )
 			return;
 	}
 
@@ -691,6 +691,8 @@ void R_DrawAliasModel (entity_t *e)
 	if ( !r_lerpmodels->GetBool() )
 		currententity->backlerp = 0;
 	GL_DrawAliasFrameLerp (paliashdr, currententity->backlerp);
+
+	//R_DrawBounds( mins, maxs );
 
 	GL_TexEnv( GL_REPLACE );
 	glShadeModel (GL_FLAT);

@@ -288,7 +288,7 @@ static void PF_StartSound( edict_t *entity, int channel, int sound_num, float vo
 	SV_StartSound( nullptr, entity, channel, sound_num, volume, attenuation, timeofs );
 }
 
-// Need these due to zone api changes
+// need these due to zone api changes
 
 static void *PF_TagMalloc( int size, int tag )
 {
@@ -298,6 +298,13 @@ static void *PF_TagMalloc( int size, int tag )
 static void PF_TagFreeGroup( int tag )
 {
 	Mem_TagFreeGroup( tag );
+}
+
+// need this due to cvar_get api change
+
+static cvar_t *PF_Cvar_Get( const char *name, const char *value, uint32 flags )
+{
+	return Cvar_Get( name, value, flags );
 }
 
 //=================================================================================================
@@ -358,7 +365,7 @@ void SV_InitGameProgs()
 	gi.TagFree = Mem_TagFree;
 	gi.FreeTags = PF_TagFreeGroup;
 
-	gi.cvar = Cvar_Get;
+	gi.cvar = PF_Cvar_Get;
 	gi.cvar_set = Cvar_FindSetString;
 	gi.cvar_forceset = Cvar_ForceSet;
 

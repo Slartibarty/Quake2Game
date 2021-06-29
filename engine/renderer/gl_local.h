@@ -155,6 +155,7 @@ extern cvar_t *r_lockpvs;
 
 extern cvar_t *r_fullscreen;
 extern cvar_t *r_gamma;
+extern cvar_t *r_multisamples;
 
 extern cvar_t *r_basemaps;
 extern cvar_t *r_specmaps;

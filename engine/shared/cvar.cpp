@@ -81,7 +81,7 @@ char *Cvar_CompleteVariable( const char *partial )
 
 // If the variable already exists, the value will not be set
 // The flags will be or'ed in if the variable exists.
-cvar_t *Cvar_Get( const char *name, const char * value, uint32 flags )
+cvar_t *Cvar_Get( const char *name, const char *value, uint32 flags, const char *help )
 {
 	if ( flags & ( CVAR_USERINFO | CVAR_SERVERINFO ) )
 	{

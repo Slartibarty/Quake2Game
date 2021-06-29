@@ -539,11 +539,14 @@ void Key_Event (int key, bool down, unsigned time)
 	// console key is hardcoded, so the user can never unbind it
 	if (key == '`' || key == '~')
 	{
+#if 0
 		if (!down)
 			return;
 		SCR_ToggleDevUI();
+#endif
 		return;
 	}
+
 
 	// any key during the attract mode will bring up the menu
 	if (cl.attractloop && cls.key_dest != key_menu &&

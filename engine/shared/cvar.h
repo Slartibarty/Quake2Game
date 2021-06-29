@@ -39,7 +39,7 @@ char *		Cvar_CompleteVariable( const char *partial );
 			// creates the variable if it doesn't exist, or returns the existing one
 			// if it exists, the value will not be changed, but flags will be ORed in
 			// that allows variables to be unarchived without needing bitflags
-cvar_t *	Cvar_Get( const char *name, const char *value, uint32 flags );
+cvar_t *	Cvar_Get( const char *name, const char *value, uint32 flags, const char *help = nullptr );
 
 			// finds and returns the value of a variable
 const char *Cvar_FindGetString( const char *name );			// returns an empty string if not found

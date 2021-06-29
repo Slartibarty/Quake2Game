@@ -22,20 +22,14 @@
 namespace UI::Console
 {
 
-static constexpr uint MAX_MATCHES		= 9;	// 10th match is "..."
-static constexpr uint MAX_NOTIFIES		= 8;	// should be a cvar
+static constexpr int MAX_MATCHES	= 9;	// 10th match is "..."
+static constexpr int MAX_NOTIFIES	= 8;	// should be a cvar
 
-static constexpr uint32 CmdColor = colors::green; // PackColor( 192, 255, 192, 255 )
+static constexpr uint32 CmdColor	= colors::green;
 
 static cvar_t *con_notifytime;
-
-// unfinished
-class qCircularBuffer
-{
-	uint m_count;
-	uint m_start;
-	uint m_end;
-};
+static cvar_t *con_drawnotify;
+static cvar_t *con_allownotify;
 
 struct notify_t
 {
@@ -66,15 +60,17 @@ struct console2_t
 
 	// alphabetically sorted lists of matching commands and cvars
 	std::vector<std::string_view>	entryMatches;
-	uint					beginCvars = 0;				// contains the offset to the cvars in the matches list, so we can sort seperately
+	int						beginCvars = 0;				// contains the offset to the cvars in the matches list, so we can sort seperately
 	int						completionPosition = -1;
 
 	notify_t				notifies[MAX_NOTIFIES];		// cls.realtime time the line was generated, for transparent notify lines
+	int						currentNotify;
 
 	bool					scrollToBottom;
 	bool					completionPopup;
 	bool					wordWrap;
 	bool					ignoreEdit;					// when true, CallbackEdit will be ignored once
+	bool					initialized;
 
 	// so we can use the console instantly from main
 	console2_t()
@@ -92,9 +88,52 @@ static console2_t con;
 
 //=================================================================================================
 
+static bool CanAddNotifies()
+{
+	if ( !con.initialized ) {
+		return false;
+	}
+
+	// TEMP
+	/*if ( !developer->GetBool() ) {
+		return false;
+	}*/
+
+	if ( !con_allownotify->GetBool() ) {
+		return false;
+	}
+
+	return true;
+}
+
+static bool CanDrawNotifies()
+{
+	// TEMP
+	/*if ( !developer->GetBool() ) {
+		return false;
+	}*/
+
+	if ( !con_drawnotify->GetBool() ) {
+		return false;
+	}
+
+	return true;
+}
+
 void Print( const char *txt )
 {
 	con.buffer.append( txt );
+
+	if ( !CanAddNotifies() ) {
+		return;
+	}
+
+	notify_t &notify = con.notifies[con.currentNotify & ( MAX_NOTIFIES - 1 )];
+
+	Q_strcpy_s( notify.message, txt );
+	notify.timeLeft = con_notifytime->GetFloat();
+
+	++con.currentNotify;
 }
 
 static int TextEditCallback( ImGuiInputTextCallbackData *data )
@@ -200,18 +239,13 @@ static void Clear_f()
 
 void Init()
 {
-	con_notifytime = Cvar_Get( "con_notifytime", "3", 0 );
+	con_notifytime = Cvar_Get( "con_notifytime", "8", 0, "Time in seconds that notifies are visible before expiring." );
+	con_drawnotify = Cvar_Get( "con_drawnotify", "1", 0, "If true, notifies can be drawn." );
+	con_allownotify = Cvar_Get( "con_allownotify", "1", 0, "If true, notifies can be posted." );
 
 	Cmd_AddCommand( "clear", Clear_f );
 
-	static bool once;
-
-	if ( !once )
-	{
-		strcpy( con.notifies[0].message, "BROTHER\n" );
-		con.notifies[0].timeLeft = SEC2MS( con_notifytime->GetFloat() );
-		once = true;
-	}
+	con.initialized = true;
 }
 
 /*
@@ -292,7 +326,7 @@ static void RegenerateMatches( const char *partial )
 	std::sort( con.entryMatches.begin(), con.entryMatches.end() );
 
 	// index to the first cvar
-	con.beginCvars = static_cast<uint>( con.entryMatches.size() );
+	size_t beginCvars = con.entryMatches.size();
 
 	// find cvar matches
 	for ( cvar_t *pVar = cvar_vars; pVar; pVar = pVar->pNext )
@@ -303,9 +337,10 @@ static void RegenerateMatches( const char *partial )
 		}
 	}
 
-	std::sort( con.entryMatches.begin() + con.beginCvars, con.entryMatches.end() );
+	std::sort( con.entryMatches.begin() + beginCvars, con.entryMatches.end() );
 
-	//qsort( matches, numMatches, sizeof( const char * ), StringSort );
+	// give con our variable
+	con.beginCvars = static_cast<int>( beginCvars );
 }
 
 /*
@@ -435,7 +470,7 @@ void ShowConsole( bool *pOpen )
 	// input line
 	const ImGuiInputTextFlags inputFlags =
 		ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion |
-		ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackEdit;
+		ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackEdit | ImGuiInputTextFlags_CallbackAlways;
 
 	// steal focus from the window upon opening, no matter what
 	bool focusOnInput = ImGui::IsWindowAppearing() ? true : false;
@@ -489,7 +524,7 @@ void ShowConsole( bool *pOpen )
 			// the command popup should only list the first n entries, starting with commands
 			if ( ImGui::Begin( "CommandPopup", nullptr, popFlags ) )
 			{
-				uint i = 0;
+				int i = 0;
 
 				// loop for the cmds, they're printed green
 				ImGui::PushStyleColor( ImGuiCol_Text, CmdColor );
@@ -500,7 +535,7 @@ void ShowConsole( bool *pOpen )
 				ImGui::PopStyleColor();
 
 				// loop for the cvars
-				for ( ; i < (uint)con.entryMatches.size() && i < MAX_MATCHES; ++i )
+				for ( ; i < (int)con.entryMatches.size() && i < MAX_MATCHES; ++i )
 				{
 					ImGui::Selectable( con.entryMatches[i].data() );
 				}
@@ -532,54 +567,73 @@ void ShowConsole( bool *pOpen )
 
 void ShowNotify()
 {
-	// only draw in dev mode
-	if ( !developer->GetBool() )
+	if ( !CanDrawNotifies() )
 	{
 		return;
 	}
 
-	constexpr float PAD = 40.0f;
+	const int currentNotify = con.currentNotify;
+	const int minNotify = con.currentNotify - MAX_NOTIFIES + 1;
 
-	ImGuiWindowFlags windowFlags =
+	// check to see if we have some stuff to display, to avoid the window begin call
+	bool show = false;
+	for ( int i = minNotify; i < currentNotify; ++i )
+	{
+		const int index = i & ( MAX_NOTIFIES - 1 );
+
+		if ( con.notifies[index].timeLeft > 0.0f )
+		{
+			show = true;
+			break;
+		}
+	}
+	if ( !show )
+	{
+		return;
+	}
+
+	const ImGuiWindowFlags windowFlags =
 		ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_AlwaysAutoResize |
 		ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoMove;
 
-#if 0
-	{
-		const ImGuiViewport* viewport = ImGui::GetMainViewport();
-		ImVec2 workPos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
-		ImVec2 windowPos;
-		windowPos.x = workPos.x + PAD;
-		windowPos.y = workPos.y + PAD;
-		ImGui::SetNextWindowPos( workPos, ImGuiCond_Always );
-		windowFlags |= ImGuiWindowFlags_NoMove;
-	}
-#endif
+	ImGui::SetNextWindowPos( ImVec2( 0.0f, 0.0f ), ImGuiCond_Always );
+	ImGui::SetNextWindowBgAlpha( 0.25f );
 
 	ImGui::Begin( "Notify Area", nullptr, windowFlags );
 
-	for ( uint i = 0; i < MAX_NOTIFIES; ++i )
-	{
-		notify_t &notify = con.notifies[i];
+	ImGuiIO &io = ImGui::GetIO();
 
-		double timeLeft = notify.timeLeft;
+	for ( int i = minNotify; i < currentNotify; ++i )
+	{
+		const int index = i & ( MAX_NOTIFIES - 1 );
+
+		notify_t &notify = con.notifies[index];
+
+		if ( notify.timeLeft <= 0.0f )
+		{
+			continue;
+		}
 
 		uint32 alpha = 255;
 
-		if ( timeLeft <= 0.5 )
+		if ( notify.timeLeft <= 0.5f )
 		{
-			float fltAlpha = Clamp( timeLeft, 0.0, 0.5 ) / 0.5;
+			float fltAlpha = Clamp( notify.timeLeft, 0.0f, 0.5f ) / 0.5f;
 
-			alpha = static_cast<uint32>( fltAlpha * 255.0 );
+			alpha = static_cast<uint32>( fltAlpha * 255.0f );
 
-			if ( i == 0 && fltAlpha < 0.2 )
+			if ( fltAlpha < 0.2f )
 			{
-				//y -= fontTall * ( 1.0f - f / 0.2f );
+				ImGui::SetCursorPosY( ImGui::GetCursorPosY() - ImGui::GetFont()->FontSize * ( 1.0f - fltAlpha / 0.2f ) );
 			}
 		}
 
-		ImGui::TextUnformatted( notify.message );
+		notify.timeLeft -= cls.frametime;
 
+		const uint32 packedColor = PackColor( 255, 255, 255, alpha );
+		ImGui::PushStyleColor( ImGuiCol_Text, packedColor );
+		ImGui::TextUnformatted( notify.message );
+		ImGui::PopStyleColor();
 	}
 
 	ImGui::End();
@@ -589,7 +643,7 @@ void ClearNotify()
 {
 	for ( uint i = 0; i < MAX_NOTIFIES; ++i )
 	{
-		con.notifies[i].timeLeft = 0.0;
+		con.notifies[i].timeLeft = 0.0f;
 	}
 }
 

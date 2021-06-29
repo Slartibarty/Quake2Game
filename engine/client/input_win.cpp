@@ -281,7 +281,7 @@ namespace input
 
 		BOOL result = RegisterRawInputDevices( rid, 2, sizeof( *rid ) );
 		if ( result == FALSE ) {
-			Com_Print( "Failed to register for raw input!\n" );
+			Com_FatalError( "Failed to register for raw input!\n" );
 		}
 	}
 
@@ -373,8 +373,13 @@ LRESULT CALLBACK MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 	case WM_CHAR:
 		// You can also use ToAscii()+GetKeyboardState() to retrieve characters.
 		if ( wParam > 0 && wParam < 0x10000 ) {
-			ImGuiIO &io = ImGui::GetIO();
-			io.AddInputCharacterUTF16( (ImWchar16)wParam );
+			if ( wParam == '`' || wParam == '~' ) {
+				// this sucks, but it must be low-level so imgui never recieves it
+				SCR_ToggleDevUI();
+				return 0;
+			}
+			ImGui::GetIO().AddInputCharacterUTF16( (ImWchar16)wParam );
+			return 0;
 		}
 		break;
 

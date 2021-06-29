@@ -30,5 +30,9 @@ void		R_DrawFilled( int x, int y, int w, int h, uint32 color );
 void		R_DrawStretchRaw( int x, int y, int w, int h, int cols, int rows, byte *data );
 void		R_SetRawPalette( const byte *palette );
 
+			// 3D elements
+void		R_DrawBounds( const vec3_t mins, const vec3_t maxs );
+void		R_DrawLine( const vec3_t start, const vec3_t end );
+
 void *		R_GetWindowHandle();
 void		R_AppActivate( bool active );

@@ -544,3 +544,51 @@ void R_DrawStretchRaw( int x, int y, int w, int h, int cols, int rows, byte *dat
 	glDeleteTextures( 1, &id );
 #endif
 }
+
+/*
+===================================================================================================
+
+	3D draw functions
+
+===================================================================================================
+*/
+
+void R_DrawBounds( const vec3_t mins, const vec3_t maxs )
+{
+	glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
+
+	glBegin( GL_LINE_LOOP );
+	glVertex3f( mins[0], mins[1], mins[2] );
+	glVertex3f( mins[0], maxs[1], mins[2] );
+	glVertex3f( maxs[0], maxs[1], mins[2] );
+	glVertex3f( maxs[0], mins[1], mins[2] );
+	glEnd();
+	glBegin( GL_LINE_LOOP );
+	glVertex3f( mins[0], mins[1], maxs[2] );
+	glVertex3f( mins[0], maxs[1], maxs[2] );
+	glVertex3f( maxs[0], maxs[1], maxs[2] );
+	glVertex3f( maxs[0], mins[1], maxs[2] );
+	glEnd();
+
+	glBegin( GL_LINES );
+	glVertex3f( mins[0], mins[1], mins[2] );
+	glVertex3f( mins[0], mins[1], maxs[2] );
+
+	glVertex3f( mins[0], maxs[1], mins[2] );
+	glVertex3f( mins[0], maxs[1], maxs[2] );
+
+	glVertex3f( maxs[0], mins[1], mins[2] );
+	glVertex3f( maxs[0], mins[1], maxs[2] );
+
+	glVertex3f( maxs[0], maxs[1], mins[2] );
+	glVertex3f( maxs[0], maxs[1], maxs[2] );
+	glEnd();
+}
+
+void R_DrawLine( const vec3_t start, const vec3_t end )
+{
+	glBegin( GL_LINES );
+	glVertex3fv( start );
+	glVertex3fv( end );
+	glEnd();
+}
