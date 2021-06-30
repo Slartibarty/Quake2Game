@@ -78,13 +78,15 @@ struct cvar_t
 {
 	lab::string		name;
 	lab::string		value;
-	lab::string		latchedValue;
+	lab::string		help;				// null if no help
+	lab::string		latchedValue;		// null if no latched value
 	uint32			flags;
 	float			fltValue;
 	int				intValue;
 	cvar_t *		pNext;
 
 	const char *	GetName() const		{ return name.c_str(); }
+	const char *	GetHelp() const		{ return help.c_str(); }
 
 	bool			IsModified() const	{ return ( flags & CVAR_MODIFIED ) != 0; }
 	void			SetModified()		{ flags |= CVAR_MODIFIED; }
@@ -483,8 +485,8 @@ struct entity_state_t
 
 //-------------------------------------------------------------------------------------------------
 // player_state_t is the information needed in addition to pmove_state_t
-// to rendered a view.  There will only be 10 player_state_t sent each second,
-// but the number of pmove_state_t changes will be reletive to client
+// to render a view.  There will only be 10 player_state_t sent each second,
+// but the number of pmove_state_t changes will be relative to client
 // frame rates
 //-------------------------------------------------------------------------------------------------
 

@@ -18,6 +18,8 @@
 
 namespace lab
 {
+	// TODO: Currently only used by cvars, which are calloc'd
+	// make considerations for use cases outside of that scenario
 	class string
 	{
 	private:

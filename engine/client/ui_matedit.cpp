@@ -17,25 +17,24 @@
 #error The material editor is not compatible with Linux yet!
 #endif
 
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <Windows.h>
+#include "../../core/sys_includes.h"
 #include <CommCtrl.h>
 #include <ShlObj_core.h>
 
 #include "winquake.h"
 
-static void Sys_FileDialog( std::vector<std::string> &fileNames )
+struct filterSpec_t
 {
-	static const COMDLG_FILTERSPEC supportedTypes[]
-	{
-		{ L"DDS (*.dds)", L"*.dds" },
-		{ L"PNG (*.png)", L"*.png" },
-		{ L"TGA (*.tga)", L"*.tga" },
-		{ L"All Texture Files (*.dds;*.png;*.tga)", L"*.dds;*.png;*.tga" },
-		{ L"All Files (*.*)", L"*.*" },
-	};
+	const platChar_t *pszName;
+	const platChar_t *pszSpec;
+};
 
+static void Sys_OpenFileDialog(
+	std::vector<std::string> &fileNames,
+	const filterSpec_t *supportedTypes,
+	const uint numTypes,
+	const uint defaultIndex )
+{
 	char filenameBuffer[1024];
 
 	IFileOpenDialog *pDialog;
@@ -45,16 +44,18 @@ static void Sys_FileDialog( std::vector<std::string> &fileNames )
 		CLSCTX_INPROC_SERVER,
 		IID_PPV_ARGS( &pDialog ) );
 
+	const COMDLG_FILTERSPEC *filterSpec = reinterpret_cast<const COMDLG_FILTERSPEC *>( supportedTypes );
+
 	if ( SUCCEEDED( hr ) )
 	{
 		FILEOPENDIALOGOPTIONS flags;
 		hr = pDialog->GetOptions( &flags ); assert( SUCCEEDED( hr ) );
 		hr = pDialog->SetOptions( flags | FOS_FORCEFILESYSTEM | FOS_ALLOWMULTISELECT ); assert( SUCCEEDED( hr ) );
-		hr = pDialog->SetFileTypes( countof( supportedTypes ), supportedTypes ); assert( SUCCEEDED( hr ) );
+		hr = pDialog->SetFileTypes( numTypes, filterSpec ); assert( SUCCEEDED( hr ) );
 
 		hr = pDialog->SetTitle( L"Texture Picker" );
 
-		hr = pDialog->SetFileTypeIndex( 4 ); assert( SUCCEEDED( hr ) );
+		hr = pDialog->SetFileTypeIndex( defaultIndex ); assert( SUCCEEDED( hr ) );
 		//hr = pDialog->SetDefaultExtension( L"dds" ); assert( SUCCEEDED( hr ) );
 
 		hr = pDialog->Show( cl_hwnd );
@@ -88,6 +89,27 @@ static void Sys_FileDialog( std::vector<std::string> &fileNames )
 namespace UI::MatEdit
 {
 
+static const char *s_materialTemplate
+{
+	"{\n"
+	"\t$basetexture %s\n"
+	"}\n"
+};
+
+static const filterSpec_t s_textureTypes[]
+{
+	{ PLATTEXT( "DDS (*.dds)" ), PLATTEXT( "*.dds" ) },
+	{ PLATTEXT( "PNG (*.png)" ), PLATTEXT( "*.png" ) },
+	{ PLATTEXT( "TGA (*.tga)" ), PLATTEXT( "*.tga" ) },
+	{ PLATTEXT( "All Texture Files (*.dds;*.png;*.tga)" ), PLATTEXT( "*.dds;*.png;*.tga" ) },
+	{ PLATTEXT( "All Files (*.*)" ), PLATTEXT( "*.*" ) }
+};
+
+static const filterSpec_t s_materialTypes[]
+{
+	{ PLATTEXT( "Material File (*.mat)" ), PLATTEXT( "*.mat" ) }
+};
+
 struct matEdit_t
 {
 	bool ui_batch;
@@ -96,13 +118,6 @@ struct matEdit_t
 };
 
 static matEdit_t matEdit;
-
-static const char *s_materialTemplate
-{
-	"{\n"
-	"\t$basetexture %s\n"
-	"}\n"
-};
 
 static void CreateMaterialsForTextures()
 {
@@ -161,25 +176,24 @@ static void ShowBatch( bool *pOpen )
 	}
 	ImGui::PopStyleVar();
 
-	if ( ImGui::Button( "Select Files" ) )
+	if ( ImGui::Button( "Select Files..." ) )
 	{
 		matEdit.batchNames.clear();
-		Sys_FileDialog( matEdit.batchNames );
+		Sys_OpenFileDialog( matEdit.batchNames, s_textureTypes, countof( s_textureTypes ), 4 );
 	}
 
-	ImGuiWindowFlags scrollFlags = ImGuiWindowFlags_HorizontalScrollbar;
+	const ImGuiWindowFlags scrollFlags = ImGuiWindowFlags_HorizontalScrollbar;
 
-	// Reserve enough left-over height for 1 separator + 1 input text
-	ImGui::BeginChild( "ScrollingRegion", ImVec2( 0.0f, -ImGui::GetFrameHeightWithSpacing() ), true, scrollFlags );
-
-	for ( uint i = 0; i < matEdit.batchNames.size(); ++i )
+	if ( ImGui::BeginChild( "ScrollingRegion", ImVec2( 0.0f, -ImGui::GetFrameHeightWithSpacing() ), true, scrollFlags ) )
 	{
-		ImGui::TextUnformatted( matEdit.batchNames[i].c_str(), matEdit.batchNames[i].c_str() + matEdit.batchNames[i].length() );
+		for ( uint i = 0; i < matEdit.batchNames.size(); ++i )
+		{
+			ImGui::TextUnformatted( matEdit.batchNames[i].c_str(), matEdit.batchNames[i].c_str() + matEdit.batchNames[i].length() );
+		}
 	}
-
 	ImGui::EndChild();
 
-	if ( ImGui::Button( "Create basic materials" ) && !matEdit.batchNames.empty() )
+	if ( ImGui::Button( "Create Basic Materials" ) && !matEdit.batchNames.empty() )
 	{
 		CreateMaterialsForTextures();
 		matEdit.batchNames.clear();
@@ -195,7 +209,7 @@ void ShowMaterialEditor( bool *pOpen )
 	const ImGuiWindowFlags mainWindowFlags =
 		ImGuiWindowFlags_MenuBar;
 
-	ImGui::PushStyleVar( ImGuiStyleVar_WindowMinSize, ImVec2( 330.0f, 250.0f ) );
+	ImGui::PushStyleVar( ImGuiStyleVar_WindowMinSize, ImVec2( 1200.0f, 800.0f ) );
 	if ( !ImGui::Begin( "Material Editor", pOpen, mainWindowFlags ) )
 	{
 		ImGui::PopStyleVar();
@@ -208,9 +222,26 @@ void ShowMaterialEditor( bool *pOpen )
 
 	if ( ImGui::BeginMenuBar() )
 	{
-		if ( ImGui::BeginMenu( "Windows" ) )
+		if ( ImGui::BeginMenu( "File" ) )
 		{
-			ImGui::MenuItem( "Material Batch Tool", nullptr, &matEdit.ui_batch );
+			ImGui::MenuItem( "New", "Ctrl+N" );
+			ImGui::MenuItem( "Open...", "Ctrl+O" );
+			ImGui::MenuItem( "Save", "Ctrl+S" );
+			ImGui::MenuItem( "Save As...", nullptr );
+			ImGui::MenuItem( "Save All...", "Ctrl+Shift+S" );
+			ImGui::MenuItem( "Close", "Ctrl+W" );
+			ImGui::Separator();
+			if ( ImGui::MenuItem( "Exit", "Ctrl+Q" ) )
+			{
+				*pOpen = false;
+			}
+
+			ImGui::EndMenu();
+		}
+		if ( ImGui::BeginMenu( "Tools" ) )
+		{
+			ImGui::MenuItem( "Material Batch Tool...", nullptr, &matEdit.ui_batch );
+
 			ImGui::EndMenu();
 		}
 		ImGui::EndMenuBar();
@@ -226,4 +257,4 @@ void ShowMaterialEditor( bool *pOpen )
 	ImGui::End();
 }
 
-}
+} // namespace UI::MatEdit

@@ -1,14 +1,13 @@
 
 #pragma once
 
-#include "q_shared.h"
-#include "q_formats.h"
-
 #include "cmdlib.h"
 #include "scriplib.h"
 #include "polylib.h"
 #include "threads.h"
 #include "bspfile.h"
+
+#include "../../common/q_formats.h"
 
 // Default settings
 

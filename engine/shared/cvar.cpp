@@ -83,6 +83,9 @@ char *Cvar_CompleteVariable( const char *partial )
 // The flags will be or'ed in if the variable exists.
 cvar_t *Cvar_Get( const char *name, const char *value, uint32 flags, const char *help )
 {
+	assert( name );
+	assert( value );
+
 	if ( flags & ( CVAR_USERINFO | CVAR_SERVERINFO ) )
 	{
 		if ( !Cvar_InfoValidate( name ) )
@@ -115,6 +118,9 @@ cvar_t *Cvar_Get( const char *name, const char *value, uint32 flags, const char 
 
 	var->name.assign( name );
 	var->value.assign( value );
+	if ( help ) {
+		var->help.assign( help );
+	}
 
 	Cvar_SetDerivatives( var );
 
@@ -124,6 +130,7 @@ cvar_t *Cvar_Get( const char *name, const char *value, uint32 flags, const char 
 
 	var->flags = flags;
 
+	// all newly created vars are "modified"
 	var->SetModified();
 
 	return var;
@@ -269,13 +276,15 @@ void Cvar_FullSet( const char *name, const char *value, uint32 flags )
 		userinfo_modified = true;
 	}
 
-	var->value.assign( value );
-
-	Cvar_SetDerivatives( var );
-
 	var->flags = flags;
 
-	var->SetModified();
+	if ( Q_strcmp( value, var->value.c_str() ) != 0 ) {
+		// value changed
+		var->value.assign( value );
+		Cvar_SetDerivatives( var );
+
+		var->SetModified();
+	}
 }
 
 //=================================================================================================
@@ -301,7 +310,7 @@ void Cvar_SetInt( cvar_t *var, int value )
 
 void Cvar_SetBool( cvar_t *var, bool value )
 {
-	char str[2]{ (char)value + '0', '\0'};
+	char str[2]{ (char)value + '0', '\0' };
 	Cvar_Set_Internal( var, str, false );
 }
 
@@ -497,7 +506,7 @@ void Cvar_Set_f()
 static void Cvar_List_f()
 {
 	cvar_t *var = cvar_vars;
-	int i = 0;
+	uint i = 0;
 
 	for ( ; var; var = var->pNext, ++i )
 	{
@@ -531,7 +540,7 @@ static void Cvar_List_f()
 		Com_Printf( " %s \"%s\"\n", var->name.c_str(), var->value.c_str() );
 	}
 
-	Com_Printf( "%d cvars\n", i );
+	Com_Printf( "%u cvars\n", i );
 }
 
 void Cvar_Init()

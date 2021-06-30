@@ -6,7 +6,7 @@
 
 #include <WinSock2.h>
 #include <WS2tcpip.h>
-#include <Windows.h>
+#include <Windows.h>		// not using sys_includes.h, winsock2 is special
 
 #include "net.h"
 

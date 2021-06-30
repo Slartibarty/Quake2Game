@@ -237,6 +237,119 @@ static void Clear_f()
 	con.buffer.clear();
 }
 
+// this is the wrong place for this really, oh well
+static void Find_f()
+{
+	if ( Cmd_Argc() != 2 )
+	{
+		return;
+	}
+
+	const char *searchName = Cmd_Argv( 1 );
+
+	if ( !searchName[0] )
+	{
+		return;
+	}
+
+	std::vector<cmd_function_t *> cmdMatches;
+
+	strlen_t searchLength = Q_strlen( searchName );
+
+	strlen_t longestName = 16;
+	strlen_t longestValue = 8;
+	strlen_t longestHelp = 8;
+
+	// find command matches
+	for ( cmd_function_t *pCmd = cmd_functions; pCmd; pCmd = pCmd->next )
+	{
+		if ( strstr( pCmd->name, searchName ) )					// TODO: need Q_ version
+		{
+			strlen_t nameLength = Q_strlen( pCmd->name );
+			if ( nameLength > longestName )
+			{
+				longestName = nameLength;
+			}
+			cmdMatches.push_back( pCmd );
+		}
+	}
+
+	std::sort( cmdMatches.begin(), cmdMatches.end() );
+
+	std::vector<cvar_t *> cvarMatches;
+
+	// find cvar matches
+	for ( cvar_t *pVar = cvar_vars; pVar; pVar = pVar->pNext )
+	{
+		if ( strstr( pVar->GetName(), searchName ) )			// TODO: need Q_ version
+		{
+			if ( pVar->name.length() > longestName )
+			{
+				longestName = pVar->name.length() + 1;
+			}
+			if ( pVar->value.length() > longestValue )
+			{
+				longestValue = pVar->value.length() + 1;
+			}
+			if ( pVar->help.length() > longestHelp )
+			{
+				longestHelp = pVar->help.length() + 1;
+			}
+			cvarMatches.push_back( pVar );
+		}
+	}
+
+	std::sort( cvarMatches.begin(), cvarMatches.end() );
+
+	// build the format string
+
+	char formatString[128];
+	Q_sprintf_s( formatString, "%%-%us" "%%-%us" "%%-%us\n", longestName, longestValue, longestHelp );
+
+	Com_Printf( formatString, "name", "value", "help text" );
+
+	strlen_t maxLength = Min<strlen_t>( longestName + longestValue + longestHelp, 127 );
+
+	char underscores[128]{};
+	for ( uint i = 0; i < 128; ++i )
+	{
+		// HACK?
+		if ( i == longestName - 1 || i == longestName + longestValue - 1 )
+		{
+			underscores[i] = ' ';
+			continue;
+		}
+		underscores[i] = '_';
+		if ( i >= maxLength )
+		{
+			underscores[i] = '\n';
+			break;
+		}
+	}
+
+	Com_Print( underscores );
+
+	std::string cmdNameGreen;
+
+	for ( const auto &pCmd : cmdMatches )
+	{
+		cmdNameGreen = S_COLOR_GREEN;
+		cmdNameGreen.append( pCmd->name );
+		Com_Printf( formatString, cmdNameGreen.c_str(), "", "" );
+	}
+
+	for ( const auto &pVar : cvarMatches )
+	{
+		const char *string = pVar->GetString();
+		if ( string[0] == '\0' )
+		{
+			string = "\"\"";
+		}
+		Com_Printf( formatString, pVar->GetName(), string, pVar->GetHelp() ? pVar->GetHelp() : "" );
+	}
+
+}
+
 void Init()
 {
 	con_notifytime = Cvar_Get( "con_notifytime", "8", 0, "Time in seconds that notifies are visible before expiring." );
@@ -244,6 +357,7 @@ void Init()
 	con_allownotify = Cvar_Get( "con_allownotify", "1", 0, "If true, notifies can be posted." );
 
 	Cmd_AddCommand( "clear", Clear_f );
+	Cmd_AddCommand( "find", Find_f );
 
 	con.initialized = true;
 }

@@ -14,9 +14,6 @@
 */
 
 #include "gl_local.h"
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <Windows.h>
 #include "../../resources/resource.h"
 
 struct glwstate_t

@@ -19,9 +19,7 @@
 #include <cassert>
 
 // I am so sorry
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <Windows.h>
+#include "sys_includes.h"
 
 #include "sys_types.h"
 

@@ -12,9 +12,8 @@
 static_assert( DIRECTX_MATH_VERSION >= 316 );
 
 #ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <Windows.h>
+// only need system headers on win
+#include "../../core/sys_includes.h"
 #endif
 
 #include "GL/glew.h"

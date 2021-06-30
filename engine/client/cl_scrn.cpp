@@ -540,20 +540,21 @@ static void SCR_DrawDevMenu()
 {
 	if ( ImGui::BeginMainMenuBar() )
 	{
-		if ( ImGui::BeginMenu( "DevUI" ) )
+		if ( ImGui::BeginMenu( "Engine" ) )
+		{
+			if ( ImGui::MenuItem( "Quit", "Alt+F4" ) )
+			{
+				input::SendQuitMessage();
+			}
+
+			ImGui::EndMenu();
+		}
+		if ( ImGui::BeginMenu( "Tools" ) )
 		{
 			ImGui::MenuItem( "Demo", nullptr, &scr.ui_showDemo );
 			ImGui::MenuItem( "Console", nullptr, &scr.ui_console );
 			ImGui::MenuItem( "Material Editor", nullptr, &scr.ui_matEdit );
 
-			ImGui::EndMenu();
-		}
-		if ( ImGui::BeginMenu( "Engine" ) )
-		{
-			if ( ImGui::MenuItem( "Quit", "ALT+F4" ) )
-			{
-				input::SendQuitMessage();
-			}
 			ImGui::EndMenu();
 		}
 		ImGui::EndMainMenuBar();

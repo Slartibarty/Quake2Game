@@ -2,9 +2,10 @@
 
 #include <cstdlib>
 #include <cstdio>
+
 #include <process.h>
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
+
+#include "../../core/sys_includes.h"
 
 #include "conproc.h"
 

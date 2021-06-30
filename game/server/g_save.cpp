@@ -148,7 +148,7 @@ void InitGame (void)
 	dedicated = gi.cvar ("dedicated", "0", CVAR_NOSET);
 
 	// latched vars
-	sv_cheats = gi.cvar ("cheats", "0", CVAR_SERVERINFO|CVAR_LATCH);
+	sv_cheats = gi.cvar ("sv_cheats", "0", CVAR_SERVERINFO|CVAR_LATCH);
 	gi.cvar ("gamename", GAMEVERSION , CVAR_SERVERINFO | CVAR_LATCH);
 	gi.cvar ("gamedate", __DATE__ , CVAR_SERVERINFO | CVAR_LATCH);
 

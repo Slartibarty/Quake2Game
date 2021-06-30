@@ -6,10 +6,8 @@
 
 #include <vector>
 
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#include <CommCtrl.h>
-#include "../client/winquake.h"	// Hack?
+#include "../../core/sys_includes.h"
+#include "../client/winquake.h"			// Hack?
 
 #include "sys.h"
 

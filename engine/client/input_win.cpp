@@ -4,9 +4,7 @@
 
 #include "cl_local.h"
 
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <Windows.h>
+#include "../../core/sys_includes.h"
 #include "winquake.h"
 
 #include "imgui.h"
