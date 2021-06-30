@@ -190,6 +190,8 @@ local imgui_sources = {
 	"thirdparty/imgui/imgui_tables.cpp",
 	"thirdparty/imgui/imgui_widgets.cpp",
 	
+	--"thirdparty/imgui/misc/freetype/imgui_freetype.*",
+	
 	"thirdparty/imgui/backends/imgui_impl_opengl3.*"
 }
 
@@ -199,6 +201,67 @@ local meshoptimizer_public = {
 
 local meshoptimizer_sources = {
 	"thirdparty/meshoptimizer/src/*.cpp",
+}
+
+-- freetype
+
+local freetype_public_headers = {
+	"thirdparty/freetype/include/ft2build.h",
+	"thirdparty/freetype/include/freetype/*.h"
+}
+
+local freetype_config_headers = {
+	"thirdparty/freetype/include/freetype/config/*.h"
+}
+
+local freetype_private_headers = {
+	"thirdparty/freetype/include/freetype/internal/*.h"
+}
+
+local freetype_sources = {
+	-- base
+	"thirdparty/freetype/src/autofit/autofit.c",
+	"thirdparty/freetype/src/base/ftbase.c",
+	"thirdparty/freetype/src/base/ftbbox.c",
+	"thirdparty/freetype/src/base/ftbdf.c",
+	"thirdparty/freetype/src/base/ftbitmap.c",
+	"thirdparty/freetype/src/base/ftcid.c",
+	"thirdparty/freetype/src/base/ftfstype.c",
+	"thirdparty/freetype/src/base/ftgasp.c",
+	"thirdparty/freetype/src/base/ftglyph.c",
+	"thirdparty/freetype/src/base/ftgxval.c",
+	"thirdparty/freetype/src/base/ftinit.c",
+	"thirdparty/freetype/src/base/ftmm.c",
+	"thirdparty/freetype/src/base/ftotval.c",
+	"thirdparty/freetype/src/base/ftpatent.c",
+	"thirdparty/freetype/src/base/ftpfr.c",
+	"thirdparty/freetype/src/base/ftstroke.c",
+	"thirdparty/freetype/src/base/ftsynth.c",
+	"thirdparty/freetype/src/base/fttype1.c",
+	"thirdparty/freetype/src/base/ftwinfnt.c",
+	"thirdparty/freetype/src/bdf/bdf.c",
+	"thirdparty/freetype/src/bzip2/ftbzip2.c",
+	"thirdparty/freetype/src/cache/ftcache.c",
+	"thirdparty/freetype/src/cff/cff.c",
+	"thirdparty/freetype/src/cid/type1cid.c",
+	"thirdparty/freetype/src/gzip/ftgzip.c",
+	"thirdparty/freetype/src/lzw/ftlzw.c",
+	"thirdparty/freetype/src/pcf/pcf.c",
+	"thirdparty/freetype/src/pfr/pfr.c",
+	"thirdparty/freetype/src/psaux/psaux.c",
+	"thirdparty/freetype/src/pshinter/pshinter.c",
+	"thirdparty/freetype/src/psnames/psnames.c",
+	"thirdparty/freetype/src/raster/raster.c",
+	"thirdparty/freetype/src/sdf/sdf.c",
+	"thirdparty/freetype/src/sfnt/sfnt.c",
+	"thirdparty/freetype/src/smooth/smooth.c",
+	"thirdparty/freetype/src/truetype/truetype.c",
+	"thirdparty/freetype/src/type1/type1.c",
+	"thirdparty/freetype/src/type42/type42.c",
+	"thirdparty/freetype/src/winfonts/winfnt.c",
+	
+	"thirdparty/freetype/builds/windows/ftsystem.c",
+	"thirdparty/freetype/builds/windows/ftdebug.c"
 }
 
 local fbxsdk_dir = os.getenv( "FBXSDK_DIR" )
@@ -535,8 +598,6 @@ project "qsmf"
 
 filter {}
 
--- Thirdparty
-
 group "thirdparty"
 
 project "zlib"
@@ -576,6 +637,24 @@ project "meshoptimizer"
 		meshoptimizer_public,
 		meshoptimizer_sources,
 	}
+
+--[[
+project "freetype"
+	kind "StaticLib"
+	targetname "freetype"
+	language "C"
+	includedirs { "thirdparty/freetype/include", "thirdparty/libpng", "thirdparty/libpng_config", "thirdparty/zlib" }
+	defines { "_CRT_NONSTDC_NO_WARNINGS", "FT2_BUILD_LIBRARY",
+	"FT_CONFIG_OPTION_USE_PNG", "FT_CONFIG_OPTION_SUBPIXEL_RENDERING", "FT_CONFIG_OPTION_DISABLE_STREAM_SUPPORT",
+	"FT_CONFIG_OPTION_SYSTEM_ZLIB" }
+	
+	files {
+		freetype_public_headers,
+		freetype_config_headers,
+		freetype_private_headers,
+		freetype_sources
+	}
+--]]
 
 --[[
 project "uvatlas"

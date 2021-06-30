@@ -397,8 +397,9 @@ static bool SCR_InitImGui()
 	ImGui_ImplOpenGL3_Init( /*"#version 330 core"*/ );
 
 	ImFontConfig fontConfig;
+	//fontConfig.FontBuilderFlags = ImGuiFreeTypeBuilderFlags_LoadColor;
 
-	//io.Fonts->AddFontFromFileTTF( va( "%s/fonts/consola.ttf", FS_Gamedir() ), 16.0f, &fontConfig );
+	//io.Fonts->AddFontFromFileTTF( va( "%s/fonts/consola.ttf", FS_Gamedir() ), 13.0f, &fontConfig );
 	io.Fonts->AddFontDefault();
 
 	return true;

@@ -28,6 +28,8 @@
 #define IMGUI_DEBUG_PARANOID
 #endif
 
+//#define IMGUI_ENABLE_FREETYPE
+
 #ifdef IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS
 
 // Provide our own file methods
