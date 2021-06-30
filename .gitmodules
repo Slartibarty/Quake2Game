@@ -22,3 +22,6 @@
 [submodule "thirdparty/ImGuizmo"]
 	path = thirdparty/ImGuizmo
 	url = https://github.com/CedricGuillemet/ImGuizmo.git
+[submodule "thirdparty/freetype"]
+	path = thirdparty/freetype
+	url = https://gitlab.freedesktop.org/freetype/freetype.git
