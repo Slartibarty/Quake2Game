@@ -60,8 +60,8 @@ static bool ParseCommandLine( int argc, char **argv )
 		// need at least input and output
 		Com_Print( "Usage: qsmf [options] input.fbx output.smf\n" );
 		Com_Print(
-			"Help:\n"
-			"  -verbose      : If present, this parameter enables verbose (debug) printing\n"
+			"Options:\n"
+			"  -verbose      : If present, this parameter enables verbose logging\n"
 		);
 		return false;
 	}

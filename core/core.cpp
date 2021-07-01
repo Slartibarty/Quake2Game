@@ -15,9 +15,9 @@ static char core_null_string[1];
 
 void COM_FileBase( const char *in, char *out )
 {
-	strlen_t len, start, end;
+	int len, start, end;
 
-	len = Q_strlen( in );
+	len = static_cast<int>( Q_strlen( in ) );
 
 	// Scan backwards for the extension
 	end = len - 1;

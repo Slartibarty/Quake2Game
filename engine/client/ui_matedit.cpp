@@ -228,7 +228,7 @@ void ShowMaterialEditor( bool *pOpen )
 			ImGui::MenuItem( "Open...", "Ctrl+O" );
 			ImGui::MenuItem( "Save", "Ctrl+S" );
 			ImGui::MenuItem( "Save As...", nullptr );
-			ImGui::MenuItem( "Save All...", "Ctrl+Shift+S" );
+			ImGui::MenuItem( "Save All", "Ctrl+Shift+S" );
 			ImGui::MenuItem( "Close", "Ctrl+W" );
 			ImGui::Separator();
 			if ( ImGui::MenuItem( "Exit", "Ctrl+Q" ) )

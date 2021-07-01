@@ -152,6 +152,11 @@ void GL_Screenshot_TGA_f()
 ===================================================================================================
 */
 
+struct rgb_t
+{
+	byte r, g, b;
+};
+
 /*
 ========================
 R_ExtractWad_f
@@ -188,6 +193,7 @@ void R_ExtractWad_f()
 	{
 		fclose( wadhandle );
 		Com_Printf( "Malformed palette lump\n" );
+		return;
 	}
 
 	fclose( wadhandle );
@@ -208,6 +214,8 @@ void R_ExtractWad_f()
 		return;
 	}
 
+	Com_Printf( "Wad lumps: %d\n", wadheader.numlumps );
+
 	fseek( wadhandle, wadheader.infotableofs, SEEK_SET );
 
 	wad2::lumpinfo_t *wadlumps = (wad2::lumpinfo_t *)Mem_Alloc( sizeof( wad2::lumpinfo_t ) * wadheader.numlumps );
@@ -224,16 +232,21 @@ void R_ExtractWad_f()
 	{
 		assert( wadlumps[i].compression == wad2::CMP_NONE );
 
-		if ( wadlumps[i].type != wad2::TYP_MIPTEX )
+		Com_Printf( "  lump %d name: %s\n", i, wadlumps[i].name );
+
+		if ( wadlumps[i].type != wad2::TYP_MIPTEX && wadlumps[i].type != wad2::TYP_SOUND ) {
 			continue;
+		}
 
 		wad2::miptex_t miptex;
 
 		fseek( wadhandle, wadlumps[i].filepos, SEEK_SET );
 		fread( &miptex, sizeof( miptex ), 1, wadhandle );
 
+		assert( miptex.nOffsets[0] == 40 );
+
 		int32 c;
-		byte *pic8, *pic32;
+		byte *pic8, *pic24;
 
 		c = miptex.width * miptex.height;
 
@@ -241,19 +254,20 @@ void R_ExtractWad_f()
 
 		fread( pic8, 1, c, wadhandle );
 
-		pic32 = (byte *)Mem_Alloc( c * 3 );
+		pic24 = (byte *)Mem_Alloc( c * 3 );
 
-		for ( int32 pixel = 0; pixel < ( c * 3 ); pixel += 3 )
+		for ( int32 pixel = 0, pixel2 = 0; pixel < ( c * 3 ); pixel += 3, pixel2 += 3 )
 		{
-			pic32[pixel + 0] = palette[pic8[pixel + 0]];
-			pic32[pixel + 1] = palette[pic8[pixel + 1]];
-			pic32[pixel + 2] = palette[pic8[pixel + 2]];
+			assert( pixel2 < c );
+			pic24[pixel + 0] = palette[pic8[pixel + 0]];
+			pic24[pixel + 1] = palette[pic8[pixel + 1]];
+			pic24[pixel + 2] = palette[pic8[pixel + 2]];
 		}
 
 		Mem_Free( pic8 );
 
 		char outname[MAX_QPATH];
-		Q_sprintf_s( outname, "%s/textures/%s/%s.tga", FS_Gamedir(), wadbase, wadlumps[i].name );
+		Q_sprintf_s( outname, "%s/textures/%s/%s.png", FS_Gamedir(), wadbase, wadlumps[i].name );
 
 		char *asterisk;
 		while ( ( asterisk = strchr( outname, '*' ) ) )
@@ -262,36 +276,17 @@ void R_ExtractWad_f()
 			*asterisk = '!';
 		}
 
-	//	if ( stbi_write_tga( outname, miptex.width, miptex.height, 3, pic32 ) == 0 )
+		FILE *outHandle = fopen( outname, "wb" );
+		if ( outHandle )
 		{
-			Com_Printf( "Failed to write %s\n", outname );
+			if ( !img::WritePNG( miptex.width, miptex.height, false, pic24, outHandle ) )
+			{
+				Com_Printf( "Failed to write %s\n", outname );
+			}
+			fclose( outHandle );
 		}
 
-		Mem_Free( pic32 );
-
-		Q_sprintf_s( outname, "%s/textures/%s/%s.was", FS_Gamedir(), wadbase, wadlumps[i].name );
-
-		while ( ( asterisk = strchr( outname, '*' ) ) )
-		{
-			// Half-Lifeify the texture name
-			*asterisk = '!';
-		}
-
-		was_t was{};
-		switch ( wadlumps[i].name[0] )
-		{
-		case '*':
-			was.contents |= CONTENTS_WATER;
-			break;
-		}
-
-		FILE *scripthandle = fopen( outname, "wb" );
-		if ( scripthandle )
-		{
-			fwrite( &was, sizeof( was ), 1, scripthandle );
-			fclose( scripthandle );
-		}
-
+		Mem_Free( pic24 );
 	}
 
 	Mem_Free( wadlumps );
