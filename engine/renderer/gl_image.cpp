@@ -216,6 +216,8 @@ static GLuint GL_UploadCompressed( const byte *pBuffer, imageFlags_t flags )
 		format = GL_COMPRESSED_RGBA_BPTC_UNORM_ARB;
 		blockSize = 16;
 		break;
+	default:
+		Com_FatalError( "A DDS file was present with a compression type not yet supported.\nSorry for crashing but I don't want to refactor the code just yet.\n" );
 	}
 
 	// mip 0
@@ -239,14 +241,15 @@ static GLuint GL_UploadCompressed( const byte *pBuffer, imageFlags_t flags )
 	return id;
 }
 
-static GLuint GL_Upload( const byte *pData, int nWidth, int nHeight, imageFlags_t flags )
+// uploads a 32-bit, uncompressed texture pointed to by pData
+static GLuint GL_Upload( const byte *pData, int width, int height, imageFlags_t flags )
 {
 	GLuint id;
 
 	glGenTextures( 1, &id );
 	GL_Bind( id );
 
-	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, nWidth, nHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, pData );
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pData );
 
 	// auto-generate mipmaps (FIXME: sad vendor-specific extension)
 	if ( GLEW_ARB_framebuffer_object )
