@@ -72,24 +72,25 @@ then searches for a command or variable that matches the first token.
 
 */
 
-typedef void ( *xcommand_t ) ( void );
+typedef void ( *xcommand_t )( void );
 
 // HACK: would be nice to find a way to iterate through commands without having this be visible
 // this is only here to satisfy the console
-struct cmd_function_t
+struct cmdFunction_t
 {
-	cmd_function_t *	next;
-	const char *		name;
-	xcommand_t			function;
+	const char *		pName;
+	const char *		pHelp;
+	xcommand_t			pFunction;
+	cmdFunction_t *		pNext;
 };
 
 // possible commands to execute
-extern cmd_function_t *cmd_functions;
+extern cmdFunction_t *cmd_functions;
 
 void	Cmd_Init();
 void	Cmd_Shutdown();
 
-void	Cmd_AddCommand( const char *cmd_name, xcommand_t function );
+void	Cmd_AddCommand( const char *cmd_name, xcommand_t function, const char *help = nullptr );
 // called by the init functions of other parts of the program to
 // register commands and functions to call for them.
 // The cmd_name is referenced later, so it should not be in temp memory

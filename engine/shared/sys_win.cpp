@@ -467,7 +467,7 @@ main
 */
 int main( int argc, char **argv )
 {
-	int time, oldtime, newtime;
+	int frameTime, oldTime, newTime;
 
 	// Make sure the CRT thinks we're a GUI app, this makes CRT asserts use a message box
 	// rather than printing to stderr
@@ -486,8 +486,6 @@ int main( int argc, char **argv )
 
 	Time_Init();
 
-	double initStart = Time_FloatMilliseconds();
-
 	Sys_InitVidModes();
 
 	Engine_Init( argc, argv );
@@ -496,7 +494,7 @@ int main( int argc, char **argv )
 		Com_DPrint( "Using Windows UTF-8 codepage\n" );
 	}
 
-	oldtime = Sys_Milliseconds();
+	oldTime = Sys_Milliseconds();
 
 	MSG msg;
 
@@ -509,7 +507,7 @@ int main( int argc, char **argv )
 			Sleep( 1 );
 		}
 
-		// proces all queued messages
+		// process all queued messages
 		while ( PeekMessageW( &msg, nullptr, 0, 0, PM_REMOVE ) )
 		{
 			if ( msg.message == WM_QUIT )
@@ -522,16 +520,17 @@ int main( int argc, char **argv )
 
 		do
 		{
-			newtime = Sys_Milliseconds();
-			time = newtime - oldtime;
-		} while ( time < 1 );
+			newTime = Sys_Milliseconds();
+			frameTime = newTime - oldTime;
+		} while ( frameTime < 1 );
 
-		sys_frame_time = newtime;
-		curtime = newtime;
+		// set legacy
+		sys_frame_time = newTime;
+		curtime = newTime;
 
-		Engine_Frame( time );
+		Engine_Frame( frameTime );
 
-		oldtime = newtime;
+		oldTime = newTime;
 	}
 
 	// unreachable

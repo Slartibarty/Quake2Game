@@ -632,7 +632,7 @@ void Engine_Init( int argc, char **argv )
 Engine_Frame
 ========================
 */
-void Engine_Frame( int msec )
+void Engine_Frame( int frameTime )
 {
 	char	*s;
 	int		time_before, time_between, time_after;
@@ -668,13 +668,13 @@ void Engine_Frame( int msec )
 		}
 	}
 
-	if ( fixedtime->GetFloat() != 0.0f ) {
-		msec = fixedtime->GetInt();
+	if ( fixedtime->GetInt() != 0 ) {
+		frameTime = fixedtime->GetInt();
 	}
-	else if ( timescale->GetFloat() != 1.0f ) {
-		msec *= timescale->GetInt();
-		if ( msec < 1 ) {
-			msec = 1;
+	else if ( timescale->GetInt() != 1 ) {
+		frameTime *= timescale->GetInt();
+		if ( frameTime < 1 ) {
+			frameTime = 1;
 		}
 	}
 
@@ -703,19 +703,20 @@ void Engine_Frame( int msec )
 		time_before = Sys_Milliseconds();
 	}
 
-	SV_Frame( msec );
+	SV_Frame( frameTime );
 
 	if ( host_speeds->GetBool() ) {
 		time_between = Sys_Milliseconds();
 	}
 
-	CL_Frame( msec );
+	CL_Frame( frameTime );
 
 	if ( host_speeds->GetBool() ) {
 		time_after = Sys_Milliseconds();
 	}
 
-	if ( host_speeds->GetBool() ) {
+	if ( host_speeds->GetBool() )
+	{
 		int all, sv, gm, cl, rf;
 
 		all = time_after - time_before;

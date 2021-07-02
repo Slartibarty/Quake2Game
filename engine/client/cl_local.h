@@ -520,3 +520,14 @@ namespace UI::MatEdit
 {
 	void ShowMaterialEditor( bool *pOpen );
 }
+
+/*
+=======================================
+	Stats page
+=======================================
+*/
+
+namespace UI::StatsPanel
+{
+	void ShowStats();
+}

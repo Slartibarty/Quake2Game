@@ -242,33 +242,38 @@ static void Find_f()
 {
 	if ( Cmd_Argc() != 2 )
 	{
+		Com_Print( "Usage: find <cmd/cvar/*>\n" );
 		return;
 	}
 
 	const char *searchName = Cmd_Argv( 1 );
-
 	if ( !searchName[0] )
 	{
 		return;
 	}
 
-	std::vector<cmd_function_t *> cmdMatches;
+	bool listAll = searchName[0] == '*' ? true : false;
 
-	strlen_t searchLength = Q_strlen( searchName );
+	std::vector<cmdFunction_t *> cmdMatches;
 
 	strlen_t longestName = 16;
 	strlen_t longestValue = 8;
 	strlen_t longestHelp = 8;
 
 	// find command matches
-	for ( cmd_function_t *pCmd = cmd_functions; pCmd; pCmd = pCmd->next )
+	for ( cmdFunction_t *pCmd = cmd_functions; pCmd; pCmd = pCmd->pNext )
 	{
-		if ( strstr( pCmd->name, searchName ) )					// TODO: need Q_ version
+		if ( listAll || strstr( pCmd->pName, searchName ) )					// TODO: need Q_ version
 		{
-			strlen_t nameLength = Q_strlen( pCmd->name );
-			if ( nameLength > longestName )
+			strlen_t length = Q_strlen( pCmd->pName );
+			if ( length > longestName )
 			{
-				longestName = nameLength;
+				longestName = length;
+			}
+			length = pCmd->pHelp ? Q_strlen( pCmd->pHelp ) : 0;
+			if ( length > longestHelp )
+			{
+				longestHelp = length + 1;
 			}
 			cmdMatches.push_back( pCmd );
 		}
@@ -281,7 +286,7 @@ static void Find_f()
 	// find cvar matches
 	for ( cvar_t *pVar = cvar_vars; pVar; pVar = pVar->pNext )
 	{
-		if ( strstr( pVar->GetName(), searchName ) )			// TODO: need Q_ version
+		if ( listAll || strstr( pVar->GetName(), searchName ) )			// TODO: need Q_ version
 		{
 			if ( pVar->name.length() > longestName )
 			{
@@ -311,7 +316,7 @@ static void Find_f()
 	strlen_t maxLength = Min<strlen_t>( longestName + longestValue + longestHelp, 127 );
 
 	char underscores[128]{};
-	for ( uint i = 0; i < 128; ++i )
+	for ( strlen_t i = 0; ; ++i )
 	{
 		// HACK?
 		if ( i == longestName - 1 || i == longestName + longestValue - 1 )
@@ -320,7 +325,7 @@ static void Find_f()
 			continue;
 		}
 		underscores[i] = '_';
-		if ( i >= maxLength )
+		if ( i == maxLength - 1 )
 		{
 			underscores[i] = '\n';
 			break;
@@ -334,8 +339,8 @@ static void Find_f()
 	for ( const auto &pCmd : cmdMatches )
 	{
 		cmdNameGreen = S_COLOR_GREEN;
-		cmdNameGreen.append( pCmd->name );
-		Com_Printf( formatString, cmdNameGreen.c_str(), "", "" );
+		cmdNameGreen.append( pCmd->pName );
+		Com_Printf( formatString, cmdNameGreen.c_str(), S_COLOR_WHITE "", pCmd->pHelp ? pCmd->pHelp : "" );
 	}
 
 	for ( const auto &pVar : cvarMatches )
@@ -350,14 +355,48 @@ static void Find_f()
 
 }
 
+static void Help_f()
+{
+	if ( Cmd_Argc() != 2 )
+	{
+		Com_Print( "Usage: help <cmd/cvar>\n" );
+		return;
+	}
+
+	const char *name = Cmd_Argv( 1 );
+	if ( !name[0] )
+	{
+		return;
+	}
+
+	// search cmds
+	for ( cmdFunction_t *pCmd = cmd_functions; pCmd; pCmd = pCmd->pNext )
+	{
+		if ( Q_strcmp( pCmd->pName, name ) == 0 )
+		{
+			Com_Printf( " - %s\n", pCmd->pHelp );
+		}
+	}
+
+	// search cvars
+	for ( cvar_t *pVar = cvar_vars; pVar; pVar = pVar->pNext )
+	{
+		if ( Q_strcmp( pVar->GetName(), name ) == 0 )
+		{
+			Com_Printf( " - %s\n", pVar->help.c_str() );
+		}
+	}
+}
+
 void Init()
 {
 	con_notifytime = Cvar_Get( "con_notifytime", "8", 0, "Time in seconds that notifies are visible before expiring." );
 	con_drawnotify = Cvar_Get( "con_drawnotify", "1", 0, "If true, notifies can be drawn." );
 	con_allownotify = Cvar_Get( "con_allownotify", "1", 0, "If true, notifies can be posted." );
 
-	Cmd_AddCommand( "clear", Clear_f );
-	Cmd_AddCommand( "find", Find_f );
+	Cmd_AddCommand( "clear", Clear_f, "Clears the console buffer." );
+	Cmd_AddCommand( "find", Find_f, "Finds all cmds and cvars with <param> in the name, use * to list all." );
+	Cmd_AddCommand( "help", Help_f, "Displays help for a given cmd or cvar." );
 
 	con.initialized = true;
 }
@@ -429,11 +468,11 @@ static void RegenerateMatches( const char *partial )
 	strlen_t partialLength = Q_strlen( partial );
 
 	// find command matches
-	for ( cmd_function_t *pCmd = cmd_functions; pCmd; pCmd = pCmd->next )
+	for ( cmdFunction_t *pCmd = cmd_functions; pCmd; pCmd = pCmd->pNext )
 	{
-		if ( Q_strncmp( partial, pCmd->name, partialLength ) == 0 )
+		if ( Q_strncmp( partial, pCmd->pName, partialLength ) == 0 )
 		{
-			con.entryMatches.push_back( pCmd->name );
+			con.entryMatches.push_back( pCmd->pName );
 		}
 	}
 
@@ -466,6 +505,8 @@ Draws the console using ImGui
 */
 void ShowConsole( bool *pOpen )
 {
+	assert( *pOpen );
+
 	ImGui::PushStyleVar( ImGuiStyleVar_WindowMinSize, ImVec2( 330.0f, 250.0f ) );
 
 	ImGui::SetNextWindowSize( ImVec2( 600.0f, 800.0f ), ImGuiCond_FirstUseEver );

@@ -1603,13 +1603,14 @@ CL_Frame
 
 ==================
 */
-void CL_Frame (int msec)
+void CL_Frame( int msec )
 {
-	static int	extratime;
-	static int  lasttimecalled;
+	static int extratime;
+	static int lasttimecalled;
 
-	if (dedicated->GetBool())
+	if ( dedicated->GetBool() ) {
 		return;
+	}
 
 	extratime += msec;
 
@@ -1626,7 +1627,7 @@ void CL_Frame (int msec)
 	}
 
 	// let the mouse activate or deactivate
-	input::Frame ();
+	input::Frame();
 
 	// decide the simulation time
 	cls.frametime = MS2SEC( (float)extratime ); // SlartTime
@@ -1635,10 +1636,10 @@ void CL_Frame (int msec)
 
 	extratime = 0;
 
-	// SlartTodo: wtf does this do?
-	if ( cls.frametime > ( 1.0f / 5.0f ) ) {
+	// SlartTodo: don't think we want this...
+	/*if ( cls.frametime > ( 1.0f / 5.0f ) ) {
 		cls.frametime = ( 1.0f / 5.0f );
-	}
+	}*/
 
 	// if in the debugger last frame, don't timeout
 	if ( msec > 5000 ) {

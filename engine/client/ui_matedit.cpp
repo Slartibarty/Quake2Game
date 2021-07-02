@@ -206,6 +206,8 @@ void ShowMaterialEditor( bool *pOpen )
 {
 	// main window
 
+	assert( *pOpen );
+
 	const ImGuiWindowFlags mainWindowFlags =
 		ImGuiWindowFlags_MenuBar;
 

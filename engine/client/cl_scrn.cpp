@@ -54,6 +54,7 @@ cvar_t		*scr_graphscale;
 cvar_t		*scr_graphshift;
 
 cvar_t		*scr_devpause;
+cvar_t		*scr_showfps;
 
 char		crosshair_pic[MAX_QPATH];
 int			crosshair_width, crosshair_height;
@@ -67,6 +68,7 @@ struct screenGlobals_t
 	bool	ui_showDemo;
 	bool	ui_console;
 	bool	ui_matEdit;
+	bool	ui_stats;
 } scr;
 
 struct qHistoryStack
@@ -419,16 +421,17 @@ SCR_Init
 */
 void SCR_Init()
 {
-	scr_showpause = Cvar_Get( "scr_showpause", "1", 0 );
-	scr_centertime = Cvar_Get( "scr_centertime", "2.5", 0 );
+	scr_showpause = Cvar_Get( "scr_showpause", "1", 0, "If true, <paused> is displayed on the screen whilst paused.");
+	scr_centertime = Cvar_Get( "scr_centertime", "2.5", 0, "The time in seconds that centerprint text should stay on screen.");
 	scr_netgraph = Cvar_Get( "scr_netgraph", "0", 0 );
 	scr_timegraph = Cvar_Get( "scr_timegraph", "0", 0 );
-	scr_debuggraph = Cvar_Get( "scr_debuggraph", "0", 0 );
+	scr_debuggraph = Cvar_Get( "scr_debuggraph", "0", 0, "If true, shows the general debug graph.");
 	scr_graphheight = Cvar_Get( "scr_graphheight", "32", 0 );
 	scr_graphscale = Cvar_Get( "scr_graphscale", "1", 0 );
 	scr_graphshift = Cvar_Get( "scr_graphshift", "0", 0 );
 
-	scr_devpause = Cvar_Get( "scr_devpause", "0", 0 );
+	scr_devpause = Cvar_Get( "scr_devpause", "0", 0, "If true, the game pauses whilst the devui is up.");
+	scr_showfps = Cvar_Get( "scr_showfps", "0", 0, "If true, shows a stats panel on screen.");
 
 	Cmd_AddCommand( "timerefresh", SCR_TimeRefresh_f );
 	Cmd_AddCommand( "loading", SCR_Loading_f );
@@ -601,28 +604,36 @@ Draws ImGui elements of the screen
 */
 static void SCR_DrawImGui()
 {
+	// non-interactive panels
+
+	if ( scr_showfps->GetBool() ) {
+		UI::StatsPanel::ShowStats();
+	}
+
 	if ( !scr.ui_devui ) {
-		// if we're not drawing the dev UI, draw the console notify area
+		// show the notify and leave early
 		UI::Console::ShowNotify();
 		return;
 	}
 
-	// dev menu is always active in dev UI mode
-	SCR_DrawDevMenu();
+	// interactive panels
 
-	if ( scr.ui_showDemo ) {
-		ImGui::ShowDemoWindow( &scr.ui_showDemo );
+	if ( scr.ui_devui )
+	{
+		SCR_DrawDevMenu();
+
+		if ( scr.ui_showDemo ) {
+			ImGui::ShowDemoWindow( &scr.ui_showDemo );
+		}
+
+		if ( scr.ui_console ) {
+			UI::Console::ShowConsole( &scr.ui_console );
+		}
+
+		if ( scr.ui_matEdit ) {
+			UI::MatEdit::ShowMaterialEditor( &scr.ui_matEdit );
+		}
 	}
-
-	if ( scr.ui_console ) {
-		UI::Console::ShowConsole( &scr.ui_console );
-	}
-
-	if ( scr.ui_matEdit ) {
-		UI::MatEdit::ShowMaterialEditor( &scr.ui_matEdit );
-	}
-
-	ImGui::Render();
 }
 
 //=================================================================================================
