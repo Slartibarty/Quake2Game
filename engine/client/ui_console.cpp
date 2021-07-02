@@ -442,11 +442,6 @@ static void Submit()
 	con.editLine.Clear();
 }
 
-int StringSort( const void *p1, const void *p2 )
-{
-	return Q_strcmp( (const char *)p1, (const char *)p2 );
-}
-
 /*
 ========================
 RegenerateMatches
