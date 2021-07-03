@@ -383,7 +383,9 @@ static void Help_f()
 	{
 		if ( Q_strcmp( pVar->GetName(), name ) == 0 )
 		{
-			Com_Printf( " - %s\n", pVar->help.c_str() );
+			Cvar_PrintValue( pVar );
+			Cvar_PrintFlags( pVar );
+			Cvar_PrintHelp( pVar );
 		}
 	}
 }

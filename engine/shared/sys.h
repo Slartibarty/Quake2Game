@@ -4,6 +4,12 @@
 
 #pragma once
 
+struct filterSpec_t
+{
+	const platChar_t *pszName;
+	const platChar_t *pszSpec;
+};
+
 void	Sys_Init( void );
 
 void	Sys_AppActivate( void );
@@ -28,3 +34,19 @@ void	Sys_Quit( int code );
 
 char	*Sys_GetClipboardData( void );
 void	Sys_CopyProtect( void );
+
+// common file dialog interface
+
+void Sys_FileOpenDialog(
+	std::string &filename,
+	const platChar_t *title,
+	const filterSpec_t *supportedTypes,
+	const uint numTypes,
+	const uint defaultIndex );
+
+void Sys_FileOpenDialogMultiple(
+	std::vector<std::string> &filenames,
+	const platChar_t *title,
+	const filterSpec_t *supportedTypes,
+	const uint numTypes,
+	const uint defaultIndex );

@@ -78,6 +78,11 @@ void		Cvar_GetLatchedVars();
 			// was handled. (print or change)
 bool		Cvar_Command();
 
+			// for consistency
+void		Cvar_PrintValue( cvar_t *var );
+void		Cvar_PrintHelp( cvar_t *var );
+void		Cvar_PrintFlags( cvar_t *var );
+
 			// appends lines containing "set variable value" for all variables
 			// with the archive flag set to true.
 void 		Cvar_WriteVariables( FILE *f );

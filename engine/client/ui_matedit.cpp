@@ -13,79 +13,6 @@
 
 #include "imgui.h"
 
-#ifndef _WIN32
-#error The material editor is not compatible with Linux yet!
-#endif
-
-#include "../../core/sys_includes.h"
-#include <CommCtrl.h>
-#include <ShlObj_core.h>
-
-#include "winquake.h"
-
-struct filterSpec_t
-{
-	const platChar_t *pszName;
-	const platChar_t *pszSpec;
-};
-
-static void Sys_OpenFileDialog(
-	std::vector<std::string> &fileNames,
-	const filterSpec_t *supportedTypes,
-	const uint numTypes,
-	const uint defaultIndex )
-{
-	char filenameBuffer[1024];
-
-	IFileOpenDialog *pDialog;
-	HRESULT hr = CoCreateInstance(
-		CLSID_FileOpenDialog,
-		nullptr,
-		CLSCTX_INPROC_SERVER,
-		IID_PPV_ARGS( &pDialog ) );
-
-	const COMDLG_FILTERSPEC *filterSpec = reinterpret_cast<const COMDLG_FILTERSPEC *>( supportedTypes );
-
-	if ( SUCCEEDED( hr ) )
-	{
-		FILEOPENDIALOGOPTIONS flags;
-		hr = pDialog->GetOptions( &flags ); assert( SUCCEEDED( hr ) );
-		hr = pDialog->SetOptions( flags | FOS_FORCEFILESYSTEM | FOS_ALLOWMULTISELECT ); assert( SUCCEEDED( hr ) );
-		hr = pDialog->SetFileTypes( numTypes, filterSpec ); assert( SUCCEEDED( hr ) );
-
-		hr = pDialog->SetTitle( L"Texture Picker" );
-
-		hr = pDialog->SetFileTypeIndex( defaultIndex ); assert( SUCCEEDED( hr ) );
-		//hr = pDialog->SetDefaultExtension( L"dds" ); assert( SUCCEEDED( hr ) );
-
-		hr = pDialog->Show( cl_hwnd );
-		if ( SUCCEEDED( hr ) )
-		{
-			IShellItemArray *pArray;
-			hr = pDialog->GetResults( &pArray );
-			if ( SUCCEEDED( hr ) )
-			{
-				DWORD numItems;
-				pArray->GetCount( &numItems );
-				fileNames.reserve( numItems );
-				for ( DWORD i = 0; i < numItems; ++i )
-				{
-					IShellItem *pItem;
-					pArray->GetItemAt( i, &pItem );
-					LPWSTR pName;
-					pItem->GetDisplayName( SIGDN_FILESYSPATH, &pName );
-					WideCharToMultiByte( CP_UTF8, 0, pName, wcslen( pName ) + 1, filenameBuffer, sizeof( filenameBuffer ), nullptr, nullptr );
-					CoTaskMemFree( pName );
-					Str_FixSlashes( filenameBuffer );
-					fileNames.push_back( filenameBuffer );
-				}
-				pArray->Release();
-			}
-		}
-		pDialog->Release();
-	}
-}
-
 namespace UI::MatEdit
 {
 
@@ -179,7 +106,12 @@ static void ShowBatch( bool *pOpen )
 	if ( ImGui::Button( "Select Files..." ) )
 	{
 		matEdit.batchNames.clear();
-		Sys_OpenFileDialog( matEdit.batchNames, s_textureTypes, countof( s_textureTypes ), 4 );
+		Sys_FileOpenDialogMultiple( matEdit.batchNames, PLATTEXT( "Texture Picker" ), s_textureTypes, countof( s_textureTypes ), 4 );
+	}
+
+	if ( ImGui::Button( "Clear" ) )
+	{
+		matEdit.batchNames.clear();
 	}
 
 	const ImGuiWindowFlags scrollFlags = ImGuiWindowFlags_HorizontalScrollbar;

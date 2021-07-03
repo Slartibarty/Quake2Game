@@ -96,7 +96,20 @@ cvar_t *Cvar_Get( const char *name, const char *value, uint32 flags, const char 
 	}
 
 	cvar_t *var = Cvar_Find( name );
-	if ( var ) {
+	if ( var )
+	{
+		if ( help )
+		{
+			// if no help, make this the help
+			if ( var->help.empty() )
+			{
+				var->help.assign( help );
+			}
+			else
+			{
+				Com_Printf( S_COLOR_YELLOW "Warning: cvar %s has help defined in multiple locations\n", name );
+			}
+		}
 		var->flags |= flags;
 		return var;
 	}
@@ -416,13 +429,68 @@ bool Cvar_Command()
 	// perform a variable print or set
 	if ( Cmd_Argc() == 1 )
 	{
-		Com_Printf( "\"%s\" is \"%s\"\n", var->name.c_str(), var->value.c_str() );
+		Cvar_PrintValue( var );
+		Cvar_PrintFlags( var );
+		Cvar_PrintHelp( var );
 		return true;
 	}
 
 	Cvar_Set( var->name.c_str(), Cmd_Argv( 1 ) );
 
 	return true;
+}
+
+void Cvar_PrintValue( cvar_t *var )
+{
+	Com_Printf( "\"%s\" is \"%s\"\n", var->GetName(), var->GetString() );
+}
+
+void Cvar_PrintHelp( cvar_t *var )
+{
+	if ( !var->help.empty() ) {
+		Com_Printf( " - %s\n", var->help.c_str() );
+	}
+}
+
+void Cvar_PrintFlags( cvar_t *var )
+{
+	uint32 flags = var->flags & ~CVAR_MODIFIED;
+
+	if ( flags == 0 )
+	{
+		return;
+	}
+
+	if ( flags & CVAR_ARCHIVE )
+	{
+		Com_Print( " archive" );
+	}
+	if ( flags & CVAR_USERINFO )
+	{
+		Com_Print( " userinfo" );
+	}
+	if ( flags & CVAR_SERVERINFO )
+	{
+		Com_Print( " serverinfo" );
+	}
+	if ( flags & CVAR_NOSET )
+	{
+		Com_Print( " noset" );
+	}
+	if ( flags & CVAR_LATCH )
+	{
+		Com_Print( " latch" );
+	}
+	if ( flags & CVAR_CHEAT )
+	{
+		Com_Print( " cheat" );
+	}
+	/*if ( flags & CVAR_MODIFIED )
+	{
+		Com_Print( "archive" );
+	}*/
+
+	Com_Print( "\n" );
 }
 
 void Cvar_WriteVariables( FILE *f )

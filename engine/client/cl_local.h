@@ -523,11 +523,22 @@ namespace UI::MatEdit
 
 /*
 =======================================
-	Stats page
+	Stats Page
 =======================================
 */
 
 namespace UI::StatsPanel
 {
 	void ShowStats();
+}
+
+/*
+=======================================
+	Model Viewer
+=======================================
+*/
+
+namespace UI::ModelViewer
+{
+	void ShowModelViewer( bool *pOpen );
 }

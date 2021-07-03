@@ -260,14 +260,14 @@ bool Cbuf_AddLateCommands( int argc, char **argv )
 	int i, j;
 
 	// build the combined string to parse from
-	strlen_t s = 0;
+	int s = 0;
 	for ( i = 1; i < argc; ++i )
 	{
 		if ( Q_strcmp( argv[i], "+set" ) == 0 ) {
 			i += 2;
 			continue;
 		}
-		s += Q_strlen( argv[i] ) + 1;
+		s += static_cast<int>( strlen( argv[i] ) + 1 );
 	}
 	if ( s == 0 ) {
 		return false;
@@ -292,7 +292,8 @@ bool Cbuf_AddLateCommands( int argc, char **argv )
 	build[0] = '\0';
 	for ( i = 0; i < s - 1; ++i )
 	{
-		if ( text[i] == '+' ) {
+		if ( text[i] == '+' )
+		{
 			++i;
 
 			for ( j = i; ( text[j] != '+' ) && ( text[j] != '-' ) && ( text[j] != '\0' ); j++ )

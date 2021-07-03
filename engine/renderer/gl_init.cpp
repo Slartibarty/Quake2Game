@@ -2,7 +2,7 @@
 #include "gl_local.h"
 
 #ifdef Q_DEBUG
-//#define Q_DEBUG_GL
+#define Q_DEBUG_GL
 #endif
 
 glState_t				glState;
@@ -45,6 +45,7 @@ cvar_t *r_flashblend;
 cvar_t *r_overbright;
 cvar_t *r_swapinterval;
 cvar_t *r_lockpvs;
+cvar_t *r_nodebug;
 
 cvar_t *r_fullscreen;
 cvar_t *r_gamma;
@@ -61,9 +62,8 @@ cvar_t *r_viewmodelfov;
 
 static void GLAPIENTRY GL_DebugProc( GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam )
 {
-	if ( severity == GL_DEBUG_SEVERITY_NOTIFICATION )
+	if ( severity == GL_DEBUG_SEVERITY_NOTIFICATION || r_nodebug->GetBool() )
 	{
-		// ignore notifications
 		return;
 	}
 
@@ -102,7 +102,7 @@ static void GLAPIENTRY GL_DebugProc( GLenum source, GLenum type, GLuint id, GLen
 		pType = "DEPRECATED BEHAVIOR";
 		break;
 	case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
-		pType = "UDEFINED BEHAVIOR";
+		pType = "UNDEFINED BEHAVIOR";
 		break;
 	case GL_DEBUG_TYPE_PORTABILITY:
 		pType = "PORTABILITY";
@@ -170,9 +170,12 @@ void R_InitGLState()
 
 #ifdef Q_DEBUG_GL
 
-	glEnable( GL_DEBUG_OUTPUT );
-	glEnable( GL_DEBUG_OUTPUT_SYNCHRONOUS );
-	glDebugMessageCallback( GL_DebugProc, nullptr );
+	if ( GLEW_KHR_debug )
+	{
+		glEnable( GL_DEBUG_OUTPUT );
+		glEnable( GL_DEBUG_OUTPUT_SYNCHRONOUS );
+		glDebugMessageCallback( GL_DebugProc, nullptr );
+	}
 
 #endif
 }
@@ -184,52 +187,53 @@ R_InitCVars
 */
 static void R_InitCVars()
 {
-	r_lefthand = Cvar_Get( "hand", "0", CVAR_USERINFO | CVAR_ARCHIVE );
-	r_norefresh = Cvar_Get( "r_norefresh", "0", 0 );
-	r_fullbright = Cvar_Get( "r_fullbright", "0", 0 );
-	r_drawentities = Cvar_Get( "r_drawentities", "1", 0 );
-	r_drawworld = Cvar_Get( "r_drawworld", "1", 0 );
-	r_drawlights = Cvar_Get( "r_drawlights", "0", 0 );
-	r_novis = Cvar_Get( "r_novis", "0", 0 );
-	r_nocull = Cvar_Get( "r_nocull", "0", 0 );
-	r_lerpmodels = Cvar_Get( "r_lerpmodels", "1", 0 );
-	r_speeds = Cvar_Get( "r_speeds", "0", 0 );
+	r_lefthand = Cvar_Get( "hand", "0", CVAR_USERINFO | CVAR_ARCHIVE, "Determines weapon handedness." );
+	r_norefresh = Cvar_Get( "r_norefresh", "0", 0, "Disables rendering, you won't be able to see the console." );
+	r_fullbright = Cvar_Get( "r_fullbright", "0", 0, "If true, lighting is ignored." );
+	r_drawentities = Cvar_Get( "r_drawentities", "1", 0, "If true, entities are drawn." );
+	r_drawworld = Cvar_Get( "r_drawworld", "1", 0, "If true, the world is drawn." );
+	r_drawlights = Cvar_Get( "r_drawlights", "0", 0, "If true, lights are drawn." );
+	r_novis = Cvar_Get( "r_novis", "0", 0, "If true, vis is ignored." );
+	r_nocull = Cvar_Get( "r_nocull", "0", 0, "If true, world polygons are not frustrum culled." );
+	r_lerpmodels = Cvar_Get( "r_lerpmodels", "1", 0, "If true, md2 models are vertex lerped." );
+	r_speeds = Cvar_Get( "r_speeds", "0", 0, "If true, perf info is printed to the console every frame.");
 
-	r_lightlevel = Cvar_Get( "r_lightlevel", "0", 0 );
+	r_lightlevel = Cvar_Get( "r_lightlevel", "0", 0, "A terrible hack to determine the client's light level." );
 
-	r_modulate = Cvar_Get( "r_modulate", "1", CVAR_ARCHIVE );
-	r_mode = Cvar_Get( "r_mode", "3", CVAR_ARCHIVE );
-	r_lightmap = Cvar_Get( "r_lightmap", "0", 0 );
-	r_shadows = Cvar_Get( "r_shadows", "0", CVAR_ARCHIVE );
-	r_dynamic = Cvar_Get( "r_dynamic", "1", 0 );
-	r_picmip = Cvar_Get( "r_picmip", "0", 0 );
-	r_showtris = Cvar_Get( "r_showtris", "0", 0 );
-	r_wireframe = Cvar_Get( "r_wireframe", "0", 0 );
-	r_finish = Cvar_Get( "r_finish", "0", CVAR_ARCHIVE );
-	r_clear = Cvar_Get( "r_clear", "1", 0 );
-	r_cullfaces = Cvar_Get( "r_cullfaces", "1", 0 );
-	r_polyblend = Cvar_Get( "r_polyblend", "1", 0 );
-	r_flashblend = Cvar_Get( "r_flashblend", "0", 0 );
-	r_lockpvs = Cvar_Get( "r_lockpvs", "0", 0 );
+	r_modulate = Cvar_Get( "r_modulate", "1", CVAR_ARCHIVE, "Deprecated." );
+	r_mode = Cvar_Get( "r_mode", "3", CVAR_ARCHIVE, "The video mode." );
+	r_lightmap = Cvar_Get( "r_lightmap", "0", 0, "If true, displays the lightmap." );
+	r_shadows = Cvar_Get( "r_shadows", "0", CVAR_ARCHIVE, "Deprecated." );
+	r_dynamic = Cvar_Get( "r_dynamic", "1", 0, "If true, dynamic lighting is enabled." );
+	r_picmip = Cvar_Get( "r_picmip", "0", 0, "Deprecated." );
+	r_showtris = Cvar_Get( "r_showtris", "0", 0, "Deprecated." );
+	r_wireframe = Cvar_Get( "r_wireframe", "0", 0, "If true, draws everything using lines." );
+	r_finish = Cvar_Get( "r_finish", "0", CVAR_ARCHIVE, "Deprecated." );
+	r_clear = Cvar_Get( "r_clear", "1", 0, "If true, clears the framebuffer at the start of each frame." );
+	r_cullfaces = Cvar_Get( "r_cullfaces", "1", 0, "If true, back-facing polygons are culled." );
+	r_polyblend = Cvar_Get( "r_polyblend", "1", 0, "If true, displays screen flashes." );
+	r_flashblend = Cvar_Get( "r_flashblend", "0", 0, "Deprecated." );
+	r_lockpvs = Cvar_Get( "r_lockpvs", "0", 0, "Locks the active PVS." );
+	r_nodebug = Cvar_Get( "r_nodebug", "0", 0, "Disable OpenGL debug spew." );
 
-	r_vertex_arrays = Cvar_Get( "r_vertex_arrays", "0", CVAR_ARCHIVE );
+	r_vertex_arrays = Cvar_Get( "r_vertex_arrays", "0", CVAR_ARCHIVE, "Deprecated.");
 
-	r_ext_multitexture = Cvar_Get( "r_ext_multitexture", "0", CVAR_ARCHIVE );
-	r_ext_compiled_vertex_array = Cvar_Get( "r_ext_compiled_vertex_array", "1", CVAR_ARCHIVE );
+	r_ext_multitexture = Cvar_Get( "r_ext_multitexture", "0", CVAR_ARCHIVE, "MD2 Deprecated." );
+	r_ext_compiled_vertex_array = Cvar_Get( "r_ext_compiled_vertex_array", "1", CVAR_ARCHIVE, "MD2 Deprecated." );
 
-	r_overbright = Cvar_Get( "r_overbright", "1", 0 );
-	r_swapinterval = Cvar_Get( "r_swapinterval", "0", CVAR_ARCHIVE );
+	r_overbright = Cvar_Get( "r_overbright", "1", 0, "Whether to use better blending for lightmaps. Deprecated.");
+	r_swapinterval = Cvar_Get( "r_swapinterval", "0", CVAR_ARCHIVE, "Determines the page flip interval, -1 = adaptive vsync, 0 = immediate, 1 = vsync" );
 
-	r_fullscreen = Cvar_Get( "r_fullscreen", "0", CVAR_ARCHIVE );
-	r_gamma = Cvar_Get( "r_gamma", "1", CVAR_ARCHIVE );
-	r_multisamples = Cvar_Get( "r_multisamples", "8", CVAR_ARCHIVE );
+	r_fullscreen = Cvar_Get( "r_fullscreen", "0", CVAR_ARCHIVE, "If true, the game draws in a fullscreen window." );
+	r_gamma = Cvar_Get( "r_gamma", "1", CVAR_ARCHIVE, "Deprecated." );
+	r_multisamples = Cvar_Get( "r_multisamples", "8", CVAR_ARCHIVE, "Number of times to multisample pixels. Valid values are powers of 2 between 0 and 8." );
 
-	r_basemaps = Cvar_Get( "r_basemaps", "1", 0 );
-	r_specmaps = Cvar_Get( "r_specmaps", "1", 0 );
-	r_normmaps = Cvar_Get( "r_normmaps", "1", 0 );
-	r_emitmaps = Cvar_Get( "r_emitmaps", "1", 0 );
+	r_basemaps = Cvar_Get( "r_basemaps", "1", 0, "Whether to bind diffuse maps." );
+	r_specmaps = Cvar_Get( "r_specmaps", "1", 0, "Whether to bind specular maps." );
+	r_normmaps = Cvar_Get( "r_normmaps", "1", 0, "Whether to bind normal maps." );
+	r_emitmaps = Cvar_Get( "r_emitmaps", "1", 0, "Whether to bind emission maps." );
 
-	r_viewmodelfov = Cvar_Get( "r_viewmodelfov", "42", 0 );
+	r_viewmodelfov = Cvar_Get( "r_viewmodelfov", "42", 0, "The field of view to draw viewmodels at.");
 }
 
 /*
@@ -239,14 +243,14 @@ R_InitCommands
 */
 static void R_InitCommands()
 {
-	Cmd_AddCommand( "imagelist", GL_ImageList_f );
-	Cmd_AddCommand( "materiallist", GL_MaterialList_f );
-	Cmd_AddCommand( "screenshot", GL_Screenshot_PNG_f );
-	Cmd_AddCommand( "screenshot_tga", GL_Screenshot_TGA_f );
-	Cmd_AddCommand( "modellist", Mod_Modellist_f );
+	Cmd_AddCommand( "imagelist", GL_ImageList_f, "Lists all registered images." );
+	Cmd_AddCommand( "materiallist", GL_MaterialList_f, "Lists all registered materials." );
+	Cmd_AddCommand( "screenshot", GL_Screenshot_PNG_f, "Takes a PNG screenshot." );
+	Cmd_AddCommand( "screenshot_tga", GL_Screenshot_TGA_f, "Takes a TGA screenshot." );
+	Cmd_AddCommand( "modellist", Mod_Modellist_f, "Lists all registered models." );
 
-	Cmd_AddCommand( "extractwad", R_ExtractWad_f );
-	Cmd_AddCommand( "upgradewals", R_UpgradeWals_f );
+	Cmd_AddCommand( "extractwad", R_ExtractWad_f, "Extracts a Quake 1 WAD to the textures directory." );
+	Cmd_AddCommand( "upgradewals", R_UpgradeWals_f, "Converts a folder of Quake 2 WAL files to PNG." );
 }
 
 /*

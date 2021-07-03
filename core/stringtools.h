@@ -159,7 +159,7 @@ inline uint32 HashString( const char* s )
 	uint32 h = 2166136261u;
 	for ( ; *s; ++s )
 	{
-		uint32 c = (unsigned char) *s;
+		uint32 c = (unsigned char)*s;
 		h = (h ^ c) * 16777619;
 	}
 	return (h ^ (h << 17)) + (h >> 21);
@@ -170,7 +170,7 @@ inline uint32 HashStringInsensitive( const char* s )
 	uint32 h = 2166136261u;
 	for ( ; *s; ++s )
 	{
-		uint32 c = (unsigned char) *s;
+		uint32 c = (unsigned char)*s;
 		c += (((('A'-1) - c) & (c - ('Z'+1))) >> 26) & 32;
 		h = (h ^ c) * 16777619;
 	}
@@ -187,7 +187,7 @@ inline consteval uint32 ConstHashString( const char( &s )[cnt] )
 	uint32 h = 2166136261u;
 	for ( uint32 i = 0; i < cnt-1; ++i )
 	{
-		uint32 c = (unsigned char) s[i];
+		uint32 c = (unsigned char)s[i];
 		h = (h ^ c) * 16777619;
 	}
 	return (h ^ (h << 17)) + (h >> 21);
@@ -199,7 +199,7 @@ inline consteval uint32 ConstHashStringInsensitive( const char( &s )[cnt] )
 	uint32 h = 2166136261u;
 	for ( uint32 i = 0; i < cnt-1; ++i )
 	{
-		uint32 c = (unsigned char) s[i];
+		uint32 c = (unsigned char)s[i];
 		c += (((('A'-1) - c) & (c - ('Z'+1))) >> 26) & 32;
 		h = (h ^ c) * 16777619;
 	}

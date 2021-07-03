@@ -65,11 +65,3 @@ int		Sys_Milliseconds();
 char *	Sys_FindFirst( const char *path, unsigned musthave, unsigned canthave );
 char *	Sys_FindNext( unsigned musthave, unsigned canthave );
 void	Sys_FindClose( void );
-
-/*
-=======================================
-	File dialog
-=======================================
-*/
-
-// TODO: Common dialog interface

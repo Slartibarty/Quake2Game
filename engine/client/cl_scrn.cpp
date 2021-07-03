@@ -69,6 +69,7 @@ struct screenGlobals_t
 	bool	ui_console;
 	bool	ui_matEdit;
 	bool	ui_stats;
+	bool	ui_mdlviewer;
 } scr;
 
 struct qHistoryStack
@@ -558,6 +559,7 @@ static void SCR_DrawDevMenu()
 			ImGui::MenuItem( "Demo", nullptr, &scr.ui_showDemo );
 			ImGui::MenuItem( "Console", nullptr, &scr.ui_console );
 			ImGui::MenuItem( "Material Editor", nullptr, &scr.ui_matEdit );
+			ImGui::MenuItem( "Model Viewer", nullptr, &scr.ui_mdlviewer );
 
 			ImGui::EndMenu();
 		}
@@ -632,6 +634,10 @@ static void SCR_DrawImGui()
 
 		if ( scr.ui_matEdit ) {
 			UI::MatEdit::ShowMaterialEditor( &scr.ui_matEdit );
+		}
+
+		if ( scr.ui_mdlviewer ) {
+			UI::ModelViewer::ShowModelViewer( &scr.ui_mdlviewer );
 		}
 	}
 }

@@ -516,6 +516,8 @@ static void R_DrawParticles()
 
 	glDisable( GL_BLEND );
 	glDepthMask( GL_TRUE );
+
+	glUseProgram( 0 );
 }
 
 //=================================================================================================
@@ -618,38 +620,6 @@ static void R_SetupFrame()
 
 	c_brush_polys = 0;
 	c_alias_polys = 0;
-
-	// clear out the portion of the screen that the NOWORLDMODEL defines
-	if ( tr.refdef.rdflags & RDF_NOWORLDMODEL )
-	{
-		glEnable( GL_SCISSOR_TEST );
-		glClearColor( 0.3f, 0.3f, 0.3f, 1.0f );
-		glScissor( tr.refdef.x, vid.height - tr.refdef.height - tr.refdef.y, tr.refdef.width, tr.refdef.height );
-		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-		glClearColor( DEFAULT_CLEARCOLOR );
-		glDisable( GL_SCISSOR_TEST );
-	}
-}
-
-/*
-========================
-MYgluPerspective
-========================
-*/
-void MYgluPerspective(GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble zFar)
-{
-	GLdouble xmin, xmax, ymin, ymax;
-
-	ymax = zNear * tan(fovy * M_PI / 360.0);
-	ymin = -ymax;
-
-	xmin = ymin * aspect;
-	xmax = ymax * aspect;
-
-	xmin += -(2.0 * 0.0) / zNear;
-	xmax += -(2.0 * 0.0) / zNear;
-
-	glFrustum(xmin, xmax, ymin, ymax, zNear, zFar);
 }
 
 // convert from our coordinate system (looking down X)
@@ -916,12 +886,17 @@ R_BeginFrame
 Public
 ========================
 */
-void R_BeginFrame( bool imgui )
+void R_BeginFrame( bool imgui, int frameBuffer )
 {
 	GLimp_BeginFrame();
 
 	// check if we need to set modes
 	R_SetMode();
+
+	// set framebuffer
+	if ( frameBuffer != 0 ) {
+		R_BindFBO( frameBuffer );
+	}
 
 	// tell imgui we're starting a new frame
 	if ( imgui ) {

@@ -990,3 +990,110 @@ void GL_ShutdownImages( void )
 	}
 #endif
 }
+
+/*
+===============================================================================
+	Framebuffers
+===============================================================================
+*/
+
+#define MAX_FRAMEBUFFERS 16
+
+struct frameBuffer_t
+{
+	GLuint obj, color, depthStencil;
+	int width, height;
+};
+
+static frameBuffer_t s_frameBuffers[MAX_FRAMEBUFFERS];
+
+int R_CreateFBO( int width, int height )
+{
+	// find a free framebuffer
+	int i = 0;
+	for ( ; i < MAX_FRAMEBUFFERS; ++i )
+	{
+		if ( s_frameBuffers[i].obj == 0 ) {
+			break;
+		}
+	}
+	if ( i == MAX_FRAMEBUFFERS ) {
+		Com_FatalError( "Ran out of framebuffer slots, tell a programmer!\n" );
+	}
+
+	frameBuffer_t &fb = s_frameBuffers[i];
+
+	fb.width = width;
+	fb.height = height;
+
+	glGenFramebuffers( 1, &fb.obj );
+	glBindFramebuffer( GL_FRAMEBUFFER, fb.obj );
+
+	glGenTextures( 1, &fb.color );
+	GL_Bind( fb.color );
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr );
+	GL_ApplyTextureParameters( IF_NOMIPS );
+	glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fb.color, 0 );
+
+	glGenRenderbuffers( 1, &fb.depthStencil );
+	glBindRenderbuffer( GL_RENDERBUFFER, fb.depthStencil );
+	glRenderbufferStorage( GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height );
+	glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, fb.depthStencil );
+
+	if ( glCheckFramebufferStatus( GL_FRAMEBUFFER ) != GL_FRAMEBUFFER_COMPLETE )
+	{
+		Com_FatalError( "Failed to create framebuffer\n" );
+	}
+
+	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+
+	return i;
+}
+
+void R_DestroyFBO( int fbo )
+{
+	assert( fbo >= 0 && fbo < MAX_FRAMEBUFFERS );
+	frameBuffer_t &fb = s_frameBuffers[fbo];
+
+	glDeleteRenderbuffers( 1, &fb.depthStencil );
+	glDeleteTextures( 1, &fb.color );
+	glDeleteFramebuffers( 1, &fb.obj );
+
+	memset( &fb, 0, sizeof( fb ) );
+}
+
+void R_BindFBO( int fbo )
+{
+	assert( fbo >= 0 && fbo < MAX_FRAMEBUFFERS );
+	const frameBuffer_t &fb = s_frameBuffers[fbo];
+
+	glBindFramebuffer( GL_FRAMEBUFFER, fb.obj );
+
+	glViewport( 0, 0, fb.width, fb.height );
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+}
+
+void R_BindDefaultFBO()
+{
+	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+
+	glViewport( 0, 0, vid.width, vid.height );
+}
+
+uint R_TexNumFBO( int fbo )
+{
+	assert( fbo >= 0 && fbo < MAX_FRAMEBUFFERS );
+	const frameBuffer_t &fb = s_frameBuffers[fbo];
+
+	return fb.color;
+}
+
+void R_DestroyAllFBOs()
+{
+	for ( int i = 0; i < MAX_FRAMEBUFFERS; ++i )
+	{
+		if ( s_frameBuffers[i].obj != 0 ) {
+			R_DestroyFBO( i );
+		}
+	}
+}

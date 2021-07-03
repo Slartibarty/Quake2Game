@@ -16,9 +16,9 @@ void		R_SetSky( const char *name, float rotate, vec3_t axis );
 void		R_EndRegistration();
 
 			// Render entry points
-void		R_BeginFrame( bool imgui = false );
+void		R_BeginFrame( bool imgui = false, int frameBuffer = 0 );	// should only be called by SCR_Update
 void		R_RenderFrame( refdef_t *fd );
-void		R_EndFrame( bool imgui = false );
+void		R_EndFrame( bool imgui = false );							// should only be called by SCR_Update
 
 			// 2D elements, occurs after world and entities
 void		R_DrawGetPicSize( int *w, int *h, const char *name );
@@ -36,3 +36,9 @@ void		R_DrawLine( const vec3_t start, const vec3_t end );
 
 void *		R_GetWindowHandle();
 void		R_AppActivate( bool active );
+
+int			R_CreateFBO( int width, int height );
+void		R_DestroyFBO( int fbo );
+void		R_BindFBO( int fbo );
+void		R_BindDefaultFBO();
+uint		R_TexNumFBO( int fbo );

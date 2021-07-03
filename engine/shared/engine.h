@@ -7,6 +7,11 @@
 #pragma once
 
 #include "../../common/q_shared.h"
+#include "../../common/q_formats.h" // File formats
+
+// c++ headers
+#include <vector>
+#include <string>
 
 #include "cmd.h"
 #include "cmodel.h"
@@ -20,8 +25,6 @@
 #include "sizebuf.h"
 #include "sys.h"
 #include "memory.h"
-
-#include "../../common/q_formats.h" // File formats
 
 /*
 ===================================================================================================

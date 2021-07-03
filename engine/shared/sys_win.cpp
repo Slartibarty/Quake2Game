@@ -5,8 +5,10 @@
 #include <process.h>
 
 #include <vector>
+#include <string>
 
 #include "../../core/sys_includes.h"
+#include <ShlObj_core.h>
 #include "../client/winquake.h"			// Hack?
 
 #include "sys.h"
@@ -361,6 +363,117 @@ void Sys_AppActivate (void)
 {
 	ShowWindow ( cl_hwnd, SW_RESTORE);
 	SetForegroundWindow ( cl_hwnd );
+}
+
+void Sys_FileOpenDialog(
+	std::string &filename,
+	const platChar_t *title,
+	const filterSpec_t *supportedTypes,
+	const uint numTypes,
+	const uint defaultIndex )
+{
+	char filenameBuffer[LONG_MAX_PATH];
+
+	IFileOpenDialog *pDialog;
+	HRESULT hr = CoCreateInstance(
+		CLSID_FileOpenDialog,
+		nullptr,
+		CLSCTX_INPROC_SERVER,
+		IID_PPV_ARGS( &pDialog ) );
+
+	const COMDLG_FILTERSPEC *filterSpec = reinterpret_cast<const COMDLG_FILTERSPEC *>( supportedTypes );
+
+	if ( SUCCEEDED( hr ) )
+	{
+		FILEOPENDIALOGOPTIONS flags;
+		hr = pDialog->GetOptions( &flags ); assert( SUCCEEDED( hr ) );
+		flags |= FOS_FORCEFILESYSTEM;
+		hr = pDialog->SetOptions( flags ); assert( SUCCEEDED( hr ) );
+		hr = pDialog->SetFileTypes( numTypes, filterSpec ); assert( SUCCEEDED( hr ) );
+
+		hr = pDialog->SetTitle( title ); assert( SUCCEEDED( hr ) );
+
+		hr = pDialog->SetFileTypeIndex( defaultIndex ); assert( SUCCEEDED( hr ) );
+		//hr = pDialog->SetDefaultExtension( L"dds" ); assert( SUCCEEDED( hr ) );
+
+		hr = pDialog->Show( cl_hwnd );
+		if ( SUCCEEDED( hr ) )
+		{
+			IShellItem *pItem;
+			hr = pDialog->GetResult( &pItem );
+			if ( SUCCEEDED( hr ) )
+			{
+				LPWSTR pName;
+				pItem->GetDisplayName( SIGDN_FILESYSPATH, &pName );
+				WideCharToMultiByte( CP_UTF8, 0, pName, static_cast<int>( wcslen( pName ) + 1 ), filenameBuffer, sizeof( filenameBuffer ), nullptr, nullptr );
+				CoTaskMemFree( pName );
+				Str_FixSlashes( filenameBuffer );
+				filename.assign( filenameBuffer );
+
+				pItem->Release();
+			}
+		}
+		pDialog->Release();
+	}
+}
+
+void Sys_FileOpenDialogMultiple(
+	std::vector<std::string> &filenames,
+	const platChar_t *title,
+	const filterSpec_t *supportedTypes,
+	const uint numTypes,
+	const uint defaultIndex )
+{
+	char filenameBuffer[LONG_MAX_PATH];
+
+	IFileOpenDialog *pDialog;
+	HRESULT hr = CoCreateInstance(
+		CLSID_FileOpenDialog,
+		nullptr,
+		CLSCTX_INPROC_SERVER,
+		IID_PPV_ARGS( &pDialog ) );
+
+	const COMDLG_FILTERSPEC *filterSpec = reinterpret_cast<const COMDLG_FILTERSPEC *>( supportedTypes );
+
+	if ( SUCCEEDED( hr ) )
+	{
+		FILEOPENDIALOGOPTIONS flags;
+		hr = pDialog->GetOptions( &flags ); assert( SUCCEEDED( hr ) );
+		flags |= FOS_FORCEFILESYSTEM | FOS_ALLOWMULTISELECT;
+		hr = pDialog->SetOptions( flags ); assert( SUCCEEDED( hr ) );
+		hr = pDialog->SetFileTypes( numTypes, filterSpec ); assert( SUCCEEDED( hr ) );
+
+		hr = pDialog->SetTitle( title ); assert( SUCCEEDED( hr ) );
+
+		hr = pDialog->SetFileTypeIndex( defaultIndex ); assert( SUCCEEDED( hr ) );
+		//hr = pDialog->SetDefaultExtension( L"dds" ); assert( SUCCEEDED( hr ) );
+
+		hr = pDialog->Show( cl_hwnd );
+		if ( SUCCEEDED( hr ) )
+		{
+			IShellItemArray *pArray;
+			hr = pDialog->GetResults( &pArray );
+			if ( SUCCEEDED( hr ) )
+			{
+				DWORD numItems;
+				pArray->GetCount( &numItems );
+				filenames.reserve( numItems );
+				for ( DWORD i = 0; i < numItems; ++i )
+				{
+					IShellItem *pItem;
+					pArray->GetItemAt( i, &pItem );
+					LPWSTR pName;
+					pItem->GetDisplayName( SIGDN_FILESYSPATH, &pName );
+					WideCharToMultiByte( CP_UTF8, 0, pName, static_cast<int>( wcslen( pName ) + 1 ), filenameBuffer, sizeof( filenameBuffer ), nullptr, nullptr );
+					CoTaskMemFree( pName );
+					Str_FixSlashes( filenameBuffer );
+					filenames.push_back( filenameBuffer );
+				}
+				pArray->Release();
+			}
+		}
+		pDialog->Release();
+	}
 }
 
 /*

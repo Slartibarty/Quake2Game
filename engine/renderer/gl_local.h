@@ -21,7 +21,7 @@ static_assert( DIRECTX_MATH_VERSION >= 316 );
 #include "GL/wglew.h"
 #endif
 
-#define DEFAULT_CLEARCOLOR		0.0f, 0.0f, 0.0f, 1.0f	// Black
+#define DEFAULT_CLEARCOLOR		0.5f, 0.5f, 0.5f, 1.0f
 
 #define MAT_EXT ".mat"
 
@@ -151,6 +151,7 @@ extern cvar_t *r_flashblend;
 extern cvar_t *r_overbright;
 extern cvar_t *r_swapinterval;
 extern cvar_t *r_lockpvs;
+extern cvar_t *r_nodebug;
 
 extern cvar_t *r_fullscreen;
 extern cvar_t *r_gamma;
@@ -231,6 +232,8 @@ void		GL_FreeUnusedMaterials();
 
 void		GL_InitImages();
 void		GL_ShutdownImages();
+
+void		R_DestroyAllFBOs();
 
 // Image flags
 // Mipmaps are opt-out
