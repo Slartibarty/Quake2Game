@@ -10,26 +10,9 @@
 
 #pragma once
 
-#if 1
+#include "../../common/filesystem_interface.h"
 
 // Local engine interface
-
-#define DECLARE_HANDLE(name) struct name##__{int unused;}; typedef struct name##__ *name
-
-#ifdef Q_DEBUG
-// to disallow implicit conversions
-struct fsHandle_t__ { void *unused; }; using fsHandle_t = fsHandle_t__ *;
-#else
-using fsHandle_t = void *;
-#endif
-
-#define FS_INVALID_HANDLE nullptr
-
-enum fsPath_t
-{
-	FS_GAMEDIR,
-	FS_WRITEDIR
-};
 
 namespace FileSystem
 {
@@ -90,59 +73,35 @@ inline consteval int Developer_searchpath()
 
 // DLL interface
 
-#if 0
-
-class __declspec( novtable ) IFileSystem
-{
-	virtual void OpenFileRead( const char *filename, fsHandle_t &handle ) = 0;
-	virtual void CloseFile( fsHandle_t handle ) = 0;
-	virtual void ReadFile( void *buffer, int length, fsHandle_t handle ) = 0;
-
-	virtual int LoadFile( const char *filename, void **buffer, int extraData = 0 ) = 0;
-	virtual void FreeFile( void *buffer ) = 0;
-};
-
 class CFileSystem final : public IFileSystem
 {
-	void OpenFileRead( const char *filename, fsHandle_t &handle ) override
-	{ FileSystem::OpenFileRead( filename, handle ); }
+public:
+	fsHandle_t OpenFileRead( const char *filename ) override
+	{ return FileSystem::OpenFileRead( filename ); }
+	fsHandle_t OpenFileWrite( const char *filename ) override
+	{ return FileSystem::OpenFileWrite( filename ); }
+	fsHandle_t OpenFileAppend( const char *filename ) override
+	{ return FileSystem::OpenFileAppend( filename ); }
 	void CloseFile( fsHandle_t handle ) override
 	{ FileSystem::CloseFile( handle ); }
-	void ReadFile( void *buffer, int length, fsHandle_t handle ) override
-	{ FileSystem::ReadFile( buffer, length, handle ); }
-
-	int LoadFile( const char *filename, void **buffer, int extraData = 0 ) override
-	{ FileSystem::LoadFile( filename, buffer, extraData ); }
-	void FreeFile( void *buffer ) override
-	{ FileSystem::FreeFile( buffer ); }
+	int ReadFile( void *buffer, int length, fsHandle_t handle ) override
+	{ return FileSystem::ReadFile( buffer, length, handle ); }
+	void WriteFile( const void *buffer, int length, fsHandle_t handle ) override
+	{ FileSystem::WriteFile( buffer, length, handle ); }
+	void PrintFile( const char *string, fsHandle_t handle ) override
+	{ FileSystem::PrintFile( string, handle ); }
+	void PrintFileFmt( fsHandle_t handle, const char *fmt, ... ) override
+	{
+		// HACK
+		va_list args;
+		va_start( args, fmt );
+		vfprintf( (FILE *)handle, fmt, args );
+		va_end( args );
+	}
+	void FlushFile( fsHandle_t handle ) override
+	{ FileSystem::FlushFile( handle ); }
+	bool FileExists( const char *filename, fsPath_t fsPath = FS_GAMEDIR ) override
+	{ return FileSystem::FileExists( filename, fsPath ); }
 };
 
-#endif
-
-#else
-
-void		FS_Init();
-void		FS_Shutdown();
-
-// I/O
-
-int			FS_FOpenFile( const char *filename, FILE **file );
-void		FS_FCloseFile( FILE *f );
-// properly handles partial reads
-void		FileSystem::ReadFile( void *buffer, int len, FILE *f );
-
-// a null buffer will just return the file length without loading
-// a -1 length is not present
-int			FS_LoadFile( const char *path, void **buffer, int extradata = 0 );
-void		FS_FreeFile( void *buffer );
-
-const char	*FS_NextPath( const char *prevpath );
-
-// Utilities
-
-void		FS_SetGamedir( const char *dir, bool flush );
-const char	*FS_Gamedir();
-void		FS_CreatePath( char *path );
-void		FS_ExecAutoexec();
-
-#endif
+extern CFileSystem g_fileSystem;

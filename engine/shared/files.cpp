@@ -436,6 +436,9 @@ void ExecAutoexec()
 
 }
 
+// DLL interface
+CFileSystem g_fileSystem;
+
 #else
 
 char	fs_gamedir[MAX_OSPATH];

@@ -773,7 +773,7 @@ void CL_PingServers_f()
 		if ( !adr.port ) {
 			adr.port = BigShort( PORT_SERVER );
 		}
-		Netchan_OutOfBandPrint( NS_CLIENT, adr, va( "info %i", PROTOCOL_VERSION ) );
+		Netchan_OutOfBandPrint( NS_CLIENT, adr, "info " STRINGIFY( PROTOCOL_VERSION ) );
 	}
 }
 

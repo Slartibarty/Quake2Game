@@ -3,6 +3,7 @@
 #pragma once
 
 #include "../../common/q_shared.h"
+#include "../../common/filesystem_interface.h"
 
 #ifdef _WIN32
 #include <malloc.h>

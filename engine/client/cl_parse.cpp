@@ -286,11 +286,7 @@ void CL_ParseServerData (void)
 	i = MSG_ReadLong (&net_message);
 	cls.serverProtocol = i;
 
-	// BIG HACK to let demos from release work with the 3.0x patch!!!
-	if (Com_ServerState() && PROTOCOL_VERSION == 34)
-	{
-	}
-	else if (i != PROTOCOL_VERSION)
+	if (i != PROTOCOL_VERSION)
 		Com_Errorf ("Server returned version %i, not %i", i, PROTOCOL_VERSION);
 
 	cl.servercount = MSG_ReadLong (&net_message);
@@ -634,7 +630,7 @@ void CL_ParseServerMessage (void)
 	if (cl_shownet->GetInt() == 1)
 		Com_Printf ("%i ",net_message.cursize);
 	else if (cl_shownet->GetInt() >= 2)
-		Com_Printf ("------------------\n");
+		Com_Print ("------------------\n");
 
 
 //
@@ -680,7 +676,7 @@ void CL_ParseServerMessage (void)
 			break;
 
 		case svc_reconnect:
-			Com_Printf ("Server disconnected, reconnecting\n");
+			Com_Print ("Server disconnected, reconnecting\n");
 			if (cls.download) {
 				//ZOID, close download
 				FileSystem::CloseFile (cls.download);
@@ -698,7 +694,7 @@ void CL_ParseServerMessage (void)
 				Com_Printf (S_COLOR_GREEN "%s", MSG_ReadString (&net_message));
 				break;
 			}
-			Com_Printf ("%s", MSG_ReadString (&net_message));
+			Com_Print (MSG_ReadString (&net_message));
 			break;
 			
 		case svc_centerprint:

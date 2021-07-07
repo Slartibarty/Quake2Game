@@ -845,13 +845,13 @@ static void SV_ServerRecord_f()
 	// serverdata needs to go over for all types of servers
 	// to make sure the protocol is right, and to set the gamedir
 	//
+
 	// send the serverdata
 	MSG_WriteByte( &buf, svc_serverdata );
 	MSG_WriteLong( &buf, PROTOCOL_VERSION );
 	MSG_WriteLong( &buf, svs.spawncount );
 	// 2 means server demo
 	MSG_WriteByte( &buf, 2 );	// demos are always attract loops
-	MSG_WriteString( &buf, Cvar_FindGetString( "gamedir" ) );
 	MSG_WriteShort( &buf, -1 );
 	// send full levelname
 	MSG_WriteString( &buf, sv.configstrings[CS_NAME] );

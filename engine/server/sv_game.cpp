@@ -378,6 +378,8 @@ void SV_InitGameProgs()
 	gi.SetAreaPortalState = CM_SetAreaPortalState;
 	gi.AreasConnected = CM_AreasConnected;
 
+	gi.fileSystem = &g_fileSystem;
+
 	ge = (game_export_t *)Sys_GetGameAPI( &gi );
 
 	if ( !ge ) {

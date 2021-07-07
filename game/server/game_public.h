@@ -155,6 +155,8 @@ struct game_import_t
 	void	(*AddCommandString) (const char *text);
 
 	void	(*DebugGraph) (float value, uint32 color);
+
+	IFileSystem *fileSystem;
 };
 
 //
@@ -208,7 +210,7 @@ struct game_export_t
 	// can vary in size from one game to another.
 	// 
 	// The size will be fixed when ge->Init() is called
-	edict_t		*edicts;
+	edict_t *	edicts;
 	int			edict_size;
 	int			num_edicts;		// current number, <= max_edicts
 	int			max_edicts;
