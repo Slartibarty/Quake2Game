@@ -621,6 +621,7 @@ void Cvar_Shutdown()
 
 		var->name.~string();
 		var->value.~string();
+		var->help.~string();
 		var->latchedValue.~string();
 		lastVar = var;
 	}

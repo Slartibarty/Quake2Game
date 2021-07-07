@@ -44,11 +44,20 @@ void ShowModelViewer( bool *pOpen )
 			{
 				if ( ImGui::MenuItem( "Open..." ) )
 				{
-					mdlViewer.mdlName.clear();
-					Sys_FileOpenDialog( mdlViewer.mdlName, PLATTEXT( "Model Picker" ), s_modelTypes, countof( s_modelTypes ), 1 );
-					if ( !mdlViewer.mdlName.empty() )
+					std::string mdlName;
+					Sys_FileOpenDialog( mdlName, PLATTEXT( "Model Picker" ), s_modelTypes, countof( s_modelTypes ), 1 );
+					if ( !mdlName.empty() )
 					{
-
+						const char *relativePath = FileSystem::AbsolutePathToRelativePath( mdlName.c_str() );
+						if ( relativePath )
+						{
+							mdlViewer.mdlName.assign( relativePath );
+						}
+						else
+						{
+							mdlViewer.mdlName.clear();
+							Com_Print( S_COLOR_RED "[MDLViewer] Selected model is not located in the game folder!\n" );
+						}
 					}
 				}
 				ImGui::EndMenu();

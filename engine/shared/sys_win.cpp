@@ -387,7 +387,7 @@ void Sys_FileOpenDialog(
 	{
 		FILEOPENDIALOGOPTIONS flags;
 		hr = pDialog->GetOptions( &flags ); assert( SUCCEEDED( hr ) );
-		flags |= FOS_FORCEFILESYSTEM;
+		flags |= FOS_FORCEFILESYSTEM | FOS_NOCHANGEDIR;
 		hr = pDialog->SetOptions( flags ); assert( SUCCEEDED( hr ) );
 		hr = pDialog->SetFileTypes( numTypes, filterSpec ); assert( SUCCEEDED( hr ) );
 
@@ -439,7 +439,7 @@ void Sys_FileOpenDialogMultiple(
 	{
 		FILEOPENDIALOGOPTIONS flags;
 		hr = pDialog->GetOptions( &flags ); assert( SUCCEEDED( hr ) );
-		flags |= FOS_FORCEFILESYSTEM | FOS_ALLOWMULTISELECT;
+		flags |= FOS_FORCEFILESYSTEM | FOS_NOCHANGEDIR | FOS_ALLOWMULTISELECT;
 		hr = pDialog->SetOptions( flags ); assert( SUCCEEDED( hr ) );
 		hr = pDialog->SetFileTypes( numTypes, filterSpec ); assert( SUCCEEDED( hr ) );
 

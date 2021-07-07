@@ -21,9 +21,12 @@ namespace FileSystem
 
 					// Returns true if a path is absolute.
 	bool			IsAbsolutePath( const char *path );
-					// Translates a relative path to an absolute path.
-	char *			RelativePathToAbsolutePath( const char *relativePath );
-					// Creates the given directory tree in the write dir.
+					// Translates a relative path to an absolute path. UNTESTED AS OF NOW!
+	const char *	RelativePathToAbsolutePath( const char *relativePath, fsPath_t fsPath = FS_GAMEDIR );
+					// Translates an absolute path to a relative path, Returns nullptr on failure.
+					// Returns absolutePath trimmed to the relative part.
+	const char *	AbsolutePathToRelativePath( const char *absolutePath, fsPath_t fsPath = FS_GAMEDIR );
+					// Creates the given directory tree in the write dir. Add gamedir support when needed.
 	void			CreatePath( const char *path );
 					// Returns the length of a file.
 	int				GetFileLength( fsHandle_t handle );
@@ -31,9 +34,9 @@ namespace FileSystem
 					// Opens an existing file for reading.
 	fsHandle_t		OpenFileRead( const char *filename );
 					// Opens a new file for writing, will create any needed subdirectories.
-	fsHandle_t		OpenFileWrite( const char *filename );
+	fsHandle_t		OpenFileWrite( const char *filename, fsPath_t fsPath = FS_WRITEDIR );
 					// Opens a file for writing, at the end. If it doesn't exist, it is created. (creates subdirectories).
-	fsHandle_t		OpenFileAppend( const char *filename );
+	fsHandle_t		OpenFileAppend( const char *filename, fsPath_t fsPath = FS_WRITEDIR );
 					// Closes a file.
 	void			CloseFile( fsHandle_t handle );
 					// Reads raw data from a file. Returns bytes read.

@@ -1,5 +1,5 @@
 //=================================================================================================
-// The main file for the engine
+// Central command
 //=================================================================================================
 
 #include "engine.h"
@@ -21,7 +21,7 @@ static fsHandle_t	logfile;
 
 cvar_t *	host_speeds;
 cvar_t *	log_stats;
-cvar_t *	developer;
+cvar_t *	com_developer;
 cvar_t *	timescale;
 cvar_t *	fixedtime;
 cvar_t *	logfile_active;			// 1 = buffer log, 2 = flush after each print
@@ -175,7 +175,7 @@ A Com_Print that only shows up if the "developer" cvar is set
 
 void Com_DPrint( const char *msg )
 {
-	if ( !developer || !developer->GetBool() ) {
+	if ( !com_developer || !com_developer->GetBool() ) {
 		return;
 	}
 
@@ -184,7 +184,7 @@ void Com_DPrint( const char *msg )
 
 void Com_DPrintf( _Printf_format_string_ const char *fmt, ... )
 {
-	if ( !developer || !developer->GetBool() ) {
+	if ( !com_developer || !com_developer->GetBool() ) {
 		return;
 	}
 
@@ -586,7 +586,7 @@ void Engine_Init( int argc, char **argv )
 
 	host_speeds = Cvar_Get( "host_speeds", "0", 0 );
 	log_stats = Cvar_Get( "log_stats", "0", 0 );
-	developer = Cvar_Get( "developer", "0", 0 );
+	com_developer = Cvar_Get( "com_developer", "0", 0 );
 	timescale = Cvar_Get( "timescale", "1", 0 );
 	fixedtime = Cvar_Get( "fixedtime", "0", 0 );
 	logfile_active = Cvar_Get( "logfile", "0", 0 );

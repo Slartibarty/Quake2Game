@@ -37,57 +37,31 @@ static const filterSpec_t s_materialTypes[]
 	{ PLATTEXT( "Material File (*.mat)" ), PLATTEXT( "*.mat" ) }
 };
 
-struct matEdit_t
+static struct matEdit_t
 {
 	bool ui_batch;
 
 	std::vector<std::string> batchNames;
-};
-
-static matEdit_t matEdit;
+} matEdit;
 
 static void CreateMaterialsForTextures()
 {
 	const uint numFilenames = static_cast<uint>( matEdit.batchNames.size() );
 
-	char workingDirectory[LONG_MAX_PATH];
-	Sys_GetWorkingDirectory( workingDirectory, sizeof( workingDirectory ) );
-
 	for ( uint i = 0; i < numFilenames; ++i )
 	{
-		// COPY
-		std::string filename = matEdit.batchNames[i];
-
-		size_t lastDot = filename.find_last_of( '.' );
-		if ( !lastDot )
-		{
-			continue;
-		}
-
-		std::string ext = filename.substr( lastDot, filename.length() );
-		filename.erase( filename.begin() + lastDot, filename.end() );
-		filename.append( ".mat" );
-
 		// trim the filename up to the game directory
-
-		if ( !filename.starts_with( workingDirectory ) )
-		{
+		const char *relativePath = FileSystem::AbsolutePathToRelativePath( matEdit.batchNames[i].c_str() );
+		if ( !relativePath ) {
 			continue;
 		}
 
-		fsHandle_t handle = FileSystem::OpenFileWrite( filename.c_str() );
-		if ( !handle )
-		{
+		fsHandle_t handle = FileSystem::OpenFileWrite( relativePath, FS_GAMEDIR );
+		if ( !handle ) {
 			continue;
 		}
 
-		filename.erase( filename.begin() + lastDot, filename.end() );
-		filename.append( ext );
-
-		filename.erase( filename.begin(), filename.begin() + strlen( workingDirectory ) + 1 );
-
-		FileSystem::PrintFileFmt( handle, s_materialTemplate, filename.c_str() + filename.find( '/' ) + 1 );
-
+		FileSystem::PrintFileFmt( handle, s_materialTemplate, relativePath );
 		FileSystem::CloseFile( handle );
 	}
 }

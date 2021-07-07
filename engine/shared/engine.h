@@ -98,7 +98,7 @@ byte		COM_BlockSequenceCRCByte( byte *base, int length, int sequence );
 #define NUMVERTEXNORMALS 162
 extern vec3_t bytedirs[NUMVERTEXNORMALS];
 
-extern cvar_t *		developer;
+extern cvar_t *		com_developer;
 extern cvar_t *		dedicated;
 extern cvar_t *		host_speeds;
 extern cvar_t *		log_stats;

@@ -98,7 +98,7 @@ static bool CanAddNotifies()
 	}
 
 	// TEMP
-	/*if ( !developer->GetBool() ) {
+	/*if ( !com_developer->GetBool() ) {
 		return false;
 	}*/
 
@@ -112,7 +112,7 @@ static bool CanAddNotifies()
 static bool CanDrawNotifies()
 {
 	// TEMP
-	/*if ( !developer->GetBool() ) {
+	/*if ( !com_developer->GetBool() ) {
 		return false;
 	}*/
 

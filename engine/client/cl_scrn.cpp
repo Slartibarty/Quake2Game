@@ -658,7 +658,7 @@ void SCR_BeginLoadingPlaque()
 	if ( cls.disable_screen != 0.0f ) {
 		return;
 	}
-	if ( developer->GetBool() ) {
+	if ( com_developer->GetBool() ) {
 		return;
 	}
 	if ( cls.state == ca_disconnected ) {

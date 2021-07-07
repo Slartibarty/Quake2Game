@@ -21,7 +21,8 @@ using fsHandle_t = void *;
 enum fsPath_t
 {
 	FS_GAMEDIR,
-	FS_WRITEDIR
+	FS_WRITEDIR,
+	FS_CONTENTDIR
 };
 
 class IFileSystem
