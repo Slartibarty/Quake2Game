@@ -742,7 +742,6 @@ Engine_Shutdown
 */
 void Engine_Shutdown()
 {
-	FileSystem::Shutdown();
 	Key_Shutdown();
 	Cvar_Shutdown();
 	Cmd_Shutdown();
@@ -755,6 +754,8 @@ void Engine_Shutdown()
 		FileSystem::CloseFile( logfile );
 		logfile = nullptr;
 	}
+
+	FileSystem::Shutdown();
 }
 
 /*

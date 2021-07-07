@@ -167,6 +167,15 @@ void Init()
 void Shutdown()
 {
 	// Clean up search paths
+	searchPath_t *pLastSP = nullptr;
+	for ( searchPath_t *pSP = fs.searchPaths; pSP; pSP = pSP->pNext )
+	{
+		if ( pLastSP ) {
+			delete pLastSP;
+		}
+		pLastSP = pSP;
+	}
+	delete pLastSP;
 }
 
 //=============================================================================
