@@ -18,6 +18,8 @@
 #define NOMINMAX
 #include <Windows.h>
 
+#undef DeleteFile		// Not used, but undefining anyway
+
 #else
 
 // Linux!

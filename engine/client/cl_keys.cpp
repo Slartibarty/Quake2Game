@@ -349,7 +349,7 @@ Key_WriteBindings
 Writes lines containing "bind key value"
 ============
 */
-void Key_WriteBindings( FILE *f )
+void Key_WriteBindings( fsHandle_t handle )
 {
 	char buffer[1024];
 
@@ -358,7 +358,7 @@ void Key_WriteBindings( FILE *f )
 		if ( keybindings[i] && keybindings[i][0] )
 		{
 			Q_sprintf_s( buffer, "bind %s \"%s\"\n", Key_KeynumToString( i ), keybindings[i] );
-			fputs( buffer, f );
+			FileSystem::PrintFile( buffer, handle );
 		}
 	}
 }

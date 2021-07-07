@@ -231,13 +231,6 @@ static cvar_t *Cvar_Set_Internal( cvar_t *var, const char *value, bool force )
 			{
 				var->value.assign( value );
 				Cvar_SetDerivatives( var );
-
-				// Hack?
-				if ( Q_strcmp( var->name.c_str(), "fs_game" ) == 0 )
-				{
-					FS_SetGamedir( var->value.c_str(), true );
-					FS_ExecAutoexec();
-				}
 			}
 
 			return var;
@@ -408,13 +401,6 @@ void Cvar_GetLatchedVars()
 		//var->latchedValue = nullptr;
 
 		Cvar_SetDerivatives( var );
-
-		// Hack?
-		if ( Q_strcmp( var->name.c_str(), "fs_game" ) == 0 )
-		{
-			FS_SetGamedir( var->value.c_str(), true );
-			FS_ExecAutoexec();
-		}
 	}
 }
 
@@ -493,7 +479,7 @@ void Cvar_PrintFlags( cvar_t *var )
 	Com_Print( "\n" );
 }
 
-void Cvar_WriteVariables( FILE *f )
+void Cvar_WriteVariables( fsHandle_t handle )
 {
 	char buffer[1024];
 
@@ -502,7 +488,7 @@ void Cvar_WriteVariables( FILE *f )
 		if ( var->flags & CVAR_ARCHIVE )
 		{
 			Q_sprintf_s( buffer, "set %s \"%s\"\n", var->name.c_str(), var->value.c_str() );
-			fputs( buffer, f );
+			FileSystem::PrintFile( buffer, handle );
 		}
 	}
 }

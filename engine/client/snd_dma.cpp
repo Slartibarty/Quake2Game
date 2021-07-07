@@ -576,7 +576,6 @@ sfx_t *S_RegisterSexedSound (entity_state_t *ent, char *base)
 	int			n;
 	char		*p;
 	sfx_t		*sfx;
-	FILE		*f;
 	char		model[MAX_QPATH];
 	char		sexedFilename[MAX_QPATH];
 	char		maleFilename[MAX_QPATH];
@@ -607,11 +606,9 @@ sfx_t *S_RegisterSexedSound (entity_state_t *ent, char *base)
 	if (!sfx)
 	{
 		// no, so see if it exists
-		FS_FOpenFile (&sexedFilename[1], &f);
-		if (f)
+		if (FileSystem::FileExists (sexedFilename))
 		{
-			// yes, close the file and register it
-			FS_FCloseFile (f);
+			// yes register it
 			sfx = S_RegisterSound (sexedFilename);
 		}
 		else

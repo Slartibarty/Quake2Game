@@ -69,66 +69,59 @@ extern	cvar_t *allow_download_models;
 extern	cvar_t *allow_download_sounds;
 extern	cvar_t *allow_download_maps;
 
-//======================================================================
-
+//=============================================================================
 
 /*
-====================
+========================
 CL_WriteDemoMessage
 
 Dumps the current net message, prefixed by the length
-====================
+========================
 */
-void CL_WriteDemoMessage (void)
+void CL_WriteDemoMessage()
 {
-	int		len, swlen;
-
 	// the first eight bytes are just packet sequencing stuff
-	len = net_message.cursize-8;
-	swlen = LittleLong(len);
-	fwrite (&swlen, 4, 1, cls.demofile);
-	fwrite (net_message.data+8,	len, 1, cls.demofile);
+	int len = net_message.cursize - 8;
+	int swlen = LittleLong( len );
+	FileSystem::WriteFile( &swlen, sizeof( swlen ), cls.demofile );
+	FileSystem::WriteFile( net_message.data + 8, len, cls.demofile );
 }
 
-
 /*
-====================
+========================
 CL_Stop_f
 
 stop recording a demo
-====================
+========================
 */
-void CL_Stop_f (void)
+static void CL_Stop_f()
 {
-	int		len;
-
-	if (!cls.demorecording)
+	if ( !cls.demorecording )
 	{
-		Com_Printf ("Not recording a demo.\n");
+		Com_Print( "Not recording a demo.\n" );
 		return;
 	}
 
-// finish up
-	len = -1;
-	fwrite (&len, 4, 1, cls.demofile);
-	fclose (cls.demofile);
-	cls.demofile = NULL;
+	// finish up
+	int len = -1;
+	FileSystem::WriteFile( &len, sizeof( len ), cls.demofile );
+	FileSystem::CloseFile( cls.demofile );
+	cls.demofile = FS_INVALID_HANDLE;
 	cls.demorecording = false;
-	Com_Printf ("Stopped demo.\n");
+	Com_Print( "Stopped demo.\n" );
 }
 
 /*
-====================
+========================
 CL_Record_f
 
 record <demoname>
 
 Begins recording a demo from the current position
-====================
+========================
 */
-void CL_Record_f (void)
+static void CL_Record_f()
 {
-	char	name[MAX_OSPATH];
 	byte	buf_data[MAX_MSGLEN];
 	sizebuf_t	buf;
 	int		i;
@@ -136,35 +129,33 @@ void CL_Record_f (void)
 	entity_state_t	*ent;
 	entity_state_t	nullstate;
 
-	if (Cmd_Argc() != 2)
+	if ( Cmd_Argc() != 2 )
 	{
-		Com_Printf ("record <demoname>\n");
+		Com_Print( "Usage: record <demoname>\n" );
 		return;
 	}
 
-	if (cls.demorecording)
+	if ( cls.demorecording )
 	{
-		Com_Printf ("Already recording.\n");
+		Com_Print( "Already recording.\n" );
 		return;
 	}
 
-	if (cls.state != ca_active)
+	if ( cls.state != ca_active )
 	{
-		Com_Printf ("You must be in a level to record.\n");
+		Com_Print( "You must be in a level to record.\n" );
 		return;
 	}
 
 	//
 	// open the demo file
 	//
-	Q_sprintf_s (name, "%s/demos/%s.dm2", FS_Gamedir(), Cmd_Argv(1));
-
-	Com_Printf ("recording to %s.\n", name);
-	FS_CreatePath (name);
-	cls.demofile = fopen (name, "wb");
-	if (!cls.demofile)
+	const char *demoName = Cmd_Argv( 1 );
+	Com_Printf( "recording to %s.\n", demoName );
+	cls.demofile = FileSystem::OpenFileWrite( demoName );
+	if ( cls.demofile == FS_INVALID_HANDLE )
 	{
-		Com_Printf ("ERROR: couldn't open.\n");
+		Com_Print( S_COLOR_RED "ERROR: couldn't open.\n" );
 		return;
 	}
 	cls.demorecording = true;
@@ -175,66 +166,68 @@ void CL_Record_f (void)
 	//
 	// write out messages to hold the startup information
 	//
-	SZ_Init (&buf, buf_data, sizeof(buf_data));
+	SZ_Init( &buf, buf_data, sizeof( buf_data ) );
 
 	// send the serverdata
-	MSG_WriteByte (&buf, svc_serverdata);
-	MSG_WriteLong (&buf, PROTOCOL_VERSION);
-	MSG_WriteLong (&buf, 0x10000 + cl.servercount);
-	MSG_WriteByte (&buf, 1);	// demos are always attract loops
-	MSG_WriteString (&buf, cl.gamedir);
-	MSG_WriteShort (&buf, cl.playernum);
+	MSG_WriteByte( &buf, svc_serverdata );
+	MSG_WriteLong( &buf, PROTOCOL_VERSION );
+	MSG_WriteLong( &buf, 0x10000 + cl.servercount );
+	MSG_WriteByte( &buf, 1 );	// demos are always attract loops
+	MSG_WriteShort( &buf, cl.playernum );
 
-	MSG_WriteString (&buf, cl.configstrings[CS_NAME]);
+	MSG_WriteString( &buf, cl.configstrings[CS_NAME] );
 
-	// configstrings
-	for (i=0 ; i<MAX_CONFIGSTRINGS ; i++)
+	// Write configstrings
+	for ( i = 0; i < MAX_CONFIGSTRINGS; i++ )
 	{
-		if (cl.configstrings[i][0])
+		if ( cl.configstrings[i][0] )
 		{
-			if (buf.cursize + strlen (cl.configstrings[i]) + 32 > buf.maxsize)
-			{	// write it out
-				len = LittleLong (buf.cursize);
-				fwrite (&len, 4, 1, cls.demofile);
-				fwrite (buf.data, buf.cursize, 1, cls.demofile);
+			if ( buf.cursize + static_cast<int>( strlen( cl.configstrings[i] ) + 32 ) > buf.maxsize )
+			{
+				// write it out
+				len = LittleLong( buf.cursize );
+				FileSystem::WriteFile( &len, sizeof( len ), cls.demofile );
+				FileSystem::WriteFile( buf.data, buf.cursize, cls.demofile );
 				buf.cursize = 0;
 			}
 
-			MSG_WriteByte (&buf, svc_configstring);
-			MSG_WriteShort (&buf, i);
-			MSG_WriteString (&buf, cl.configstrings[i]);
+			MSG_WriteByte( &buf, svc_configstring );
+			MSG_WriteShort( &buf, i );
+			MSG_WriteString( &buf, cl.configstrings[i] );
 		}
-
 	}
 
-	// baselines
-	memset (&nullstate, 0, sizeof(nullstate));
-	for (i=0; i<MAX_EDICTS ; i++)
+	// Write baselines
+	memset( &nullstate, 0, sizeof( nullstate ) );
+	for ( i = 0; i < MAX_EDICTS; i++ )
 	{
 		ent = &cl_entities[i].baseline;
-		if (!ent->modelindex)
+		if ( !ent->modelindex )
+		{
 			continue;
+		}
 
-		if (buf.cursize + 64 > buf.maxsize)
-		{	// write it out
-			len = LittleLong (buf.cursize);
-			fwrite (&len, 4, 1, cls.demofile);
-			fwrite (buf.data, buf.cursize, 1, cls.demofile);
+		if ( buf.cursize + 64 > buf.maxsize )
+		{
+			// write it out
+			len = LittleLong( buf.cursize );
+			FileSystem::WriteFile( &len, sizeof( len ), cls.demofile );
+			FileSystem::WriteFile( buf.data, buf.cursize, cls.demofile );
 			buf.cursize = 0;
 		}
 
-		MSG_WriteByte (&buf, svc_spawnbaseline);		
-		MSG_WriteDeltaEntity (&nullstate, &cl_entities[i].baseline, &buf, true, true);
+		MSG_WriteByte( &buf, svc_spawnbaseline );
+		MSG_WriteDeltaEntity( &nullstate, &cl_entities[i].baseline, &buf, true, true );
 	}
 
-	MSG_WriteByte (&buf, svc_stufftext);
-	MSG_WriteString (&buf, "precache\n");
+	MSG_WriteByte( &buf, svc_stufftext );
+	MSG_WriteString( &buf, "precache\n" );
 
-	// write it to the demo file
+	// Write it to the demo file
 
-	len = LittleLong (buf.cursize);
-	fwrite (&len, 4, 1, cls.demofile);
-	fwrite (buf.data, buf.cursize, 1, cls.demofile);
+	len = LittleLong( buf.cursize );
+	FileSystem::WriteFile( &len, sizeof( len ), cls.demofile );
+	FileSystem::WriteFile( buf.data, buf.cursize, cls.demofile );
 
 	// the rest of the demo file will be individual frames
 }
@@ -587,7 +580,7 @@ void CL_Disconnect (void)
 
 	// stop download
 	if (cls.download) {
-		fclose(cls.download);
+		FileSystem::CloseFile(cls.download);
 		cls.download = NULL;
 	}
 
@@ -1090,7 +1083,7 @@ void CL_RequestNextDownload (void)
 				// checking for skins in the model
 				if (!precache_model) {
 
-					FS_LoadFile (cl.configstrings[precache_check], (void **)&precache_model);
+					FileSystem::LoadFile (cl.configstrings[precache_check], (void **)&precache_model);
 					if (!precache_model) {
 						precache_model_skin = 0;
 						precache_check++;
@@ -1098,7 +1091,7 @@ void CL_RequestNextDownload (void)
 					}
 					if (LittleLong(*(unsigned *)precache_model) != IDALIASHEADER) {
 						// not an alias model
-						FS_FreeFile(precache_model);
+						FileSystem::FreeFile(precache_model);
 						precache_model = 0;
 						precache_model_skin = 0;
 						precache_check++;
@@ -1124,7 +1117,7 @@ void CL_RequestNextDownload (void)
 					precache_model_skin++;
 				}
 				if (precache_model) { 
-					FS_FreeFile(precache_model);
+					FileSystem::FreeFile(precache_model);
 					precache_model = 0;
 				}
 				precache_model_skin = 0;
@@ -1484,28 +1477,23 @@ Writes key bindings and archived cvars to config.cfg
 */
 void CL_WriteConfiguration()
 {
-	char path[MAX_QPATH];
-	FILE *f;
-
 	if ( cls.state == ca_uninitialized ) {
 		return;
 	}
 
-	Q_sprintf_s( path, "%s/config.cfg", FS_Gamedir() );
-
-	f = fopen( path, "wb" );
-	if ( !f )
+	fsHandle_t handle = FileSystem::OpenFileWrite( "config.cfg" );
+	if ( handle == FS_INVALID_HANDLE )
 	{
 		Com_Print( "Couldn't write config.cfg.\n" );
 		return;
 	}
 
-	fputs( "// generated by quake, do not modify\n", f );
+	FileSystem::PrintFile( "// generated by quake, do not modify\n", handle );
 
-	Key_WriteBindings( f );
-	Cvar_WriteVariables( f );
+	Key_WriteBindings( handle );
+	Cvar_WriteVariables( handle );
 
-	fclose( f );
+	FileSystem::CloseFile( handle );
 }
 
 
@@ -1689,14 +1677,14 @@ void CL_Frame( int msec )
 			{
 				lasttimecalled = Sys_Milliseconds();
 				if ( log_stats_file )
-					fprintf( log_stats_file, "0\n" );
+					FileSystem::PrintFile( "0\n", log_stats_file );
 			}
 			else
 			{
 				int now = Sys_Milliseconds();
 
 				if ( log_stats_file )
-					fprintf( log_stats_file, "%d\n", now - lasttimecalled );
+					FileSystem::PrintFileFmt( log_stats_file, "%d\n", now - lasttimecalled );
 				lasttimecalled = now;
 			}
 		}
@@ -1744,7 +1732,7 @@ void CL_Init (void)
 	CL_InitCGame();
 
 //	Cbuf_AddText ("exec autoexec.cfg\n");
-	FS_ExecAutoexec ();
+	FileSystem::ExecAutoexec ();
 	Cbuf_Execute ();
 
 }

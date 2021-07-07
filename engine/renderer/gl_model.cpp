@@ -222,7 +222,7 @@ model_t *Mod_ForName( const char *name, bool crash )
 	//
 	// load the file
 	//
-	int bufferLength = FS_LoadFile( pMod->name, (void **)&pBuffer );
+	int bufferLength = FileSystem::LoadFile( pMod->name, (void **)&pBuffer );
 	if ( !pBuffer )
 	{
 		if ( crash ) {
@@ -274,7 +274,7 @@ model_t *Mod_ForName( const char *name, bool crash )
 
 	loadmodel->extradatasize = Hunk_End();
 
-	FS_FreeFile( pBuffer );
+	FileSystem::FreeFile( pBuffer );
 
 	return pMod;
 }

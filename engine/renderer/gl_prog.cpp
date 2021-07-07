@@ -70,7 +70,7 @@ static GLuint MakeShader( const char *filename, GLenum type )
 	GLchar *buffer;
 	GLint bufferLen;
 
-	bufferLen = (GLint)FS_LoadFile( filename, (void **)&buffer );
+	bufferLen = (GLint)FileSystem::LoadFile( filename, (void **)&buffer );
 	if ( !buffer ) {
 		return 0;
 	}
@@ -78,7 +78,7 @@ static GLuint MakeShader( const char *filename, GLenum type )
 	GLuint shader = glCreateShader( type );
 	glShaderSource( shader, 1, &buffer, &bufferLen );
 
-	FS_FreeFile( buffer );
+	FileSystem::FreeFile( buffer );
 
 	glCompileShader( shader );
 

@@ -341,7 +341,7 @@ static void Cmd_Exec_f()
 	const char *filename = Cmd_Argv( 1 );
 
 	char *f;
-	int len = FS_LoadFile( filename, (void **)&f, 1 );
+	int len = FileSystem::LoadFile( filename, (void **)&f, 1 );
 	if ( !f )
 	{
 		Com_Printf( "Couldn't exec %s\n", filename );
@@ -351,7 +351,7 @@ static void Cmd_Exec_f()
 
 	Cbuf_InsertText( f );
 
-	FS_FreeFile( f );
+	FileSystem::FreeFile( f );
 }
 
 /*

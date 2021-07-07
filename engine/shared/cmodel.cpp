@@ -688,7 +688,7 @@ cmodel_t *CM_LoadMap( const char *name, bool clientload, unsigned *checksum )
 	// load the file
 	//
 	byte *buf;
-	int length = FS_LoadFile( name, (void **)&buf );
+	int length = FileSystem::LoadFile( name, (void **)&buf );
 	if ( !buf )
 	{
 		Com_Errorf("Couldn't load %s", name );
@@ -723,7 +723,7 @@ cmodel_t *CM_LoadMap( const char *name, bool clientload, unsigned *checksum )
 	CMod_LoadVisibility( buf, &header->lumps[LUMP_VISIBILITY] );
 	CMod_LoadEntityString( buf, &header->lumps[LUMP_ENTITIES] );
 
-	FS_FreeFile( buf );
+	FileSystem::FreeFile( buf );
 
 	CM_InitBoxHull();
 
@@ -1828,11 +1828,11 @@ CM_WritePortalState
 Writes the portal state to a savegame file
 ===================
 */
-void CM_WritePortalState( FILE *f )
+void CM_WritePortalState( fsHandle_t f )
 {
-	size_t count = cm.portalopen.Count();
-	fwrite( &count, sizeof( count ), 1, f );
-	fwrite( cm.portalopen.Base(), sizeof( bool ), count, f );
+	int count = cm.portalopen.Count();
+	FileSystem::WriteFile( &count, sizeof( count ), f );
+	FileSystem::WriteFile( cm.portalopen.Base(), count * sizeof( bool ), f );
 }
 
 /*
@@ -1843,13 +1843,13 @@ Reads the portal state from a savegame file
 and recalculates the area connections
 ===================
 */
-void CM_ReadPortalState (FILE *f)
+void CM_ReadPortalState( fsHandle_t f )
 {
-	size_t count;
-	FS_Read( &count, sizeof( count ), f );
+	int count;
+	FileSystem::ReadFile( &count, sizeof( count ), f );
 	cm.portalopen.PrepForNewData( count );
-	FS_Read( cm.portalopen.Base(), count * sizeof( bool ), f );
-	FloodAreaConnections ();
+	FileSystem::ReadFile( cm.portalopen.Base(), count * sizeof( bool ), f );
+	FloodAreaConnections();
 }
 
 /*

@@ -511,7 +511,7 @@ void V_RenderView()
 		Com_Printf( "ent:%i  lt:%i  part:%i\n", clView.numEntities, clView.numDLights, clView.numParticles );
 	}
 	if ( log_stats->GetBool() && ( log_stats_file != nullptr ) ) {
-		fprintf( log_stats_file, "%i,%i,%i,", clView.numEntities, clView.numDLights, clView.numParticles );
+		FileSystem::PrintFileFmt( log_stats_file, "%i,%i,%i,", clView.numEntities, clView.numDLights, clView.numParticles );
 	}
 }
 

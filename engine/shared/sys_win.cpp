@@ -8,7 +8,7 @@
 #include <string>
 
 #include "../../core/sys_includes.h"
-#include <ShlObj_core.h>
+#include <ShlObj.h>
 #include "../client/winquake.h"			// Hack?
 
 #include "sys.h"
@@ -507,33 +507,26 @@ typedef void *( *GetAPI_t ) ( void * );
 
 static void *Sys_GetAPI( void *parms, HINSTANCE &instance, const char *gamename, const char *procname )
 {
-	char name[MAX_OSPATH];
-
 	if ( instance ) {
 		Com_FatalError( "Sys_GetAPI without Sys_Unload(C)Game" );
 	}
 
-	// now run through the search paths
-	const char *path = nullptr;
-	while ( 1 )
+	char fullPath[MAX_OSPATH];
+	if ( !FileSystem::FindPhysicalFile( gamename, fullPath, sizeof( fullPath ) ) )
 	{
-		path = FS_NextPath( path );
-		if ( !path ) {
-			return nullptr;		// couldn't find one anywhere
-		}
-		Q_sprintf_s( name, "%s/%s", path, gamename );
-		instance = LoadLibraryA( name );
-		if ( instance )
-		{
-			Com_DPrintf( "LoadLibrary (%s)\n", name );
-			break;
-		}
+		return nullptr;
+	}
+
+	instance = LoadLibraryA( fullPath );
+	if ( !instance )
+	{
+		return nullptr;
 	}
 
 	GetAPI_t GetGameAPI = (GetAPI_t)GetProcAddress( instance, procname );
 	if ( !GetGameAPI )
 	{
-		Sys_UnloadGame();
+		FreeLibrary( instance );
 		return nullptr;
 	}
 

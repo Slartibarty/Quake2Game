@@ -85,7 +85,7 @@ void		Cvar_PrintFlags( cvar_t *var );
 
 			// appends lines containing "set variable value" for all variables
 			// with the archive flag set to true.
-void 		Cvar_WriteVariables( FILE *f );
+void 		Cvar_WriteVariables( fsHandle_t handle );
 
 			// returns an info string containing all the CVAR_USERINFO cvars
 char *		Cvar_Userinfo();

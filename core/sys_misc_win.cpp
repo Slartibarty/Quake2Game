@@ -101,6 +101,11 @@ void Hunk_Free( void *base )
 =======================================
 */
 
+bool Sys_FileExists( const char *filename )
+{
+	return GetFileAttributesA( filename ) != INVALID_FILE_ATTRIBUTES;
+}
+
 void Sys_CopyFile( const char *src, const char *dst )
 {
 	CopyFileA( src, dst, FALSE );

@@ -109,7 +109,7 @@ sfxcache_t *S_LoadSound (sfx_t *s)
 
 //	Com_Printf ("loading %s\n",namebuffer);
 
-	size = FS_LoadFile (namebuffer, (void **)&data);
+	size = FileSystem::LoadFile (namebuffer, (void **)&data);
 
 	if (!data)
 	{
@@ -124,7 +124,7 @@ sfxcache_t *S_LoadSound (sfx_t *s)
 		info = GetWavinfo( s->name, data, size );
 		if ( info.channels != 1 )
 		{
-			FS_FreeFile( data );
+			FileSystem::FreeFile( data );
 			Com_Printf( "%s is a stereo sample\n", s->name );
 			return nullptr;
 		}
@@ -137,7 +137,7 @@ sfxcache_t *S_LoadSound (sfx_t *s)
 		sc = s->cache = (sfxcache_t *)Mem_Alloc( len + sizeof( sfxcache_t ) );
 		if ( !sc )
 		{
-			FS_FreeFile( data );
+			FileSystem::FreeFile( data );
 			return nullptr;
 		}
 
@@ -149,14 +149,14 @@ sfxcache_t *S_LoadSound (sfx_t *s)
 
 		ResampleSfx( s, sc->speed, sc->width, data + info.dataofs );
 
-		FS_FreeFile( data );
+		FileSystem::FreeFile( data );
 	}
 	else if ( IsOgg( data ) )
 	{
 		int channels, samplerate, samples;
 		short *output;
 		samples = stb_vorbis_decode_memory( data, size, &channels, &samplerate, &output );
-		FS_FreeFile( data );
+		FileSystem::FreeFile( data );
 		if ( samples == -1 )
 		{
 			Com_DPrintf( "Couldn't load %s\n", namebuffer );
@@ -194,7 +194,7 @@ sfxcache_t *S_LoadSound (sfx_t *s)
 	}
 	else
 	{
-		FS_FreeFile( data );
+		FileSystem::FreeFile( data );
 		Com_Printf( "%s is neither WAV or OGG data\n", namebuffer );
 		return nullptr;
 	}

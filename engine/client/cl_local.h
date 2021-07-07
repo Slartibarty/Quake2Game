@@ -106,7 +106,7 @@ struct clientActive_t
 	//
 	// non-gameserver infornamtion
 	// FIXME: move this cinematic stuff into the cin_t structure
-	FILE		*cinematic_file;
+	fsHandle_t	cinematic_file;
 	int			cinematictime;		// cls.realtime for first cinematic frame
 	int			cinematicframe;
 	byte		cinematicpalette[768];
@@ -115,8 +115,7 @@ struct clientActive_t
 	// server state information
 	//
 	qboolean	attractloop;		// running the attract loop, any key will menu
-	int			servercount;	// server identification for prespawns
-	char		gamedir[MAX_QPATH];
+	int			servercount;		// server identification for prespawns
 	int			playernum;
 
 	char		configstrings[MAX_CONFIGSTRINGS][MAX_QPATH];
@@ -194,7 +193,7 @@ struct clientStatic_t
 
 	int			challenge;			// from the server to use for connecting
 
-	FILE *		download;			// file transfer from server
+	fsHandle_t	download;			// file transfer from server
 	char		downloadtempname[MAX_OSPATH];
 	char		downloadname[MAX_OSPATH];
 	int			downloadnumber;
@@ -202,7 +201,7 @@ struct clientStatic_t
 	int			downloadpercent;
 
 // demo recording info must be here, so it isn't cleared on level change
-	FILE *		demofile;
+	fsHandle_t	demofile;
 	bool		demorecording;
 	bool		demowaiting;	// don't record until a non-delta message is received
 };
@@ -298,8 +297,6 @@ void CL_RequestNextDownload();
 
 // demos
 void CL_WriteDemoMessage();
-void CL_Stop_f();
-void CL_Record_f();
 
 void CL_Quit_f();
 
@@ -344,7 +341,7 @@ void Key_Init();
 void Key_Shutdown();
 
 void Key_Event( int key, bool down, unsigned time );
-void Key_WriteBindings( FILE *f );
+void Key_WriteBindings( fsHandle_t handle );
 void Key_SetBinding( int keynum, const char *binding );
 void Key_ClearStates();
 

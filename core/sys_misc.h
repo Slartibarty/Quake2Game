@@ -25,6 +25,7 @@ size_t	Hunk_End();
 =======================================
 */
 
+bool	Sys_FileExists( const char *filename );					// Includes folders
 void	Sys_CopyFile( const char *src, const char *dst );
 void	Sys_DeleteFile( const char *filename );
 void	Sys_CreateDirectory( const char *path );

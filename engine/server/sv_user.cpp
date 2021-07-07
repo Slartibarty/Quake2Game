@@ -24,8 +24,7 @@ static void SV_BeginDemoserver()
 	char name[MAX_OSPATH];
 
 	Q_sprintf_s( name, "demos/%s", sv.name );
-	FS_FOpenFile( name, &sv.demofile );
-
+	sv.demofile = FileSystem::OpenFileRead( name );
 	if ( !sv.demofile )
 	{
 		Com_Errorf( "Couldn't open %s\n", name );
@@ -282,7 +281,7 @@ static void SV_NextDownload_f()
 		return;
 	}
 
-	FS_FreeFile( sv_client->download );
+	FileSystem::FreeFile( sv_client->download );
 	sv_client->download = NULL;
 }
 
@@ -298,7 +297,6 @@ static void SV_BeginDownload_f()
 	extern cvar_t *allow_download_models;
 	extern cvar_t *allow_download_sounds;
 	extern cvar_t *allow_download_maps;
-	extern int file_from_pak; // ZOID did file come from pak?
 
 	char *name;
 	int offset = 0;
@@ -335,24 +333,21 @@ static void SV_BeginDownload_f()
 	}
 
 	if ( sv_client->download ) {
-		FS_FreeFile( sv_client->download );
+		FileSystem::FreeFile( sv_client->download );
 	}
 
-	sv_client->downloadsize = FS_LoadFile( name, (void **)&sv_client->download );
+	sv_client->downloadsize = FileSystem::LoadFile( name, (void **)&sv_client->download );
 	sv_client->downloadcount = offset;
 
 	if ( offset > sv_client->downloadsize ) {
 		sv_client->downloadcount = sv_client->downloadsize;
 	}
 
-	if ( !sv_client->download
-		// special check for maps, if it came from a pak file, don't allow
-		// download  ZOID
-		|| ( Q_strncmp( name, "maps/", 5 ) == 0 && file_from_pak ) )
+	if ( !sv_client->download )
 	{
 		Com_DPrintf( "Couldn't download %s to %s\n", name, sv_client->name );
 		if ( sv_client->download ) {
-			FS_FreeFile( sv_client->download );
+			FileSystem::FreeFile( sv_client->download );
 			sv_client->download = NULL;
 		}
 

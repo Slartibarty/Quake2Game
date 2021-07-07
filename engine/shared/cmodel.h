@@ -54,5 +54,5 @@ qboolean	CM_AreasConnected( int area1, int area2 );
 int			CM_WriteAreaBits( byte *buffer, int area );
 bool		CM_HeadnodeVisible( int headnode, byte *visbits );
 
-void		CM_WritePortalState( FILE *f );
-void		CM_ReadPortalState( FILE *f );
+void		CM_WritePortalState( fsHandle_t f );
+void		CM_ReadPortalState( fsHandle_t f );

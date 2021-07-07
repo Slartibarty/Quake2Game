@@ -75,7 +75,7 @@ static void CreateMaterialsForTextures()
 			continue;
 		}
 
-		FILE *handle = fopen( filename.c_str(), "wb" );
+		fsHandle_t handle = FileSystem::OpenFileWrite( filename.c_str() );
 		if ( !handle )
 		{
 			continue;
@@ -86,9 +86,9 @@ static void CreateMaterialsForTextures()
 
 		filename.erase( filename.begin(), filename.begin() + strlen( workingDirectory ) + 1 );
 
-		fprintf( handle, s_materialTemplate, filename.c_str() + filename.find( '/' ) + 1 );
+		FileSystem::PrintFileFmt( handle, s_materialTemplate, filename.c_str() + filename.find( '/' ) + 1 );
 
-		fclose( handle );
+		FileSystem::CloseFile( handle );
 	}
 }
 

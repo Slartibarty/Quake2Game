@@ -13,12 +13,12 @@
 #include <vector>
 #include <string>
 
+#include "files.h"
 #include "cmd.h"
 #include "cmodel.h"
 #include "conproc.h"
 #include "crc.h"
 #include "cvar.h"
-#include "files.h"
 #include "msg.h"
 #include "net.h"
 #include "protocol.h"
@@ -103,7 +103,7 @@ extern cvar_t *		dedicated;
 extern cvar_t *		host_speeds;
 extern cvar_t *		log_stats;
 
-extern FILE *		log_stats_file;
+extern fsHandle_t	log_stats_file;
 
 extern int		curtime;
 

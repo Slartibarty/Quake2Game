@@ -28,7 +28,7 @@ namespace img
 	bool	TestPNG( const byte *buf );
 
 	byte *	LoadPNG( byte *buf, int &width, int &height );
-	bool	WritePNG( int width, int height, bool b32bit, byte *buffer, FILE *handle );
+	bool	WritePNG( int width, int height, bool b32bit, byte *buffer, fsHandle_t handle );
 
 	//-------------------------------------------------------------------------------------------------
 	// DirectDraw Surface

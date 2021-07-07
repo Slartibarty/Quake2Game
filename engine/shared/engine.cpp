@@ -7,25 +7,26 @@
 #include <csetjmp>
 
 extern void SCR_EndLoadingPlaque( void );
-// This should really be in common? It's not part of the client? Or is it? huh? what.
+// This should really be in common? It's not part of the client? Or is it? huh? what. ???
 extern void Key_Init();
 extern void Key_Shutdown();
 
-jmp_buf abortframe;		// an ERR_DROP occured, exit the entire frame
+static constexpr auto StatsLogFile_Name = "stats.log";
+static constexpr auto LogFile_Name = "qconsole.log";
 
+static jmp_buf		abortframe;		// an ERR_DROP occured, exit the entire frame
 
-FILE	*log_stats_file;
+fsHandle_t			log_stats_file;
+static fsHandle_t	logfile;
 
-cvar_t	*host_speeds;
-cvar_t	*log_stats;
-cvar_t	*developer;
-cvar_t	*timescale;
-cvar_t	*fixedtime;
-cvar_t	*logfile_active;	// 1 = buffer log, 2 = flush after each print
-cvar_t	*showtrace;
-cvar_t	*dedicated;
-
-FILE	*logfile;
+cvar_t *	host_speeds;
+cvar_t *	log_stats;
+cvar_t *	developer;
+cvar_t *	timescale;
+cvar_t *	fixedtime;
+cvar_t *	logfile_active;			// 1 = buffer log, 2 = flush after each print
+cvar_t *	showtrace;
+cvar_t *	dedicated;
 
 int		server_state;
 
@@ -127,24 +128,27 @@ void Com_Print( const char *msg )
 	Sys_ConsoleOutput( newMsg );
 
 	// logfile
-	if ( logfile_active && logfile_active->GetBool() ) {
-		char name[MAX_QPATH];
-
-		if ( !logfile ) {
-			Q_sprintf_s( name, "%s/qconsole.log", FS_Gamedir() );
-			if ( logfile_active->GetInt() > 2 ) {
-				logfile = fopen( name, "a" );
+	if ( logfile_active && logfile_active->GetBool() )
+	{
+		if ( !logfile )
+		{
+			if ( logfile_active->GetInt() > 2 )
+			{
+				FileSystem::OpenFileAppend( LogFile_Name );
 			}
-			else {
-				logfile = fopen( name, "w" );
+			else
+			{
+				FileSystem::OpenFileWrite( LogFile_Name );
 			}
 		}
-		if ( logfile ) {
-			fputs( newMsg, logfile );
+		if ( logfile )
+		{
+			FileSystem::PrintFile( newMsg, logfile );
 		}
-		if ( logfile_active->GetInt() > 1 ) {
+		if ( logfile_active->GetInt() > 1 )
+		{
 			// force it to save every time
-			fflush( logfile );
+			FileSystem::FlushFile( logfile );
 		}
 	}
 }
@@ -567,7 +571,7 @@ void Engine_Init( int argc, char **argv )
 	Cbuf_AddEarlyCommands( argc, argv );
 	Cbuf_Execute();
 
-	FS_Init();
+	FileSystem::Init();
 
 	Cbuf_AddText( "exec default.cfg\n" );
 	Cbuf_AddText( "exec config.cfg\n" );
@@ -649,20 +653,20 @@ void Engine_Frame( int frameTime )
 		{
 			if ( log_stats_file )
 			{
-				fclose( log_stats_file );
+				FileSystem::CloseFile( log_stats_file );
 				log_stats_file = nullptr;
 			}
-			log_stats_file = fopen( "stats.log", "w" );
+			log_stats_file = FileSystem::OpenFileWrite( StatsLogFile_Name );
 			if ( log_stats_file )
 			{
-				fputs( "entities,dlights,parts,frame time\n", log_stats_file );
+				FileSystem::PrintFile( "entities,dlights,parts,frame time\n", log_stats_file );
 			}
 		}
 		else
 		{
 			if ( log_stats_file )
 			{
-				fclose( log_stats_file );
+				FileSystem::CloseFile( log_stats_file );
 				log_stats_file = nullptr;
 			}
 		}
@@ -738,7 +742,7 @@ Engine_Shutdown
 */
 void Engine_Shutdown()
 {
-	FS_Shutdown();
+	FileSystem::Shutdown();
 	Key_Shutdown();
 	Cvar_Shutdown();
 	Cmd_Shutdown();
@@ -748,7 +752,7 @@ void Engine_Shutdown()
 	Mem_Shutdown();
 
 	if ( logfile ) {
-		fclose( logfile );
+		FileSystem::CloseFile( logfile );
 		logfile = nullptr;
 	}
 }

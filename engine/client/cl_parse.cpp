@@ -33,10 +33,7 @@ const char *svc_strings[256] =
 
 void CL_DownloadFileName(char *dest, int destlen, const char *fn)
 {
-	if (Q_strncmp(fn, "players", 7) == 0)
-		Q_sprintf_s (dest, destlen, "%s/%s", BASEDIRNAME, fn);
-	else
-		Q_sprintf_s (dest, destlen, "%s/%s", FS_Gamedir(), fn);
+	Q_strcpy_s( dest, destlen, fn );
 }
 
 /*
@@ -49,8 +46,7 @@ to start a download from the server.
 */
 bool CL_CheckOrDownloadFile (const char *filename)
 {
-	FILE *fp;
-	char	name[MAX_OSPATH];
+	char name[MAX_OSPATH];
 
 	if (strstr (filename, ".."))
 	{
@@ -58,7 +54,7 @@ bool CL_CheckOrDownloadFile (const char *filename)
 		return true;
 	}
 
-	if (FS_LoadFile (filename, NULL) != -1)
+	if (FileSystem::FileExists (filename))
 	{	// it exists, no need to download
 		return true;
 	}
@@ -78,13 +74,12 @@ bool CL_CheckOrDownloadFile (const char *filename)
 
 //	FS_CreatePath (name);
 
-	fp = fopen (name, "r+b");
-	if (fp) { // it exists
-		int len;
-		fseek(fp, 0, SEEK_END);
-		len = ftell(fp);
+	fsHandle_t handle = FileSystem::OpenFileAppend( name );
+	if (handle) {
+		// it exists
+		int len = FileSystem::GetFileLength( handle );
 
-		cls.download = fp;
+		cls.download = handle;
 
 		// give the server an offset to start the download
 		Com_Printf ("Resuming %s\n", cls.downloadname);
@@ -127,7 +122,7 @@ void	CL_Download_f (void)
 		return;
 	}
 
-	if (FS_LoadFile (filename, NULL) != -1)
+	if (FileSystem::LoadFile (filename, NULL) != -1)
 	{	// it exists, no need to download
 		Com_Printf("File already exists.\n");
 		return;
@@ -192,7 +187,7 @@ void CL_ParseDownload (void)
 		if (cls.download)
 		{
 			// if here, we tried to resume a file but the server said no
-			fclose (cls.download);
+			FileSystem::CloseFile (cls.download);
 			cls.download = NULL;
 		}
 		CL_RequestNextDownload ();
@@ -204,9 +199,9 @@ void CL_ParseDownload (void)
 	{
 		CL_DownloadFileName(name, sizeof(name), cls.downloadtempname);
 
-		FS_CreatePath (name);
+		FileSystem::CreatePath (name);
 
-		cls.download = fopen (name, "wb");
+		cls.download = FileSystem::OpenFileWrite( name );
 		if (!cls.download)
 		{
 			net_message.readcount += size;
@@ -216,7 +211,7 @@ void CL_ParseDownload (void)
 		}
 	}
 
-	fwrite (net_message.data + net_message.readcount, 1, size, cls.download);
+	FileSystem::WriteFile (net_message.data + net_message.readcount, size, cls.download);
 	net_message.readcount += size;
 
 	if (percent != 100)
@@ -243,7 +238,7 @@ void CL_ParseDownload (void)
 
 //		Com_Printf ("100%%\n");
 
-		fclose (cls.download);
+		FileSystem::CloseFile (cls.download);
 
 		// rename the temp file to it's final name
 		CL_DownloadFileName(oldn, sizeof(oldn), cls.downloadtempname);
@@ -277,7 +272,6 @@ CL_ParseServerData
 */
 void CL_ParseServerData (void)
 {
-	extern cvar_t	*fs_gamedirvar;
 	char	*str;
 	int		i;
 	
@@ -301,20 +295,6 @@ void CL_ParseServerData (void)
 
 	cl.servercount = MSG_ReadLong (&net_message);
 	cl.attractloop = MSG_ReadByte (&net_message);
-
-	// game directory
-	str = MSG_ReadString (&net_message);
-	assert( fs_gamedirvar->GetString() && *fs_gamedirvar->GetString() );
-	// set gamedir
-	if ( ( str && *str ) && Q_strcmp( str, fs_gamedirvar->GetString() ) != 0 )
-	{
-		Q_strcpy_s( cl.gamedir, str );
-		Cvar_FindSetString( "fs_game", str );
-	}
-	else
-	{
-		Q_strcpy_s( cl.gamedir, fs_gamedirvar->GetString() );
-	}
 
 	// parse player entity number
 	cl.playernum = MSG_ReadShort (&net_message);
@@ -664,7 +644,7 @@ void CL_ParseServerMessage (void)
 	{
 		if (net_message.readcount > net_message.cursize)
 		{
-			Com_Errorf ("CL_ParseServerMessage: Bad server message");
+			Com_Error ("CL_ParseServerMessage: Bad server message");
 			break;
 		}
 
@@ -688,7 +668,7 @@ void CL_ParseServerMessage (void)
 		switch (cmd)
 		{
 		default:
-			Com_Errorf ("CL_ParseServerMessage: Illegible server message\n");
+			Com_Error ("CL_ParseServerMessage: Illegible server message\n");
 			break;
 			
 		case svc_nop:
@@ -703,7 +683,7 @@ void CL_ParseServerMessage (void)
 			Com_Printf ("Server disconnected, reconnecting\n");
 			if (cls.download) {
 				//ZOID, close download
-				fclose (cls.download);
+				FileSystem::CloseFile (cls.download);
 				cls.download = NULL;
 			}
 			cls.state = ca_connecting;

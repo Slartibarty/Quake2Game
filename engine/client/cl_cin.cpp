@@ -56,7 +56,7 @@ static void SCR_LoadPCX (char *filename, byte **pic, byte **palette, int *width,
 	//
 	// load the file
 	//
-	len = FS_LoadFile (filename, (void **)&raw);
+	len = FileSystem::LoadFile( filename, (void **)&raw );
 	if (!raw)
 		return;	// Com_Printf ("Bad pcx file %s\n", filename);
 
@@ -121,7 +121,7 @@ static void SCR_LoadPCX (char *filename, byte **pic, byte **palette, int *width,
 		*pic = NULL;
 	}
 
-	FS_FreeFile (pcx);
+	FileSystem::FreeFile (pcx);
 }
 
 //=============================================================
@@ -146,7 +146,7 @@ void SCR_StopCinematic (void)
 	}
 	if (cl.cinematic_file)
 	{
-		fclose (cl.cinematic_file);
+		FileSystem::CloseFile (cl.cinematic_file);
 		cl.cinematic_file = NULL;
 	}
 	if (cin.hnodes1)
@@ -236,7 +236,7 @@ void Huff1TableInit (void)
 		memset (cin.h_used,0,sizeof(cin.h_used));
 
 		// read a row of counts
-		FS_Read (counts, sizeof(counts), cl.cinematic_file);
+		FileSystem::ReadFile (counts, sizeof(counts), cl.cinematic_file);
 		for (j=0 ; j<256 ; j++)
 			cin.h_count[j] = counts[j];
 
@@ -411,11 +411,8 @@ byte *SCR_ReadNextFrame (void)
 	int		start, end, count;
 
 	// read the next frame
-	r = (int)fread (&command, 4, 1, cl.cinematic_file);
-	if (r == 0)		// we'll give it one more chance
-		r = (int)fread (&command, 4, 1, cl.cinematic_file);
-
-	if (r != 1)
+	r = FileSystem::ReadFile (&command, sizeof(command), cl.cinematic_file);
+	if (r != sizeof(command))
 		return NULL;
 	command = LittleLong(command);
 	if (command == 2)
@@ -424,23 +421,23 @@ byte *SCR_ReadNextFrame (void)
 	if (command == 1)
 	{
 		// read palette
-		FS_Read (cl.cinematicpalette, sizeof(cl.cinematicpalette), cl.cinematic_file);
+		FileSystem::ReadFile (cl.cinematicpalette, sizeof(cl.cinematicpalette), cl.cinematic_file);
 		R_SetRawPalette( cl.cinematicpalette );
 	}
 
 	// decompress the next frame
-	FS_Read (&size, 4, cl.cinematic_file);
+	FileSystem::ReadFile (&size, 4, cl.cinematic_file);
 	size = LittleLong(size);
 	if (size > sizeof(compressed) || size < 1)
 		Com_Errorf ("Bad compressed frame size");
-	FS_Read (compressed, size, cl.cinematic_file);
+	FileSystem::ReadFile (compressed, size, cl.cinematic_file);
 
 	// read sound
 	start = cl.cinematicframe*cin.s_rate/14;
 	end = (cl.cinematicframe+1)*cin.s_rate/14;
 	count = end - start;
 
-	FS_Read (samples, count*cin.s_width*cin.s_channels, cl.cinematic_file);
+	FileSystem::ReadFile (samples, count*cin.s_width*cin.s_channels, cl.cinematic_file);
 
 	S_RawSamples (count, cin.s_rate, cin.s_width, cin.s_channels, samples);
 
@@ -577,7 +574,7 @@ void SCR_PlayCinematic (const char *arg)
 	}
 
 	Q_sprintf_s (name, "video/%s", arg);
-	FS_FOpenFile (name, &cl.cinematic_file);
+	cl.cinematic_file = FileSystem::OpenFileRead (name);
 	if (!cl.cinematic_file)
 	{
 //		Com_Errorf ("Cinematic %s not found.\n", name);
@@ -590,16 +587,16 @@ void SCR_PlayCinematic (const char *arg)
 
 	cls.state = ca_active;
 
-	FS_Read (&width, 4, cl.cinematic_file);
-	FS_Read (&height, 4, cl.cinematic_file);
+	FileSystem::ReadFile (&width, 4, cl.cinematic_file);
+	FileSystem::ReadFile (&height, 4, cl.cinematic_file);
 	cin.width = LittleLong(width);
 	cin.height = LittleLong(height);
 
-	FS_Read (&cin.s_rate, 4, cl.cinematic_file);
+	FileSystem::ReadFile (&cin.s_rate, 4, cl.cinematic_file);
 	cin.s_rate = LittleLong(cin.s_rate);
-	FS_Read (&cin.s_width, 4, cl.cinematic_file);
+	FileSystem::ReadFile (&cin.s_width, 4, cl.cinematic_file);
 	cin.s_width = LittleLong(cin.s_width);
-	FS_Read (&cin.s_channels, 4, cl.cinematic_file);
+	FileSystem::ReadFile (&cin.s_channels, 4, cl.cinematic_file);
 	cin.s_channels = LittleLong(cin.s_channels);
 
 	Huff1TableInit ();

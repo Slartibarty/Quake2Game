@@ -352,7 +352,7 @@ static bool GL_LoadImage( const char *pName, int &width, int &height, byte *&pPi
 	byte *pBuffer;
 	int nBufLen;
 
-	nBufLen = FS_LoadFile( pName, (void **)&pBuffer );
+	nBufLen = FileSystem::LoadFile( pName, (void **)&pBuffer );
 	if ( !pBuffer )
 	{
 		return false;
@@ -364,7 +364,7 @@ static bool GL_LoadImage( const char *pName, int &width, int &height, byte *&pPi
 	{
 		pPic = img::LoadPNG( pBuffer, width, height );
 
-		FS_FreeFile( pBuffer );
+		FileSystem::FreeFile( pBuffer );
 		return false;
 	}
 	else if ( img::TestDDS( pBuffer ) )
@@ -384,7 +384,7 @@ static bool GL_LoadImage( const char *pName, int &width, int &height, byte *&pPi
 		// There is no real test for TGA
 		pPic = img::LoadTGA( pBuffer, nBufLen, width, height );
 
-		FS_FreeFile( pBuffer );
+		FileSystem::FreeFile( pBuffer );
 		return false;
 	}
 	
@@ -433,7 +433,7 @@ static image_t *GL_FindImage( const char *name, imageFlags_t flags )
 	if ( compressed ) {
 		Mem_Free( pic );
 	} else {
-		FS_FreeFile( pic );
+		FileSystem::FreeFile( pic );
 	}
 
 	++image->refcount;
@@ -658,7 +658,7 @@ static material_t *GL_CreateMaterial( const char *name )
 	strcat( newname, ".mat" );
 #endif
 
-	nBufLen = FS_LoadFile( name, (void **)&pBuffer, 1 );
+	nBufLen = FileSystem::LoadFile( name, (void **)&pBuffer, 1 );
 	if ( !pBuffer )
 	{
 		return defaultMaterial;
@@ -690,12 +690,12 @@ static material_t *GL_CreateMaterial( const char *name )
 
 	if ( !ParseMaterial( pBuffer, material ) )
 	{
-		FS_FreeFile( pBuffer );
+		FileSystem::FreeFile( pBuffer );
 		memset( material, 0, sizeof( *material ) );
 		return defaultMaterial;
 	}
 
-	FS_FreeFile( pBuffer );
+	FileSystem::FreeFile( pBuffer );
 	return material;
 }
 
@@ -800,7 +800,7 @@ static void GL_GetPalette (void)
 	byte	*pBuffer;
 	int		nBufLen;
 
-	nBufLen = FS_LoadFile("textures/colormap.pcx", (void**)&pBuffer);
+	nBufLen = FileSystem::LoadFile("textures/colormap.pcx", (void**)&pBuffer);
 	if (!pBuffer)
 	{
 		Com_FatalError("Couldn't load textures/colormap.pcx");
@@ -808,11 +808,11 @@ static void GL_GetPalette (void)
 
 	if (!img::CreateColormapFromPCX(pBuffer, nBufLen, d_8to24table))
 	{
-		FS_FreeFile(pBuffer);
+		FileSystem::FreeFile(pBuffer);
 		Com_FatalError("textures/colormap.pcx is not a valid PCX!");
 	}
 
-	FS_FreeFile(pBuffer);
+	FileSystem::FreeFile(pBuffer);
 }
 
 //-------------------------------------------------------------------------------------------------

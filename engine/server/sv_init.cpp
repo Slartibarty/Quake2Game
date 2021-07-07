@@ -102,9 +102,6 @@ SV_CheckForSavegame
 */
 static void SV_CheckForSavegame()
 {
-	char		name[MAX_OSPATH];
-	FILE *		f;
-
 	if ( sv_noreload->GetBool() ) {
 		return;
 	}
@@ -113,14 +110,12 @@ static void SV_CheckForSavegame()
 		return;
 	}
 
-	Q_sprintf_s( name, "%s/save/current/%s.sav", FS_Gamedir(), sv.name );
-	f = fopen( name, "rb" );
-	if ( !f ) {
+	char name[MAX_OSPATH];
+	Q_sprintf_s( name, "save/current/%s.sav", sv.name );
+	if ( !FileSystem::FileExists( name ) ) {
 		// no savegame
 		return;
 	}
-
-	fclose( f );
 
 	SV_ClearWorld();
 
@@ -168,7 +163,7 @@ static void SV_SpawnServer( const char *server, const char *spawnpoint, serverSt
 
 	Com_DPrintf( "SpawnServer: %s\n", server );
 	if ( sv.demofile ) {
-		fclose( sv.demofile );
+		FileSystem::CloseFile( sv.demofile );
 	}
 
 	svs.spawncount++;		// any partially connected client will be restarted

@@ -1774,7 +1774,7 @@ const char *M_Credits_Key( int key )
 	{
 	case K_ESCAPE:
 		if (creditsBuffer)
-			FS_FreeFile (creditsBuffer);
+			FileSystem::FreeFile (creditsBuffer);
 		M_PopMenu ();
 		break;
 	}
@@ -1782,8 +1782,6 @@ const char *M_Credits_Key( int key )
 	return menu_out_sound;
 
 }
-
-extern int Developer_searchpath ();
 
 void M_Menu_Credits_f( void )
 {
@@ -1793,7 +1791,7 @@ void M_Menu_Credits_f( void )
 	int		isdeveloper = 0;
 
 	creditsBuffer = NULL;
-	count = FS_LoadFile ("credits", (void**)&creditsBuffer);
+	count = FileSystem::LoadFile ("credits", (void**)&creditsBuffer);
 	if (count != -1)
 	{
 		p = creditsBuffer;
@@ -2003,13 +2001,12 @@ qboolean	m_savevalid[MAX_SAVEGAMES];
 void Create_Savestrings (void)
 {
 	int		i;
-	FILE	*f;
 	char	name[MAX_OSPATH];
 
 	for (i=0 ; i<MAX_SAVEGAMES ; i++)
 	{
-		Q_sprintf_s (name, "%s/save/save%i/server.ssv", FS_Gamedir(), i);
-		f = fopen (name, "rb");
+		Q_sprintf_s (name, "save/save%i/server.ssv", i);
+		fsHandle_t f = FileSystem::OpenFileRead (name);
 		if (!f)
 		{
 			strcpy (m_savestrings[i], "<EMPTY>");
@@ -2017,8 +2014,8 @@ void Create_Savestrings (void)
 		}
 		else
 		{
-			FS_Read (m_savestrings[i], sizeof(m_savestrings[i]), f);
-			fclose (f);
+			FileSystem::ReadFile (m_savestrings[i], sizeof(m_savestrings[i]), f);
+			FileSystem::CloseFile (f);
 			m_savevalid[i] = true;
 		}
 	}
@@ -2477,30 +2474,17 @@ void StartServer_MenuInit( void )
 //PGM
 //=======
 	char *buffer;
-	char  mapsname[1024];
 	char *s;
 	int length;
 	int i;
-	FILE *fp;
 
 	/*
 	** load the list of map names
 	*/
-	Q_sprintf_s( mapsname, "%s/maps.lst", FS_Gamedir() );
-	// Slart: This is some weird logic here, what's going on?
-	if ( ( fp = fopen( mapsname, "rb" ) ) == 0 )
+	length = FileSystem::LoadFile( "maps.lst", (void **)&buffer, 1 );
+	if ( !buffer )
 	{
-		if ( ( length = FS_LoadFile( "maps.lst", ( void ** ) &buffer ) ) == -1 )
-			Com_Errorf("couldn't find maps.lst\n" );
-	}
-	else
-	{
-		fseek(fp, 0, SEEK_END);
-		length = ftell(fp);
-		fseek(fp, 0, SEEK_SET);
-
-		buffer = (char*)Mem_Alloc( length );
-		fread( buffer, length, 1, fp );
+		Com_Error( "Couldn't find maps.lst\n" );
 	}
 
 	s = buffer;
@@ -2538,15 +2522,7 @@ void StartServer_MenuInit( void )
 	}
 	mapnames[nummaps] = 0;
 
-	if ( fp != 0 )
-	{
-		fp = 0;
-		Mem_Free( buffer );
-	}
-	else
-	{
-		FS_FreeFile( buffer );
-	}
+	FileSystem::FreeFile( buffer );
 
 	/*
 	** initialize the menu stuff
@@ -3387,146 +3363,9 @@ static qboolean IconOfSkinExists( char *skin, char **pcxfiles, int npcxfiles )
 	return false;
 }
 
-static qboolean PlayerConfig_ScanDirectories( void )
+static void PlayerConfig_ScanDirectories( void )
 {
-	char findname[1024];
-	char scratch[1024];
-	int ndirs = 0, npms = 0;
-	char **dirnames;
-	const char *path = NULL;
-	int i;
-
-	extern char **FS_ListFiles( const char *, int *, unsigned, unsigned );
-
-	s_numplayermodels = 0;
-
-	/*
-	** get a list of directories
-	*/
-	do 
-	{
-		path = FS_NextPath( path );
-		Q_sprintf_s( findname, "%s/players/*.*", path );
-
-		if ( ( dirnames = FS_ListFiles( findname, &ndirs, SFF_SUBDIR, 0 ) ) != 0 )
-			break;
-	} while ( path );
-
-	if ( !dirnames )
-		return false;
-
-	/*
-	** go through the subdirectories
-	*/
-	npms = ndirs;
-	if ( npms > MAX_PLAYERMODELS )
-		npms = MAX_PLAYERMODELS;
-
-	for ( i = 0; i < npms; i++ )
-	{
-		int k, s;
-		char *a, *b, *c;
-		char **pcxnames;
-		char **skinnames;
-		int npcxfiles;
-		int nskins = 0;
-
-		if ( dirnames[i] == 0 )
-			continue;
-
-		// verify the existence of tris.md2
-		strcpy( scratch, dirnames[i] );
-		strcat( scratch, "/tris.md2" );
-		if ( !Sys_FindFirst( scratch, 0, SFF_SUBDIR | SFF_HIDDEN | SFF_SYSTEM ) )
-		{
-			Mem_Free( dirnames[i] );
-			dirnames[i] = 0;
-			Sys_FindClose();
-			continue;
-		}
-		Sys_FindClose();
-
-		// verify the existence of at least one pcx skin
-		strcpy( scratch, dirnames[i] );
-		strcat( scratch, "/*.pcx" );
-		pcxnames = FS_ListFiles( scratch, &npcxfiles, 0, SFF_SUBDIR | SFF_HIDDEN | SFF_SYSTEM );
-
-		if ( !pcxnames )
-		{
-			Mem_Free( dirnames[i] );
-			dirnames[i] = 0;
-			continue;
-		}
-
-		// count valid skins, which consist of a skin with a matching "_i" icon
-		for ( k = 0; k < npcxfiles-1; k++ )
-		{
-			if ( !strstr( pcxnames[k], "_i.pcx" ) )
-			{
-				if ( IconOfSkinExists( pcxnames[k], pcxnames, npcxfiles - 1 ) )
-				{
-					nskins++;
-				}
-			}
-		}
-		if ( !nskins )
-			continue;
-
-		skinnames = (char**)Mem_ClearedAlloc( sizeof( char * ) * ( nskins + 1 ) );
-
-		// copy the valid skins
-		for ( s = 0, k = 0; k < npcxfiles-1; k++ )
-		{
-			char *a, *b, *c;
-
-			if ( !strstr( pcxnames[k], "_i.pcx" ) )
-			{
-				if ( IconOfSkinExists( pcxnames[k], pcxnames, npcxfiles - 1 ) )
-				{
-					a = strrchr( pcxnames[k], '/' );
-					b = strrchr( pcxnames[k], '\\' );
-
-					if ( a > b )
-						c = a;
-					else
-						c = b;
-
-					strcpy( scratch, c + 1 );
-
-					if ( strrchr( scratch, '.' ) )
-						*strrchr( scratch, '.' ) = 0;
-
-					skinnames[s] = Mem_CopyString( scratch );
-					s++;
-				}
-			}
-		}
-
-		// at this point we have a valid player model
-		s_pmi[s_numplayermodels].nskins = nskins;
-		s_pmi[s_numplayermodels].skindisplaynames = skinnames;
-
-		// make short name for the model
-		a = strrchr( dirnames[i], '/' );
-		b = strrchr( dirnames[i], '\\' );
-
-		if ( a > b )
-			c = a;
-		else
-			c = b;
-
-		Q_strcpy_s( s_pmi[s_numplayermodels].displayname, c + 1 );
-		strcpy( s_pmi[s_numplayermodels].directory, c + 1 );
-
-		FreeFileList( pcxnames, npcxfiles );
-
-		s_numplayermodels++;
-	}
-	if ( dirnames )
-		FreeFileList( dirnames, ndirs );
-
-	// Slart: I assume false is what should be returned here
-	return false;
+	// no, no players, none
 }
 
 static int pmicmpfnc( const void *_a, const void *_b )

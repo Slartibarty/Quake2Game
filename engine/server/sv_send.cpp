@@ -431,8 +431,8 @@ static void SV_DemoCompleted()
 {
 	if ( sv.demofile )
 	{
-		fclose( sv.demofile );
-		sv.demofile = NULL;
+		FileSystem::CloseFile( sv.demofile );
+		sv.demofile = nullptr;
 	}
 	SV_Nextserver();
 }
@@ -497,7 +497,7 @@ void SV_SendClientMessages()
 		else
 		{
 			// get the next message
-			r = fread( &msglen, 4, 1, sv.demofile );
+			r = FileSystem::ReadFile( &msglen, sizeof( msglen ), sv.demofile );
 			if ( r != 1 )
 			{
 				SV_DemoCompleted();
@@ -512,7 +512,7 @@ void SV_SendClientMessages()
 			if ( msglen > MAX_MSGLEN ) {
 				Com_Error( "SV_SendClientMessages: msglen > MAX_MSGLEN" );
 			}
-			r = fread( msgbuf, msglen, 1, sv.demofile );
+			r = FileSystem::ReadFile( msgbuf, msglen, sv.demofile );
 			if ( r != 1 )
 			{
 				SV_DemoCompleted();

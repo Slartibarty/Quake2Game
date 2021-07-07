@@ -56,7 +56,7 @@ void SV_DropClient( client_t *drop )
 
 	if ( drop->download )
 	{
-		FS_FreeFile( drop->download );
+		FileSystem::FreeFile( drop->download );
 		drop->download = NULL;
 	}
 
@@ -1063,7 +1063,7 @@ void SV_Shutdown( const char *finalmsg, bool reconnect )
 
 	// free current level
 	if ( sv.demofile ) {
-		fclose( sv.demofile );
+		FileSystem::CloseFile( sv.demofile );
 	}
 	memset( &sv, 0, sizeof( sv ) );
 	Com_SetServerState( sv.state );
@@ -1076,7 +1076,7 @@ void SV_Shutdown( const char *finalmsg, bool reconnect )
 		Mem_Free( svs.client_entities );
 	}
 	if ( svs.demofile ) {
-		fclose( svs.demofile );
+		FileSystem::CloseFile( svs.demofile );
 	}
 	memset( &svs, 0, sizeof( svs ) );
 }

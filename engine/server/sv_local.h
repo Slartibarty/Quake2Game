@@ -40,7 +40,7 @@ struct server_t
 	byte		multicast_buf[MAX_MSGLEN];
 
 	// demo server information
-	FILE		*demofile;
+	fsHandle_t	demofile;
 	qboolean	timedemo;		// don't time sync
 };
 
@@ -151,7 +151,7 @@ struct serverStatic_t
 	challenge_t	challenges[MAX_CHALLENGES];	// to prevent invalid IPs from connecting
 
 	// serverrecord values
-	FILE		*demofile;
+	fsHandle_t	demofile;
 	sizebuf_t	demo_multicast;
 	byte		demo_multicast_buf[MAX_MSGLEN];
 };

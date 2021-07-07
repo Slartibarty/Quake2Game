@@ -287,7 +287,7 @@ namespace img
 	}
 
 	// Write a PNG using STDIO
-	bool WritePNG( int width, int height, bool b32bit, byte *buffer, FILE *handle )
+	bool WritePNG( int width, int height, bool b32bit, byte *buffer, fsHandle_t handle )
 	{
 		png_structp png_ptr;
 		png_infop info_ptr;

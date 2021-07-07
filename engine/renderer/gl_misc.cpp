@@ -16,7 +16,7 @@ static constexpr size_t MaxScreenshots = 999;
 
 struct threadData_t
 {
-	char	filename[MAX_OSPATH];
+	char	filename[MAX_QPATH];
 	byte *	pixBuffer;
 	int		width, height;
 };
@@ -25,7 +25,7 @@ static uint32 PNG_ThreadProc( void *params )
 {
 	threadData_t *threadData = (threadData_t *)params;
 
-	FILE *handle = fopen( threadData->filename, "wb" );
+	fsHandle_t handle = FileSystem::OpenFileWrite( threadData->filename );
 	if ( !handle ) {
 		Mem_Free( threadData->pixBuffer );
 		Mem_Free( threadData );
@@ -35,7 +35,7 @@ static uint32 PNG_ThreadProc( void *params )
 	img::VerticalFlip( threadData->pixBuffer, vid.width, vid.height, 3 );
 	img::WritePNG( vid.width, vid.height, false, threadData->pixBuffer, handle );
 
-	fclose( handle );
+	FileSystem::CloseFile( handle );
 	Mem_Free( threadData->pixBuffer );
 	Mem_Free( threadData );
 
@@ -51,8 +51,8 @@ static void GL_Screenshot_Internal( bool png )
 {	
 	// create the screenshots directory if it doesn't exist
 	char checkname[MAX_QPATH];
-	Q_sprintf_s( checkname, "%s/screenshots", FS_Gamedir() );
-	Sys_CreateDirectory( checkname );
+	strcpy( checkname, "screenshots" );
+	FileSystem::CreatePath( checkname );
 
 	// find a file name to save it to
 	char picname[16];
@@ -64,13 +64,11 @@ static void GL_Screenshot_Internal( bool png )
 	{
 		picname[5] = i / 10 + '0';
 		picname[6] = i % 10 + '0';
-		Q_sprintf_s( checkname, "%s/screenshots/%s", FS_Gamedir(), picname );
-		FILE *handle = fopen( checkname, "rb" );
-		if ( !handle ) {
+		Q_sprintf_s( checkname, "screenshots/%s", picname );
+		if ( !FileSystem::FileExists( checkname, FS_WRITEDIR ) ) {
 			// file doesn't exist
 			break;
 		}
-		fclose( handle );
 	}
 	if ( i == MaxScreenshots + 1 )
 	{
@@ -105,7 +103,7 @@ static void GL_Screenshot_Internal( bool png )
 	}
 	else
 	{
-		FILE *handle = fopen( checkname, "wb" );
+		fsHandle_t handle = FileSystem::OpenFileWrite( checkname );
 		assert( handle );
 
 		memset( pixbuffer, 0, 18 );
@@ -125,9 +123,9 @@ static void GL_Screenshot_Internal( bool png )
 			pixbuffer[i + 2] = temp;
 		}
 
-		fwrite( pixbuffer, 1, c, handle );
+		FileSystem::WriteFile( pixbuffer, c, handle );
 
-		fclose( handle );
+		FileSystem::CloseFile( handle );
 		Mem_Free( pixbuffer );
 
 		Com_Printf( "Wrote %s\n", picname );
@@ -166,6 +164,7 @@ Extract a WAD file to 24-bit TGA files
 */
 void R_ExtractWad_f()
 {
+#if 0
 	if ( Cmd_Argc() < 3 )
 	{
 		Com_Printf( "Usage: <file.wad> <palette.lmp>\n" );
@@ -291,6 +290,7 @@ void R_ExtractWad_f()
 
 	Mem_Free( wadlumps );
 	fclose( wadhandle );
+#endif
 }
 
 /*
@@ -334,6 +334,7 @@ Upgrade all WALs in a specified folder to TGAs
 */
 void R_UpgradeWals_f()
 {
+#if 0
 	if ( Cmd_Argc() < 2 )
 	{
 		Com_Printf( "Usage: <folder>\n" );
@@ -387,6 +388,7 @@ void R_UpgradeWals_f()
 	}
 
 	Sys_FindClose();
+#endif
 }
 
 /*
