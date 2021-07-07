@@ -32,7 +32,7 @@ namespace FileSystem
 {
 
 // I wear a huge trollface upon my head
-static constexpr auto SaveFolderName = "Project Moon";
+static constexpr auto SaveFolderName = "Freeze Team/Project Moon";
 
 cvar_t *fs_debug;
 cvar_t *fs_mod;

@@ -6,6 +6,9 @@
 	FIXME: you can only browse history after you've submitted something, this is due to the
 	placement of con.completionPopup after Con2_Submit
 
+	TODO: add a space after scrolling through the completion popup
+	it's very convenient not having to press space, watch for gotchas
+
 ===================================================================================================
 */
 
@@ -195,7 +198,7 @@ static int TextEditCallback( ImGuiInputTextCallbackData *data )
 
 			const char *match_str = con.completionPosition >= 0 ? con.entryMatches[con.completionPosition].data() : "";
 			data->DeleteChars( 0, data->BufTextLen );
-			data->InsertChars( 0, match_str );
+			data->InsertChars( data->CursorPos, match_str );
 		}
 		else if ( !con.historyLines.empty() )
 		{
@@ -223,7 +226,7 @@ static int TextEditCallback( ImGuiInputTextCallbackData *data )
 
 			const char *history_str = con.historyPosition >= 0 ? con.historyLines[con.historyPosition].data : "";
 			data->DeleteChars( 0, data->BufTextLen );
-			data->InsertChars( 0, history_str );
+			data->InsertChars( data->CursorPos, history_str );
 		}
 	}
 	break;
@@ -686,10 +689,14 @@ void ShowConsole( bool *pOpen )
 				}
 				ImGui::PopStyleColor();
 
+				char workBuf[256];
+
 				// loop for the cvars
 				for ( ; i < (int)con.entryMatches.size() && i < MAX_MATCHES; ++i )
 				{
-					ImGui::Selectable( con.entryMatches[i].data() );
+					// HACK: This sucks a little
+					Q_sprintf_s( workBuf, "%s %s", con.entryMatches[i].data(), Cvar_FindGetString( con.entryMatches[i].data() ) );
+					ImGui::Selectable( workBuf );
 				}
 
 				if ( i >= MAX_MATCHES )

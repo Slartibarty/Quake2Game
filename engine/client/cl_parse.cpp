@@ -292,6 +292,9 @@ void CL_ParseServerData (void)
 	cl.servercount = MSG_ReadLong (&net_message);
 	cl.attractloop = MSG_ReadByte (&net_message);
 
+	// game directory
+	str = MSG_ReadString( &net_message );
+
 	// parse player entity number
 	cl.playernum = MSG_ReadShort (&net_message);
 

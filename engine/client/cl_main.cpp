@@ -173,6 +173,7 @@ static void CL_Record_f()
 	MSG_WriteLong( &buf, PROTOCOL_VERSION );
 	MSG_WriteLong( &buf, 0x10000 + cl.servercount );
 	MSG_WriteByte( &buf, 1 );	// demos are always attract loops
+	MSG_WriteString( &buf, "WackassNutty" );
 	MSG_WriteShort( &buf, cl.playernum );
 
 	MSG_WriteString( &buf, cl.configstrings[CS_NAME] );

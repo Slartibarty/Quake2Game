@@ -179,7 +179,7 @@ void Com_DPrint( const char *msg )
 		return;
 	}
 
-	Com_Printf( S_COLOR_YELLOW "%s", msg );
+	Com_Print( msg );
 }
 
 void Com_DPrintf( _Printf_format_string_ const char *fmt, ... )
@@ -195,7 +195,7 @@ void Com_DPrintf( _Printf_format_string_ const char *fmt, ... )
 	Q_vsprintf_s( msg, fmt, argptr );
 	va_end( argptr );
 
-	Com_Printf( S_COLOR_YELLOW "%s", msg );
+	Com_Print( msg );
 }
 
 /*

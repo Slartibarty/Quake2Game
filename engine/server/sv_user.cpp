@@ -69,6 +69,7 @@ static void SV_New_f()
 	MSG_WriteLong( &sv_client->netchan.message, PROTOCOL_VERSION );
 	MSG_WriteLong( &sv_client->netchan.message, svs.spawncount );
 	MSG_WriteByte( &sv_client->netchan.message, sv.attractloop );
+	MSG_WriteString( &sv_client->netchan.message, "WackassNutty" );
 
 	if ( sv.state == ss_cinematic || sv.state == ss_pic )
 	{
