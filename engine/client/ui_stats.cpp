@@ -13,6 +13,12 @@
 namespace UI::StatsPanel
 {
 
+#define FPS_FRAMES 6
+
+static void ShowFPS()
+{
+}
+
 void ShowStats()
 {
 	const ImGuiWindowFlags windowFlags =
@@ -24,17 +30,41 @@ void ShowStats()
 
 	ImGui::Begin( "Stats Area", nullptr, windowFlags );
 
-	// my brain fell out
-	// TODO: does this actually work?
-	float flFps = 1.0f / ( cls.frametime + FLT_EPSILON );
-	int fps = static_cast<int>( flFps );
-
 	char workBuf[128];
 	int length;
 
-	length = Q_sprintf_s( workBuf, "Client FPS : %d", fps );
-	ImGui::TextUnformatted( workBuf, workBuf + length );
-	ImGui::Separator();
+	// calc FPS
+	{
+		static double previousTimes[FPS_FRAMES];
+		static uint index;
+		static double previous;
+
+		// don't use serverTime, because that will be drifting to
+		// correct for internet lag changes, timescales, timedemos, etc
+		double t = Time_FloatMilliseconds();
+		double frameTime = t - previous;
+		previous = t;
+
+		previousTimes[index++ % FPS_FRAMES] = frameTime;
+		if ( index > FPS_FRAMES )
+		{
+			// average multiple frames together to smooth changes out a bit
+			double total = 0.0;
+			for ( uint i = 0; i < FPS_FRAMES; ++i ) {
+				total += previousTimes[i];
+			}
+			if ( total == 0.0 ) {
+				total = 1.0;
+			}
+			double fps = 1000000.0 * FPS_FRAMES / total;
+			fps = ( fps + 500.0 ) / 1000.0;
+
+			length = Q_sprintf_s( workBuf, "Client FPS : %f", fps );
+			ImGui::TextUnformatted( workBuf, workBuf + length );
+			ImGui::Separator();
+		}
+	}
+
 	length = Q_sprintf_s( workBuf, "cls.framecount : %d", cls.framecount );
 	ImGui::TextUnformatted( workBuf, workBuf + length );
 	length = Q_sprintf_s( workBuf, "cls.realtime   : %d", cls.realtime );

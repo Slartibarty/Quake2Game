@@ -13,7 +13,7 @@
 #include <vector>
 #include <string>
 
-#include "files.h"
+#include "filesystem.h"
 #include "cmd.h"
 #include "cmodel.h"
 #include "conproc.h"

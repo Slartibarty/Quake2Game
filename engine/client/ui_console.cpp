@@ -26,14 +26,14 @@
 namespace UI::Console
 {
 
-static constexpr int MAX_MATCHES	= 9;	// 10th match is "..."
-static constexpr int MAX_NOTIFIES	= 8;	// should be a cvar
+#define MAX_MATCHES		9			// 10th match is "..."
+#define MAX_NOTIFIES	8			// should be a cvar
 
 static constexpr uint32 CmdColor	= colors::green;
 
-static cvar_t *con_notifytime;
-static cvar_t *con_drawnotify;
-static cvar_t *con_allownotify;
+static cvar_t *con_notifyTime;
+static cvar_t *con_drawNotify;
+static cvar_t *con_allowNotify;
 
 struct notify_t
 {
@@ -103,7 +103,7 @@ static bool CanAddNotifies()
 		return false;
 	}*/
 
-	if ( !con_allownotify->GetBool() ) {
+	if ( !con_allowNotify->GetBool() ) {
 		return false;
 	}
 
@@ -117,7 +117,7 @@ static bool CanDrawNotifies()
 		return false;
 	}*/
 
-	if ( !con_drawnotify->GetBool() ) {
+	if ( !con_drawNotify->GetBool() ) {
 		return false;
 	}
 
@@ -135,7 +135,7 @@ void Print( const char *txt )
 	notify_t &notify = con.notifies[con.currentNotify & ( MAX_NOTIFIES - 1 )];
 
 	Q_strcpy_s( notify.message, txt );
-	notify.timeLeft = con_notifytime->GetFloat();
+	notify.timeLeft = con_notifyTime->GetFloat();
 
 	++con.currentNotify;
 }
@@ -396,9 +396,9 @@ static void Help_f()
 
 void Init()
 {
-	con_notifytime = Cvar_Get( "con_notifytime", "8", 0, "Time in seconds that notifies are visible before expiring." );
-	con_drawnotify = Cvar_Get( "con_drawnotify", "1", 0, "If true, notifies can be drawn." );
-	con_allownotify = Cvar_Get( "con_allownotify", "1", 0, "If true, notifies can be posted." );
+	con_notifyTime = Cvar_Get( "con_notifyTime", "8", 0, "Time in seconds that notifies are visible before expiring." );
+	con_drawNotify = Cvar_Get( "con_drawNotify", "1", 0, "If true, notifies can be drawn." );
+	con_allowNotify = Cvar_Get( "con_allowNotify", "1", 0, "If true, notifies can be posted." );
 
 	Cmd_AddCommand( "clear", Clear_f, "Clears the console buffer." );
 	Cmd_AddCommand( "find", Find_f, "Finds all cmds and cvars with <param> in the name, use * to list all." );

@@ -25,7 +25,7 @@
 #include <ShlObj.h>
 #endif
 
-#include "files.h"
+#include "filesystem.h"
 
 #define FS_VERIFYPATH(a) ASSUME( a == FS_GAMEDIR || a == FS_WRITEDIR )
 
