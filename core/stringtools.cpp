@@ -153,6 +153,44 @@ int Q_strncasecmp( const char *s1, const char *s2, strlen_t n )
 	return 0;
 }
 
+const char *Q_stristr( const char *str, const char *substr )
+{
+	assert( str );
+	assert( substr );
+
+	const char *letter = str;
+
+	while ( *letter != '\0' )
+	{
+		if ( Q_tolower_fast( *letter ) == Q_tolower_fast( *substr ) )
+		{
+			const char *match = letter + 1;
+			const char *test = substr + 1;
+			while ( *test != '\0' )
+			{
+				if ( *match == 0 ) {
+					return nullptr;
+				}
+
+				if ( Q_tolower_fast( *match ) != Q_tolower_fast( *test ) ) {
+					break;
+				}
+
+				++match;
+				++test;
+			}
+
+			if ( *test == '\0' ) {
+				return letter;
+			}
+		}
+
+		++letter;
+	}
+
+	return nullptr;
+}
+
 /*
 ===================================================================================================
 

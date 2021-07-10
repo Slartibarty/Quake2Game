@@ -3,6 +3,8 @@
 
 	Console variables
 
+	CVar names are case insensitive, values are case sensitive
+
 ===================================================================================================
 */
 
@@ -42,7 +44,7 @@ cvar_t *Cvar_Find( const char *name )
 	// hashing doesn't help here, in fact it's somehow slower
 	for ( cvar_t *var = cvar_vars; var; var = var->pNext )
 	{
-		if ( Q_strcmp( name, var->name.c_str() ) == 0 ) {
+		if ( Q_stricmp( name, var->name.c_str() ) == 0 ) {
 			return var;
 		}
 	}
@@ -61,7 +63,7 @@ char *Cvar_CompleteVariable( const char *partial )
 	// check exact match
 	for ( cvar_t *cvar = cvar_vars; cvar; cvar = cvar->pNext )
 	{
-		if ( Q_strcmp( partial, cvar->name.c_str() ) == 0 ) {
+		if ( Q_stricmp( partial, cvar->name.c_str() ) == 0 ) {
 			return cvar->name.data();
 		}
 	}
@@ -69,7 +71,7 @@ char *Cvar_CompleteVariable( const char *partial )
 	// check partial match
 	for ( cvar_t *cvar = cvar_vars; cvar; cvar = cvar->pNext )
 	{
-		if ( Q_strncmp( partial, cvar->name.c_str(), len ) == 0 ) {
+		if ( Q_strnicmp( partial, cvar->name.c_str(), len ) == 0 ) {
 			return cvar->name.data();
 		}
 	}
@@ -90,7 +92,7 @@ cvar_t *Cvar_Get( const char *name, const char *value, uint32 flags, const char 
 	{
 		if ( !Cvar_InfoValidate( name ) )
 		{
-			Com_Print( "invalid info cvar name\n" );
+			Com_Print( S_COLOR_YELLOW "invalid info cvar name\n" );
 			return nullptr;
 		}
 	}
@@ -122,7 +124,7 @@ cvar_t *Cvar_Get( const char *name, const char *value, uint32 flags, const char 
 	{
 		if ( !Cvar_InfoValidate( value ) )
 		{
-			Com_Print( "invalid info cvar value\n" );
+			Com_Print( S_COLOR_YELLOW "invalid info cvar value\n" );
 			return nullptr;
 		}
 	}
@@ -192,7 +194,7 @@ static cvar_t *Cvar_Set_Internal( cvar_t *var, const char *value, bool force )
 	{
 		if ( !Cvar_InfoValidate( value ) )
 		{
-			Com_Printf( "invalid info cvar value\n" );
+			Com_Printf( S_COLOR_YELLOW "invalid info cvar value\n" );
 			return var;
 		}
 	}
@@ -201,7 +203,7 @@ static cvar_t *Cvar_Set_Internal( cvar_t *var, const char *value, bool force )
 	{
 		if ( var->flags & CVAR_NOSET )
 		{
-			Com_Printf( "%s is write protected.\n", var->name.c_str() );
+			Com_Printf( S_COLOR_YELLOW "%s is write protected.\n", var->name.c_str() );
 			return var;
 		}
 
@@ -605,7 +607,7 @@ static void Cvar_Help_f()
 void Cvar_Init()
 {
 	Cmd_AddCommand( "set", Cvar_Set_f );
-	Cmd_AddCommand( "cvarlist", Cvar_List_f );
+	Cmd_AddCommand( "cvarList", Cvar_List_f );
 }
 
 void Cvar_Shutdown()

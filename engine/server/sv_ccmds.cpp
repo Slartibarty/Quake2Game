@@ -283,63 +283,62 @@ static void SV_WriteServerFile( qboolean autosave )
 	time_t	aclock;
 	struct tm	*newtime;
 
-	Com_DPrintf("SV_WriteServerFile(%s)\n", autosave ? "true" : "false");
+	Com_DPrintf( "SV_WriteServerFile(%s)\n", autosave ? "true" : "false" );
 
-	strcpy (name, "save/current/server.ssv");
-	f = FileSystem::OpenFileWrite (name);
-	if (!f)
+	strcpy( name, "save/current/server.ssv" );
+	f = FileSystem::OpenFileWrite( name );
+	if ( !f )
 	{
-		Com_Printf ("Couldn't write %s\n", name);
+		Com_Printf( "Couldn't write %s\n", name );
 		return;
 	}
 	// write the comment field
-	memset (comment, 0, sizeof(comment));
+	memset( comment, 0, sizeof( comment ) );
 
-	if (!autosave)
+	if ( !autosave )
 	{
-		time (&aclock);
-		newtime = localtime (&aclock);
-		Q_sprintf_s (comment, "%2i:%i%i %2i/%2i  ", newtime->tm_hour
-			, newtime->tm_min/10, newtime->tm_min%10,
-			newtime->tm_mon+1, newtime->tm_mday);
-		strncat (comment, sv.configstrings[CS_NAME], sizeof(comment)-1-strlen(comment) );
+		time( &aclock );
+		newtime = localtime( &aclock );
+		Q_sprintf_s( comment, "%2i:%i%i %2i/%2i  ", newtime->tm_hour
+			, newtime->tm_min / 10, newtime->tm_min % 10,
+			newtime->tm_mon + 1, newtime->tm_mday );
+		strncat( comment, sv.configstrings[CS_NAME], sizeof( comment ) - 1 - strlen( comment ) );
 	}
 	else
 	{
 		// autosaved
-		Q_sprintf_s (comment, "ENTERING %s", sv.configstrings[CS_NAME]);
+		Q_sprintf_s( comment, "ENTERING %s", sv.configstrings[CS_NAME] );
 	}
 
-	FileSystem::WriteFile (comment, sizeof(comment), f);
+	FileSystem::WriteFile( comment, sizeof( comment ), f );
 
 	// write the mapcmd
-	FileSystem::WriteFile (svs.mapcmd, sizeof(svs.mapcmd), f);
+	FileSystem::WriteFile( svs.mapcmd, sizeof( svs.mapcmd ), f );
 
 	// write all CVAR_LATCH cvars
 	// these will be things like coop, skill, deathmatch, etc
-	for (var = cvar_vars ; var ; var=var->pNext)
+	for ( var = cvar_vars; var; var = var->pNext )
 	{
-		if (!(var->GetFlags() & CVAR_LATCH))
-			continue;
-		if (strlen(var->GetName()) >= sizeof(name)-1
-			|| strlen(var->GetString()) >= sizeof(string)-1)
-		{
-			Com_Printf ("Cvar too long: %s = %s\n", var->GetName(), var->GetString());
+		if ( !( var->GetFlags() & CVAR_LATCH ) ) {
 			continue;
 		}
-		memset (name, 0, sizeof(name));
-		memset (string, 0, sizeof(string));
-		strcpy (name, var->GetName());
-		strcpy (string, var->GetString());
-		FileSystem::WriteFile (name, sizeof(name), f);
-		FileSystem::WriteFile (string, sizeof(string), f);
+		if ( var->name.length() >= sizeof( name ) - 1 ||
+			var->value.length() >= sizeof( string ) - 1 )
+		{
+			Com_Printf( "Cvar too long: %s = %s\n", var->GetName(), var->GetString() );
+			continue;
+		}
+		Q_strcpy_s( name, var->GetName() );
+		Q_strcpy_s( string, var->GetString() );
+		FileSystem::WriteFile( name, sizeof( name ), f );
+		FileSystem::WriteFile( string, sizeof( string ), f );
 	}
 
-	FileSystem::CloseFile (f);
+	FileSystem::CloseFile( f );
 
 	// write game state
-	strcpy (name, "save/current/game.ssv");
-	ge->WriteGame (name, autosave);
+	strcpy( name, "save/current/game.ssv" );
+	ge->WriteGame( name, autosave );
 }
 
 /*

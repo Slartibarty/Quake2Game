@@ -744,12 +744,12 @@ cmodel_t *CM_InlineModel( const char *name )
 {
 	if ( !name || name[0] != '*' )
 	{
-		Com_Errorf("CM_InlineModel: bad name" );
+		Com_Error("CM_InlineModel: bad name" );
 	}
 	int num = atoi( name + 1 );
 	if ( num < 1 || num >= cm.cmodels.Count() )
 	{
-		Com_Errorf("CM_InlineModel: bad number" );
+		Com_Error("CM_InlineModel: bad number" );
 	}
 
 	return &cm.cmodels.Data(num);

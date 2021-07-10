@@ -8,6 +8,7 @@
 
 	TODO: add a space after scrolling through the completion popup
 	it's very convenient not having to press space, watch for gotchas
+	TODO: Command aliases are not considered
 
 ===================================================================================================
 */
@@ -266,7 +267,7 @@ static void Find_f()
 	// find command matches
 	for ( cmdFunction_t *pCmd = cmd_functions; pCmd; pCmd = pCmd->pNext )
 	{
-		if ( listAll || strstr( pCmd->pName, searchName ) )					// TODO: need Q_ version
+		if ( listAll || Q_stristr( pCmd->pName, searchName ) )
 		{
 			strlen_t length = Q_strlen( pCmd->pName );
 			if ( length > longestName )
@@ -289,7 +290,7 @@ static void Find_f()
 	// find cvar matches
 	for ( cvar_t *pVar = cvar_vars; pVar; pVar = pVar->pNext )
 	{
-		if ( listAll || strstr( pVar->GetName(), searchName ) )			// TODO: need Q_ version
+		if ( listAll || Q_stristr( pVar->GetName(), searchName ) )
 		{
 			if ( pVar->name.length() > longestName )
 			{
@@ -375,7 +376,7 @@ static void Help_f()
 	// search cmds
 	for ( cmdFunction_t *pCmd = cmd_functions; pCmd; pCmd = pCmd->pNext )
 	{
-		if ( Q_strcmp( pCmd->pName, name ) == 0 )
+		if ( Q_stricmp( pCmd->pName, name ) == 0 )
 		{
 			Com_Printf( " - %s\n", pCmd->pHelp );
 		}
@@ -384,7 +385,7 @@ static void Help_f()
 	// search cvars
 	for ( cvar_t *pVar = cvar_vars; pVar; pVar = pVar->pNext )
 	{
-		if ( Q_strcmp( pVar->GetName(), name ) == 0 )
+		if ( Q_stricmp( pVar->GetName(), name ) == 0 )
 		{
 			Cvar_PrintValue( pVar );
 			Cvar_PrintFlags( pVar );
@@ -470,7 +471,7 @@ static void RegenerateMatches( const char *partial )
 	// find command matches
 	for ( cmdFunction_t *pCmd = cmd_functions; pCmd; pCmd = pCmd->pNext )
 	{
-		if ( Q_strncmp( partial, pCmd->pName, partialLength ) == 0 )
+		if ( Q_strnicmp( partial, pCmd->pName, partialLength ) == 0 )
 		{
 			con.entryMatches.push_back( pCmd->pName );
 		}
@@ -484,7 +485,7 @@ static void RegenerateMatches( const char *partial )
 	// find cvar matches
 	for ( cvar_t *pVar = cvar_vars; pVar; pVar = pVar->pNext )
 	{
-		if ( Q_strncmp( partial, pVar->GetName(), partialLength ) == 0 )
+		if ( Q_strnicmp( partial, pVar->GetName(), partialLength ) == 0 )
 		{
 			con.entryMatches.push_back( pVar->GetName() );
 		}

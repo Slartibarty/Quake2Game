@@ -359,7 +359,7 @@ void CL_SendConnectPacket (void)
 	if (adr.port == 0)
 		adr.port = BigShort (PORT_SERVER);
 
-	port = (int)Cvar_FindGetFloat ("qport");
+	port = net_qport->GetInt();
 	userinfo_modified = false;
 
 	Netchan_OutOfBandPrint (NS_CLIENT, adr, "connect %i %i %i \"%s\"\n",
@@ -398,7 +398,7 @@ void CL_CheckForResend (void)
 
 	if (!NET_StringToNetadr (cls.servername, adr))
 	{
-		Com_Printf ("Bad server address\n");
+		Com_Print ("Bad server address\n");
 		cls.state = ca_disconnected;
 		return;
 	}
@@ -1447,6 +1447,7 @@ void CL_InitLocal (void)
 	// the only thing this does is allow command completion
 	// to work -- all unknown commands are automatically
 	// forwarded to the server
+	// TODO: This sucks
 	Cmd_AddCommand ("wave", NULL);
 	Cmd_AddCommand ("inven", NULL);
 	Cmd_AddCommand ("kill", NULL);
@@ -1705,10 +1706,8 @@ void CL_Init (void)
 	if (dedicated->GetBool())
 		return;		// nothing running on the client
 
-	// all archived variables will now be loaded
-
 	UI::Console::Init();
-#if defined __linux__ || defined __sgi
+#if defined __linux__
 	S_Init();
 	VID_Init();
 #else
@@ -1732,8 +1731,10 @@ void CL_Init (void)
 
 	CL_InitCGame();
 
-//	Cbuf_AddText ("exec autoexec.cfg\n");
-	FileSystem::ExecAutoexec ();
+	if ( FileSystem::FileExists( "autoexec.cfg" ) )
+	{
+		Cbuf_AddText( "exec autoexec.cfg\n" );
+	}
 	Cbuf_Execute ();
 
 }

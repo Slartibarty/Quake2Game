@@ -27,9 +27,7 @@
 
 using strlen_t = uint32;
 
-inline strlen_t Q_strlen( const char *str ) {
-	return static_cast<strlen_t>( strlen( str ) );
-}
+#define Q_strlen(a) static_cast<strlen_t>(strlen(a))
 
 /*
 =======================================
@@ -97,6 +95,8 @@ inline int Q_sprintf( char *pDest, _Printf_format_string_ const char *pFmt, ... 
 =======================================
 */
 
+// cmp
+
 inline int Q_strcmp( const char *s1, const char *s2 ) {
 	return s1 == s2 ? 0 : strcmp( s1, s2 );
 }
@@ -108,8 +108,17 @@ inline int Q_strncmp( const char *s1, const char *s2, strlen_t maxcount ) {
 int Q_strcasecmp( const char *s1, const char *s2 );
 int Q_strncasecmp( const char *s1, const char *s2, strlen_t n );
 
-inline int Q_stricmp( const char *s1, const char *s2 ) {
-	return Q_strcasecmp( s1, s2 );
+#define Q_stricmp Q_strcasecmp
+#define Q_strnicmp Q_strncasecmp
+
+// strstr
+
+#define Q_strstr strstr
+
+const char *Q_stristr( const char *str, const char *substr );
+
+inline char *Q_stristr( char *str, const char *substr ) {
+	return const_cast<char *>( Q_stristr( reinterpret_cast<const char *>( str ), substr ) );
 }
 
 /*

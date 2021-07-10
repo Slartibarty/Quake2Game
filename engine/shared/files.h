@@ -66,7 +66,6 @@ namespace FileSystem
 
 					// Finds a file without considering packfiles (for dlls), returns the absolute path.
 	bool			FindPhysicalFile( const char *name, char *buffer, strlen_t bufferSize, fsPath_t fsPath = FS_GAMEDIR );
-	void			ExecAutoexec();
 }
 
 inline consteval int Developer_searchpath()

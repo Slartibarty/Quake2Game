@@ -57,38 +57,37 @@ then a packet only needs to be delivered if there is something in the
 unacknowledged reliable
 */
 
-cvar_t		*showpackets;
-cvar_t		*showdrop;
-cvar_t		*qport;
+static cvar_t *net_showpackets;
+static cvar_t *net_showdrop;
+cvar_t *net_qport;
 
 netadr_t	net_from;
 sizebuf_t	net_message;
 byte		net_message_buffer[MAX_MSGLEN];
 
 /*
-===============
+========================
 Netchan_Init
-
-===============
+========================
 */
-void Netchan_Init (void)
+void Netchan_Init()
 {
-	int		port;
+	char portStr[8];
 
 	// pick a port value that should be nice and random
-	port = Sys_Milliseconds() & 0xffff;
+	Q_sprintf( portStr, "%d", Sys_Milliseconds() & 0xffff );
 
-	showpackets = Cvar_Get ("showpackets", "0", 0);
-	showdrop = Cvar_Get ("showdrop", "0", 0);
-	qport = Cvar_Get ("qport", va("%i", port), CVAR_NOSET);
+	net_showpackets = Cvar_Get( "net_showpackets", "0", 0 );
+	net_showdrop = Cvar_Get( "net_showdrop", "0", 0 );
+	net_qport = Cvar_Get( "net_qport", portStr, CVAR_NOSET );
 }
 
 /*
-===============
+========================
 Netchan_OutOfBand
 
 Sends an out-of-band datagram
-================
+========================
 */
 void Netchan_OutOfBand (netsrc_t net_socket, netadr_t &adr, int length, byte *data)
 {
@@ -232,7 +231,7 @@ void Netchan_Transmit (netchan_t *chan, int length, byte *data)
 
 	// send the qport if we are a client
 	if (chan->sock == NS_CLIENT)
-		MSG_WriteShort (&send, qport->GetInt());
+		MSG_WriteShort (&send, net_qport->GetInt());
 
 // copy the reliable message to the packet first
 	if (send_reliable)
@@ -250,7 +249,7 @@ void Netchan_Transmit (netchan_t *chan, int length, byte *data)
 // send the datagram
 	NET_SendPacket (chan->sock, send.cursize, send.data, chan->remote_address);
 
-	if (showpackets->GetBool())
+	if (net_showpackets->GetBool())
 	{
 		if (send_reliable)
 			Com_Printf ("send %4i : s=%i reliable=%i ack=%i rack=%i\n"
@@ -297,7 +296,7 @@ qboolean Netchan_Process (netchan_t *chan, sizebuf_t *msg)
 	sequence &= ~(1<<31);
 	sequence_ack &= ~(1<<31);	
 
-	if (showpackets->GetBool())
+	if (net_showpackets->GetBool())
 	{
 		if (reliable_message)
 			Com_Printf ("recv %4i : s=%i reliable=%i ack=%i rack=%i\n"
@@ -319,7 +318,7 @@ qboolean Netchan_Process (netchan_t *chan, sizebuf_t *msg)
 //
 	if (sequence <= (unsigned)chan->incoming_sequence)
 	{
-		if (showdrop->GetBool())
+		if (net_showdrop->GetBool())
 			Com_Printf ("%s:Out of order packet %i at %i\n"
 				, NET_NetadrToString (chan->remote_address)
 				,  sequence
@@ -333,7 +332,7 @@ qboolean Netchan_Process (netchan_t *chan, sizebuf_t *msg)
 	chan->dropped = sequence - (chan->incoming_sequence+1);
 	if (chan->dropped > 0)
 	{
-		if (showdrop->GetBool())
+		if (net_showdrop->GetBool())
 			Com_Printf ("%s:Dropped %i packets at %i\n"
 			, NET_NetadrToString (chan->remote_address)
 			, chan->dropped

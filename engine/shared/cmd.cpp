@@ -4,6 +4,7 @@
 	Quake script command processing module
 
 	Provides command text buffering (Cbuf) and command execution (Cmd)
+	Cmd names are case insensitive
 
 ===================================================================================================
 */
@@ -402,7 +403,7 @@ static void Cmd_Alias_f()
 	// if the alias already exists, reuse it
 	for ( pAlias = cmd_alias; pAlias; pAlias = pAlias->pNext )
 	{
-		if ( Q_strcmp( aliasName, pAlias->name ) == 0 )
+		if ( Q_stricmp( aliasName, pAlias->name ) == 0 )
 		{
 			Mem_Free( pAlias->pValue );
 			break;
@@ -683,9 +684,9 @@ void Cmd_AddCommand( const char *cmd_name, xcommand_t function, const char *help
 	// fail if the command already exists
 	for ( pCmd = cmd_functions; pCmd; pCmd = pCmd->pNext )
 	{
-		if ( Q_strcmp( cmd_name, pCmd->pName ) == 0 )
+		if ( Q_stricmp( cmd_name, pCmd->pName ) == 0 )
 		{
-			Com_Printf( "Cmd_AddCommand: %s already defined\n", cmd_name );
+			Com_Printf( "Cmd_AddCommand: %s already defined as %s\n", cmd_name, pCmd->pName );
 			return;
 		}
 	}
@@ -716,7 +717,7 @@ void Cmd_RemoveCommand( const char *cmd_name )
 			Com_Printf( "Cmd_RemoveCommand: %s not added\n", cmd_name );
 			return;
 		}
-		if ( Q_strcmp( cmd_name, pCmd->pName ) == 0 )
+		if ( Q_stricmp( cmd_name, pCmd->pName ) == 0 )
 		{
 			*ppBack = pCmd->pNext;
 			Mem_Free( pCmd );
@@ -735,7 +736,7 @@ bool Cmd_Exists( const char *cmd_name )
 {
 	for ( cmdFunction_t *cmd = cmd_functions; cmd; cmd = cmd->pNext )
 	{
-		if ( Q_strcmp( cmd_name, cmd->pName ) == 0 ) {
+		if ( Q_stricmp( cmd_name, cmd->pName ) == 0 ) {
 			return true;
 		}
 	}
@@ -762,13 +763,13 @@ const char *Cmd_CompleteCommand( const char *partial )
 	// check for exact match
 	for ( pCmd = cmd_functions; pCmd; pCmd = pCmd->pNext )
 	{
-		if ( Q_strcmp( partial, pCmd->pName ) == 0 ) {
+		if ( Q_stricmp( partial, pCmd->pName ) == 0 ) {
 			return pCmd->pName;
 		}
 	}
 	for ( pAlias = cmd_alias; pAlias; pAlias = pAlias->pNext )
 	{
-		if ( Q_strcmp( partial, pAlias->name ) == 0 ) {
+		if ( Q_stricmp( partial, pAlias->name ) == 0 ) {
 			return pAlias->name;
 		}
 	}
@@ -776,13 +777,13 @@ const char *Cmd_CompleteCommand( const char *partial )
 	// check for partial match
 	for ( pCmd = cmd_functions; pCmd; pCmd = pCmd->pNext )
 	{
-		if ( Q_strncmp( partial, pCmd->pName, len ) == 0 ) {
+		if ( Q_strnicmp( partial, pCmd->pName, len ) == 0 ) {
 			return pCmd->pName;
 		}
 	}
 	for ( pAlias = cmd_alias; pAlias; pAlias = pAlias->pNext )
 	{
-		if ( Q_strncmp( partial, pAlias->name, len ) == 0 ) {
+		if ( Q_strnicmp( partial, pAlias->name, len ) == 0 ) {
 			return pAlias->name;
 		}
 	}
@@ -811,7 +812,7 @@ void Cmd_ExecuteString( char *text )
 	// check functions
 	for ( cmdFunction_t *pCmd = cmd_functions; pCmd; pCmd = pCmd->pNext )
 	{
-		if ( !Q_strcasecmp( cmd_argv[0], pCmd->pName ) )
+		if ( !Q_stricmp( cmd_argv[0], pCmd->pName ) )
 		{
 			if ( !pCmd->pFunction )
 			{
@@ -829,7 +830,7 @@ void Cmd_ExecuteString( char *text )
 	// check alias
 	for ( cmdalias_t *pAlias = cmd_alias; pAlias; pAlias = pAlias->pNext )
 	{
-		if ( !Q_strcasecmp( cmd_argv[0], pAlias->name ) )
+		if ( !Q_stricmp( cmd_argv[0], pAlias->name ) )
 		{
 			if ( ++alias_count == ALIAS_LOOP_COUNT )
 			{

@@ -86,9 +86,11 @@ struct netchan_t
 	byte		reliable_buf[MAX_MSGLEN - 16];	// unacked reliable message
 };
 
-extern	netadr_t	net_from;
-extern	sizebuf_t	net_message;
-extern	byte		net_message_buffer[MAX_MSGLEN];
+extern cvar_t *		net_qport;
+
+extern netadr_t		net_from;
+extern sizebuf_t	net_message;
+extern byte			net_message_buffer[MAX_MSGLEN];
 
 void		Netchan_Init( void );
 void		Netchan_Setup( netsrc_t sock, netchan_t *chan, netadr_t adr, int qport );

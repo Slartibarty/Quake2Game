@@ -583,9 +583,4 @@ bool FindPhysicalFile( const char *filename, char *buffer, strlen_t bufferSize, 
 	}
 }
 
-void ExecAutoexec()
-{
-	Cbuf_AddText( "exec autoexec.cfg\n" );
-}
-
 }

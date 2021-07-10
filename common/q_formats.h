@@ -497,7 +497,7 @@ namespace fmtSMF
 		uint32 offsetIndices;		// offset in file to index data
 	};
 
-	// a mesh represents a single draw call, a model can have multiple draw meshes
+	// a mesh represents a single draw call, a model can have multiple meshes
 	struct mesh_t
 	{
 		char materialName[256];		// "materials/models/alien01/grimbles.mat"
@@ -520,6 +520,8 @@ namespace fmtSMF
 // .SKL SKeLetal model format
 // 
 // Indices are shorts
+// The max joints are 256 so that bone indices can be stored in bytes
+// 
 //-------------------------------------------------------------------------------------------------
 
 namespace fmtSKL
@@ -527,20 +529,35 @@ namespace fmtSKL
 	inline constexpr int32 MaxJoints = 256;			// 256 max joints per model
 	inline constexpr int32 MaxVertexWeights = 4;	// 4 joints per vertex
 
-	inline constexpr int32 fourCC = MakeFourCC( 'M', 'A', 'T', 'E' );
+	inline constexpr int32 fourCC = MakeFourCC( 'Q', 'S', 'K', 'L' );
 	inline constexpr int32 version = 1;
+
+	enum flags_t
+	{
+		eBigIndices = 1
+	};
 
 	struct header_t
 	{
 		int32 fourCC;
 		int32 version;
+		uint32 flags;
+		uint32 numMeshes;
+		uint32 offsetMeshes;		// offset in file to mesh definitions
 		uint32 numVerts;
-		uint32 offsetVerts;
+		uint32 offsetVerts;			// offset in file to vertex data
 		uint32 numIndices;
-		uint32 offsetIndices;
+		uint32 offsetIndices;		// offset in file to index data
 		uint32 numJoints;
 		uint32 offsetJoints;
-		char materialName[256];	// "materials/models/alien01/grimbles.mat"
+	};
+
+	// a mesh represents a single draw call, a model can have multiple meshes
+	struct mesh_t
+	{
+		char materialName[256];		// "materials/models/alien01/grimbles.mat"
+		uint32 offsetIndices;		// offset into the index buffer
+		uint32 countIndices;		// number of indices
 	};
 
 	struct vertex_t
@@ -565,7 +582,7 @@ namespace fmtSKL
 // .SP2 sprite file format
 //-------------------------------------------------------------------------------------------------
 
-constexpr int IDSPRITEHEADER = MakeFourCC('I', 'D', 'S', '2');
+inline constexpr int IDSPRITEHEADER = MakeFourCC('I', 'D', 'S', '2');
 
 #define SPRITE_VERSION	2
 
@@ -601,24 +618,12 @@ struct miptex_t
 };
 
 //-------------------------------------------------------------------------------------------------
-// .WAS material script format
-//-------------------------------------------------------------------------------------------------
-
-struct was_t
-{
-	char		animname[32];			// next frame in animation chain
-	uint32		flags;
-	uint32		contents;
-	uint32		value;
-};
-
-//-------------------------------------------------------------------------------------------------
 // .WAD legacy storage format
 //-------------------------------------------------------------------------------------------------
 
 namespace wad2
 {
-	constexpr int IDWADHEADER = MakeFourCC( 'W', 'A', 'D', '2' );
+	inline constexpr int IDWADHEADER = MakeFourCC( 'W', 'A', 'D', '2' );
 	
 	// obsolete
 	enum compression_t : int8
