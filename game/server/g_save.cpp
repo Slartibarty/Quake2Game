@@ -145,7 +145,7 @@ void InitGame (void)
 	sv_gravity = gi.cvar ("sv_gravity", "800", 0);
 
 	// noset vars
-	dedicated = gi.cvar ("dedicated", "0", CVAR_NOSET);
+	dedicated = gi.cvar ("dedicated", "0", CVAR_INIT);
 
 	// latched vars
 	sv_cheats = gi.cvar ("sv_cheats", "0", CVAR_SERVERINFO|CVAR_LATCH);

@@ -79,7 +79,7 @@ void Netchan_Init()
 
 	net_showPackets = Cvar_Get( "net_showPackets", "0", 0, "Log packet stats." );
 	net_showDrop = Cvar_Get( "net_showDrop", "0", 0, "Log dropped packets." );
-	net_qport = Cvar_Get( "net_qport", portStr, CVAR_NOSET, "The network port." );
+	net_qport = Cvar_Get( "net_qport", portStr, CVAR_INIT, "The network port." );
 }
 
 /*

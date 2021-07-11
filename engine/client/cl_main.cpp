@@ -748,7 +748,7 @@ void CL_PingServers_f()
 	// send a broadcast packet
 	Com_Printf( "pinging broadcast...\n" );
 
-	net_noudp = Cvar_Get( "net_noudp", "0", CVAR_NOSET );
+	net_noudp = Cvar_Get( "net_noudp", "0", CVAR_INIT );
 	if ( !net_noudp->GetBool() )
 	{
 		adr.type = NA_BROADCAST;

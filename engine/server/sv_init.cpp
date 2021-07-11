@@ -249,7 +249,7 @@ static void SV_SpawnServer( const char *server, const char *spawnpoint, serverSt
 	SV_CheckForSavegame();
 
 	// set serverinfo variable
-	Cvar_FullSet( "mapname", sv.name, CVAR_SERVERINFO | CVAR_NOSET );
+	Cvar_FullSet( "mapname", sv.name, CVAR_SERVERINFO | CVAR_INIT );
 
 	Com_Print( "-------------------------------------\n" );
 }

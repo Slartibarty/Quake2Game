@@ -438,7 +438,7 @@ void SCR_Init()
 	scr_graphscale = Cvar_Get( "scr_graphscale", "1", 0 );
 	scr_graphshift = Cvar_Get( "scr_graphshift", "0", 0 );
 
-	scr_multiview = Cvar_Get( "scr_multiview", "0", CVAR_NOSET, "If true, you can drag ImGui windows out of the game window.");
+	scr_multiview = Cvar_Get( "scr_multiview", "0", CVAR_INIT, "If true, you can drag ImGui windows out of the game window.");
 	scr_devpause = Cvar_Get( "scr_devpause", "0", 0, "If true, the game pauses whilst the devui is up.");
 	scr_showfps = Cvar_Get( "scr_showfps", "0", 0, "If true, shows a stats panel on screen.");
 

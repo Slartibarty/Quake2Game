@@ -599,9 +599,9 @@ void Com_Init( int argc, char **argv )
 	com_showTrace = Cvar_Get( "com_showTrace", "0", 0, "Spams the console with trace stats." );
 
 #ifdef DEDICATED_ONLY
-	dedicated = Cvar_Get( "dedicated", "1", CVAR_NOSET, "If true, this is a dedicated server." );
+	dedicated = Cvar_Get( "dedicated", "1", CVAR_INIT, "If true, this is a dedicated server." );
 #else
-	dedicated = Cvar_Get( "dedicated", "0", CVAR_NOSET, "If true, this is a dedicated server." );
+	dedicated = Cvar_Get( "dedicated", "0", CVAR_INIT, "If true, this is a dedicated server." );
 #endif
 
 	Cmd_AddCommand( "com_error", Com_Error_f, "Throws a Com_Error." );

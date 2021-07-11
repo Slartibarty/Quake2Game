@@ -133,7 +133,7 @@ void Init()
 
 	fs_production = Cvar_Get( "fs_production", "0", 0, "If true, file writes are forced to writeDir." );
 	fs_debug = Cvar_Get( "fs_debug", "0", 0, "Controls FS spew." );
-	fs_mod = Cvar_Get( "fs_mod", BASEDIRNAME, CVAR_NOSET, "The primary mod dir." );
+	fs_mod = Cvar_Get( "fs_mod", BASEDIRNAME, CVAR_INIT, "The primary mod dir." );
 
 	// Set gameDir
 	// Use the current working directory as the base dir.

@@ -65,13 +65,16 @@ bool	Info_Validate (const char *s);
 // CVARS - cvars.cpp
 //-------------------------------------------------------------------------------------------------
 
-#define	CVAR_ARCHIVE		1	// will be written to config.cfg
-#define	CVAR_USERINFO		2	// added to userinfo when changed
-#define	CVAR_SERVERINFO		4	// added to serverinfo when changed
-#define	CVAR_NOSET			8	// don't allow change from console at all, but can be set via command line
-#define	CVAR_LATCH			16	// save changes until server restart
-#define CVAR_CHEAT			32	// var cannot be changed unless sv_cheats is true (or singleplayer)
-#define CVAR_MODIFIED		64	// set when the variable is modified
+enum cvarFlags_t : uint32
+{
+	CVAR_ARCHIVE		= 1,	// will be written to config.cfg
+	CVAR_USERINFO		= 2,	// added to userinfo when changed
+	CVAR_SERVERINFO		= 4,	// added to serverinfo when changed
+	CVAR_INIT			= 8,	// can only be set from the command-line
+	CVAR_LATCH			= 16,	// save changes until server restart
+	CVAR_CHEAT			= 32,	// variable is considered a cheat
+	CVAR_MODIFIED		= 64	// set when the variable is modified
+};
 
 // nothing outside the Cvar_*() functions should modify these fields!
 struct cvar_t

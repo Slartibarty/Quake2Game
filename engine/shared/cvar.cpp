@@ -201,7 +201,7 @@ static cvar_t *Cvar_Set_Internal( cvar_t *var, const char *value, bool force )
 
 	if ( !force )
 	{
-		if ( var->flags & CVAR_NOSET )
+		if ( var->flags & CVAR_INIT )
 		{
 			Com_Printf( S_COLOR_YELLOW "%s is write protected.\n", var->name.c_str() );
 			return var;
@@ -461,7 +461,7 @@ void Cvar_PrintFlags( cvar_t *var )
 	{
 		Com_Print( " serverinfo" );
 	}
-	if ( flags & CVAR_NOSET )
+	if ( flags & CVAR_INIT )
 	{
 		Com_Print( " noset" );
 	}
@@ -584,7 +584,7 @@ static void Cvar_List_f()
 			Com_Printf( " " );
 		}
 
-		if ( var->flags & CVAR_NOSET ) {
+		if ( var->flags & CVAR_INIT ) {
 			Com_Printf( "-" );
 		}
 		else if ( var->flags & CVAR_LATCH ) {
