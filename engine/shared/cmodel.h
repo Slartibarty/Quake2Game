@@ -8,6 +8,7 @@
 
 #include "../../common/q_shared.h" // cmodel_t, trace_t
 
+void		CM_Init();
 void		CM_Shutdown();
 
 cmodel_t	*CM_LoadMap( const char *name, bool clientload, unsigned *checksum );

@@ -216,7 +216,7 @@ cmMapData_t cm;
 csurface_t	s_nullsurface;
 
 
-cvar_t	*cm_noareas;
+cvar_t	*cm_noAreas;
 
 
 // Counters
@@ -649,26 +649,8 @@ cmodel_t *CM_LoadMap( const char *name, bool clientload, unsigned *checksum )
 
 	if ( !name || !name[0] )
 	{
-		Com_Errorf("CM_LoadMap: NULL name" );
+		Com_Error( "CM_LoadMap: NULL name" );
 	}
-
-	cm_noareas = Cvar_Get( "cm_noareas", "0", 0 );
-
-#if 0
-	// Create a dummy map
-	if ( !name )
-	{
-		cm.Reset();
-		cm.CreateCinematicMap();
-		*checksum = 0;
-		return cm.cmodels.Base();		// cinematic servers won't have anything at all
-	}
-
-	if ( name && name[0] == '\0' )
-	{
-		Com_Errorf("CM_LoadMap: name was provided, but empty!" );
-	}
-#endif
 
 	if ( Q_strcmp( cm.name, name ) == 0 && ( clientload || !Cvar_FindGetFloat( "flushmap" ) ) )
 	{
@@ -1771,7 +1753,7 @@ void	CM_SetAreaPortalState (int portalnum, qboolean open)
 
 qboolean	CM_AreasConnected (int area1, int area2)
 {
-	if (cm_noareas->GetBool())
+	if (cm_noAreas->GetBool())
 		return true;
 
 	if (area1 > cm.areas.Count() || area2 > cm.areas.Count())
@@ -1801,7 +1783,7 @@ int CM_WriteAreaBits (byte *buffer, int area)
 
 	bytes = (cm.areas.Count()+7)>>3;
 
-	if (cm_noareas->GetBool())
+	if (cm_noAreas->GetBool())
 	{	// for debugging, send everything
 		memset (buffer, 255, bytes);
 	}
@@ -1883,6 +1865,10 @@ bool CM_HeadnodeVisible (int nodenum, byte *visbits)
 	return CM_HeadnodeVisible(node->children[1], visbits);
 }
 
+void CM_Init()
+{
+	cm_noAreas = Cvar_Get( "cm_noAreas", "0", 0, "" );
+}
 
 void CM_Shutdown()
 {

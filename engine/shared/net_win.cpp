@@ -24,7 +24,7 @@ struct loopback_t
 	int			get, send;
 };
 
-static cvar_t	*noudp;
+static cvar_t	*net_noudp;
 
 loopback_t	loopbacks[2];
 SOCKET		ip_sockets[2];
@@ -634,7 +634,7 @@ void NET_Config( bool multiplayer )
 	}
 	else
 	{	// open sockets
-		if ( !noudp->GetBool() ) {
+		if ( !net_noudp->GetBool() ) {
 			NET_OpenIP();
 		}
 	}
@@ -682,14 +682,12 @@ void NET_Init()
 	WSADATA wsadata;
 
 	int err = WSAStartup( MAKEWORD( 2, 2 ), &wsadata );
-
 	if ( err != 0 ) {
 		Com_FatalErrorf( "Winsock initialization failed, returned %d", err );
 	}
-
 	Com_Print( "Winsock Initialized\n" );
 
-	noudp = Cvar_Get( "noudp", "0", CVAR_NOSET );
+	net_noudp = Cvar_Get( "net_noudp", "0", CVAR_NOSET );
 }
 
 /*

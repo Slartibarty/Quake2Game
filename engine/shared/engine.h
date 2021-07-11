@@ -100,23 +100,23 @@ extern vec3_t bytedirs[NUMVERTEXNORMALS];
 
 extern cvar_t *		com_developer;
 extern cvar_t *		dedicated;
-extern cvar_t *		host_speeds;
-extern cvar_t *		log_stats;
+extern cvar_t *		com_speeds;
+extern cvar_t *		com_logStats;
 
 extern fsHandle_t	log_stats_file;
 
 extern int		curtime;
 
-// host_speeds times
+// com_speeds times
 extern int		time_before_game;
 extern int		time_after_game;
 extern int		time_before_ref;
 extern int		time_after_ref;
 
-void Engine_Init( int argc, char **argv );
-void Engine_Shutdown();
-void Engine_Frame( int frameTime );
-bool Engine_IsMainThread();
+void Com_Init( int argc, char **argv );
+void Com_Shutdown();
+void Com_Frame( int frameTime );
+bool Com_IsMainThread();
 
 /*
 ===================================================================================================

@@ -730,7 +730,7 @@ SV_RunGameFrame
 */
 static void SV_RunGameFrame()
 {
-	if ( host_speeds->GetBool() ) {
+	if ( com_speeds->GetBool() ) {
 		time_before_game = Time_Milliseconds();
 	}
 
@@ -756,7 +756,7 @@ static void SV_RunGameFrame()
 		}
 	}
 
-	if ( host_speeds->GetBool() ) {
+	if ( com_speeds->GetBool() ) {
 		time_after_game = Time_Milliseconds();
 	}
 }

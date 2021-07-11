@@ -594,7 +594,7 @@ int main( int argc, char **argv )
 
 	Sys_InitVidModes();
 
-	Engine_Init( argc, argv );
+	Com_Init( argc, argv );
 
 	if ( GetACP() == CP_UTF8 ) {
 		Com_DPrint( "Using Windows UTF-8 codepage\n" );
@@ -634,7 +634,7 @@ int main( int argc, char **argv )
 		sys_frame_time = newTime;
 		curtime = newTime;
 
-		Engine_Frame( frameTime );
+		Com_Frame( frameTime );
 
 		oldTime = newTime;
 	}

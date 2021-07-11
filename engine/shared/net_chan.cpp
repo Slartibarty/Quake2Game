@@ -57,8 +57,8 @@ then a packet only needs to be delivered if there is something in the
 unacknowledged reliable
 */
 
-static cvar_t *net_showpackets;
-static cvar_t *net_showdrop;
+static cvar_t *net_showPackets;
+static cvar_t *net_showDrop;
 cvar_t *net_qport;
 
 netadr_t	net_from;
@@ -75,11 +75,11 @@ void Netchan_Init()
 	char portStr[8];
 
 	// pick a port value that should be nice and random
-	Q_sprintf( portStr, "%d", Sys_Milliseconds() & 0xffff );
+	Q_sprintf( portStr, "%d", static_cast<int>( Time_Milliseconds() & 0xFFFF ) );
 
-	net_showpackets = Cvar_Get( "net_showpackets", "0", 0 );
-	net_showdrop = Cvar_Get( "net_showdrop", "0", 0 );
-	net_qport = Cvar_Get( "net_qport", portStr, CVAR_NOSET );
+	net_showPackets = Cvar_Get( "net_showPackets", "0", 0, "Log packet stats." );
+	net_showDrop = Cvar_Get( "net_showDrop", "0", 0, "Log dropped packets." );
+	net_qport = Cvar_Get( "net_qport", portStr, CVAR_NOSET, "The network port." );
 }
 
 /*
@@ -249,7 +249,7 @@ void Netchan_Transmit (netchan_t *chan, int length, byte *data)
 // send the datagram
 	NET_SendPacket (chan->sock, send.cursize, send.data, chan->remote_address);
 
-	if (net_showpackets->GetBool())
+	if (net_showPackets->GetBool())
 	{
 		if (send_reliable)
 			Com_Printf ("send %4i : s=%i reliable=%i ack=%i rack=%i\n"
@@ -296,7 +296,7 @@ qboolean Netchan_Process (netchan_t *chan, sizebuf_t *msg)
 	sequence &= ~(1<<31);
 	sequence_ack &= ~(1<<31);	
 
-	if (net_showpackets->GetBool())
+	if (net_showPackets->GetBool())
 	{
 		if (reliable_message)
 			Com_Printf ("recv %4i : s=%i reliable=%i ack=%i rack=%i\n"
@@ -318,7 +318,7 @@ qboolean Netchan_Process (netchan_t *chan, sizebuf_t *msg)
 //
 	if (sequence <= (unsigned)chan->incoming_sequence)
 	{
-		if (net_showdrop->GetBool())
+		if (net_showDrop->GetBool())
 			Com_Printf ("%s:Out of order packet %i at %i\n"
 				, NET_NetadrToString (chan->remote_address)
 				,  sequence
@@ -332,7 +332,7 @@ qboolean Netchan_Process (netchan_t *chan, sizebuf_t *msg)
 	chan->dropped = sequence - (chan->incoming_sequence+1);
 	if (chan->dropped > 0)
 	{
-		if (net_showdrop->GetBool())
+		if (net_showDrop->GetBool())
 			Com_Printf ("%s:Dropped %i packets at %i\n"
 			, NET_NetadrToString (chan->remote_address)
 			, chan->dropped

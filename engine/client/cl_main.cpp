@@ -740,7 +740,7 @@ void CL_PingServers_f()
 	netadr_t		adr;
 	char			name[32];
 	const char *	adrstring;
-	cvar_t *		noudp;
+	cvar_t *		net_noudp;
 
 	// allow remote
 	NET_Config( true );
@@ -748,8 +748,8 @@ void CL_PingServers_f()
 	// send a broadcast packet
 	Com_Printf( "pinging broadcast...\n" );
 
-	noudp = Cvar_Get( "noudp", "0", CVAR_NOSET );
-	if ( !noudp->GetBool() )
+	net_noudp = Cvar_Get( "net_noudp", "0", CVAR_NOSET );
+	if ( !net_noudp->GetBool() )
 	{
 		adr.type = NA_BROADCAST;
 		adr.port = BigShort( PORT_SERVER );
@@ -1514,14 +1514,14 @@ typedef struct
 } cheatvar_t;
 
 cheatvar_t	cheatvars[]{
-	{"timescale", "1"},
+	{"com_timeScale", "1"},
 	{"timedemo", "0"},
 	{"r_drawworld", "1"},
 	{"cl_testlights", "0"},
 	{"r_fullbright", "0"},
 	{"r_drawflat", "0"},
 	{"paused", "0"},
-	{"fixedtime", "0"},
+	{"com_fixedTime", "0"},
 	{"sw_draworder", "0"},
 	{"gl_lightmap", "0"},
 //	{"gl_saturatelighting", "0"},
@@ -1651,10 +1651,10 @@ void CL_Frame( int msec )
 	}
 
 	// update the screen
-	if (host_speeds->GetBool())
+	if (com_speeds->GetBool())
 		time_before_ref = Sys_Milliseconds ();
 	SCR_UpdateScreen ();
-	if (host_speeds->GetBool())
+	if (com_speeds->GetBool())
 		time_after_ref = Sys_Milliseconds ();
 
 	// update audio
@@ -1671,7 +1671,7 @@ void CL_Frame( int msec )
 
 	cls.framecount++;
 
-	if ( log_stats->GetBool() )
+	if ( com_logStats->GetBool() )
 	{
 		if ( cls.state == ca_active )
 		{
@@ -1731,12 +1731,7 @@ void CL_Init (void)
 
 	CL_InitCGame();
 
-	if ( FileSystem::FileExists( "autoexec.cfg" ) )
-	{
-		Cbuf_AddText( "exec autoexec.cfg\n" );
-	}
 	Cbuf_Execute ();
-
 }
 
 

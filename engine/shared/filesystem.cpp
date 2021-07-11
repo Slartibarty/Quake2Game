@@ -148,10 +148,10 @@ void Init()
 	Q_strcpy_s( fs.modDir, fs_mod->GetString() );
 
 	if ( fs_debug->GetBool() ) {
-		Com_DPrintf( "[FileSystem] gameDir is %s\n", fs.gameDir );
-		Com_DPrintf( "[FileSystem] writeDir is %s\n", fs.writeDir );
-		Com_DPrintf( "[FileSystem] contentDir is %s\n", fs.contentDir );
-		Com_DPrintf( "[FileSystem] modDir is %s\n", fs.modDir );
+		Com_Printf( "[FileSystem] gameDir is %s\n", fs.gameDir );
+		Com_Printf( "[FileSystem] writeDir is %s\n", fs.writeDir );
+		Com_Printf( "[FileSystem] contentDir is %s\n", fs.contentDir );
+		Com_Printf( "[FileSystem] modDir is %s\n", fs.modDir );
 	}
 
 	// Search paths are added backwards due to the nature of singly linked lists.
@@ -253,7 +253,7 @@ const char *AbsolutePathToRelativePath( const char *absolutePath, fsPath_t fsPat
 		for ( searchPath_t *pSP = fs.searchPaths; pSP; pSP = pSP->pNext )
 		{
 			strlen_t length = Q_strlen( pSP->dirName );
-			if ( Q_strncasecmp( pSP->dirName, absolutePath, length ) == 0 )
+			if ( Q_strnicmp( pSP->dirName, absolutePath, length ) == 0 )
 			{
 				// if the beginning of this filename matches the absolute path, then it's what we want
 				return absolutePath + length + 1;
@@ -268,7 +268,7 @@ const char *AbsolutePathToRelativePath( const char *absolutePath, fsPath_t fsPat
 		Q_sprintf_s( fullPath, "%s/%s", fs.writeDir, fs.modDir );
 
 		strlen_t length = Q_strlen( fullPath );
-		if ( Q_strncasecmp( fullPath, absolutePath, length ) == 0 )
+		if ( Q_strnicmp( fullPath, absolutePath, length ) == 0 )
 		{
 			// if the beginning of this filename matches the absolute path, then it's what we want
 			return absolutePath + length + 1;
@@ -331,14 +331,14 @@ fsHandle_t OpenFileRead( const char *filename )
 		}
 
 		if ( fs_debug->GetBool() ) {
-			Com_DPrintf( S_COLOR_YELLOW "[FileSystem] Reading %s\n", fullPath );
+			Com_Printf( S_COLOR_YELLOW "[FileSystem] Reading %s\n", fullPath );
 		}
 
 		return handle;
 	}
 
 	if ( fs_debug->GetBool() ) {
-		Com_DPrintf( S_COLOR_RED "[FileSystem] Can't find %s\n", filename );
+		Com_Printf( S_COLOR_RED "[FileSystem] Can't find %s\n", filename );
 	}
 
 	return FS_INVALID_HANDLE;
@@ -371,9 +371,9 @@ fsHandle_t OpenFileWrite( const char *filename, fsPath_t fsPath /*= FS_WRITEDIR*
 
 	if ( fs_debug->GetBool() ) {
 		if ( handle ) {
-			Com_DPrintf( S_COLOR_YELLOW "[FileSystem] Writing %s\n", fullPath );
+			Com_Printf( S_COLOR_YELLOW "[FileSystem] Writing %s\n", fullPath );
 		} else {
-			Com_DPrintf( S_COLOR_RED "[FileSystem] Failed to write %s\n", fullPath );
+			Com_Printf( S_COLOR_RED "[FileSystem] Failed to write %s\n", fullPath );
 		}
 	}
 
@@ -407,10 +407,9 @@ fsHandle_t OpenFileAppend( const char *filename, fsPath_t fsPath /*= FS_WRITEDIR
 
 	if ( fs_debug->GetBool() ) {
 		if ( handle ) {
-			Com_DPrintf( S_COLOR_YELLOW "[FileSystem] Appending %s\n", fullPath );
-		}
-		else {
-			Com_DPrintf( S_COLOR_RED "[FileSystem] Failed to append %s\n", fullPath );
+			Com_Printf( S_COLOR_YELLOW "[FileSystem] Appending %s\n", fullPath );
+		} else {
+			Com_Printf( S_COLOR_RED "[FileSystem] Failed to append %s\n", fullPath );
 		}
 	}
 
@@ -583,4 +582,4 @@ bool FindPhysicalFile( const char *filename, char *buffer, strlen_t bufferSize, 
 	}
 }
 
-}
+} // namespace FileSystem

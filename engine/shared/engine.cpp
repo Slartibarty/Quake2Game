@@ -19,18 +19,18 @@ static jmp_buf		abortframe;		// an ERR_DROP occured, exit the entire frame
 fsHandle_t			log_stats_file;
 static fsHandle_t	logfile;
 
-cvar_t *	host_speeds;
-cvar_t *	log_stats;
+cvar_t *	com_speeds;
+cvar_t *	com_logStats;
 cvar_t *	com_developer;
-cvar_t *	timescale;
-cvar_t *	fixedtime;
-cvar_t *	logfile_active;			// 1 = buffer log, 2 = flush after each print
-cvar_t *	showtrace;
+cvar_t *	com_timeScale;
+cvar_t *	com_fixedTime;
+cvar_t *	com_logFile;			// 1 = buffer log, 2 = flush after each print
+cvar_t *	com_showTrace;
 cvar_t *	dedicated;
 
 int		server_state;
 
-// host_speeds times
+// com_speeds times
 int		time_before_game;
 int		time_after_game;
 int		time_before_ref;
@@ -118,7 +118,7 @@ void Com_Print( const char *msg )
 
 	Sys_OutputDebugString( newMsg );
 
-	if ( !Engine_IsMainThread() ) {
+	if ( !Com_IsMainThread() ) {
 		return;
 	}
 
@@ -128,11 +128,11 @@ void Com_Print( const char *msg )
 	Sys_ConsoleOutput( newMsg );
 
 	// logfile
-	if ( logfile_active && logfile_active->GetBool() )
+	if ( com_logFile && com_logFile->GetBool() )
 	{
 		if ( !logfile )
 		{
-			if ( logfile_active->GetInt() > 2 )
+			if ( com_logFile->GetInt() > 2 )
 			{
 				FileSystem::OpenFileAppend( LogFile_Name );
 			}
@@ -145,7 +145,7 @@ void Com_Print( const char *msg )
 		{
 			FileSystem::PrintFile( newMsg, logfile );
 		}
-		if ( logfile_active->GetInt() > 1 )
+		if ( com_logFile->GetInt() > 1 )
 		{
 			// force it to save every time
 			FileSystem::FlushFile( logfile );
@@ -259,7 +259,7 @@ void Com_FatalError( const char *msg )
 {
 	SV_Shutdown( va( S_COLOR_RED "Server fatal crashed: %s\n", msg ), false );
 	CL_Shutdown();
-	Engine_Shutdown();
+	Com_Shutdown();
 
 	Sys_Error( msg );
 }
@@ -308,7 +308,7 @@ void Com_Quit( int code )
 {
 	SV_Shutdown( "Server quit\n", false );
 	CL_Shutdown();
-	Engine_Shutdown();
+	Com_Shutdown();
 
 	Sys_Quit( code );
 }
@@ -541,15 +541,27 @@ static void Com_Quit_f()
 
 /*
 ========================
-Engine_Init
+Com_Version_f
+
+Prints the engine version to the console
 ========================
 */
-void Engine_Init( int argc, char **argv )
+static void Com_Version_f()
+{
+	Com_Printf( "%s - %s, %s", BLD_STRING, __DATE__, __TIME__ );
+}
+
+/*
+========================
+Com_Init
+========================
+*/
+void Com_Init( int argc, char **argv )
 {
 	isMainThread = true;
 
 	if ( setjmp( abortframe ) ) {
-		Com_FatalError( "Error during initialization" );
+		Com_FatalError( "Error during initialization\n" );
 	}
 
 	Mem_Init();
@@ -571,36 +583,33 @@ void Engine_Init( int argc, char **argv )
 	Cbuf_AddEarlyCommands( argc, argv );
 	Cbuf_Execute();
 
-	FileSystem::Init();
-
 	Cbuf_AddText( "exec default.cfg\n" );
 	Cbuf_AddText( "exec config.cfg\n" );
+	Cbuf_AddText( "exec autoexec.cfg\n" );
 
 	Cbuf_AddEarlyCommands( argc, argv );
 	Cbuf_Execute();
 
-	//
-	// init commands and vars
-	//
-	Cmd_AddCommand( "error", Com_Error_f );
+	FileSystem::Init();
 
-	host_speeds = Cvar_Get( "host_speeds", "0", 0 );
-	log_stats = Cvar_Get( "log_stats", "0", 0 );
-	com_developer = Cvar_Get( "com_developer", "0", 0 );
-	timescale = Cvar_Get( "timescale", "1", 0 );
-	fixedtime = Cvar_Get( "fixedtime", "0", 0 );
-	logfile_active = Cvar_Get( "logfile", "0", 0 );
-	showtrace = Cvar_Get( "showtrace", "0", 0 );
+	// cvars and commands
+
+	com_speeds = Cvar_Get( "com_speeds", "0", 0, "Spam some info to the console or something idk." );
+	com_logStats = Cvar_Get( "com_logStats", "0", 0, "Logs some stuff to the console idk." );
+	com_developer = Cvar_Get( "com_developer", "0", 0, "Enables developer mode." );
+	com_timeScale = Cvar_Get( "com_timeScale", "1", 0, "Scale time by this amount." );
+	com_fixedTime = Cvar_Get( "com_fixedTime", "0", 0, "Force time to this value." );
+	com_logFile = Cvar_Get( "com_logFile", "0", 0, "Directs all logged messages to a file." );
+	com_showTrace = Cvar_Get( "com_showTrace", "0", 0, "Spams the console with trace stats." );
 
 #ifdef DEDICATED_ONLY
-	dedicated = Cvar_Get( "dedicated", "1", CVAR_NOSET );
+	dedicated = Cvar_Get( "dedicated", "1", CVAR_NOSET, "If true, this is a dedicated server." );
 #else
-	dedicated = Cvar_Get( "dedicated", "0", CVAR_NOSET );
+	dedicated = Cvar_Get( "dedicated", "0", CVAR_NOSET, "If true, this is a dedicated server." );
 #endif
 
-	// create the version convar
-	Cvar_Get( "version", va( "%s - %s, %s", BLD_STRING, __DATE__, __TIME__ ), CVAR_SERVERINFO | CVAR_NOSET );
-
+	Cmd_AddCommand( "com_error", Com_Error_f, "Throws a Com_Error." );
+	Cmd_AddCommand( "com_version", Com_Version_f, "Prints engine version information." );
 	if ( dedicated->GetBool() ) {
 		Cmd_AddCommand( "quit", Com_Quit_f );
 	}
@@ -614,7 +623,8 @@ void Engine_Init( int argc, char **argv )
 	CL_Init();
 
 	// add + commands from command line
-	if ( !Cbuf_AddLateCommands( argc, argv ) ) {
+	if ( !Cbuf_AddLateCommands( argc, argv ) )
+	{
 		// if the user didn't give any commands, run default action
 		if ( !dedicated->GetBool() ) {
 			Cbuf_AddText( "d1\n" );
@@ -622,21 +632,23 @@ void Engine_Init( int argc, char **argv )
 			Cbuf_AddText( "dedicated_start\n" );
 		}
 		Cbuf_Execute();
-	} else {
+	}
+	else
+	{
 		// the user asked for something explicit
 		// so drop the loading plaque
 		SCR_EndLoadingPlaque();
 	}
 
-	Com_Print( "====== Quake2 Initialized ======\n\n" );
+	Com_Print( "======== Quake2 Initialized ========\n\n" );
 }
 
 /*
 ========================
-Engine_Frame
+Com_Frame
 ========================
 */
-void Engine_Frame( int frameTime )
+void Com_Frame( int frameTime )
 {
 	char	*s;
 	int		time_before, time_between, time_after;
@@ -646,10 +658,10 @@ void Engine_Frame( int frameTime )
 		return;
 	}
 
-	if ( log_stats->IsModified() )
+	if ( com_logStats->IsModified() )
 	{
-		log_stats->ClearModified();
-		if ( log_stats->GetBool() )
+		com_logStats->ClearModified();
+		if ( com_logStats->GetBool() )
 		{
 			if ( log_stats_file )
 			{
@@ -672,17 +684,17 @@ void Engine_Frame( int frameTime )
 		}
 	}
 
-	if ( fixedtime->GetInt() != 0 ) {
-		frameTime = fixedtime->GetInt();
+	if ( com_fixedTime->GetInt() != 0 ) {
+		frameTime = com_fixedTime->GetInt();
 	}
-	else if ( timescale->GetInt() != 1 ) {
-		frameTime *= timescale->GetInt();
+	else if ( com_timeScale->GetInt() != 1 ) {
+		frameTime *= com_timeScale->GetInt();
 		if ( frameTime < 1 ) {
 			frameTime = 1;
 		}
 	}
 
-	if ( showtrace->GetBool() )
+	if ( com_showTrace->GetBool() )
 	{
 		// cmodel
 		extern int c_traces, c_brush_traces;
@@ -703,23 +715,23 @@ void Engine_Frame( int frameTime )
 	} while ( s );
 	Cbuf_Execute();
 
-	if ( host_speeds->GetBool() ) {
+	if ( com_speeds->GetBool() ) {
 		time_before = Sys_Milliseconds();
 	}
 
 	SV_Frame( frameTime );
 
-	if ( host_speeds->GetBool() ) {
+	if ( com_speeds->GetBool() ) {
 		time_between = Sys_Milliseconds();
 	}
 
 	CL_Frame( frameTime );
 
-	if ( host_speeds->GetBool() ) {
+	if ( com_speeds->GetBool() ) {
 		time_after = Sys_Milliseconds();
 	}
 
-	if ( host_speeds->GetBool() )
+	if ( com_speeds->GetBool() )
 	{
 		int all, sv, gm, cl, rf;
 
@@ -737,10 +749,10 @@ void Engine_Frame( int frameTime )
 
 /*
 ========================
-Engine_Shutdown
+Com_Shutdown
 ========================
 */
-void Engine_Shutdown()
+void Com_Shutdown()
 {
 	Key_Shutdown();
 	Cvar_Shutdown();
@@ -760,10 +772,10 @@ void Engine_Shutdown()
 
 /*
 ========================
-Engine_IsMainThread
+Com_IsMainThread
 ========================
 */
-bool Engine_IsMainThread()
+bool Com_IsMainThread()
 {
 	return isMainThread;
 }

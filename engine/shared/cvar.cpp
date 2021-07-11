@@ -599,11 +599,6 @@ static void Cvar_List_f()
 	Com_Printf( "%u cvars\n", i );
 }
 
-static void Cvar_Help_f()
-{
-
-}
-
 void Cvar_Init()
 {
 	Cmd_AddCommand( "set", Cvar_Set_f );
