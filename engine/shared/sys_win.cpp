@@ -44,17 +44,18 @@ void Sys_Error( const char *msg )
 {
 	Sys_OutputDebugString( msg );
 
-	/*TaskDialog(
+	wchar_t reason[MAX_PRINT_MSG];
+	Str_Widen( msg, reason, countof( reason ) );
+
+	TaskDialog(
 		nullptr,
 		nullptr,
+		L"JaffaQuake",
 		L"Engine Error",
-		L"The game crashed!",
-		L"Bruh",
+		reason,
 		TDCBF_OK_BUTTON,
 		TD_ERROR_ICON,
-		nullptr );*/
-
-	MessageBoxA( nullptr, msg, "Engine Error", MB_OK | MB_ICONERROR | MB_TOPMOST );
+		nullptr );
 
 	Sys_Quit( EXIT_FAILURE );
 }
@@ -62,13 +63,6 @@ void Sys_Error( const char *msg )
 [[noreturn]]
 void Sys_Quit( int code )
 {
-	// SLARTHACK: FIXME!!!!
-//	if ( dedicated && dedicated->value )
-//		FreeConsole();
-
-	// shut down QHOST hooks if necessary
-	DeinitConProc();
-
 	exit( code );
 }
 
@@ -77,44 +71,45 @@ void Sys_Quit( int code )
 /*
 ================
 Sys_CopyProtect
-
 ================
 */
-void Sys_CopyProtect (void)
+void Sys_CopyProtect()
 {
 
 }
 
 //=================================================================================================
 
-/*
-================
-Sys_Init
-================
-*/
-void Sys_Init (void)
+void Sys_Init()
 {
-	if (dedicated->GetBool())
+	if ( dedicated->GetBool() )
 	{
-		if (!AllocConsole ())
-			Com_FatalErrorf("Couldn't create dedicated server console");
-		hinput = GetStdHandle (STD_INPUT_HANDLE);
-		houtput = GetStdHandle (STD_OUTPUT_HANDLE);
-	
+		if ( !AllocConsole() ) {
+			Com_FatalError( "Couldn't create dedicated server console" );
+		}
+		hinput = GetStdHandle( STD_INPUT_HANDLE );
+		houtput = GetStdHandle( STD_OUTPUT_HANDLE );
+
 		// let QHOST hook in
-		InitConProc (g_argc, g_argv);
+		InitConProc( g_argc, g_argv );
+	}
+}
+
+void Sys_Shutdown()
+{
+	if ( dedicated->GetBool() )
+	{
+		FreeConsole();
+
+		// shut down QHOST hooks if necessary
+		DeinitConProc();
 	}
 }
 
 static char	console_text[256];
 static int	console_textlen;
 
-/*
-================
-Sys_ConsoleInput
-================
-*/
-char *Sys_ConsoleInput (void)
+char *Sys_ConsoleInput()
 {
 	INPUT_RECORD recs;
 	DWORD numread, numevents, dummy;
@@ -185,14 +180,7 @@ char *Sys_ConsoleInput (void)
 	return NULL;
 }
 
-
-/*
-================
-Sys_ConsoleOutput
-
-Print text to the dedicated console
-================
-*/
+// Print text to the dedicated console
 void Sys_ConsoleOutput (const char *string)
 {
 	DWORD	dummy;
@@ -216,14 +204,7 @@ void Sys_ConsoleOutput (const char *string)
 		WriteFile(houtput, console_text, console_textlen, &dummy, NULL);
 }
 
-
-/*
-================
-Sys_GetClipboardData
-
-================
-*/
-char *Sys_GetClipboardData( void )
+char *Sys_GetClipboardData()
 {
 	char *data = nullptr;
 
@@ -354,15 +335,11 @@ bool Sys_GetVidModeInfo( int &width, int &height, int mode )
 ===================================================================================================
 */
 
-/*
-=================
-Sys_AppActivate
-=================
-*/
-void Sys_AppActivate (void)
+// TODO: Remove?
+void Sys_AppActivate()
 {
-	ShowWindow ( cl_hwnd, SW_RESTORE);
-	SetForegroundWindow ( cl_hwnd );
+	ShowWindow( cl_hwnd, SW_RESTORE );
+	SetForegroundWindow( cl_hwnd );
 }
 
 void Sys_FileOpenDialog(

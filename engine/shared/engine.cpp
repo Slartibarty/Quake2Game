@@ -519,11 +519,7 @@ test error shutdown procedures
 */
 static void Com_Error_f()
 {
-	if ( Cmd_Argc() == 2 )
-	{
-		Com_FatalError( Cmd_Argv( 1 ) );
-	}
-	Com_FatalError( "Error test" );
+	Com_FatalError( "Error test\n" );
 }
 
 /*
@@ -548,7 +544,7 @@ Prints the engine version to the console
 */
 static void Com_Version_f()
 {
-	Com_Printf( "%s - %s, %s", BLD_STRING, __DATE__, __TIME__ );
+	Com_Printf( "%s - %s, %s\n", BLD_STRING, __DATE__, __TIME__ );
 }
 
 /*
@@ -583,14 +579,14 @@ void Com_Init( int argc, char **argv )
 	Cbuf_AddEarlyCommands( argc, argv );
 	Cbuf_Execute();
 
+	FileSystem::Init();
+
 	Cbuf_AddText( "exec default.cfg\n" );
 	Cbuf_AddText( "exec config.cfg\n" );
 	Cbuf_AddText( "exec autoexec.cfg\n" );
 
 	Cbuf_AddEarlyCommands( argc, argv );
 	Cbuf_Execute();
-
-	FileSystem::Init();
 
 	// cvars and commands
 
@@ -618,6 +614,8 @@ void Com_Init( int argc, char **argv )
 
 	NET_Init();
 	Netchan_Init();
+
+	CM_Init();
 
 	SV_Init();
 	CL_Init();
@@ -754,20 +752,18 @@ Com_Shutdown
 */
 void Com_Shutdown()
 {
-	Key_Shutdown();
-	Cvar_Shutdown();
-	Cmd_Shutdown();
-
-	CM_Shutdown();
-
-	Mem_Shutdown();
-
 	if ( logfile ) {
 		FileSystem::CloseFile( logfile );
 		logfile = nullptr;
 	}
 
+	CM_Shutdown();
+	Sys_Shutdown();
 	FileSystem::Shutdown();
+	Key_Shutdown();
+	Cvar_Shutdown();
+	Cmd_Shutdown();
+	Mem_Shutdown();
 }
 
 /*

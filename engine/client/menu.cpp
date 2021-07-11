@@ -963,7 +963,7 @@ static menuslider_s		s_options_sfxvolume_slider;
 
 static void CrosshairFunc( void *unused )
 {
-	Cvar_SetInt( cl_crosshair, s_options_crosshair_box.curvalue );
+	Cvar_SetInt( scr_crosshair, s_options_crosshair_box.curvalue );
 }
 
 static void CustomizeControlsFunc( void *unused )
@@ -986,13 +986,13 @@ static void ControlsSetMenuItemValues( void )
 	s_options_sfxvolume_slider.curvalue		= s_volume->GetFloat() * 10;
 	s_options_sensitivity_slider.curvalue	= sensitivity->GetFloat() * 2;
 
-	Cvar_SetInt( cl_run, Clamp<int64>( cl_run->GetInt(), 0, 1 ) );
+	Cvar_SetInt( cl_run, Clamp( cl_run->GetInt(), 0, 1 ) );
 	s_options_alwaysrun_box.curvalue		= cl_run->GetInt();
 
 	s_options_invertmouse_box.curvalue		= m_pitch->GetInt() < 0;
 
-	Cvar_SetInt( cl_crosshair, Clamp<int64>( cl_crosshair->GetInt(), 0, 3 ) );
-	s_options_crosshair_box.curvalue		= cl_crosshair->GetInt();
+	Cvar_SetInt( scr_crosshair, Clamp( scr_crosshair->GetInt(), 0, 3 ) );
+	s_options_crosshair_box.curvalue		= scr_crosshair->GetInt();
 }
 
 static void ControlsResetDefaultsFunc( void *unused )

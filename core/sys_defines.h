@@ -12,7 +12,7 @@
 #define	MAX_TOKEN_CHARS		128		// max length of an individual token
 
 // TODO: Bump me up! 64 is not enough
-#define	MAX_QPATH			64		// max length of a relative game path, IE: ("./base/models/alien.smf")
+#define	MAX_QPATH			64		// max length of a relative mod path, IE: ("models/alien.smf")
 
 #ifdef countof
 #error countf was previously defined by another library

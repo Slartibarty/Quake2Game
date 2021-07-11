@@ -199,16 +199,13 @@ const char *Q_stristr( const char *str, const char *substr )
 ===================================================================================================
 */
 
-void Str_NarrowToWide( const char *pNarrowString, wchar_t *pWideString )
+void Str_Widen( const char *pSrc, wchar_t *pDest, strlen_t nDestSize )
 {
-	strlen_t i;
-	strlen_t narrowLength = Q_strlen( pNarrowString );
-
-	for ( i = 0; i < narrowLength; ++i )
+	wchar_t *pLast = pDest + nDestSize - 1;
+	while ( ( pDest < pLast ) && ( *pSrc != 0 ) )
 	{
-		// blind expansion
-		pWideString[i] = static_cast<wchar_t>( pNarrowString[i] );
+		*pDest = *pSrc;
+		++pDest; ++pSrc;
 	}
-
-	pWideString[i] = 0;
+	*pDest = 0;
 }

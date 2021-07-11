@@ -1517,14 +1517,11 @@ cheatvar_t	cheatvars[]{
 	{"com_timeScale", "1"},
 	{"timedemo", "0"},
 	{"r_drawworld", "1"},
-	{"cl_testlights", "0"},
+	{"v_testLights", "0"},
 	{"r_fullbright", "0"},
-	{"r_drawflat", "0"},
 	{"paused", "0"},
 	{"com_fixedTime", "0"},
-	{"sw_draworder", "0"},
 	{"gl_lightmap", "0"},
-//	{"gl_saturatelighting", "0"},
 	{NULL, NULL}
 };
 
@@ -1703,8 +1700,9 @@ CL_Init
 */
 void CL_Init (void)
 {
-	if (dedicated->GetBool())
-		return;		// nothing running on the client
+	if ( dedicated->GetBool() ) {
+		return;
+	}
 
 	UI::Console::Init();
 #if defined __linux__
@@ -1745,11 +1743,15 @@ to run quit through here before the final handoff to the sys code.
 */
 void CL_Shutdown(void)
 {
-	static bool isdown = false;
+	static bool isdown;
+
+	if ( dedicated->GetBool() ) {
+		return;
+	}
 	
 	if (isdown)
 	{
-	//	printf ("recursive shutdown\n");
+		// recursive shutdown
 		return;
 	}
 	isdown = true;

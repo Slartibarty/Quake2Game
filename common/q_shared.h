@@ -71,7 +71,7 @@ bool	Info_Validate (const char *s);
 #define	CVAR_NOSET			8	// don't allow change from console at all, but can be set via command line
 #define	CVAR_LATCH			16	// save changes until server restart
 #define CVAR_CHEAT			32	// var cannot be changed unless sv_cheats is true (or singleplayer)
-#define CVAR_MODIFIED		64	// set each time the cvar is changed
+#define CVAR_MODIFIED		64	// set when the variable is modified
 
 // nothing outside the Cvar_*() functions should modify these fields!
 struct cvar_t

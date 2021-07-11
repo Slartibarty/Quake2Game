@@ -129,6 +129,8 @@ static void AddSearchPath( const char *baseDir, const char *dirName )
 
 void Init()
 {
+	Com_Print( "-------- Initializing FileSystem --------\n" );
+
 	fs_production = Cvar_Get( "fs_production", "0", 0, "If true, file writes are forced to writeDir." );
 	fs_debug = Cvar_Get( "fs_debug", "0", 0, "Controls FS spew." );
 	fs_mod = Cvar_Get( "fs_mod", BASEDIRNAME, CVAR_NOSET, "The primary mod dir." );
@@ -147,12 +149,10 @@ void Init()
 	// Set modDir
 	Q_strcpy_s( fs.modDir, fs_mod->GetString() );
 
-	if ( fs_debug->GetBool() ) {
-		Com_Printf( "[FileSystem] gameDir is %s\n", fs.gameDir );
-		Com_Printf( "[FileSystem] writeDir is %s\n", fs.writeDir );
-		Com_Printf( "[FileSystem] contentDir is %s\n", fs.contentDir );
-		Com_Printf( "[FileSystem] modDir is %s\n", fs.modDir );
-	}
+	Com_Printf( "gameDir   : %s\n", fs.gameDir );
+	Com_Printf( "writeDir  : %s\n", fs.writeDir );
+	Com_Printf( "contentDir: %s\n", fs.contentDir );
+	Com_Printf( "modDir    : %s\n", fs.modDir );
 
 	// Search paths are added backwards due to the nature of singly linked lists.
 	// This needs to be refactored in the future to use modinfos.
@@ -162,6 +162,8 @@ void Init()
 	AddSearchPath( fs.gameDir, fs.modDir );
 	// 1. Add the write/mod directory
 	AddSearchPath( fs.writeDir, fs.modDir );
+
+	Com_Print( "FileSystem initialized\n" "-----------------------------------------\n\n" );
 }
 
 void Shutdown()

@@ -526,8 +526,8 @@ void CL_ParseConfigString (void)
 	}
 	else if (i >= CS_IMAGES && i < CS_IMAGES+MAX_MODELS)
 	{
-	//	if (cl.refresh_prepped)
-	//		cl.image_precache[i-CS_IMAGES] = R_RegisterPic (cl.configstrings[i]); // SlartMaterialSystemTodo
+		if (cl.refresh_prepped)
+			cl.image_precache[i-CS_IMAGES] = R_RegisterPic (cl.configstrings[i]); // SlartMaterialSystemTodo
 	}
 	else if (i >= CS_PLAYERSKINS && i < CS_PLAYERSKINS+MAX_CLIENTS)
 	{

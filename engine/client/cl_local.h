@@ -127,7 +127,7 @@ struct clientActive_t
 	cmodel_t	*model_clip[MAX_MODELS];
 
 	sfx_t		*sound_precache[MAX_SOUNDS];
-//	image_t		*image_precache[MAX_IMAGES]; // SlartMaterialSystemTodo
+	material_t	*image_precache[MAX_IMAGES];
 
 	clientinfo_t	clientinfo[MAX_CLIENTS];
 	clientinfo_t	baseclientinfo;
@@ -377,12 +377,9 @@ struct vrect_t
 	int x, y, width, height;
 };
 
-extern cvar_t *cl_crosshair;
+extern cvar_t *scr_crosshair;
 
 extern vrect_t scr_vrect;		// position of render window
-
-extern char crosshair_pic[MAX_QPATH];
-extern int crosshair_width, crosshair_height;
 
 void SCR_Init();
 void SCR_Shutdown();

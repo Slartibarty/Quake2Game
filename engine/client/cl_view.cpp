@@ -1,19 +1,17 @@
 
 #include "cl_local.h"
 
-cvar_t		*cl_crosshair;
+static cvar_t *	v_addParticles;
+static cvar_t *	v_addLights;
+static cvar_t *	v_addEntities;
+static cvar_t *	v_addBlend;
 
-static cvar_t *	cl_add_particles;
-static cvar_t *	cl_add_lights;
-static cvar_t *	cl_add_entities;
-static cvar_t *	cl_add_blend;
+static cvar_t *	v_testParticles;
+static cvar_t *	v_testEntities;
+static cvar_t *	v_testLights;
+static cvar_t *	v_testBlend;
 
-static cvar_t *	cl_testparticles;
-static cvar_t *	cl_testentities;
-static cvar_t *	cl_testlights;
-static cvar_t *	cl_testblend;
-
-static cvar_t *	cl_stats;
+static cvar_t *	v_stats;
 
 // development tools for weapons
 int			g_gunFrame;
@@ -182,7 +180,7 @@ static void V_TestParticles()
 		}
 
 		p->color = 8;
-		p->alpha = cl_testparticles->GetFloat();
+		p->alpha = v_testParticles->GetFloat();
 	}
 }
 
@@ -213,21 +211,21 @@ void CL_PrepRefresh()
 
 	// precache map
 
-	Com_Printf( "Map: %s\r", mapName );
+	Com_Printf( "Precaching map: %s\n", mapName );
 	SCR_UpdateScreen();
 
 	R_BeginRegistration( mapName );
 
-	Com_Print( "                                     \r" );
+	Com_Print( "...\n" );
 
 	// precache scr pics
 
-	Com_Print( "pics\r" );
+	Com_Print( "Precaching pics\n" );
 	SCR_UpdateScreen();
 
 	SCR_TouchPics();
 
-	Com_Print( "                                     \r" );
+	Com_Print( "...\n" );
 
 	// precache tent models
 
@@ -245,7 +243,7 @@ void CL_PrepRefresh()
 		const char *modelName = cl.configstrings[CS_MODELS + i];
 
 		if ( modelName[0] != '*' ) {
-			Com_Printf( "%s\r", modelName );
+			Com_Printf( "%s\n", modelName );
 		}
 
 		SCR_UpdateScreen();
@@ -268,33 +266,29 @@ void CL_PrepRefresh()
 				cl.model_clip[i] = nullptr;
 			}
 		}
-
-		if ( modelName[0] != '*' ) {
-			Com_Print( "                                     \r" );
-		}
 	}
 
 	// precache images
 
-	Com_Print( "images\r" );
+	Com_Print( "Precaching images\n" );
 	SCR_UpdateScreen();
 
 	for ( int i = 1; i < MAX_IMAGES && cl.configstrings[CS_IMAGES + i][0]; i++ )
 	{
-	//	cl.image_precache[i] = R_RegisterPic (cl.configstrings[CS_IMAGES+i]); // SlartMaterialSystemTodo
+		cl.image_precache[i] = R_RegisterPic (cl.configstrings[CS_IMAGES+i]); // SlartMaterialSystemTodo
 	}
 	
-	Com_Print( "                                     \r" );
+	Com_Print( "...\n" );
 
 	for ( int i = 0; i < MAX_CLIENTS; i++ )
 	{
 		if ( !cl.configstrings[CS_PLAYERSKINS + i][0] ) {
 			continue;
 		}
-		Com_Printf( "client %i\r", i );
+		Com_Printf( "Precaching client %d info\n", i );
 		SCR_UpdateScreen();
 		CL_ParseClientinfo( i );
-		Com_Print( "                                     \r" );
+		//Com_Print( "                                     \r" );
 	}
 
 	char name[MAX_QPATH];
@@ -304,19 +298,19 @@ void CL_PrepRefresh()
 
 	// set sky textures and speed
 
-	Com_Print( "sky\r" );
+	Com_Print( "Precaching sky\n" );
 	SCR_UpdateScreen();
 
-	float rotate = (float)atof( cl.configstrings[CS_SKYROTATE] );
+	float rotate = static_cast<float>( atof( cl.configstrings[CS_SKYROTATE] ) );
 	vec3_t axis;
 	sscanf( cl.configstrings[CS_SKYAXIS], "%f %f %f", &axis[0], &axis[1], &axis[2] );
 	R_SetSky( cl.configstrings[CS_SKY], rotate, axis );
 
-	Com_Print( "                                     \r" );
-
 	// registration complete
 
 	R_EndRegistration();
+
+	Com_Print( "Done precaching\n" );
 
 	// clear any lines of console text
 
@@ -440,16 +434,16 @@ void V_RenderView()
 		// v_forward, etc.
 		CL_AddEntities();
 
-		if ( cl_testparticles->GetBool() ) {
+		if ( v_testParticles->GetBool() ) {
 			V_TestParticles();
 		}
-		if ( cl_testentities->GetBool() ) {
+		if ( v_testEntities->GetBool() ) {
 			V_TestEntities();
 		}
-		if ( cl_testlights->GetBool() ) {
+		if ( v_testLights->GetBool() ) {
 			V_TestDLights();
 		}
-		if ( cl_testblend->GetBool() )
+		if ( v_testBlend->GetBool() )
 		{
 			cl.refdef.blend[0] = 1.0f;
 			cl.refdef.blend[1] = 0.5f;
@@ -477,16 +471,16 @@ void V_RenderView()
 
 		cl.refdef.areabits = cl.frame.areabits;
 
-		if ( !cl_add_entities->GetBool() ) {
+		if ( !v_addEntities->GetBool() ) {
 			clView.numEntities = 0;
 		}
-		if ( !cl_add_particles->GetBool() ) {
+		if ( !v_addParticles->GetBool() ) {
 			clView.numParticles = 0;
 		}
-		if ( !cl_add_lights->GetBool() ) {
+		if ( !v_addLights->GetBool() ) {
 			clView.numDLights = 0;
 		}
-		if ( !cl_add_blend->GetBool() ) {
+		if ( !v_addBlend->GetBool() ) {
 			VectorClear( cl.refdef.blend );
 		}
 
@@ -507,7 +501,7 @@ void V_RenderView()
 
 	R_RenderFrame( &cl.refdef );
 
-	if ( cl_stats->GetBool() ) {
+	if ( v_stats->GetBool() ) {
 		Com_Printf( "ent:%i  lt:%i  part:%i\n", clView.numEntities, clView.numDLights, clView.numParticles );
 	}
 	if ( com_logStats->GetBool() && ( log_stats_file != nullptr ) ) {
@@ -528,7 +522,7 @@ static void V_Sky_f()
 	vec3_t	axis;
 
 	if ( Cmd_Argc() < 2 ) {
-		Com_Printf( "Usage: sky <basename> <rotate> <axis x y z>\n" );
+		Com_Print( "Usage: sky <basename> <rotate> <axis x y z>\n" );
 		return;
 	}
 
@@ -574,25 +568,23 @@ V_Init
 */
 void V_Init()
 {
-	cl_crosshair = Cvar_Get( "cl_crosshair", "0", CVAR_ARCHIVE );
+	v_addBlend = Cvar_Get( "v_addBlend", "1", 0 );
+	v_addLights = Cvar_Get( "v_addLights", "1", 0 );
+	v_addParticles = Cvar_Get( "v_addParticles", "1", 0 );
+	v_addEntities = Cvar_Get( "v_addEntities", "1", 0 );
 
-	cl_add_blend = Cvar_Get( "cl_blend", "1", 0 );
-	cl_add_lights = Cvar_Get( "cl_lights", "1", 0 );
-	cl_add_particles = Cvar_Get( "cl_particles", "1", 0 );
-	cl_add_entities = Cvar_Get( "cl_entities", "1", 0 );
+	v_testBlend = Cvar_Get( "v_testBlend", "0", 0 );
+	v_testParticles = Cvar_Get( "v_testParticles", "0", 0 );
+	v_testEntities = Cvar_Get( "v_testEntities", "0", 0 );
+	v_testLights = Cvar_Get( "v_testLights", "0", 0 );
 
-	cl_testblend = Cvar_Get( "cl_testblend", "0", 0 );
-	cl_testparticles = Cvar_Get( "cl_testparticles", "0", 0 );
-	cl_testentities = Cvar_Get( "cl_testentities", "0", 0 );
-	cl_testlights = Cvar_Get( "cl_testlights", "0", 0 );
+	v_stats = Cvar_Get( "v_stats", "0", 0 );
 
-	cl_stats = Cvar_Get( "cl_stats", "0", 0 );
+	Cmd_AddCommand( "v_gun_next", V_Gun_Next_f );
+	Cmd_AddCommand( "v_gun_prev", V_Gun_Prev_f );
+	Cmd_AddCommand( "v_gun_model", V_Gun_Model_f );
+	Cmd_AddCommand( "v_gun_reset", V_Gun_Model_f );
 
-	Cmd_AddCommand( "cl_gun_next", V_Gun_Next_f );
-	Cmd_AddCommand( "cl_gun_prev", V_Gun_Prev_f );
-	Cmd_AddCommand( "cl_gun_model", V_Gun_Model_f );
-	Cmd_AddCommand( "cl_gun_reset", V_Gun_Model_f );
-
-	Cmd_AddCommand( "cl_sky", V_Sky_f );
-	Cmd_AddCommand( "cl_viewpos", V_Viewpos_f );
+	Cmd_AddCommand( "v_sky", V_Sky_f );
+	Cmd_AddCommand( "v_viewpos", V_Viewpos_f );
 }

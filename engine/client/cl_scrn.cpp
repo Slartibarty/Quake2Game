@@ -34,14 +34,9 @@
 #include "backends/imgui_impl_opengl3.h"
 #include "q_imgui_imp.h"
 
-float		scr_con_current;	// aproaches scr_conlines at scr_conspeed
-float		scr_conlines;		// 0.0 to 1.0 lines of console to display
-
-bool		scr_initialized;	// ready to draw
-
-int			scr_draw_loading;
-
 vrect_t		scr_vrect;		// position of render window on screen
+
+cvar_t		*scr_crosshair;
 
 cvar_t		*scr_centertime;
 cvar_t		*scr_showpause;
@@ -53,17 +48,21 @@ cvar_t		*scr_graphheight;
 cvar_t		*scr_graphscale;
 cvar_t		*scr_graphshift;
 
+cvar_t		*scr_multiview;
 cvar_t		*scr_devpause;
 cvar_t		*scr_showfps;
-
-char		crosshair_pic[MAX_QPATH];
-int			crosshair_width, crosshair_height;
 
 void SCR_TimeRefresh_f();
 void SCR_Loading_f();
 
-struct screenGlobals_t
+static struct screenGlobals_t
 {
+	char	crosshairName[MAX_QPATH];
+	int		crosshairWidth, crosshairHeight;
+	int		drawLoading;
+
+	bool	initialized;		// true if ready to draw
+			// UI toggles
 	bool	ui_devui;
 	bool	ui_showDemo;
 	bool	ui_console;
@@ -71,11 +70,6 @@ struct screenGlobals_t
 	bool	ui_stats;
 	bool	ui_mdlviewer;
 } scr;
-
-struct qHistoryStack
-{
-
-};
 
 /*
 ===================================================================================================
@@ -391,7 +385,10 @@ static bool SCR_InitImGui()
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO &io = ImGui::GetIO();
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_ViewportsEnable;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_DockingEnable;
+	if ( scr_multiview->GetBool() ) {
+		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+	}
 	io.IniFilename = nullptr;
 
 	ImGui::StyleColorsDark();
@@ -430,6 +427,8 @@ SCR_Init
 */
 void SCR_Init()
 {
+	scr_crosshair = Cvar_Get( "scr_crosshair", "0", CVAR_ARCHIVE );
+
 	scr_showpause = Cvar_Get( "scr_showpause", "1", 0, "If true, <paused> is displayed on the screen whilst paused.");
 	scr_centertime = Cvar_Get( "scr_centertime", "2.5", 0, "The time in seconds that centerprint text should stay on screen.");
 	scr_netgraph = Cvar_Get( "scr_netgraph", "0", 0 );
@@ -439,6 +438,7 @@ void SCR_Init()
 	scr_graphscale = Cvar_Get( "scr_graphscale", "1", 0 );
 	scr_graphshift = Cvar_Get( "scr_graphshift", "0", 0 );
 
+	scr_multiview = Cvar_Get( "scr_multiview", "0", CVAR_NOSET, "If true, you can drag ImGui windows out of the game window.");
 	scr_devpause = Cvar_Get( "scr_devpause", "0", 0, "If true, the game pauses whilst the devui is up.");
 	scr_showfps = Cvar_Get( "scr_showfps", "0", 0, "If true, shows a stats panel on screen.");
 
@@ -450,7 +450,7 @@ void SCR_Init()
 	// always show the console by default
 	scr.ui_console = true;
 
-	scr_initialized = true;
+	scr.initialized = true;
 }
 
 /*
@@ -508,10 +508,10 @@ static void SCR_DrawLoading()
 {
 	int w, h;
 
-	if ( !scr_draw_loading ) {
+	if ( !scr.drawLoading ) {
 		return;
 	}
-	scr_draw_loading = false;
+	scr.drawLoading = 0;
 
 	R_DrawGetPicSize( &w, &h, "loading" );
 	R_DrawPic( ( viddef.width - w ) / 2, ( viddef.height - h ) / 2, "loading" );
@@ -524,21 +524,21 @@ SCR_DrawCrosshair
 */
 static void SCR_DrawCrosshair()
 {
-	if ( !cl_crosshair->GetBool() ) {
+	if ( !scr_crosshair->GetBool() ) {
 		return;
 	}
 
-	if ( cl_crosshair->IsModified() ) {
-		cl_crosshair->ClearModified();
+	if ( scr_crosshair->IsModified() ) {
+		scr_crosshair->ClearModified();
 		SCR_TouchPics();
 	}
 
-	if ( !crosshair_pic[0] ) {
+	if ( !scr.crosshairName[0] ) {
 		return;
 	}
 
-	R_DrawPic( scr_vrect.x + ( ( scr_vrect.width - crosshair_width ) >> 1 )
-		, scr_vrect.y + ( ( scr_vrect.height - crosshair_height ) >> 1 ), crosshair_pic );
+	R_DrawPic( scr_vrect.x + ( ( scr_vrect.width - scr.crosshairWidth ) >> 1 )
+		, scr_vrect.y + ( ( scr_vrect.height - scr.crosshairHeight ) >> 1 ), scr.crosshairName );
 }
 
 /*
@@ -659,6 +659,8 @@ SCR_BeginLoadingPlaque
 */
 void SCR_BeginLoadingPlaque()
 {
+	return;
+
 	S_StopAllSounds();
 	cl.sound_prepped = false;		// don't play ambients
 	CDAudio_Stop();
@@ -679,9 +681,9 @@ void SCR_BeginLoadingPlaque()
 
 	if ( cl.cinematictime > 0 ) {
 		// clear to black first
-		scr_draw_loading = 2;
+		scr.drawLoading = 2;
 	} else {
-		scr_draw_loading = 1;
+		scr.drawLoading = 1;
 	}
 
 	SCR_UpdateScreen();
@@ -908,16 +910,16 @@ void SCR_TouchPics()
 		}
 	}
 
-	if ( cl_crosshair->GetBool() )
+	if ( scr_crosshair->GetBool() )
 	{
-		if ( cl_crosshair->GetInt() > 3 || cl_crosshair->GetInt() < 0 ) {
-			Cvar_SetInt( cl_crosshair, 3 );
+		if ( scr_crosshair->GetInt() > 3 || scr_crosshair->GetInt() < 0 ) {
+			Cvar_SetInt( scr_crosshair, 3 );
 		}
 
-		Q_sprintf_s( crosshair_pic, "ch%i", cl_crosshair->GetInt() );
-		R_DrawGetPicSize( &crosshair_width, &crosshair_height, crosshair_pic );
-		if ( !crosshair_width ) {
-			crosshair_pic[0] = '\0';
+		Q_sprintf_s( scr.crosshairName, "ch%i", scr_crosshair->GetInt() );
+		R_DrawGetPicSize( &scr.crosshairWidth, &scr.crosshairHeight, scr.crosshairName );
+		if ( !scr.crosshairWidth ) {
+			scr.crosshairName[0] = '\0';
 		}
 	}
 }
@@ -1256,19 +1258,19 @@ void SCR_UpdateScreen()
 		return;
 	}
 
-	if ( !scr_initialized ) {
+	if ( !scr.initialized ) {
 		// not initialized yet
 		return;
 	}
 
 	R_BeginFrame( true );
 
-	if ( scr_draw_loading == 2 )
+	if ( scr.drawLoading == 2 )
 	{
 		// loading plaque over black screen
 		int w, h;
 
-		scr_draw_loading = false;
+		scr.drawLoading = 0;
 
 		R_DrawGetPicSize( &w, &h, "loading" );
 		R_DrawPic( ( viddef.width - w ) / 2, ( viddef.height - h ) / 2, "loading" );

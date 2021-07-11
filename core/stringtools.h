@@ -234,6 +234,5 @@ inline void Str_FixSlashes( char *pStr ) {
 	Str_Substitute( pStr, '\\', '/' );
 }
 
-// fast conversion from ANSI to UTF16
-// pWideString must be at least as long as pNarrowString
-void Str_NarrowToWide( const char *pNarrowString, wchar_t *pWideString );
+// Widens ASCII input
+void Str_Widen( const char *pNarrow, wchar_t *pWide, strlen_t maxCount );

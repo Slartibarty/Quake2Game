@@ -189,8 +189,7 @@ static void SV_Baselines_f()
 
 	// write a packet full of data
 
-	while ( sv_client->netchan.message.cursize < MAX_MSGLEN / 2
-		&& start < MAX_EDICTS )
+	while ( sv_client->netchan.message.cursize < MAX_MSGLEN / 2 && start < MAX_EDICTS )
 	{
 		base = &sv.baselines[start];
 		if ( base->modelindex || base->sound || base->effects )
