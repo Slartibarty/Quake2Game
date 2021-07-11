@@ -899,7 +899,8 @@ void R_BeginFrame( bool imgui, int frameBuffer )
 	}
 
 	// tell imgui we're starting a new frame
-	if ( imgui ) {
+	if ( imgui )
+	{
 		ImGui_ImplOpenGL3_NewFrame();
 		qImGui::OSImp_NewFrame();
 		ImGui::NewFrame();
@@ -934,7 +935,8 @@ void R_EndFrame( bool imgui )
 	Draw_RenderBatches();
 
 	// draw imgui, if applicable
-	if ( imgui ) {
+	if ( imgui )
+	{
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData( ImGui::GetDrawData() );
 	}

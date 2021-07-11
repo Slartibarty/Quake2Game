@@ -16,6 +16,8 @@
 #include "gl_local.h"
 #include "../../resources/resource.h"
 
+#include "imgui.h"
+
 struct glwstate_t
 {
 	HINSTANCE	hInstance;
@@ -236,6 +238,87 @@ static void GLimp_PopulateLegacyPFD( PIXELFORMATDESCRIPTOR &pfd )
 	};
 }
 
+void *GLimp_SetupContext( void *localContext, bool shareWithMain )
+{
+	PIXELFORMATDESCRIPTOR pfd;
+	BOOL result;
+	int pixelformat;
+
+	HDC hDC = reinterpret_cast<HDC>( localContext );
+
+	// Intel HD Graphics 3000 chips (my laptop) don't support this function
+	if ( WGLEW_ARB_pixel_format )
+	{
+		const int multiSamples = Clamp( r_multisamples->GetInt(), 0, 8 );
+
+		const int attriblist[]
+		{
+			WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
+			WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
+			WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
+			WGL_SAMPLES_ARB, multiSamples,
+			WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB,
+			WGL_COLOR_BITS_ARB, 32,
+			WGL_DEPTH_BITS_ARB, 24,
+			WGL_STENCIL_BITS_ARB, 8,
+			0
+		};
+
+		UINT numformats;
+
+		result = wglChoosePixelFormatARB( hDC, attriblist, NULL, 1, &pixelformat, &numformats );
+		assert( result );
+
+		result = DescribePixelFormat( hDC, pixelformat, sizeof( pfd ), &pfd );
+		assert( result != 0 );
+	}
+	else
+	{
+		GLimp_PopulateLegacyPFD( pfd );
+		pixelformat = ChoosePixelFormat( hDC, &pfd );
+	}
+
+	result = SetPixelFormat( hDC, pixelformat, &pfd );
+	assert( result );
+
+	HGLRC hGLRC;
+
+	// Intel HD Graphics 3000 chips (my laptop) don't support this function
+	if ( WGLEW_ARB_create_context )
+	{
+		const int contextAttribs[]
+		{
+			WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
+			WGL_CONTEXT_MINOR_VERSION_ARB, 3,
+			WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
+			0, // End
+		};
+
+		hGLRC = wglCreateContextAttribsARB( hDC, NULL, contextAttribs );
+		assert( hGLRC );
+	}
+	else
+	{
+		hGLRC = wglCreateContext( hDC );
+		assert( hGLRC );
+	}
+
+	result = wglMakeCurrent( hDC, hGLRC );
+	assert( result );
+
+	if ( shareWithMain )
+	{
+		wglShareLists( s_glwState.hGLRC, hGLRC );
+	}
+
+	if ( WGLEW_EXT_swap_control )
+	{
+		wglSwapIntervalEXT( r_swapinterval->GetInt() );
+	}
+
+	return reinterpret_cast<void *>( hGLRC );
+}
+
 static void GLimp_CreateWindow( WNDPROC wndproc, int width, int height, bool fullscreen )
 {
 	const WNDCLASSEXW wcex
@@ -247,7 +330,7 @@ static void GLimp_CreateWindow( WNDPROC wndproc, int width, int height, bool ful
 		0,						// Extra storage
 		s_glwState.hInstance,	// Module
 		(HICON)LoadImageW( s_glwState.hInstance, MAKEINTRESOURCEW( IDI_ICON1 ), IMAGE_ICON, 0, 0, LR_SHARED ),		// Icon
-		(HCURSOR)LoadImageW( NULL, MAKEINTRESOURCEW( 32512 ), IMAGE_CURSOR, 0, 0, LR_SHARED ),	// Cursor to use
+		(HCURSOR)LoadImageW( NULL, IDC_ARROW, IMAGE_CURSOR, 0, 0, LR_SHARED ),	// Cursor to use
 		(HBRUSH)( COLOR_WINDOW + 1 ),		// Background colour
 		NULL,					// Menu
 		WINDOW_CLASS_NAME,		// Classname
@@ -298,75 +381,10 @@ static void GLimp_CreateWindow( WNDPROC wndproc, int width, int height, bool ful
 		NULL					// Additional params
 	);
 
-	BOOL	result;
-	PIXELFORMATDESCRIPTOR pfd;
-	int		pixelformat;
-
 	s_glwState.hDC = GetDC( s_glwState.hWnd );
 	assert( s_glwState.hDC );
 
-	// Intel HD Graphics 3000 chips (my laptop) don't support this function
-	if ( WGLEW_ARB_pixel_format )
-	{
-		const int multiSamples = Clamp( r_multisamples->GetInt(), 0, 8 );
-
-		const int attriblist[]
-		{
-			WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
-			WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
-			WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
-			WGL_SAMPLES_ARB, multiSamples,
-			WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB,
-			WGL_COLOR_BITS_ARB, 32,
-			WGL_DEPTH_BITS_ARB, 24,
-			WGL_STENCIL_BITS_ARB, 8,
-			0
-		};
-
-		UINT numformats;
-
-		result = wglChoosePixelFormatARB( s_glwState.hDC, attriblist, NULL, 1, &pixelformat, &numformats );
-		assert( result );
-
-		result = DescribePixelFormat( s_glwState.hDC, pixelformat, sizeof( pfd ), &pfd );
-		assert( result != 0 );
-	}
-	else
-	{
-		GLimp_PopulateLegacyPFD( pfd );
-		pixelformat = ChoosePixelFormat( s_glwState.hDC, &pfd );
-	}
-
-	result = SetPixelFormat( s_glwState.hDC, pixelformat, &pfd );
-	assert( result );
-
-	// Intel HD Graphics 3000 chips (my laptop) don't support this function
-	if ( WGLEW_ARB_create_context )
-	{
-		const int contextAttribs[]
-		{
-			WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
-			WGL_CONTEXT_MINOR_VERSION_ARB, 3,
-			WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
-			0, // End
-		};
-
-		s_glwState.hGLRC = wglCreateContextAttribsARB( s_glwState.hDC, NULL, contextAttribs );
-		assert( s_glwState.hGLRC );
-	}
-	else
-	{
-		s_glwState.hGLRC = wglCreateContext( s_glwState.hDC );
-		assert( s_glwState.hGLRC );
-	}
-
-	result = wglMakeCurrent( s_glwState.hDC, s_glwState.hGLRC );
-	assert( result );
-
-	if ( WGLEW_EXT_swap_control )
-	{
-		wglSwapIntervalEXT( r_swapinterval->GetInt() );
-	}
+	s_glwState.hGLRC = reinterpret_cast<HGLRC>( GLimp_SetupContext( s_glwState.hDC, false ) );
 
 	// let the sound and input subsystems know about the new window
 	VID_NewWindow( width, height );
@@ -426,6 +444,11 @@ bool GLimp_SetMode( int &width, int &height, int mode, bool fullscreen )
 	glViewport( 0, 0, width, height );
 
 	return true;
+}
+
+void GLimp_ShareLists( void *context )
+{
+	wglShareLists( s_glwState.hGLRC, (HGLRC)context );
 }
 
 bool GLimp_Init()
@@ -488,6 +511,13 @@ void GLimp_BeginFrame()
 
 void GLimp_EndFrame()
 {
+	if ( ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable )
+	{
+		ImGui::UpdatePlatformWindows();
+		ImGui::RenderPlatformWindowsDefault();
+		wglMakeCurrent( s_glwState.hDC, s_glwState.hGLRC );
+	}
+
 	SwapBuffers( s_glwState.hDC );
 }
 

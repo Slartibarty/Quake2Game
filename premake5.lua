@@ -308,7 +308,7 @@ project "engine"
 	links { "core" }
 	filter "system:windows"
 		linkoptions { "/ENTRY:mainCRTStartup" }
-		links { "comctl32", "ws2_32", "dsound", "dxguid", "opengl32", "noenv.obj", "zlib", "libpng" }
+		links { "shcore", "comctl32", "ws2_32", "dsound", "dxguid", "opengl32", "noenv.obj", "zlib", "libpng" }
 	filter {}
 	filter "system:linux"
 		links { "GL", "SDL2", "zlib", "png" }

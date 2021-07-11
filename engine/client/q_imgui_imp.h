@@ -10,6 +10,7 @@ namespace qImGui
 
 	bool		OSImp_Init( void *window );
 	void		OSImp_Shutdown();
+	void		OSImp_SetWantMonitorUpdate();
 	void		OSImp_NewFrame();
 
 #ifdef _WIN32

@@ -338,6 +338,9 @@ LRESULT CALLBACK MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 	switch ( uMsg )
 	{
+	case WM_ERASEBKGND:
+		return 0;
+
 	case WM_INPUT:
 	{
 		UINT dwSize = sizeof( RAWINPUT );
@@ -417,7 +420,52 @@ LRESULT CALLBACK MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		cl_hwnd = nullptr;
 		PostQuitMessage( 0 );
 		return 0;
+
+	case WM_DISPLAYCHANGE:
+		qImGui::OSImp_SetWantMonitorUpdate();
+		return 0;
 	}
 
 	return DefWindowProcW( hWnd, uMsg, wParam, lParam );
+}
+
+LRESULT CALLBACK ChildWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
+{
+	ImGuiViewport* viewport = ImGui::FindViewportByPlatformHandle( (void*)hWnd );
+	if ( !viewport ) {
+		return DefWindowProcW( hWnd, uMsg, wParam, lParam );
+	}
+
+	switch ( uMsg )
+	{
+	case WM_CLOSE:
+		viewport->PlatformRequestClose = true;
+		return 0;
+	case WM_MOVE:
+		viewport->PlatformRequestMove = true;
+		return 0;
+	case WM_SIZE:
+		viewport->PlatformRequestResize = true;
+		return 0;
+	case WM_MOUSEACTIVATE:
+		if ( viewport->Flags & ImGuiViewportFlags_NoFocusOnClick ) {
+			return MA_NOACTIVATE;
+		}
+		break;
+	case WM_NCHITTEST:
+		// Let mouse pass-through the window. This will allow the backend to set io.MouseHoveredViewport properly (which is OPTIONAL).
+		// The ImGuiViewportFlags_NoInputs flag is set while dragging a viewport, as want to detect the window behind the one we are dragging.
+		// If you cannot easily access those viewport flags from your windowing/event code: you may manually synchronize its state e.g. in
+		// your main loop after calling UpdatePlatformWindows(). Iterate all viewports/platform windows and pass the flag to your windowing system.
+		if ( viewport->Flags & ImGuiViewportFlags_NoInputs ) {
+			return HTTRANSPARENT;
+		}
+		break;
+	case WM_CREATE:
+		return DefWindowProcW( hWnd, uMsg, wParam, lParam );
+	case WM_DESTROY:
+		return DefWindowProcW( hWnd, uMsg, wParam, lParam );
+	}
+
+	return MainWndProc( hWnd, uMsg, wParam, lParam );
 }
