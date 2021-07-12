@@ -1422,8 +1422,6 @@ void CL_CalcViewValues()
 		cl.refdef.blend[i] = ps->blend[i];
 	}
 
-	//SV_CalcGunOffset( ps, ops );
-
 	// add the weapon
 	CL_AddViewWeapon( ps, ops, bob );
 }

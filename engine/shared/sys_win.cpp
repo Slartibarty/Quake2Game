@@ -383,6 +383,7 @@ void Sys_FileOpenDialog(
 				LPWSTR pName;
 				pItem->GetDisplayName( SIGDN_FILESYSPATH, &pName );
 				WideCharToMultiByte( CP_UTF8, 0, pName, static_cast<int>( wcslen( pName ) + 1 ), filenameBuffer, sizeof( filenameBuffer ), nullptr, nullptr );
+				filenameBuffer[MAX_OSPATH - 1] = '\0';
 				CoTaskMemFree( pName );
 				Str_FixSlashes( filenameBuffer );
 				filename.assign( filenameBuffer );
@@ -442,6 +443,7 @@ void Sys_FileOpenDialogMultiple(
 					LPWSTR pName;
 					pItem->GetDisplayName( SIGDN_FILESYSPATH, &pName );
 					WideCharToMultiByte( CP_UTF8, 0, pName, static_cast<int>( wcslen( pName ) + 1 ), filenameBuffer, sizeof( filenameBuffer ), nullptr, nullptr );
+					filenameBuffer[MAX_OSPATH - 1] = '\0';
 					CoTaskMemFree( pName );
 					Str_FixSlashes( filenameBuffer );
 					filenames.push_back( filenameBuffer );

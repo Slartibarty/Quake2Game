@@ -76,6 +76,7 @@ static void SetWriteDirectory()
 	{
 		char fullPath[MAX_OSPATH];
 		WideCharToMultiByte( CP_UTF8, 0, savedGames, static_cast<int>( wcslen( savedGames ) + 1 ), fullPath, sizeof( fullPath ), nullptr, nullptr );
+		fullPath[MAX_OSPATH - 1] = '\0';
 		Str_FixSlashes( fullPath );
 		Q_sprintf_s( fs.writeDir, "%s/%s", fullPath, SaveFolderName );
 		CoTaskMemFree( savedGames );
@@ -133,7 +134,7 @@ void Init()
 
 	fs_production = Cvar_Get( "fs_production", "0", 0, "If true, file writes are forced to writeDir." );
 	fs_debug = Cvar_Get( "fs_debug", "0", 0, "Controls FS spew." );
-	fs_mod = Cvar_Get( "fs_mod", BASEDIRNAME, CVAR_INIT, "The primary mod dir." );
+	fs_mod = Cvar_Get( "fs_mod", BASE_MODDIR, CVAR_INIT, "The primary mod dir." );
 
 	// Set gameDir
 	// Use the current working directory as the base dir.
