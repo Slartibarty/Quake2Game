@@ -9,12 +9,14 @@
 // This file is dedicated to Jerma and his dumptruck ass, amen
 //-------------------------------------------------------------------------------------------------
 
-#include "../../core/sys_types.h"
+#include "../../core/core.h"
+
+#include "../shared/filesystem.h"
 
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 
 #define IMGUI_DISABLE_DEFAULT_FORMAT_FUNCTIONS
-//#define IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS
+#define IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS
 
 #define IMGUI_STB_TRUETYPE_FILENAME		"stb_truetype.h"
 #define IMGUI_STB_RECT_PACK_FILENAME	"stb_rect_pack.h"
@@ -34,7 +36,8 @@
 
 // Provide our own file methods
 
-typedef fsHandle ImFileHandle;
+using ImFileHandle = fsHandle_t;
+
 extern ImFileHandle		ImFileOpen( const char *filename, const char *mode );
 extern bool				ImFileClose( ImFileHandle file );
 extern uint64			ImFileGetSize( ImFileHandle file );

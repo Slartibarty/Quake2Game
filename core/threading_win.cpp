@@ -1,8 +1,6 @@
 
 #include "core.h"
 
-#include <process.h>
-
 #include "threading.h"
 
 /*

@@ -28,8 +28,8 @@ namespace FileSystem
 	const char *	AbsolutePathToRelativePath( const char *absolutePath, fsPath_t fsPath = FS_GAMEDIR );
 					// Creates the given directory tree in the write dir. Add gamedir support when needed.
 	void			CreatePath( const char *path );
-					// Returns the length of a file.
-	int				GetFileLength( fsHandle_t handle );
+					// Returns the size of a file.
+	int				GetFileSize( fsHandle_t handle );
 
 					// Opens an existing file for reading.
 	fsHandle_t		OpenFileRead( const char *filename );

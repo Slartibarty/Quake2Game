@@ -14,14 +14,8 @@
 // Not Linux-capable yet
 #ifdef _WIN32
 
-#include <string>
-#include <vector>
-#include <cassert>
-
 // I am so sorry
 #include "sys_includes.h"
-
-#include "sys_types.h"
 
 inline constexpr int MAX_THREAD_NAME = 32;
 

@@ -77,7 +77,7 @@ bool CL_CheckOrDownloadFile (const char *filename)
 	fsHandle_t handle = FileSystem::OpenFileAppend( name );
 	if (handle) {
 		// it exists
-		int len = FileSystem::GetFileLength( handle );
+		int len = FileSystem::GetFileSize( handle );
 
 		cls.download = handle;
 

@@ -306,7 +306,7 @@ void CreatePath( const char *path )
 	CreateAbsolutePath( fullPath, skipDist );
 }
 
-int GetFileLength( fsHandle_t handle )
+int GetFileSize( fsHandle_t handle )
 {
 	long pos;
 	long end;
@@ -527,7 +527,7 @@ int LoadFile( const char *filename, void **buffer, int extraData /*= 0*/ )
 		return -1;
 	}
 
-	int length = GetFileLength( handle );
+	int length = GetFileSize( handle );
 
 	if ( !buffer )
 	{
