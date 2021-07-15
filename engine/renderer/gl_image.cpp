@@ -387,6 +387,8 @@ static bool GL_LoadImage( const char *pName, int &width, int &height, byte *&pPi
 		FileSystem::FreeFile( pBuffer );
 		return false;
 	}
+
+	// TODO: Unreachable? This function kinda sucks
 	
 	Com_Printf( "GL_LoadImage - %s is an unsupported image format!", pName );
 	return false;

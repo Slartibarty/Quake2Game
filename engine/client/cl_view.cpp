@@ -345,18 +345,20 @@ float CalcFov( float fov_x, float width, float height )
 	return a;
 }
 
-//=================================================================================================
+/*
+===================================================================================================
+	Gun frame debugging helpers
+===================================================================================================
+*/
 
-// gun frame debugging functions
-
-void V_Gun_Next_f()
+static void V_Gun_Next_f()
 {
 	++g_gunFrame;
 
 	Com_Printf( "frame %i\n", g_gunFrame );
 }
 
-void V_Gun_Prev_f()
+static void V_Gun_Prev_f()
 {
 	--g_gunFrame;
 
@@ -367,24 +369,27 @@ void V_Gun_Prev_f()
 	Com_Printf( "frame %i\n", g_gunFrame );
 }
 
-void V_Gun_Model_f()
+static void V_Gun_Model_f()
 {
 	if ( Cmd_Argc() != 2 )
 	{
-		g_gunModel = nullptr;
 		return;
 	}
 
 	g_gunModel = R_RegisterModel( Cmd_Argv( 1 ) );
 }
 
-void V_Gun_Reset_f()
+static void V_Gun_Reset_f()
 {
 	g_gunFrame = 0;
 	g_gunModel = nullptr;
 }
 
-//=================================================================================================
+/*
+===================================================================================================
+	View rendering
+===================================================================================================
+*/
 
 static int entitycmpfnc( const entity_t *a, const entity_t *b )
 {
@@ -511,7 +516,7 @@ void V_RenderView()
 
 /*
 ========================
-SCR_Sky_f
+V_Sky_f
 
 Set a specific sky and rotation speed
 ========================

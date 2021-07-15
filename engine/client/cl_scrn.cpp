@@ -659,6 +659,12 @@ SCR_BeginLoadingPlaque
 */
 void SCR_BeginLoadingPlaque()
 {
+	// TEMP
+	// TEMP
+	// TEMP
+	// TEMP
+	// TEMP
+	// TEMP
 	return;
 
 	S_StopAllSounds();
@@ -688,7 +694,7 @@ void SCR_BeginLoadingPlaque()
 
 	SCR_UpdateScreen();
 
-	cls.disable_screen = Time_FloatMilliseconds();
+	cls.disable_screen = static_cast<float>( Time_FloatMilliseconds() );
 	cls.disable_servercount = cl.servercount;
 }
 
@@ -871,8 +877,7 @@ static void SCR_DrawField( int x, int y, int color, int width, int value )
 		width = 5;
 	}
 
-	Q_sprintf_s( num, "%i", value );
-	l = (int)strlen( num );
+	l = Q_sprintf_s( num, "%i", value );
 	if ( l > width ) {
 		l = width;
 	}
