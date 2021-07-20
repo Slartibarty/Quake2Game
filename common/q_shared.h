@@ -299,7 +299,7 @@ struct pmove_t
 //ROGUE
 
 // entity_state_t->renderfx flags
-#define	RF_MINLIGHT			1		// allways have some light (viewmodel)
+#define	RF_MINLIGHT			1		// always have some light (viewmodel)
 #define	RF_VIEWERMODEL		2		// don't draw through eyes, only mirrors
 #define	RF_WEAPONMODEL		4		// only draw through eyes
 #define	RF_FULLBRIGHT		8		// allways draw full intensity

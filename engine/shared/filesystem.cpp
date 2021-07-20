@@ -27,7 +27,7 @@
 
 #include "filesystem.h"
 
-#define FS_VERIFYPATH(a) ASSUME( a == FS_GAMEDIR || a == FS_WRITEDIR )
+#define FS_VERIFYPATH(a) ASSUME( a == FS_GAMEDIR || a == FS_WRITEDIR || a == FS_CONTENTDIR )
 
 // DLL interface
 CFileSystem g_fileSystem;
