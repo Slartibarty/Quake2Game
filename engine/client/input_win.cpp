@@ -240,8 +240,8 @@ namespace input
 
 		SetCapture( cl_hwnd );
 		ClipCursor( &sysIn.window_rect );
-	//	while ( ShowCursor( FALSE ) >= 0 )
-	//		;
+		while ( ShowCursor( FALSE ) >= 0 )
+			;
 	}
 
 	//-------------------------------------------------------------------------------------------------
@@ -256,8 +256,8 @@ namespace input
 
 		ClipCursor( nullptr );
 		ReleaseCapture();
-	//	while ( ShowCursor( TRUE ) < 0 )
-	//		;
+		while ( ShowCursor( TRUE ) < 0 )
+			;
 	}
 
 	void Init()
