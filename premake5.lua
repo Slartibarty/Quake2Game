@@ -19,7 +19,7 @@ local filter_64bit = "platforms:" .. plat_64bit
 
 -- Workspace definition -------------------------------------------------------
 
-workspace "quake2"
+workspace "jaffaquake"
 	configurations { conf_dbg, conf_rel, conf_rtl }
 	platforms { plat_64bit }
 	location( build_dir )
@@ -295,11 +295,11 @@ project "core"
 		}
 	filter {}
 	
-group "quake2"
+group "main"
 
 project "engine"
 	kind "WindowedApp"
-	targetname "q2game"
+	targetname "jaffaquake"
 	language "C++"
 	targetdir "../game"
 	debugdir "../game"
