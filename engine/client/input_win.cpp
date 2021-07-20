@@ -17,10 +17,13 @@ extern unsigned sys_frame_time;
 // TODO: this shouldn't really be in a namespace
 namespace input
 {
-	static bool in_appactive;
-	static bool mouseactive;		// false when not in focus
-	static RECT window_rect;
-	static LONG last_xpos, last_ypos;
+	static struct sysInput_t
+	{
+		RECT window_rect;
+		LONG last_xpos, last_ypos;
+		bool appactive;
+		bool mouseactive;		// false when not in focus
+	} sysIn;
 
 	static const uint8 scantokey[128]
 	{
@@ -203,14 +206,14 @@ namespace input
 			break;
 		}
 
-		if ( mouseactive == false ) {
+		if ( sysIn.mouseactive == false ) {
 			return;
 		}
 
-		float xpos = static_cast<float>( raw.lLastX + last_xpos );
-		float ypos = static_cast<float>( raw.lLastY + last_ypos );
-		last_xpos = raw.lLastX;
-		last_ypos = raw.lLastY;
+		float xpos = static_cast<float>( raw.lLastX + sysIn.last_xpos );
+		float ypos = static_cast<float>( raw.lLastY + sysIn.last_ypos );
+		sysIn.last_xpos = raw.lLastX;
+		sysIn.last_ypos = raw.lLastY;
 
 		xpos *= m_yaw->GetFloat() * sensitivity->GetFloat();
 		ypos *= m_pitch->GetFloat() * sensitivity->GetFloat();
@@ -230,15 +233,15 @@ namespace input
 	//-------------------------------------------------------------------------------------------------
 	static void ActivateMouse()
 	{
-		if ( mouseactive == true ) {
+		if ( sysIn.mouseactive == true ) {
 			return;
 		}
-		mouseactive = true;
+		sysIn.mouseactive = true;
 
 		SetCapture( cl_hwnd );
-		ClipCursor( &window_rect );
-		while ( ShowCursor( FALSE ) >= 0 )
-			;
+		ClipCursor( &sysIn.window_rect );
+	//	while ( ShowCursor( FALSE ) >= 0 )
+	//		;
 	}
 
 	//-------------------------------------------------------------------------------------------------
@@ -246,15 +249,15 @@ namespace input
 	//-------------------------------------------------------------------------------------------------
 	static void DeactivateMouse()
 	{
-		if ( mouseactive == false ) {
+		if ( sysIn.mouseactive == false ) {
 			return;
 		}
-		mouseactive = false;
+		sysIn.mouseactive = false;
 
 		ClipCursor( nullptr );
 		ReleaseCapture();
-		while ( ShowCursor( TRUE ) < 0 )
-			;
+	//	while ( ShowCursor( TRUE ) < 0 )
+	//		;
 	}
 
 	void Init()
@@ -296,7 +299,7 @@ namespace input
 	//-------------------------------------------------------------------------------------------------
 	void Frame()
 	{
-		if ( !in_appactive )
+		if ( !sysIn.appactive )
 		{
 			DeactivateMouse();
 			return;
@@ -316,7 +319,7 @@ namespace input
 
 	void Activate( bool active )
 	{
-		in_appactive = active;
+		sysIn.appactive = active;
 	}
 
 	void SendQuitMessage()
@@ -407,7 +410,8 @@ LRESULT CALLBACK MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 	case WM_SIZE: [[fallthrough]];
 	case WM_MOVE:
-		GetWindowRect( hWnd, &window_rect );
+		GetClientRect( hWnd, &sysIn.window_rect );
+		MapWindowPoints( hWnd, nullptr, (LPPOINT)&sysIn.window_rect, 2 );
 		return 0;
 
 	case WM_CREATE:
@@ -463,6 +467,8 @@ LRESULT CALLBACK ChildWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	case WM_CREATE:
 		return DefWindowProcW( hWnd, uMsg, wParam, lParam );
 	case WM_DESTROY:
+		return DefWindowProcW( hWnd, uMsg, wParam, lParam );
+	case WM_DISPLAYCHANGE:
 		return DefWindowProcW( hWnd, uMsg, wParam, lParam );
 	}
 

@@ -193,15 +193,15 @@ static void CL_DeltaEntity( clSnapshot_t *frame, int newnum, entity_state_t *old
 	CL_ParseDelta( old, state, newnum, bits );
 
 	// some data changes will force no lerping
-	if ( state->modelindex != ent->current.modelindex
-		|| state->modelindex2 != ent->current.modelindex2
-		|| state->modelindex3 != ent->current.modelindex3
-		|| state->modelindex4 != ent->current.modelindex4
-		|| fabsf( state->origin[0] - ent->current.origin[0] ) > 512.0f
-		|| fabsf( state->origin[1] - ent->current.origin[1] ) > 512.0f
-		|| fabsf( state->origin[2] - ent->current.origin[2] ) > 512.0f
-		|| state->event == EV_PLAYER_TELEPORT
-		|| state->event == EV_OTHER_TELEPORT )
+	if ( state->modelindex != ent->current.modelindex   ||
+		 state->modelindex2 != ent->current.modelindex2 ||
+		 state->modelindex3 != ent->current.modelindex3 ||
+		 state->modelindex4 != ent->current.modelindex4 ||
+		 fabsf( state->origin[0] - ent->current.origin[0] ) > 256.0f ||
+		 fabsf( state->origin[1] - ent->current.origin[1] ) > 256.0f ||
+		 fabsf( state->origin[2] - ent->current.origin[2] ) > 256.0f ||
+		 state->event == EV_PLAYER_TELEPORT ||
+		 state->event == EV_OTHER_TELEPORT )
 	{
 		ent->serverframe = -99;
 	}
@@ -556,10 +556,7 @@ void CL_ParseFrame()
 	cl.frame.deltaframe = MSG_ReadLong( &net_message );
 	cl.frame.servertime = cl.frame.serverframe * 100;
 
-	// BIG HACK to let old demos continue to work
-	if ( cls.serverProtocol != 26 ) {
-		cl.surpressCount = MSG_ReadByte( &net_message );
-	}
+	cl.surpressCount = MSG_ReadByte( &net_message );
 
 	if ( cl_shownet->GetInt() == 3 ) {
 		Com_Printf( "   frame:%i  delta:%i\n", cl.frame.serverframe, cl.frame.deltaframe );
@@ -568,7 +565,7 @@ void CL_ParseFrame()
 	// If the frame is delta compressed from data that we
 	// no longer have available, we must suck up the rest of
 	// the frame, but not use it, then ask for a non-compressed
-	// message 
+	// message
 	if ( cl.frame.deltaframe <= 0 )
 	{
 		cl.frame.valid = true;		// uncompressed frame
@@ -665,25 +662,24 @@ void CL_ParseFrame()
 /*
 ========================
 CL_AddPacketEntities
+
+Add entities from our frame
 ========================
 */
 static void CL_AddPacketEntities( clSnapshot_t *frame )
 {
 	entity_t			ent;
 	entity_state_t *	s1;
-	float				autorotate;
 	int					i;
 	int					pnum;
 	centity_t *			cent;
-	int					autoanim;
 	clientinfo_t *		ci;
 	unsigned int		effects, renderfx;
 
 	// bonus items rotate at a fixed rate
-	autorotate = anglemod( static_cast<float>( cl.time / 10 ) );
-
+	const float autorotate = anglemod( static_cast<float>( cl.time / 10 ) );
 	// brush models can auto animate their frames
-	autoanim = 2 * MS2SEC( cl.time );
+	const int autoanim = 2 * MS2SEC( cl.time );
 
 	memset( &ent, 0, sizeof( ent ) );
 
@@ -1154,12 +1150,12 @@ static void CL_CalcViewModelLag( vec3_t origin, const vec3_t angles )
 
 /*
 ========================
-CL_AddViewWeapon
+CL_AddViewModel
 
 Adds the viewmodel entity
 ========================
 */
-static void CL_AddViewWeapon( player_state_t *ps, player_state_t *ops, float bob )
+static void CL_AddViewModel( player_state_t *ps, player_state_t *ops, float bob )
 {
 	entity_t view;
 
@@ -1338,13 +1334,14 @@ void CL_CalcViewValues()
 	}
 	ops = &oldframe->playerstate;
 
-#if 0	// SlartTodo: should be /= 8 right? This is fine at 256 but Q3 doesn't do this
-	// see if the player entity was teleported this frame
-	if ( fabs( ops->pmove.origin[0] - ps->pmove.origin[0] ) > 256.0f
-		|| fabs( ops->pmove.origin[1] - ps->pmove.origin[1] ) > 256.0f
-		|| fabs( ops->pmove.origin[2] - ps->pmove.origin[2] ) > 256.0f )
-		ops = ps;		// don't interpolate
-#endif
+	// If we have moved a large distance this frame, don't interpolate,
+	// we've probably been teleported or something
+	if ( fabsf( ops->pmove.origin[0] - ps->pmove.origin[0] ) > 256.0f ||
+		 fabsf( ops->pmove.origin[1] - ps->pmove.origin[1] ) > 256.0f ||
+		 fabsf( ops->pmove.origin[2] - ps->pmove.origin[2] ) > 256.0f )
+	{
+		ops = ps;
+	}
 
 	ent = &cl_entities[cl.playernum + 1];
 	lerp = cl.lerpfrac;
@@ -1422,8 +1419,8 @@ void CL_CalcViewValues()
 		cl.refdef.blend[i] = ps->blend[i];
 	}
 
-	// add the weapon
-	CL_AddViewWeapon( ps, ops, bob );
+	// add the viewmodel
+	CL_AddViewModel( ps, ops, bob );
 }
 
 /*
@@ -1486,14 +1483,16 @@ Called to get the sound spatialization origin
 */
 void CL_GetEntitySoundOrigin( int ent, vec3_t org )
 {
-	centity_t *old;
+	centity_t *cent;
 
 	if ( ent < 0 || ent >= MAX_EDICTS ) {
+		// TODO: Make this survivable?
 		Com_Error( "CL_GetEntitySoundOrigin: bad ent" );
 	}
 
-	old = &cl_entities[ent];
-	VectorCopy( old->lerp_origin, org );
+	cent = cl_entities + ent;
+	VectorCopy( cent->lerp_origin, org );
 
 	// FIXME: bmodel issues...
+	// TODO: What does the message above mean?
 }
