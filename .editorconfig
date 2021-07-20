@@ -1,0 +1,8 @@
+# This file is here so GitHub uses 4-space tabs...
+
+root = true
+
+[*.{c++,cc,cpp,cppm,cxx,h,h++,hh,hpp,hxx,inl,ipp,ixx,tlh,tli}]
+
+indent_style = tab
+indent_size = 4
