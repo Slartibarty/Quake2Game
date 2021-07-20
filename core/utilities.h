@@ -10,6 +10,8 @@
 
 #include "sys_types.h"
 
+#define BIT( num )		( 1 << ( num ) )
+
 template< typename T >
 inline constexpr T Min( const T valMin, const T valMax ) {
 	return valMin < valMax ? valMin : valMax;

@@ -28,6 +28,7 @@ static_assert( DIRECTX_MATH_VERSION >= 316 );
 //=============================================================================
 
 #include "gl_model.h"
+#include "gl_jaffamodel.h"
 
 #define BACKFACE_EPSILON	0.01f
 
@@ -399,7 +400,6 @@ void	R_MarkLeaves();
 */
 
 void	R_DrawAliasModel( entity_t *e );
-void	R_DrawStudioModel( entity_t *e );
 void	R_DrawStaticMeshFile( entity_t *e );
 
 /*

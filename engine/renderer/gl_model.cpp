@@ -15,7 +15,6 @@ model_t *loadmodel;
 
 void Mod_LoadBrushModel( model_t *pMod, void *pBuffer, int bufferLength );
 void Mod_LoadAliasModel( model_t *pMod, void *pBuffer, int bufferLength );
-void Mod_LoadStudioModel( model_t *pMod, void *pBuffer, int bufferLength );
 void Mod_LoadSMFModel( model_t *pMod, void *pBuffer, int bufferLength );
 void Mod_LoadSpriteModel( model_t *pMod, void *pBuffer, int bufferLength );
 
@@ -250,11 +249,6 @@ model_t *Mod_ForName( const char *name, bool crash )
 	case IDALIASHEADER:
 		loadmodel->extradata = Hunk_Begin( 0x200000 );
 		Mod_LoadAliasModel( pMod, pBuffer, bufferLength );
-		break;
-
-	case IDSTUDIOHEADER:
-		loadmodel->extradata = Hunk_Begin( 0x400000 );
-		Mod_LoadStudioModel( pMod, pBuffer, bufferLength );
 		break;
 
 	case IDSPRITEHEADER:
@@ -1158,49 +1152,6 @@ void Mod_LoadAliasModel( model_t *pMod, void *pBuffer, int bufferLength )
 	pMod->maxs[0] = 32;
 	pMod->maxs[1] = 32;
 	pMod->maxs[2] = 32;
-}
-
-/*
-===================================================================================================
-
-	Studio models
-
-===================================================================================================
-*/
-
-/*
-========================
-Mod_LoadStudioModel
-========================
-*/
-void Mod_LoadStudioModel( model_t *pMod, void *pBuffer, int bufferLength )
-{
-	int					i;
-	studiohdr_t			*phdr;
-	mstudiotexture_t	*ptexture;
-
-	phdr = (studiohdr_t *)Hunk_Alloc( bufferLength );
-	memcpy( phdr, pBuffer, bufferLength ); // Don't bother with swapping
-
-	assert( phdr->numtextures <= MAX_MD2SKINS );
-
-	if ( phdr->textureindex != 0 )
-	{
-		ptexture = (mstudiotexture_t *)( (byte *)phdr + phdr->textureindex );
-
-		for ( i = 0; i < phdr->numtextures; ++i )
-		{
-			// strcpy( name, mod->name );
-			// strcpy( name, ptexture[i].name );
-			pMod->skins[i] = defaultMaterial;
-			ptexture[i].index = pMod->skins[i]->image->texnum;
-		}
-	}
-
-	pMod->type = mod_studio;
-
-	VectorCopy( phdr->min, pMod->mins );
-	VectorCopy( phdr->max, pMod->maxs );
 }
 
 /*

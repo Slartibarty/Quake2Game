@@ -331,9 +331,6 @@ static void R_DrawEntity( entity_t *e )
 		case mod_alias:
 			R_DrawAliasModel( e );
 			break;
-		case mod_studio:
-			R_DrawStudioModel( e );
-			break;
 		case mod_brush:
 			R_DrawBrushModel( e );
 			break;

@@ -12,7 +12,9 @@
 #define	MAX_TOKEN_CHARS		128		// max length of an individual token
 
 // TODO: Bump me up! 64 is not enough
+// TODO: These are both the same thing, replace QPATH or make assetpath QPATH
 #define	MAX_QPATH			64		// max length of a relative mod path, IE: ("models/alien.smf")
+#define MAX_ASSETPATH		128		// max length of a mod assetname, IE: ("models/devtest/alyx.smf")
 
 #ifdef countof
 #error countf was previously defined by another library
