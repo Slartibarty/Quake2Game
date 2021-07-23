@@ -215,7 +215,7 @@ namespace img
 	static void LoadPNG_WarningCallback( png_structp png_ptr, png_const_charp msg )
 	{
 		// Warnings are not so bad and should only be seen by devs
-		Com_DPrintf( "PNG load warning: %s\n", msg );
+		Com_DPrintf( "PNG load warning: %s\n\n", msg );
 	}
 
 	byte *LoadPNG( byte *buf, int &width, int &height )

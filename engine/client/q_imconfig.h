@@ -11,7 +11,7 @@
 
 #include "../../core/core.h"
 
-#include "../shared/filesystem.h"
+#include "../../common/filesystem_interface.h"
 
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 
@@ -22,7 +22,7 @@
 #define IMGUI_STB_RECT_PACK_FILENAME	"stb_rect_pack.h"
 
 #ifdef Q_RETAIL
-#define IMGUI_DISABLE_DEMO_WINDOWS
+//#define IMGUI_DISABLE_DEMO_WINDOWS
 #endif
 
 #ifdef Q_DEBUG

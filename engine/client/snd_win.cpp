@@ -262,8 +262,6 @@ bool SNDDMA_Init()
 	memset( &dma, 0, sizeof( dma ) );
 	dsound_init = false;
 
-	CoInitializeEx( nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE );
-
 	if ( !SNDDMA_InitDS() )
 	{
 		CoUninitialize();
@@ -306,8 +304,6 @@ void SNDDMA_Shutdown()
 
 		Com_DPrint( "...releasing DS object\n" );
 		pDS->Release();
-
-		CoUninitialize();
 	}
 
 	pDS = nullptr;

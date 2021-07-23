@@ -51,7 +51,7 @@ void Draw_Init()
 	s_drawChars = GL_FindMaterial( ConCharsName, true );
 	if ( !s_drawChars->IsOkay() ) {
 		// we NEED the console font
-		Com_FatalErrorf( "Could not find font: %s", ConCharsName );
+		Com_FatalErrorf( "Could not find font: %s\n", ConCharsName );
 	}
 
 	// reserve 64 draw commands

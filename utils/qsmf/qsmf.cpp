@@ -218,7 +218,7 @@ static void AddSkeletonContribution( FbxNode *pNode, std::vector<fmtJMDL::bone_t
 		{
 			if ( i == (int32)( bones.size() - 1 ) )
 			{
-				Com_FatalError( "Error: Catastrophic failure\n" );
+				Com_FatalError( "Error: Catastrophic failure" );
 			}
 			if ( Q_strcmp( bones[i].name, pParent->GetName() ) == 0 )
 			{

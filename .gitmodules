@@ -26,3 +26,6 @@
 [submodule "thirdparty/freetype"]
 	path = thirdparty/freetype
 	url = https://gitlab.freedesktop.org/freetype/freetype.git
+[submodule "thirdparty/rapidjson"]
+	path = thirdparty/rapidjson
+	url = https://github.com/Tencent/rapidjson.git

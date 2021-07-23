@@ -58,7 +58,7 @@ threadHandle_t Sys_CreateThread( xthread_t function, void *parms, xthreadPriorit
 
 	HANDLE handle = CreateThread( nullptr, stackSize, (LPTHREAD_START_ROUTINE)function, parms, flags, nullptr );
 	if ( !handle ) {
-		Com_FatalErrorf( "Sys_CreateThread error: %u", GetLastError() );
+		Com_FatalErrorf( "Sys_CreateThread error: %u\n", GetLastError() );
 	}
 
 	Sys_SetThreadName( handle, name );

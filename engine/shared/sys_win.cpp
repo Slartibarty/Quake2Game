@@ -31,6 +31,8 @@ char	**g_argv;
 ===================================================================================================
 */
 
+// MSDN says OutputDebugStringW converts the unicode string to the system codepage
+// So just directly use the A version
 void Sys_OutputDebugString( const char *msg )
 {
 	if ( IsDebuggerPresent() )
@@ -42,15 +44,27 @@ void Sys_OutputDebugString( const char *msg )
 [[noreturn]]
 void Sys_Error( const char *msg )
 {
+	// Trim the newline
+	char newMsg[MAX_PRINT_MSG];
+	Q_strcpy_s( newMsg, msg );
+	char *lastNewline = newMsg + strlen( newMsg ) - 1;
+	if ( *lastNewline == '\n' )
+	{
+		*lastNewline = '\0';
+	}
+
+	// Use old msg, we need the newline
 	Sys_OutputDebugString( msg );
 
 	wchar_t reason[MAX_PRINT_MSG];
-	Str_Widen( msg, reason, countof( reason ) );
+	Sys_UTF8ToUTF16( newMsg, Q_strlen( newMsg ) + 1, reason, countof( reason ) );
+
+	const platChar_t *windowTitle = FileSystem::ModInfo::GetWindowTitle();
 
 	TaskDialog(
 		nullptr,
 		nullptr,
-		L"JaffaQuake",
+		windowTitle,
 		L"Engine Error",
 		reason,
 		TDCBF_OK_BUTTON,
@@ -82,10 +96,12 @@ void Sys_CopyProtect()
 
 void Sys_Init()
 {
+	CoInitializeEx( nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE );
+
 	if ( dedicated->GetBool() )
 	{
 		if ( !AllocConsole() ) {
-			Com_FatalError( "Couldn't create dedicated server console" );
+			Com_FatalError( "Couldn't create dedicated server console\n" );
 		}
 		hinput = GetStdHandle( STD_INPUT_HANDLE );
 		houtput = GetStdHandle( STD_OUTPUT_HANDLE );
@@ -104,6 +120,8 @@ void Sys_Shutdown()
 		// shut down QHOST hooks if necessary
 		DeinitConProc();
 	}
+
+	CoUninitialize();
 }
 
 static char	console_text[256];
@@ -121,16 +139,16 @@ char *Sys_ConsoleInput()
 	for ( ;; )
 	{
 		if (!GetNumberOfConsoleInputEvents (hinput, &numevents))
-			Com_FatalErrorf("Error getting # of console events");
+			Com_FatalErrorf("Error getting # of console events\n");
 
 		if (numevents == 0)
 			break;
 
 		if (!ReadConsoleInput(hinput, &recs, 1, &numread))
-			Com_FatalErrorf("Error reading console input");
+			Com_FatalErrorf("Error reading console input\n");
 
 		if (numread != 1)
-			Com_FatalErrorf("Couldn't read console input");
+			Com_FatalErrorf("Couldn't read console input\n");
 
 		if (recs.EventType == KEY_EVENT)
 		{
@@ -469,7 +487,7 @@ static HINSTANCE cgame_library;
 void Sys_UnloadGame()
 {
 	if ( !FreeLibrary( game_library ) ) {
-		Com_FatalError( "FreeLibrary failed for game library" );
+		Com_FatalError( "FreeLibrary failed for game library\n" );
 	}
 	game_library = nullptr;
 }
@@ -477,7 +495,7 @@ void Sys_UnloadGame()
 void Sys_UnloadCGame()
 {
 	if ( !FreeLibrary( cgame_library ) ) {
-		Com_FatalError( "FreeLibrary failed for cgame library" );
+		Com_FatalError( "FreeLibrary failed for cgame library\n" );
 	}
 	cgame_library = nullptr;
 }
@@ -487,7 +505,7 @@ typedef void *( *GetAPI_t ) ( void * );
 static void *Sys_GetAPI( void *parms, HINSTANCE &instance, const char *gamename, const char *procname )
 {
 	if ( instance ) {
-		Com_FatalError( "Sys_GetAPI without Sys_Unload(C)Game" );
+		Com_FatalError( "Sys_GetAPI without Sys_Unload(C)Game\n" );
 	}
 
 	char fullPath[MAX_OSPATH];

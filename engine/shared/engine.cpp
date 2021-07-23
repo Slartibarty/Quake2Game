@@ -7,7 +7,6 @@
 #include <csetjmp>
 
 extern void SCR_EndLoadingPlaque( void );
-// This should really be in common? It's not part of the client? Or is it? huh? what. ???
 extern void Key_Init();
 extern void Key_Shutdown();
 
@@ -216,7 +215,7 @@ void Com_Error( const char *msg )
 	{
 		// This is should never happen
 		// in fact this string should be optimised away if everything goes to plan
-		Com_FatalError( "recursive error, tell a developer!" );
+		Com_FatalError( "Recursive error, tell a developer!\n" );
 	}
 
 	recursive = true;
@@ -257,7 +256,7 @@ Kills the server, kills the client, shuts the engine down and quits the program
 [[noreturn]]
 void Com_FatalError( const char *msg )
 {
-	SV_Shutdown( va( S_COLOR_RED "Server fatal crashed: %s\n", msg ), false );
+	SV_Shutdown( va( S_COLOR_RED "Server fatal crashed: %s", msg ), false );
 	CL_Shutdown();
 	Com_Shutdown();
 

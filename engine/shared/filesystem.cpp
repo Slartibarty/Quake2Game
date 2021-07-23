@@ -20,6 +20,8 @@
 
 #include "engine.h"
 
+#include "rapidjson/document.h"
+
 #ifdef _WIN32
 #include "../../core/sys_includes.h"
 #include <ShlObj.h>
@@ -35,8 +37,13 @@ CFileSystem g_fileSystem;
 namespace FileSystem
 {
 
-// I wear a huge trollface upon my head
-static constexpr auto SaveFolderName = "Freeze Team/Project Moon";
+namespace ModInfo
+{
+static void ParseModInfo();
+}
+
+#define MODINFO_NAME		"modinfo.json"
+#define SAVEFOLDER_NAME		"Freeze Team/Project Moon"
 
 static cvar_t *fs_production;
 static cvar_t *fs_debug;
@@ -78,7 +85,7 @@ static void SetWriteDirectory()
 		WideCharToMultiByte( CP_UTF8, 0, savedGames, static_cast<int>( wcslen( savedGames ) + 1 ), fullPath, sizeof( fullPath ), nullptr, nullptr );
 		fullPath[MAX_OSPATH - 1] = '\0';
 		Str_FixSlashes( fullPath );
-		Q_sprintf_s( fs.writeDir, "%s/%s", fullPath, SaveFolderName );
+		Q_sprintf_s( fs.writeDir, "%s/%s", fullPath, SAVEFOLDER_NAME );
 		CoTaskMemFree( savedGames );
 	}
 	else
@@ -115,7 +122,6 @@ static void SetContentDirectory()
 	strlen_t sizeAfter = sizeof( fs.contentDir ) - ( copyZone - fs.contentDir );
 
 	Q_strcpy_s( copyZone, sizeAfter, "content" );
-
 }
 
 // Does all the grunt work related to adding a new game directory (finding packs, etc)
@@ -159,10 +165,20 @@ void Init()
 	// This needs to be refactored in the future to use modinfos.
 	// The write directory takes presedence for searches
 
-	// 2. Add the game/mod directory
+	// Third priority, additional game dirs specified by the modinfo
+	ModInfo::ParseModInfo();
+
+	// Second priority, Add the game/mod directory
 	AddSearchPath( fs.gameDir, fs.modDir );
-	// 1. Add the write/mod directory
+
+	// First priority, Add the write/mod directory
 	AddSearchPath( fs.writeDir, fs.modDir );
+
+	Com_Print( "Search paths:\n" );
+	for ( searchPath_t *pSP = fs.searchPaths; pSP; pSP = pSP->pNext )
+	{
+		Com_Printf( "  %s\n", pSP->dirName );
+	}
 
 	Com_Print( "FileSystem initialized\n" "-----------------------------------------\n\n" );
 }
@@ -584,5 +600,106 @@ bool FindPhysicalFile( const char *filename, char *buffer, strlen_t bufferSize, 
 	}
 	}
 }
+
+// Modinfo is a subsystem of the filesystem, since they're inherently closely related
+namespace ModInfo
+{
+
+static struct modInfo_t
+{
+	char gameTitle[64];				// The game title
+	platChar_t windowTitle[64];		// The title created windows will have
+
+	rapidjson::Document doc;
+} modInfo;
+
+static void ParseModInfo()
+{
+	using namespace rapidjson;
+
+	char fullPath[MAX_OSPATH];
+	Q_sprintf_s( fullPath, "%s/%s/%s", fs.gameDir, fs.modDir, MODINFO_NAME );
+
+	// Search paths aren't initialised yet, so we need to use low-level functions
+	fsHandle_t handle = reinterpret_cast<fsHandle_t>( fopen( fullPath, "rb" ) );
+	if ( !handle ) {
+		Com_FatalErrorf( "The primary mod (\"%s\") does not contain a " MODINFO_NAME "\n", fs.modDir);
+		return;
+	}
+	int length = GetFileSize( handle );
+	if ( length == 0 ) {
+		Com_FatalErrorf( "The primary mod (\"%s\") contains an empty " MODINFO_NAME "\n", fs.modDir);
+		CloseFile( handle );
+		return;
+	}
+	void *pData = Mem_Alloc( length );
+	ReadFile( pData, length, handle );
+	CloseFile( handle );
+
+	Com_Printf( "Parsing %s/%s\n", fs.modDir, MODINFO_NAME );
+
+	modInfo.doc.Parse( (char *)pData, length );
+	FileSystem::FreeFile( pData );
+	if ( modInfo.doc.HasParseError() || !modInfo.doc.IsObject() ) {
+		Com_FatalErrorf( "Failed to parse %s/%s\n", fs.modDir, MODINFO_NAME );
+		return;
+	}
+
+	Value::ConstMemberIterator member;
+
+	// More than one subsystem needs the information here, so just store it in the filesystem
+
+	member = modInfo.doc.FindMember( "GameTitle" );
+	if ( member != modInfo.doc.MemberEnd() && member->value.IsString() )
+	{
+		const char *str = member->value.GetString();
+		Q_strcpy_s( modInfo.gameTitle, str );
+	}
+
+	member = modInfo.doc.FindMember( "WindowTitle" );
+	if ( member != modInfo.doc.MemberEnd() && member->value.IsString() )
+	{
+#ifdef _WIN32
+		Sys_UTF8ToUTF16( member->value.GetString(), member->value.GetStringLength() + 1, modInfo.windowTitle, countof( modInfo.windowTitle ) );
+#else
+		Q_strcpy_s( modInfo.gameTitle, member->value.GetString() );
+#endif
+	}
+
+	member = modInfo.doc.FindMember( "FileSystem" );
+	if ( member != modInfo.doc.MemberEnd() && member->value.IsObject() )
+	{
+		Value::ConstMemberIterator searchPaths = member->value.FindMember( "SearchPaths" );
+		if ( searchPaths != modInfo.doc.MemberEnd() && searchPaths->value.IsArray() )
+		{
+			Value::ConstArray arr = searchPaths->value.GetArray();
+
+			for ( SizeType i = 0; i < arr.Size(); ++i )
+			{
+				const char *str = arr[i].GetString();
+
+				AddSearchPath( fs.gameDir, str );
+			}
+		}
+	}
+
+}
+
+const char *GetGameTitle()
+{
+	return modInfo.gameTitle;
+}
+
+const platChar_t *GetWindowTitle()
+{
+	return modInfo.windowTitle;
+}
+
+void *GetModInfoDocument()
+{
+	return reinterpret_cast<void *>( &modInfo.doc );
+}
+
+} // namespace ModInfo
 
 } // namespace FileSystem

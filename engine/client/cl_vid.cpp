@@ -60,7 +60,7 @@ VID_LoadRefresh
 static bool VID_LoadRefresh()
 {
 	if ( s_rendererActive ) {
-		Com_FatalError( "Tried to initialise the renderer twice!" );
+		Com_FatalError( "Tried to initialise the renderer twice!\n" );
 	}
 
 	if ( !R_Init() )
@@ -90,7 +90,7 @@ void VID_Init()
 
 	if ( !VID_LoadRefresh() )
 	{
-		Com_FatalError( "Couldn't load renderer!" );
+		Com_FatalError( "Couldn't load renderer!\n" );
 	}
 
 	cls.disable_screen = 0.0f;

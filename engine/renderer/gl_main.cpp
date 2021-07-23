@@ -870,7 +870,7 @@ static void R_SetMode()
 			// try setting it back to something safe
 			if ( GLimp_SetMode( vid.width, vid.height, glState.prev_mode, false ) == false )
 			{
-				Com_FatalError( "R_SetMode: could not revert to safe mode" );
+				Com_FatalError( "R_SetMode: could not revert to safe mode\n" );
 			}
 		}
 	}

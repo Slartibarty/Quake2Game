@@ -6,8 +6,6 @@
 	FIXME: you can only browse history after you've submitted something, this is due to the
 	placement of con.completionPopup after Con2_Submit
 
-	TODO: add a space after scrolling through the completion popup
-	it's very convenient not having to press space, watch for gotchas
 	TODO: Command aliases are not considered
 
 ===================================================================================================
@@ -30,6 +28,7 @@ namespace UI::Console
 #define MAX_NOTIFIES	8			// should be a cvar
 
 static constexpr uint32 CmdColor	= colors::green;
+static constexpr uint32 aliasColor	= colors::purple;	// Not implemented
 
 static cvar_t *con_notifyTime;
 static cvar_t *con_drawNotify;
@@ -166,6 +165,7 @@ static int TextEditCallback( ImGuiInputTextCallbackData *data )
 			// replace entire buffer
 			data->DeleteChars( 0, data->BufTextLen );
 			data->InsertChars( data->CursorPos, cmd );
+			data->InsertChars( data->CursorPos, " " );
 		}
 	}
 	break;
@@ -197,9 +197,19 @@ static int TextEditCallback( ImGuiInputTextCallbackData *data )
 				break;
 			}
 
-			const char *match_str = con.completionPosition >= 0 ? con.entryMatches[con.completionPosition].data() : "";
 			data->DeleteChars( 0, data->BufTextLen );
-			data->InsertChars( data->CursorPos, match_str );
+			const char *match_str = con.completionPosition >= 0 ? con.entryMatches[con.completionPosition].data() : "";
+			if ( match_str[0] != '\0' )
+			{
+				strlen_t match_len = Q_strlen( match_str );
+				assert( match_len > 0 );
+				data->InsertChars( data->CursorPos, match_str, match_str + match_len );
+				// If we don't already end with a space, add one to ease typing numbers
+				if ( match_str[match_len - 1] != ' ' )
+				{
+					data->InsertChars( data->CursorPos, " " );
+				}
+			}
 		}
 		else if ( !con.historyLines.empty() )
 		{
@@ -671,9 +681,7 @@ void ShowConsole( bool *pOpen )
 			RegenerateMatches( con.editLine.data );
 		}
 
-		const uint totalMatches = static_cast<uint>( con.entryMatches.size() );
-
-		if ( totalMatches != 0 )
+		if ( con.entryMatches.size() != 0 )
 		{
 			ImGui::SetNextWindowPos( popupPosition );
 

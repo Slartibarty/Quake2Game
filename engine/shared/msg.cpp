@@ -200,6 +200,11 @@ void MSG_WriteDir (sizebuf_t *sb, vec3_t dir)
 	}
 	MSG_WriteByte (sb, best);
 #else
+	if ( !dir ) {
+		// Eventually weed out all the code that does this...
+		return;
+	}
+
 	MSG_WritePos( sb, dir );
 #endif
 }
@@ -233,9 +238,9 @@ void MSG_WriteDeltaEntity (entity_state_t *from, entity_state_t *to, sizebuf_t *
 	int		bits;
 
 	if (!to->number)
-		Com_FatalErrorf("Unset entity number");
+		Com_FatalError("Unset entity number\n");
 	if (to->number >= MAX_EDICTS)
-		Com_FatalErrorf("Entity number >= MAX_EDICTS");
+		Com_FatalError("Entity number >= MAX_EDICTS\n");
 
 // send an update
 	bits = 0;

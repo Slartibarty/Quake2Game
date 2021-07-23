@@ -353,20 +353,18 @@ LRESULT CALLBACK MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		// Now read into the buffer
 		GetRawInputData( (HRAWINPUT)lParam, RID_INPUT, &raw, &dwSize, sizeof( RAWINPUTHEADER ) );
 
-		ImGuiIO &io = ImGui::GetIO();
-
 		// if imgui is focused, we should not send keyboard input to the game
 		switch ( raw.header.dwType )
 		{
 		case RIM_TYPEKEYBOARD:
 			HandleKeyboardInput_ImGui( raw.data.keyboard );
-			if ( !io.WantCaptureKeyboard ) {
+			if ( !SCR_IsDevUIOpen() ) {
 				HandleKeyboardInput( raw.data.keyboard );
 			}
 			break;
 		case RIM_TYPEMOUSE:
 			HandleMouseInput_ImGui( raw.data.mouse );
-			if ( !io.WantCaptureMouse ) {
+			if ( !SCR_IsDevUIOpen() ) {
 				HandleMouseInput( raw.data.mouse );
 			}
 			break;
@@ -416,6 +414,10 @@ LRESULT CALLBACK MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 	case WM_CREATE:
 		cl_hwnd = hWnd;
+		return 0;
+
+	case WM_CLOSE:
+		PostQuitMessage( 0 );
 		return 0;
 
 		// DefWindowProc calls this after WM_CLOSE

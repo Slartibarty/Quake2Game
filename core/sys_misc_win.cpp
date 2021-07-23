@@ -34,7 +34,7 @@ void *Hunk_Begin( size_t maxSize )
 	memBase = VirtualAlloc( nullptr, maxSize, MEM_RESERVE, PAGE_NOACCESS );
 
 	if ( !memBase ) {
-		Com_FatalError( "VirtualAlloc reserve failed" );
+		Com_FatalError( "VirtualAlloc reserve failed\n" );
 	}
 
 	return memBase;
@@ -53,12 +53,12 @@ void *Hunk_Alloc( size_t size )
 	{
 		// leaks memory
 		FormatMessageA( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, nullptr, GetLastError(), MAKELANGID( LANG_NEUTRAL, SUBLANG_DEFAULT ), (LPSTR)&buf, 0, nullptr );
-		Com_FatalErrorf( "VirtualAlloc commit failed\n%s", (char *)buf );
+		Com_FatalErrorf( "VirtualAlloc commit failed\n%s\n", (char *)buf );
 	}
 
 	curSize += size;
 	if ( curSize > hunkMaxSize ) {
-		Com_FatalError( "Hunk_Alloc overflow" );
+		Com_FatalError( "Hunk_Alloc overflow\n" );
 	}
 
 	return (void *)( (byte *)memBase + curSize - size );
@@ -73,7 +73,7 @@ size_t Hunk_End()
 	// write protect it
 	buf = VirtualAlloc( membase, cursize, MEM_COMMIT, PAGE_READONLY );
 	if ( !buf )
-		Com_FatalErrorf( "VirtualAlloc commit failed" );
+		Com_FatalErrorf( "VirtualAlloc commit failed\n" );
 #endif
 
 	++hunkCount;
@@ -125,6 +125,15 @@ void Sys_GetWorkingDirectory( char *path, uint length )
 {
 	GetCurrentDirectoryA( length, path );
 	Str_FixSlashes( path );
+}
+
+// I hate this
+void Sys_UTF8ToUTF16( const char *pIn, strlen_t inSizeInChars, wchar_t *pOut, strlen_t outSizeInChars )
+{
+	// When MultiByteToWideChar runs out of space, it explodes and fails and spits out errors and whatever
+	// so we set the last byte of the outbuffer to null. This is sad.
+	MultiByteToWideChar( CP_UTF8, 0, pIn, inSizeInChars, pOut, outSizeInChars );
+	pOut[outSizeInChars - 1] = L'\0';
 }
 
 /*
@@ -255,7 +264,7 @@ char *Sys_FindFirst (const char *path, unsigned musthave, unsigned canthave )
 	struct _finddata_t findinfo;
 
 	if (findhandle)
-		Com_FatalErrorf("Sys_BeginFind without close");
+		Com_FatalErrorf("Sys_BeginFind without close\n");
 	findhandle = 0;
 
 	COM_FilePath (path, findbase);

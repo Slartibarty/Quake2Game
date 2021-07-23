@@ -102,7 +102,7 @@ void M_PushMenu ( void (*draw) (void), const char *(*key) (int k) )
 	if (i == m_menudepth)
 	{
 		if (m_menudepth >= MAX_MENU_DEPTH)
-			Com_FatalErrorf("M_PushMenu: MAX_MENU_DEPTH");
+			Com_FatalError("M_PushMenu: MAX_MENU_DEPTH\n");
 		m_layers[m_menudepth].draw = m_drawfunc;
 		m_layers[m_menudepth].key = m_keyfunc;
 		m_menudepth++;
@@ -130,7 +130,7 @@ void M_PopMenu (void)
 {
 	S_StartLocalSound( menu_out_sound );
 	if (m_menudepth < 1)
-		Com_FatalErrorf("M_PopMenu: depth < 1");
+		Com_FatalError("M_PopMenu: depth < 1\n");
 	m_menudepth--;
 
 	m_drawfunc = m_layers[m_menudepth].draw;

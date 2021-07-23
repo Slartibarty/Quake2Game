@@ -66,6 +66,7 @@ static struct screenGlobals_t
 	bool	ui_devui;
 	bool	ui_showDemo;
 	bool	ui_console;
+	bool	ui_mapEdit;
 	bool	ui_matEdit;
 	bool	ui_stats;
 	bool	ui_mdlviewer;
@@ -415,6 +416,12 @@ static bool SCR_InitImGui()
 
 static void SCR_ShutdownImGui()
 {
+	if ( !ImGui::GetCurrentContext() )
+	{
+		// we never reached SCR_InitImGui
+		return;
+	}
+
 	ImGui_ImplOpenGL3_Shutdown();
 	qImGui::OSImp_Shutdown();
 	ImGui::DestroyContext();
@@ -566,6 +573,7 @@ static void SCR_DrawDevMenu()
 		{
 			ImGui::MenuItem( "Demo", nullptr, &scr.ui_showDemo );
 			ImGui::MenuItem( "Console", nullptr, &scr.ui_console );
+			ImGui::MenuItem( "Map Editor", nullptr, &scr.ui_mapEdit );
 			ImGui::MenuItem( "Material Editor", nullptr, &scr.ui_matEdit );
 			ImGui::MenuItem( "Model Viewer", nullptr, &scr.ui_mdlviewer );
 
@@ -573,6 +581,10 @@ static void SCR_DrawDevMenu()
 		}
 		ImGui::EndMainMenuBar();
 	}
+
+	// TODO: DOESN't WORK1
+	ImGui::SetNextWindowBgAlpha( 0.25f );
+	ImGui::DockSpaceOverViewport( ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode );
 }
 
 //=================================================================================================
@@ -638,6 +650,10 @@ static void SCR_DrawImGui()
 
 		if ( scr.ui_console ) {
 			UI::Console::ShowConsole( &scr.ui_console );
+		}
+
+		if ( scr.ui_mapEdit ) {
+			UI::MapEdit::ShowMapEditor( &scr.ui_mapEdit );
 		}
 
 		if ( scr.ui_matEdit ) {
@@ -761,6 +777,11 @@ void SCR_TimeRefresh_f()
 	double time = end - start;
 
 	Com_Printf( "%g seconds (%g fps)\n", time, 128.0 / time );
+}
+
+bool SCR_IsDevUIOpen()
+{
+	return scr.ui_devui;
 }
 
 //=================================================================================================

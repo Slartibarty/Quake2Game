@@ -181,7 +181,7 @@ void SV_Multicast( vec3_t origin, multicast_t to )
 
 	default:
 		mask = nullptr;
-		Com_FatalErrorf( "SV_Multicast: bad to:%i", to );
+		Com_FatalErrorf( "SV_Multicast: bad to:%i\n", to );
 	}
 
 	// send the data to all relevent clients
@@ -255,18 +255,18 @@ void SV_StartSound( vec3_t origin, edict_t *entity, int channel,
 	vec3_t		origin_v;
 
 	if ( volume < 0.0f || volume > 1.0f ) {
-		Com_FatalErrorf( "SV_StartSound: volume = %f", volume );
+		Com_FatalErrorf( "SV_StartSound: volume = %f\n", volume );
 	}
 
 	if ( attenuation < 0.0f || attenuation > 4.0f ) {
-		Com_FatalErrorf( "SV_StartSound: attenuation = %f", attenuation );
+		Com_FatalErrorf( "SV_StartSound: attenuation = %f\n", attenuation );
 	}
 
 //	if (channel < 0 || channel > 15)
-//		Com_FatalErrorf("SV_StartSound: channel = %i", channel);
+//		Com_FatalErrorf("SV_StartSound: channel = %i\n", channel);
 
 	if ( timeofs < 0.0f || timeofs > 0.255f ) {
-		Com_FatalErrorf( "SV_StartSound: timeofs = %f", timeofs );
+		Com_FatalErrorf( "SV_StartSound: timeofs = %f\n", timeofs );
 	}
 
 	ent = NUM_FOR_EDICT( entity );

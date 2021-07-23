@@ -463,7 +463,7 @@ static int SV_HullForEntity (edict_t *ent)
 		model = sv.models[ ent->s.modelindex ];
 
 		if (!model)
-			Com_FatalErrorf("MOVETYPE_PUSH with a non bsp model");
+			Com_FatalError("MOVETYPE_PUSH with a non bsp model\n");
 
 		return model->headnode;
 	}

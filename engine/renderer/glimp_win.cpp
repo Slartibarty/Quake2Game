@@ -139,7 +139,6 @@ static void GLimp_DestroyDummyWindow( DummyVars &dvars )
 ===================================================================================================
 */
 
-static constexpr auto	WINDOW_TITLE = L"JaffaQuake";
 static constexpr auto	WINDOW_CLASS_NAME = L"Q2GAME";
 static constexpr DWORD	WINDOW_STYLE = ( WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX );
 
@@ -366,10 +365,12 @@ static void GLimp_CreateWindow( WNDPROC wndproc, int width, int height, bool ful
 	RECT r{ 0, 0, width, height };
 	AdjustWindowRectEx( &r, dwStyle, false, dwExStyle );
 
+	const platChar_t *windowTitle = FileSystem::ModInfo::GetWindowTitle();
+
 	s_glwState.hWnd = CreateWindowExW(
 		dwExStyle,				// Ex-Style
 		WINDOW_CLASS_NAME,		// Window class
-		WINDOW_TITLE,			// Window title
+		windowTitle,			// Window title
 		dwStyle,				// Window style
 		xPos,					// X pos
 		yPos,					// Y pos (Calls ShowWindow if WS_VISIBLE is set)

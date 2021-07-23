@@ -400,6 +400,7 @@ void CL_AddNetgraph();
 void SCR_TouchPics();
 
 void SCR_ToggleDevUI();
+bool SCR_IsDevUIOpen();
 
 //
 // cl_cin
@@ -502,6 +503,17 @@ namespace UI::Console
 	void ClearNotify();
 
 	void Print( const char *txt );
+}
+
+/*
+=======================================
+	Map Editor
+=======================================
+*/
+
+namespace UI::MapEdit
+{
+	void ShowMapEditor( bool *pOpen );
 }
 
 /*

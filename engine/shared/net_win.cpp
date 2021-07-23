@@ -453,7 +453,7 @@ void NET_SendPacket( netsrc_t sock, int length, const void *data, const netadr_t
 		}
 		break;
 	default:
-		Com_FatalError( "NET_SendPacket: bad address type" );
+		Com_FatalError( "NET_SendPacket: bad address type\n" );
 	}
 
 	NET_NetadrToSockadr( &to, &addr );
@@ -578,7 +578,7 @@ static void NET_OpenIP()
 		}
 		ip_sockets[NS_SERVER] = NET_IPSocket( ip->GetString(), port );
 		if ( !ip_sockets[NS_SERVER] && dedicated ) {
-			Com_FatalError("Couldn't allocate dedicated server IP port" );
+			Com_FatalError("Couldn't allocate dedicated server IP port\n" );
 		}
 	}
 
@@ -683,7 +683,7 @@ void NET_Init()
 
 	int err = WSAStartup( MAKEWORD( 2, 2 ), &wsadata );
 	if ( err != 0 ) {
-		Com_FatalErrorf( "Winsock initialization failed, returned %d", err );
+		Com_FatalErrorf( "Winsock initialization failed, returned %d\n", err );
 	}
 	Com_Print( "Winsock Initialized\n" );
 

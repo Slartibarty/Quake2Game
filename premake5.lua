@@ -303,7 +303,7 @@ project "engine"
 	language "C++"
 	targetdir "../game"
 	debugdir "../game"
-	includedirs { "thirdparty/glew/include", "thirdparty/zlib", "thirdparty/libpng", "thirdparty/libpng_config", "thirdparty/imgui" }
+	includedirs { "thirdparty/glew/include", "thirdparty/zlib", "thirdparty/libpng", "thirdparty/libpng_config", "thirdparty/imgui", "thirdparty/rapidjson/include" }
 	defines { "GLEW_STATIC", "GLEW_NO_GLU", "IMGUI_USER_CONFIG=\"../../engine/client/q_imconfig.h\"", "IMGUI_IMPL_WIN32_DISABLE_GAMEPAD" }
 	links { "core" }
 	filter "system:windows"

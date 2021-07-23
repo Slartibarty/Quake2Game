@@ -66,6 +66,17 @@ namespace FileSystem
 
 					// Finds a file without considering packfiles (for dlls), returns the absolute path.
 	bool			FindPhysicalFile( const char *name, char *buffer, strlen_t bufferSize, fsPath_t fsPath = FS_GAMEDIR );
+
+	namespace ModInfo
+	{
+		// Gets the title of the current game.
+		const char *GetGameTitle();
+		// Gets the title all windows created by the engine should use.
+		const platChar_t *GetWindowTitle();
+		// Returns the ModInfo RapidJSON document.
+		void *GetModInfoDocument();
+	}
+
 }
 
 inline consteval int Developer_searchpath()
