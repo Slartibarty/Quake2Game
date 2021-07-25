@@ -133,11 +133,11 @@ void Com_Print( const char *msg )
 		{
 			if ( com_logFile->GetInt() > 2 )
 			{
-				FileSystem::OpenFileAppend( LogFile_Name );
+				logfile = FileSystem::OpenFileAppend( LogFile_Name );
 			}
 			else
 			{
-				FileSystem::OpenFileWrite( LogFile_Name );
+				logfile = FileSystem::OpenFileWrite( LogFile_Name );
 			}
 		}
 		if ( logfile )
@@ -569,6 +569,8 @@ void Com_Init( int argc, char **argv )
 	Cmd_Init();
 	Cvar_Init();
 
+	// Here rather than in client because we need the bind cmds and stuff
+	// for the Cbuf_ calls below, not good for dedicated
 	Key_Init();
 
 	// we need to add the early commands twice, because
@@ -578,6 +580,7 @@ void Com_Init( int argc, char **argv )
 	Cbuf_AddEarlyCommands( argc, argv );
 	Cbuf_Execute();
 
+	Sys_Init();
 	FileSystem::Init();
 
 	Cbuf_AddText( "exec default.cfg\n" );
@@ -609,11 +612,8 @@ void Com_Init( int argc, char **argv )
 		Cmd_AddCommand( "quit", Com_Quit_f );
 	}
 
-	Sys_Init();
-
 	NET_Init();
 	Netchan_Init();
-
 	CM_Init();
 
 	SV_Init();

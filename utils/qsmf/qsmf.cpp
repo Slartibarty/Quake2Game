@@ -45,9 +45,9 @@ using mesh_t = fmtJMDL::mesh_t;
 template< typename t_vert >
 struct nodeWork_t
 {
-	std::vector<std::string> materialNames;
-	std::vector<fatVertex_t<t_vert>> verts;
-	std::vector<fmtJMDL::bone_t> bones;
+	std::vector<std::string>			materialNames;
+	std::vector<fatVertex_t<t_vert>>	verts;
+	std::vector<fmtJMDL::bone_t>		bones;
 };
 
 static struct options_t
@@ -64,8 +64,8 @@ static bool ParseCommandLine( int argc, char **argv )
 	if ( argc < 3 )
 	{
 		// need at least input and output
-		Com_Print( "Usage: qsmf [options] input.fbx output.smf\n" );
 		Com_Print(
+			"Usage: qsmf [options] input.fbx output.jmdl\n"
 			"Options:\n"
 			"  -verbose      : Enables verbose logging\n"
 			"  -skeleton     : Creates a jmdl with skeletons\n"
@@ -349,7 +349,9 @@ static void HandleNode_r( FbxNode *pNode, nodeWork_t<t_vert> &contributions )
 		return;
 	}
 
-	switch ( pAttr->GetAttributeType() )
+	FbxNodeAttribute::EType type = pAttr->GetAttributeType();
+
+	switch ( type )
 	{
 	case FbxNodeAttribute::eMesh:
 		AddMeshContribution<t_vert>( pNode, contributions.verts, contributions.materialNames );

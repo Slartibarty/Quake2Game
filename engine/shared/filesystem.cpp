@@ -37,6 +37,14 @@ CFileSystem g_fileSystem;
 namespace FileSystem
 {
 
+namespace Internal
+{
+fsHandle_t OpenFileRead( const char *absPath );
+fsHandle_t OpenFileWrite( const char *absPath );
+fsHandle_t OpenFileAppend( const char *absPath );
+const char *GetAPIName();
+}
+
 namespace ModInfo
 {
 static void ParseModInfo();
@@ -136,7 +144,10 @@ static void AddSearchPath( const char *baseDir, const char *dirName )
 
 void Init()
 {
-	Com_Print( "-------- Initializing FileSystem --------\n" );
+	Com_Printf(
+		"-------- Initializing FileSystem --------\n"
+		"Using %s for IO operations\n", Internal::GetAPIName()
+	);
 
 	fs_production = Cvar_Get( "fs_production", "0", 0, "If true, file writes are forced to writeDir." );
 	fs_debug = Cvar_Get( "fs_debug", "0", 0, "Controls FS spew." );
@@ -162,7 +173,6 @@ void Init()
 	Com_Printf( "modDir    : %s\n", fs.modDir );
 
 	// Search paths are added backwards due to the nature of singly linked lists.
-	// This needs to be refactored in the future to use modinfos.
 	// The write directory takes presedence for searches
 
 	// Third priority, additional game dirs specified by the modinfo
@@ -322,19 +332,6 @@ void CreatePath( const char *path )
 	CreateAbsolutePath( fullPath, skipDist );
 }
 
-int GetFileSize( fsHandle_t handle )
-{
-	long pos;
-	long end;
-
-	pos = ftell( (FILE *)handle );
-	fseek( (FILE *)handle, 0, SEEK_END );
-	end = ftell( (FILE *)handle );
-	fseek( (FILE *)handle, pos, SEEK_SET );
-
-	return static_cast<int>( end );
-}
-
 fsHandle_t OpenFileRead( const char *filename )
 {
 	char fullPath[MAX_OSPATH];
@@ -344,7 +341,7 @@ fsHandle_t OpenFileRead( const char *filename )
 	{
 		Q_sprintf_s( fullPath, "%s/%s", pSP->dirName, filename );
 
-		fsHandle_t handle = (fsHandle_t)fopen( fullPath, "rb" );
+		fsHandle_t handle = Internal::OpenFileRead( fullPath );
 		if ( handle == FS_INVALID_HANDLE ) {
 			continue;
 		}
@@ -386,7 +383,7 @@ fsHandle_t OpenFileWrite( const char *filename, fsPath_t fsPath /*= FS_WRITEDIR*
 	Q_sprintf_s( fullPath, "%s/%s/%s", directory, fs.modDir, filename );
 	CreateAbsolutePath( fullPath, Q_strlen( directory ) );
 
-	fsHandle_t handle = (fsHandle_t)fopen( fullPath, "wb" );
+	fsHandle_t handle = Internal::OpenFileWrite( fullPath );
 
 	if ( fs_debug->GetBool() ) {
 		if ( handle ) {
@@ -422,7 +419,7 @@ fsHandle_t OpenFileAppend( const char *filename, fsPath_t fsPath /*= FS_WRITEDIR
 	Q_sprintf_s( fullPath, "%s/%s/%s", directory, fs.modDir, filename );
 	CreateAbsolutePath( fullPath, Q_strlen( directory ) );
 
-	fsHandle_t handle = (fsHandle_t)fopen( fullPath, "ab" );
+	fsHandle_t handle = Internal::OpenFileAppend( fullPath );
 
 	if ( fs_debug->GetBool() ) {
 		if ( handle ) {
@@ -433,47 +430,6 @@ fsHandle_t OpenFileAppend( const char *filename, fsPath_t fsPath /*= FS_WRITEDIR
 	}
 
 	return handle;
-}
-
-void CloseFile( fsHandle_t handle )
-{
-	fclose( (FILE *)handle );
-}
-
-int ReadFile( void *buffer, int length, fsHandle_t handle )
-{
-	assert( length > 0 );
-	int read = static_cast<int>( fread( buffer, length, 1, (FILE*)handle ) );
-
-	assert( read != 0 );
-
-	return read;
-}
-
-void WriteFile( const void *buffer, int length, fsHandle_t handle )
-{
-	assert( length > 0 );
-	[[maybe_unused]] int written = static_cast<int>( fwrite( buffer, length, 1, (FILE*)handle ) );
-
-	assert( written != 0 );
-}
-
-void PrintFile( const char *string, fsHandle_t handle )
-{
-	fputs( string, (FILE *)handle );
-}
-
-void PrintFileFmt( fsHandle_t handle, const char *fmt, ... )
-{
-	va_list args;
-	va_start( args, fmt );
-	vfprintf( (FILE *)handle, fmt, args );
-	va_end( args );
-}
-
-void FlushFile( fsHandle_t handle )
-{
-	fflush( (FILE *)handle );
 }
 
 bool FileExists( const char *filename, fsPath_t fsPath /*= FS_GAMEDIR*/ )
@@ -621,7 +577,7 @@ static void ParseModInfo()
 	Q_sprintf_s( fullPath, "%s/%s/%s", fs.gameDir, fs.modDir, MODINFO_NAME );
 
 	// Search paths aren't initialised yet, so we need to use low-level functions
-	fsHandle_t handle = reinterpret_cast<fsHandle_t>( fopen( fullPath, "rb" ) );
+	fsHandle_t handle = Internal::OpenFileRead( fullPath );
 	if ( !handle ) {
 		Com_FatalErrorf( "The primary mod (\"%s\") does not contain a " MODINFO_NAME "\n", fs.modDir);
 		return;

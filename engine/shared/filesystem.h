@@ -30,6 +30,10 @@ namespace FileSystem
 	void			CreatePath( const char *path );
 					// Returns the size of a file.
 	int				GetFileSize( fsHandle_t handle );
+					// Move the cursor to an offset
+	void			Seek( fsHandle_t handle, int offset, fsSeek_t seek );
+					// Returns the position of the cursor
+	int				Tell( fsHandle_t handle );
 
 					// Opens an existing file for reading.
 	fsHandle_t		OpenFileRead( const char *filename );
@@ -46,6 +50,8 @@ namespace FileSystem
 					// Writes a string to a file.
 	void			PrintFile( const char *string, fsHandle_t handle );
 					// Writes a string to a file. Funkily!
+	void			PrintFileVFmt( fsHandle_t handle, const char *fmt, va_list args );
+					// Ditto
 	void			PrintFileFmt( fsHandle_t handle, const char *fmt, ... );
 					// Force the file to be flushed to disc. If underlying implementation allows (win32 sys api is unbuffered).
 	void			FlushFile( fsHandle_t handle );
@@ -105,10 +111,9 @@ public:
 	{ FileSystem::PrintFile( string, handle ); }
 	void PrintFileFmt( fsHandle_t handle, const char *fmt, ... ) override
 	{
-		// HACK
 		va_list args;
 		va_start( args, fmt );
-		vfprintf( (FILE *)handle, fmt, args );
+		FileSystem::PrintFileVFmt( handle, fmt, args );
 		va_end( args );
 	}
 	void FlushFile( fsHandle_t handle ) override

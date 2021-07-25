@@ -67,6 +67,7 @@ static void GLAPIENTRY GL_DebugProc( GLenum source, GLenum type, GLuint id, GLen
 		return;
 	}
 
+	const char *pColor;
 	const char *pSource;
 	const char *pType;
 	const char *pSeverity;
@@ -124,23 +125,28 @@ static void GLAPIENTRY GL_DebugProc( GLenum source, GLenum type, GLuint id, GLen
 	switch ( severity )
 	{
 	case GL_DEBUG_SEVERITY_HIGH:
+		pColor = S_COLOR_RED;
 		pSeverity = "HIGH";
 		break;
 	case GL_DEBUG_SEVERITY_MEDIUM:
+		pColor = S_COLOR_YELLOW;
 		pSeverity = "MEDIUM";
 		break;
 	case GL_DEBUG_SEVERITY_LOW:
+		pColor = S_COLOR_YELLOW;
 		pSeverity = "LOW";
 		break;
-	case GL_DEBUG_SEVERITY_NOTIFICATION:
+	case GL_DEBUG_SEVERITY_NOTIFICATION: // We skip notifications so this case never fires
+		pColor = S_COLOR_DEFAULT;
 		pSeverity = "NOTIFICATION";
 		break;
 	default:
+		pColor = S_COLOR_DEFAULT;
 		pSeverity = "UNKNOWN";
 		break;
 	}
 
-	Com_Printf( "%d: %s of %s severity, raised from %s: %s\n", id, pType, pSeverity, pSource, message );
+	Com_Printf( "%s%d: %s of %s severity, raised from %s: %s\n", pColor, id, pType, pSeverity, pSource, message );
 }
 
 #endif
@@ -324,7 +330,13 @@ void R_Restart()
 
 	GL_CheckErrors();
 
-	// re-intialise everything (excluding glimp)
+	GLimp_Shutdown();
+
+	// re-intialise everything
+
+	if ( !GLimp_Init() ) {
+		Com_FatalError( "Failed to re-initialise GLimp after a vid_restart!\n" );
+	}
 
 	// set a "safe" display mode
 	glState.prev_mode = 3;

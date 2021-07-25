@@ -292,7 +292,7 @@ BOOL WriteText (LPTSTR szText)
 		rec.Event.KeyEvent.wVirtualScanCode = CharToCode (*sz);
 		rec.Event.KeyEvent.uChar.AsciiChar = *sz;
 		rec.Event.KeyEvent.uChar.UnicodeChar = *sz;
-		rec.Event.KeyEvent.dwControlKeyState = isupper(*sz) ? 0x80 : 0x0; 
+		rec.Event.KeyEvent.dwControlKeyState = iswupper((wint_t)*sz) ? 0x80 : 0x0; 
 
 		WriteConsoleInput(
 			hStdin,

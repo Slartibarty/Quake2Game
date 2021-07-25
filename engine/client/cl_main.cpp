@@ -1745,7 +1745,7 @@ void CL_Shutdown(void)
 {
 	static bool isdown;
 
-	if ( dedicated->GetBool() ) {
+	if ( dedicated && dedicated->GetBool() ) {
 		return;
 	}
 	

@@ -25,6 +25,13 @@ enum fsPath_t
 	FS_CONTENTDIR
 };
 
+enum fsSeek_t
+{
+	FS_SEEK_SET,		// SEEK_SET or FILE_BEGIN
+	FS_SEEK_CUR,		// SEEK_CUR or FILE_CURRENT
+	FS_SEEK_END			// SEEK_END or FILE_END
+};
+
 class IFileSystem
 {
 public:

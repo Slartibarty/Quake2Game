@@ -150,33 +150,5 @@ FbxVector4 FBX_GetTangent( FbxMesh *pMesh, int vertexID )
 
 FbxVector4 FBX_GetVertexWeights( FbxMesh *pMesh, int vertexID )
 {
-	const int elementTangentCount = pMesh->GetElementTangentCount();
-
-	for ( int tanIter = 0; tanIter < elementTangentCount; ++tanIter )
-	{
-		FbxGeometryElementTangent *pTangent = pMesh->GetElementTangent( tanIter );
-
-		if ( pTangent->GetMappingMode() == FbxGeometryElement::eByPolygonVertex )
-		{
-			int id;
-
-			switch ( pTangent->GetReferenceMode() )
-			{
-			case FbxGeometryElement::eDirect:
-				return pTangent->GetDirectArray().GetAt( vertexID );
-				break;
-
-			case FbxGeometryElement::eIndexToDirect:
-				id = pTangent->GetIndexArray().GetAt( vertexID );
-				return pTangent->GetDirectArray().GetAt( id );
-				break;
-
-				// other reference modes not shown here!
-			default:
-				break;
-			}
-		}
-	}
-
 	return FbxVector4( 0.0, 0.0, 0.0, 0.0 );
 }

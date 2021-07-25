@@ -98,7 +98,7 @@ void Sys_Init()
 {
 	CoInitializeEx( nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE );
 
-	if ( dedicated->GetBool() )
+	if ( dedicated && dedicated->GetBool() )
 	{
 		if ( !AllocConsole() ) {
 			Com_FatalError( "Couldn't create dedicated server console\n" );
@@ -113,7 +113,7 @@ void Sys_Init()
 
 void Sys_Shutdown()
 {
-	if ( dedicated->GetBool() )
+	if ( dedicated && dedicated->GetBool() )
 	{
 		FreeConsole();
 
