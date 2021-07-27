@@ -79,13 +79,33 @@ static bool VID_LoadRefresh()
 
 /*
 ========================
+VID_ListModes_f
+
+Lists all available system video modes
+========================
+*/
+static void VID_ListModes_f()
+{
+	const int numModes = Sys_GetNumVidModes();
+
+	for ( int i = 0; i < numModes; ++i )
+	{
+		int width, height;
+		Sys_GetVidModeInfo( width, height, i );
+		Com_Printf( "  %d %d\n", width, height );
+	}
+}
+
+/*
+========================
 VID_Init
 ========================
 */
 void VID_Init()
 {
 	Cmd_AddCommand( "vid_restart", VID_Restart_f );
-	
+	Cmd_AddCommand( "vid_listModes", VID_ListModes_f, "Lists all video modes." );
+
 	cls.disable_screen = 1.0f;
 
 	if ( !VID_LoadRefresh() )

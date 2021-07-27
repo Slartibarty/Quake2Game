@@ -106,6 +106,24 @@ namespace qImGui
 		return exStyle;
 	}
 
+#if 0
+	static void OSImp_EnableTransparency( HWND hWnd )
+	{
+		const DWM_BLURBEHIND dwmBlurBehind
+		{
+			.dwFlags = DWM_BB_ENABLE,
+			.fEnable = TRUE,
+			.hRgnBlur = nullptr,
+			.fTransitionOnMaximized = FALSE
+		};
+
+		if ( FAILED( DwmEnableBlurBehindWindow( hWnd, &dwmBlurBehind ) ) )
+		{
+			Com_Print( S_COLOR_RED "Failed to enable transparency on a window...\n" );
+		}
+	}
+#endif
+
 	static void OSImp_CreateWindow( ImGuiViewport* viewport )
 	{
 		// Get style
@@ -140,6 +158,9 @@ namespace qImGui
 			GetModuleHandleW( nullptr ),
 			nullptr
 		);
+
+		// LATER, when imgui implements it properly
+		//OSImp_EnableTransparency( hWnd );
 
 		viewportData_t *data = new viewportData_t;
 		viewport->PlatformUserData = data;

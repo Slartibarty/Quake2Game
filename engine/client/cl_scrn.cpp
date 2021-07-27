@@ -11,21 +11,6 @@
 ===================================================================================================
 */
 
-/*
-
-  id developer's notes:
-
-  full screen console
-  put up loading plaque
-  blanked background with loading plaque
-  blanked background with menu
-  cinematics
-  full screen image for quit and victory
-
-  end of unit intermissions
-
-*/
-
 #include "cl_local.h"
 
 #include <vector>

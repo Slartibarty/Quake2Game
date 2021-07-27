@@ -48,6 +48,7 @@ const char *GetAPIName();
 namespace ModInfo
 {
 static void ParseModInfo();
+static void Shutdown();
 }
 
 #define MODINFO_NAME		"modinfo.json"
@@ -195,6 +196,8 @@ void Init()
 
 void Shutdown()
 {
+	ModInfo::Shutdown();
+
 	// Clean up search paths
 	searchPath_t *pLastSP = nullptr;
 	for ( searchPath_t *pSP = fs.searchPaths; pSP; pSP = pSP->pNext )
@@ -485,7 +488,7 @@ void RemoveFile( const char *filename )
 
 //=============================================================================
 
-int LoadFile( const char *filename, void **buffer, int extraData /*= 0*/ )
+fsSize_t LoadFile( const char *filename, void **buffer, fsSize_t extraData /*= 0*/ )
 {
 	assert( filename && filename[0] );
 	assert( extraData >= 0 );
@@ -499,7 +502,7 @@ int LoadFile( const char *filename, void **buffer, int extraData /*= 0*/ )
 		return -1;
 	}
 
-	int length = GetFileSize( handle );
+	fsSize_t length = GetFileSize( handle );
 
 	if ( !buffer )
 	{
@@ -566,7 +569,7 @@ static struct modInfo_t
 	char gameTitle[64];				// The game title
 	platChar_t windowTitle[64];		// The title created windows will have
 
-	rapidjson::Document doc;
+	rapidjson::Document *pDoc;
 } modInfo;
 
 static void ParseModInfo()
@@ -580,40 +583,40 @@ static void ParseModInfo()
 	fsHandle_t handle = Internal::OpenFileRead( fullPath );
 	if ( !handle ) {
 		Com_FatalErrorf( "The primary mod (\"%s\") does not contain a " MODINFO_NAME "\n", fs.modDir);
-		return;
 	}
-	int length = GetFileSize( handle );
+	fsSize_t length = GetFileSize( handle );
 	if ( length == 0 ) {
-		Com_FatalErrorf( "The primary mod (\"%s\") contains an empty " MODINFO_NAME "\n", fs.modDir);
 		CloseFile( handle );
-		return;
+		Com_FatalErrorf( "The primary mod (\"%s\") contains an empty " MODINFO_NAME "\n", fs.modDir);
 	}
+
 	void *pData = Mem_Alloc( length );
 	ReadFile( pData, length, handle );
 	CloseFile( handle );
 
 	Com_Printf( "Parsing %s/%s\n", fs.modDir, MODINFO_NAME );
 
-	modInfo.doc.Parse( (char *)pData, length );
+	modInfo.pDoc = new Document;
+
+	modInfo.pDoc->Parse( (char *)pData, length );
 	FileSystem::FreeFile( pData );
-	if ( modInfo.doc.HasParseError() || !modInfo.doc.IsObject() ) {
+	if ( modInfo.pDoc->HasParseError() || !modInfo.pDoc->IsObject() ) {
 		Com_FatalErrorf( "Failed to parse %s/%s\n", fs.modDir, MODINFO_NAME );
-		return;
 	}
 
 	Value::ConstMemberIterator member;
 
 	// More than one subsystem needs the information here, so just store it in the filesystem
 
-	member = modInfo.doc.FindMember( "GameTitle" );
-	if ( member != modInfo.doc.MemberEnd() && member->value.IsString() )
+	member = modInfo.pDoc->FindMember( "GameTitle" );
+	if ( member != modInfo.pDoc->MemberEnd() && member->value.IsString() )
 	{
 		const char *str = member->value.GetString();
 		Q_strcpy_s( modInfo.gameTitle, str );
 	}
 
-	member = modInfo.doc.FindMember( "WindowTitle" );
-	if ( member != modInfo.doc.MemberEnd() && member->value.IsString() )
+	member = modInfo.pDoc->FindMember( "WindowTitle" );
+	if ( member != modInfo.pDoc->MemberEnd() && member->value.IsString() )
 	{
 #ifdef _WIN32
 		Sys_UTF8ToUTF16( member->value.GetString(), member->value.GetStringLength() + 1, modInfo.windowTitle, countof( modInfo.windowTitle ) );
@@ -622,11 +625,11 @@ static void ParseModInfo()
 #endif
 	}
 
-	member = modInfo.doc.FindMember( "FileSystem" );
-	if ( member != modInfo.doc.MemberEnd() && member->value.IsObject() )
+	member = modInfo.pDoc->FindMember( "FileSystem" );
+	if ( member != modInfo.pDoc->MemberEnd() && member->value.IsObject() )
 	{
 		Value::ConstMemberIterator searchPaths = member->value.FindMember( "SearchPaths" );
-		if ( searchPaths != modInfo.doc.MemberEnd() && searchPaths->value.IsArray() )
+		if ( searchPaths != modInfo.pDoc->MemberEnd() && searchPaths->value.IsArray() )
 		{
 			Value::ConstArray arr = searchPaths->value.GetArray();
 
@@ -641,6 +644,11 @@ static void ParseModInfo()
 
 }
 
+static void Shutdown()
+{
+	delete modInfo.pDoc;
+}
+
 const char *GetGameTitle()
 {
 	return modInfo.gameTitle;
@@ -653,7 +661,7 @@ const platChar_t *GetWindowTitle()
 
 void *GetModInfoDocument()
 {
-	return reinterpret_cast<void *>( &modInfo.doc );
+	return reinterpret_cast<void *>( modInfo.pDoc );
 }
 
 } // namespace ModInfo

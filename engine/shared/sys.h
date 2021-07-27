@@ -23,7 +23,7 @@ bool	Sys_GetVidModeInfo( int &width, int &height, int mode );
 
 void	Sys_OutputDebugString( const char *msg );
 [[noreturn]]
-void	Sys_Error( const char *msg );
+void	Sys_Error( const platChar_t *mainInstruction, const char *msg );
 [[noreturn]]
 void	Sys_Quit( int code );
 

@@ -324,6 +324,7 @@ project "engine"
 		"engine/server/*",
 		"engine/shared/*",
 		
+		"engine/mapedit/*",
 		"engine/renderer/*",
 		
 		"game/client/cg_public.h",

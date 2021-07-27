@@ -15,11 +15,9 @@
 
 #include <vector>
 #include <string>
-#include <array>
 #include <algorithm>
 
 #include "imgui.h"
-#include "q_imgui_imp.h"
 
 namespace UI::Console
 {

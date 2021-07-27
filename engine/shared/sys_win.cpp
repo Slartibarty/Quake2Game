@@ -9,6 +9,7 @@
 
 #include "../../core/sys_includes.h"
 #include <ShlObj.h>
+#include <VersionHelpers.h>
 #include "../client/winquake.h"			// Hack?
 
 #include "sys.h"
@@ -42,7 +43,7 @@ void Sys_OutputDebugString( const char *msg )
 }
 
 [[noreturn]]
-void Sys_Error( const char *msg )
+void Sys_Error( const platChar_t *mainInstruction, const char *msg )
 {
 	// Trim the newline
 	char newMsg[MAX_PRINT_MSG];
@@ -65,7 +66,7 @@ void Sys_Error( const char *msg )
 		nullptr,
 		nullptr,
 		windowTitle,
-		L"Engine Error",
+		mainInstruction,
 		reason,
 		TDCBF_OK_BUTTON,
 		TD_ERROR_ICON,
@@ -571,6 +572,12 @@ main
 int main( int argc, char **argv )
 {
 	int frameTime, oldTime, newTime;
+
+	if ( !IsWindows7SP1OrGreater() )
+	{
+		// Just deny anyone running win7sp0 or prior from running the game
+		Sys_Error( PLATTEXT( "Incompatible System" ), "You must be running Windows 7 SP1 or newer to play this game\n" );
+	}
 
 	// Make sure the CRT thinks we're a GUI app, this makes CRT asserts use a message box
 	// rather than printing to stderr

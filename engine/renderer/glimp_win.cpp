@@ -447,11 +447,6 @@ bool GLimp_SetMode( int &width, int &height, int mode, bool fullscreen )
 	return true;
 }
 
-void GLimp_ShareLists( void *context )
-{
-	wglShareLists( s_glwState.hGLRC, (HGLRC)context );
-}
-
 bool GLimp_Init()
 {
 	s_glwState.hInstance = GetModuleHandleW( nullptr );

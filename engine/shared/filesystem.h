@@ -29,9 +29,9 @@ namespace FileSystem
 					// Creates the given directory tree in the write dir. Add gamedir support when needed.
 	void			CreatePath( const char *path );
 					// Returns the size of a file.
-	int				GetFileSize( fsHandle_t handle );
+	fsSize_t		GetFileSize( fsHandle_t handle );
 					// Move the cursor to an offset
-	void			Seek( fsHandle_t handle, int offset, fsSeek_t seek );
+	void			Seek( fsHandle_t handle, fsSize_t offset, fsSeek_t seek );
 					// Returns the position of the cursor
 	int				Tell( fsHandle_t handle );
 
@@ -44,9 +44,9 @@ namespace FileSystem
 					// Closes a file.
 	void			CloseFile( fsHandle_t handle );
 					// Reads raw data from a file. Returns bytes read.
-	int				ReadFile( void *buffer, int length, fsHandle_t handle );
-					// Writes raw data to a file.
-	void			WriteFile( const void *buffer, int length, fsHandle_t handle );
+	fsSize_t		ReadFile( void *buffer, fsSize_t length, fsHandle_t handle );
+					// Writes raw data to a file. Returns bytes written.
+	fsSize_t		WriteFile( const void *buffer, fsSize_t length, fsHandle_t handle );
 					// Writes a string to a file.
 	void			PrintFile( const char *string, fsHandle_t handle );
 					// Writes a string to a file. Funkily!
@@ -66,7 +66,7 @@ namespace FileSystem
 					// extraData specifies the amount of additional zeroed memory to
 					// add to the end of the file, typical usage is extraData = 1 to null
 					// terminate text files.
-	int				LoadFile( const char *filename, void **buffer, int extraData = 0 );
+	fsSize_t		LoadFile( const char *filename, void **buffer, fsSize_t extraData = 0 );
 					// Frees the memory allocated by LoadFile.
 	void			FreeFile( void *buffer );
 

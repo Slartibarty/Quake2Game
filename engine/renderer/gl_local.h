@@ -472,7 +472,6 @@ bool 	GLimp_Init();
 void	GLimp_Shutdown();
 
 bool    GLimp_SetMode( int &width, int &height, int mode, bool fullscreen );
-void	GLimp_ShareLists( void *context );
 
 void	GLimp_AppActivate( bool active );
 

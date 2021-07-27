@@ -38,6 +38,9 @@ void Q_strcpy_s( char *pDest, strlen_t nDestSize, const char *pSrc )
 	*pDest = '\0';
 }
 
+// The implementation of these two functions *must* be capable of taking null for dest and 0 for destsize
+// to support returning of the required buffer size, stb_sprintf supports this but it is non-standard!!!
+
 _Success_( return >= 0 )
 int Q_vsprintf_s( _Always_( _Post_z_ ) char *pDest, strlen_t nDestSize, _Printf_format_string_ const char *pFmt, va_list args )
 {

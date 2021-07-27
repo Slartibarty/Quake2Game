@@ -260,7 +260,7 @@ void Com_FatalError( const char *msg )
 	CL_Shutdown();
 	Com_Shutdown();
 
-	Sys_Error( msg );
+	Sys_Error( PLATTEXT( "Engine Error" ), msg );
 }
 
 [[noreturn]]
@@ -579,6 +579,8 @@ void Com_Init( int argc, char **argv )
 	// the settings of the config files
 	Cbuf_AddEarlyCommands( argc, argv );
 	Cbuf_Execute();
+
+	// Systems before this are not allowed to fail
 
 	Sys_Init();
 	FileSystem::Init();

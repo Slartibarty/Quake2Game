@@ -9,6 +9,11 @@
 	TODO: Is there any reason in the world why we wouldn't want to use stdio on all platforms?
 	the buffered IO seems to be a big win.
 
+	NOTE: There are a number of gotchas in this code, the winapi uses DWORD and LONGLONG
+	inconsistently to denote the size of a file. ideally we want to use unsigned 32-bit ints for
+	representing file sizes, as we don't ever expect to have to touch files larger than 4 gigabytes
+	so this shouldn't really be a problem
+
 ===================================================================================================
 */
 
@@ -77,27 +82,27 @@ const char *GetAPIName()
 
 } // namespace Internal
 
-int GetFileSize( fsHandle_t handle )
+fsSize_t GetFileSize( fsHandle_t handle )
 {
 	LARGE_INTEGER fileSize;
 
 	GetFileSizeEx( reinterpret_cast<HANDLE>( handle ), &fileSize );
 
-	return static_cast<int>( fileSize.QuadPart );
+	return static_cast<fsSize_t>( fileSize.QuadPart );
 }
 
-void Seek( fsHandle_t handle, int offset, fsSeek_t seek )
+void Seek( fsHandle_t handle, fsSize_t offset, fsSeek_t seek )
 {
 	SetFilePointerEx( reinterpret_cast<HANDLE>( handle ), static_cast<LARGE_INTEGER>( offset ), nullptr, static_cast<DWORD>( seek ) );
 }
 
-int Tell( fsHandle_t handle )
+fsSize_t Tell( fsHandle_t handle )
 {
 	LARGE_INTEGER currentPosition;
 
 	SetFilePointerEx( reinterpret_cast<HANDLE>( handle ), LARGE_INTEGER(), &currentPosition, FILE_CURRENT );
 
-	return static_cast<int>( currentPosition.QuadPart );
+	return static_cast<fsSize_t>( currentPosition.QuadPart );
 }
 
 void CloseFile( fsHandle_t handle )
@@ -105,7 +110,7 @@ void CloseFile( fsHandle_t handle )
 	CloseHandle( reinterpret_cast<HANDLE>( handle ) );
 }
 
-int ReadFile( void *buffer, int length, fsHandle_t handle )
+fsSize_t ReadFile( void *buffer, fsSize_t length, fsHandle_t handle )
 {
 	assert( length > 0 );
 
@@ -113,26 +118,28 @@ int ReadFile( void *buffer, int length, fsHandle_t handle )
 
 	::ReadFile( reinterpret_cast<HANDLE>( handle ), buffer, static_cast<DWORD>( length ), &bytesRead, nullptr );
 
-	return bytesRead;
+	return static_cast<fsSize_t>( bytesRead );
 }
 
-void WriteFile( const void *buffer, int length, fsHandle_t handle )
+fsSize_t WriteFile( const void *buffer, fsSize_t length, fsHandle_t handle )
 {
 	assert( length > 0 );
 
 	DWORD bytesWritten;
 
 	::WriteFile( reinterpret_cast<HANDLE>( handle ), buffer, static_cast<DWORD>( length ), &bytesWritten, nullptr );
+
+	return static_cast<fsSize_t>( bytesWritten );
 }
 
 void PrintFile( const char *string, fsHandle_t handle )
 {
-	WriteFile( string, Q_strlen( string ), handle );
+	WriteFile( string, static_cast<fsSize_t>( strlen( string ) ), handle );
 }
 
 void PrintFileVFmt( fsHandle_t handle, const char *fmt, va_list args )
 {
-	int strSize = Q_vsprintf_s( nullptr, 0, fmt, args ) + 1;
+	int strSize = Q_vsprintf( nullptr, fmt, args ) + 1;
 	assert( strSize <= MAX_PRINT_MSG );
 	char *str = (char *)Mem_StackAlloc( strSize );
 	Q_vsprintf( str, fmt, args );
@@ -192,27 +199,33 @@ const char *GetAPIName()
 
 } // namespace Internal
 
-int GetFileSize( fsHandle_t handle )
+fsSize_t GetFileSize( fsHandle_t handle )
 {
 	long pos;
 	long end;
+
+	// longs are always 32-bit on Windows for backwards compatibility
+	// longs are 64-bit on Linux64 (and 32-bit on Linux32)
+	// soo... this code is unoptimal for Windows
+	// _ftell64 is a microsoft extension we can leverage if we ever
+	// *have* to use stdio on Windows
 
 	pos = ftell( (FILE *)handle );
 	fseek( (FILE *)handle, 0, SEEK_END );
 	end = ftell( (FILE *)handle );
 	fseek( (FILE *)handle, pos, SEEK_SET );
 
-	return static_cast<int>( end );
+	return static_cast<fsSize_t>( end );
 }
 
-void Seek( fsHandle_t handle, int offset, fsSeek_t seek )
+void Seek( fsHandle_t handle, fsSize_t offset, fsSeek_t seek )
 {
-	fseek( reinterpret_cast<FILE *>( handle ), static_cast<long>( offset ), static_cast<int>( seek ) );
+	fseek( (FILE*)handle, (long)offset, (int)seek );
 }
 
-int Tell( fsHandle_t handle )
+fsSize_t Tell( fsHandle_t handle )
 {
-	return static_cast<int>( ftell( reinterpret_cast<FILE *>( handle ) ) );
+	return static_cast<fsSize_t>( ftell( (FILE*)handle ) );
 }
 
 void CloseFile( fsHandle_t handle )
@@ -220,22 +233,26 @@ void CloseFile( fsHandle_t handle )
 	fclose( (FILE *)handle );
 }
 
-int ReadFile( void *buffer, int length, fsHandle_t handle )
+fsSize_t ReadFile( void *buffer, fsSize_t length, fsHandle_t handle )
 {
 	assert( length > 0 );
-	int read = static_cast<int>( fread( buffer, length, 1, (FILE*)handle ) );
+
+	fsSize_t read = static_cast<fsSize_t>( fread( buffer, (size_t)length, 1, (FILE*)handle ) );
 
 	assert( read != 0 );
 
 	return read;
 }
 
-void WriteFile( const void *buffer, int length, fsHandle_t handle )
+fsSize_t WriteFile( const void *buffer, fsSize_t length, fsHandle_t handle )
 {
 	assert( length > 0 );
-	[[maybe_unused]] int written = static_cast<int>( fwrite( buffer, length, 1, (FILE*)handle ) );
+
+	fsSize_t written = static_cast<fsSize_t>( fwrite( buffer, (size_t)length, 1, (FILE*)handle ) );
 
 	assert( written != 0 );
+
+	return written;
 }
 
 void PrintFile( const char *string, fsHandle_t handle )
