@@ -26,7 +26,7 @@ using uint = unsigned int;
 using qboolean = int32;		// obsolete
 
 // Platform specific character types
-// currently not used, avoid usage
+// minimise usage, only for code that touches platform APIs!
 
 #ifdef _WIN32
 

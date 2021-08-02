@@ -42,18 +42,15 @@ inline void Q_strcpy_s( char( &pDest )[nDestSize], const char *pSrc ) {
 	Q_strcpy_s( pDest, nDestSize, pSrc );
 }
 
-_Success_( return >= 0 )
-int Q_vsprintf_s( _Always_( _Post_z_ ) char *pDest, strlen_t nDestSize, _Printf_format_string_ const char *pFmt, va_list args );
+int Q_vsprintf_s( _Post_z_ char *pDest, strlen_t nDestSize, _Printf_format_string_ const char *pFmt, va_list args );
 
-_Success_( return >= 0 )
 template< strlen_t nDestSize >
-inline int Q_vsprintf_s( _Always_( _Post_z_ ) char( &pDest )[nDestSize], _Printf_format_string_ const char *pFmt, va_list args )
+inline int Q_vsprintf_s( _Post_z_ char( &pDest )[nDestSize], _Printf_format_string_ const char *pFmt, va_list args )
 {
 	return Q_vsprintf_s( pDest, nDestSize, pFmt, args );
 }
 
-_Success_( return >= 0 )
-inline int Q_sprintf_s( _Always_( _Post_z_ ) char *pDest, strlen_t nDestSize, _Printf_format_string_ const char *pFmt, ... )
+inline int Q_sprintf_s( _Post_z_ char *pDest, strlen_t nDestSize, _Printf_format_string_ const char *pFmt, ... )
 {
 	int result;
 	va_list args;
@@ -65,9 +62,8 @@ inline int Q_sprintf_s( _Always_( _Post_z_ ) char *pDest, strlen_t nDestSize, _P
 	return result;
 }
 
-_Success_( return >= 0 )
 template< strlen_t nDestSize >
-inline int Q_sprintf_s( _Always_( _Post_z_ ) char( &pDest )[nDestSize], _Printf_format_string_ const char *pFmt, ... )
+inline int Q_sprintf_s( _Post_z_ char( &pDest )[nDestSize], _Printf_format_string_ const char *pFmt, ... )
 {
 	int result;
 	va_list args;
@@ -79,11 +75,9 @@ inline int Q_sprintf_s( _Always_( _Post_z_ ) char( &pDest )[nDestSize], _Printf_
 	return result;
 }
 
-_Success_( return >= 0 )
-int Q_vsprintf( _Always_( _Post_z_ ) char *pDest, _Printf_format_string_ const char *pFmt, va_list args );
+int Q_vsprintf( _Post_z_ char *pDest, _Printf_format_string_ const char *pFmt, va_list args );
 
-_Success_( return >= 0 )
-inline int Q_sprintf( _Always_( _Post_z_ ) char *pDest, _Printf_format_string_ const char *pFmt, ... )
+inline int Q_sprintf( _Post_z_ char *pDest, _Printf_format_string_ const char *pFmt, ... )
 {
 	int result;
 	va_list args;

@@ -34,8 +34,10 @@
 ===================================================================================================
 */
 
+// The name of the engine, idTech uses this for engine variations (IE: "D3BFG", "RAGE")
 #define	ENGINE_VERSION "JaffaQuake"
 
+// The default argument for fs_mod
 #define	BASE_MODDIR "base"
 
 #ifdef _WIN32
@@ -63,11 +65,13 @@
 #define BLD_CONFIG "Retail"
 #elif defined Q_RELEASE
 #define BLD_CONFIG "Release"
-#else
+#elif defined Q_DEBUG
 #define BLD_CONFIG "Debug"
+#else
+#error No config defined
 #endif
 
-constexpr const char BLD_STRING[] = ( ENGINE_VERSION " - " BLD_PLATFORM " " BLD_CONFIG );
+#define BLD_STRING ( ENGINE_VERSION " - " BLD_PLATFORM " " BLD_CONFIG )
 
 /*
 ===================================================================================================

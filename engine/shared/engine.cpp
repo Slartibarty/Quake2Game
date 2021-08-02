@@ -6,7 +6,7 @@
 
 #include <csetjmp>
 
-extern void SCR_EndLoadingPlaque( void );
+extern void SCR_EndLoadingPlaque();
 extern void Key_Init();
 extern void Key_Shutdown();
 
@@ -27,7 +27,7 @@ cvar_t *	com_logFile;			// 1 = buffer log, 2 = flush after each print
 cvar_t *	com_showTrace;
 cvar_t *	dedicated;
 
-int		server_state;
+static int		server_state;
 
 // com_speeds times
 int		time_before_game;
@@ -178,7 +178,7 @@ void Com_DPrint( const char *msg )
 		return;
 	}
 
-	Com_Print( msg );
+	Com_Printf( S_COLOR_YELLOW "%s", msg );
 }
 
 void Com_DPrintf( _Printf_format_string_ const char *fmt, ... )
@@ -194,7 +194,7 @@ void Com_DPrintf( _Printf_format_string_ const char *fmt, ... )
 	Q_vsprintf_s( msg, fmt, argptr );
 	va_end( argptr );
 
-	Com_Print( msg );
+	Com_Printf( S_COLOR_YELLOW "%s", msg );
 }
 
 /*

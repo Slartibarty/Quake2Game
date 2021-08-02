@@ -124,16 +124,11 @@ extern	portable_samplepair_t	s_rawsamples[MAX_RAW_SAMPLES];
 
 extern cvar_t	*s_volume;
 extern cvar_t	*s_nosound;
-extern cvar_t	*s_loadas8bit;
 extern cvar_t	*s_khz;
 extern cvar_t	*s_show;
 extern cvar_t	*s_mixahead;
 extern cvar_t	*s_testsound;
 extern cvar_t	*s_primary;
-
-wavinfo_t GetWavinfo (char *name, byte *wav, int wavlength);
-bool IsWav( byte *wav );
-bool IsOgg( byte *ogg );
 
 sfxcache_t *S_LoadSound (sfx_t *s);
 

@@ -13,7 +13,6 @@ extern cvar_t *hand;
 
 // sound
 extern cvar_t *s_volume;
-extern cvar_t *s_loadas8bit;
 
 // renderer
 extern cvar_t *r_gamma;

@@ -15,10 +15,6 @@ namespace UI::StatsPanel
 
 #define FPS_FRAMES 6
 
-static void ShowFPS()
-{
-}
-
 void ShowStats()
 {
 	const ImGuiWindowFlags windowFlags =

@@ -61,6 +61,11 @@ void Sys_Error( const platChar_t *mainInstruction, const char *msg )
 	Sys_UTF8ToUTF16( newMsg, Q_strlen( newMsg ) + 1, reason, countof( reason ) );
 
 	const platChar_t *windowTitle = FileSystem::ModInfo::GetWindowTitle();
+	if ( windowTitle[0] == '\0' )
+	{
+		// Filesystem didn't have a chance to init, so use this instead
+		windowTitle = PLATTEXT( ENGINE_VERSION );
+	}
 
 	TaskDialog(
 		nullptr,
