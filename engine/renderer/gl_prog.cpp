@@ -148,7 +148,7 @@ Shaders_Init
 */
 void Shaders_Init()
 {
-	Cmd_AddCommand( "r_rebuildshaders", R_RebuildShaders_f );
+	CmdSystem::AddCommand( "r_rebuildshaders", R_RebuildShaders_f );
 
 	BuildAllShaders();
 }

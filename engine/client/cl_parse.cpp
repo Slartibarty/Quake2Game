@@ -109,12 +109,12 @@ void	CL_Download_f (void)
 {
 	char filename[MAX_OSPATH];
 
-	if (Cmd_Argc() != 2) {
+	if (CmdSystem::GetArgc() != 2) {
 		Com_Printf("Usage: download <filename>\n");
 		return;
 	}
 
-	Q_sprintf_s(filename, "%s", Cmd_Argv(1));
+	Q_sprintf_s(filename, "%s", CmdSystem::GetArgv(1));
 
 	if (strstr (filename, ".."))
 	{
@@ -707,11 +707,11 @@ void CL_ParseServerMessage (void)
 		case svc_stufftext:
 			s = MSG_ReadString (&net_message);
 			Com_DPrintf ("stufftext: %s\n", s);
-			Cbuf_AddText (s);
+			CmdBuffer::AddText (s);
 			break;
 			
 		case svc_serverdata:
-			Cbuf_Execute ();		// make sure any stuffed commands are done
+			CmdBuffer::Execute ();		// make sure any stuffed commands are done
 			CL_ParseServerData ();
 			break;
 			

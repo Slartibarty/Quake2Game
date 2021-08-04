@@ -371,12 +371,12 @@ static void V_Gun_Prev_f()
 
 static void V_Gun_Model_f()
 {
-	if ( Cmd_Argc() != 2 )
+	if ( CmdSystem::GetArgc() != 2 )
 	{
 		return;
 	}
 
-	g_gunModel = R_RegisterModel( Cmd_Argv( 1 ) );
+	g_gunModel = R_RegisterModel( CmdSystem::GetArgv( 1 ) );
 }
 
 static void V_Gun_Reset_f()
@@ -526,28 +526,28 @@ static void V_Sky_f()
 	float	rotate;
 	vec3_t	axis;
 
-	if ( Cmd_Argc() < 2 ) {
+	if ( CmdSystem::GetArgc() < 2 ) {
 		Com_Print( "Usage: sky <basename> <rotate> <axis x y z>\n" );
 		return;
 	}
 
-	if ( Cmd_Argc() > 2 ) {
-		rotate = (float)atof( Cmd_Argv( 2 ) );
+	if ( CmdSystem::GetArgc() > 2 ) {
+		rotate = (float)atof( CmdSystem::GetArgv( 2 ) );
 	} else {
 		rotate = 0.0f;
 	}
 
-	if ( Cmd_Argc() == 6 ) {
-		axis[0] = (float)atof( Cmd_Argv( 3 ) );
-		axis[1] = (float)atof( Cmd_Argv( 4 ) );
-		axis[2] = (float)atof( Cmd_Argv( 5 ) );
+	if ( CmdSystem::GetArgc() == 6 ) {
+		axis[0] = (float)atof( CmdSystem::GetArgv( 3 ) );
+		axis[1] = (float)atof( CmdSystem::GetArgv( 4 ) );
+		axis[2] = (float)atof( CmdSystem::GetArgv( 5 ) );
 	} else {
 		axis[0] = 0.0f;
 		axis[1] = 0.0f;
 		axis[2] = 1.0f;
 	}
 
-	R_SetSky( Cmd_Argv( 1 ), rotate, axis );
+	R_SetSky( CmdSystem::GetArgv( 1 ), rotate, axis );
 }
 
 /*
@@ -585,11 +585,11 @@ void V_Init()
 
 	v_stats = Cvar_Get( "v_stats", "0", 0 );
 
-	Cmd_AddCommand( "v_gun_next", V_Gun_Next_f );
-	Cmd_AddCommand( "v_gun_prev", V_Gun_Prev_f );
-	Cmd_AddCommand( "v_gun_model", V_Gun_Model_f );
-	Cmd_AddCommand( "v_gun_reset", V_Gun_Model_f );
+	CmdSystem::AddCommand( "v_gun_next", V_Gun_Next_f );
+	CmdSystem::AddCommand( "v_gun_prev", V_Gun_Prev_f );
+	CmdSystem::AddCommand( "v_gun_model", V_Gun_Model_f );
+	CmdSystem::AddCommand( "v_gun_reset", V_Gun_Model_f );
 
-	Cmd_AddCommand( "v_sky", V_Sky_f );
-	Cmd_AddCommand( "v_viewpos", V_Viewpos_f );
+	CmdSystem::AddCommand( "v_sky", V_Sky_f );
+	CmdSystem::AddCommand( "v_viewpos", V_Viewpos_f );
 }

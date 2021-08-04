@@ -155,7 +155,7 @@ static void SVC_Info()
 		return;
 	}
 
-	version = atoi( Cmd_Argv( 1 ) );
+	version = atoi( CmdSystem::GetArgv( 1 ) );
 
 	if ( version != PROTOCOL_VERSION )
 	{
@@ -259,7 +259,7 @@ static void SVC_DirectConnect()
 
 	Com_DPrint( "SVC_DirectConnect()\n" );
 
-	version = atoi( Cmd_Argv( 1 ) );
+	version = atoi( CmdSystem::GetArgv( 1 ) );
 	if ( version != PROTOCOL_VERSION )
 	{
 		Netchan_OutOfBandPrint( NS_SERVER, adr, "print\nServer is version %d.\n", PROTOCOL_VERSION );
@@ -267,11 +267,11 @@ static void SVC_DirectConnect()
 		return;
 	}
 
-	qport = atoi( Cmd_Argv( 2 ) );
+	qport = atoi( CmdSystem::GetArgv( 2 ) );
 
-	challenge = atoi( Cmd_Argv( 3 ) );
+	challenge = atoi( CmdSystem::GetArgv( 3 ) );
 
-	Q_strcpy_s( userinfo, Cmd_Argv( 4 ) );
+	Q_strcpy_s( userinfo, CmdSystem::GetArgv( 4 ) );
 
 	// force the IP key/value pair so the game can filter based on ip
 	Info_SetValueForKey( userinfo, "ip", NET_NetadrToString( net_from ) );
@@ -398,7 +398,7 @@ static int Rcon_Validate()
 		return 0;
 	}
 
-	if ( Q_strcmp( Cmd_Argv( 1 ), rcon_password->GetString() ) != 0 ) {
+	if ( Q_strcmp( CmdSystem::GetArgv( 1 ), rcon_password->GetString() ) != 0 ) {
 		return 0;
 	}
 
@@ -438,13 +438,13 @@ static void SVC_RemoteCommand()
 	{
 		remaining[0] = 0;
 
-		for ( i = 2; i < Cmd_Argc(); i++ )
+		for ( i = 2; i < CmdSystem::GetArgc(); i++ )
 		{
-			strcat( remaining, Cmd_Argv( i ) );
+			strcat( remaining, CmdSystem::GetArgv( i ) );
 			strcat( remaining, " " );
 		}
 
-		Cmd_ExecuteString( remaining );
+		CmdSystem::ExecuteString( remaining );
 	}
 
 	Com_EndRedirect();
@@ -470,9 +470,9 @@ static void SV_ConnectionlessPacket()
 
 	s = MSG_ReadStringLine( &net_message );
 
-	Cmd_TokenizeString( s, false );
+	CmdSystem::TokenizeString( s, false );
 
-	c = Cmd_Argv( 0 );
+	c = CmdSystem::GetArgv( 0 );
 	Com_DPrintf( "Packet %s : %s\n", NET_NetadrToString( net_from ), c );
 
 	if ( Q_strcmp( c, "ping" ) == 0 ) {

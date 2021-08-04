@@ -409,13 +409,13 @@ void Cvar_GetLatchedVars()
 bool Cvar_Command()
 {
 	// check variables
-	cvar_t *var = Cvar_Find( Cmd_Argv( 0 ) );
+	cvar_t *var = Cvar_Find( CmdSystem::GetArgv( 0 ) );
 	if ( !var ) {
 		return false;
 	}
 
 	// perform a variable print or set
-	if ( Cmd_Argc() == 1 )
+	if ( CmdSystem::GetArgc() == 1 )
 	{
 		Cvar_PrintValue( var );
 		Cvar_PrintFlags( var );
@@ -423,7 +423,7 @@ bool Cvar_Command()
 		return true;
 	}
 
-	Cvar_Set( var->name.c_str(), Cmd_Argv( 1 ) );
+	Cvar_Set( var->name.c_str(), CmdSystem::GetArgv( 1 ) );
 
 	return true;
 }
@@ -526,7 +526,7 @@ char *Cvar_Serverinfo()
 // Allows setting and defining of arbitrary cvars from console
 void Cvar_Set_f()
 {
-	int count = Cmd_Argc();
+	int count = CmdSystem::GetArgc();
 	if ( count != 3 && count != 4 )
 	{
 		Com_Print( "usage: set <variable> <value> [u / s]\n" );
@@ -537,11 +537,11 @@ void Cvar_Set_f()
 	{
 		int flags;
 
-		if ( !Q_strcmp( Cmd_Argv( 3 ), "u" ) )
+		if ( !Q_strcmp( CmdSystem::GetArgv( 3 ), "u" ) )
 		{
 			flags = CVAR_USERINFO;
 		}
-		else if ( !Q_strcmp( Cmd_Argv( 3 ), "s" ) )
+		else if ( !Q_strcmp( CmdSystem::GetArgv( 3 ), "s" ) )
 		{
 			flags = CVAR_SERVERINFO;
 		}
@@ -551,11 +551,11 @@ void Cvar_Set_f()
 			return;
 		}
 
-		Cvar_FullSet( Cmd_Argv( 1 ), Cmd_Argv( 2 ), flags );
+		Cvar_FullSet( CmdSystem::GetArgv( 1 ), CmdSystem::GetArgv( 2 ), flags );
 	}
 	else
 	{
-		Cvar_Set( Cmd_Argv( 1 ), Cmd_Argv( 2 ) );
+		Cvar_Set( CmdSystem::GetArgv( 1 ), CmdSystem::GetArgv( 2 ) );
 	}
 }
 
@@ -601,8 +601,8 @@ static void Cvar_List_f()
 
 void Cvar_Init()
 {
-	Cmd_AddCommand( "set", Cvar_Set_f );
-	Cmd_AddCommand( "cvarList", Cvar_List_f );
+	CmdSystem::AddCommand( "set", Cvar_Set_f );
+	CmdSystem::AddCommand( "cvarList", Cvar_List_f );
 }
 
 void Cvar_Shutdown()

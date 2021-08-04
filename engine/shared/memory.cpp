@@ -151,7 +151,7 @@ void Mem_Init()
 {
 	z_tagchain.next = z_tagchain.prev = &z_tagchain;
 
-	Cmd_AddCommand( "mem_stats", Mem_Stats_f );
+	CmdSystem::AddCommand( "mem_stats", Mem_Stats_f );
 }
 
 void Mem_Shutdown()

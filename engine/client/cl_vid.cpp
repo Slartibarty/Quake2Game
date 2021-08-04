@@ -103,8 +103,8 @@ VID_Init
 */
 void VID_Init()
 {
-	Cmd_AddCommand( "vid_restart", VID_Restart_f );
-	Cmd_AddCommand( "vid_listModes", VID_ListModes_f, "Lists all video modes." );
+	CmdSystem::AddCommand( "vid_restart", VID_Restart_f );
+	CmdSystem::AddCommand( "vid_listModes", VID_ListModes_f, "Lists all video modes." );
 
 	cls.disable_screen = 1.0f;
 

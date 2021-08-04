@@ -1,5 +1,38 @@
 #include "snd_local.h"
 
+#include <xaudio2.h>
+
+namespace SysSound
+{
+
+static IXAudio2 *pXAudio2;
+
+static bool Init()
+{
+	if ( pXAudio2 )
+	{
+		return true;
+	}
+
+	return SUCCEEDED( XAudio2Create( &pXAudio2, 0, XAUDIO2_USE_DEFAULT_PROCESSOR ) );
+}
+
+static void Shutdown()
+{
+	if ( pXAudio2 )
+	{
+		pXAudio2->Release();
+		pXAudio2 = nullptr;
+	}
+}
+
+static void Activate( bool active )
+{
+	assert( pXAudio2 );
+}
+
+}
+
 #define DIRECTSOUND_VERSION 0x1000
 
 #include <dsound.h>

@@ -434,8 +434,8 @@ void SCR_Init()
 	scr_devpause = Cvar_Get( "scr_devpause", "0", 0, "If true, the game pauses whilst the devui is up.");
 	scr_showfps = Cvar_Get( "scr_showfps", "0", 0, "If true, shows a stats panel on screen.");
 
-	Cmd_AddCommand( "timerefresh", SCR_TimeRefresh_f );
-	Cmd_AddCommand( "loading", SCR_Loading_f );
+	CmdSystem::AddCommand( "timerefresh", SCR_TimeRefresh_f );
+	CmdSystem::AddCommand( "loading", SCR_Loading_f );
 
 	SCR_InitImGui();
 
@@ -735,7 +735,7 @@ void SCR_TimeRefresh_f()
 
 	double start = Time_FloatSeconds();
 
-	if ( Cmd_Argc() == 2 )
+	if ( CmdSystem::GetArgc() == 2 )
 	{
 		// run without page flipping
 		R_BeginFrame();

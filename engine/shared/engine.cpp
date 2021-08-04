@@ -564,33 +564,33 @@ void Com_Init( int argc, char **argv )
 	// prepare enough of the subsystems to handle
 	// cvar and command buffer management
 
-	Cbuf_Init();
+	CmdBuffer::Init();
 
-	Cmd_Init();
+	CmdSystem::Init();
 	Cvar_Init();
 
 	// Here rather than in client because we need the bind cmds and stuff
-	// for the Cbuf_ calls below, not good for dedicated
+	// for the CmdBuffer calls below, not good for dedicated
 	Key_Init();
 
 	// we need to add the early commands twice, because
 	// a basedir or cddir needs to be set before execing
 	// config files, but we want other parms to override
 	// the settings of the config files
-	Cbuf_AddEarlyCommands( argc, argv );
-	Cbuf_Execute();
+	CmdBuffer::AddEarlyCommands( argc, argv );
+	CmdBuffer::Execute();
 
 	// Systems before this are not allowed to fail
 
 	Sys_Init();
 	FileSystem::Init();
 
-	Cbuf_AddText( "exec default.cfg\n" );
-	Cbuf_AddText( "exec config.cfg\n" );
-	Cbuf_AddText( "exec autoexec.cfg\n" );
+	CmdBuffer::AddText( "exec default.cfg\n" );
+	CmdBuffer::AddText( "exec config.cfg\n" );
+	CmdBuffer::AddText( "exec autoexec.cfg\n" );
 
-	Cbuf_AddEarlyCommands( argc, argv );
-	Cbuf_Execute();
+	CmdBuffer::AddEarlyCommands( argc, argv );
+	CmdBuffer::Execute();
 
 	// cvars and commands
 
@@ -608,10 +608,10 @@ void Com_Init( int argc, char **argv )
 	dedicated = Cvar_Get( "dedicated", "0", CVAR_INIT, "If true, this is a dedicated server." );
 #endif
 
-	Cmd_AddCommand( "com_error", Com_Error_f, "Throws a Com_Error." );
-	Cmd_AddCommand( "com_version", Com_Version_f, "Prints engine version information." );
+	CmdSystem::AddCommand( "com_error", Com_Error_f, "Throws a Com_Error." );
+	CmdSystem::AddCommand( "com_version", Com_Version_f, "Prints engine version information." );
 	if ( dedicated->GetBool() ) {
-		Cmd_AddCommand( "quit", Com_Quit_f );
+		CmdSystem::AddCommand( "quit", Com_Quit_f );
 	}
 
 	NET_Init();
@@ -622,15 +622,15 @@ void Com_Init( int argc, char **argv )
 	CL_Init();
 
 	// add + commands from command line
-	if ( !Cbuf_AddLateCommands( argc, argv ) )
+	if ( !CmdBuffer::AddLateCommands( argc, argv ) )
 	{
 		// if the user didn't give any commands, run default action
 		if ( !dedicated->GetBool() ) {
-			Cbuf_AddText( "d1\n" );
+			CmdBuffer::AddText( "d1\n" );
 		} else {
-			Cbuf_AddText( "dedicated_start\n" );
+			CmdBuffer::AddText( "dedicated_start\n" );
 		}
-		Cbuf_Execute();
+		CmdBuffer::Execute();
 	}
 	else
 	{
@@ -709,10 +709,10 @@ void Com_Frame( int frameTime )
 	{
 		s = Sys_ConsoleInput();
 		if ( s ) {
-			Cbuf_AddText( va( "%s\n", s ) );
+			CmdBuffer::AddText( va( "%s\n", s ) );
 		}
 	} while ( s );
-	Cbuf_Execute();
+	CmdBuffer::Execute();
 
 	if ( com_speeds->GetBool() ) {
 		time_before = Sys_Milliseconds();
@@ -763,7 +763,7 @@ void Com_Shutdown()
 	FileSystem::Shutdown();
 	Key_Shutdown();
 	Cvar_Shutdown();
-	Cmd_Shutdown();
+	CmdSystem::Shutdown();
 	Mem_Shutdown();
 }
 
