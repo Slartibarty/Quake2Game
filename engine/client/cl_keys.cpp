@@ -142,11 +142,11 @@ void Key_Message (int key)
 	if ( key == K_ENTER || key == K_KP_ENTER )
 	{
 		if (chat_team)
-			CmdBuffer::AddText ("say_team \"");
+			Cbuf_AddText ("say_team \"");
 		else
-			CmdBuffer::AddText ("say \"");
-		CmdBuffer::AddText(chat_buffer);
-		CmdBuffer::AddText("\"\n");
+			Cbuf_AddText ("say \"");
+		Cbuf_AddText(chat_buffer);
+		Cbuf_AddText("\"\n");
 
 		cls.key_dest = key_game;
 		chat_bufferlen = 0;
@@ -271,16 +271,16 @@ void Key_Unbind_f (void)
 {
 	int		b;
 
-	if (CmdSystem::GetArgc() != 2)
+	if (Cmd_Argc() != 2)
 	{
 		Com_Printf ("unbind <key> : remove commands from a key\n");
 		return;
 	}
 	
-	b = Key_StringToKeynum (CmdSystem::GetArgv(1));
+	b = Key_StringToKeynum (Cmd_Argv(1));
 	if (b==-1)
 	{
-		Com_Printf ("\"%s\" isn't a valid key\n", CmdSystem::GetArgv(1));
+		Com_Printf ("\"%s\" isn't a valid key\n", Cmd_Argv(1));
 		return;
 	}
 
@@ -307,26 +307,26 @@ void Key_Bind_f (void)
 	int			i, c, b;
 	char		cmd[1024];
 	
-	c = CmdSystem::GetArgc();
+	c = Cmd_Argc();
 
 	if (c < 2)
 	{
 		Com_Printf ("bind <key> [command] : attach a command to a key\n");
 		return;
 	}
-	b = Key_StringToKeynum (CmdSystem::GetArgv(1));
+	b = Key_StringToKeynum (Cmd_Argv(1));
 	if (b==-1)
 	{
-		Com_Printf ("\"%s\" isn't a valid key\n", CmdSystem::GetArgv(1));
+		Com_Printf ("\"%s\" isn't a valid key\n", Cmd_Argv(1));
 		return;
 	}
 
 	if (c == 2)
 	{
 		if (keybindings[b])
-			Com_Printf ("\"%s\" = \"%s\"\n", CmdSystem::GetArgv(1), keybindings[b] );
+			Com_Printf ("\"%s\" = \"%s\"\n", Cmd_Argv(1), keybindings[b] );
 		else
-			Com_Printf ("\"%s\" is not bound\n", CmdSystem::GetArgv(1) );
+			Com_Printf ("\"%s\" is not bound\n", Cmd_Argv(1) );
 		return;
 	}
 	
@@ -334,7 +334,7 @@ void Key_Bind_f (void)
 	cmd[0] = 0;		// start out with a null string
 	for (i=2 ; i< c ; i++)
 	{
-		strcat (cmd, CmdSystem::GetArgv(i));
+		strcat (cmd, Cmd_Argv(i));
 		if (i != (c-1))
 			strcat (cmd, " ");
 	}
@@ -465,10 +465,10 @@ void Key_Init()
 //
 // register our functions
 //
-	CmdSystem::AddCommand ("bind",Key_Bind_f);
-	CmdSystem::AddCommand ("unbind",Key_Unbind_f);
-	CmdSystem::AddCommand ("unbindall",Key_Unbindall_f);
-	CmdSystem::AddCommand ("bindlist",Key_Bindlist_f);
+	Cmd_AddCommand ("bind",Key_Bind_f);
+	Cmd_AddCommand ("unbind",Key_Unbind_f);
+	Cmd_AddCommand ("unbindall",Key_Unbindall_f);
+	Cmd_AddCommand ("bindlist",Key_Bindlist_f);
 }
 
 /*
@@ -557,7 +557,7 @@ void Key_Event (int key, bool down, unsigned time)
 
 		if (cl.frame.playerstate.stats[STAT_LAYOUTS] && cls.key_dest == key_game)
 		{	// put away help computer / inventory
-			CmdBuffer::AddText ("cmd putaway\n");
+			Cbuf_AddText ("cmd putaway\n");
 			return;
 		}
 		switch (cls.key_dest)
@@ -605,7 +605,7 @@ void Key_Event (int key, bool down, unsigned time)
 		if (kb && kb[0] == '+')
 		{
 			Q_sprintf_s (cmd, "-%s %i %i\n", kb+1, key, time);
-			CmdBuffer::AddText (cmd);
+			Cbuf_AddText (cmd);
 		}
 		if (keyshift[key] != key)
 		{
@@ -613,7 +613,7 @@ void Key_Event (int key, bool down, unsigned time)
 			if (kb && kb[0] == '+')
 			{
 				Q_sprintf_s (cmd, "-%s %i %i\n", kb+1, key, time);
-				CmdBuffer::AddText (cmd);
+				Cbuf_AddText (cmd);
 			}
 		}
 		return;
@@ -632,12 +632,12 @@ void Key_Event (int key, bool down, unsigned time)
 			if (kb[0] == '+')
 			{	// button commands add keynum and time as a parm
 				Q_sprintf_s (cmd, "%s %i %i\n", kb, key, time);
-				CmdBuffer::AddText (cmd);
+				Cbuf_AddText (cmd);
 			}
 			else
 			{
-				CmdBuffer::AddText (kb);
-				CmdBuffer::AddText ("\n");
+				Cbuf_AddText (kb);
+				Cbuf_AddText ("\n");
 			}
 		}
 		return;

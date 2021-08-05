@@ -165,24 +165,24 @@ Extract a WAD file to 24-bit TGA files
 void R_ExtractWad_f()
 {
 #if 0
-	if ( CmdSystem::GetArgc() < 3 )
+	if ( Cmd_Argc() < 3 )
 	{
 		Com_Printf( "Usage: <file.wad> <palette.lmp>\n" );
 		return;
 	}
 
 	char wadbase[MAX_QPATH];
-	COM_FileBase( CmdSystem::GetArgv( 1 ), wadbase );
+	COM_FileBase( Cmd_Argv( 1 ), wadbase );
 
 	// Create the output folder if it doesn't exist
 	Sys_CreateDirectory( va( "%s/textures/%s", FS_Gamedir(), wadbase ) );
 
 	FILE *wadhandle;
 
-	wadhandle = fopen( va( "%s/%s", FS_Gamedir(), CmdSystem::GetArgv( 2 ) ), "rb" );
+	wadhandle = fopen( va( "%s/%s", FS_Gamedir(), Cmd_Argv( 2 ) ), "rb" );
 	if ( !wadhandle )
 	{
-		Com_Printf( "Couldn't open %s\n", CmdSystem::GetArgv( 2 ) );
+		Com_Printf( "Couldn't open %s\n", Cmd_Argv( 2 ) );
 		return;
 	}
 
@@ -197,10 +197,10 @@ void R_ExtractWad_f()
 
 	fclose( wadhandle );
 
-	wadhandle = fopen( va( "%s/%s", FS_Gamedir(), CmdSystem::GetArgv( 1 ) ), "rb" );
+	wadhandle = fopen( va( "%s/%s", FS_Gamedir(), Cmd_Argv( 1 ) ), "rb" );
 	if ( !wadhandle )
 	{
-		Com_Printf( "Couldn't open %s\n", CmdSystem::GetArgv( 1 ) );
+		Com_Printf( "Couldn't open %s\n", Cmd_Argv( 1 ) );
 		return;
 	}
 
@@ -335,7 +335,7 @@ Upgrade all WALs in a specified folder to TGAs
 void R_UpgradeWals_f()
 {
 #if 0
-	if ( CmdSystem::GetArgc() < 2 )
+	if ( Cmd_Argc() < 2 )
 	{
 		Com_Printf( "Usage: <folder>\n" );
 		return;
@@ -344,7 +344,7 @@ void R_UpgradeWals_f()
 	char		folder[MAX_OSPATH];
 	const char	*str;
 
-	Q_sprintf_s( folder, "%s/%s/*", FS_Gamedir(), CmdSystem::GetArgv( 1 ) );
+	Q_sprintf_s( folder, "%s/%s/*", FS_Gamedir(), Cmd_Argv( 1 ) );
 
 	str = Sys_FindFirst( folder, 0, 0 );
 	if ( !str ) {

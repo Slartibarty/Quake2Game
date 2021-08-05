@@ -46,7 +46,7 @@ void KeyDown (kbutton_t *b)
 	int		k;
 	char	*c;
 	
-	c = CmdSystem::GetArgv(1);
+	c = Cmd_Argv(1);
 	if (c[0])
 		k = atoi(c);
 	else
@@ -69,7 +69,7 @@ void KeyDown (kbutton_t *b)
 		return;		// still down
 
 	// save timestamp
-	c = CmdSystem::GetArgv(2);
+	c = Cmd_Argv(2);
 	b->downtime = atoi(c);
 	if (!b->downtime)
 		b->downtime = sys_frame_time - 100;
@@ -83,7 +83,7 @@ void KeyUp (kbutton_t *b)
 	char	*c;
 	unsigned	uptime;
 
-	c = CmdSystem::GetArgv(1);
+	c = Cmd_Argv(1);
 	if (c[0])
 		k = atoi(c);
 	else
@@ -106,7 +106,7 @@ void KeyUp (kbutton_t *b)
 		return;		// still up (this should not happen)
 
 	// save timestamp
-	c = CmdSystem::GetArgv(2);
+	c = Cmd_Argv(2);
 	uptime = atoi(c);
 	if (uptime)
 		b->msec += uptime - b->downtime;
@@ -356,34 +356,34 @@ CL_InitInput
 */
 void CL_InitInput (void)
 {
-	CmdSystem::AddCommand ("centerview",IN_CenterView);
+	Cmd_AddCommand ("centerview",IN_CenterView);
 
-	CmdSystem::AddCommand ("+moveup",IN_UpDown);
-	CmdSystem::AddCommand ("-moveup",IN_UpUp);
-	CmdSystem::AddCommand ("+movedown",IN_DownDown);
-	CmdSystem::AddCommand ("-movedown",IN_DownUp);
-	CmdSystem::AddCommand ("+left",IN_LeftDown);
-	CmdSystem::AddCommand ("-left",IN_LeftUp);
-	CmdSystem::AddCommand ("+right",IN_RightDown);
-	CmdSystem::AddCommand ("-right",IN_RightUp);
-	CmdSystem::AddCommand ("+forward",IN_ForwardDown);
-	CmdSystem::AddCommand ("-forward",IN_ForwardUp);
-	CmdSystem::AddCommand ("+back",IN_BackDown);
-	CmdSystem::AddCommand ("-back",IN_BackUp);
-	CmdSystem::AddCommand ("+lookup", IN_LookupDown);
-	CmdSystem::AddCommand ("-lookup", IN_LookupUp);
-	CmdSystem::AddCommand ("+lookdown", IN_LookdownDown);
-	CmdSystem::AddCommand ("-lookdown", IN_LookdownUp);
-	CmdSystem::AddCommand ("+moveleft", IN_MoveleftDown);
-	CmdSystem::AddCommand ("-moveleft", IN_MoveleftUp);
-	CmdSystem::AddCommand ("+moveright", IN_MoverightDown);
-	CmdSystem::AddCommand ("-moveright", IN_MoverightUp);
-	CmdSystem::AddCommand ("+speed", IN_SpeedDown);
-	CmdSystem::AddCommand ("-speed", IN_SpeedUp);
-	CmdSystem::AddCommand ("+attack", IN_AttackDown);
-	CmdSystem::AddCommand ("-attack", IN_AttackUp);
-	CmdSystem::AddCommand ("+use", IN_UseDown);
-	CmdSystem::AddCommand ("-use", IN_UseUp);
+	Cmd_AddCommand ("+moveup",IN_UpDown);
+	Cmd_AddCommand ("-moveup",IN_UpUp);
+	Cmd_AddCommand ("+movedown",IN_DownDown);
+	Cmd_AddCommand ("-movedown",IN_DownUp);
+	Cmd_AddCommand ("+left",IN_LeftDown);
+	Cmd_AddCommand ("-left",IN_LeftUp);
+	Cmd_AddCommand ("+right",IN_RightDown);
+	Cmd_AddCommand ("-right",IN_RightUp);
+	Cmd_AddCommand ("+forward",IN_ForwardDown);
+	Cmd_AddCommand ("-forward",IN_ForwardUp);
+	Cmd_AddCommand ("+back",IN_BackDown);
+	Cmd_AddCommand ("-back",IN_BackUp);
+	Cmd_AddCommand ("+lookup", IN_LookupDown);
+	Cmd_AddCommand ("-lookup", IN_LookupUp);
+	Cmd_AddCommand ("+lookdown", IN_LookdownDown);
+	Cmd_AddCommand ("-lookdown", IN_LookdownUp);
+	Cmd_AddCommand ("+moveleft", IN_MoveleftDown);
+	Cmd_AddCommand ("-moveleft", IN_MoveleftUp);
+	Cmd_AddCommand ("+moveright", IN_MoverightDown);
+	Cmd_AddCommand ("-moveright", IN_MoverightUp);
+	Cmd_AddCommand ("+speed", IN_SpeedDown);
+	Cmd_AddCommand ("-speed", IN_SpeedUp);
+	Cmd_AddCommand ("+attack", IN_AttackDown);
+	Cmd_AddCommand ("-attack", IN_AttackUp);
+	Cmd_AddCommand ("+use", IN_UseDown);
+	Cmd_AddCommand ("-use", IN_UseUp);
 
 	cl_nodelta = Cvar_Get ("cl_nodelta", "0", 0);
 }

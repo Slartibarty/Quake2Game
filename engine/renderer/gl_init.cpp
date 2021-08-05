@@ -249,14 +249,14 @@ R_InitCommands
 */
 static void R_InitCommands()
 {
-	CmdSystem::AddCommand( "r_imageList", GL_ImageList_f, "Lists all registered images." );
-	CmdSystem::AddCommand( "r_materialList", GL_MaterialList_f, "Lists all registered materials." );
-	CmdSystem::AddCommand( "r_modelList", Mod_Modellist_f, "Lists all registered models." );
-	CmdSystem::AddCommand( "screenshot", GL_Screenshot_PNG_f, "Takes a PNG screenshot." );
-	CmdSystem::AddCommand( "screenshot_tga", GL_Screenshot_TGA_f, "Takes a TGA screenshot." );
+	Cmd_AddCommand( "r_imageList", GL_ImageList_f, "Lists all registered images." );
+	Cmd_AddCommand( "r_materialList", GL_MaterialList_f, "Lists all registered materials." );
+	Cmd_AddCommand( "r_modelList", Mod_Modellist_f, "Lists all registered models." );
+	Cmd_AddCommand( "screenshot", GL_Screenshot_PNG_f, "Takes a PNG screenshot." );
+	Cmd_AddCommand( "screenshot_tga", GL_Screenshot_TGA_f, "Takes a TGA screenshot." );
 
-	CmdSystem::AddCommand( "r_extractWad", R_ExtractWad_f, "Extracts a Quake 1 WAD to the textures directory." );
-	CmdSystem::AddCommand( "r_upgradeWals", R_UpgradeWals_f, "Converts a folder of Quake 2 WAL files to PNG." );
+	Cmd_AddCommand( "r_extractWad", R_ExtractWad_f, "Extracts a Quake 1 WAD to the textures directory." );
+	Cmd_AddCommand( "r_upgradeWals", R_UpgradeWals_f, "Converts a folder of Quake 2 WAL files to PNG." );
 }
 
 /*

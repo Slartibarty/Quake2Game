@@ -913,7 +913,7 @@ static const char *Keys_MenuKey( int key )
 			char cmd[1024];
 
 			Q_sprintf_s (cmd, "bind \"%s\" \"%s\"\n", Key_KeynumToString(key), bindnames[item->generic.localdata[0]][0]);
-			CmdBuffer::InsertText (cmd);
+			Cbuf_InsertText (cmd);
 		}
 		
 		Menu_SetStatusBar( &s_keys_menu, "enter to change, backspace to clear" );
@@ -996,8 +996,8 @@ static void ControlsSetMenuItemValues( void )
 
 static void ControlsResetDefaultsFunc( void *unused )
 {
-	CmdBuffer::AddText( "exec default.cfg\n" );
-	CmdBuffer::Execute();
+	Cbuf_AddText( "exec default.cfg\n" );
+	Cbuf_Execute();
 
 	ControlsSetMenuItemValues();
 }
@@ -1862,7 +1862,7 @@ static void StartGame( void )
 	Cvar_FindSetBool( "deathmatch", false );
 	Cvar_FindSetBool( "coop", false );
 
-	CmdBuffer::AddText ("loading ; killserver ; wait ; newgame\n");
+	Cbuf_AddText ("loading ; killserver ; wait ; newgame\n");
 	cls.key_dest = key_game;
 }
 
@@ -2025,7 +2025,7 @@ void LoadGameCallback( void *self )
 	menuaction_s *a = ( menuaction_s * ) self;
 
 	if ( m_savevalid[ a->generic.localdata[0] ] )
-		CmdBuffer::AddText (va("load save%i\n",  a->generic.localdata[0] ) );
+		Cbuf_AddText (va("load save%i\n",  a->generic.localdata[0] ) );
 	M_ForceMenuOff ();
 }
 
@@ -2095,7 +2095,7 @@ void SaveGameCallback( void *self )
 {
 	menuaction_s *a = ( menuaction_s * ) self;
 
-	CmdBuffer::AddText (va("save save%i\n", a->generic.localdata[0] ));
+	Cbuf_AddText (va("save save%i\n", a->generic.localdata[0] ));
 	M_ForceMenuOff ();
 }
 
@@ -2213,7 +2213,7 @@ void JoinServerFunc( void *self )
 		return;
 
 	Q_sprintf_s (buffer, "connect %s\n", NET_NetadrToString (local_server_netadr[index]));
-	CmdBuffer::AddText (buffer);
+	Cbuf_AddText (buffer);
 	M_ForceMenuOff ();
 }
 
@@ -2441,12 +2441,12 @@ void StartServerActionFunc( void *self )
 	if (spot)
 	{
 		if (Com_ServerState())
-			CmdBuffer::AddText ("disconnect\n");
-		CmdBuffer::AddText (va("gamemap \"*%s$%s\"\n", startmap, spot));
+			Cbuf_AddText ("disconnect\n");
+		Cbuf_AddText (va("gamemap \"*%s$%s\"\n", startmap, spot));
 	}
 	else
 	{
-		CmdBuffer::AddText (va("map %s\n", startmap));
+		Cbuf_AddText (va("map %s\n", startmap));
 	}
 
 	M_ForceMenuOff ();
@@ -3738,22 +3738,22 @@ M_Init
 */
 void M_Init (void)
 {
-	CmdSystem::AddCommand ("menu_main", M_Menu_Main_f);
-	CmdSystem::AddCommand ("menu_game", M_Menu_Game_f);
-		CmdSystem::AddCommand ("menu_loadgame", M_Menu_LoadGame_f);
-		CmdSystem::AddCommand ("menu_savegame", M_Menu_SaveGame_f);
-		CmdSystem::AddCommand ("menu_joinserver", M_Menu_JoinServer_f);
-			CmdSystem::AddCommand ("menu_addressbook", M_Menu_AddressBook_f);
-		CmdSystem::AddCommand ("menu_startserver", M_Menu_StartServer_f);
-			CmdSystem::AddCommand ("menu_dmoptions", M_Menu_DMOptions_f);
-		CmdSystem::AddCommand ("menu_playerconfig", M_Menu_PlayerConfig_f);
-			CmdSystem::AddCommand ("menu_downloadoptions", M_Menu_DownloadOptions_f);
-		CmdSystem::AddCommand ("menu_credits", M_Menu_Credits_f );
-	CmdSystem::AddCommand ("menu_multiplayer", M_Menu_Multiplayer_f );
-	CmdSystem::AddCommand ("menu_video", M_Menu_Video_f);
-	CmdSystem::AddCommand ("menu_options", M_Menu_Options_f);
-		CmdSystem::AddCommand ("menu_keys", M_Menu_Keys_f);
-	CmdSystem::AddCommand ("menu_quit", M_Menu_Quit_f);
+	Cmd_AddCommand ("menu_main", M_Menu_Main_f);
+	Cmd_AddCommand ("menu_game", M_Menu_Game_f);
+		Cmd_AddCommand ("menu_loadgame", M_Menu_LoadGame_f);
+		Cmd_AddCommand ("menu_savegame", M_Menu_SaveGame_f);
+		Cmd_AddCommand ("menu_joinserver", M_Menu_JoinServer_f);
+			Cmd_AddCommand ("menu_addressbook", M_Menu_AddressBook_f);
+		Cmd_AddCommand ("menu_startserver", M_Menu_StartServer_f);
+			Cmd_AddCommand ("menu_dmoptions", M_Menu_DMOptions_f);
+		Cmd_AddCommand ("menu_playerconfig", M_Menu_PlayerConfig_f);
+			Cmd_AddCommand ("menu_downloadoptions", M_Menu_DownloadOptions_f);
+		Cmd_AddCommand ("menu_credits", M_Menu_Credits_f );
+	Cmd_AddCommand ("menu_multiplayer", M_Menu_Multiplayer_f );
+	Cmd_AddCommand ("menu_video", M_Menu_Video_f);
+	Cmd_AddCommand ("menu_options", M_Menu_Options_f);
+		Cmd_AddCommand ("menu_keys", M_Menu_Keys_f);
+	Cmd_AddCommand ("menu_quit", M_Menu_Quit_f);
 }
 
 

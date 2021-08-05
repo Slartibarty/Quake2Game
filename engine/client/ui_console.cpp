@@ -153,7 +153,7 @@ static int TextEditCallback( ImGuiInputTextCallbackData *data )
 	break;
 	case ImGuiInputTextFlags_CallbackCompletion:
 	{
-		const char *cmd = CmdSystem::CompleteCommand( data->Buf );
+		const char *cmd = Cmd_CompleteCommand( data->Buf );
 		if ( !cmd ) {
 			cmd = Cvar_CompleteVariable( data->Buf );
 		}
@@ -252,15 +252,13 @@ static void Clear_f()
 // this is the wrong place for this really, oh well
 static void Find_f()
 {
-	using namespace CmdSystem;
-
-	if ( CmdSystem::GetArgc() != 2 )
+	if ( Cmd_Argc() != 2 )
 	{
 		Com_Print( "Usage: find <cmd/cvar/*>\n" );
 		return;
 	}
 
-	const char *searchName = CmdSystem::GetArgv( 1 );
+	const char *searchName = Cmd_Argv( 1 );
 	if ( !searchName[0] )
 	{
 		return;
@@ -371,15 +369,13 @@ static void Find_f()
 
 static void Help_f()
 {
-	using namespace CmdSystem;
-
-	if ( CmdSystem::GetArgc() != 2 )
+	if ( Cmd_Argc() != 2 )
 	{
 		Com_Print( "Usage: help <cmd/cvar>\n" );
 		return;
 	}
 
-	const char *name = CmdSystem::GetArgv( 1 );
+	const char *name = Cmd_Argv( 1 );
 	if ( !name[0] )
 	{
 		return;
@@ -412,9 +408,9 @@ void Init()
 	con_drawNotify = Cvar_Get( "con_drawNotify", "1", 0, "If true, notifies can be drawn." );
 	con_allowNotify = Cvar_Get( "con_allowNotify", "1", 0, "If true, notifies can be posted." );
 
-	CmdSystem::AddCommand( "clear", Clear_f, "Clears the console buffer." );
-	CmdSystem::AddCommand( "find", Find_f, "Finds all cmds and cvars with <param> in the name, use * to list all." );
-	CmdSystem::AddCommand( "help", Help_f, "Displays help for a given cmd or cvar." );
+	Cmd_AddCommand( "clear", Clear_f, "Clears the console buffer." );
+	Cmd_AddCommand( "find", Find_f, "Finds all cmds and cvars with <param> in the name, use * to list all." );
+	Cmd_AddCommand( "help", Help_f, "Displays help for a given cmd or cvar." );
 
 	con.initialized = true;
 }
@@ -445,15 +441,15 @@ static void Submit()
 	if ( con.editLine.data[0] == '\\' || con.editLine.data[0] == '/' )
 	{
 		// skip the >
-		CmdBuffer::AddText( con.editLine.data + 1 );
+		Cbuf_AddText( con.editLine.data + 1 );
 	}
 	else
 	{
 		// valid command
-		CmdBuffer::AddText( con.editLine.data );
+		Cbuf_AddText( con.editLine.data );
 	}
 
-	CmdBuffer::AddText( "\n" );
+	Cbuf_AddText( "\n" );
 
 	Com_Printf( "] %s\n", con.editLine.data );
 
@@ -469,8 +465,6 @@ Finds all matches for a given partially complete string
 */
 static void RegenerateMatches( const char *partial )
 {
-	using namespace CmdSystem;
-
 	ASSUME( partial );
 
 	con.entryMatches.clear();

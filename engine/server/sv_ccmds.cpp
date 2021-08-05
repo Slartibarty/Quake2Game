@@ -36,14 +36,14 @@ static void SV_SetMaster_f()
 	}
 
 	slot = 1;		// slot 0 will always contain the id master
-	for ( i = 1; i < CmdSystem::GetArgc(); i++ )
+	for ( i = 1; i < Cmd_Argc(); i++ )
 	{
 		if ( slot == MAX_MASTERS )
 			break;
 
-		if ( !NET_StringToNetadr( CmdSystem::GetArgv( i ), master_adr[i] ) )
+		if ( !NET_StringToNetadr( Cmd_Argv( i ), master_adr[i] ) )
 		{
-			Com_Printf( "Bad address: %s\n", CmdSystem::GetArgv( i ) );
+			Com_Printf( "Bad address: %s\n", Cmd_Argv( i ) );
 			continue;
 		}
 		if ( master_adr[slot].port == 0 )
@@ -65,7 +65,7 @@ static void SV_SetMaster_f()
 ========================
 SV_SetPlayer
 
-Sets sv_client and sv_player to the player with idnum CmdSystem::GetArgv(1)
+Sets sv_client and sv_player to the player with idnum Cmd_Argv(1)
 ========================
 */
 static bool SV_SetPlayer()
@@ -75,15 +75,15 @@ static bool SV_SetPlayer()
 	int idnum;
 	char *s;
 
-	if ( CmdSystem::GetArgc() < 2 )
+	if ( Cmd_Argc() < 2 )
 		return false;
 
-	s = CmdSystem::GetArgv( 1 );
+	s = Cmd_Argv( 1 );
 
 	// numeric values are just slot numbers
 	if ( s[0] >= '0' && s[0] <= '9' )
 	{
-		idnum = atoi( CmdSystem::GetArgv( 1 ) );
+		idnum = atoi( Cmd_Argv( 1 ) );
 		if ( idnum < 0 || idnum >= maxclients->GetInt() )
 		{
 			Com_Printf( "Bad client slot: %i\n", idnum );
@@ -408,7 +408,7 @@ Puts the server in demo mode on a specific map/cinematic
 */
 static void SV_DemoMap_f()
 {
-	SV_Map( true, CmdSystem::GetArgv( 1 ), false );
+	SV_Map( true, Cmd_Argv( 1 ), false );
 }
 
 /*
@@ -435,16 +435,16 @@ static void SV_GameMap_f()
 	int			i;
 	client_t	*cl;
 
-	if (CmdSystem::GetArgc() != 2)
+	if (Cmd_Argc() != 2)
 	{
 		Com_Printf ("Usage: gamemap <map>\n");
 		return;
 	}
 
-	Com_DPrintf("SV_GameMap(%s)\n", CmdSystem::GetArgv(1));
+	Com_DPrintf("SV_GameMap(%s)\n", Cmd_Argv(1));
 
 	// check for clearing the current savegame
-	map = CmdSystem::GetArgv(1);
+	map = Cmd_Argv(1);
 	if (map[0] == '*')
 	{
 		// wipe all the *.sav files
@@ -474,10 +474,10 @@ static void SV_GameMap_f()
 	}
 
 	// start up the next map
-	SV_Map (false, CmdSystem::GetArgv(1), false );
+	SV_Map (false, Cmd_Argv(1), false );
 
 	// archive server state
-	Q_strcpy_s (svs.mapcmd, CmdSystem::GetArgv(1));
+	Q_strcpy_s (svs.mapcmd, Cmd_Argv(1));
 
 	// copy off the level to the autosave slot
 	if (!dedicated->GetBool())
@@ -501,7 +501,7 @@ static void SV_Map_f()
 	char expanded[MAX_QPATH];
 
 	// if not a pcx, demo, or cinematic, check to make sure the level exists
-	map = CmdSystem::GetArgv( 1 );
+	map = Cmd_Argv( 1 );
 	if ( !strstr( map, "." ) )
 	{
 		Q_sprintf_s( expanded, "maps/%s.bsp", map );
@@ -532,14 +532,14 @@ SV_Loadgame_f
 */
 static void SV_Loadgame_f()
 {
-	if ( CmdSystem::GetArgc() != 2 ) {
+	if ( Cmd_Argc() != 2 ) {
 		Com_Print( "Usage: loadgame <directory>\n" );
 		return;
 	}
 
 	Com_Print( "Loading game...\n" );
 
-	const char *dir = CmdSystem::GetArgv( 1 );
+	const char *dir = Cmd_Argv( 1 );
 	if ( strstr( dir, ".." ) || strstr( dir, "/" ) || strstr( dir, "\\" ) ) {
 		Com_Print( "Bad savedir.\n" );
 	}
@@ -573,7 +573,7 @@ static void SV_Savegame_f()
 		return;
 	}
 
-	if ( CmdSystem::GetArgc() != 2 ) {
+	if ( Cmd_Argc() != 2 ) {
 		Com_Print( "Usage: savegame <directory>\n" );
 		return;
 	}
@@ -583,7 +583,7 @@ static void SV_Savegame_f()
 		return;
 	}
 
-	if ( Q_strcmp( CmdSystem::GetArgv( 1 ), "current" ) == 0 ) {
+	if ( Q_strcmp( Cmd_Argv( 1 ), "current" ) == 0 ) {
 		Com_Print( "Can't save to 'current'\n" );
 		return;
 	}
@@ -593,7 +593,7 @@ static void SV_Savegame_f()
 		return;
 	}
 
-	char *dir = CmdSystem::GetArgv( 1 );
+	char *dir = Cmd_Argv( 1 );
 	if ( strstr( dir, ".." ) || strstr( dir, "/" ) || strstr( dir, "\\" ) ) {
 		Com_Print( "Bad savedir.\n" );
 	}
@@ -630,7 +630,7 @@ static void SV_Kick_f()
 		return;
 	}
 
-	if ( CmdSystem::GetArgc() != 2 ) {
+	if ( Cmd_Argc() != 2 ) {
 		Com_Print( "Usage: kick <userid>\n" );
 		return;
 	}
@@ -717,11 +717,11 @@ static void SV_ConSay_f()
 	char	*p;
 	char	text[1024];
 
-	if (CmdSystem::GetArgc () < 2)
+	if (Cmd_Argc () < 2)
 		return;
 
 	strcpy (text, "console: ");
-	p = CmdSystem::GetArgs();
+	p = Cmd_Args();
 
 	if (*p == '"')
 	{
@@ -771,7 +771,7 @@ Examine all a users info strings
 */
 static void SV_DumpUser_f()
 {
-	if ( CmdSystem::GetArgc() != 2 ) {
+	if ( Cmd_Argc() != 2 ) {
 		Com_Print( "Usage: info <userid>\n" );
 		return;
 	}
@@ -801,7 +801,7 @@ static void SV_ServerRecord_f()
 	int		len;
 	int		i;
 
-	if ( CmdSystem::GetArgc() != 2 )
+	if ( Cmd_Argc() != 2 )
 	{
 		Com_Print( "serverrecord <demoname>\n" );
 		return;
@@ -822,7 +822,7 @@ static void SV_ServerRecord_f()
 	//
 	// open the demo file
 	//
-	Q_sprintf_s( name, "demos/%s.dm2", CmdSystem::GetArgv( 1 ) );
+	Q_sprintf_s( name, "demos/%s.dm2", Cmd_Argv( 1 ) );
 
 	Com_Printf( "recording to %s.\n", name );
 	svs.demofile = FileSystem::OpenFileWrite( name );
@@ -937,28 +937,28 @@ SV_InitOperatorCommands
 */
 void SV_InitOperatorCommands()
 {
-	CmdSystem::AddCommand( "heartbeat", SV_Heartbeat_f );
-	CmdSystem::AddCommand( "kick", SV_Kick_f );
-	CmdSystem::AddCommand( "status", SV_Status_f );
-	CmdSystem::AddCommand( "serverinfo", SV_Serverinfo_f );
-	CmdSystem::AddCommand( "dumpuser", SV_DumpUser_f );
+	Cmd_AddCommand( "heartbeat", SV_Heartbeat_f );
+	Cmd_AddCommand( "kick", SV_Kick_f );
+	Cmd_AddCommand( "status", SV_Status_f );
+	Cmd_AddCommand( "serverinfo", SV_Serverinfo_f );
+	Cmd_AddCommand( "dumpuser", SV_DumpUser_f );
 
-	CmdSystem::AddCommand( "map", SV_Map_f );
-	CmdSystem::AddCommand( "demomap", SV_DemoMap_f );
-	CmdSystem::AddCommand( "gamemap", SV_GameMap_f );
-	CmdSystem::AddCommand( "setmaster", SV_SetMaster_f );
+	Cmd_AddCommand( "map", SV_Map_f );
+	Cmd_AddCommand( "demomap", SV_DemoMap_f );
+	Cmd_AddCommand( "gamemap", SV_GameMap_f );
+	Cmd_AddCommand( "setmaster", SV_SetMaster_f );
 
 	if ( dedicated->GetBool() ) {
-		CmdSystem::AddCommand( "say", SV_ConSay_f );
+		Cmd_AddCommand( "say", SV_ConSay_f );
 	}
 
-	CmdSystem::AddCommand( "serverrecord", SV_ServerRecord_f );
-	CmdSystem::AddCommand( "serverstop", SV_ServerStop_f );
+	Cmd_AddCommand( "serverrecord", SV_ServerRecord_f );
+	Cmd_AddCommand( "serverstop", SV_ServerStop_f );
 
-	CmdSystem::AddCommand( "save", SV_Savegame_f );
-	CmdSystem::AddCommand( "load", SV_Loadgame_f );
+	Cmd_AddCommand( "save", SV_Savegame_f );
+	Cmd_AddCommand( "load", SV_Loadgame_f );
 
-	CmdSystem::AddCommand( "killserver", SV_KillServer_f );
+	Cmd_AddCommand( "killserver", SV_KillServer_f );
 
-	CmdSystem::AddCommand( "sv", SV_ServerCommand_f );
+	Cmd_AddCommand( "sv", SV_ServerCommand_f );
 }

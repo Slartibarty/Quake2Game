@@ -429,7 +429,7 @@ void SV_Map( bool attractloop, const char *levelstring, bool loadgame )
 		SV_BroadcastCommand( "changing\n" );
 		SV_SendClientMessages();
 		SV_SpawnServer( level, spawnpoint, ss_game, attractloop, loadgame );
-		CmdBuffer::CopyToDefer();
+		Cbuf_CopyToDefer();
 	}
 
 	SV_BroadcastCommand( "reconnect\n" );

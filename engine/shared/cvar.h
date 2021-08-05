@@ -73,7 +73,7 @@ void		Cvar_GetLatchedVars();
 
 			// Handles variable inspection and changing from the console
 			//
-			// called by CmdSystem::ExecuteString when CmdSystem::GetArgv(0) doesn't match a known
+			// called by Cmd_ExecuteString when Cmd_Argv(0) doesn't match a known
 			// command.  Returns true if the command was a variable reference that
 			// was handled. (print or change)
 bool		Cvar_Command();

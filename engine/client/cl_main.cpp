@@ -129,7 +129,7 @@ static void CL_Record_f()
 	entity_state_t	*ent;
 	entity_state_t	nullstate;
 
-	if ( CmdSystem::GetArgc() != 2 )
+	if ( Cmd_Argc() != 2 )
 	{
 		Com_Print( "Usage: record <demoname>\n" );
 		return;
@@ -150,7 +150,7 @@ static void CL_Record_f()
 	//
 	// open the demo file
 	//
-	const char *demoName = CmdSystem::GetArgv( 1 );
+	const char *demoName = Cmd_Argv( 1 );
 	Com_Printf( "recording to %s.\n", demoName );
 	cls.demofile = FileSystem::OpenFileWrite( demoName );
 	if ( cls.demofile == FS_INVALID_HANDLE )
@@ -248,7 +248,7 @@ void Cmd_ForwardToServer (void)
 {
 	char	*cmd;
 
-	cmd = CmdSystem::GetArgv(0);
+	cmd = Cmd_Argv(0);
 	if (cls.state <= ca_connected || *cmd == '-' || *cmd == '+')
 	{
 		Com_Printf ("Unknown command \"%s\"\n", cmd);
@@ -257,10 +257,10 @@ void Cmd_ForwardToServer (void)
 
 	MSG_WriteByte (&cls.netchan.message, clc_stringcmd);
 	SZ_Print (&cls.netchan.message, cmd);
-	if (CmdSystem::GetArgc() > 1)
+	if (Cmd_Argc() > 1)
 	{
 		SZ_Print (&cls.netchan.message, " ");
-		SZ_Print (&cls.netchan.message, CmdSystem::GetArgs());
+		SZ_Print (&cls.netchan.message, Cmd_Args());
 	}
 }
 
@@ -274,15 +274,15 @@ void CL_ForwardToServer_f (void)
 {
 	if (cls.state != ca_connected && cls.state != ca_active)
 	{
-		Com_Printf ("Can't \"%s\", not connected\n", CmdSystem::GetArgv(0));
+		Com_Printf ("Can't \"%s\", not connected\n", Cmd_Argv(0));
 		return;
 	}
 	
 	// don't forward the first argument
-	if (CmdSystem::GetArgc() > 1)
+	if (Cmd_Argc() > 1)
 	{
 		MSG_WriteByte (&cls.netchan.message, clc_stringcmd);
-		SZ_Print (&cls.netchan.message, CmdSystem::GetArgs());
+		SZ_Print (&cls.netchan.message, Cmd_Args());
 	}
 }
 
@@ -423,7 +423,7 @@ void CL_Connect_f (void)
 {
 	char	*server;
 
-	if (CmdSystem::GetArgc() != 2)
+	if (Cmd_Argc() != 2)
 	{
 		Com_Printf ("usage: connect <server>\n");
 		return;	
@@ -438,7 +438,7 @@ void CL_Connect_f (void)
 		CL_Disconnect ();
 	}
 
-	server = CmdSystem::GetArgv (1);
+	server = Cmd_Argv (1);
 
 	NET_Config (true);		// allow remote
 
@@ -484,9 +484,9 @@ void CL_Rcon_f (void)
 	strcat (message, rcon_client_password->GetString());
 	strcat (message, " ");
 
-	for (i=1 ; i<CmdSystem::GetArgc() ; i++)
+	for (i=1 ; i<Cmd_Argc() ; i++)
 	{
-		strcat (message, CmdSystem::GetArgv(i));
+		strcat (message, Cmd_Argv(i));
 		strcat (message, " ");
 	}
 
@@ -610,7 +610,7 @@ void CL_Packet_f (void)
 	char		*in, *out;
 	netadr_t	adr;
 
-	if (CmdSystem::GetArgc() != 3)
+	if (Cmd_Argc() != 3)
 	{
 		Com_Printf ("packet <destination> <contents>\n");
 		return;
@@ -618,7 +618,7 @@ void CL_Packet_f (void)
 
 	NET_Config (true);		// allow remote
 
-	if (!NET_StringToNetadr (CmdSystem::GetArgv(1), adr))
+	if (!NET_StringToNetadr (Cmd_Argv(1), adr))
 	{
 		Com_Printf ("Bad address\n");
 		return;
@@ -626,7 +626,7 @@ void CL_Packet_f (void)
 	if (!adr.port)
 		adr.port = BigShort (PORT_SERVER);
 
-	in = CmdSystem::GetArgv(2);
+	in = Cmd_Argv(2);
 	out = send+4;
 	send[0] = send[1] = send[2] = send[3] = (char)0xff;
 
@@ -818,9 +818,9 @@ void CL_ConnectionlessPacket (void)
 
 	s = MSG_ReadStringLine (&net_message);
 
-	CmdSystem::TokenizeString (s, false);
+	Cmd_TokenizeString (s, false);
 
-	c = CmdSystem::GetArgv(0);
+	c = Cmd_Argv(0);
 
 	Com_Printf ("%s: %s\n", NET_NetadrToString (net_from), c);
 
@@ -856,8 +856,8 @@ void CL_ConnectionlessPacket (void)
 		}
 		Sys_AppActivate ();
 		s = MSG_ReadString (&net_message);
-		CmdBuffer::AddText (s);
-		CmdBuffer::AddText ("\n");
+		Cbuf_AddText (s);
+		Cbuf_AddText ("\n");
 		return;
 	}
 	// print command from somewhere
@@ -878,7 +878,7 @@ void CL_ConnectionlessPacket (void)
 	// challenge from the server we are connecting to
 	if (!Q_strcmp(c, "challenge"))
 	{
-		cls.challenge = atoi(CmdSystem::GetArgv(1));
+		cls.challenge = atoi(Cmd_Argv(1));
 		CL_SendConnectPacket ();
 		return;
 	}
@@ -886,7 +886,7 @@ void CL_ConnectionlessPacket (void)
 	// echo request from server
 	if (!Q_strcmp(c, "echo"))
 	{
-		Netchan_OutOfBandPrint (NS_CLIENT, net_from, "%s", CmdSystem::GetArgv(1) );
+		Netchan_OutOfBandPrint (NS_CLIENT, net_from, "%s", Cmd_Argv(1) );
 		return;
 	}
 
@@ -1314,7 +1314,7 @@ void CL_Precache_f (void)
 {
 	//Yet another hack to let old demos work
 	//the old precache sequence
-	if (CmdSystem::GetArgc() < 2) {
+	if (Cmd_Argc() < 2) {
 		unsigned	map_checksum;		// for detecting cheater maps
 
 		CM_LoadMap (cl.configstrings[CS_MODELS+1], true, &map_checksum);
@@ -1324,7 +1324,7 @@ void CL_Precache_f (void)
 	}
 
 	precache_check = CS_MODELS;
-	precache_spawncount = atoi(CmdSystem::GetArgv(1));
+	precache_spawncount = atoi(Cmd_Argv(1));
 	precache_model = 0;
 	precache_model_skin = 0;
 
@@ -1413,33 +1413,33 @@ void CL_InitLocal (void)
 	//
 	// register our commands
 	//
-	CmdSystem::AddCommand ("cmd", CL_ForwardToServer_f);
-	CmdSystem::AddCommand ("pause", CL_Pause_f);
-	CmdSystem::AddCommand ("pingservers", CL_PingServers_f);
-	CmdSystem::AddCommand ("skins", CL_Skins_f);
+	Cmd_AddCommand ("cmd", CL_ForwardToServer_f);
+	Cmd_AddCommand ("pause", CL_Pause_f);
+	Cmd_AddCommand ("pingservers", CL_PingServers_f);
+	Cmd_AddCommand ("skins", CL_Skins_f);
 
-	CmdSystem::AddCommand ("userinfo", CL_Userinfo_f);
-	CmdSystem::AddCommand ("snd_restart", CL_Snd_Restart_f);
+	Cmd_AddCommand ("userinfo", CL_Userinfo_f);
+	Cmd_AddCommand ("snd_restart", CL_Snd_Restart_f);
 
-	CmdSystem::AddCommand ("changing", CL_Changing_f);
-	CmdSystem::AddCommand ("disconnect", CL_Disconnect_f);
-	CmdSystem::AddCommand ("record", CL_Record_f);
-	CmdSystem::AddCommand ("stop", CL_Stop_f);
+	Cmd_AddCommand ("changing", CL_Changing_f);
+	Cmd_AddCommand ("disconnect", CL_Disconnect_f);
+	Cmd_AddCommand ("record", CL_Record_f);
+	Cmd_AddCommand ("stop", CL_Stop_f);
 
-	CmdSystem::AddCommand ("quit", CL_Quit_f);
+	Cmd_AddCommand ("quit", CL_Quit_f);
 
-	CmdSystem::AddCommand ("connect", CL_Connect_f);
-	CmdSystem::AddCommand ("reconnect", CL_Reconnect_f);
+	Cmd_AddCommand ("connect", CL_Connect_f);
+	Cmd_AddCommand ("reconnect", CL_Reconnect_f);
 
-	CmdSystem::AddCommand ("rcon", CL_Rcon_f);
+	Cmd_AddCommand ("rcon", CL_Rcon_f);
 
 #ifdef Q_DEBUG
-	CmdSystem::AddCommand ("packet", CL_Packet_f); // this is dangerous to leave in
+	Cmd_AddCommand ("packet", CL_Packet_f); // this is dangerous to leave in
 #endif
 
-	CmdSystem::AddCommand ("precache", CL_Precache_f);
+	Cmd_AddCommand ("precache", CL_Precache_f);
 
-	CmdSystem::AddCommand ("download", CL_Download_f);
+	Cmd_AddCommand ("download", CL_Download_f);
 
 	//
 	// forward to server commands
@@ -1448,24 +1448,24 @@ void CL_InitLocal (void)
 	// to work -- all unknown commands are automatically
 	// forwarded to the server
 	// TODO: This sucks
-	CmdSystem::AddCommand ("wave", NULL);
-	CmdSystem::AddCommand ("inven", NULL);
-	CmdSystem::AddCommand ("kill", NULL);
-	CmdSystem::AddCommand ("use", NULL);
-	CmdSystem::AddCommand ("drop", NULL);
-	CmdSystem::AddCommand ("say", NULL);
-	CmdSystem::AddCommand ("say_team", NULL);
-	CmdSystem::AddCommand ("info", NULL);
-	CmdSystem::AddCommand ("give", NULL);
-	CmdSystem::AddCommand ("god", NULL);
-	CmdSystem::AddCommand ("notarget", NULL);
-	CmdSystem::AddCommand ("noclip", NULL);
-	CmdSystem::AddCommand ("invuse", NULL);
-	CmdSystem::AddCommand ("invprev", NULL);
-	CmdSystem::AddCommand ("invnext", NULL);
-	CmdSystem::AddCommand ("invdrop", NULL);
-	CmdSystem::AddCommand ("weapnext", NULL);
-	CmdSystem::AddCommand ("weapprev", NULL);
+	Cmd_AddCommand ("wave", NULL);
+	Cmd_AddCommand ("inven", NULL);
+	Cmd_AddCommand ("kill", NULL);
+	Cmd_AddCommand ("use", NULL);
+	Cmd_AddCommand ("drop", NULL);
+	Cmd_AddCommand ("say", NULL);
+	Cmd_AddCommand ("say_team", NULL);
+	Cmd_AddCommand ("info", NULL);
+	Cmd_AddCommand ("give", NULL);
+	Cmd_AddCommand ("god", NULL);
+	Cmd_AddCommand ("notarget", NULL);
+	Cmd_AddCommand ("noclip", NULL);
+	Cmd_AddCommand ("invuse", NULL);
+	Cmd_AddCommand ("invprev", NULL);
+	Cmd_AddCommand ("invnext", NULL);
+	Cmd_AddCommand ("invdrop", NULL);
+	Cmd_AddCommand ("weapnext", NULL);
+	Cmd_AddCommand ("weapprev", NULL);
 }
 
 
@@ -1571,7 +1571,7 @@ void CL_SendCommand (void)
 	input::Commands ();
 
 	// process console commands
-	CmdBuffer::Execute ();
+	Cbuf_Execute ();
 
 	// fix any cheating cvars
 	CL_FixCvarCheats ();
@@ -1729,7 +1729,7 @@ void CL_Init (void)
 
 	CL_InitCGame();
 
-	CmdBuffer::Execute ();
+	Cbuf_Execute ();
 }
 
 

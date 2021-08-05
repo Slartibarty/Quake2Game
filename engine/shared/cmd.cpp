@@ -13,60 +13,88 @@
 
 #include "cmd.h"
 
-#define	MAX_ALIAS_NAME		32
-#define	ALIAS_LOOP_COUNT	16
+#define	MAX_ALIAS_NAME	32
 
-// Adds the current command line as a clc_stringcmd to the client message.
-// Things like godmode, noclip, etc, are commands directed to the server,
-// so when they are typed in at the console, they will need to be forwarded.
-// Slart: This is in the client...
-void Cmd_ForwardToServer();
-
-namespace CmdSystem
+struct cmdalias_t
 {
+	char			name[MAX_ALIAS_NAME];
+	char *			pValue;
+	cmdalias_t *	pNext;
+};
+
+// singly linked list of command aliases
+static cmdalias_t *cmd_alias;
+
+static bool cmd_wait;
+
+#define	ALIAS_LOOP_COUNT	16
 static int alias_count;		// for detecting runaway loops
+
+static char cmd_null_string[1]; // lame
+
+//=================================================================================================
+
+/*
+========================
+Cmd_Wait_f
+
+Causes execution of the remainder of the command buffer to be delayed until
+next frame.  This allows commands like:
+bind g "impulse 5 ; +attack ; wait ; -attack ; impulse 2"
+========================
+*/
+static void Cmd_Wait_f()
+{
+	cmd_wait = true;
 }
 
-namespace CmdBuffer
-{
-
 /*
-===============================================================================
+===================================================================================================
+
 	Command buffer
-===============================================================================
+
+===================================================================================================
 */
 
-static bool			cmd_wait;
+sizebuf_t	cmd_text;
+byte		cmd_text_buf[8192];
 
-static sizebuf_t	cmd_text;
-static byte			cmd_text_buf[8192];
-
-static byte			defer_text_buf[8192];
+byte		defer_text_buf[8192];
 
 /*
 ========================
-Init
+Cbuf_Init
 ========================
 */
-void Init()
+void Cbuf_Init()
 {
 	SZ_Init( &cmd_text, cmd_text_buf, sizeof( cmd_text_buf ) );
 }
 
 /*
 ========================
-AddText
+Cbuf_Shutdown
+========================
+*/
+void Cbuf_Shutdown()
+{
+	SZ_Init( &cmd_text, cmd_text_buf, sizeof( cmd_text_buf ) );
+}
+
+/*
+========================
+Cbuf_AddText
 
 Adds command text at the end of the buffer
 ========================
 */
-void AddText( const char *text )
+void Cbuf_AddText( const char *text )
 {
 	int l = (int)strlen( text );
 
 	if ( cmd_text.cursize + l >= cmd_text.maxsize )
 	{
-		Com_Print( "CmdBuffer::AddText: overflow\n" );
+		Com_Print( "Cbuf_AddText: overflow\n" );
 		return;
 	}
 
@@ -75,14 +103,14 @@ void AddText( const char *text )
 
 /*
 ========================
-InsertText
+Cbuf_InsertText
 
 Adds command text immediately after the current command
 Adds a \n to the text
 FIXME: actually change the command buffer to do less copying
 ========================
 */
-void InsertText( const char *text )
+void Cbuf_InsertText( const char *text )
 {
 	char *temp;
 	int templen;
@@ -97,7 +125,7 @@ void InsertText( const char *text )
 	}
 
 	// add the entire text of the file
-	AddText( text );
+	Cbuf_AddText( text );
 
 	// add the copied off data
 	if ( templen )
@@ -108,10 +136,10 @@ void InsertText( const char *text )
 
 /*
 ========================
-CopyToDefer
+Cbuf_CopyToDefer
 ========================
 */
-void CopyToDefer()
+void Cbuf_CopyToDefer()
 {
 	memcpy( defer_text_buf, cmd_text_buf, cmd_text.cursize );
 	defer_text_buf[cmd_text.cursize] = '\0';
@@ -120,28 +148,28 @@ void CopyToDefer()
 
 /*
 ========================
-InsertFromDefer
+Cbuf_InsertFromDefer
 ========================
 */
-void InsertFromDefer()
+void Cbuf_InsertFromDefer()
 {
-	InsertText( (char*)defer_text_buf );
+	Cbuf_InsertText( (char*)defer_text_buf );
 	defer_text_buf[0] = '\0';
 }
 
 /*
 ========================
-Execute
+Cbuf_Execute
 ========================
 */
-void Execute()
+void Cbuf_Execute()
 {
 	int		i;
 	char	*text;
 	char	line[1024];
 	int		quotes;
 
-	CmdSystem::alias_count = 0;		// don't allow infinite alias loops
+	alias_count = 0;		// don't allow infinite alias loops
 
 	while ( cmd_text.cursize )
 	{
@@ -179,7 +207,7 @@ void Execute()
 		}
 
 		// execute the command line
-		CmdSystem::ExecuteString( line );
+		Cmd_ExecuteString( line );
 
 		if ( cmd_wait )
 		{
@@ -193,7 +221,7 @@ void Execute()
 
 /*
 ========================
-AddEarlyCommands
+Cbuf_AddEarlyCommands
 
 Adds command line parameters as script statements
 Commands lead with a +, and continue until another +
@@ -204,21 +232,21 @@ the client and server initialize for the first time.
 Other commands are added late, after all initialization is complete.
 ========================
 */
-void AddEarlyCommands( int argc, char **argv )
+void Cbuf_AddEarlyCommands( int argc, char **argv )
 {
 	for ( int i = 0; i < argc; ++i )
 	{
 		if ( Q_strcmp( argv[i], "+set" ) != 0 ) {
 			continue;
 		}
-		AddText( va( "set %s %s\n", argv[i + 1], argv[i + 2] ) );
+		Cbuf_AddText( va( "set %s %s\n", argv[i + 1], argv[i + 2] ) );
 		i += 2;
 	}
 }
 
 /*
 ========================
-AddLateCommands
+Cbuf_AddLateCommands
 
 Adds command line parameters as script statements
 Commands lead with a + and continue until another + or -
@@ -228,7 +256,7 @@ Returns true if any late commands were added, which
 will keep the demoloop from immediately starting
 ========================
 */
-bool AddLateCommands( int argc, char **argv )
+bool Cbuf_AddLateCommands( int argc, char **argv )
 {
 	int i, j;
 
@@ -259,7 +287,7 @@ bool AddLateCommands( int argc, char **argv )
 			strcat( text, " " );
 		}
 	}
-
+	
 	// pull out the commands
 	char *build = (char *)Mem_StackAlloc( s + 1 );
 	build[0] = '\0';
@@ -284,34 +312,164 @@ bool AddLateCommands( int argc, char **argv )
 
 	bool ret = build[0] != 0;
 	if ( ret ) {
-		AddText( build );
+		Cbuf_AddText( build );
 	}
-
+	
 	return ret;
 }
-
-} // namespace CommandBuffer
 
 /*
 ===================================================================================================
 
-	Command Execution
+	Script commands
 
 ===================================================================================================
 */
 
-namespace CmdSystem
+/*
+========================
+Cmd_Exec_f
+========================
+*/
+static void Cmd_Exec_f()
 {
+	if ( Cmd_Argc() != 2 )
+	{
+		Com_Print( "exec <filename> : execute a script file\n" );
+		return;
+	}
 
-struct cmdAlias_t
+	const char *filename = Cmd_Argv( 1 );
+
+	char *f;
+	int len = FileSystem::LoadFile( filename, (void **)&f, 1 );
+	if ( !f )
+	{
+		Com_Printf( "Couldn't exec %s\n", filename );
+		return;
+	}
+	Com_Printf( "Execing %s\n", filename );
+
+	Cbuf_InsertText( f );
+
+	FileSystem::FreeFile( f );
+}
+
+/*
+========================
+Cmd_Echo_f
+
+Just prints the rest of the line to the console
+========================
+*/
+static void Cmd_Echo_f()
 {
-	char			name[MAX_ALIAS_NAME];
-	char *			pValue;
-	cmdAlias_t *	pNext;
-};
+	for ( int i = 1; i < Cmd_Argc(); ++i )
+	{
+		Com_Printf( "%s ", Cmd_Argv( i ) );
+	}
+	Com_Print( "\n" );
+}
 
-// singly linked list of command aliases
-static cmdAlias_t *cmd_alias;
+/*
+========================
+Cmd_Alias_f
+
+Creates a new command that executes a command string (possibly ; seperated)
+========================
+*/
+static void Cmd_Alias_f()
+{
+	char cmd[1024];
+	cmdalias_t *pAlias;
+
+	if ( Cmd_Argc() == 1 )
+	{
+		Com_Print( "Current alias commands:\n" );
+		for ( pAlias = cmd_alias; pAlias; pAlias = pAlias->pNext )
+		{
+			Com_Printf( "%s : %s\n", pAlias->name, pAlias->pValue );
+		}
+		return;
+	}
+
+	const char *aliasName = Cmd_Argv( 1 );
+	if ( strlen( aliasName ) >= MAX_ALIAS_NAME )
+	{
+		Com_Print( "Alias name is too long\n" );
+		return;
+	}
+
+	// if the alias already exists, reuse it
+	for ( pAlias = cmd_alias; pAlias; pAlias = pAlias->pNext )
+	{
+		if ( Q_stricmp( aliasName, pAlias->name ) == 0 )
+		{
+			Mem_Free( pAlias->pValue );
+			break;
+		}
+	}
+
+	if ( !pAlias )
+	{
+		pAlias = (cmdalias_t*)Mem_ClearedAlloc( sizeof( cmdalias_t ) );
+		pAlias->pNext = cmd_alias;
+		cmd_alias = pAlias;
+	}
+	strcpy( pAlias->name, aliasName );
+
+	// copy the rest of the command line
+	cmd[0] = 0;			// start out with a null string
+	int c = Cmd_Argc();
+	for ( int i = 2; i < c; ++i )
+	{
+		strcat( cmd, Cmd_Argv( i ) );
+		if ( i != ( c - 1 ) )
+		{
+			strcat( cmd, " " );
+		}
+	}
+	strcat( cmd, "\n" );
+
+	pAlias->pValue = Mem_CopyString( cmd );
+}
+
+/*
+========================
+Cmd_Toggle_f
+
+Toggles a convar as if it were a bool
+TODO: This the wrong place for this? wtf why did I put it in the command system?
+========================
+*/
+static void Cmd_Toggle_f()
+{
+	if ( Cmd_Argc() != 2 )
+	{
+		Com_Print( "Bad parameters\n" );
+		return;
+	}
+
+	const char *cmdName = Cmd_Argv( 1 );
+	cvar_t *var = Cvar_Find( cmdName );
+	if ( !var )
+	{
+		Com_Printf( "Cvar \"%s\" does not exist\n", cmdName );
+		return;
+	}
+
+	Cvar_SetBool( var, !var->GetBool() );
+
+	Com_Printf( "Toggled %s to %s\n", var->GetName(), var->GetBool() ? "true" : "false" );
+}
+
+/*
+===================================================================================================
+
+	Command execution
+
+===================================================================================================
+*/
 
 static int		cmd_argc;
 static char *	cmd_argv[MAX_STRING_TOKENS];
@@ -322,48 +480,46 @@ cmdFunction_t *cmd_functions;
 
 /*
 ========================
-GetArgc
+Cmd_Argc
 ========================
 */
-int GetArgc()
+int Cmd_Argc()
 {
 	return cmd_argc;
 }
 
 /*
 ========================
-GetArgv
+Cmd_Argv
 ========================
 */
-char *GetArgv( int arg )
+char *Cmd_Argv( int arg )
 {
-	static char null_char;
-
 	assert( arg >= 0 && arg < cmd_argc );
 	if ( arg >= cmd_argc ) {
-		return &null_char;
+		return cmd_null_string;
 	}
 	return cmd_argv[arg];
 }
 
 /*
 ========================
-GetArgs
+Cmd_Args
 
 Returns a single string containing argv(1) to argv(argc()-1)
 ========================
 */
-char *GetArgs()
+char *Cmd_Args()
 {
 	return cmd_args;
 }
 
 /*
 ========================
-MacroExpandString
+Cmd_MacroExpandString
 ========================
 */
-static char *MacroExpandString( char *text )
+static char *Cmd_MacroExpandString( char *text )
 {
 	static char expanded[MAX_STRING_CHARS];
 	char temporary[MAX_STRING_CHARS];
@@ -436,13 +592,13 @@ static char *MacroExpandString( char *text )
 
 /*
 ========================
-TokenizeString
+Cmd_TokenizeString
 
 Parses the given string into command line tokens.
 $Cvars will be expanded unless they are in a quoted token
 ========================
 */
-void TokenizeString( char *text, bool macroExpand )
+void Cmd_TokenizeString( char *text, bool macroExpand )
 {
 	// clear the args from the last string
 	for ( int i = 0; i < cmd_argc; i++ ) {
@@ -454,7 +610,7 @@ void TokenizeString( char *text, bool macroExpand )
 
 	// macro expand the text
 	if ( macroExpand ) {
-		text = MacroExpandString( text );
+		text = Cmd_MacroExpandString( text );
 	}
 	if ( !text ) {
 		return;
@@ -490,8 +646,7 @@ void TokenizeString( char *text, bool macroExpand )
 			{
 				if ( cmd_args[l] <= ' ' ) {
 					cmd_args[l] = '\0';
-				}
-				else {
+				} else {
 					break;
 				}
 			}
@@ -512,15 +667,15 @@ void TokenizeString( char *text, bool macroExpand )
 
 /*
 ========================
-AddCommand
+Cmd_AddCommand
 ========================
 */
-void AddCommand( const char *cmd_name, xCommand_t function, const char *help /*= nullptr*/ )
+void Cmd_AddCommand( const char *cmd_name, xcommand_t function, const char *help /*= nullptr*/ )
 {
 	// fail if the command is a variable name
 	if ( Cvar_Find( cmd_name ) )
 	{
-		Com_Printf( "CmdSystem::AddCommand: %s already defined as a var\n", cmd_name );
+		Com_Printf( "Cmd_AddCommand: %s already defined as a var\n", cmd_name );
 		return;
 	}
 
@@ -531,7 +686,7 @@ void AddCommand( const char *cmd_name, xCommand_t function, const char *help /*=
 	{
 		if ( Q_stricmp( cmd_name, pCmd->pName ) == 0 )
 		{
-			Com_Printf( "CmdSystem::AddCommand: %s already defined as %s\n", cmd_name, pCmd->pName );
+			Com_Printf( "Cmd_AddCommand: %s already defined as %s\n", cmd_name, pCmd->pName );
 			return;
 		}
 	}
@@ -546,10 +701,10 @@ void AddCommand( const char *cmd_name, xCommand_t function, const char *help /*=
 
 /*
 ========================
-RemoveCommand
+Cmd_RemoveCommand
 ========================
 */
-void RemoveCommand( const char *cmd_name )
+void Cmd_RemoveCommand( const char *cmd_name )
 {
 	cmdFunction_t *pCmd, **ppBack;
 
@@ -559,7 +714,7 @@ void RemoveCommand( const char *cmd_name )
 		pCmd = *ppBack;
 		if ( !pCmd )
 		{
-			Com_Printf( "CmdSystem::RemoveCommand: %s not added\n", cmd_name );
+			Com_Printf( "Cmd_RemoveCommand: %s not added\n", cmd_name );
 			return;
 		}
 		if ( Q_stricmp( cmd_name, pCmd->pName ) == 0 )
@@ -574,10 +729,10 @@ void RemoveCommand( const char *cmd_name )
 
 /*
 ========================
-CommandExists
+Cmd_Exists
 ========================
 */
-bool CommandExists( const char *cmd_name )
+bool Cmd_Exists( const char *cmd_name )
 {
 	for ( cmdFunction_t *cmd = cmd_functions; cmd; cmd = cmd->pNext )
 	{
@@ -591,10 +746,10 @@ bool CommandExists( const char *cmd_name )
 
 /*
 ========================
-CompleteCommand
+Cmd_CompleteCommand
 ========================
 */
-const char *CompleteCommand( const char *partial )
+const char *Cmd_CompleteCommand( const char *partial )
 {
 	strlen_t len = Q_strlen( partial );
 
@@ -603,7 +758,7 @@ const char *CompleteCommand( const char *partial )
 	}
 
 	cmdFunction_t *pCmd;
-	cmdAlias_t *pAlias;
+	cmdalias_t *pAlias;
 
 	// check for exact match
 	for ( pCmd = cmd_functions; pCmd; pCmd = pCmd->pNext )
@@ -638,18 +793,18 @@ const char *CompleteCommand( const char *partial )
 
 /*
 ========================
-ExecuteString
+Cmd_ExecuteString
 
 A complete command line has been parsed, so try to execute it
 FIXME: lookupnoadd the token to speed search?
 ========================
 */
-void ExecuteString( char *text )
+void Cmd_ExecuteString( char *text )
 {
-	TokenizeString( text, true );
+	Cmd_TokenizeString( text, true );
 
 	// execute the command line
-	if ( !GetArgc() ) {
+	if ( !Cmd_Argc() ) {
 		// no tokens
 		return;
 	}
@@ -662,7 +817,7 @@ void ExecuteString( char *text )
 			if ( !pCmd->pFunction )
 			{
 				// forward to server command
-				ExecuteString( va( "cmd %s", text ) );
+				Cmd_ExecuteString( va( "cmd %s", text ) );
 			}
 			else
 			{
@@ -673,7 +828,7 @@ void ExecuteString( char *text )
 	}
 
 	// check alias
-	for ( cmdAlias_t *pAlias = cmd_alias; pAlias; pAlias = pAlias->pNext )
+	for ( cmdalias_t *pAlias = cmd_alias; pAlias; pAlias = pAlias->pNext )
 	{
 		if ( !Q_stricmp( cmd_argv[0], pAlias->name ) )
 		{
@@ -682,11 +837,11 @@ void ExecuteString( char *text )
 				Com_Print( "ALIAS_LOOP_COUNT\n" );
 				return;
 			}
-			CmdBuffer::InsertText( pAlias->pValue );
+			Cbuf_InsertText( pAlias->pValue );
 			return;
 		}
 	}
-	
+
 	// check cvars
 	if ( Cvar_Command() ) {
 		return;
@@ -713,176 +868,25 @@ static void Cmd_List_f()
 
 /*
 ========================
-Cmd_Wait_f
-
-Causes execution of the remainder of the command buffer to be delayed until
-next frame.  This allows commands like:
-bind g "impulse 5 ; +attack ; wait ; -attack ; impulse 2"
+Cmd_Init
 ========================
 */
-static void Cmd_Wait_f()
+void Cmd_Init()
 {
-	CmdBuffer::cmd_wait = true;
+	Cmd_AddCommand( "cmdlist", Cmd_List_f, "Lists all available commands." );
+	Cmd_AddCommand( "exec", Cmd_Exec_f, "Executes a script file." );
+	Cmd_AddCommand( "echo", Cmd_Echo_f, "Prints arguments to the console." );
+	Cmd_AddCommand( "alias", Cmd_Alias_f, "Creates a command alias." );
+	Cmd_AddCommand( "toggle", Cmd_Toggle_f, "Toggles a convar as if it were a bool." );
+	Cmd_AddCommand( "wait", Cmd_Wait_f, "Defers script execution until the next frame." );
 }
 
 /*
 ========================
-Cmd_Exec_f
+Cmd_Shutdown
 ========================
 */
-static void Cmd_Exec_f()
-{
-	if ( GetArgc() != 2 )
-	{
-		Com_Print( "exec <filename> : execute a script file\n" );
-		return;
-	}
-
-	const char *filename = GetArgv( 1 );
-
-	char *f;
-	FileSystem::LoadFile( filename, (void **)&f, 1 );
-	if ( !f )
-	{
-		Com_Printf( "Couldn't exec %s\n", filename );
-		return;
-	}
-	Com_Printf( "Execing %s\n", filename );
-
-	CmdBuffer::InsertText( f );
-
-	FileSystem::FreeFile( f );
-}
-
-/*
-========================
-Cmd_Echo_f
-
-Just prints the rest of the line to the console
-========================
-*/
-static void Cmd_Echo_f()
-{
-	for ( int i = 1; i < GetArgc(); ++i )
-	{
-		Com_Printf( "%s ", GetArgv( i ) );
-	}
-	Com_Print( "\n" );
-}
-
-/*
-========================
-Cmd_Alias_f
-
-Creates a new command that executes a command string (possibly ; seperated)
-========================
-*/
-static void Cmd_Alias_f()
-{
-	char cmd[1024];
-	cmdAlias_t *pAlias;
-
-	if ( GetArgc() == 1 )
-	{
-		Com_Print( "Current alias commands:\n" );
-		for ( pAlias = cmd_alias; pAlias; pAlias = pAlias->pNext )
-		{
-			Com_Printf( "%s : %s\n", pAlias->name, pAlias->pValue );
-		}
-		return;
-	}
-
-	const char *aliasName = GetArgv( 1 );
-	if ( strlen( aliasName ) >= MAX_ALIAS_NAME )
-	{
-		Com_Print( "Alias name is too long\n" );
-		return;
-	}
-
-	// if the alias already exists, reuse it
-	for ( pAlias = cmd_alias; pAlias; pAlias = pAlias->pNext )
-	{
-		if ( Q_stricmp( aliasName, pAlias->name ) == 0 )
-		{
-			Mem_Free( pAlias->pValue );
-			break;
-		}
-	}
-
-	if ( !pAlias )
-	{
-		pAlias = (cmdAlias_t*)Mem_ClearedAlloc( sizeof( cmdAlias_t ) );
-		pAlias->pNext = cmd_alias;
-		cmd_alias = pAlias;
-	}
-	strcpy( pAlias->name, aliasName );
-
-	// copy the rest of the command line
-	cmd[0] = 0;			// start out with a null string
-	int c = GetArgc();
-	for ( int i = 2; i < c; ++i )
-	{
-		strcat( cmd, GetArgv( i ) );
-		if ( i != ( c - 1 ) )
-		{
-			strcat( cmd, " " );
-		}
-	}
-	strcat( cmd, "\n" );
-
-	pAlias->pValue = Mem_CopyString( cmd );
-}
-
-/*
-========================
-Cmd_Toggle_f
-
-Toggles a convar as if it were a bool
-TODO: This the wrong place for this? wtf why did I put it in the command system?
-========================
-*/
-static void Cmd_Toggle_f()
-{
-	if ( GetArgc() != 2 )
-	{
-		Com_Print( "Bad parameters\n" );
-		return;
-	}
-
-	const char *cmdName = GetArgv( 1 );
-	cvar_t *var = Cvar_Find( cmdName );
-	if ( !var )
-	{
-		Com_Printf( "Cvar \"%s\" does not exist\n", cmdName );
-		return;
-	}
-
-	Cvar_SetBool( var, !var->GetBool() );
-
-	Com_Printf( "Toggled %s to %s\n", var->GetName(), var->GetBool() ? "true" : "false" );
-}
-
-/*
-========================
-Init
-========================
-*/
-void Init()
-{
-	CmdSystem::AddCommand( "cmdlist", Cmd_List_f, "Lists all available commands." );
-	CmdSystem::AddCommand( "exec", Cmd_Exec_f, "Executes a script file." );
-	CmdSystem::AddCommand( "echo", Cmd_Echo_f, "Prints arguments to the console." );
-	CmdSystem::AddCommand( "alias", Cmd_Alias_f, "Creates a command alias." );
-	CmdSystem::AddCommand( "toggle", Cmd_Toggle_f, "Toggles a convar as if it were a bool." );
-	CmdSystem::AddCommand( "wait", Cmd_Wait_f, "Defers script execution until the next frame." );
-}
-
-/*
-========================
-Shutdown
-========================
-*/
-void Shutdown()
+void Cmd_Shutdown()
 {
 	cmdFunction_t *cmd = cmd_functions;
 	cmdFunction_t *lastCmd = nullptr;
@@ -897,8 +901,8 @@ void Shutdown()
 	}
 	Mem_Free( lastCmd );
 
-	cmdAlias_t *alias = cmd_alias;
-	cmdAlias_t *lastAlias = nullptr;
+	cmdalias_t *alias = cmd_alias;
+	cmdalias_t *lastAlias = nullptr;
 
 	for ( ; alias; alias = alias->pNext )
 	{
@@ -916,5 +920,3 @@ void Shutdown()
 		Mem_Free( cmd_argv[i] );
 	}
 }
-
-} // namespace CmdSystem

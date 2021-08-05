@@ -119,14 +119,14 @@ static void SV_Configstrings_f()
 	}
 
 	// handle the case of a level changing while a client was connecting
-	if ( atoi( CmdSystem::GetArgv( 1 ) ) != svs.spawncount )
+	if ( atoi( Cmd_Argv( 1 ) ) != svs.spawncount )
 	{
 		Com_Print( "SV_Configstrings_f from different level\n" );
 		SV_New_f();
 		return;
 	}
 
-	start = atoi( CmdSystem::GetArgv( 2 ) );
+	start = atoi( Cmd_Argv( 2 ) );
 
 	// write a packet full of data
 
@@ -176,14 +176,14 @@ static void SV_Baselines_f()
 	}
 
 	// handle the case of a level changing while a client was connecting
-	if ( atoi( CmdSystem::GetArgv( 1 ) ) != svs.spawncount )
+	if ( atoi( Cmd_Argv( 1 ) ) != svs.spawncount )
 	{
 		Com_Print( "SV_Baselines_f from different level\n" );
 		SV_New_f();
 		return;
 	}
 
-	start = atoi( CmdSystem::GetArgv( 2 ) );
+	start = atoi( Cmd_Argv( 2 ) );
 
 	memset( &nullstate, 0, sizeof( nullstate ) );
 
@@ -224,7 +224,7 @@ static void SV_Begin_f()
 	Com_DPrintf( "Begin() from %s\n", sv_client->name );
 
 	// handle the case of a level changing while a client was connecting
-	if ( atoi( CmdSystem::GetArgv( 1 ) ) != svs.spawncount )
+	if ( atoi( Cmd_Argv( 1 ) ) != svs.spawncount )
 	{
 		Com_Print( "SV_Begin_f from different level\n" );
 		SV_New_f();
@@ -236,7 +236,7 @@ static void SV_Begin_f()
 	// call the game begin function
 	ge->ClientBegin( sv_player );
 
-	CmdBuffer::InsertFromDefer();
+	Cbuf_InsertFromDefer();
 }
 
 //=================================================================================================
@@ -298,10 +298,10 @@ static void SV_BeginDownload_f()
 	char *name;
 	int offset = 0;
 
-	name = CmdSystem::GetArgv( 1 );
+	name = Cmd_Argv( 1 );
 
-	if ( CmdSystem::GetArgc() > 2 ) {
-		offset = atoi( CmdSystem::GetArgv( 2 ) ); // downloaded offset
+	if ( Cmd_Argc() > 2 ) {
+		offset = atoi( Cmd_Argv( 2 ) ); // downloaded offset
 	}
 
 	// hacked by zoid to allow more conrol over download
@@ -397,12 +397,12 @@ void SV_Nextserver()
 	const char *v = Cvar_FindGetString( "nextserver" );
 	if ( !v[0] )
 	{
-		CmdBuffer::AddText( "killserver\n" );
+		Cbuf_AddText( "killserver\n" );
 	}
 	else
 	{
-		CmdBuffer::AddText( v );
-		CmdBuffer::AddText( "\n" );
+		Cbuf_AddText( v );
+		Cbuf_AddText( "\n" );
 	}
 	Cvar_FindSetString( "nextserver", "" );
 }
@@ -417,7 +417,7 @@ to the next server,
 */
 static void SV_Nextserver_f()
 {
-	if ( atoi( CmdSystem::GetArgv( 1 ) ) != svs.spawncount ) {
+	if ( atoi( Cmd_Argv( 1 ) ) != svs.spawncount ) {
 		Com_DPrintf( "Nextserver() from wrong level, from %s\n", sv_client->name );
 		return;		// leftover from last server
 	}
@@ -463,14 +463,14 @@ void SV_ExecuteUserCommand( char *s )
 {
 	const ucmd_t *u;
 
-	CmdSystem::TokenizeString( s, true );
+	Cmd_TokenizeString( s, true );
 	sv_player = sv_client->edict;
 
 //	SV_BeginRedirect( RD_CLIENT );
 
 	for ( u = ucmds; u->name; u++ )
 	{
-		if ( Q_strcmp( CmdSystem::GetArgv( 0 ), u->name ) == 0 )
+		if ( Q_strcmp( Cmd_Argv( 0 ), u->name ) == 0 )
 		{
 			u->func();
 			break;

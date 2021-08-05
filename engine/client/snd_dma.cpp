@@ -110,10 +110,10 @@ void S_Init (void)
 		s_testsound = Cvar_Get ("s_testsound", "0", 0);
 		s_primary = Cvar_Get ("s_primary", "0", CVAR_ARCHIVE);	// win32 specific
 
-		CmdSystem::AddCommand("play", S_Play);
-		CmdSystem::AddCommand("stopsound", S_StopAllSounds);
-		CmdSystem::AddCommand("soundlist", S_SoundList);
-		CmdSystem::AddCommand("soundinfo", S_SoundInfo_f);
+		Cmd_AddCommand("play", S_Play);
+		Cmd_AddCommand("stopsound", S_StopAllSounds);
+		Cmd_AddCommand("soundlist", S_SoundList);
+		Cmd_AddCommand("soundinfo", S_SoundInfo_f);
 
 		if (!SNDDMA_Init())
 			return;
@@ -151,10 +151,10 @@ void S_Shutdown(void)
 
 	sound_started = 0;
 
-	CmdSystem::RemoveCommand("play");
-	CmdSystem::RemoveCommand("stopsound");
-	CmdSystem::RemoveCommand("soundlist");
-	CmdSystem::RemoveCommand("soundinfo");
+	Cmd_RemoveCommand("play");
+	Cmd_RemoveCommand("stopsound");
+	Cmd_RemoveCommand("soundlist");
+	Cmd_RemoveCommand("soundinfo");
 
 	// free all sounds
 	for (i=0, sfx=known_sfx ; i < num_sfx ; i++,sfx++)
@@ -1145,15 +1145,15 @@ void S_Play(void)
 	sfx_t	*sfx;
 	
 	i = 1;
-	while (i<CmdSystem::GetArgc())
+	while (i<Cmd_Argc())
 	{
-		if (!strrchr(CmdSystem::GetArgv(i), '.'))
+		if (!strrchr(Cmd_Argv(i), '.'))
 		{
-			strcpy(name, CmdSystem::GetArgv(i));
+			strcpy(name, Cmd_Argv(i));
 			strcat(name, ".wav");
 		}
 		else
-			strcpy(name, CmdSystem::GetArgv(i));
+			strcpy(name, Cmd_Argv(i));
 		sfx = S_RegisterSound(name);
 		S_StartSound(NULL, cl.playernum+1, 0, sfx, 1.0, 1.0, 0);
 		i++;

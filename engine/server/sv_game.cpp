@@ -369,10 +369,10 @@ void SV_InitGameProgs()
 	gi.cvar_set = Cvar_FindSetString;
 	gi.cvar_forceset = Cvar_ForceSet;
 
-	gi.argc = CmdSystem::GetArgc;
-	gi.argv = CmdSystem::GetArgv;
-	gi.args = CmdSystem::GetArgs;
-	gi.AddCommandString = CmdBuffer::AddText;
+	gi.argc = Cmd_Argc;
+	gi.argv = Cmd_Argv;
+	gi.args = Cmd_Args;
+	gi.AddCommandString = Cbuf_AddText;
 
 	gi.DebugGraph = SCR_DebugGraph;
 	gi.SetAreaPortalState = CM_SetAreaPortalState;
