@@ -83,7 +83,7 @@ static bool SV_SetPlayer()
 	// numeric values are just slot numbers
 	if ( s[0] >= '0' && s[0] <= '9' )
 	{
-		idnum = atoi( Cmd_Argv( 1 ) );
+		idnum = Q_atoi( Cmd_Argv( 1 ) );
 		if ( idnum < 0 || idnum >= maxclients->GetInt() )
 		{
 			Com_Printf( "Bad client slot: %i\n", idnum );
@@ -141,9 +141,9 @@ static void SV_WipeSavegame( const char *savename )
 	Com_DPrintf( "SV_WipeSaveGame(%s)\n", savename );
 
 	Q_sprintf_s( name, "save/%s/server.ssv", savename );
-	Sys_DeleteFile( name );
+	FileSystem::RemoveFile( name );
 	Q_sprintf_s( name, "save/%s/game.ssv", savename );
-	Sys_DeleteFile( name );
+	FileSystem::RemoveFile( name );
 
 	Q_sprintf_s( name, "save/%s/*.sav", savename );
 	s = Sys_FindFirst( name, 0, 0 );
@@ -505,7 +505,7 @@ static void SV_Map_f()
 	if ( !strstr( map, "." ) )
 	{
 		Q_sprintf_s( expanded, "maps/%s.bsp", map );
-		if ( FileSystem::LoadFile( expanded, NULL ) == -1 )
+		if ( !FileSystem::FileExists( expanded ) )
 		{
 			Com_Printf( "Can't find %s\n", expanded );
 			return;

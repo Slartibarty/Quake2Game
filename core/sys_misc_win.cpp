@@ -136,6 +136,15 @@ void Sys_UTF8ToUTF16( const char *pIn, strlen_t inSizeInChars, wchar_t *pOut, st
 	pOut[outSizeInChars - 1] = L'\0';
 }
 
+// I hate this
+void Sys_UTF16toUTF8( const wchar_t *pIn, strlen_t inSizeInChars, char *pOut, strlen_t outSizeInChars )
+{
+	// When WideCharToMultiByte runs out of space, it explodes and fails and spits out errors and whatever
+	// so we set the last byte of the outbuffer to null. This is sad.
+	WideCharToMultiByte( CP_UTF8, 0, pIn, inSizeInChars, pOut, outSizeInChars, nullptr, nullptr );
+	pOut[outSizeInChars - 1] = '\0';
+}
+
 /*
 =======================================
 	Timing

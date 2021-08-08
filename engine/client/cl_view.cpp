@@ -301,7 +301,7 @@ void CL_PrepRefresh()
 	Com_Print( "Precaching sky\n" );
 	SCR_UpdateScreen();
 
-	float rotate = static_cast<float>( atof( cl.configstrings[CS_SKYROTATE] ) );
+	float rotate = Q_atof( cl.configstrings[CS_SKYROTATE] );
 	vec3_t axis;
 	sscanf( cl.configstrings[CS_SKYAXIS], "%f %f %f", &axis[0], &axis[1], &axis[2] );
 	R_SetSky( cl.configstrings[CS_SKY], rotate, axis );
@@ -321,7 +321,7 @@ void CL_PrepRefresh()
 	cl.force_refdef = true;			// make sure we have a valid refdef
 
 	// start the cd track
-	CDAudio_Play( atoi( cl.configstrings[CS_CDTRACK] ), true );
+	CDAudio_Play( Q_atoi( cl.configstrings[CS_CDTRACK] ), true );
 }
 
 /*
@@ -532,15 +532,15 @@ static void V_Sky_f()
 	}
 
 	if ( Cmd_Argc() > 2 ) {
-		rotate = (float)atof( Cmd_Argv( 2 ) );
+		rotate = Q_atof( Cmd_Argv( 2 ) );
 	} else {
 		rotate = 0.0f;
 	}
 
 	if ( Cmd_Argc() == 6 ) {
-		axis[0] = (float)atof( Cmd_Argv( 3 ) );
-		axis[1] = (float)atof( Cmd_Argv( 4 ) );
-		axis[2] = (float)atof( Cmd_Argv( 5 ) );
+		axis[0] = Q_atof( Cmd_Argv( 3 ) );
+		axis[1] = Q_atof( Cmd_Argv( 4 ) );
+		axis[2] = Q_atof( Cmd_Argv( 5 ) );
 	} else {
 		axis[0] = 0.0f;
 		axis[1] = 0.0f;

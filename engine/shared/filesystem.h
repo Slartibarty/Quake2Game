@@ -33,7 +33,7 @@ namespace FileSystem
 					// Move the cursor to an offset
 	void			Seek( fsHandle_t handle, fsSize_t offset, fsSeek_t seek );
 					// Returns the position of the cursor
-	int				Tell( fsHandle_t handle );
+	fsSize_t		Tell( fsHandle_t handle );
 
 					// Opens an existing file for reading.
 	fsHandle_t		OpenFileRead( const char *filename );
@@ -66,6 +66,9 @@ namespace FileSystem
 					// extraData specifies the amount of additional zeroed memory to
 					// add to the end of the file, typical usage is extraData = 1 to null
 					// terminate text files.
+					// Fails on empty files. Because there is nothing to read! Eventually
+					// this behaviour should be removed and functions using this should
+					// check for emptiness
 	fsSize_t		LoadFile( const char *filename, void **buffer, fsSize_t extraData = 0 );
 					// Frees the memory allocated by LoadFile.
 	void			FreeFile( void *buffer );
@@ -103,10 +106,10 @@ public:
 	{ return FileSystem::OpenFileAppend( filename ); }
 	void CloseFile( fsHandle_t handle ) override
 	{ FileSystem::CloseFile( handle ); }
-	int ReadFile( void *buffer, int length, fsHandle_t handle ) override
+	fsSize_t ReadFile( void *buffer, fsSize_t length, fsHandle_t handle ) override
 	{ return FileSystem::ReadFile( buffer, length, handle ); }
-	void WriteFile( const void *buffer, int length, fsHandle_t handle ) override
-	{ FileSystem::WriteFile( buffer, length, handle ); }
+	fsSize_t WriteFile( const void *buffer, fsSize_t length, fsHandle_t handle ) override
+	{ return FileSystem::WriteFile( buffer, length, handle ); }
 	void PrintFile( const char *string, fsHandle_t handle ) override
 	{ FileSystem::PrintFile( string, handle ); }
 	void PrintFileFmt( fsHandle_t handle, const char *fmt, ... ) override

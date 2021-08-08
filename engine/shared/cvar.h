@@ -87,10 +87,18 @@ void		Cvar_PrintFlags( cvar_t *var );
 			// with the archive flag set to true.
 void 		Cvar_WriteVariables( fsHandle_t handle );
 
+#ifndef Q_ENGINE
+
+void		Cvar_AddEarlyCommands( int argc, char **argv );
+
+#endif
+
+#ifdef Q_ENGINE
 			// returns an info string containing all the CVAR_USERINFO cvars
 char *		Cvar_Userinfo();
 			// returns an info string containing all the CVAR_SERVERINFO cvars
 char *		Cvar_Serverinfo();
+#endif
 
 void		Cvar_Init();
 void		Cvar_Shutdown();

@@ -264,6 +264,8 @@ static void AddMeshContribution( FbxNode *pNode, std::vector<fatVertex_t<t_vert>
 
 	const FbxMatrix transformMatrix( pNode->LclTranslation.Get(), pNode->LclRotation.Get(), pNode->LclScaling.Get() );
 
+	FBX_GetVertexWeights( pMesh );
+
 	int vertexID = 0;
 	for ( int polyIter = 0; polyIter < polygonCount; ++polyIter )
 	{

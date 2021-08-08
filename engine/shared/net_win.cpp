@@ -241,7 +241,7 @@ static bool NET_StringToSockaddr( const char *s, sockaddr_in *sadr )
 		if ( *colon == ':' )
 		{
 			*colon = '\0';
-			sadr->sin_port = htons( (USHORT)atoi( colon + 1 ) );
+			sadr->sin_port = htons( (USHORT)Q_atoui( colon + 1 ) );
 		}
 	}
 

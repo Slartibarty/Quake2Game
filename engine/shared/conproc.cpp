@@ -1,7 +1,6 @@
 // conproc.c -- support for qhost
 
-#include <cstdlib>
-#include <cstdio>
+#include "../../core/core.h"
 
 #include <process.h>
 
@@ -82,19 +81,19 @@ void InitConProc (int argc, char **argv)
 	if ((t = CCheckParm ("-HFILE")) > 0)
 	{
 		if (t < argc)
-			hFile = (HANDLE)atoll (ccom_argv[t+1]);
+			hFile = (HANDLE)Q_atoi64 (ccom_argv[t+1]);
 	}
 		
 	if ((t = CCheckParm ("-HPARENT")) > 0)
 	{
 		if (t < argc)
-			heventParent = (HANDLE)atoll (ccom_argv[t+1]);
+			heventParent = (HANDLE)Q_atoi64 (ccom_argv[t+1]);
 	}
 		
 	if ((t = CCheckParm ("-HCHILD")) > 0)
 	{
 		if (t < argc)
-			heventChild = (HANDLE)atoll (ccom_argv[t+1]);
+			heventChild = (HANDLE)Q_atoi64 (ccom_argv[t+1]);
 	}
 
 

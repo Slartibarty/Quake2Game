@@ -17,7 +17,7 @@ using fsHandle_t = void *;
 #endif
 
 // Should be at least uint32 later on
-using fsSize_t = int32;
+using fsSize_t = uint32;
 
 #define FS_INVALID_HANDLE nullptr
 
@@ -43,7 +43,7 @@ public:
 	virtual fsHandle_t		OpenFileAppend( const char *filename ) = 0;
 	virtual void			CloseFile( fsHandle_t handle ) = 0;
 	virtual fsSize_t		ReadFile( void *buffer, fsSize_t length, fsHandle_t handle ) = 0;
-	virtual void			WriteFile( const void *buffer, fsSize_t length, fsHandle_t handle ) = 0;
+	virtual fsSize_t		WriteFile( const void *buffer, fsSize_t length, fsHandle_t handle ) = 0;
 	virtual void			PrintFile( const char *string, fsHandle_t handle ) = 0;
 	virtual void			PrintFileFmt( fsHandle_t handle, const char *fmt, ... ) = 0;
 	virtual void			FlushFile( fsHandle_t handle ) = 0;

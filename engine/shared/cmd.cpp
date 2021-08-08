@@ -234,13 +234,13 @@ Other commands are added late, after all initialization is complete.
 */
 void Cbuf_AddEarlyCommands( int argc, char **argv )
 {
-	for ( int i = 0; i < argc; ++i )
+	for ( int i = 1; i < argc; ++i )
 	{
-		if ( Q_strcmp( argv[i], "+set" ) != 0 ) {
-			continue;
+		if ( Q_strcmp( argv[i], "+set" ) == 0 && ( i + 2 ) < argc )
+		{
+			Cbuf_AddText( va( "set %s %s\n", argv[i + 1], argv[i + 2] ) );
+			i += 2;
 		}
-		Cbuf_AddText( va( "set %s %s\n", argv[i + 1], argv[i + 2] ) );
-		i += 2;
 	}
 }
 
@@ -342,7 +342,7 @@ static void Cmd_Exec_f()
 	const char *filename = Cmd_Argv( 1 );
 
 	char *f;
-	int len = FileSystem::LoadFile( filename, (void **)&f, 1 );
+	fsSize_t len = FileSystem::LoadFile( filename, (void **)&f, 1 );
 	if ( !f )
 	{
 		Com_Printf( "Couldn't exec %s\n", filename );

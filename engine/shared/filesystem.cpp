@@ -18,7 +18,19 @@
 ===================================================================================================
 */
 
+#ifdef Q_ENGINE
 #include "engine.h"
+#else
+#include "../../core/core.h"
+#include "../../common/cvardefs.h"
+#include "../../common/filesystem_interface.h"
+#include "cvar.h"
+
+#define Mem_Alloc malloc
+#define Mem_Free free
+#define BASE_MODDIR "base"
+#define ENGINE_VERSION "JaffaUtilities"
+#endif
 
 #include "rapidjson/document.h"
 
@@ -91,8 +103,7 @@ static void SetWriteDirectory()
 	if ( SUCCEEDED( SHGetKnownFolderPath( FOLDERID_SavedGames, KF_FLAG_CREATE | KF_FLAG_INIT, nullptr, &savedGames ) ) )
 	{
 		char fullPath[MAX_OSPATH];
-		WideCharToMultiByte( CP_UTF8, 0, savedGames, static_cast<int>( wcslen( savedGames ) + 1 ), fullPath, sizeof( fullPath ), nullptr, nullptr );
-		fullPath[MAX_OSPATH - 1] = '\0';
+		Sys_UTF16toUTF8( savedGames, static_cast<int>( wcslen( savedGames ) + 1 ), fullPath, sizeof( fullPath ) );
 		Str_FixSlashes( fullPath );
 		Q_sprintf_s( fs.writeDir, "%s/%s", fullPath, SAVEFOLDER_NAME );
 		CoTaskMemFree( savedGames );
@@ -128,7 +139,7 @@ static void SetContentDirectory()
 	}
 	++copyZone; // skip slash
 
-	strlen_t sizeAfter = sizeof( fs.contentDir ) - ( copyZone - fs.contentDir );
+	strlen_t sizeAfter = static_cast<strlen_t>( sizeof( fs.contentDir ) - ( copyZone - fs.contentDir ) );
 
 	Q_strcpy_s( copyZone, sizeAfter, "content" );
 }
@@ -499,7 +510,7 @@ fsSize_t LoadFile( const char *filename, void **buffer, fsSize_t extraData /*= 0
 		if ( buffer ) {
 			*buffer = nullptr;
 		}
-		return -1;
+		return 0;
 	}
 
 	fsSize_t length = GetFileSize( handle );
@@ -508,6 +519,15 @@ fsSize_t LoadFile( const char *filename, void **buffer, fsSize_t extraData /*= 0
 	{
 		CloseFile( handle );
 		return length;
+	}
+
+	if ( length == 0 )
+	{
+		// If it's 0kb we can't garner any information from this
+		// if you need to test if a file exists, use FileExists
+		CloseFile( handle );
+		*buffer = nullptr;
+		return 0;
 	}
 
 	void *buf = Mem_Alloc( length + extraData );
@@ -651,11 +671,22 @@ static void Shutdown()
 
 const char *GetGameTitle()
 {
+	if ( modInfo.gameTitle[0] == 0 )
+	{
+		return ENGINE_VERSION;
+	}
+
 	return modInfo.gameTitle;
 }
 
 const platChar_t *GetWindowTitle()
 {
+	if ( modInfo.windowTitle[0] == 0 )
+	{
+		// Filesystem didn't get a chance to init, so return this instead
+		return PLATTEXT( ENGINE_VERSION );
+	}
+
 	return modInfo.windowTitle;
 }
 

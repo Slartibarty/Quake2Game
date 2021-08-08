@@ -350,9 +350,7 @@ static bool GL_CategorizeDDS( const char *pName, const byte *pBuffer, int bufLen
 static bool GL_LoadImage( const char *pName, int &width, int &height, byte *&pPic )
 {
 	byte *pBuffer;
-	int nBufLen;
-
-	nBufLen = FileSystem::LoadFile( pName, (void **)&pBuffer );
+	fsSize_t nBufLen = FileSystem::LoadFile( pName, (void **)&pBuffer );
 	if ( !pBuffer )
 	{
 		return false;
@@ -510,7 +508,7 @@ bool ParseMaterial( char *data, material_t *material )
 		if ( Q_strcmp( token, "$nomips" ) == 0 )
 		{
 			COM_Parse2( &data, &token, sizeof( tokenhack ) );
-			if ( atoi( token ) )
+			if ( Q_atoi( token ) )
 			{
 				flags |= IF_NOMIPS;
 			}
@@ -519,7 +517,7 @@ bool ParseMaterial( char *data, material_t *material )
 		if ( Q_strcmp( token, "$noaniso" ) == 0 )
 		{
 			COM_Parse2( &data, &token, sizeof( tokenhack ) );
-			if ( atoi( token ) )
+			if ( Q_atoi( token ) )
 			{
 				flags |= IF_NOANISO;
 			}
@@ -528,7 +526,7 @@ bool ParseMaterial( char *data, material_t *material )
 		if ( Q_strcmp( token, "$nearestfilter" ) == 0 )
 		{
 			COM_Parse2( &data, &token, sizeof( tokenhack ) );
-			if ( atoi( token ) )
+			if ( Q_atoi( token ) )
 			{
 				flags |= IF_NEAREST;
 			}
@@ -537,7 +535,7 @@ bool ParseMaterial( char *data, material_t *material )
 		if ( Q_strcmp( token, "$clamps" ) == 0 )
 		{
 			COM_Parse2( &data, &token, sizeof( tokenhack ) );
-			if ( atoi( token ) )
+			if ( Q_atoi( token ) )
 			{
 				flags |= IF_CLAMPS;
 			}
@@ -546,7 +544,7 @@ bool ParseMaterial( char *data, material_t *material )
 		if ( Q_strcmp( token, "$clampt" ) == 0 )
 		{
 			COM_Parse2( &data, &token, sizeof( tokenhack ) );
-			if ( atoi( token ) )
+			if ( Q_atoi( token ) )
 			{
 				flags |= IF_CLAMPT;
 			}
@@ -556,7 +554,7 @@ bool ParseMaterial( char *data, material_t *material )
 		{
 			// stored as a float for user convenience (it's easier to understand 0.5 as half transparency than 128 is)
 			COM_Parse2( &data, &token, sizeof( tokenhack ) );
-			material->alpha = Clamp( static_cast<uint32>( atof( token ) * 255.0 + 0.5 ), 0u, 255u );
+			material->alpha = Clamp( static_cast<uint32>( Q_atod( token ) * 255.0 + 0.5 ), 0u, 255u );
 			continue;
 		}
 	}
@@ -645,11 +643,6 @@ static material_t *GL_CreateMaterialFromData( const char *name, image_t *image, 
 
 static material_t *GL_CreateMaterial( const char *name )
 {
-	char *pBuffer;
-	int nBufLen;
-	int i;
-	material_t *material;
-
 	assert( !strstr( name, "pcx" ) );
 
 	// Horrible hack, clean this up
@@ -660,13 +653,16 @@ static material_t *GL_CreateMaterial( const char *name )
 	strcat( newname, ".mat" );
 #endif
 
-	nBufLen = FileSystem::LoadFile( name, (void **)&pBuffer, 1 );
+	char *pBuffer;
+	fsSize_t nBufLen = FileSystem::LoadFile( name, (void **)&pBuffer, 1 );
 	if ( !pBuffer )
 	{
 		return defaultMaterial;
 	}
 
 	// find a free material_t
+	int i;
+	material_t *material;
 	for ( i = 0, material = glmaterials; i < numglmaterials; i++, material++ )
 	{
 		if ( material->image == nullptr )
@@ -799,10 +795,8 @@ void GL_FreeUnusedMaterials( void )
 //-------------------------------------------------------------------------------------------------
 static void GL_GetPalette (void)
 {
-	byte	*pBuffer;
-	int		nBufLen;
-
-	nBufLen = FileSystem::LoadFile("textures/colormap.pcx", (void**)&pBuffer);
+	byte *pBuffer;
+	fsSize_t nBufLen = FileSystem::LoadFile("textures/colormap.pcx", (void**)&pBuffer);
 	if (!pBuffer)
 	{
 		Com_FatalError("Couldn't load textures/colormap.pcx\n");

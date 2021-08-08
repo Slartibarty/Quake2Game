@@ -304,7 +304,7 @@ project "engine"
 	targetdir "../game"
 	debugdir "../game"
 	includedirs { "thirdparty/glew/include", "thirdparty/zlib", "thirdparty/libpng", "thirdparty/libpng_config", "thirdparty/imgui", "thirdparty/rapidjson/include" }
-	defines { "GLEW_STATIC", "GLEW_NO_GLU", "IMGUI_USER_CONFIG=\"../../engine/client/q_imconfig.h\"", "IMGUI_IMPL_WIN32_DISABLE_GAMEPAD" }
+	defines { "Q_ENGINE", "GLEW_STATIC", "GLEW_NO_GLU", "IMGUI_USER_CONFIG=\"../../engine/client/q_imconfig.h\"", "IMGUI_IMPL_WIN32_DISABLE_GAMEPAD" }
 	links { "core" }
 	filter "system:windows"
 		linkoptions { "/ENTRY:mainCRTStartup" }
@@ -595,6 +595,43 @@ project "qsmf"
 	
 	removefiles {
 		"utils/qsmf/obj_reader.*"
+	}
+
+project "modelbuilder"
+	kind "ConsoleApp"
+	targetname "modelbuilder"
+	language "C++"
+	floatingpoint "Default"
+	targetdir "../game"
+	debugdir "../game"
+	links { "core", "zlib", "meshoptimizer" }
+	includedirs { "utils/common2", "thirdparty/meshoptimizer/src", "thirdparty/rapidjson/include", fbxsdk_include_dir }
+	
+	-- link to the FBX SDK
+	filter( filter_dbg )
+		links { fbxsdk_lib_dir .. "/debug/libfbxsdk-mt" }
+		links { fbxsdk_lib_dir .. "/debug/libxml2-mt" }
+	filter {}
+	filter( filter_rel_or_rtl )
+		links { fbxsdk_lib_dir .. "/release/libfbxsdk-mt" }
+		links { fbxsdk_lib_dir .. "/release/libxml2-mt" }
+	filter {}
+		
+	files {
+		"resources/windows_default.manifest",
+		"common/q_formats.h",
+		
+		"engine/shared/cvar.cpp",
+		"engine/shared/cvar.h",
+		"engine/shared/filesystem.cpp",
+		"engine/shared/filesystem.h",
+		"engine/shared/filesystem_platform.cpp",
+		
+		"utils/common2/cmdlib.*",
+		
+		meshoptimizer_public,
+		
+		"utils/modelbuilder/*",
 	}
 
 filter {}

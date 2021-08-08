@@ -119,14 +119,14 @@ static void SV_Configstrings_f()
 	}
 
 	// handle the case of a level changing while a client was connecting
-	if ( atoi( Cmd_Argv( 1 ) ) != svs.spawncount )
+	if ( Q_atoi( Cmd_Argv( 1 ) ) != svs.spawncount )
 	{
 		Com_Print( "SV_Configstrings_f from different level\n" );
 		SV_New_f();
 		return;
 	}
 
-	start = atoi( Cmd_Argv( 2 ) );
+	start = Q_atoi( Cmd_Argv( 2 ) );
 
 	// write a packet full of data
 
@@ -176,14 +176,14 @@ static void SV_Baselines_f()
 	}
 
 	// handle the case of a level changing while a client was connecting
-	if ( atoi( Cmd_Argv( 1 ) ) != svs.spawncount )
+	if ( Q_atoi( Cmd_Argv( 1 ) ) != svs.spawncount )
 	{
 		Com_Print( "SV_Baselines_f from different level\n" );
 		SV_New_f();
 		return;
 	}
 
-	start = atoi( Cmd_Argv( 2 ) );
+	start = Q_atoi( Cmd_Argv( 2 ) );
 
 	memset( &nullstate, 0, sizeof( nullstate ) );
 
@@ -224,7 +224,7 @@ static void SV_Begin_f()
 	Com_DPrintf( "Begin() from %s\n", sv_client->name );
 
 	// handle the case of a level changing while a client was connecting
-	if ( atoi( Cmd_Argv( 1 ) ) != svs.spawncount )
+	if ( Q_atoi( Cmd_Argv( 1 ) ) != svs.spawncount )
 	{
 		Com_Print( "SV_Begin_f from different level\n" );
 		SV_New_f();
@@ -301,7 +301,7 @@ static void SV_BeginDownload_f()
 	name = Cmd_Argv( 1 );
 
 	if ( Cmd_Argc() > 2 ) {
-		offset = atoi( Cmd_Argv( 2 ) ); // downloaded offset
+		offset = Q_atoi( Cmd_Argv( 2 ) ); // downloaded offset
 	}
 
 	// hacked by zoid to allow more conrol over download
@@ -417,7 +417,7 @@ to the next server,
 */
 static void SV_Nextserver_f()
 {
-	if ( atoi( Cmd_Argv( 1 ) ) != svs.spawncount ) {
+	if ( Q_atoi( Cmd_Argv( 1 ) ) != svs.spawncount ) {
 		Com_DPrintf( "Nextserver() from wrong level, from %s\n", sv_client->name );
 		return;		// leftover from last server
 	}

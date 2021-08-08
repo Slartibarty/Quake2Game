@@ -1785,13 +1785,11 @@ const char *M_Credits_Key( int key )
 void M_Menu_Credits_f( void )
 {
 	int		n;
-	int		count;
 	char	*p;
 	int		isdeveloper = 0;
 
-	creditsBuffer = NULL;
-	count = FileSystem::LoadFile ("credits", (void**)&creditsBuffer);
-	if (count != -1)
+	fsSize_t count = FileSystem::LoadFile ("credits", (void**)&creditsBuffer);
+	if ( !creditsBuffer )
 	{
 		p = creditsBuffer;
 		for (n = 0; n < 255; n++)
@@ -2359,7 +2357,7 @@ void RulesChangeFunc ( void *self )
 	else if(s_rules_box.curvalue == 1)		// coop				// PGM
 	{
 		s_maxclients_field.generic.statusbar = "4 maximum for cooperative";
-		if (atoi(s_maxclients_field.buffer) > 4)
+		if (Q_atoi(s_maxclients_field.buffer) > 4)
 			strcpy( s_maxclients_field.buffer, "4" );
 		s_startserver_dmoptions_action.generic.statusbar = "N/A for cooperative";
 	}
@@ -2395,9 +2393,9 @@ void StartServerActionFunc( void *self )
 
 	strcpy( startmap, strchr( mapnames[s_startmap_list.curvalue], '\n' ) + 1 );
 
-	maxclients  = atoi( s_maxclients_field.buffer );
-	timelimit	= atoi( s_timelimit_field.buffer );
-	fraglimit	= atoi( s_fraglimit_field.buffer );
+	maxclients  = Q_atoi( s_maxclients_field.buffer );
+	timelimit	= Q_atoi( s_timelimit_field.buffer );
+	fraglimit	= Q_atoi( s_fraglimit_field.buffer );
 
 	Cvar_FindSetInt( "maxclients", Max( 0, maxclients ) );
 	Cvar_FindSetInt( "timelimit", Max( 0, timelimit ) );
@@ -2474,13 +2472,12 @@ void StartServer_MenuInit( void )
 //=======
 	char *buffer;
 	char *s;
-	int length;
 	int i;
 
 	/*
 	** load the list of map names
 	*/
-	length = FileSystem::LoadFile( "maps.lst", (void **)&buffer, 1 );
+	fsSize_t length = FileSystem::LoadFile( "maps.lst", (void **)&buffer, 1 );
 	if ( !buffer )
 	{
 		Com_Error( "Couldn't find maps.lst\n" );
@@ -2489,7 +2486,7 @@ void StartServer_MenuInit( void )
 	s = buffer;
 
 	i = 0;
-	while ( i < length )
+	while ( i < (int)length )
 	{
 		if ( s[i] == '\r' )
 			nummaps++;

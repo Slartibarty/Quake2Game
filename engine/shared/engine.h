@@ -95,7 +95,7 @@ void		Info_Print( const char *s );
 int			Com_ServerState();	// this should have just been a cvar...
 void		Com_SetServerState( int state );
 
-unsigned	Com_BlockChecksum( void *buffer, int length ); // md4.c
+unsigned	Com_BlockChecksum( void *buffer, uint length ); // md4.c
 byte		COM_BlockSequenceCRCByte( byte *base, int length, int sequence );
 
 // Compressed vertex normals

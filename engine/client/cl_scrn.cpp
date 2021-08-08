@@ -967,45 +967,45 @@ static void SCR_ExecuteLayoutString( char *s )
 		if (!Q_strcmp(token, "xl"))
 		{
 			token = COM_Parse (&s);
-			x = atoi(token);
+			x = Q_atoi(token);
 			continue;
 		}
 		if (!Q_strcmp(token, "xr"))
 		{
 			token = COM_Parse (&s);
-			x = viddef.width + atoi(token);
+			x = viddef.width + Q_atoi(token);
 			continue;
 		}
 		if (!Q_strcmp(token, "xv"))
 		{
 			token = COM_Parse (&s);
-			x = viddef.width/2 - 160 + atoi(token);
+			x = viddef.width/2 - 160 + Q_atoi(token);
 			continue;
 		}
 
 		if (!Q_strcmp(token, "yt"))
 		{
 			token = COM_Parse (&s);
-			y = atoi(token);
+			y = Q_atoi(token);
 			continue;
 		}
 		if (!Q_strcmp(token, "yb"))
 		{
 			token = COM_Parse (&s);
-			y = viddef.height + atoi(token);
+			y = viddef.height + Q_atoi(token);
 			continue;
 		}
 		if (!Q_strcmp(token, "yv"))
 		{
 			token = COM_Parse (&s);
-			y = viddef.height/2 - 120 + atoi(token);
+			y = viddef.height/2 - 120 + Q_atoi(token);
 			continue;
 		}
 
 		if (!Q_strcmp(token, "pic"))
 		{	// draw a pic from a stat number
 			token = COM_Parse (&s);
-			value = cl.frame.playerstate.stats[atoi(token)];
+			value = cl.frame.playerstate.stats[Q_atoi(token)];
 			if (value >= MAX_IMAGES)
 				Com_Errorf ("Pic >= MAX_IMAGES");
 			if (cl.configstrings[CS_IMAGES+value])
@@ -1020,24 +1020,24 @@ static void SCR_ExecuteLayoutString( char *s )
 			int		score, ping, time;
 
 			token = COM_Parse (&s);
-			x = viddef.width/2 - 160 + atoi(token);
+			x = viddef.width/2 - 160 + Q_atoi(token);
 			token = COM_Parse (&s);
-			y = viddef.height/2 - 120 + atoi(token);
+			y = viddef.height/2 - 120 + Q_atoi(token);
 
 			token = COM_Parse (&s);
-			value = atoi(token);
+			value = Q_atoi(token);
 			if (value >= MAX_CLIENTS || value < 0)
 				Com_Errorf ("client >= MAX_CLIENTS");
 			ci = &cl.clientinfo[value];
 
 			token = COM_Parse (&s);
-			score = atoi(token);
+			score = Q_atoi(token);
 
 			token = COM_Parse (&s);
-			ping = atoi(token);
+			ping = Q_atoi(token);
 
 			token = COM_Parse (&s);
-			time = atoi(token);
+			time = Q_atoi(token);
 
 			SCR_DrawAltString (x+32, y, ci->name);
 			SCR_DrawString (x+32, y+8,  "Score: ");
@@ -1057,21 +1057,21 @@ static void SCR_ExecuteLayoutString( char *s )
 			char	block[80];
 
 			token = COM_Parse (&s);
-			x = viddef.width/2 - 160 + atoi(token);
+			x = viddef.width/2 - 160 + Q_atoi(token);
 			token = COM_Parse (&s);
-			y = viddef.height/2 - 120 + atoi(token);
+			y = viddef.height/2 - 120 + Q_atoi(token);
 
 			token = COM_Parse (&s);
-			value = atoi(token);
+			value = Q_atoi(token);
 			if (value >= MAX_CLIENTS || value < 0)
 				Com_Errorf ("client >= MAX_CLIENTS");
 			ci = &cl.clientinfo[value];
 
 			token = COM_Parse (&s);
-			score = atoi(token);
+			score = Q_atoi(token);
 
 			token = COM_Parse (&s);
-			ping = atoi(token);
+			ping = Q_atoi(token);
 			if (ping > 999)
 				ping = 999;
 
@@ -1094,9 +1094,9 @@ static void SCR_ExecuteLayoutString( char *s )
 		if (!Q_strcmp(token, "num"))
 		{	// draw a number
 			token = COM_Parse (&s);
-			width = atoi(token);
+			width = Q_atoi(token);
 			token = COM_Parse (&s);
-			value = cl.frame.playerstate.stats[atoi(token)];
+			value = cl.frame.playerstate.stats[Q_atoi(token)];
 			SCR_DrawField (x, y, 0, width, value);
 			continue;
 		}
@@ -1163,7 +1163,7 @@ static void SCR_ExecuteLayoutString( char *s )
 		if (!Q_strcmp(token, "stat_string"))
 		{
 			token = COM_Parse (&s);
-			index = atoi(token);
+			index = Q_atoi(token);
 			if (index < 0 || index >= MAX_CONFIGSTRINGS)
 				Com_Errorf ("Bad stat_string index");
 			index = cl.frame.playerstate.stats[index];
@@ -1204,7 +1204,7 @@ static void SCR_ExecuteLayoutString( char *s )
 		if (!Q_strcmp(token, "if"))
 		{	// draw a number
 			token = COM_Parse (&s);
-			value = cl.frame.playerstate.stats[atoi(token)];
+			value = cl.frame.playerstate.stats[Q_atoi(token)];
 			if (!value)
 			{	// skip to endif
 				while (s && Q_strcmp(token, "endif") )

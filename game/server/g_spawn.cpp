@@ -396,13 +396,13 @@ void ED_ParseField (char *key, char *value, edict_t *ent)
 				((float *)(b+f->ofs))[2] = vec[2];
 				break;
 			case F_INT:
-				*(int *)(b+f->ofs) = atoi(value);
+				*(int *)(b+f->ofs) = Q_atoi(value);
 				break;
 			case F_FLOAT:
-				*(float *)(b+f->ofs) = (float)atof(value);
+				*(float *)(b+f->ofs) = Q_atof(value);
 				break;
 			case F_ANGLEHACK:
-				v = (float)atof(value);
+				v = Q_atof(value);
 				((float *)(b+f->ofs))[0] = 0;
 				((float *)(b+f->ofs))[1] = v;
 				((float *)(b+f->ofs))[2] = 0;

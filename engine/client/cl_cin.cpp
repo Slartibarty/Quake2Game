@@ -47,7 +47,6 @@ static void SCR_LoadPCX (char *filename, byte **pic, byte **palette, int *width,
 	byte	*raw;
 	pcx_t	*pcx;
 	int		x, y;
-	int		len;
 	int		dataByte, runLength;
 	byte	*out, *pix;
 
@@ -56,7 +55,7 @@ static void SCR_LoadPCX (char *filename, byte **pic, byte **palette, int *width,
 	//
 	// load the file
 	//
-	len = FileSystem::LoadFile( filename, (void **)&raw );
+	fsSize_t len = FileSystem::LoadFile( filename, (void **)&raw );
 	if (!raw)
 		return;	// Com_Printf ("Bad pcx file %s\n", filename);
 

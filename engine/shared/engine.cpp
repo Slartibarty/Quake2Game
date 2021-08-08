@@ -548,6 +548,100 @@ static void Com_Version_f()
 
 /*
 ========================
+Com_PerfTest_f
+
+Test stuff here!
+========================
+*/
+static void Com_PerfTest_f()
+{
+	// HAHA
+
+	double start, end;
+
+	// DOUBLES
+
+	start = Time_FloatMilliseconds();
+	for ( int i = 0; i < 10000; ++i )
+	{
+		double number = Q_atod( "1337.420" );
+	}
+	end = Time_FloatMilliseconds();
+	Com_Printf( "QUAKE DBL Perf MS: %f\n", end - start );
+
+	start = Time_FloatMilliseconds();
+	for ( int i = 0; i < 10000; ++i )
+	{
+		double number = atof( "1337.420" );
+	}
+	end = Time_FloatMilliseconds();
+	Com_Printf( "MSOFT DBL Perf MS: %f\n", end - start );
+	Com_Print( "\n" );
+
+	// END DOUBLES
+
+	// FLOATS
+
+	start = Time_FloatMilliseconds();
+	for ( int i = 0; i < 10000; ++i )
+	{
+		float number = Q_atof( "1337.420" );
+	}
+	end = Time_FloatMilliseconds();
+	Com_Printf( "QUAKE FLT Perf MS: %f\n", end - start );
+
+	start = Time_FloatMilliseconds();
+	for ( int i = 0; i < 10000; ++i )
+	{
+		float number = (float)atof( "1337.420" );
+	}
+	end = Time_FloatMilliseconds();
+	Com_Printf( "MSOFT FLT Perf MS: %f\n", end - start );
+	Com_Print( "\n" );
+
+	// END FLOATS
+
+	// INTEGERS
+
+	start = Time_FloatMilliseconds();
+	for ( int i = 0; i < 10000; ++i )
+	{
+		int64 number = Q_atoi64( "133337" );
+	}
+	end = Time_FloatMilliseconds();
+	Com_Printf( "QUAKE INT64 Perf MS: %f\n", end - start );
+
+	start = Time_FloatMilliseconds();
+	for ( int i = 0; i < 10000; ++i )
+	{
+		int64 number = _atoi64( "133337" );
+	}
+	end = Time_FloatMilliseconds();
+	Com_Printf( "MSOFT INT64 Perf MS: %f\n", end - start );
+
+	start = Time_FloatMilliseconds();
+	for ( int i = 0; i < 10000; ++i )
+	{
+		int32 number = Q_atoi32( "133337" );
+	}
+	end = Time_FloatMilliseconds();
+	Com_Printf( "QUAKE INT32 Perf MS: %f\n", end - start );
+
+	start = Time_FloatMilliseconds();
+	for ( int i = 0; i < 10000; ++i )
+	{
+		int32 number = atoi( "133337" );
+	}
+	end = Time_FloatMilliseconds();
+	Com_Printf( "MSOFT INT32 Perf MS: %f\n", end - start );
+
+	// END INTEGERS
+
+	// END HAHA
+}
+
+/*
+========================
 Com_Init
 ========================
 */
@@ -608,6 +702,7 @@ void Com_Init( int argc, char **argv )
 	dedicated = Cvar_Get( "dedicated", "0", CVAR_INIT, "If true, this is a dedicated server." );
 #endif
 
+	Cmd_AddCommand( "com_perfTest", Com_PerfTest_f, "Perftest!" );
 	Cmd_AddCommand( "com_error", Com_Error_f, "Throws a Com_Error." );
 	Cmd_AddCommand( "com_version", Com_Version_f, "Prints engine version information." );
 	if ( dedicated->GetBool() ) {
@@ -639,7 +734,7 @@ void Com_Init( int argc, char **argv )
 		SCR_EndLoadingPlaque();
 	}
 
-	Com_Print( "======== Quake2 Initialized ========\n\n" );
+	Com_Print( "======== " ENGINE_VERSION " Initialized ========\n\n" );
 }
 
 /*

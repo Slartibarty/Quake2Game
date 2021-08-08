@@ -8,7 +8,19 @@
 ===================================================================================================
 */
 
+#ifdef Q_ENGINE
 #include "engine.h"
+#else
+#include "../../core/core.h"
+#include "../../common/cvardefs.h"
+#include "filesystem.h"
+
+#define Mem_Alloc( a ) malloc( a )
+#define Mem_ClearedAlloc( a ) calloc( 1, a )
+#define Mem_Free( a ) free( a )
+
+#define Com_ServerState() 0
+#endif
 
 #include "cvar.h"
 
@@ -35,8 +47,8 @@ static bool Cvar_InfoValidate( const char *s )
 
 static void Cvar_SetDerivatives( cvar_t *var )
 {
-	var->fltValue = static_cast<float>( atof( var->value.c_str() ) );
-	var->intValue = atoi( var->value.c_str() );
+	var->fltValue = Q_atof( var->value.c_str() );
+	var->intValue = Q_atoi( var->value.c_str() );
 }
 
 cvar_t *Cvar_Find( const char *name )
@@ -408,6 +420,8 @@ void Cvar_GetLatchedVars()
 
 bool Cvar_Command()
 {
+#ifdef Q_ENGINE
+
 	// check variables
 	cvar_t *var = Cvar_Find( Cmd_Argv( 0 ) );
 	if ( !var ) {
@@ -424,6 +438,8 @@ bool Cvar_Command()
 	}
 
 	Cvar_Set( var->name.c_str(), Cmd_Argv( 1 ) );
+
+#endif
 
 	return true;
 }
@@ -463,7 +479,7 @@ void Cvar_PrintFlags( cvar_t *var )
 	}
 	if ( flags & CVAR_INIT )
 	{
-		Com_Print( " noset" );
+		Com_Print( " init" );
 	}
 	if ( flags & CVAR_LATCH )
 	{
@@ -495,7 +511,25 @@ void Cvar_WriteVariables( fsHandle_t handle )
 	}
 }
 
+#ifndef Q_ENGINE
+
+void Cvar_AddEarlyCommands( int argc, char **argv )
+{
+	for ( int i = 1; i < argc; ++i )
+	{
+		if ( Q_strcmp( argv[i], "+set" ) == 0 && ( i + 2 ) < argc )
+		{
+			Cvar_Get( argv[i + 1], argv[i + 2], 0, nullptr );
+			i += 2;
+		}
+	}
+}
+
+#endif
+
 //=================================================================================================
+
+#ifdef Q_ENGINE
 
 static char *Cvar_BitInfo( uint32 bit )
 {
@@ -599,10 +633,14 @@ static void Cvar_List_f()
 	Com_Printf( "%u cvars\n", i );
 }
 
+#endif
+
 void Cvar_Init()
 {
+#ifdef Q_ENGINE
 	Cmd_AddCommand( "set", Cvar_Set_f );
 	Cmd_AddCommand( "cvarList", Cvar_List_f );
+#endif
 }
 
 void Cvar_Shutdown()

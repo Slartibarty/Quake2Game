@@ -77,7 +77,7 @@ bool CL_CheckOrDownloadFile (const char *filename)
 	fsHandle_t handle = FileSystem::OpenFileAppend( name );
 	if (handle) {
 		// it exists
-		int len = FileSystem::GetFileSize( handle );
+		fsSize_t len = FileSystem::GetFileSize( handle );
 
 		cls.download = handle;
 
@@ -122,8 +122,9 @@ void	CL_Download_f (void)
 		return;
 	}
 
-	if (FileSystem::LoadFile (filename, NULL) != -1)
-	{	// it exists, no need to download
+	if (FileSystem::FileExists (filename))
+	{
+		// it exists, no need to download
 		Com_Printf("File already exists.\n");
 		return;
 	}
@@ -506,7 +507,7 @@ void CL_ParseConfigString (void)
 	else if (i == CS_CDTRACK)
 	{
 		if (cl.refresh_prepped)
-			CDAudio_Play (atoi(cl.configstrings[CS_CDTRACK]), true);
+			CDAudio_Play (Q_atoi(cl.configstrings[CS_CDTRACK]), true);
 	}
 	else if (i >= CS_MODELS && i < CS_MODELS+MAX_MODELS)
 	{

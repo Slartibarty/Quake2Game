@@ -155,7 +155,7 @@ static void SVC_Info()
 		return;
 	}
 
-	version = atoi( Cmd_Argv( 1 ) );
+	version = Q_atoi( Cmd_Argv( 1 ) );
 
 	if ( version != PROTOCOL_VERSION )
 	{
@@ -259,7 +259,7 @@ static void SVC_DirectConnect()
 
 	Com_DPrint( "SVC_DirectConnect()\n" );
 
-	version = atoi( Cmd_Argv( 1 ) );
+	version = Q_atoi( Cmd_Argv( 1 ) );
 	if ( version != PROTOCOL_VERSION )
 	{
 		Netchan_OutOfBandPrint( NS_SERVER, adr, "print\nServer is version %d.\n", PROTOCOL_VERSION );
@@ -267,9 +267,9 @@ static void SVC_DirectConnect()
 		return;
 	}
 
-	qport = atoi( Cmd_Argv( 2 ) );
+	qport = Q_atoi( Cmd_Argv( 2 ) );
 
-	challenge = atoi( Cmd_Argv( 3 ) );
+	challenge = Q_atoi( Cmd_Argv( 3 ) );
 
 	Q_strcpy_s( userinfo, Cmd_Argv( 4 ) );
 
@@ -937,7 +937,7 @@ void SV_UserinfoChanged( client_t *cl )
 	val = Info_ValueForKey( cl->userinfo, "rate" );
 	if ( strlen( val ) != 0 )
 	{
-		cl->rate = Clamp( atoi( val ), 100, 15000 );
+		cl->rate = Clamp( Q_atoi( val ), 100, 15000 );
 	}
 	else
 	{
@@ -948,7 +948,7 @@ void SV_UserinfoChanged( client_t *cl )
 	val = Info_ValueForKey( cl->userinfo, "msg" );
 	if ( strlen( val ) != 0 )
 	{
-		cl->messagelevel = atoi( val );
+		cl->messagelevel = Q_atoi( val );
 	}
 }
 

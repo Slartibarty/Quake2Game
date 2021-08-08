@@ -178,7 +178,7 @@ model_t *Mod_ForName( const char *name, bool crash )
 	//
 	if ( name[0] == '*' )
 	{
-		i = atoi( name + 1 );
+		i = Q_atoi( name + 1 );
 		if ( i < 1 || !r_worldmodel || i >= r_worldmodel->numsubmodels ) {
 			Com_Error( "bad inline model number" );
 		}
@@ -221,7 +221,7 @@ model_t *Mod_ForName( const char *name, bool crash )
 	//
 	// load the file
 	//
-	int bufferLength = FileSystem::LoadFile( pMod->name, (void **)&pBuffer );
+	fsSize_t bufferLength = FileSystem::LoadFile( pMod->name, (void **)&pBuffer );
 	if ( !pBuffer )
 	{
 		if ( crash ) {

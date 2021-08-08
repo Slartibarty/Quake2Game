@@ -61,11 +61,6 @@ void Sys_Error( const platChar_t *mainInstruction, const char *msg )
 	Sys_UTF8ToUTF16( newMsg, Q_strlen( newMsg ) + 1, reason, countof( reason ) );
 
 	const platChar_t *windowTitle = FileSystem::ModInfo::GetWindowTitle();
-	if ( windowTitle[0] == '\0' )
-	{
-		// Filesystem didn't have a chance to init, so use this instead
-		windowTitle = PLATTEXT( ENGINE_VERSION );
-	}
 
 	TaskDialog(
 		nullptr,
@@ -578,15 +573,15 @@ int main( int argc, char **argv )
 {
 	int frameTime, oldTime, newTime;
 
+	// Make sure the CRT thinks we're a GUI app, this makes CRT asserts use a message box
+	// rather than printing to stderr
+	_set_app_type( _crt_gui_app );
+
 	if ( !IsWindows7SP1OrGreater() )
 	{
 		// Just deny anyone running win7sp0 or prior from running the game
 		Sys_Error( PLATTEXT( "Incompatible System" ), "You must be running Windows 7 SP1 or newer to play this game\n" );
 	}
-
-	// Make sure the CRT thinks we're a GUI app, this makes CRT asserts use a message box
-	// rather than printing to stderr
-	_set_app_type( _crt_gui_app );
 
 #ifdef Q_MEM_DEBUG
 	int dbgFlags = _CrtSetDbgFlag( _CRTDBG_REPORT_FLAG );

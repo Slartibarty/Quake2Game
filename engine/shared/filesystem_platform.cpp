@@ -17,7 +17,20 @@
 ===================================================================================================
 */
 
+#ifdef Q_ENGINE
 #include "engine.h"
+#else
+#include "../../core/core.h"
+#include "../../common/filesystem_interface.h"
+
+#ifdef _WIN32
+#include <malloc.h>
+#define Mem_StackAlloc _alloca
+#else
+#include <alloca.h>
+#define Mem_StackAlloc alloca
+#endif
+#endif
 
 // Undefine to force stdio on Windows
 //#define FS_FORCE_STDIO
@@ -139,7 +152,7 @@ void PrintFile( const char *string, fsHandle_t handle )
 
 void PrintFileVFmt( fsHandle_t handle, const char *fmt, va_list args )
 {
-	int strSize = Q_vsprintf( nullptr, fmt, args ) + 1;
+	int strSize = Q_vsprintf_s( nullptr, 0, fmt, args ) + 1;
 	assert( strSize <= MAX_PRINT_MSG );
 	char *str = (char *)Mem_StackAlloc( strSize );
 	Q_vsprintf( str, fmt, args );

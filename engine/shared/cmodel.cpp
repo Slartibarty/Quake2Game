@@ -670,7 +670,7 @@ cmodel_t *CM_LoadMap( const char *name, bool clientload, unsigned *checksum )
 	// load the file
 	//
 	byte *buf;
-	int length = FileSystem::LoadFile( name, (void **)&buf );
+	fsSize_t length = FileSystem::LoadFile( name, (void **)&buf );
 	if ( !buf )
 	{
 		Com_Errorf("Couldn't load %s", name );
@@ -728,7 +728,7 @@ cmodel_t *CM_InlineModel( const char *name )
 	{
 		Com_Error("CM_InlineModel: bad name" );
 	}
-	int num = atoi( name + 1 );
+	int num = Q_atoi( name + 1 );
 	if ( num < 1 || num >= cm.cmodels.Count() )
 	{
 		Com_Error("CM_InlineModel: bad number" );

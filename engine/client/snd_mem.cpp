@@ -262,7 +262,6 @@ sfxcache_t *S_LoadSound( sfx_t *s )
 	int		len;
 	float	stepscale;
 	sfxcache_t	*sc;
-	int		size;
 	char	*name;
 
 	if ( s->name[0] == '*' ) {
@@ -290,7 +289,7 @@ sfxcache_t *S_LoadSound( sfx_t *s )
 
 	//Com_Printf ("loading %s\n",namebuffer);
 
-	size = FileSystem::LoadFile (namebuffer, (void **)&data);
+	fsSize_t size = FileSystem::LoadFile (namebuffer, (void **)&data);
 	if ( !data )
 	{
 		Com_Printf( "Couldn't load %s\n", namebuffer );

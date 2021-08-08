@@ -15,6 +15,8 @@
 #include <cstdio>
 #include <cstdlib>
 
+//#define NO_OVERRIDE_NEWDELETE
+
 #if 0
 static constexpr size_t MemAlignment = 16;
 static constexpr size_t MemShift = MemAlignment - 1;
@@ -58,6 +60,40 @@ void Mem_Free( void *block )
 {
 	free( block );
 }
+
+/*
+=================================================
+	C++ new and delete
+=================================================
+*/
+
+#ifndef NO_OVERRIDE_NEWDELETE
+
+// double *pMem = new double;
+void *operator new( size_t size )
+{
+	return Mem_Alloc( size );
+}
+
+// delete pMem;
+void operator delete( void *pMem ) noexcept
+{
+	Mem_Free( pMem );
+}
+
+// char *pMem = new char[256];
+void *operator new[]( size_t size )
+{
+	return Mem_Alloc( size );
+}
+
+// delete[] pMem;
+void operator delete[]( void *pMem )
+{
+	Mem_Free( pMem );
+}
+
+#endif
 
 #endif
 

@@ -148,6 +148,7 @@ FbxVector4 FBX_GetTangent( FbxMesh *pMesh, int vertexID )
 	return FbxVector4( 0.0, 0.0, 0.0, 0.0 );
 }
 
+#if 0
 void FBX_SkinMesh( FbxMesh *pMesh )
 {
 	const int deformerCount = pMesh->GetDeformerCount( FbxDeformer::eSkin );
@@ -180,3 +181,4 @@ void FBX_SkinMesh( FbxMesh *pMesh )
 	}
 
 }
+#endif

@@ -123,6 +123,24 @@ inline char *Q_stristr( char *str, const char *substr ) {
 
 /*
 =======================================
+	String to number
+=======================================
+*/
+
+int64	Q_atoi64( const char *str );
+uint64	Q_atoui64( const char *str );
+
+int32	Q_atoi32( const char *str );
+uint32	Q_atoui32( const char *str );
+
+double	Q_atod( const char *str );
+float	Q_atof( const char *str );
+
+#define Q_atoi Q_atoi32
+#define Q_atoui Q_atoui32
+
+/*
+=======================================
 	String to upper / lower case
 =======================================
 */
