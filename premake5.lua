@@ -303,17 +303,27 @@ project "engine"
 	language "C++"
 	targetdir "../game"
 	debugdir "../game"
-	includedirs { "thirdparty/glew/include", "thirdparty/zlib", "thirdparty/libpng", "thirdparty/libpng_config", "thirdparty/imgui", "thirdparty/rapidjson/include" }
+	includedirs {
+		"thirdparty/glew/include", "thirdparty/zlib", "thirdparty/libpng",
+		"thirdparty/libpng_config", "thirdparty/imgui", "thirdparty/rapidjson/include"
+		--"thirdparty/steamworks/include"
+	}
 	defines { "Q_ENGINE", "GLEW_STATIC", "GLEW_NO_GLU", "IMGUI_USER_CONFIG=\"../../engine/client/q_imconfig.h\"", "IMGUI_IMPL_WIN32_DISABLE_GAMEPAD" }
 	links { "core" }
 	filter "system:windows"
 		linkoptions { "/ENTRY:mainCRTStartup" }
-		links { "shcore", "comctl32", "ws2_32", "dsound", "dxguid", "opengl32", "noenv.obj", "zlib", "libpng" }
+		links {
+			"shcore", "comctl32", "ws2_32", "dsound", "dxguid", "opengl32", "noenv.obj", "zlib", "libpng"
+			--"thirdparty/steamworks/lib/win64/steam_api64"
+		}
 	filter {}
 	filter "system:linux"
-		links { "GL", "SDL2", "zlib", "png" }
+		links {
+			"GL", "SDL2", "zlib", "png"
+			--"thirdparty/steamworks/lib/win64/libsteam_api64"
+		}
 	filter {}
-	
+		
 	disablewarnings { "4244", "4267" }
 
 	files {

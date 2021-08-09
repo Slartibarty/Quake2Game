@@ -12,7 +12,15 @@
 #include <VersionHelpers.h>
 #include "../client/winquake.h"			// Hack?
 
+//#define Q_USE_STEAM
+
+#ifdef Q_USE_STEAM
+#include "steam/steam_api.h"
+#endif
+
 #include "sys.h"
+
+#define Q_STEAM_APPID 480 // spacewar
 
 bool			g_activeApp, g_minimized;
 
@@ -20,9 +28,6 @@ static HANDLE	hinput, houtput;
 
 unsigned		sys_frame_time;
 int				curtime;
-
-int		g_argc;
-char	**g_argv;
 
 /*
 ===================================================================================================
@@ -32,6 +37,73 @@ char	**g_argv;
 ===================================================================================================
 */
 
+static void InitSteamStuff()
+{
+#ifdef Q_USE_STEAM
+	if ( SteamAPI_RestartAppIfNecessary( Q_STEAM_APPID ) )
+	{
+		exit( EXIT_FAILURE );
+	}
+
+	if ( !SteamAPI_Init() )
+	{
+		TaskDialog(
+			nullptr,
+			nullptr,
+			TEXT( ENGINE_VERSION ),
+			L"Failed to initialise Steam",
+			L"SteamAPI initialisation failed. Is Steam running?",
+			TDCBF_OK_BUTTON,
+			TD_ERROR_ICON,
+			nullptr );
+
+		exit( EXIT_FAILURE );
+	}
+#endif
+}
+
+static void ShutdownSteamStuff()
+{
+#ifdef Q_USE_STEAM
+	SteamAPI_Shutdown();
+#endif
+}
+
+// Called in main()
+static void Sys_SecretInit()
+{
+	InitSteamStuff();
+
+	CoInitializeEx( nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE );
+}
+
+// Called in Sys_Quit
+static void Sys_SecretShutdown()
+{
+	CoUninitialize();
+
+	// If Steam needed COM it'd call it itself
+	ShutdownSteamStuff();
+}
+
+//=================================================================================================
+
+// Called by Com_Init
+void Sys_Init( int argc, char **argv )
+{
+	if ( dedicated && dedicated->GetBool() )
+	{
+		if ( !AllocConsole() ) {
+			Com_FatalError( "Couldn't create dedicated server console\n" );
+		}
+		hinput = GetStdHandle( STD_INPUT_HANDLE );
+		houtput = GetStdHandle( STD_OUTPUT_HANDLE );
+
+		// let QHOST hook in
+		InitConProc( argc, argv );
+	}
+}
+
 // MSDN says OutputDebugStringW converts the unicode string to the system codepage
 // So just directly use the A version
 void Sys_OutputDebugString( const char *msg )
@@ -40,6 +112,15 @@ void Sys_OutputDebugString( const char *msg )
 	{
 		OutputDebugStringA( msg );
 	}
+}
+
+[[noreturn]]
+void Sys_Quit( int code )
+{
+	// Shut down very low level stuff
+	Sys_SecretShutdown();
+
+	exit( code );
 }
 
 [[noreturn]]
@@ -75,12 +156,6 @@ void Sys_Error( const platChar_t *mainInstruction, const char *msg )
 	Sys_Quit( EXIT_FAILURE );
 }
 
-[[noreturn]]
-void Sys_Quit( int code )
-{
-	exit( code );
-}
-
 //=================================================================================================
 
 /*
@@ -95,23 +170,7 @@ void Sys_CopyProtect()
 
 //=================================================================================================
 
-void Sys_Init()
-{
-	CoInitializeEx( nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE );
-
-	if ( dedicated && dedicated->GetBool() )
-	{
-		if ( !AllocConsole() ) {
-			Com_FatalError( "Couldn't create dedicated server console\n" );
-		}
-		hinput = GetStdHandle( STD_INPUT_HANDLE );
-		houtput = GetStdHandle( STD_OUTPUT_HANDLE );
-
-		// let QHOST hook in
-		InitConProc( g_argc, g_argv );
-	}
-}
-
+// Called by Com_Shutdown
 void Sys_Shutdown()
 {
 	if ( dedicated && dedicated->GetBool() )
@@ -121,8 +180,6 @@ void Sys_Shutdown()
 		// shut down QHOST hooks if necessary
 		DeinitConProc();
 	}
-
-	CoUninitialize();
 }
 
 static char	console_text[256];
@@ -577,11 +634,8 @@ int main( int argc, char **argv )
 	// rather than printing to stderr
 	_set_app_type( _crt_gui_app );
 
-	if ( !IsWindows7SP1OrGreater() )
-	{
-		// Just deny anyone running win7sp0 or prior from running the game
-		Sys_Error( PLATTEXT( "Incompatible System" ), "You must be running Windows 7 SP1 or newer to play this game\n" );
-	}
+	// no abort/retry/fail errors
+	SetErrorMode( SEM_FAILCRITICALERRORS );
 
 #ifdef Q_MEM_DEBUG
 	int dbgFlags = _CrtSetDbgFlag( _CRTDBG_REPORT_FLAG );
@@ -589,10 +643,24 @@ int main( int argc, char **argv )
 	_CrtSetDbgFlag( dbgFlags );
 #endif
 
-	g_argc = argc; g_argv = argv;
+	if ( !IsWindows7SP1OrGreater() )
+	{
+		// Just deny anyone running win7sp0 or prior from running the game
+		TaskDialog(
+			nullptr,
+			nullptr,
+			TEXT( ENGINE_VERSION ),
+			L"Incompatible System",
+			L"You must be running Windows 7 SP1 or newer to play this game",
+			TDCBF_OK_BUTTON,
+			TD_ERROR_ICON,
+			nullptr );
 
-	// no abort/retry/fail errors
-	SetErrorMode( SEM_FAILCRITICALERRORS );
+		exit( EXIT_FAILURE );
+	}
+
+	// Init very low level stuff
+	Sys_SecretInit();
 
 	Time_Init();
 
@@ -644,5 +712,4 @@ int main( int argc, char **argv )
 	}
 
 	// unreachable
-	return 0;
 }

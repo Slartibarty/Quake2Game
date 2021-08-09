@@ -6,6 +6,7 @@
 # Quake2Game
 utils/fastmat/fastmat.exe
 build/
+thirdparty/steamworks/
 
 # User-specific files
 *.rsuser

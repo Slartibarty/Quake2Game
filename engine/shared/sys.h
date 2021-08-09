@@ -4,7 +4,7 @@
 
 #pragma once
 
-void	Sys_Init();
+void	Sys_Init( int argc, char **argv );
 void	Sys_Shutdown();
 
 void	Sys_AppActivate();
@@ -23,9 +23,9 @@ bool	Sys_GetVidModeInfo( int &width, int &height, int mode );
 
 void	Sys_OutputDebugString( const char *msg );
 [[noreturn]]
-void	Sys_Error( const platChar_t *mainInstruction, const char *msg );
-[[noreturn]]
 void	Sys_Quit( int code );
+[[noreturn]]
+void	Sys_Error( const platChar_t *mainInstruction, const char *msg );
 
 char *	Sys_GetClipboardData();
 void	Sys_CopyProtect();

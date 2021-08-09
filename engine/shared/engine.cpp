@@ -676,7 +676,7 @@ void Com_Init( int argc, char **argv )
 
 	// Systems before this are not allowed to fail
 
-	Sys_Init();
+	Sys_Init( argc, argv );
 	FileSystem::Init();
 
 	Cbuf_AddText( "exec default.cfg\n" );
