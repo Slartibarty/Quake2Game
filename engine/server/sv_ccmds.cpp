@@ -435,9 +435,9 @@ static void SV_GameMap_f()
 	int			i;
 	client_t	*cl;
 
-	if (Cmd_Argc() != 2)
+	if ( Cmd_Argc() != 2 )
 	{
-		Com_Printf ("Usage: gamemap <map>\n");
+		Com_Print( "Usage: gamemap <map>\n" );
 		return;
 	}
 
@@ -497,13 +497,17 @@ For development work
 */
 static void SV_Map_f()
 {
-	char *map;
-	char expanded[MAX_QPATH];
+	if ( Cmd_Argc() != 2 )
+	{
+		Com_Print( "Usage: map <map>\n" );
+		return;
+	}
 
 	// if not a pcx, demo, or cinematic, check to make sure the level exists
-	map = Cmd_Argv( 1 );
-	if ( !strstr( map, "." ) )
+	const char *map = Cmd_Argv( 1 );
+	if ( !Q_strstr( map, "." ) )
 	{
+		char expanded[MAX_QPATH];
 		Q_sprintf_s( expanded, "maps/%s.bsp", map );
 		if ( !FileSystem::FileExists( expanded ) )
 		{
@@ -540,7 +544,7 @@ static void SV_Loadgame_f()
 	Com_Print( "Loading game...\n" );
 
 	const char *dir = Cmd_Argv( 1 );
-	if ( strstr( dir, ".." ) || strstr( dir, "/" ) || strstr( dir, "\\" ) ) {
+	if ( Q_strstr( dir, ".." ) || Q_strstr( dir, "/" ) || Q_strstr( dir, "\\" ) ) {
 		Com_Print( "Bad savedir.\n" );
 	}
 
@@ -594,7 +598,7 @@ static void SV_Savegame_f()
 	}
 
 	char *dir = Cmd_Argv( 1 );
-	if ( strstr( dir, ".." ) || strstr( dir, "/" ) || strstr( dir, "\\" ) ) {
+	if ( Q_strstr( dir, ".." ) || Q_strstr( dir, "/" ) || Q_strstr( dir, "\\" ) ) {
 		Com_Print( "Bad savedir.\n" );
 	}
 

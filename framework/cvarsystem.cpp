@@ -461,8 +461,8 @@ void Cvar_WriteVariables( fsHandle_t handle )
 	{
 		if ( var->flags & CVAR_ARCHIVE )
 		{
-			Q_sprintf_s( buffer, "set %s \"%s\"\n", var->name.c_str(), var->value.c_str() );
-			FileSystem::PrintFile( buffer, handle );
+			int bufferLen = Q_sprintf_s( buffer, "set %s \"%s\"\n", var->name.c_str(), var->value.c_str() );
+			FileSystem::WriteFile( buffer, bufferLen, handle );
 		}
 	}
 }

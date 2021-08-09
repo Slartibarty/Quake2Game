@@ -357,8 +357,8 @@ void Key_WriteBindings( fsHandle_t handle )
 	{
 		if ( keybindings[i] && keybindings[i][0] )
 		{
-			Q_sprintf_s( buffer, "bind %s \"%s\"\n", Key_KeynumToString( i ), keybindings[i] );
-			FileSystem::PrintFile( buffer, handle );
+			int bufferLen = Q_sprintf_s( buffer, "bind %s \"%s\"\n", Key_KeynumToString( i ), keybindings[i] );
+			FileSystem::WriteFile( buffer, bufferLen, handle );
 		}
 	}
 }
