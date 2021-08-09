@@ -16,7 +16,7 @@ struct fsHandle_t__ { void *unused; }; using fsHandle_t = fsHandle_t__ *;
 using fsHandle_t = void *;
 #endif
 
-// Should be at least uint32 later on
+// Maybe (u)int64 later?
 using fsSize_t = uint32;
 
 #define FS_INVALID_HANDLE nullptr

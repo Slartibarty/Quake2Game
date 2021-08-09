@@ -8,21 +8,9 @@
 ===================================================================================================
 */
 
-#ifdef Q_ENGINE
-#include "engine.h"
-#else
-#include "../../core/core.h"
-#include "../../common/cvardefs.h"
-#include "filesystem.h"
+#include "framework_local.h"
 
-#define Mem_Alloc( a ) malloc( a )
-#define Mem_ClearedAlloc( a ) calloc( 1, a )
-#define Mem_Free( a ) free( a )
-
-#define Com_ServerState() 0
-#endif
-
-#include "cvar.h"
+#include "cvarsystem.h"
 
 cvar_t *cvar_vars;
 
@@ -392,12 +380,6 @@ void Cvar_FindSetBool( const char *name, bool value )
 	Cvar_Set_Internal( var, str, false );
 }
 
-// LEGACY
-void Cvar_Set( const char *name, const char *value )
-{
-	return Cvar_FindSetString( name, value );
-}
-
 //=================================================================================================
 
 // Any variables with latched values will now be updated
@@ -416,32 +398,6 @@ void Cvar_GetLatchedVars()
 
 		Cvar_SetDerivatives( var );
 	}
-}
-
-bool Cvar_Command()
-{
-#ifdef Q_ENGINE
-
-	// check variables
-	cvar_t *var = Cvar_Find( Cmd_Argv( 0 ) );
-	if ( !var ) {
-		return false;
-	}
-
-	// perform a variable print or set
-	if ( Cmd_Argc() == 1 )
-	{
-		Cvar_PrintValue( var );
-		Cvar_PrintFlags( var );
-		Cvar_PrintHelp( var );
-		return true;
-	}
-
-	Cvar_Set( var->name.c_str(), Cmd_Argv( 1 ) );
-
-#endif
-
-	return true;
 }
 
 void Cvar_PrintValue( cvar_t *var )

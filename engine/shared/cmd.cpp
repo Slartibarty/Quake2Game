@@ -793,6 +793,40 @@ const char *Cmd_CompleteCommand( const char *partial )
 
 /*
 ========================
+Cmd_ExecuteCvar
+
+Handles variable inspection and changing from the console
+
+called by Cmd_ExecuteString when Cmd_Argv(0) doesn't match a known
+command.  Returns true if the command was a variable reference that
+was handled. (print or change)
+========================
+*/
+static bool Cmd_ExecuteCvar()
+{
+	// check variables
+	cvar_t *var = Cvar_Find( Cmd_Argv( 0 ) );
+	if ( !var ) {
+		return false;
+	}
+
+	// perform a variable print or set
+	if ( Cmd_Argc() == 1 )
+	{
+		Cvar_PrintValue( var );
+		Cvar_PrintFlags( var );
+		Cvar_PrintHelp( var );
+		return true;
+	}
+
+	// set it!
+	Cvar_FindSetString( var->name.c_str(), Cmd_Argv( 1 ) );
+
+	return true;
+}
+
+/*
+========================
 Cmd_ExecuteString
 
 A complete command line has been parsed, so try to execute it
@@ -843,7 +877,7 @@ void Cmd_ExecuteString( char *text )
 	}
 
 	// check cvars
-	if ( Cvar_Command() ) {
+	if ( Cmd_ExecuteCvar() ) {
 		return;
 	}
 

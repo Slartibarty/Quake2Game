@@ -390,7 +390,7 @@ static bool SCR_InitImGui()
 	qImGui::OSImp_Init( R_GetWindowHandle() );
 	ImGui_ImplOpenGL3_Init( /*"#version 330 core"*/ );
 
-	ImFontConfig fontConfig;
+	//ImFontConfig fontConfig;
 	//fontConfig.FontBuilderFlags = ImGuiFreeTypeBuilderFlags_LoadColor;
 
 	//io.Fonts->AddFontFromFileTTF( va( "%s/fonts/consola.ttf", FS_Gamedir() ), 13.0f, &fontConfig );

@@ -13,12 +13,13 @@
 #include <vector>
 #include <string>
 
-#include "filesystem.h"
+// framework
+#include "../../framework/framework_public.h"
+
 #include "cmd.h"
 #include "cmodel.h"
 #include "conproc.h"
 #include "crc.h"
-#include "cvar.h"
 #include "msg.h"
 #include "net.h"
 #include "protocol.h"

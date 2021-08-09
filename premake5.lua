@@ -320,6 +320,8 @@ project "engine"
 		"common/*",
 		"resources/*",
 		
+		"framework/*",
+		
 		"engine/client/*",
 		"engine/server/*",
 		"engine/shared/*",
@@ -621,11 +623,7 @@ project "modelbuilder"
 		"resources/windows_default.manifest",
 		"common/q_formats.h",
 		
-		"engine/shared/cvar.cpp",
-		"engine/shared/cvar.h",
-		"engine/shared/filesystem.cpp",
-		"engine/shared/filesystem.h",
-		"engine/shared/filesystem_platform.cpp",
+		"framework/*",
 		
 		"utils/common2/cmdlib.*",
 		

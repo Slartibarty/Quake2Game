@@ -917,8 +917,14 @@ G_RunEntity
 */
 void G_RunEntity( edict_t *ent )
 {
-	if ( ent->prethink )
+	// Players don't use this function
+	if ( g_playersOnly->GetBool() ) {
+		return;
+	}
+
+	if ( ent->prethink ) {
 		ent->prethink( ent );
+	}
 
 	switch ( ent->movetype )
 	{
@@ -942,6 +948,6 @@ void G_RunEntity( edict_t *ent )
 		SV_Physics_Toss( ent );
 		break;
 	default:
-		gi.error( "SV_Physics: bad movetype %i", (int)ent->movetype );
+		gi.error( "SV_Physics: bad movetype %d\n", (int)ent->movetype );
 	}
 }

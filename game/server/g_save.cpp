@@ -184,8 +184,9 @@ void InitGame (void)
 	// dm map list
 	sv_maplist = gi.cvar ("sv_maplist", "", 0);
 
-	g_viewthing = gi.cvar ("g_viewthing", "models/devtest/computer/computer.smf", CVAR_ARCHIVE);
+	g_viewthing = gi.cvar ("g_viewthing", "models/devtest/barneyhl1.smf", CVAR_ARCHIVE);
 	g_frametime = gi.cvar ("g_frametime", "0.1", 0);
+	g_playersOnly = gi.cvar ("g_playersOnly", "0", 0);
 
 	// items
 	InitItems ();

@@ -553,6 +553,7 @@ extern	cvar_t	*sv_rollangle;
 
 extern	cvar_t	*g_viewthing;
 extern	cvar_t	*g_frametime;
+extern	cvar_t	*g_playersOnly;
 
 extern	cvar_t	*run_pitch;
 extern	cvar_t	*run_roll;

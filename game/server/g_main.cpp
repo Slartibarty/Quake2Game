@@ -41,6 +41,7 @@ cvar_t	*gun_z;
 
 cvar_t	*g_viewthing;
 cvar_t	*g_frametime;
+cvar_t	*g_playersOnly;
 
 cvar_t	*run_pitch;
 cvar_t	*run_roll;

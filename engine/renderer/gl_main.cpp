@@ -431,7 +431,7 @@ struct partPoint_t
 static GLuint s_partVAO;
 static GLuint s_partVBO;
 
-std::vector<partPoint_t> s_partVector;
+static std::vector<partPoint_t> s_partVector;
 
 /*
 ========================

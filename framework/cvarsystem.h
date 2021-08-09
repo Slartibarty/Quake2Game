@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include "../common/cvardefs.h"
+
 // singly-linked list of all cvars
 extern cvar_t *cvar_vars;
 
@@ -66,17 +68,13 @@ void		Cvar_FindSetFloat( const char *name, float value );
 void		Cvar_FindSetInt( const char *name, int value );
 void		Cvar_FindSetBool( const char *name, bool value );
 
+			// backwards compatibility
+#define		Cvar_Set Cvar_FindSetString
+
 //=================================================================================================
 
 			// any CVAR_LATCHED variables that have been set will now take effect
 void		Cvar_GetLatchedVars();
-
-			// Handles variable inspection and changing from the console
-			//
-			// called by Cmd_ExecuteString when Cmd_Argv(0) doesn't match a known
-			// command.  Returns true if the command was a variable reference that
-			// was handled. (print or change)
-bool		Cvar_Command();
 
 			// for consistency
 void		Cvar_PrintValue( cvar_t *var );
@@ -88,9 +86,7 @@ void		Cvar_PrintFlags( cvar_t *var );
 void 		Cvar_WriteVariables( fsHandle_t handle );
 
 #ifndef Q_ENGINE
-
 void		Cvar_AddEarlyCommands( int argc, char **argv );
-
 #endif
 
 #ifdef Q_ENGINE

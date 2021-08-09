@@ -3,8 +3,6 @@
 
 	The Virtual Filesystem 2.0
 
-	TODO: gameinfo.txt
-
 	MAYBE: changing the gameDir is unsupported right now, it's always the working directory
 
 	Notes:
@@ -18,25 +16,23 @@
 ===================================================================================================
 */
 
-#ifdef Q_ENGINE
-#include "engine.h"
-#else
-#include "../../core/core.h"
-#include "../../common/cvardefs.h"
-#include "../../common/filesystem_interface.h"
-#include "cvar.h"
-
-#define Mem_Alloc malloc
-#define Mem_Free free
-#define BASE_MODDIR "base"
-#define ENGINE_VERSION "JaffaUtilities"
-#endif
+#include "framework_local.h"
 
 #include "rapidjson/document.h"
 
 #ifdef _WIN32
 #include "../../core/sys_includes.h"
 #include <ShlObj.h>
+
+#ifdef Q_ENGINE
+// COM is initialised for the main thread by Sys_Init already
+#define FS_INITCOM
+#define FS_KILLCOM
+#else
+// Must use COINIT_MULTITHREADED because we typically don't have a message pump in utils
+#define FS_INITCOM CoInitializeEx( nullptr, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE );
+#define FS_KILLCOM CoUninitialize();
+#endif
 #endif
 
 #include "filesystem.h"
@@ -99,14 +95,16 @@ static void SetWriteDirectory()
 {
 #ifdef _WIN32
 
+	FS_INITCOM
+
 	PWSTR savedGames;
 	if ( SUCCEEDED( SHGetKnownFolderPath( FOLDERID_SavedGames, KF_FLAG_CREATE | KF_FLAG_INIT, nullptr, &savedGames ) ) )
 	{
 		char fullPath[MAX_OSPATH];
 		Sys_UTF16toUTF8( savedGames, static_cast<int>( wcslen( savedGames ) + 1 ), fullPath, sizeof( fullPath ) );
+		CoTaskMemFree( savedGames );
 		Str_FixSlashes( fullPath );
 		Q_sprintf_s( fs.writeDir, "%s/%s", fullPath, SAVEFOLDER_NAME );
-		CoTaskMemFree( savedGames );
 	}
 	else
 	{
@@ -114,6 +112,8 @@ static void SetWriteDirectory()
 		assert( 0 );
 		Q_strcpy_s( fs.writeDir, fs.gameDir );
 	}
+
+	FS_KILLCOM
 
 #else
 

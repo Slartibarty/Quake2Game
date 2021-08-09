@@ -17,20 +17,7 @@
 ===================================================================================================
 */
 
-#ifdef Q_ENGINE
-#include "engine.h"
-#else
-#include "../../core/core.h"
-#include "../../common/filesystem_interface.h"
-
-#ifdef _WIN32
-#include <malloc.h>
-#define Mem_StackAlloc _alloca
-#else
-#include <alloca.h>
-#define Mem_StackAlloc alloca
-#endif
-#endif
+#include "framework_local.h"
 
 // Undefine to force stdio on Windows
 //#define FS_FORCE_STDIO
@@ -97,11 +84,12 @@ const char *GetAPIName()
 
 fsSize_t GetFileSize( fsHandle_t handle )
 {
-	LARGE_INTEGER fileSize;
+	LONGLONG fileSize;
 
-	GetFileSizeEx( reinterpret_cast<HANDLE>( handle ), &fileSize );
+	GetFileSizeEx( reinterpret_cast<HANDLE>( handle ), reinterpret_cast<LARGE_INTEGER *>( &fileSize ) );
+	assert( fileSize <= UINT32_MAX );
 
-	return static_cast<fsSize_t>( fileSize.QuadPart );
+	return static_cast<fsSize_t>( fileSize );
 }
 
 void Seek( fsHandle_t handle, fsSize_t offset, fsSeek_t seek )
@@ -111,11 +99,11 @@ void Seek( fsHandle_t handle, fsSize_t offset, fsSeek_t seek )
 
 fsSize_t Tell( fsHandle_t handle )
 {
-	LARGE_INTEGER currentPosition;
+	LONGLONG currentPosition;
 
-	SetFilePointerEx( reinterpret_cast<HANDLE>( handle ), LARGE_INTEGER(), &currentPosition, FILE_CURRENT );
+	SetFilePointerEx( reinterpret_cast<HANDLE>( handle ), static_cast<LARGE_INTEGER>( 0 ), reinterpret_cast<LARGE_INTEGER *>( &currentPosition ), FILE_CURRENT );
 
-	return static_cast<fsSize_t>( currentPosition.QuadPart );
+	return static_cast<fsSize_t>( currentPosition );
 }
 
 void CloseFile( fsHandle_t handle )
