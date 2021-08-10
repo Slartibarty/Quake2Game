@@ -108,10 +108,12 @@ void Sys_Init( int argc, char **argv )
 // So just directly use the A version
 void Sys_OutputDebugString( const char *msg )
 {
+#ifndef Q_RETAIL
 	if ( IsDebuggerPresent() )
 	{
 		OutputDebugStringA( msg );
 	}
+#endif
 }
 
 [[noreturn]]

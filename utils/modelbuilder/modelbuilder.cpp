@@ -12,6 +12,8 @@
 
 #include "rapidjson/document.h"
 
+#include "modelbuildinstance.h"
+
 class CModelBuilder
 {
 private:
@@ -29,6 +31,21 @@ private:
 
 	std::vector<modelBuild_t> m_modelBuilds;
 
+	void InitSystems( int argc, char **argv )
+	{
+		Cvar_Init();
+		Cvar_AddEarlyCommands( argc, argv );
+
+		FileSystem::Init();
+	}
+
+	void ShutdownSystems()
+	{
+		FileSystem::Shutdown();
+
+		Cvar_Shutdown();
+	}
+
 	bool ParseCommandLine( int argc, char **argv )
 	{
 		using namespace rapidjson;
@@ -40,14 +57,23 @@ private:
 
 		Document doc;
 
+		int mdlBuilds = 0;
+
 		for ( int i = 1; i < argc; ++i )
 		{
-			const char *filename = argv[i];
+			const char *argName = argv[i];
+
+			if ( Q_strcmp( argName, "+set" ) == 0 )
+			{
+				i += 2;
+				continue;
+			}
+
 			char *buffer;
-			Local_LoadFile( filename, (byte **)&buffer, 1 );
+			FileSystem::LoadFile( argName, (void **)&buffer, 1 );
 			if ( !buffer )
 			{
-				Com_Printf( "Failed to load %s\n", filename );
+				Com_Printf( "Failed to load %s\n", argName );
 				return false;
 			}
 
@@ -55,14 +81,14 @@ private:
 			free( buffer );
 			if ( doc.HasParseError() || !doc.IsObject() )
 			{
-				Com_Printf( "JSON parse error in %s at offset %zu\n", filename, doc.GetErrorOffset() );
+				Com_Printf( "JSON parse error in %s at offset %zu\n", argName, doc.GetErrorOffset() );
 				return false;
 			}
 
 			modelBuild_t &mdlBuild = m_modelBuilds.emplace_back();
 
 			// Fill out scriptPath
-			mdlBuild.scriptPath = _strdup( filename );
+			mdlBuild.scriptPath = _strdup( argName );
 			Str_FixSlashes( mdlBuild.scriptPath );
 			Local_StripFilename( mdlBuild.scriptPath );
 
@@ -93,9 +119,11 @@ private:
 			{
 				mdlBuild.hasSkeleton = member->value.GetBool();
 			}
+
+			++mdlBuilds;
 		}
 
-		Com_Printf( "Building %d jmdls\n", argc - 1 );
+		Com_Printf( "Building %d jmdls\n", mdlBuilds );
 
 		return true;
 	}
@@ -115,10 +143,7 @@ public:
 	{
 		Com_Print( "---- JaffaQuake Model Compiler - By Slartibarty ----\n\n" );
 
-		Cvar_Init();
-		Cvar_AddEarlyCommands( argc, argv );
-
-		FileSystem::Init();
+		InitSystems( argc, argv );
 
 		if ( !ParseCommandLine( argc, argv ) )
 		{
@@ -132,6 +157,8 @@ public:
 		{
 			DoWorkOnModel( m_modelBuilds[i] );
 		}
+
+		ShutdownSystems();
 
 		return EXIT_SUCCESS;
 	}

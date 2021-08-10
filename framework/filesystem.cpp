@@ -187,6 +187,15 @@ void Init()
 	// Search paths are added backwards due to the nature of singly linked lists.
 	// The write directory takes presedence for searches
 
+	// Fourth priority, the content directory (if it exists)
+	if ( Sys_FileExists( fs.contentDir ) )
+	{
+		AddSearchPath( fs.contentDir, fs.modDir );
+	}
+
+	// TODO: For development purposes we probably want to be able to access content sources in other mod folders
+	// should do this when needed
+
 	// Third priority, additional game dirs specified by the modinfo
 	ModInfo::ParseModInfo();
 
