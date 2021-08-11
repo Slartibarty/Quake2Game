@@ -251,10 +251,13 @@ extern "C"
 	=================================================
 	*/
 
+	// This is causing trouble with release builds
+#if 0
 	size_t _msize( void *pMem )
 	{
 		return mi_usable_size( pMem );
 	}
+#endif
 
 }
 

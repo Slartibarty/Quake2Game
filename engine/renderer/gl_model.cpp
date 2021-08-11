@@ -262,7 +262,7 @@ model_t *Mod_ForName( const char *name, bool crash )
 		break;
 
 	default:
-		Com_Errorf( "Mod_NumForName: unknown fileid for %s", pMod->name );
+		Com_Errorf( "Mod_NumForName: unknown FourCC for %s", pMod->name );
 		break;
 	}
 

@@ -16,6 +16,10 @@
 
 // Happy unity build
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#endif
+
 #include "../thirdparty/mimalloc/src/stats.c"
 #include "../thirdparty/mimalloc/src/random.c"
 #include "../thirdparty/mimalloc/src/os.c"
