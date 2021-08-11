@@ -60,6 +60,8 @@
 
 #endif
 
+// reminder for me to check my bookmarks for that assume compiler performance stuff
+
 #ifdef Q_DEBUG
 
 #define ASSUME(x)			assert(x)

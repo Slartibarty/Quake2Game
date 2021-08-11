@@ -12,15 +12,11 @@
 #include <VersionHelpers.h>
 #include "../client/winquake.h"			// Hack?
 
-//#define Q_USE_STEAM
-
 #ifdef Q_USE_STEAM
 #include "steam/steam_api.h"
 #endif
 
 #include "sys.h"
-
-#define Q_STEAM_APPID 480 // spacewar
 
 bool			g_activeApp, g_minimized;
 

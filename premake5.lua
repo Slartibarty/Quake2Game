@@ -17,6 +17,37 @@ local filter_rtl = "configurations:" .. conf_rtl
 
 local filter_64bit = "platforms:" .. plat_64bit
 
+-- Options --------------------------------------------------------------------
+
+newoption {
+	trigger = "exclude-utils",
+	description = "Exclude utilities"
+}
+
+newoption {
+	trigger = "distro",
+	value = "platform",
+	description = "Set distribution platform",
+	default = "none",
+	allowed = {
+		{ "none", "No distribution platform" },
+		{ "steam", "Build for Steam" }
+	}
+}
+
+function LinkToDistro()
+	if _OPTIONS["distro"] == "steam" then
+		includedirs { "thirdparty/steamworks/include" }
+		defines { "Q_USE_STEAM", "Q_STEAM_APPID=480" }
+		filter "system:windows"
+			links { "thirdparty/steamworks/lib/win64/steam_api64" }
+		filter {}
+		filter "system:linux"
+			links { "thirdparty/steamworks/lib/linux64/libsteam_api64" }
+		filter {}
+	end
+end
+
 -- Workspace definition -------------------------------------------------------
 
 workspace "jaffaquake"
@@ -307,7 +338,6 @@ project "engine"
 	includedirs {
 		"thirdparty/glew/include", "thirdparty/zlib", "thirdparty/libpng",
 		"thirdparty/libpng_config", "thirdparty/imgui", "thirdparty/rapidjson/include"
-		--"thirdparty/steamworks/include"
 	}
 	defines { "Q_ENGINE", "GLEW_STATIC", "GLEW_NO_GLU", "IMGUI_USER_CONFIG=\"../../engine/client/q_imconfig.h\"", "IMGUI_IMPL_WIN32_DISABLE_GAMEPAD" }
 	links { "core" }
@@ -315,16 +345,16 @@ project "engine"
 		linkoptions { "/ENTRY:mainCRTStartup" }
 		links {
 			"shcore", "comctl32", "ws2_32", "dsound", "dxguid", "opengl32", "noenv.obj", "zlib", "libpng"
-			--"thirdparty/steamworks/lib/win64/steam_api64"
 		}
 	filter {}
 	filter "system:linux"
 		links {
 			"GL", "SDL2", "zlib", "png"
-			--"thirdparty/steamworks/lib/win64/libsteam_api64"
 		}
 	filter {}
-		
+	
+	LinkToDistro()
+	
 	disablewarnings { "4244", "4267" }
 
 	files {
@@ -442,208 +472,208 @@ project "game"
 	
 -- Utils
 
-filter "system:windows"
+if not _OPTIONS["exclude-utils"] then
 
-group "utilities"
+	group "utilities"
 
-project "qbsp4"
-	kind "ConsoleApp"
-	targetname "qbsp4"
-	language "C++"
-	floatingpoint "Default"
-	targetdir "../game"
-	debugdir "../game"
-	links { "core" }
-	includedirs { "utils/common2", "common" }
-	
-	files {
-		"resources/windows_default.manifest",
+	project "qbsp4"
+		kind "ConsoleApp"
+		targetname "qbsp4"
+		language "C++"
+		floatingpoint "Default"
+		targetdir "../game"
+		debugdir "../game"
+		links { "core" }
+		includedirs { "utils/common2", "common" }
 		
-		"common/*",
-		
-		"utils/common2/cmdlib.*",
-		"utils/common2/mathlib.*",
-		"utils/common2/scriplib.*",
-		"utils/common2/polylib.*",
-		"utils/common2/threads.*",
-		"utils/common2/bspfile.*",
+		files {
+			"resources/windows_default.manifest",
 			
-		"utils/qbsp4/*"
-	}
-	
-	filter "system:windows"
-		removefiles {
-			"**/*_linux.*"
-		}
-	filter {}
-	filter "system:linux"
-		removefiles {
-			"**/*_win.*"
-		}
-	filter {}
-
-project "qvis4"
-	kind "ConsoleApp"
-	targetname "qvis4"
-	language "C++"
-	floatingpoint "Default"
-	targetdir "../game"
-	debugdir "../game"
-	links { "core" }
-	includedirs { "utils/common2", "common" }
-	
-	files {
-		"resources/windows_default.manifest",
-		
-		"common/*",
-
-		"utils/common2/cmdlib.*",
-		"utils/common2/mathlib.*",
-		"utils/common2/threads.*",
-		"utils/common2/scriplib.*",
-		"utils/common2/bspfile.*",
-	
-		"utils/qvis4/*"
-	}
-	
-	filter "system:windows"
-		removefiles {
-			"**/*_linux.*"
-		}
-	filter {}
-	filter "system:linux"
-		removefiles {
-			"**/*_win.*"
-		}
-	filter {}
-	
-project "qrad4"
-	kind "ConsoleApp"
-	targetname "qrad4"
-	language "C++"
-	floatingpoint "Default"
-	targetdir "../game"
-	debugdir "../game"
-	links { "core" }
-	includedirs { "utils/common2", "common", "thirdparty/stb" }
-	
-	files {
-		"resources/windows_default.manifest",
-		
-		"common/*",
-	
-		"utils/common2/cmdlib.*",
-		"utils/common2/mathlib.*",
-		"utils/common2/threads.*",
-		"utils/common2/polylib.*",
-		"utils/common2/scriplib.*",
-		"utils/common2/bspfile.*",
-	
-		"utils/qrad4/*"
-	}
-	
-	filter "system:windows"
-		removefiles {
-			"**/*_linux.*"
-		}
-	filter {}
-	filter "system:linux"
-		removefiles {
-			"**/*_win.*"
-		}
-	filter {}
-	
-project "qatlas"
-	kind "ConsoleApp"
-	targetname "qatlas"
-	language "C++"
-	floatingpoint "Default"
-	targetdir "../game"
-	debugdir "../game"
-	links { "core" }
-	includedirs { "utils/common2", "thirdparty/xatlas" }
-	
-	files {
-		"resources/windows_default.manifest",
-		"common/q_formats.h",
-	
-		"utils/common2/cmdlib.*",
-		
-		"utils/qatlas/*",
-		
-		xatlas_public,
-		xatlas_sources
-	}
-	
-project "qsmf"
-	kind "ConsoleApp"
-	targetname "qsmf"
-	language "C++"
-	floatingpoint "Default"
-	targetdir "../game"
-	debugdir "../game"
-	links { "core", "zlib", "meshoptimizer" }
-	includedirs { "utils/common2", "thirdparty/meshoptimizer/src", fbxsdk_include_dir }
-	
-	-- link to the FBX SDK
-	filter( filter_dbg )
-		links { fbxsdk_lib_dir .. "/debug/libfbxsdk-mt" }
-		links { fbxsdk_lib_dir .. "/debug/libxml2-mt" }
-	filter {}
-	filter( filter_rel_or_rtl )
-		links { fbxsdk_lib_dir .. "/release/libfbxsdk-mt" }
-		links { fbxsdk_lib_dir .. "/release/libxml2-mt" }
-	filter {}
-		
-	files {
-		"resources/windows_default.manifest",
-		"common/q_formats.h",
+			"common/*",
 			
-		"utils/common2/cmdlib.*",
+			"utils/common2/cmdlib.*",
+			"utils/common2/mathlib.*",
+			"utils/common2/scriplib.*",
+			"utils/common2/polylib.*",
+			"utils/common2/threads.*",
+			"utils/common2/bspfile.*",
+				
+			"utils/qbsp4/*"
+		}
 		
-		meshoptimizer_public,
-		
-		"utils/qsmf/*",
-	}
-	
-	removefiles {
-		"utils/qsmf/obj_reader.*"
-	}
+		filter "system:windows"
+			removefiles {
+				"**/*_linux.*"
+			}
+		filter {}
+		filter "system:linux"
+			removefiles {
+				"**/*_win.*"
+			}
+		filter {}
 
-project "modelbuilder"
-	kind "ConsoleApp"
-	targetname "modelbuilder"
-	language "C++"
-	floatingpoint "Default"
-	targetdir "../game"
-	debugdir "../game"
-	links { "core", "zlib", "meshoptimizer" }
-	includedirs { "utils/common2", "thirdparty/meshoptimizer/src", "thirdparty/rapidjson/include", fbxsdk_include_dir }
-	
-	-- link to the FBX SDK
-	filter( filter_dbg )
-		links { fbxsdk_lib_dir .. "/debug/libfbxsdk-mt" }
-		links { fbxsdk_lib_dir .. "/debug/libxml2-mt" }
-	filter {}
-	filter( filter_rel_or_rtl )
-		links { fbxsdk_lib_dir .. "/release/libfbxsdk-mt" }
-		links { fbxsdk_lib_dir .. "/release/libxml2-mt" }
-	filter {}
+	project "qvis4"
+		kind "ConsoleApp"
+		targetname "qvis4"
+		language "C++"
+		floatingpoint "Default"
+		targetdir "../game"
+		debugdir "../game"
+		links { "core" }
+		includedirs { "utils/common2", "common" }
 		
-	files {
-		"resources/windows_default.manifest",
-		"common/q_formats.h",
-		
-		"framework/*",
-		
-		"utils/common2/cmdlib.*",
-		
-		meshoptimizer_public,
-		
-		"utils/modelbuilder/*",
-	}
+		files {
+			"resources/windows_default.manifest",
+			
+			"common/*",
 
-filter {}
+			"utils/common2/cmdlib.*",
+			"utils/common2/mathlib.*",
+			"utils/common2/threads.*",
+			"utils/common2/scriplib.*",
+			"utils/common2/bspfile.*",
+		
+			"utils/qvis4/*"
+		}
+		
+		filter "system:windows"
+			removefiles {
+				"**/*_linux.*"
+			}
+		filter {}
+		filter "system:linux"
+			removefiles {
+				"**/*_win.*"
+			}
+		filter {}
+		
+	project "qrad4"
+		kind "ConsoleApp"
+		targetname "qrad4"
+		language "C++"
+		floatingpoint "Default"
+		targetdir "../game"
+		debugdir "../game"
+		links { "core" }
+		includedirs { "utils/common2", "common", "thirdparty/stb" }
+		
+		files {
+			"resources/windows_default.manifest",
+			
+			"common/*",
+		
+			"utils/common2/cmdlib.*",
+			"utils/common2/mathlib.*",
+			"utils/common2/threads.*",
+			"utils/common2/polylib.*",
+			"utils/common2/scriplib.*",
+			"utils/common2/bspfile.*",
+		
+			"utils/qrad4/*"
+		}
+		
+		filter "system:windows"
+			removefiles {
+				"**/*_linux.*"
+			}
+		filter {}
+		filter "system:linux"
+			removefiles {
+				"**/*_win.*"
+			}
+		filter {}
+		
+	project "qatlas"
+		kind "ConsoleApp"
+		targetname "qatlas"
+		language "C++"
+		floatingpoint "Default"
+		targetdir "../game"
+		debugdir "../game"
+		links { "core" }
+		includedirs { "utils/common2", "thirdparty/xatlas" }
+		
+		files {
+			"resources/windows_default.manifest",
+			"common/q_formats.h",
+		
+			"utils/common2/cmdlib.*",
+			
+			"utils/qatlas/*",
+			
+			xatlas_public,
+			xatlas_sources
+		}
+		
+	project "qsmf"
+		kind "ConsoleApp"
+		targetname "qsmf"
+		language "C++"
+		floatingpoint "Default"
+		targetdir "../game"
+		debugdir "../game"
+		links { "core", "zlib", "meshoptimizer" }
+		includedirs { "utils/common2", "thirdparty/meshoptimizer/src", fbxsdk_include_dir }
+		
+		-- link to the FBX SDK
+		filter( filter_dbg )
+			links { fbxsdk_lib_dir .. "/debug/libfbxsdk-mt" }
+			links { fbxsdk_lib_dir .. "/debug/libxml2-mt" }
+		filter {}
+		filter( filter_rel_or_rtl )
+			links { fbxsdk_lib_dir .. "/release/libfbxsdk-mt" }
+			links { fbxsdk_lib_dir .. "/release/libxml2-mt" }
+		filter {}
+			
+		files {
+			"resources/windows_default.manifest",
+			"common/q_formats.h",
+				
+			"utils/common2/cmdlib.*",
+			
+			meshoptimizer_public,
+			
+			"utils/qsmf/*",
+		}
+		
+		removefiles {
+			"utils/qsmf/obj_reader.*"
+		}
+
+	project "modelbuilder"
+		kind "ConsoleApp"
+		targetname "modelbuilder"
+		language "C++"
+		floatingpoint "Default"
+		targetdir "../game"
+		debugdir "../game"
+		links { "core", "zlib", "meshoptimizer" }
+		includedirs { "utils/common2", "thirdparty/meshoptimizer/src", "thirdparty/rapidjson/include", fbxsdk_include_dir }
+		
+		-- link to the FBX SDK
+		filter( filter_dbg )
+			links { fbxsdk_lib_dir .. "/debug/libfbxsdk-mt" }
+			links { fbxsdk_lib_dir .. "/debug/libxml2-mt" }
+		filter {}
+		filter( filter_rel_or_rtl )
+			links { fbxsdk_lib_dir .. "/release/libfbxsdk-mt" }
+			links { fbxsdk_lib_dir .. "/release/libxml2-mt" }
+		filter {}
+			
+		files {
+			"resources/windows_default.manifest",
+			"common/q_formats.h",
+			
+			"framework/*",
+			
+			"utils/common2/cmdlib.*",
+			
+			meshoptimizer_public,
+			
+			"utils/modelbuilder/*",
+		}
+
+end
 
 group "thirdparty"
 
@@ -672,18 +702,22 @@ project "libpng"
 		
 		"thirdparty/libpng_config/pnglibconf.h"
 	}
+	
+if not _OPTIONS["exclude-utils"] then
 
-project "meshoptimizer"
-	kind "StaticLib"
-	targetname "meshoptimizer"
-	language "C++"
-	
-	vpaths { ["code"] = "*" }
-	
-	files {
-		meshoptimizer_public,
-		meshoptimizer_sources,
-	}
+	project "meshoptimizer"
+		kind "StaticLib"
+		targetname "meshoptimizer"
+		language "C++"
+		
+		vpaths { ["code"] = "*" }
+		
+		files {
+			meshoptimizer_public,
+			meshoptimizer_sources,
+		}
+
+end
 
 --[[
 project "freetype"
