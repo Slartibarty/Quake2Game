@@ -447,7 +447,7 @@ void Cvar_PrintFlags( cvar_t *var )
 	}
 	/*if ( flags & CVAR_MODIFIED )
 	{
-		Com_Print( "archive" );
+		Com_Print( " modified" );
 	}*/
 
 	Com_Print( "\n" );
@@ -468,6 +468,8 @@ void Cvar_WriteVariables( fsHandle_t handle )
 }
 
 #ifndef Q_ENGINE
+
+// This should probably be moved elsewhere
 
 void Cvar_AddEarlyCommands( int argc, char **argv )
 {
@@ -527,11 +529,11 @@ void Cvar_Set_f()
 	{
 		int flags;
 
-		if ( !Q_strcmp( Cmd_Argv( 3 ), "u" ) )
+		if ( Q_strcmp( Cmd_Argv( 3 ), "u" ) == 0 )
 		{
 			flags = CVAR_USERINFO;
 		}
-		else if ( !Q_strcmp( Cmd_Argv( 3 ), "s" ) )
+		else if ( Q_strcmp( Cmd_Argv( 3 ), "s" ) == 0 )
 		{
 			flags = CVAR_SERVERINFO;
 		}
@@ -545,8 +547,29 @@ void Cvar_Set_f()
 	}
 	else
 	{
-		Cvar_Set( Cmd_Argv( 1 ), Cmd_Argv( 2 ) );
+		Cvar_FindSetString( Cmd_Argv( 1 ), Cmd_Argv( 2 ) );
 	}
+}
+
+static void Cvar_Toggle_f()
+{
+	if ( Cmd_Argc() != 2 )
+	{
+		Com_Print( "Bad parameters\n" );
+		return;
+	}
+
+	const char *cmdName = Cmd_Argv( 1 );
+	cvar_t *var = Cvar_Find( cmdName );
+	if ( !var )
+	{
+		Com_Printf( "Cvar \"%s\" does not exist\n", cmdName );
+		return;
+	}
+
+	Cvar_SetBool( var, !var->GetBool() );
+
+	Com_Printf( "Toggled %s to %s\n", var->GetName(), var->GetBool() ? "true" : "false" );
 }
 
 static void Cvar_List_f()
@@ -594,27 +617,22 @@ static void Cvar_List_f()
 void Cvar_Init()
 {
 #ifdef Q_ENGINE
-	Cmd_AddCommand( "set", Cvar_Set_f );
-	Cmd_AddCommand( "cvarList", Cvar_List_f );
+	Cmd_AddCommand( "set", Cvar_Set_f, "Interesting magical command." );
+	Cmd_AddCommand( "toggle", Cvar_Toggle_f, "Toggles a convar as if it were a bool." );
+	Cmd_AddCommand( "cvarList", Cvar_List_f, "Lists all cvars." );
 #endif
 }
 
 void Cvar_Shutdown()
 {
-	cvar_t *var = cvar_vars;
-	cvar_t *lastVar = nullptr;
-
-	for ( ; var; var = var->pNext )
+	while ( cvar_vars )
 	{
-		if ( lastVar ) {
-			Mem_Free( lastVar );
-		}
-
-		var->name.~string();
-		var->value.~string();
-		var->help.~string();
-		var->latchedValue.~string();
-		lastVar = var;
+		cvar_t *pNext = cvar_vars->pNext;
+		cvar_vars->name.~string();
+		cvar_vars->value.~string();
+		cvar_vars->help.~string();
+		cvar_vars->latchedValue.~string();
+		Mem_Free( cvar_vars );
+		cvar_vars = pNext;
 	}
-	Mem_Free( lastVar );
 }

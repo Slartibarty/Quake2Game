@@ -15,15 +15,15 @@
 
 #define	MAX_ALIAS_NAME	32
 
-struct cmdalias_t
+struct cmdAlias_t
 {
 	char			name[MAX_ALIAS_NAME];
 	char *			pValue;
-	cmdalias_t *	pNext;
+	cmdAlias_t *	pNext;
 };
 
 // singly linked list of command aliases
-static cmdalias_t *cmd_alias;
+static cmdAlias_t *cmd_alias;
 
 static bool cmd_wait;
 
@@ -381,7 +381,7 @@ Creates a new command that executes a command string (possibly ; seperated)
 static void Cmd_Alias_f()
 {
 	char cmd[1024];
-	cmdalias_t *pAlias;
+	cmdAlias_t *pAlias;
 
 	if ( Cmd_Argc() == 1 )
 	{
@@ -412,7 +412,7 @@ static void Cmd_Alias_f()
 
 	if ( !pAlias )
 	{
-		pAlias = (cmdalias_t*)Mem_ClearedAlloc( sizeof( cmdalias_t ) );
+		pAlias = (cmdAlias_t*)Mem_ClearedAlloc( sizeof( cmdAlias_t ) );
 		pAlias->pNext = cmd_alias;
 		cmd_alias = pAlias;
 	}
@@ -432,35 +432,6 @@ static void Cmd_Alias_f()
 	strcat( cmd, "\n" );
 
 	pAlias->pValue = Mem_CopyString( cmd );
-}
-
-/*
-========================
-Cmd_Toggle_f
-
-Toggles a convar as if it were a bool
-TODO: This the wrong place for this? wtf why did I put it in the command system?
-========================
-*/
-static void Cmd_Toggle_f()
-{
-	if ( Cmd_Argc() != 2 )
-	{
-		Com_Print( "Bad parameters\n" );
-		return;
-	}
-
-	const char *cmdName = Cmd_Argv( 1 );
-	cvar_t *var = Cvar_Find( cmdName );
-	if ( !var )
-	{
-		Com_Printf( "Cvar \"%s\" does not exist\n", cmdName );
-		return;
-	}
-
-	Cvar_SetBool( var, !var->GetBool() );
-
-	Com_Printf( "Toggled %s to %s\n", var->GetName(), var->GetBool() ? "true" : "false" );
 }
 
 /*
@@ -758,7 +729,7 @@ const char *Cmd_CompleteCommand( const char *partial )
 	}
 
 	cmdFunction_t *pCmd;
-	cmdalias_t *pAlias;
+	cmdAlias_t *pAlias;
 
 	// check for exact match
 	for ( pCmd = cmd_functions; pCmd; pCmd = pCmd->pNext )
@@ -862,7 +833,7 @@ void Cmd_ExecuteString( char *text )
 	}
 
 	// check alias
-	for ( cmdalias_t *pAlias = cmd_alias; pAlias; pAlias = pAlias->pNext )
+	for ( cmdAlias_t *pAlias = cmd_alias; pAlias; pAlias = pAlias->pNext )
 	{
 		if ( !Q_stricmp( cmd_argv[0], pAlias->name ) )
 		{
@@ -911,7 +882,6 @@ void Cmd_Init()
 	Cmd_AddCommand( "exec", Cmd_Exec_f, "Executes a script file." );
 	Cmd_AddCommand( "echo", Cmd_Echo_f, "Prints arguments to the console." );
 	Cmd_AddCommand( "alias", Cmd_Alias_f, "Creates a command alias." );
-	Cmd_AddCommand( "toggle", Cmd_Toggle_f, "Toggles a convar as if it were a bool." );
 	Cmd_AddCommand( "wait", Cmd_Wait_f, "Defers script execution until the next frame." );
 }
 
@@ -922,35 +892,28 @@ Cmd_Shutdown
 */
 void Cmd_Shutdown()
 {
-	cmdFunction_t *cmd = cmd_functions;
-	cmdFunction_t *lastCmd = nullptr;
-
-	for ( ; cmd; cmd = cmd->pNext )
+	// Clean up functions
+	while ( cmd_functions )
 	{
-		if ( lastCmd ) {
-			Mem_Free( lastCmd );
-		}
-
-		lastCmd = cmd;
+		cmdFunction_t *pNext = cmd_functions->pNext;
+		Mem_Free( cmd_functions );
+		cmd_functions = pNext;
 	}
-	Mem_Free( lastCmd );
 
-	cmdalias_t *alias = cmd_alias;
-	cmdalias_t *lastAlias = nullptr;
-
-	for ( ; alias; alias = alias->pNext )
+	// Clean up aliases
+	while ( cmd_alias )
 	{
-		if ( lastAlias ) {
-			Mem_Free( lastAlias );
-		}
-
-		lastAlias = alias;
-
-		Mem_Free( alias->pValue );
+		cmdAlias_t *pNext = cmd_alias->pNext;
+		Mem_Free( cmd_alias->pValue );
+		Mem_Free( cmd_alias );
+		cmd_alias = pNext;
 	}
-	Mem_Free( lastAlias );
 
+	// Clean up the argc
 	for ( int i = 0; i < cmd_argc; ++i ) {
 		Mem_Free( cmd_argv[i] );
+		cmd_argv[i] = nullptr;
 	}
+	cmd_argc = 0;
+	cmd_args[0] = 0;
 }
