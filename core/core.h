@@ -14,8 +14,10 @@
 
 #pragma once
 
+#include "memory_impl.h"
+
 // mem debugging, must be above the CRT headers
-#if defined Q_DEBUG && defined _WIN32
+#if defined Q_DEBUG && defined _WIN32 && !defined Q_MEM_USE_MIMALLOC
 #define Q_MEM_DEBUG
 #define _CRTDBG_MAP_ALLOC
 #include <cstdlib>
@@ -50,6 +52,7 @@
 #include "color.h"
 
 // partially inline
+#include "memory.h"
 #include "math.h"			// blahhh, nasty filename?
 #include "byteswap.h"
 #include "stringtools.h"

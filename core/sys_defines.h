@@ -45,6 +45,7 @@
 #define MAX_OSPATH			WIN32_MAX_PATH		// max length of a filesystem pathname
 
 #define DLLEXPORT			__declspec(dllexport)
+#define RESTRICTFN			__declspec(restrict)
 #define FORCEINLINE			__forceinline
 #define ASSUME_(x)			__assume(x)
 
@@ -53,6 +54,7 @@
 #define MAX_OSPATH			UNIX_MAX_PATH
 
 #define DLLEXPORT			__attribute__((visibility("default")))
+#define RESTRICTFN
 #define FORCEINLINE			inline
 #define ASSUME_(x)
 

@@ -22,18 +22,6 @@
 
 // Engine interop defines
 
-#ifdef _WIN32
-#include <malloc.h>
-#define Mem_StackAlloc _alloca
-#else
-#include <alloca.h>
-#define Mem_StackAlloc alloca
-#endif
-
-#define Mem_Alloc( a ) malloc( a )
-#define Mem_ClearedAlloc( a ) calloc( 1, a )
-#define Mem_Free( a ) free( a )
-
 #define Com_ServerState() 0
 
 #define BASE_MODDIR "base"

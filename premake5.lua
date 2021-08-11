@@ -276,6 +276,7 @@ project "core"
 	kind "StaticLib"
 	targetname "core"
 	language "C++"
+	includedirs { "thirdparty/mimalloc/include" }
 	
 	vpaths { ["code"] = "*" }
 	

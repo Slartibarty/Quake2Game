@@ -8,20 +8,28 @@
 ===================================================================================================
 */
 
-#include "engine.h"
+#include "core.h"
+
+#if defined Q_MEM_USE_MIMALLOC
+#include "../../thirdparty/mimalloc/include/mimalloc.h"
+#endif
 
 #include "memory.h"
 
-#include <cstdio>
-#include <cstdlib>
-
 //#define NO_OVERRIDE_NEWDELETE
 
-#if 0
-static constexpr size_t MemAlignment = 16;
-static constexpr size_t MemShift = MemAlignment - 1;
+#if defined Q_MEM_USE_MIMALLOC
 
-static constexpr size_t ALIGN( size_t size ) { return ( size + MemShift ) & ~MemShift; }
+#define malloc_internal			mi_malloc
+#define realloc_internal		mi_realloc
+#define free_internal			mi_free
+
+#else
+
+#define malloc_internal			malloc
+#define realloc_internal		realloc
+#define free_internal			free
+
 #endif
 
 /*
@@ -34,12 +42,12 @@ static constexpr size_t ALIGN( size_t size ) { return ( size + MemShift ) & ~Mem
 
 void *Mem_Alloc( size_t size )
 {
-	return malloc( size );
+	return malloc_internal( size );
 }
 
 void *Mem_ReAlloc( void *block, size_t size )
 {
-	return realloc( block, size );
+	return realloc_internal( block, size );
 }
 
 void *Mem_ClearedAlloc( size_t size )
@@ -58,12 +66,15 @@ char *Mem_CopyString( const char *in )
 
 void Mem_Free( void *block )
 {
-	free( block );
+	free_internal( block );
 }
 
 /*
 =================================================
 	C++ new and delete
+
+	This overrides both versions of new and delete
+	need to check if MSVC has any special cases
 =================================================
 */
 
@@ -76,7 +87,7 @@ void *operator new( size_t size )
 }
 
 // delete pMem;
-void operator delete( void *pMem ) noexcept
+void operator delete( void *pMem )
 {
 	Mem_Free( pMem );
 }
@@ -131,7 +142,7 @@ void *Mem_TagAlloc( size_t size, uint16 tag )
 
 	z->magic = Z_MAGIC;
 	z->tag = tag;
-	z->size = size;
+	z->size = static_cast<uint32>( size );
 
 	z->next = z_tagchain.next;
 	z->prev = &z_tagchain;
@@ -178,19 +189,73 @@ void Mem_TagFreeGroup( uint16 tag )
 =================================================
 */
 
-static void Mem_Stats_f()
-{
-	Com_Print( "Not implemented\n" );
-}
-
 void Mem_Init()
 {
 	z_tagchain.next = z_tagchain.prev = &z_tagchain;
-
-	Cmd_AddCommand( "mem_stats", Mem_Stats_f );
 }
 
 void Mem_Shutdown()
 {
 	
 }
+
+/*
+===============================================================================
+	The gross stuff
+	
+	MSVCRT specific allocator overrides, so
+	third-party libraries that call plain old
+	"malloc" go through this allocator.
+
+	If using this without a custom allocator, it'll result in an infinite loop.
+	(malloc calls Mem_Alloc calls malloc calls Mem_Alloc etc)
+
+	TODO: This doesn't yet account for internal functions, a screwy library
+	directly accessing MSVCRT functions internally would suck!
+===============================================================================
+*/
+
+#if defined _WIN32 && defined Q_MEM_USE_MIMALLOC
+
+extern "C"
+{
+	/*
+	=================================================
+		Standard functions
+	=================================================
+	*/
+
+	RESTRICTFN void *malloc( size_t size )
+	{
+		return Mem_Alloc( size );
+	}
+
+	RESTRICTFN void *realloc( void *pMem, size_t size )
+	{
+		return Mem_ReAlloc( pMem, size );
+	}
+
+	RESTRICTFN void *calloc( size_t count, size_t size )
+	{
+		return Mem_ClearedAlloc( count * size );
+	}
+
+	void free( void *pMem )
+	{
+		Mem_Free( pMem );
+	}
+
+	/*
+	=================================================
+		CRT internals
+	=================================================
+	*/
+
+	size_t _msize( void *pMem )
+	{
+		return mi_usable_size( pMem );
+	}
+
+}
+
+#endif
