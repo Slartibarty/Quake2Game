@@ -21,11 +21,13 @@
   </compatibility>
   
   <!-- Segment heap -->
+  <!-- Disabled for the time being
   <asmv3:application xmlns:asmv3="urn:schemas-microsoft-com:asm.v3">
     <asmv3:windowsSettings>
       <heapType xmlns="http://schemas.microsoft.com/SMI/2020/WindowsSettings">SegmentHeap</heapType>
     </asmv3:windowsSettings>
   </asmv3:application>
+  -->
   
   <!-- Use UTF-8 codepage over system codepage -->
   <application>

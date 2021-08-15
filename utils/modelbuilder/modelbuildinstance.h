@@ -3,11 +3,10 @@ class CModelBuildInstance
 {
 private:
 
+	void AddMeshContribution();
+
 public:
 
-	void Operate()
-	{
-
-	}
+	void BuildModel( const modelBuild_t &mdlBuild );
 
 };

@@ -14,37 +14,26 @@
 
 #include "modelbuildinstance.h"
 
+static void InitSystems( int argc, char **argv )
+{
+	Cvar_Init();
+	Cvar_AddEarlyCommands( argc, argv );
+
+	FileSystem::Init();
+}
+
+static void ShutdownSystems()
+{
+	FileSystem::Shutdown();
+
+	Cvar_Shutdown();
+}
+
 class CModelBuilder
 {
 private:
 
-	// Contains settings relevant to building a model
-	struct modelBuild_t
-	{
-		char *scriptPath = nullptr;				// The path from the working directory to this script file
-
-		std::vector<std::string> scenes;
-		std::vector<std::string> animations;
-
-		bool hasSkeleton = false;
-	};
-
 	std::vector<modelBuild_t> m_modelBuilds;
-
-	void InitSystems( int argc, char **argv )
-	{
-		Cvar_Init();
-		Cvar_AddEarlyCommands( argc, argv );
-
-		FileSystem::Init();
-	}
-
-	void ShutdownSystems()
-	{
-		FileSystem::Shutdown();
-
-		Cvar_Shutdown();
-	}
 
 	bool ParseCommandLine( int argc, char **argv )
 	{
@@ -128,11 +117,11 @@ private:
 		return true;
 	}
 
-	void DoWorkOnModel( const modelBuild_t &mdlBuild )
+	static void DoWorkOnModel( const modelBuild_t &mdlBuild )
 	{
 		CModelBuildInstance *pBuildInstance = new CModelBuildInstance;
 
-
+		pBuildInstance->BuildModel( mdlBuild );
 
 		delete pBuildInstance;
 	}

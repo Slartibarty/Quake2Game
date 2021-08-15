@@ -356,7 +356,7 @@ project "engine"
 	LinkToDistro()
 	
 	disablewarnings { "4244", "4267" }
-
+	
 	files {
 		"common/*",
 		"resources/*",
@@ -420,7 +420,7 @@ project "cgame"
 	filter( "files:not game/client/**" )
 		flags( { "NoPCH" } )
 	filter( {} )
-
+	
 	files {
 		"common/*",
 		"game/client/*",
@@ -452,7 +452,7 @@ project "game"
 	filter( "files:not game/server/**" )
 		flags( { "NoPCH" } )
 	filter {}
-
+	
 	files {
 		"common/*",
 		"game/server/*",
@@ -485,7 +485,7 @@ if not _OPTIONS["exclude-utils"] then
 		debugdir "../game"
 		links { "core" }
 		includedirs { "utils/common2", "common" }
-		
+				
 		files {
 			"resources/windows_default.manifest",
 			
@@ -521,7 +521,7 @@ if not _OPTIONS["exclude-utils"] then
 		debugdir "../game"
 		links { "core" }
 		includedirs { "utils/common2", "common" }
-		
+				
 		files {
 			"resources/windows_default.manifest",
 			
@@ -556,7 +556,7 @@ if not _OPTIONS["exclude-utils"] then
 		debugdir "../game"
 		links { "core" }
 		includedirs { "utils/common2", "common", "thirdparty/stb" }
-		
+				
 		files {
 			"resources/windows_default.manifest",
 			
@@ -592,7 +592,7 @@ if not _OPTIONS["exclude-utils"] then
 		debugdir "../game"
 		links { "core" }
 		includedirs { "utils/common2", "thirdparty/xatlas" }
-		
+				
 		files {
 			"resources/windows_default.manifest",
 			"common/q_formats.h",
@@ -624,7 +624,7 @@ if not _OPTIONS["exclude-utils"] then
 			links { fbxsdk_lib_dir .. "/release/libfbxsdk-mt" }
 			links { fbxsdk_lib_dir .. "/release/libxml2-mt" }
 		filter {}
-			
+					
 		files {
 			"resources/windows_default.manifest",
 			"common/q_formats.h",
@@ -659,7 +659,7 @@ if not _OPTIONS["exclude-utils"] then
 			links { fbxsdk_lib_dir .. "/release/libfbxsdk-mt" }
 			links { fbxsdk_lib_dir .. "/release/libxml2-mt" }
 		filter {}
-			
+					
 		files {
 			"resources/windows_default.manifest",
 			"common/q_formats.h",

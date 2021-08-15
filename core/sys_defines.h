@@ -46,6 +46,7 @@
 
 #define DLLEXPORT			__declspec(dllexport)
 #define RESTRICTFN			__declspec(restrict)
+#define RESTRICT			__restrict
 #define FORCEINLINE			__forceinline
 #define ASSUME_(x)			__assume(x)
 
@@ -55,6 +56,7 @@
 
 #define DLLEXPORT			__attribute__((visibility("default")))
 #define RESTRICTFN
+#define RESTRICT
 #define FORCEINLINE			inline
 #define ASSUME_(x)
 

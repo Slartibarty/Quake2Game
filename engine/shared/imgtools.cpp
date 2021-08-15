@@ -286,7 +286,17 @@ namespace img
 		return rows;
 	}
 
-	// Write a PNG using STDIO
+	static void PNG_CustomWrite( png_structp pPNG, png_bytep pData, size_t size )
+	{
+		FileSystem::WriteFile( pData, (fsSize_t)size, (fsHandle_t)png_get_io_ptr( pPNG ) );
+	}
+
+	static void PNG_CustomFlush( png_structp pPNG )
+	{
+		FileSystem::FlushFile( (fsHandle_t)png_get_io_ptr( pPNG ) );
+	}
+
+	// Write a PNG using the filesystem
 	bool WritePNG( int width, int height, bool b32bit, byte *buffer, fsHandle_t handle )
 	{
 		png_structp png_ptr;
@@ -298,7 +308,7 @@ namespace img
 		info_ptr = png_create_info_struct( png_ptr );
 		assert( info_ptr );
 
-		png_set_write_fn( png_ptr, handle, nullptr, nullptr );
+		png_set_write_fn( png_ptr, handle, PNG_CustomWrite, PNG_CustomFlush );
 
 		png_set_IHDR( png_ptr, info_ptr, width, height, 8, b32bit ? PNG_COLOR_TYPE_RGBA : PNG_COLOR_TYPE_RGB,
 			PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT );

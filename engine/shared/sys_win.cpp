@@ -633,7 +633,8 @@ int main( int argc, char **argv )
 	_set_app_type( _crt_gui_app );
 
 	// no abort/retry/fail errors
-	SetErrorMode( SEM_FAILCRITICALERRORS );
+	// Slart: wtf is this?
+	//SetErrorMode( SEM_FAILCRITICALERRORS );
 
 #ifdef Q_MEM_DEBUG
 	int dbgFlags = _CrtSetDbgFlag( _CRTDBG_REPORT_FLAG );

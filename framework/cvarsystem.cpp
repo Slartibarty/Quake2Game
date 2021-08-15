@@ -391,6 +391,7 @@ void Cvar_GetLatchedVars()
 			continue;
 		}
 
+		// TODO: wtf?
 		var->value = std::move( var->latchedValue );
 		//Mem_Free( var->value );
 		//var->value = var->latchedValue;

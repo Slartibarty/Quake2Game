@@ -21,3 +21,14 @@
 // This program
 #include "fbxutils.h"
 #include "utils.h"
+
+// Contains settings relevant to building a model
+struct modelBuild_t
+{
+	char *scriptPath = nullptr;				// The path from the working directory to this script file
+
+	std::vector<std::string> scenes;
+	std::vector<std::string> animations;
+
+	bool hasSkeleton = false;
+};

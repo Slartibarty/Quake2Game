@@ -40,6 +40,8 @@ namespace lab
 			strcpy( m_pData, pString );
 		}
 
+		string() = default;
+
 		~string() {
 			if ( m_pData ) {
 				free( m_pData );

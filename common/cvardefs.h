@@ -15,6 +15,8 @@ enum cvarFlags_t : uint32
 // nothing outside the Cvar_*() functions should modify these fields!
 struct cvar_t
 {
+//private:
+
 	lab::string		name;
 	lab::string		value;
 	lab::string		help;				// null if no help
@@ -23,6 +25,8 @@ struct cvar_t
 	float			fltValue;
 	int				intValue;
 	cvar_t *		pNext;
+
+//public:
 
 	const char *	GetName() const		{ return name.c_str(); }
 	const char *	GetHelp() const		{ return help.c_str(); }

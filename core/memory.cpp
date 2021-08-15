@@ -16,19 +16,34 @@
 
 #include "memory.h"
 
-//#define NO_OVERRIDE_NEWDELETE
-
 #if defined Q_MEM_USE_MIMALLOC
 
 #define malloc_internal			mi_malloc
 #define realloc_internal		mi_realloc
 #define free_internal			mi_free
 
+#define msize_internal			mi_usable_size
+#define expand_internal			mi_expand
+
 #else
 
 #define malloc_internal			malloc
 #define realloc_internal		realloc
 #define free_internal			free
+
+#ifdef _WIN32
+
+#define msize_internal			_msize
+#define expand_internal			_expand
+
+#else
+
+#error Implement this!
+
+#define msize_internal
+#define expand_internal
+
+#endif
 
 #endif
 
@@ -40,71 +55,40 @@
 
 #ifndef Q_MEM_DEBUG
 
-void *Mem_Alloc( size_t size )
+RESTRICTFN void *Mem_Alloc( size_t size )
 {
 	return malloc_internal( size );
 }
 
-void *Mem_ReAlloc( void *block, size_t size )
+RESTRICTFN void *Mem_ReAlloc( void *block, size_t size )
 {
 	return realloc_internal( block, size );
 }
 
-void *Mem_ClearedAlloc( size_t size )
+RESTRICTFN void *Mem_ClearedAlloc( size_t size )
 {
-	void *mem = Mem_Alloc( size );
+	void *mem = malloc_internal( size );
 	memset( mem, 0, size );
 	return mem;
 }
 
-char *Mem_CopyString( const char *in )
+RESTRICTFN char *Mem_CopyString( const char *in )
 {
-	char *out = (char *)Mem_Alloc( strlen( in ) + 1 );
-	strcpy( out, in );
+	size_t size = strlen( in ) + 1;
+	char *out = (char *)malloc_internal( size );
+	memcpy( out, in, size );
 	return out;
+}
+
+size_t Mem_Size( void *block )
+{
+	return msize_internal( block );
 }
 
 void Mem_Free( void *block )
 {
 	free_internal( block );
 }
-
-/*
-=================================================
-	C++ new and delete
-
-	This overrides both versions of new and delete
-	need to check if MSVC has any special cases
-=================================================
-*/
-
-#ifndef NO_OVERRIDE_NEWDELETE
-
-// double *pMem = new double;
-void *operator new( size_t size )
-{
-	return Mem_Alloc( size );
-}
-
-// delete pMem;
-void operator delete( void *pMem )
-{
-	Mem_Free( pMem );
-}
-
-// char *pMem = new char[256];
-void *operator new[]( size_t size )
-{
-	return Mem_Alloc( size );
-}
-
-// delete[] pMem;
-void operator delete[]( void *pMem )
-{
-	Mem_Free( pMem );
-}
-
-#endif
 
 #endif
 
@@ -198,67 +182,3 @@ void Mem_Shutdown()
 {
 	
 }
-
-/*
-===============================================================================
-	The gross stuff
-	
-	MSVCRT specific allocator overrides, so
-	third-party libraries that call plain old
-	"malloc" go through this allocator.
-
-	If using this without a custom allocator, it'll result in an infinite loop.
-	(malloc calls Mem_Alloc calls malloc calls Mem_Alloc etc)
-
-	TODO: This doesn't yet account for internal functions, a screwy library
-	directly accessing MSVCRT functions internally would suck!
-===============================================================================
-*/
-
-#if defined _WIN32 && defined Q_MEM_USE_MIMALLOC
-
-extern "C"
-{
-	/*
-	=================================================
-		Standard functions
-	=================================================
-	*/
-
-	RESTRICTFN void *malloc( size_t size )
-	{
-		return Mem_Alloc( size );
-	}
-
-	RESTRICTFN void *realloc( void *pMem, size_t size )
-	{
-		return Mem_ReAlloc( pMem, size );
-	}
-
-	RESTRICTFN void *calloc( size_t count, size_t size )
-	{
-		return Mem_ClearedAlloc( count * size );
-	}
-
-	void free( void *pMem )
-	{
-		Mem_Free( pMem );
-	}
-
-	/*
-	=================================================
-		CRT internals
-	=================================================
-	*/
-
-	// This is causing trouble with release builds
-#if 0
-	size_t _msize( void *pMem )
-	{
-		return mi_usable_size( pMem );
-	}
-#endif
-
-}
-
-#endif
