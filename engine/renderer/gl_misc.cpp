@@ -32,8 +32,8 @@ static uint32 PNG_ThreadProc( void *params )
 		return 1;
 	}
 
-	img::VerticalFlip( threadData->pixBuffer, vid.width, vid.height, 3 );
-	img::WritePNG( vid.width, vid.height, false, threadData->pixBuffer, handle );
+	img::VerticalFlip( threadData->pixBuffer, threadData->width, threadData->height, 3 );
+	img::WritePNG( threadData->width, threadData->height, false, threadData->pixBuffer, handle );
 
 	FileSystem::CloseFile( handle );
 	Mem_Free( threadData->pixBuffer );
@@ -56,7 +56,7 @@ static void GL_Screenshot_Internal( bool png )
 
 	// find a file name to save it to
 	char picname[16];
-	Q_sprintf_s( picname, "quake00.%s", png ? "png" : "tga" );
+	Q_sprintf( picname, "quake00.%s", png ? "png" : "tga" );
 
 	size_t i;
 
@@ -76,7 +76,11 @@ static void GL_Screenshot_Internal( bool png )
 		return;
 	}
 
-	size_t c = (size_t)vid.width * (size_t)vid.height * 3;
+	// w/h of the framebuffer
+	const int width = tr.refdef.width;
+	const int height = tr.refdef.height;
+
+	size_t c = (size_t)width * (size_t)height * 3;
 	size_t addsize = 0;
 	if ( !png )
 	{
@@ -85,7 +89,7 @@ static void GL_Screenshot_Internal( bool png )
 	}
 	byte *pixbuffer = (byte *)Mem_Alloc( c );
 
-	glReadPixels( 0, 0, vid.width, vid.height, GL_RGB, GL_UNSIGNED_BYTE, pixbuffer + addsize );
+	glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixbuffer + addsize );
 
 	if ( png )
 	{
@@ -94,8 +98,8 @@ static void GL_Screenshot_Internal( bool png )
 		threadData_t *threadData = (threadData_t *)Mem_Alloc( sizeof( threadData_t ) );
 		strcpy( threadData->filename, checkname );
 		threadData->pixBuffer = pixbuffer;
-		threadData->width = vid.width;
-		threadData->height = vid.height;
+		threadData->width = width;
+		threadData->height = height;
 
 		// fire and forget
 		threadHandle_t thread = Sys_CreateThread( PNG_ThreadProc, threadData, THREAD_NORMAL, PLATTEXT( "PNG Screenshot Thread" ), CORE_ANY );
@@ -108,10 +112,10 @@ static void GL_Screenshot_Internal( bool png )
 
 		memset( pixbuffer, 0, 18 );
 		pixbuffer[2] = 2; // uncompressed type
-		pixbuffer[12] = vid.width & 255;
-		pixbuffer[13] = vid.width >> 8;
-		pixbuffer[14] = vid.height & 255;
-		pixbuffer[15] = vid.height >> 8;
+		pixbuffer[12] = width & 255;
+		pixbuffer[13] = width >> 8;
+		pixbuffer[14] = height & 255;
+		pixbuffer[15] = height >> 8;
 		pixbuffer[16] = 24; // pixel size
 
 		byte temp;

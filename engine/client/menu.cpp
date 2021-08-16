@@ -76,7 +76,7 @@ static void M_Banner( const char *name )
 	int w, h;
 
 	R_DrawGetPicSize (&w, &h, name );
-	R_DrawPic( viddef.width / 2 - w / 2, viddef.height / 2 - 110, name );
+	R_DrawPic( g_vidDef.width / 2 - w / 2, g_vidDef.height / 2 - 110, name );
 }
 
 void M_PushMenu ( void (*draw) (void), const char *(*key) (int k) )
@@ -382,8 +382,8 @@ void M_Main_Draw (void)
 		totalheight += ( h + 12 );
 	}
 
-	ystart = ( viddef.height / 2 - 110 );
-	xoffset = ( viddef.width - widest + 70 ) / 2;
+	ystart = ( g_vidDef.height / 2 - 110 );
+	xoffset = ( g_vidDef.width - widest + 70 ) / 2;
 
 	for ( i = 0; names[i] != 0; i++ )
 	{
@@ -499,7 +499,7 @@ static void StartNetworkServerFunc( void *unused )
 
 void Multiplayer_MenuInit( void )
 {
-	s_multiplayer_menu.x = viddef.width * 0.50f - 64;
+	s_multiplayer_menu.x = g_vidDef.width * 0.50f - 64;
 	s_multiplayer_menu.nitems = 0;
 
 	s_join_network_server_action.generic.type	= MTYPE_ACTION;
@@ -705,7 +705,7 @@ static void Keys_MenuInit( void )
 	int y = 0;
 	int i = 0;
 
-	s_keys_menu.x = viddef.width * 0.50f;
+	s_keys_menu.x = g_vidDef.width * 0.50f;
 	s_keys_menu.nitems = 0;
 	s_keys_menu.cursordraw = KeyCursorDrawFunc;
 
@@ -1033,8 +1033,8 @@ void Options_MenuInit( void )
 	/*
 	** configure controls menu and menu items
 	*/
-	s_options_menu.x = viddef.width / 2;
-	s_options_menu.y = viddef.height / 2 - 58;
+	s_options_menu.x = g_vidDef.width / 2;
+	s_options_menu.y = g_vidDef.height / 2 - 58;
 	s_options_menu.nitems = 0;
 
 	s_options_sfxvolume_slider.generic.type	= MTYPE_SLIDER;
@@ -1245,7 +1245,7 @@ void VID_MenuInit( void )
 
 	s_mode_list.curvalue = r_mode->GetInt();
 
-	s_vid_menu.x = viddef.width / 2;
+	s_vid_menu.x = g_vidDef.width / 2;
 	s_vid_menu.nitems = 0;
 
 	s_mode_list.generic.type = MTYPE_SPINCONTROL;
@@ -1323,7 +1323,7 @@ void VID_MenuDraw (void)
 	** draw the banner
 	*/
 	R_DrawGetPicSize( &w, &h, "m_banner_video" );
-	R_DrawPic( viddef.width / 2 - w / 2, viddef.height / 2 - 110, "m_banner_video" );
+	R_DrawPic( g_vidDef.width / 2 - w / 2, g_vidDef.height / 2 - 110, "m_banner_video" );
 
 	/*
 	** move cursor to a reasonable starting position
@@ -1731,7 +1731,7 @@ void M_Credits_MenuDraw( void )
 	/*
 	** draw the credits
 	*/
-	for ( i = 0, y = viddef.height - int( ( cls.realtime - credits_start_time ) / 40.0f ); credits[i] && y < viddef.height; y += 10, i++ )
+	for ( i = 0, y = g_vidDef.height - int( ( cls.realtime - credits_start_time ) / 40.0f ); credits[i] && y < g_vidDef.height; y += 10, i++ )
 	{
 		int j, stringoffset = 0;
 		int bold = false;
@@ -1754,7 +1754,7 @@ void M_Credits_MenuDraw( void )
 		{
 			int x;
 
-			x = ( viddef.width - (int)strlen( credits[i] ) * 8 - stringoffset * 8 ) / 2 + ( j + stringoffset ) * 8;
+			x = ( g_vidDef.width - (int)strlen( credits[i] ) * 8 - stringoffset * 8 ) / 2 + ( j + stringoffset ) * 8;
 
 			if ( bold )
 				R_DrawCharColor( x, y, credits[i][j+stringoffset], colors::green );
@@ -1899,7 +1899,7 @@ static void CreditsFunc( void *unused )
 
 void Game_MenuInit( void )
 {
-	s_game_menu.x = viddef.width * 0.50f;
+	s_game_menu.x = g_vidDef.width * 0.50f;
 	s_game_menu.nitems = 0;
 
 	s_easy_game_action.generic.type	= MTYPE_ACTION;
@@ -2031,8 +2031,8 @@ void LoadGame_MenuInit( void )
 {
 	int i;
 
-	s_loadgame_menu.x = viddef.width / 2 - 120;
-	s_loadgame_menu.y = viddef.height / 2 - 58;
+	s_loadgame_menu.x = g_vidDef.width / 2 - 120;
+	s_loadgame_menu.y = g_vidDef.height / 2 - 58;
 	s_loadgame_menu.nitems = 0;
 
 	Create_Savestrings();
@@ -2108,8 +2108,8 @@ void SaveGame_MenuInit( void )
 {
 	int i;
 
-	s_savegame_menu.x = viddef.width / 2 - 120;
-	s_savegame_menu.y = viddef.height / 2 - 58;
+	s_savegame_menu.x = g_vidDef.width / 2 - 120;
+	s_savegame_menu.y = g_vidDef.height / 2 - 58;
 	s_savegame_menu.nitems = 0;
 
 	Create_Savestrings();
@@ -2253,7 +2253,7 @@ void JoinServer_MenuInit( void )
 {
 	int i;
 
-	s_joinserver_menu.x = viddef.width * 0.50f - 120;
+	s_joinserver_menu.x = g_vidDef.width * 0.50f - 120;
 	s_joinserver_menu.nitems = 0;
 
 	s_joinserver_address_book_action.generic.type	= MTYPE_ACTION;
@@ -2523,7 +2523,7 @@ void StartServer_MenuInit( void )
 	/*
 	** initialize the menu stuff
 	*/
-	s_startserver_menu.x = viddef.width * 0.50f;
+	s_startserver_menu.x = g_vidDef.width * 0.50f;
 	s_startserver_menu.nitems = 0;
 
 	s_startmap_list.generic.type = MTYPE_SPINCONTROL;
@@ -2849,7 +2849,7 @@ void DMOptions_MenuInit( void )
 	int dmflags = (int)Cvar_FindGetFloat( "dmflags" );
 	int y = 0;
 
-	s_dmoptions_menu.x = viddef.width * 0.50f;
+	s_dmoptions_menu.x = g_vidDef.width * 0.50f;
 	s_dmoptions_menu.nitems = 0;
 
 	s_falls_box.generic.type = MTYPE_SPINCONTROL;
@@ -3116,7 +3116,7 @@ void DownloadOptions_MenuInit( void )
 	};
 	int y = 0;
 
-	s_downloadoptions_menu.x = viddef.width * 0.50f;
+	s_downloadoptions_menu.x = g_vidDef.width * 0.50f;
 	s_downloadoptions_menu.nitems = 0;
 
 	s_download_title.generic.type = MTYPE_SEPARATOR;
@@ -3209,8 +3209,8 @@ void AddressBook_MenuInit( void )
 {
 	int i;
 
-	s_addressbook_menu.x = viddef.width / 2 - 142;
-	s_addressbook_menu.y = viddef.height / 2 - 58;
+	s_addressbook_menu.x = g_vidDef.width / 2 - 142;
+	s_addressbook_menu.y = g_vidDef.height / 2 - 58;
 	s_addressbook_menu.nitems = 0;
 
 	for ( i = 0; i < NUM_ADDRESSBOOK_ENTRIES; i++ )
@@ -3453,8 +3453,8 @@ qboolean PlayerConfig_MenuInit( void )
 		}
 	}
 
-	s_player_config_menu.x = viddef.width / 2 - 95; 
-	s_player_config_menu.y = viddef.height / 2 - 97;
+	s_player_config_menu.x = g_vidDef.width / 2 - 95; 
+	s_player_config_menu.y = g_vidDef.height / 2 - 97;
 	s_player_config_menu.nitems = 0;
 
 	s_player_name_field.generic.type = MTYPE_FIELD;
@@ -3553,14 +3553,13 @@ qboolean PlayerConfig_MenuInit( void )
 
 void PlayerConfig_MenuDraw( void )
 {
+#if 0
 	extern float CalcFov( float fov_x, float w, float h );
 	refdef_t refdef;
 	char scratch[MAX_QPATH];
 
 	memset( &refdef, 0, sizeof( refdef ) );
 
-	refdef.x = viddef.width / 2;
-	refdef.y = viddef.height / 2 - 72;
 	refdef.width = 144;
 	refdef.height = 168;
 	refdef.fov_x = 40;
@@ -3599,7 +3598,7 @@ void PlayerConfig_MenuDraw( void )
 
 		Menu_Draw( &s_player_config_menu );
 
-		M_DrawTextBox( ( refdef.x ) * ( 320.0F / viddef.width ) - 8, ( viddef.height / 2 ) * ( 240.0F / viddef.height) - 77, refdef.width / 8, refdef.height / 8 );
+		M_DrawTextBox( ( refdef.x ) * ( 320.0F / g_vidDef.width ) - 8, ( g_vidDef.height / 2 ) * ( 240.0F / g_vidDef.height) - 77, refdef.width / 8, refdef.height / 8 );
 		refdef.height += 4;
 
 		R_RenderFrame( &refdef );
@@ -3609,6 +3608,7 @@ void PlayerConfig_MenuDraw( void )
 			s_pmi[s_player_model_box.curvalue].skindisplaynames[s_player_skin_box.curvalue] );
 		R_DrawPic( s_player_config_menu.x - 40, refdef.y, scratch );
 	}
+#endif
 }
 
 const char *PlayerConfig_MenuKey (int key)
@@ -3713,7 +3713,7 @@ void M_Quit_Draw (void)
 	int		w, h;
 
 	R_DrawGetPicSize (&w, &h, "quit");
-	R_DrawPic ( (viddef.width-w)/2, (viddef.height-h)/2, "quit");
+	R_DrawPic ( (g_vidDef.width-w)/2, (g_vidDef.height-h)/2, "quit");
 }
 
 
@@ -3780,9 +3780,9 @@ void M_Draw (void)
 
 	// dim everything behind it down
 	if ( cl.cinematictime > 0 ) {
-		R_DrawFilled( 0, 0, viddef.width, viddef.height, colors::black );
+		R_DrawFilled( 0, 0, g_vidDef.width, g_vidDef.height, colors::black );
 	} else {
-		R_DrawFilled( 0, 0, viddef.width, viddef.height, color );
+		R_DrawFilled( 0, 0, g_vidDef.width, g_vidDef.height, color );
 	}
 
 	m_drawfunc ();

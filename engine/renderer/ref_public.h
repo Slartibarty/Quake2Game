@@ -35,6 +35,7 @@ void		R_DrawBounds( const vec3_t mins, const vec3_t maxs );
 void		R_DrawLine( const vec3_t start, const vec3_t end );
 
 void *		R_GetWindowHandle();
+void		R_GetWindowDimensions( int &width, int &height );
 void		R_AppActivate( bool active );
 
 int			R_CreateFBO( int width, int height );

@@ -273,12 +273,12 @@ void CL_ShutdownCGame();
 //
 // cl_vid
 //
-struct viddef_t
+struct vidDef_t
 {
-	int width, height;		// coordinates from main game
+	int width, height;
 };
 
-extern viddef_t viddef;		// global video state
+extern vidDef_t g_vidDef;
 
 void VID_Init();
 void VID_Shutdown();
@@ -372,14 +372,7 @@ void CL_RegisterSounds();
 //
 // cl_scrn
 //
-struct vrect_t
-{
-	int x, y, width, height;
-};
-
 extern cvar_t *scr_crosshair;
-
-extern vrect_t scr_vrect;		// position of render window
 
 void SCR_Init();
 void SCR_Shutdown();

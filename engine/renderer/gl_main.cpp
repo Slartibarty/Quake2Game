@@ -857,7 +857,7 @@ static void R_SetMode()
 		r_mode->ClearModified();
 		r_fullscreen->ClearModified();
 
-		if ( GLimp_SetMode( vid.width, vid.height, r_mode->GetInt(), r_fullscreen->GetBool() ) == true )
+		if ( GLimp_SetMode( r_mode->GetInt(), r_fullscreen->GetBool() ) == true )
 		{
 			glState.prev_mode = r_mode->GetInt();
 		}
@@ -868,7 +868,7 @@ static void R_SetMode()
 			Com_Printf( "R_SetMode: invalid mode\n" );
 
 			// try setting it back to something safe
-			if ( GLimp_SetMode( vid.width, vid.height, glState.prev_mode, false ) == false )
+			if ( GLimp_SetMode( glState.prev_mode, false ) == false )
 			{
 				Com_FatalError( "R_SetMode: could not revert to safe mode\n" );
 			}

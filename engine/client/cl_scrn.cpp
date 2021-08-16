@@ -19,8 +19,6 @@
 #include "backends/imgui_impl_opengl3.h"
 #include "q_imgui_imp.h"
 
-vrect_t		scr_vrect;		// position of render window on screen
-
 cvar_t		*scr_crosshair;
 
 cvar_t		*scr_centertime;
@@ -139,10 +137,10 @@ static void SCR_DrawDebugGraph()
 	//
 	// draw the graph
 	//
-	w = scr_vrect.width;
+	w = g_vidDef.width;
 
-	x = scr_vrect.x;
-	y = scr_vrect.y + scr_vrect.height;
+	x = 0;
+	y = g_vidDef.height;
 	R_DrawFilled( x, y - scr_graphheight->GetInt(), w, scr_graphheight->GetInt(), colors::dkGray );
 
 	for (a=0 ; a<w ; a++)
@@ -304,7 +302,7 @@ static void SCR_DrawCenterString()
 	start = scr_centerstring;
 
 	if ( scr_center_lines <= 4 ) {
-		y = static_cast<int>( viddef.height * 0.35f );
+		y = static_cast<int>( g_vidDef.height * 0.35f );
 	} else {
 		y = 48;
 	}
@@ -315,7 +313,7 @@ static void SCR_DrawCenterString()
 		for (l=0 ; l<40 ; l++)
 			if (start[l] == '\n' || !start[l])
 				break;
-		x = (viddef.width - l*8)/2;
+		x = (g_vidDef.width - l*8)/2;
 
 		for (j=0 ; j<l ; j++, x+=8)
 		{
@@ -344,24 +342,6 @@ static void SCR_CheckDrawCenterString()
 	}
 
 	SCR_DrawCenterString();
-}
-
-//=================================================================================================
-
-/*
-=================
-SCR_CalcVrect
-
-Sets scr_vrect, the coordinates of the rendered window
-=================
-*/
-static void SCR_CalcVrect()
-{
-	scr_vrect.width = viddef.width;
-	scr_vrect.height = viddef.height;
-
-	scr_vrect.x = 0;
-	scr_vrect.y = 0;
 }
 
 //=================================================================================================
@@ -466,7 +446,7 @@ static void SCR_DrawNet()
 		return;
 	}
 
-	R_DrawPic( scr_vrect.x + 64, scr_vrect.y, "net" );
+	R_DrawPic( 64, 0, "net" );
 }
 
 /*
@@ -476,19 +456,18 @@ SCR_DrawPause
 */
 static void SCR_DrawPause()
 {
-	int w, h;
-
 	if ( !cl_paused->GetBool() ) {
 		return;
 	}
 
 	if ( !scr_showpause->GetBool() ) {
-		// turn off for screenshots
 		return;
 	}
 
+	int w, h;
+
 	R_DrawGetPicSize( &w, &h, "pause" );
-	R_DrawPic( ( viddef.width - w ) / 2, viddef.height / 2 + 8, "pause" );
+	R_DrawPic( ( g_vidDef.width - w ) / 2, g_vidDef.height / 2 + 8, "pause" );
 }
 
 /*
@@ -498,15 +477,15 @@ SCR_DrawLoading
 */
 static void SCR_DrawLoading()
 {
-	int w, h;
-
-	if ( !scr.drawLoading ) {
+	if ( scr.drawLoading == 0 ) {
 		return;
 	}
 	scr.drawLoading = 0;
 
+	int w, h;
+
 	R_DrawGetPicSize( &w, &h, "loading" );
-	R_DrawPic( ( viddef.width - w ) / 2, ( viddef.height - h ) / 2, "loading" );
+	R_DrawPic( ( g_vidDef.width - w ) / 2, ( g_vidDef.height - h ) / 2, "loading" );
 }
 
 /*
@@ -529,8 +508,10 @@ static void SCR_DrawCrosshair()
 		return;
 	}
 
-	R_DrawPic( scr_vrect.x + ( ( scr_vrect.width - scr.crosshairWidth ) >> 1 )
-		, scr_vrect.y + ( ( scr_vrect.height - scr.crosshairHeight ) >> 1 ), scr.crosshairName );
+	const int x = ( g_vidDef.width - scr.crosshairWidth ) >> 1;
+	const int y = ( g_vidDef.height - scr.crosshairHeight ) >> 1;
+
+	R_DrawPic( x, y, scr.crosshairName );
 }
 
 /*
@@ -973,13 +954,13 @@ static void SCR_ExecuteLayoutString( char *s )
 		if (!Q_strcmp(token, "xr"))
 		{
 			token = COM_Parse (&s);
-			x = viddef.width + Q_atoi(token);
+			x = g_vidDef.width + Q_atoi(token);
 			continue;
 		}
 		if (!Q_strcmp(token, "xv"))
 		{
 			token = COM_Parse (&s);
-			x = viddef.width/2 - 160 + Q_atoi(token);
+			x = g_vidDef.width/2 - 160 + Q_atoi(token);
 			continue;
 		}
 
@@ -992,13 +973,13 @@ static void SCR_ExecuteLayoutString( char *s )
 		if (!Q_strcmp(token, "yb"))
 		{
 			token = COM_Parse (&s);
-			y = viddef.height + Q_atoi(token);
+			y = g_vidDef.height + Q_atoi(token);
 			continue;
 		}
 		if (!Q_strcmp(token, "yv"))
 		{
 			token = COM_Parse (&s);
-			y = viddef.height/2 - 120 + Q_atoi(token);
+			y = g_vidDef.height/2 - 120 + Q_atoi(token);
 			continue;
 		}
 
@@ -1007,7 +988,7 @@ static void SCR_ExecuteLayoutString( char *s )
 			token = COM_Parse (&s);
 			value = cl.frame.playerstate.stats[Q_atoi(token)];
 			if (value >= MAX_IMAGES)
-				Com_Errorf ("Pic >= MAX_IMAGES");
+				Com_Error ("Pic >= MAX_IMAGES");
 			if (cl.configstrings[CS_IMAGES+value])
 			{
 				R_DrawPic (x, y, cl.configstrings[CS_IMAGES+value]);
@@ -1020,9 +1001,9 @@ static void SCR_ExecuteLayoutString( char *s )
 			int		score, ping, time;
 
 			token = COM_Parse (&s);
-			x = viddef.width/2 - 160 + Q_atoi(token);
+			x = g_vidDef.width/2 - 160 + Q_atoi(token);
 			token = COM_Parse (&s);
-			y = viddef.height/2 - 120 + Q_atoi(token);
+			y = g_vidDef.height/2 - 120 + Q_atoi(token);
 
 			token = COM_Parse (&s);
 			value = Q_atoi(token);
@@ -1057,9 +1038,9 @@ static void SCR_ExecuteLayoutString( char *s )
 			char	block[80];
 
 			token = COM_Parse (&s);
-			x = viddef.width/2 - 160 + Q_atoi(token);
+			x = g_vidDef.width/2 - 160 + Q_atoi(token);
 			token = COM_Parse (&s);
-			y = viddef.height/2 - 120 + Q_atoi(token);
+			y = g_vidDef.height/2 - 120 + Q_atoi(token);
 
 			token = COM_Parse (&s);
 			value = Q_atoi(token);
@@ -1284,7 +1265,7 @@ void SCR_UpdateScreen()
 		scr.drawLoading = 0;
 
 		R_DrawGetPicSize( &w, &h, "loading" );
-		R_DrawPic( ( viddef.width - w ) / 2, ( viddef.height - h ) / 2, "loading" );
+		R_DrawPic( ( g_vidDef.width - w ) / 2, ( g_vidDef.height - h ) / 2, "loading" );
 	}
 	else if ( cl.cinematictime > 0 )
 	{
@@ -1305,8 +1286,6 @@ void SCR_UpdateScreen()
 	}
 	else
 	{
-		SCR_CalcVrect();
-
 		// draw the game view
 
 		V_RenderView();

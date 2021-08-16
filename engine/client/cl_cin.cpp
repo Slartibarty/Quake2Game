@@ -528,7 +528,7 @@ bool SCR_DrawCinematic()
 		return true;
 	}
 
-	R_DrawStretchRaw( 0, 0, viddef.width, viddef.height, cin.width, cin.height, cin.pic );
+	R_DrawStretchRaw( 0, 0, g_vidDef.width, g_vidDef.height, cin.width, cin.height, cin.pic );
 
 	return true;
 }

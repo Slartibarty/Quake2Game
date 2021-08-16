@@ -465,10 +465,8 @@ void V_RenderView()
 		cl.refdef.vieworg[2] += 1.0f/16;
 		*/
 
-		cl.refdef.x = scr_vrect.x;
-		cl.refdef.y = scr_vrect.y;
-		cl.refdef.width = scr_vrect.width;
-		cl.refdef.height = scr_vrect.height;
+		cl.refdef.width = g_vidDef.width;
+		cl.refdef.height = g_vidDef.height;
 
 		cl.refdef.fov_y = CalcFov( cl.refdef.fov_x, (float)cl.refdef.width, (float)cl.refdef.height );
 		cl.refdef.time = MS2SEC( static_cast<float>( cl.time ) ); // SlartTime

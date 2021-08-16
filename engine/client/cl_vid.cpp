@@ -9,7 +9,7 @@
 ===================================================================================================
 */
 
-viddef_t	viddef;
+vidDef_t	g_vidDef;
 
 static bool	s_rendererActive;
 
@@ -46,8 +46,8 @@ Called by the renderer, sets the structure size
 */
 void VID_NewWindow ( int width, int height)
 {
-	viddef.width  = width;
-	viddef.height = height;
+	g_vidDef.width  = width;
+	g_vidDef.height = height;
 
 	cl.force_refdef = true;		// can't use a paused refdef
 }

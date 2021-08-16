@@ -68,11 +68,6 @@ void		GL_CheckErrors();
 ===============================================================================
 */
 
-struct vidDef_t
-{
-	int	width, height;
-};
-
 // GLEW covers all our bases so this is empty right now
 struct glConfig_t
 {
@@ -96,7 +91,7 @@ struct renderSystemGlobals_t
 	refdef_t	refdef;
 	int			registrationSequence;
 
-	entity_t *	pViewmodelEntity;		// so we can render this particular entity last after everything else, but before the UI
+	entity_t *	pViewmodelEntity;			// so we can render this particular entity last after everything else, but before the UI
 
 	DirectX::XMFLOAT4X4A projMatrix;		// the projection matrix
 	DirectX::XMFLOAT4X4A viewMatrix;		// the view matrix
@@ -108,7 +103,6 @@ struct renderSystemGlobals_t
 extern glState_t				glState;
 extern glConfig_t				glConfig;
 extern renderSystemGlobals_t	tr;			// named "tr" to ease porting from other branches
-extern vidDef_t					vid;		// should incorporate this elsewhere eventually, written to by glimp
 
 extern	model_t *r_worldmodel;
 
@@ -471,7 +465,7 @@ void *	GLimp_SetupContext( void *localContext, bool shareWithMain );
 bool 	GLimp_Init();
 void	GLimp_Shutdown();
 
-bool    GLimp_SetMode( int &width, int &height, int mode, bool fullscreen );
+bool    GLimp_SetMode( int mode, bool fullscreen );
 
 void	GLimp_AppActivate( bool active );
 

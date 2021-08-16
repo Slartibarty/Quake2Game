@@ -398,7 +398,7 @@ void Draw_RenderBatches()
 
 		// set up the render state
 		DirectX::XMFLOAT4X4A orthoMatrix;
-		DirectX::XMStoreFloat4x4A( &orthoMatrix, XMMatrixOrthographicOffCenterRH( 0.0f, vid.width, vid.height, 0.0f, -1.0f, 1.0f ) );
+		DirectX::XMStoreFloat4x4A( &orthoMatrix, XMMatrixOrthographicOffCenterRH( 0.0f, tr.refdef.width, tr.refdef.height, 0.0f, -1.0f, 1.0f ) );
 
 		glUseProgram( glProgs.guiProg );
 		glUniformMatrix4fv( 3, 1, GL_FALSE, (float *)&orthoMatrix );

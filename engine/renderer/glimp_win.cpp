@@ -25,6 +25,8 @@ struct glwstate_t
 	HDC			hDC;
 	HWND		hWnd;
 	HGLRC		hGLRC;
+
+	int			width, height;		// width / height of the window
 };
 
 static glwstate_t s_glwState;
@@ -142,6 +144,16 @@ static void GLimp_DestroyDummyWindow( DummyVars &dvars )
 static constexpr auto	WINDOW_CLASS_NAME = L"Q2GAME";
 static constexpr DWORD	WINDOW_STYLE = ( WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX );
 
+static void GLimp_NewWindow( int width, int height )
+{
+	// Send the coordinates to the client
+	VID_NewWindow( width, height );
+
+	// Set our own width and height
+	s_glwState.width = width;
+	s_glwState.height = height;
+}
+
 static void GLimp_SetWindowSize( int width, int height )
 {
 	DWORD dwStyle = (DWORD)GetWindowLongW( s_glwState.hWnd, GWL_STYLE );
@@ -156,9 +168,7 @@ static void GLimp_SetWindowSize( int width, int height )
 	SetWindowPos( s_glwState.hWnd, NULL, 0, 0, newWidth, newHeight, SWP_NOZORDER | SWP_NOMOVE );
 
 	glViewport( 0, 0, width, height );
-	VID_NewWindow( width, height );
-	vid.width = width;
-	vid.height = height;
+	GLimp_NewWindow( width, height );
 }
 
 static void GLimp_PerformCDS( int width, int height, bool fullscreen, bool alertWindow )
@@ -387,10 +397,8 @@ static void GLimp_CreateWindow( WNDPROC wndproc, int width, int height, bool ful
 
 	s_glwState.hGLRC = reinterpret_cast<HGLRC>( GLimp_SetupContext( s_glwState.hDC, false ) );
 
-	// let the sound and input subsystems know about the new window
-	VID_NewWindow( width, height );
-	vid.width = width;
-	vid.height = height;
+	// let the sound and input subsystems know about the new window, glViewport is unnecessary
+	GLimp_NewWindow( width, height );
 
 	if ( fullscreen )
 	{
@@ -426,23 +434,21 @@ static void GLimp_DestroyWindow()
 ===================================================================================================
 */
 
-bool GLimp_SetMode( int &width, int &height, int mode, bool fullscreen )
+bool GLimp_SetMode( int mode, bool fullscreen )
 {
 	Com_Printf( "Setting mode %d:", mode );
 
+	int width, height;
+
 	if ( !Sys_GetVidModeInfo( width, height, mode ) )
 	{
-		Com_Printf( " invalid mode\n" );
-		width = 0;
-		height = 0;
+		Com_Print( " invalid mode\n" );
 		return false;
 	}
 
 	Com_Printf( " %dx%d %s\n", width, height, ( fullscreen ? "FS" : "W" ) );
 
 	GLimp_PerformCDS( width, height, fullscreen, true );
-
-	glViewport( 0, 0, width, height );
 
 	return true;
 }
@@ -521,6 +527,12 @@ void GLimp_EndFrame()
 void *R_GetWindowHandle()
 {
 	return reinterpret_cast<void *>( s_glwState.hWnd );
+}
+
+void R_GetWindowDimensions( int &width, int &height )
+{
+	width = s_glwState.width;
+	height = s_glwState.height;
 }
 
 void GLimp_AppActivate( bool active )

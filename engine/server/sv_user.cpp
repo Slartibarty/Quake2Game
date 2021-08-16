@@ -470,7 +470,7 @@ void SV_ExecuteUserCommand( char *s )
 
 	for ( u = ucmds; u->name; u++ )
 	{
-		if ( Q_strcmp( Cmd_Argv( 0 ), u->name ) == 0 )
+		if ( Q_stricmp( Cmd_Argv( 0 ), u->name ) == 0 )
 		{
 			u->func();
 			break;

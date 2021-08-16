@@ -8,7 +8,6 @@
 glState_t				glState;
 glConfig_t				glConfig;
 renderSystemGlobals_t	tr;
-vidDef_t				vid;
 
 cvar_t *r_norefresh;
 cvar_t *r_drawentities;

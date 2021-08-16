@@ -20,8 +20,8 @@ static void	 SpinControl_DoSlide( menulist_s *s, int64 dir );
 #define RCOLUMN_OFFSET  16
 #define LCOLUMN_OFFSET -16
 
-#define VID_WIDTH viddef.width
-#define VID_HEIGHT viddef.height
+#define VID_WIDTH g_vidDef.width
+#define VID_HEIGHT g_vidDef.height
 
 void Action_DoEnter( menuaction_s *a )
 {

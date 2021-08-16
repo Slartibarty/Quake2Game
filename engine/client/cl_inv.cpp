@@ -57,8 +57,8 @@ void CL_DrawInventory()
 		top = 0;
 	}
 
-	x = ( viddef.width - 256 ) / 2;
-	y = ( viddef.height - 240 ) / 2;
+	x = ( g_vidDef.width - 256 ) / 2;
+	y = ( g_vidDef.height - 240 ) / 2;
 
 	R_DrawPic( x, y + CONCHAR_HEIGHT, "inventory" );
 

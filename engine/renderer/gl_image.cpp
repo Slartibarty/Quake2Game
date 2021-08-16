@@ -1073,7 +1073,9 @@ void R_BindDefaultFBO()
 {
 	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
 
-	glViewport( 0, 0, vid.width, vid.height );
+	int width, height;
+	R_GetWindowDimensions( width, height );
+	glViewport( 0, 0, width, height );
 }
 
 uint R_TexNumFBO( int fbo )

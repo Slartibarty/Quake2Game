@@ -65,7 +65,7 @@ struct lightstyle_t
 
 struct refdef_t
 {
-	int			x, y, width, height;	// in virtual screen coordinates
+	int			width, height;		// because we might be rendering to a framebuffer
 
 	float		fov_x, fov_y;
 	vec3_t		vieworg;
