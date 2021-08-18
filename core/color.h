@@ -57,6 +57,7 @@ namespace colors
 #define C_COLOR_BLACK			'9'
 
 // colour escape strings
+#ifndef Q_CONSOLE_APP
 #define S_COLOR_DEFAULT			"^0"
 #define S_COLOR_RED				"^1"
 #define S_COLOR_GREEN			"^2"
@@ -67,6 +68,20 @@ namespace colors
 #define S_COLOR_WHITE			"^7"
 #define S_COLOR_GRAY			"^8"
 #define S_COLOR_BLACK			"^9"
+#define S_COLOR_RESET
+#else
+#define S_COLOR_DEFAULT			"\u001b[0m"
+#define S_COLOR_RED				"\u001b[31;1m"
+#define S_COLOR_GREEN			"\u001b[32;1m"
+#define S_COLOR_YELLOW			"\u001b[33;1m"
+#define S_COLOR_BLUE			"\u001b[34;1m"
+#define S_COLOR_CYAN			"\u001b[36;1m"
+#define S_COLOR_ORANGE			S_COLOR_RED
+#define S_COLOR_WHITE			"\u001b[37;1m"
+#define S_COLOR_GRAY			S_COLOR_WHITE
+#define S_COLOR_BLACK			S_COLOR_WHITE
+#define S_COLOR_RESET			S_COLOR_DEFAULT
+#endif
 
 // returns true if a char is a valid colour index
 inline constexpr bool IsColorIndex( int ch ) {

@@ -66,7 +66,7 @@ includedirs { "thirdparty/stb", "thirdparty/DirectXMath" }
 flags { "MultiProcessorCompile", "NoBufferSecurityCheck" }
 staticruntime "On"
 cppdialect "C++20"
-warnings "Default"
+warnings "Extra"
 floatingpoint "Fast"
 characterset "Unicode"
 exceptionhandling "Off"
@@ -79,7 +79,7 @@ filter {}
 
 -- Config for Windows
 filter "system:windows"
-	buildoptions { "/utf-8", "/permissive", "/Zc:__cplusplus", "/Zc:preprocessor" }
+	buildoptions { "/utf-8", "/permissive-", "/Zc:__cplusplus", "/Zc:preprocessor" }
 	defines { "WIN32", "_WINDOWS", "_CRT_SECURE_NO_WARNINGS" }
 filter {}
 	
@@ -339,7 +339,7 @@ project "engine"
 		"thirdparty/glew/include", "thirdparty/zlib", "thirdparty/libpng",
 		"thirdparty/libpng_config", "thirdparty/imgui", "thirdparty/rapidjson/include"
 	}
-	defines { "Q_ENGINE", "GLEW_STATIC", "GLEW_NO_GLU", "IMGUI_USER_CONFIG=\"../../engine/client/q_imconfig.h\"", "IMGUI_IMPL_WIN32_DISABLE_GAMEPAD" }
+	defines { "Q_ENGINE", "GLEW_STATIC", "GLEW_NO_GLU", "IMGUI_USER_CONFIG=\"../../engine/client/q_imconfig.h\"" }
 	links { "core" }
 	filter "system:windows"
 		linkoptions { "/ENTRY:mainCRTStartup" }
@@ -355,7 +355,7 @@ project "engine"
 	
 	LinkToDistro()
 	
-	disablewarnings { "4244", "4267" }
+	--disablewarnings { "4244", "4267" }
 	
 	files {
 		"common/*",
@@ -483,6 +483,7 @@ if not _OPTIONS["exclude-utils"] then
 		floatingpoint "Default"
 		targetdir "../game"
 		debugdir "../game"
+		defines { "Q_CONSOLE_APP" }
 		links { "core" }
 		includedirs { "utils/common2", "common" }
 				
@@ -519,6 +520,7 @@ if not _OPTIONS["exclude-utils"] then
 		floatingpoint "Default"
 		targetdir "../game"
 		debugdir "../game"
+		defines { "Q_CONSOLE_APP" }
 		links { "core" }
 		includedirs { "utils/common2", "common" }
 				
@@ -554,6 +556,7 @@ if not _OPTIONS["exclude-utils"] then
 		floatingpoint "Default"
 		targetdir "../game"
 		debugdir "../game"
+		defines { "Q_CONSOLE_APP" }
 		links { "core" }
 		includedirs { "utils/common2", "common", "thirdparty/stb" }
 				
@@ -590,6 +593,7 @@ if not _OPTIONS["exclude-utils"] then
 		floatingpoint "Default"
 		targetdir "../game"
 		debugdir "../game"
+		defines { "Q_CONSOLE_APP" }
 		links { "core" }
 		includedirs { "utils/common2", "thirdparty/xatlas" }
 				
@@ -612,6 +616,7 @@ if not _OPTIONS["exclude-utils"] then
 		floatingpoint "Default"
 		targetdir "../game"
 		debugdir "../game"
+		defines { "Q_CONSOLE_APP" }
 		links { "core", "zlib", "meshoptimizer" }
 		includedirs { "utils/common2", "thirdparty/meshoptimizer/src", fbxsdk_include_dir }
 		
@@ -647,6 +652,7 @@ if not _OPTIONS["exclude-utils"] then
 		floatingpoint "Default"
 		targetdir "../game"
 		debugdir "../game"
+		defines { "Q_CONSOLE_APP" }
 		links { "core", "zlib", "meshoptimizer" }
 		includedirs { "utils/common2", "thirdparty/meshoptimizer/src", "thirdparty/rapidjson/include", fbxsdk_include_dir }
 		

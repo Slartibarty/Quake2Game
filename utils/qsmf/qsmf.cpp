@@ -22,8 +22,8 @@
 #include <string>
 
 // external libs
-#include "fbxsdk.h"
 #include "meshoptimizer.h"
+#include "fbxsdk.h"
 
 // local
 #include "fbxutils.h"
@@ -37,6 +37,7 @@ template< typename t_vert >
 struct fatVertex_t
 {
 	t_vert v;
+	FbxNode *linkNode;		// The node associated with this vertex
 	int materialID;
 };
 
@@ -237,15 +238,50 @@ static void AddSkeletonContribution( FbxNode *pNode, std::vector<fmtJMDL::bone_t
 		bone.pos.v[i] = static_cast<float>( translation[i] );
 		bone.rot.v[i] = static_cast<float>( rotation[i] );
 	}
+}
 
-	int blah = 0;
-	blah = 1;
+static void FBX_SkinMesh( FbxMesh *pMesh, )
+{
+	const int deformerCount = pMesh->GetDeformerCount( FbxDeformer::eSkin );
+	if ( deformerCount <= 0 ) {
+		return;
+	}
+
+	for ( int iDeformer = 0; iDeformer < deformerCount; ++iDeformer )
+	{
+		FbxSkin *pSkin = FbxCast< FbxSkin >( pMesh->GetDeformer( iDeformer, FbxDeformer::eSkin ) );
+		if ( !pSkin ) {
+			continue;
+		}
+
+		const int clusterCount = pSkin->GetClusterCount();
+		for ( int iCluster = 0; iCluster < clusterCount; ++iCluster )
+		{
+			FbxCluster *pCluster = pSkin->GetCluster( iCluster );
+			FbxNode *pLinkNode = pCluster->GetLink();
+
+			if ( !pLinkNode ) {
+				continue;
+			}
+
+			// find the bone
+
+			const char *linkNodeName = pLinkNode->GetName();
+			Com_Printf( "Link node name: %s\n", linkNodeName );
+
+			//for ( int i = 0; i <  )
+
+		}
+	}
+
 }
 
 template< typename t_vert >
-static void AddMeshContribution( FbxNode *pNode, std::vector<fatVertex_t<t_vert>> &contribution, std::vector<std::string> &materialNames )
+static void AddMeshContribution( FbxNode *pNode, nodeWork_t<t_vert> &contributions )
 {
 	constexpr int polygonSize = 3;
+
+	auto &contributions.
 
 	FbxMesh *pMesh = pNode->GetMesh();
 
@@ -263,8 +299,6 @@ static void AddMeshContribution( FbxNode *pNode, std::vector<fatVertex_t<t_vert>
 	assert( pMaterial );
 
 	const FbxMatrix transformMatrix( pNode->LclTranslation.Get(), pNode->LclRotation.Get(), pNode->LclScaling.Get() );
-
-	FBX_GetVertexWeights( pMesh );
 
 	int vertexID = 0;
 	for ( int polyIter = 0; polyIter < polygonCount; ++polyIter )
@@ -300,11 +334,6 @@ static void AddMeshContribution( FbxNode *pNode, std::vector<fatVertex_t<t_vert>
 			vertex.v.tangent.y = static_cast<float>( tangent[1] );
 			vertex.v.tangent.z = static_cast<float>( tangent[2] );
 
-			if constexpr ( IS_SKINNING )
-			{
-
-			}
-
 			// find the name for this vertex, then match it to the array, if it doesn't exist, add it
 			const int materialID = pMaterial->GetIndexArray().GetAt( polyIter );
 			const FbxSurfaceMaterial *pLocalMat = pNode->GetMaterial( materialID );
@@ -331,6 +360,11 @@ static void AddMeshContribution( FbxNode *pNode, std::vector<fatVertex_t<t_vert>
 			vertex.materialID = matchID;
 		}
 	}
+
+	if constexpr ( IS_SKINNING )
+	{
+		FBX_SkinMesh( pMesh );
+	}
 }
 
 template< typename t_vert >
@@ -343,20 +377,13 @@ static void HandleNode_r( FbxNode *pNode, nodeWork_t<t_vert> &contributions )
 		return;
 	}
 
-	const FbxNodeAttribute *pAttr = pNode->GetNodeAttribute();
-
-	if ( !pAttr )
-	{
-		Com_Print( "Warning: Null node attribute!\n" );
-		return;
-	}
-
+	FbxNodeAttribute *pAttr = pNode->GetNodeAttribute();
 	FbxNodeAttribute::EType type = pAttr->GetAttributeType();
 
 	switch ( type )
 	{
 	case FbxNodeAttribute::eMesh:
-		AddMeshContribution<t_vert>( pNode, contributions.verts, contributions.materialNames );
+		AddMeshContribution<t_vert>( pNode, contributions );
 		break;
 	case FbxNodeAttribute::eSkeleton:
 		// Only add if we're skinning
@@ -493,14 +520,58 @@ template< typename t_vert >
 static void HandleScene( FbxNode *pRootNode )
 {
 	const int nodeCount = pRootNode->GetChildCount( true );
+	const int childCount = pRootNode->GetChildCount( false );
 
 	Com_Printf( "Scene has %d node%s\n", nodeCount, nodeCount != 1 ? "s" : "" );
 
 	nodeWork_t<t_vert> contributions;
 
-	for ( int i = 0; i < pRootNode->GetChildCount( false ); ++i )
+	// once for bones
+	for ( int i = 0; i < childCount; ++i )
 	{
-		HandleNode_r<t_vert>( pRootNode->GetChild( i ), contributions );
+		FbxNode *pNode = pRootNode->GetChild( i );
+
+		FbxNodeAttribute *pAttr = pNode->GetNodeAttribute();
+
+		if ( !pAttr )
+		{
+			Com_Printf( "NOTICE ME: Null node attribute! All child nodes of %s will be ignored.\n", pNode->GetName() );
+			continue;
+		}
+
+		FbxNodeAttribute::EType type = pAttr->GetAttributeType();
+
+		if ( type != FbxNodeAttribute::eSkeleton )
+		{
+			// GOTCHA: TODO: FIXME: THIS WILL CANCEL OUT ALL CHILD NODES!!! VERY BAD!!
+			continue;
+		}
+
+		HandleNode_r<t_vert>( pNode, contributions );
+	}
+
+	// once for meshes
+	for ( int i = 0; i < childCount; ++i )
+	{
+		FbxNode *pNode = pRootNode->GetChild( i );
+
+		FbxNodeAttribute *pAttr = pNode->GetNodeAttribute();
+
+		if ( !pAttr )
+		{
+			Com_Printf( "NOTICE ME: Null node attribute! All child nodes of %s will be ignored.\n", pNode->GetName() );
+			continue;
+		}
+
+		FbxNodeAttribute::EType type = pAttr->GetAttributeType();
+
+		if ( type != FbxNodeAttribute::eMesh )
+		{
+			// GOTCHA: TODO: FIXME: THIS WILL CANCEL OUT ALL CHILD NODES!!! VERY BAD!!
+			continue;
+		}
+
+		HandleNode_r<t_vert>( pNode, contributions );
 	}
 
 	// ensure the materials have .mat appended to them
@@ -618,6 +689,7 @@ static int Operate()
 int main( int argc, char **argv )
 {
 	Com_Print( "---- QSMF model compiler - By Slartibarty ----\n" );
+	Com_Print( S_COLOR_YELLOW "---- Tell slart to eventually fix the flaw where child nodes are ignored ----\n" S_COLOR_RESET );
 
 	Time_Init();
 

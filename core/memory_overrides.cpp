@@ -133,6 +133,15 @@ extern "C"
 		return Mem_Size( pMem );
 	}
 
+#ifdef Q_DEBUG
+
+	RESTRICTFN char *_strdup_dbg( const char *pString, int block_use, const char *file_name, int line_number )
+	{
+		return Mem_CopyString( pString );
+	}
+
+#endif
+
 	RESTRICTFN char *_strdup( const char *pString )
 	{
 		return Mem_CopyString( pString );

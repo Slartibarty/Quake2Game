@@ -56,7 +56,7 @@
 
 #define DLLEXPORT			__attribute__((visibility("default")))
 #define RESTRICTFN
-#define RESTRICT
+#define RESTRICT			__restrict__
 #define FORCEINLINE			inline
 #define ASSUME_(x)
 

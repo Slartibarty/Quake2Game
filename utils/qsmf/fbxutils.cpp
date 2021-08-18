@@ -147,36 +147,3 @@ FbxVector4 FBX_GetTangent( FbxMesh *pMesh, int vertexID )
 
 	return FbxVector4( 0.0, 0.0, 0.0, 0.0 );
 }
-
-void FBX_SkinMesh( FbxMesh *pMesh )
-{
-	const int deformerCount = pMesh->GetDeformerCount( FbxDeformer::eSkin );
-	if ( deformerCount <= 0 ) {
-		return;
-	}
-
-	for ( int iDeformer = 0; iDeformer < deformerCount; ++iDeformer )
-	{
-		FbxSkin *pSkin = FbxCast< FbxSkin >( pMesh->GetDeformer( iDeformer, FbxDeformer::eSkin ) );
-		if ( !pSkin ) {
-			continue;
-		}
-
-		const int clusterCount = pSkin->GetClusterCount();
-		for ( int iCluster = 0; iCluster < clusterCount; ++iCluster )
-		{
-			FbxCluster *pCluster = pSkin->GetCluster( iCluster );
-			FbxNode *pLinkNode = pCluster->GetLink();
-
-			if ( !pLinkNode ) {
-				continue;
-			}
-
-			// find the bone
-
-			pCluster->
-
-		}
-	}
-
-}
