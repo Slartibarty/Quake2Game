@@ -16,6 +16,6 @@ void Local_StripFilename( char *str )
 	}
 	if ( lastSlash )
 	{
-		lastSlash = '\0';
+		*lastSlash = '\0';
 	}
 }

@@ -324,7 +324,7 @@ char *copystring( const char *s )
 	return b;
 }
 
-void DefaultExtension (char *path, char *extension)
+void DefaultExtension (char *path, const char *extension)
 {
 	char    *src;
 //

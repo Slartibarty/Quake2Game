@@ -370,7 +370,7 @@ void MakePatchForFace (int fn, winding_t *w)
 entity_t *EntityForModel (int modnum)
 {
 	int		i;
-	char	*s;
+	const char	*s;
 	char	name[16];
 
 	Q_sprintf (name, "*%d", modnum);

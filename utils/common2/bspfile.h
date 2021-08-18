@@ -91,17 +91,17 @@ typedef struct
 extern	int			num_entities;
 extern	entity_t	entities[MAX_MAP_ENTITIES];
 
-void	ParseEntities (void);
-void	UnparseEntities (void);
+void	ParseEntities();
+void	UnparseEntities();
 
-void 	SetKeyValue (entity_t *ent, char *key, char *value);
-char 	*ValueForKey (entity_t *ent, char *key);
+void 		SetKeyValue( entity_t *ent, const char *key, const char *value );
+const char 	*ValueForKey( entity_t *ent, const char *key );
 // will return "" if not present
 
-vec_t	FloatForKey (entity_t *ent, char *key);
-void 	GetVectorForKey (entity_t *ent, char *key, vec3_t vec);
+vec_t	FloatForKey( entity_t *ent, const char *key );
+void 	GetVectorForKey( entity_t *ent, const char *key, vec3_t vec );
 
-epair_t *ParseEpair (void);
+epair_t *ParseEpair();
 
-void PrintEntity (entity_t *ent);
+void PrintEntity( entity_t *ent );
 

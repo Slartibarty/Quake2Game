@@ -642,7 +642,7 @@ qboolean FloodEntities (tree_t *tree)
 {
 	int		i;
 	vec3_t	origin;
-	char	*cl;
+	const char	*cl;
 	qboolean	inside;
 	node_t *headnode;
 

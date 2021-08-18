@@ -66,7 +66,7 @@ includedirs { "thirdparty/stb", "thirdparty/DirectXMath" }
 flags { "MultiProcessorCompile", "NoBufferSecurityCheck" }
 staticruntime "On"
 cppdialect "C++20"
-warnings "Extra"
+warnings "Default"
 floatingpoint "Fast"
 characterset "Unicode"
 exceptionhandling "Off"
@@ -79,7 +79,7 @@ filter {}
 
 -- Config for Windows
 filter "system:windows"
-	buildoptions { "/utf-8", "/permissive-", "/Zc:__cplusplus", "/Zc:preprocessor" }
+	buildoptions { "/utf-8", "/Zc:__cplusplus", "/Zc:preprocessor" }
 	defines { "WIN32", "_WINDOWS", "_CRT_SECURE_NO_WARNINGS" }
 filter {}
 	
@@ -355,7 +355,7 @@ project "engine"
 	
 	LinkToDistro()
 	
-	--disablewarnings { "4244", "4267" }
+	disablewarnings { "4244", "4267" }
 	
 	files {
 		"common/*",

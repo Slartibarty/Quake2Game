@@ -160,7 +160,7 @@ void RunThreadsOn( int workcnt, bool showpacifier, threadworker_f func )
 				NULL,
 				0,
 				(LPTHREAD_START_ROUTINE)func,
-				(LPVOID)i,
+				(LPVOID)(intptr_t)i,
 				0,
 				nullptr
 			);

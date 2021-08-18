@@ -36,7 +36,7 @@ BOOL GetScreenBufferLines (int *piLines);
 BOOL SetScreenBufferLines (int iLines);
 BOOL ReadText (LPTSTR pszText, int iBeginLine, int iEndLine);
 BOOL WriteText (LPTSTR szText);
-int CharToCode (char c);
+int CharToCode (int c);
 BOOL SetConsoleCXCY(HANDLE hStdout, int cx, int cy);
 
 int		ccom_argc;
@@ -289,7 +289,7 @@ BOOL WriteText (LPTSTR szText)
 		rec.Event.KeyEvent.wRepeatCount = 1;
 		rec.Event.KeyEvent.wVirtualKeyCode = upper;
 		rec.Event.KeyEvent.wVirtualScanCode = CharToCode (*sz);
-		rec.Event.KeyEvent.uChar.AsciiChar = *sz;
+		rec.Event.KeyEvent.uChar.AsciiChar = (CHAR)*sz; // wut
 		rec.Event.KeyEvent.uChar.UnicodeChar = *sz;
 		rec.Event.KeyEvent.dwControlKeyState = iswupper((wint_t)*sz) ? 0x80 : 0x0; 
 
@@ -314,11 +314,11 @@ BOOL WriteText (LPTSTR szText)
 }
 
 
-int CharToCode (char c)
+int CharToCode (int c)
 {
-	char upper;
+	int upper;
 		
-	upper = toupper(c);
+	upper = towupper(c);
 
 	switch (c)
 	{
@@ -329,10 +329,10 @@ int CharToCode (char c)
 			break;
 	}
 
-	if (isalpha(c))
+	if (iswalpha(c))
 		return (30 + upper - 65); 
 
-	if (isdigit(c))
+	if (iswdigit(c))
 		return (1 + upper - 47);
 
 	return c;

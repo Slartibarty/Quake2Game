@@ -27,7 +27,7 @@ char	*ExpandArg( char *path );
 char	*ExpandPath( char *path );
 char	*copystring( const char *s );
 
-void 	DefaultExtension (char *path, char *extension);
+void 	DefaultExtension (char *path, const char *extension);
 void 	DefaultPath (char *path, char *basepath);
 void 	StripFilename (char *path);
 void 	StripExtension (char *path);

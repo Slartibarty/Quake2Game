@@ -706,54 +706,55 @@ void PrintEntity (entity_t *ent)
 
 }
 
-void 	SetKeyValue (entity_t *ent, char *key, char *value)
+void SetKeyValue( entity_t *ent, const char *key, const char *value )
 {
-	epair_t	*ep;
-	
-	for (ep=ent->epairs ; ep ; ep=ep->next)
-		if (!strcmp (ep->key, key) )
+	epair_t *ep;
+
+	for ( ep = ent->epairs; ep; ep = ep->next )
+	{
+		if ( Q_strcmp( ep->key, key ) == 0 )
 		{
-			free (ep->value);
-			ep->value = copystring(value);
+			free( ep->value );
+			ep->value = copystring( value );
 			return;
 		}
-	ep = (epair_t *)malloc (sizeof(*ep));
+	}
+
+	ep = (epair_t *)malloc( sizeof( *ep ) );
 	ep->next = ent->epairs;
 	ent->epairs = ep;
-	ep->key = copystring(key);
-	ep->value = copystring(value);
+	ep->key = copystring( key );
+	ep->value = copystring( value );
 }
 
-char 	*ValueForKey (entity_t *ent, char *key)
+const char *ValueForKey( entity_t *ent, const char *key )
 {
-	epair_t	*ep;
-	
-	for (ep=ent->epairs ; ep ; ep=ep->next)
-		if (!strcmp (ep->key, key) )
+	epair_t *ep;
+
+	for ( ep = ent->epairs; ep; ep = ep->next )
+	{
+		if ( Q_strcmp( ep->key, key ) == 0 )
+		{
 			return ep->value;
+		}
+	}
+
 	return "";
 }
 
-vec_t	FloatForKey (entity_t *ent, char *key)
+vec_t FloatForKey (entity_t *ent, const char *key)
 {
-	char	*k;
-	
-	k = ValueForKey (ent, key);
-	return (float)atof(k);
+	return Q_atof( ValueForKey( ent, key ) );
 }
 
-void 	GetVectorForKey (entity_t *ent, char *key, vec3_t vec)
+void GetVectorForKey( entity_t *ent, const char *key, vec3_t vec )
 {
-	char	*k;
-	double	v1, v2, v3;
+	// scanf into doubles, then assign, so it is vec_t size independent
 
-	k = ValueForKey (ent, key);
-// scanf into doubles, then assign, so it is vec_t size independent
-	v1 = v2 = v3 = 0;
-	sscanf (k, "%lf %lf %lf", &v1, &v2, &v3);
-	vec[0] = (float)v1;
-	vec[1] = (float)v2;
-	vec[2] = (float)v3;
+	double v1 = 0.0, v2 = 0.0, v3 = 0.0;
+	const char *k = ValueForKey( ent, key );
+	sscanf( k, "%lf %lf %lf", &v1, &v2, &v3 );
+	vec[0] = (vec_t)v1;
+	vec[1] = (vec_t)v2;
+	vec[2] = (vec_t)v3;
 }
-
-
