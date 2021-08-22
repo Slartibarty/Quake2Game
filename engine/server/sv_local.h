@@ -44,8 +44,8 @@ struct server_t
 	qboolean	timedemo;		// don't time sync
 };
 
-#define EDICT_NUM(n) ((edict_t *)((byte *)ge->edicts + ge->edict_size*(n)))
-#define NUM_FOR_EDICT(e) ( ((byte *)(e)-(byte *)ge->edicts ) / ge->edict_size)
+#define EDICT_NUM(n)		ge->GetEdict(n)
+#define NUM_FOR_EDICT(e)	(int)(((intptr_t)e) - ((intptr_t)ge->GetEdict(0)))
 
 
 enum clientState_t {

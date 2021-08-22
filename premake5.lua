@@ -71,7 +71,7 @@ floatingpoint "Fast"
 characterset "Unicode"
 exceptionhandling "Off"
 editandcontinue "Off"
-	
+
 -- Config for all 64-bit projects
 filter( filter_64bit )
 	architecture "x86_64"
@@ -82,7 +82,7 @@ filter "system:windows"
 	buildoptions { "/utf-8", "/Zc:__cplusplus", "/Zc:preprocessor" }
 	defines { "WIN32", "_WINDOWS", "_CRT_SECURE_NO_WARNINGS" }
 filter {}
-	
+
 -- Config for Windows, release, clean this up!
 filter { "system:windows", filter_rel_or_rtl }
 	buildoptions { "/Gw" }
@@ -220,9 +220,9 @@ local imgui_sources = {
 	"thirdparty/imgui/imgui_draw.cpp",
 	"thirdparty/imgui/imgui_tables.cpp",
 	"thirdparty/imgui/imgui_widgets.cpp",
-	
+
 	--"thirdparty/imgui/misc/freetype/imgui_freetype.*",
-	
+
 	"thirdparty/imgui/backends/imgui_impl_opengl3.*"
 }
 
@@ -290,7 +290,7 @@ local freetype_sources = {
 	"thirdparty/freetype/src/type1/type1.c",
 	"thirdparty/freetype/src/type42/type42.c",
 	"thirdparty/freetype/src/winfonts/winfnt.c",
-	
+
 	"thirdparty/freetype/builds/windows/ftsystem.c",
 	"thirdparty/freetype/builds/windows/ftdebug.c"
 }
@@ -308,9 +308,9 @@ project "core"
 	targetname "core"
 	language "C++"
 	includedirs { "thirdparty/mimalloc/include" }
-	
+
 	vpaths { ["code"] = "*" }
-	
+
 	files {
 		"core/*.cpp",
 		"core/*.h"
@@ -326,7 +326,7 @@ project "core"
 			"**/*_win.*"
 		}
 	filter {}
-	
+
 group "main"
 
 project "engine"
@@ -352,38 +352,38 @@ project "engine"
 			"GL", "SDL2", "zlib", "png"
 		}
 	filter {}
-	
+
 	LinkToDistro()
-	
+
 	disablewarnings { "4244", "4267" }
-	
+
 	files {
 		"common/*",
 		"resources/*",
-		
+
 		"framework/*",
-		
+
 		"engine/client/*",
 		"engine/server/*",
 		"engine/shared/*",
-		
+
 		"engine/mapedit/*",
 		"engine/renderer/*",
-		
+
 		"game/client/cg_public.h",
 		"game/server/game_public.h",
-		
+
 		zlib_public,
-		
+
 		libpng_public,
-		
+
 		imgui_public,
 		imgui_sources,
-		
+
 		glew_public,
 		glew_sources,
 	}
-	
+
 	filter "system:windows"
 		removefiles {
 			"**/*_linux.*"
@@ -396,7 +396,7 @@ project "engine"
 			"resources/*"
 		}
 	filter {}
-	
+
 	removefiles {
 		"engine/client/cl_console.cpp",
 		"engine/client/cd_win.*",
@@ -405,28 +405,28 @@ project "engine"
 		"**/*sv_null.*",
 		"**_pch.cpp"
 	}
-	
+
 project "cgame"
 	kind "SharedLib"
 	targetname "cgame"
 	language "C++"
 	targetdir "../game/base"
 	links { "core" }
-	
+
 	disablewarnings { "4244", "4267" }
-		
+
 	pchsource( "game/client/cg_pch.cpp" )
 	pchheader( "cg_local.h" )
 	filter( "files:not game/client/**" )
 		flags( { "NoPCH" } )
 	filter( {} )
-	
+
 	files {
 		"common/*",
 		"game/client/*",
 		"game/shared/*",
 	}
-	
+
 	filter "system:windows"
 		removefiles {
 			"**/*_linux.*"
@@ -437,28 +437,32 @@ project "cgame"
 			"**/*_win.*"
 		}
 	filter {}
-	
+
 project "game"
 	kind "SharedLib"
 	targetname "game"
 	language "C++"
 	targetdir "../game/base"
 	links { "core" }
+	includedirs { "game/server", "thirdparty/rapidjson/include" }
 
 	disablewarnings { "4244", "4311", "4302" }
-	
+
 	pchsource( "game/server/g_pch.cpp" )
 	pchheader( "g_local.h" )
 	filter( "files:not game/server/**" )
 		flags( { "NoPCH" } )
 	filter {}
-	
+
 	files {
 		"common/*",
+
 		"game/server/*",
+		"game/server/entities/*",
+
 		"game/shared/*",
 	}
-	
+
 	filter "system:windows"
 		removefiles {
 			"**/*_linux.*"
@@ -469,7 +473,7 @@ project "game"
 			"**/*_win.*"
 		}
 	filter {}
-	
+
 -- Utils
 
 if not _OPTIONS["exclude-utils"] then
@@ -486,22 +490,22 @@ if not _OPTIONS["exclude-utils"] then
 		defines { "Q_CONSOLE_APP" }
 		links { "core" }
 		includedirs { "utils/common2", "common" }
-				
+
 		files {
 			"resources/windows_default.manifest",
-			
+
 			"common/*",
-			
+
 			"utils/common2/cmdlib.*",
 			"utils/common2/mathlib.*",
 			"utils/common2/scriplib.*",
 			"utils/common2/polylib.*",
 			"utils/common2/threads.*",
 			"utils/common2/bspfile.*",
-				
+
 			"utils/qbsp4/*"
 		}
-		
+
 		filter "system:windows"
 			removefiles {
 				"**/*_linux.*"
@@ -523,10 +527,10 @@ if not _OPTIONS["exclude-utils"] then
 		defines { "Q_CONSOLE_APP" }
 		links { "core" }
 		includedirs { "utils/common2", "common" }
-				
+
 		files {
 			"resources/windows_default.manifest",
-			
+
 			"common/*",
 
 			"utils/common2/cmdlib.*",
@@ -534,10 +538,10 @@ if not _OPTIONS["exclude-utils"] then
 			"utils/common2/threads.*",
 			"utils/common2/scriplib.*",
 			"utils/common2/bspfile.*",
-		
+
 			"utils/qvis4/*"
 		}
-		
+
 		filter "system:windows"
 			removefiles {
 				"**/*_linux.*"
@@ -548,7 +552,7 @@ if not _OPTIONS["exclude-utils"] then
 				"**/*_win.*"
 			}
 		filter {}
-		
+
 	project "qrad4"
 		kind "ConsoleApp"
 		targetname "qrad4"
@@ -559,22 +563,22 @@ if not _OPTIONS["exclude-utils"] then
 		defines { "Q_CONSOLE_APP" }
 		links { "core" }
 		includedirs { "utils/common2", "common", "thirdparty/stb" }
-				
+
 		files {
 			"resources/windows_default.manifest",
-			
+
 			"common/*",
-		
+
 			"utils/common2/cmdlib.*",
 			"utils/common2/mathlib.*",
 			"utils/common2/threads.*",
 			"utils/common2/polylib.*",
 			"utils/common2/scriplib.*",
 			"utils/common2/bspfile.*",
-		
+
 			"utils/qrad4/*"
 		}
-		
+
 		filter "system:windows"
 			removefiles {
 				"**/*_linux.*"
@@ -585,7 +589,7 @@ if not _OPTIONS["exclude-utils"] then
 				"**/*_win.*"
 			}
 		filter {}
-		
+
 	project "qatlas"
 		kind "ConsoleApp"
 		targetname "qatlas"
@@ -596,19 +600,19 @@ if not _OPTIONS["exclude-utils"] then
 		defines { "Q_CONSOLE_APP" }
 		links { "core" }
 		includedirs { "utils/common2", "thirdparty/xatlas" }
-				
+
 		files {
 			"resources/windows_default.manifest",
 			"common/q_formats.h",
-		
+
 			"utils/common2/cmdlib.*",
-			
+
 			"utils/qatlas/*",
-			
+
 			xatlas_public,
 			xatlas_sources
 		}
-		
+
 	project "qsmf"
 		kind "ConsoleApp"
 		targetname "qsmf"
@@ -619,7 +623,7 @@ if not _OPTIONS["exclude-utils"] then
 		defines { "Q_CONSOLE_APP" }
 		links { "core", "zlib", "meshoptimizer" }
 		includedirs { "utils/common2", "thirdparty/meshoptimizer/src", fbxsdk_include_dir }
-		
+
 		-- link to the FBX SDK
 		filter( filter_dbg )
 			links { fbxsdk_lib_dir .. "/debug/libfbxsdk-mt" }
@@ -629,18 +633,18 @@ if not _OPTIONS["exclude-utils"] then
 			links { fbxsdk_lib_dir .. "/release/libfbxsdk-mt" }
 			links { fbxsdk_lib_dir .. "/release/libxml2-mt" }
 		filter {}
-					
+
 		files {
 			"resources/windows_default.manifest",
 			"common/q_formats.h",
-				
+
 			"utils/common2/cmdlib.*",
-			
+
 			meshoptimizer_public,
-			
+
 			"utils/qsmf/*",
 		}
-		
+
 		removefiles {
 			"utils/qsmf/obj_reader.*"
 		}
@@ -655,7 +659,7 @@ if not _OPTIONS["exclude-utils"] then
 		defines { "Q_CONSOLE_APP" }
 		links { "core", "zlib", "meshoptimizer" }
 		includedirs { "utils/common2", "thirdparty/meshoptimizer/src", "thirdparty/rapidjson/include", fbxsdk_include_dir }
-		
+
 		-- link to the FBX SDK
 		filter( filter_dbg )
 			links { fbxsdk_lib_dir .. "/debug/libfbxsdk-mt" }
@@ -665,17 +669,17 @@ if not _OPTIONS["exclude-utils"] then
 			links { fbxsdk_lib_dir .. "/release/libfbxsdk-mt" }
 			links { fbxsdk_lib_dir .. "/release/libxml2-mt" }
 		filter {}
-					
+
 		files {
 			"resources/windows_default.manifest",
 			"common/q_formats.h",
-			
+
 			"framework/*",
-			
+
 			"utils/common2/cmdlib.*",
-			
+
 			meshoptimizer_public,
-			
+
 			"utils/modelbuilder/*",
 		}
 
@@ -688,36 +692,36 @@ project "zlib"
 	targetname "zlib"
 	language "C"
 	defines { "_CRT_NONSTDC_NO_WARNINGS" }
-		
+
 	disablewarnings { "4267" }
-	
+
 	files {
 		zlib_public,
 		zlib_sources
 	}
-	
+
 project "libpng"
 	kind "StaticLib"
 	targetname "libpng"
 	language "C"
 	includedirs { "thirdparty/libpng_config", "thirdparty/zlib" }
-		
+
 	files {
 		libpng_public,
 		libpng_sources,
-		
+
 		"thirdparty/libpng_config/pnglibconf.h"
 	}
-	
+
 if not _OPTIONS["exclude-utils"] then
 
 	project "meshoptimizer"
 		kind "StaticLib"
 		targetname "meshoptimizer"
 		language "C++"
-		
+
 		vpaths { ["code"] = "*" }
-		
+
 		files {
 			meshoptimizer_public,
 			meshoptimizer_sources,
@@ -734,7 +738,7 @@ project "freetype"
 	defines { "_CRT_NONSTDC_NO_WARNINGS", "FT2_BUILD_LIBRARY",
 	"FT_CONFIG_OPTION_USE_PNG", "FT_CONFIG_OPTION_SUBPIXEL_RENDERING", "FT_CONFIG_OPTION_DISABLE_STREAM_SUPPORT",
 	"FT_CONFIG_OPTION_SYSTEM_ZLIB" }
-	
+
 	files {
 		freetype_public_headers,
 		freetype_config_headers,
@@ -749,9 +753,9 @@ project "uvatlas"
 	targetname "uvatlas"
 	language "C++"
 	includedirs { "thirdparty/UVAtlas/UVAtlas", "thirdparty/UVAtlas/UVAtlas/inc", "thirdparty/UVAtlas/UVAtlas/geodesics" }
-	
+
 	disablewarnings { "4530" }
-	
+
 	files {
 		uvatlas_public,
 		uvatlas_sources

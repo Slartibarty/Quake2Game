@@ -39,7 +39,7 @@ class IFileSystem
 {
 public:
 	virtual fsHandle_t		OpenFileRead( const char *filename ) = 0;
-	virtual fsHandle_t		OpenFileWrite( const char *filename ) = 0;
+	virtual fsHandle_t		OpenFileWrite( const char *filename, fsPath_t fsPath = FS_WRITEDIR ) = 0;
 	virtual fsHandle_t		OpenFileAppend( const char *filename ) = 0;
 	virtual void			CloseFile( fsHandle_t handle ) = 0;
 	virtual fsSize_t		ReadFile( void *buffer, fsSize_t length, fsHandle_t handle ) = 0;
@@ -48,4 +48,7 @@ public:
 	virtual void			PrintFileFmt( fsHandle_t handle, const char *fmt, ... ) = 0;
 	virtual void			FlushFile( fsHandle_t handle ) = 0;
 	virtual bool			FileExists( const char *filename, fsPath_t fsPath = FS_GAMEDIR ) = 0;
+
+	virtual fsSize_t		LoadFile( const char *filename, void **buffer, fsSize_t extraData = 0 ) = 0;
+	virtual void			FreeFile( void *buffer ) = 0;
 };

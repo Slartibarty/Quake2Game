@@ -715,7 +715,7 @@ void SV_PrepWorldFrame()
 	edict_t *ent;
 	int		i;
 
-	for ( i = 0; i < ge->num_edicts; i++, ent++ )
+	for ( i = 0; i < ge->GetNumEdicts(); i++, ent++ )
 	{
 		ent = EDICT_NUM( i );
 		// events only last for a single message

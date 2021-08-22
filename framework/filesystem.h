@@ -100,8 +100,8 @@ class CFileSystem final : public IFileSystem
 public:
 	fsHandle_t OpenFileRead( const char *filename ) override
 	{ return FileSystem::OpenFileRead( filename ); }
-	fsHandle_t OpenFileWrite( const char *filename ) override
-	{ return FileSystem::OpenFileWrite( filename ); }
+	fsHandle_t OpenFileWrite( const char *filename, fsPath_t fsPath ) override
+	{ return FileSystem::OpenFileWrite( filename, fsPath ); }
 	fsHandle_t OpenFileAppend( const char *filename ) override
 	{ return FileSystem::OpenFileAppend( filename ); }
 	void CloseFile( fsHandle_t handle ) override
@@ -123,6 +123,11 @@ public:
 	{ FileSystem::FlushFile( handle ); }
 	bool FileExists( const char *filename, fsPath_t fsPath = FS_GAMEDIR ) override
 	{ return FileSystem::FileExists( filename, fsPath ); }
+
+	fsSize_t LoadFile( const char *filename, void **buffer, fsSize_t extraData = 0 )
+	{ return FileSystem::LoadFile( filename, buffer, extraData ); }
+	void FreeFile( void *buffer )
+	{ return FileSystem::FreeFile( buffer ); }
 };
 
 extern CFileSystem g_fileSystem;

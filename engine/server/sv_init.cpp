@@ -76,7 +76,7 @@ static void SV_CreateBaseline()
 	edict_t *		svent;
 	int				entnum;
 
-	for ( entnum = 1; entnum < ge->num_edicts; entnum++ )
+	for ( entnum = 1; entnum < ge->GetNumEdicts(); entnum++ )
 	{
 		svent = EDICT_NUM( entnum );
 		if ( !svent->inuse ) {
