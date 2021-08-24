@@ -191,7 +191,7 @@ static void SV_Baselines_f()
 
 	while ( sv_client->netchan.message.cursize < MAX_MSGLEN / 2 && start < MAX_EDICTS )
 	{
-		base = &sv.baselines[start];
+		base = &sv.svEntities[start].baseline;
 		if ( base->modelindex || base->sound || base->effects )
 		{
 			MSG_WriteByte( &sv_client->netchan.message, svc_spawnbaseline );

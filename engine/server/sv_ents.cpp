@@ -13,23 +13,19 @@
 ========================
 SV_EmitPacketEntities
 
-Writes a delta update of an entity_state_t list to the message.
+Writes a delta update of an entityState_t list to the message.
 ========================
 */
 static void SV_EmitPacketEntities( clientSnapshot_t *from, clientSnapshot_t *to, sizebuf_t *msg )
 {
-	entity_state_t *oldent = nullptr, *newent = nullptr;
+	entityState_t *oldent, *newent;
 	int		oldindex, newindex;
 	int		oldnum, newnum;
 	int		from_num_entities;
 	int		bits;
 
-#if 0
-	if ( numprojs )
-		MSG_WriteByte( msg, svc_packetentities2 );
-	else
-#endif
-		MSG_WriteByte( msg, svc_packetentities );
+	// Q2 ONLY
+	MSG_WriteByte( msg, svc_packetentities );
 
 	if ( !from ) {
 		from_num_entities = 0;
@@ -37,6 +33,8 @@ static void SV_EmitPacketEntities( clientSnapshot_t *from, clientSnapshot_t *to,
 		from_num_entities = from->num_entities;
 	}
 
+	newent = nullptr;
+	oldent = nullptr;
 	newindex = 0;
 	oldindex = 0;
 	while ( newindex < to->num_entities || oldindex < from_num_entities )
@@ -60,9 +58,6 @@ static void SV_EmitPacketEntities( clientSnapshot_t *from, clientSnapshot_t *to,
 			// delta update from old position
 			// because the force parm is false, this will not result
 			// in any bytes being emited if the entity has not changed at all
-			// note that players are always 'newentities', this updates their oldorigin always
-			// and prevents warping
-			assert( oldent ); assert( newent );
 			MSG_WriteDeltaEntity( oldent, newent, msg, false, newent->number <= maxclients->GetInt() );
 			oldindex++;
 			newindex++;
@@ -72,8 +67,7 @@ static void SV_EmitPacketEntities( clientSnapshot_t *from, clientSnapshot_t *to,
 		if ( newnum < oldnum )
 		{
 			// this is a new entity, send it from the baseline
-			assert( newent );
-			MSG_WriteDeltaEntity( &sv.baselines[newnum], newent, msg, true, true );
+			MSG_WriteDeltaEntity( &sv.svEntities[newnum].baseline, newent, msg, true, true );
 			newindex++;
 			continue;
 		}
@@ -103,11 +97,6 @@ static void SV_EmitPacketEntities( clientSnapshot_t *from, clientSnapshot_t *to,
 	}
 
 	MSG_WriteShort( msg, 0 );	// end of packetentities
-
-#if 0
-	if ( numprojs )
-		SV_EmitProjectileUpdate( msg );
-#endif
 }
 
 /*
@@ -472,23 +461,21 @@ void SV_BuildClientFrame( client_t *client )
 	byte *	bitvector;
 
 	clent = client->edict;
-	if ( !clent->client ) {
-		// not in game yet
+	if ( !clent || client->state == cs_zombie ) {
 		return;
 	}
-
-#if 0
-	numprojs = 0; // no projectiles yet
-#endif
 
 	// this is the frame we are creating
 	frame = &client->frames[sv.framenum & UPDATE_MASK];
 
 	frame->senttime = svs.realtime; // save it for ping calc later
 
+	// grab the current player_state_t
+	frame->ps = *SV_PlayerStateForNum( client - svs.clients );
+
 	// find the client's PVS
 	for ( i = 0; i < 3; i++ ) {
-		org[i] = clent->client->ps.pmove.origin[i] + clent->client->ps.viewoffset[i];
+		org[i] = frame->ps.pmove.origin[i] + frame->ps.viewoffset[i];
 	}
 
 	leafnum = CM_PointLeafnum( org );
@@ -497,9 +484,6 @@ void SV_BuildClientFrame( client_t *client )
 
 	// calculate the visible areas
 	frame->areabytes = CM_WriteAreaBits( frame->areabits, clientarea );
-
-	// grab the current player_state_t
-	frame->ps = clent->client->ps;
 
 
 	SV_FatPVS( org );
@@ -515,8 +499,10 @@ void SV_BuildClientFrame( client_t *client )
 	{
 		ent = EDICT_NUM( e );
 
+		svEntity_t *svEnt = SV_SvEntityForSharedEntity( ent );
+
 		// ignore ents without visible models
-		if ( ent->svflags & SVF_NOCLIENT ) {
+		if ( ent->svFlags & SVF_NOCLIENT ) {
 			continue;
 		}
 
@@ -528,21 +514,20 @@ void SV_BuildClientFrame( client_t *client )
 		// ignore if not touching a PV leaf
 		if ( ent != clent )
 		{
+			// ignore if not touching a PV leaf
 			// check area
-			if ( !CM_AreasConnected( clientarea, ent->areanum ) )
-			{
+			if ( !CM_AreasConnected( clientarea, svEnt->areanum ) ) {
 				// doors can legally straddle two areas, so
 				// we may need to check another one
-				if ( !ent->areanum2 || !CM_AreasConnected( clientarea, ent->areanum2 ) ) {
-					// blocked by a door
-					continue;
+				if ( !CM_AreasConnected( clientarea, svEnt->areanum2 ) ) {
+					continue;		// blocked by a door
 				}
 			}
 
 			// beams just check one point for PHS
 			if ( ent->s.renderfx & RF_BEAM )
 			{
-				l = ent->clusternums[0];
+				l = svEnt->clusternums[0];
 				if ( !( clientphs[l >> 3] & ( 1 << ( l & 7 ) ) ) ) {
 					continue;
 				}
@@ -557,25 +542,31 @@ void SV_BuildClientFrame( client_t *client )
 					bitvector = fatpvs;
 				}
 
-				if ( ent->num_clusters == -1 )
-				{
-					// too many leafs for individual check, go by headnode
-					if ( !CM_HeadnodeVisible( ent->headnode, bitvector ) ) {
-						continue;
-					}
-					c_fullsend++;
+				// check individual leafs
+				if ( !svEnt->numClusters ) {
+					continue;
 				}
-				else
-				{	// check individual leafs
-					for ( i = 0; i < ent->num_clusters; i++ )
-					{
-						l = ent->clusternums[i];
-						if ( bitvector[l >> 3] & ( 1 << ( l & 7 ) ) ) {
-							break;
-						}
+				l = 0;
+				for ( i=0 ; i < svEnt->numClusters ; i++ ) {
+					l = svEnt->clusternums[i];
+					if ( bitvector[l >> 3] & (1 << (l&7) ) ) {
+						break;
 					}
-					if ( i == ent->num_clusters ) {
-						// not visible
+				}
+
+				// if we haven't found it to be visible,
+				// check overflow clusters that coudln't be stored
+				if ( i == svEnt->numClusters ) {
+					if ( svEnt->lastCluster ) {
+						for ( ; l <= svEnt->lastCluster ; l++ ) {
+							if ( bitvector[l >> 3] & (1 << (l&7) ) ) {
+								break;
+							}
+						}
+						if ( l == svEnt->lastCluster ) {
+							continue;	// not visible
+						}
+					} else {
 						continue;
 					}
 				}
@@ -590,11 +581,6 @@ void SV_BuildClientFrame( client_t *client )
 			}
 		}
 
-#if 0
-		if ( SV_AddProjectileUpdate( ent ) )
-			continue; // added as a special projectile
-#endif
-
 		// add it to the circular client_entities array
 		state = &svs.client_entities[svs.next_client_entities % svs.num_client_entities];
 		if ( ent->s.number != e )
@@ -605,7 +591,7 @@ void SV_BuildClientFrame( client_t *client )
 		*state = ent->s;
 
 		// don't mark players missiles as solid
-		if ( ent->owner == client->edict ) {
+		if ( ent->ownerNum == e ) {
 			state->solid = 0;
 		}
 
@@ -625,12 +611,12 @@ Used for recording footage for merged or assembled demos
 */
 void SV_RecordDemoMessage()
 {
-	int			e;
-	edict_t *	ent;
-	entity_state_t	nostate;
-	sizebuf_t	buf;
-	byte		buf_data[32768];
-	int			len;
+	int					e;
+	sharedEntity_t *	ent;
+	entityState_t		nostate;
+	sizebuf_t			buf;
+	byte				buf_data[32768];
+	int					len;
 
 	if ( !svs.demofile ) {
 		return;
@@ -650,16 +636,16 @@ void SV_RecordDemoMessage()
 	while ( e < ge->GetNumEdicts() )
 	{
 		// ignore ents without visible models unless they have an effect
-		if ( ent->inuse &&
+		if ( ent->linked &&
 			ent->s.number &&
 			( ent->s.modelindex || ent->s.effects || ent->s.sound || ent->s.event ) &&
-			!( ent->svflags & SVF_NOCLIENT ) )
+			!( ent->svFlags & SVF_NOCLIENT ) )
 		{
 			MSG_WriteDeltaEntity( &nostate, &ent->s, &buf, false, true );
 		}
 
 		e++;
-		ent = EDICT_NUM( e );
+		ent = ge->GetEdict( e );
 	}
 
 	MSG_WriteShort( &buf, 0 );		// end of packetentities

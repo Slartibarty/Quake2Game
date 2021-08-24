@@ -2,7 +2,25 @@
 #pragma once
 
 #include "../shared/engine.h"
-#include "../../game/server/game_public.h"
+#include "../../game/server/g_public.h"
+
+#define	MAX_ENT_CLUSTERS	16
+
+struct worldSector_t;
+
+struct svEntity_t
+{
+	worldSector_t *	worldSector;
+	svEntity_t *	nextEntityInWorldSector;
+
+	entityState_t	baseline;			// for delta compression of initial sighting
+	int				numClusters;		// if -1, use headnode instead
+	int				clusternums[MAX_ENT_CLUSTERS];
+	int				lastCluster;		// if all the clusters don't fit in clusternums
+	int				areanum, areanum2;
+	int				snapshotCounter;	// used to prevent double adding from portal views
+	int				sharedEntityIndex;	// index for ge->GetEdict
+};
 
 //=================================================================================================
 
@@ -32,7 +50,7 @@ struct server_t
 	cmodel_t	*models[MAX_MODELS];
 
 	char		configstrings[MAX_CONFIGSTRINGS][MAX_QPATH];
-	entity_state_t	baselines[MAX_EDICTS];
+	svEntity_t	svEntities[MAX_EDICTS];
 
 	// the multicast buffer is used to send a message to a set of clients
 	// it is only used to marshall data until SV_Multicast is called
@@ -56,14 +74,21 @@ enum clientState_t {
 	cs_spawned		// client is fully in game
 };
 
+#define	MAX_MAP_AREA_BYTES		32		// bit vector of area visibility
+
 struct clientSnapshot_t
 {
-	int					areabytes;
-	byte				areabits[MAX_MAP_AREAS/8];		// portalarea visibility bits
-	player_state_t		ps;
-	int					num_entities;
-	int					first_entity;		// into the circular sv_packet_entities[]
-	int					senttime;			// for ping calculations
+	int				areabytes;
+	byte			areabits[MAX_MAP_AREA_BYTES];		// portalarea visibility bits
+	playerState_t	ps;
+	int				num_entities;
+	int				first_entity;		// into the circular sv_packet_entities[]
+										// the entities MUST be in increasing state number
+										// order, otherwise the delta compression will fail
+	int				senttime;			// LEGACY Q2
+	int				messageSent;		// time the message was transmitted
+	int				messageAcked;		// time the message was acked
+	int				messageSize;		// used to rate drop packets
 };
 
 #define	LATENCY_COUNTS	16
@@ -253,46 +278,52 @@ extern game_export_t *ge;
 void SV_InitGameProgs();
 void SV_ShutdownGameProgs();
 
-//=============================================================================
+// wrong place for this? put here because it's there in q3
+playerState_t *SV_PlayerStateForNum( int num );
+sharedEntity_t *SV_SharedEntityForNum( int num );
+svEntity_t *SV_SvEntityForSharedEntity( sharedEntity_t *gEnt );
+sharedEntity_t *SV_SharedEntityForSvEntity( svEntity_t *svEnt );
 
+//============================================================
 //
 // high level object sorting to reduce interaction tests
-// sv_world.c
 //
 
-void SV_ClearWorld (void);
+void SV_ClearWorld( void );
 // called after the world model has been loaded, before linking any entities
 
-void SV_UnlinkEdict (edict_t *ent);
+void SV_UnlinkEntity( sharedEntity_t *ent );
 // call before removing an entity, and before trying to move one,
 // so it doesn't clip against itself
 
-void SV_LinkEdict (edict_t *ent);
+void SV_LinkEntity( sharedEntity_t *ent );
 // Needs to be called any time an entity changes origin, mins, maxs,
 // or solid.  Automatically unlinks if needed.
 // sets ent->v.absmin and ent->v.absmax
 // sets ent->leafnums[] for pvs determination even if the entity
 // is not solid
 
-int SV_AreaEdicts (vec3_t mins, vec3_t maxs, edict_t **list, int maxcount, int areatype);
-// fills in a table of edict pointers with edicts that have bounding boxes
+
+int SV_ClipHandleForEntity( const sharedEntity_t *ent );
+
+
+void SV_SectorList_f( void );
+
+
+int SV_AreaEntities( const vec3_t mins, const vec3_t maxs, int *entityList, int maxcount );
+// fills in a table of entity numbers with entities that have bounding boxes
 // that intersect the given area.  It is possible for a non-axial bmodel
 // to be returned that doesn't actually intersect the area on an exact
 // test.
 // returns the number of pointers filled in
-// ??? does this always return the world?
-
-//=============================================================================
-
-//
-// functions that interact with everything apropriate
-//
-int SV_PointContents (vec3_t p);
-// returns the CONTENTS_* value from the world at the given point.
-// Quake 2 extends this to also check entities, to allow moving liquids
+// The world entity is never returned in this list.
 
 
-trace_t SV_Trace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, edict_t *passedict, int contentmask);
+int SV_PointContents( const vec3_t p, int passEntityNum );
+// returns the CONTENTS_* value from the world and all entities at the given point.
+
+
+void SV_Trace( trace_t *results, const vec3_t start, vec3_t mins, vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask );
 // mins and maxs are relative
 
 // if the entire move stays in a solid volume, trace.allsolid will be set,
@@ -301,5 +332,8 @@ trace_t SV_Trace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, edict_t *p
 // if the starting point is in a solid, it will be allowed to move out
 // to an open area
 
-// passedict is explicitly excluded from clipping checks (normally NULL)
+// passEntityNum is explicitly excluded from clipping checks (normally ENTITYNUM_NONE)
 
+
+void SV_ClipToEntity( trace_t *trace, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int entityNum, int contentmask, int capsule );
+// clip to a specific entity

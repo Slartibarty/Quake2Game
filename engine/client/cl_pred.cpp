@@ -107,20 +107,16 @@ static void CL_ClipMoveToEntities ( vec3_t start, vec3_t mins, vec3_t maxs, vec3
 			mins, maxs, headnode, MASK_PLAYERSOLID,
 			ent->origin, angles, trace);
 
-		if (trace.allsolid || trace.startsolid ||
-		trace.fraction < tr->fraction)
-		{
-			trace.ent = (edict_t *)ent;
-		 	if (tr->startsolid)
-			{
-				*tr = trace;
-				tr->startsolid = true;
-			}
-			else
-				*tr = trace;
+		if ( trace.allsolid || trace.fraction < tr->fraction ) {
+			trace.entityNum = ent->number;
+			*tr = trace;
 		}
-		else if (trace.startsolid)
+		else if ( trace.startsolid ) {
 			tr->startsolid = true;
+		}
+		if ( tr->allsolid ) {
+			return;
+		}
 	}
 }
 
@@ -130,11 +126,7 @@ static trace_t CL_PMTrace( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end )
 
 	// check against world
 	t = CM_BoxTrace( start, end, mins, maxs, 0, MASK_PLAYERSOLID );
-	if ( t.fraction < 1.0f )
-	{
-		t.ent = (edict_t *)1;
-	}
-
+	t.entityNum = t.fraction != 1.0f ? ENTITYNUM_WORLD : ENTITYNUM_NONE;
 	// check all other solid models
 	CL_ClipMoveToEntities( start, mins, maxs, end, &t );
 

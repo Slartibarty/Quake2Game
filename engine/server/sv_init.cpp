@@ -79,7 +79,7 @@ static void SV_CreateBaseline()
 	for ( entnum = 1; entnum < ge->GetNumEdicts(); entnum++ )
 	{
 		svent = EDICT_NUM( entnum );
-		if ( !svent->inuse ) {
+		if ( !svent->linked ) {
 			continue;
 		}
 		if ( !svent->s.modelindex && !svent->s.sound && !svent->s.effects ) {
@@ -91,7 +91,7 @@ static void SV_CreateBaseline()
 		// take current state as baseline
 		//
 		VectorCopy( svent->s.origin, svent->s.old_origin );
-		sv.baselines[entnum] = svent->s;
+		sv.svEntities[entnum].baseline = svent->s;
 	}
 }
 

@@ -95,8 +95,9 @@ static char *SV_StatusString()
 		cl = &svs.clients[i];
 		if ( cl->state == cs_connected || cl->state == cs_spawned )
 		{
+			const playerState_t *ps = SV_PlayerStateForNum( i );
 			playerLength = Q_sprintf_s( player, "%i %i \"%s\"\n",
-				cl->edict->client->ps.stats[STAT_FRAGS], cl->ping, cl->name );
+				ps->stats[STAT_FRAGS], cl->ping, cl->name );
 			if ( statusLength + playerLength >= sizeof( status ) ) {
 				// can't hold any more
 				break;
@@ -362,7 +363,7 @@ gotnewcl:
 	newcl->challenge = challenge; // save challenge for checksumming
 
 	// get the game a chance to reject this connection or modify the userinfo
-	if ( !ge->ClientConnect( ent, userinfo ) )
+	if ( !ge->ClientConnect( edictnum, userinfo ) )
 	{
 		if ( *Info_ValueForKey( userinfo, "rejmsg" ) ) {
 			Netchan_OutOfBandPrint( NS_SERVER, adr, "print\n%s\nConnection refused.\n",
@@ -561,7 +562,8 @@ static void SV_CalcPings ()
 		}
 
 		// let the game dll know about the ping
-		cl->edict->client->ping = cl->ping;
+		playerState_t *ps = SV_PlayerStateForNum( i );
+		ps->ping = cl->ping;
 	}
 }
 

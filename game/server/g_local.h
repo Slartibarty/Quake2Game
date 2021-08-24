@@ -15,7 +15,7 @@
 // short, server-visible gclient_t and edict_t structures,
 // because we define the full size ones in this file
 #define	GAME_INCLUDE
-#include "game_public.h"
+#include "g_public.h"
 
 class CBaseEntity;
 
@@ -106,6 +106,14 @@ enum moveType_t
 	MOVETYPE_TOSS,			// gravity
 	MOVETYPE_FLYMISSILE,	// extra size to monsters
 	MOVETYPE_BOUNCE
+};
+
+struct gclient_t
+{
+	player_state_t	ps;		// communicated by server to clients
+	int				ping;
+	// the game dll can add anything it wants after
+	// this point in the structure
 };
 
 //
@@ -375,7 +383,7 @@ extern	cvar_t	*maxspectators;
 	cmds_client.cpp
 =============================
 */
-void ClientCommand( edict_t *ent );
+void ClientCommand( CBasePlayer *ent );
 
 /*
 =============================

@@ -729,7 +729,24 @@ cmodel_t *CM_InlineModel( const char *name )
 		Com_Error("CM_InlineModel: bad name" );
 	}
 	int num = Q_atoi( name + 1 );
+	// TODO: 0 IS NOT INVALID!
 	if ( num < 1 || num >= cm.cmodels.Count() )
+	{
+		Com_Error("CM_InlineModel: bad number" );
+	}
+
+	return &cm.cmodels.Data(num);
+}
+
+/*
+==================
+CM_InlineModel_Q3
+==================
+*/
+cmodel_t *CM_InlineModel_Q3( int num )
+{
+	// TODO: NOTE THE 0! IT IS NOT THE SAME ABOVE
+	if ( num < 0 || num >= cm.cmodels.Count() )
 	{
 		Com_Error("CM_InlineModel: bad number" );
 	}
@@ -782,6 +799,7 @@ int CM_LeafArea( int leafnum )
 //=======================================================================
 
 
+cmodel_t	box_model;
 cplane_t	*box_planes;
 int			box_headnode;
 cbrush_t	*box_brush;
@@ -865,13 +883,47 @@ void CM_InitBoxHull (void)
 
 /*
 ===================
+CM_TempBoxModel
+
+To keep everything totally uniform, bounding boxes are turned into small
+BSP trees instead of being compared directly.
+Capsules are handled differently though.
+===================
+*/
+cmodel_t *CM_TempBoxModel( const vec3_t mins, const vec3_t maxs )
+{
+	VectorCopy( mins, box_model.mins );
+	VectorCopy( maxs, box_model.maxs );
+
+	box_planes[0].dist = maxs[0];
+	box_planes[1].dist = -maxs[0];
+	box_planes[2].dist = mins[0];
+	box_planes[3].dist = -mins[0];
+	box_planes[4].dist = maxs[1];
+	box_planes[5].dist = -maxs[1];
+	box_planes[6].dist = mins[1];
+	box_planes[7].dist = -mins[1];
+	box_planes[8].dist = maxs[2];
+	box_planes[9].dist = -maxs[2];
+	box_planes[10].dist = mins[2];
+	box_planes[11].dist = -mins[2];
+
+	//VectorCopy( mins, box_brush->bounds[1] );
+	//VectorCopy( maxs, box_brush->bounds[1] );
+
+	return &box_model;
+}
+
+
+/*
+===================
 CM_HeadnodeForBox
 
 To keep everything totally uniform, bounding boxes are turned into small
 BSP trees instead of being compared directly.
 ===================
 */
-int	CM_HeadnodeForBox (vec3_t mins, vec3_t maxs)
+int	CM_HeadnodeForBox (const vec3_t mins, const vec3_t maxs)
 {
 	box_planes[0].dist = maxs[0];
 	box_planes[1].dist = -maxs[0];

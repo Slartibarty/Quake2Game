@@ -13,13 +13,14 @@ void		CM_Shutdown();
 
 cmodel_t	*CM_LoadMap( const char *name, bool clientload, unsigned *checksum );
 cmodel_t	*CM_InlineModel( const char *name );	// *1, *2, etc
+cmodel_t	*CM_InlineModel_Q3( int num );
 
 int			CM_NumClusters( void );
 int			CM_NumInlineModels( void );
 char		*CM_EntityString( void );
 
 // creates a clipping hull for an arbitrary box
-int			CM_HeadnodeForBox( vec3_t mins, vec3_t maxs );
+int			CM_HeadnodeForBox( const vec3_t mins, const vec3_t maxs );
 
 
 // returns an ORed contents mask

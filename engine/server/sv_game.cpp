@@ -159,7 +159,7 @@ static void PF_setmodel( edict_t *ent, const char *name )
 		mod = CM_InlineModel( name );
 		VectorCopy( mod->mins, ent->mins );
 		VectorCopy( mod->maxs, ent->maxs );
-		SV_LinkEdict( ent );
+		SV_LinkEntity( ent );
 	}
 }
 
@@ -334,9 +334,9 @@ void SV_InitGameProgs()
 	gi.centerprintf = PF_centerprintf;
 	gi.error = PF_error;
 
-	gi.linkentity = SV_LinkEdict;
-	gi.unlinkentity = SV_UnlinkEdict;
-	gi.BoxEdicts = SV_AreaEdicts;
+	gi.linkentity = SV_LinkEntity;
+	gi.unlinkentity = SV_UnlinkEntity;
+	gi.BoxEdicts = SV_AreaEntities;
 	gi.trace = SV_Trace;
 	gi.pointcontents = SV_PointContents;
 	gi.setmodel = PF_setmodel;
@@ -409,4 +409,30 @@ void SV_ShutdownGameProgs()
 	ge->Shutdown();
 	Sys_UnloadGame();
 	ge = nullptr;
+}
+
+//=================================================================================================
+
+playerState_t *SV_PlayerStateForNum( int num )
+{
+	return ge->GetPlayerState( num );
+}
+
+sharedEntity_t *SV_SharedEntityForNum( int num )
+{
+	return ge->GetEdict( num );
+}
+
+svEntity_t *SV_SvEntityForSharedEntity( sharedEntity_t *shEnt )
+{
+	if ( !shEnt || shEnt->s.number < 0 || shEnt->s.number >= MAX_EDICTS )
+	{
+		Com_Error( "SV_SvEntityForSharedEntity: bad gEnt\n" );
+	}
+	return &sv.svEntities[shEnt->s.number];
+}
+
+sharedEntity_t *SV_SharedEntityForSvEntity( svEntity_t *svEnt )
+{
+	return ge->GetEdict( svEnt->sharedEntityIndex );
 }

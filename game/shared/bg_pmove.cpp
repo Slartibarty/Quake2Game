@@ -481,8 +481,8 @@ static bool PM_SlideMove( bool gravity )
 		// Save entity that blocked us (since fraction was < 1.0)
 		//  for contact
 		// Add it if it's not already in the list!!!
-		if ( pm->numtouch < MAXTOUCH && trace.ent ) {
-			pm->touchents[pm->numtouch] = trace.ent;
+		if ( pm->numtouch < MAXTOUCH && trace.entityNum ) {
+			pm->touchents[pm->numtouch] = trace.entityNum;
 			pm->numtouch++;
 		}
 
@@ -1265,13 +1265,13 @@ static void PM_CategorizePosition( void )
 
 	pml.groundTrace = pm->trace( pml.origin, pm->mins, pm->maxs, point );
 
-	if ( !pml.groundTrace.ent || ( pml.groundTrace.plane.normal[2] < MIN_STEP_NORMAL && !pml.groundTrace.startsolid ) )
+	if ( !pml.groundTrace.entityNum || ( pml.groundTrace.plane.normal[2] < MIN_STEP_NORMAL && !pml.groundTrace.startsolid ) )
 	{
 		pm->groundentity = NULL;
 	}
 	else
 	{
-		pm->groundentity = pml.groundTrace.ent;
+		pm->groundentity = pml.groundTrace.entityNum;
 
 		// hitting solid ground will end a waterjump
 		if ( pm->s.pm_flags & PMF_TIME_WATERJUMP )
@@ -1287,7 +1287,7 @@ static void PM_CategorizePosition( void )
 		}
 		else
 		{
-			pm->groundentity = pml.groundTrace.ent;	// Otherwise, point to index of ent under us.
+			pm->groundentity = pml.groundTrace.entityNum;	// Otherwise, point to index of ent under us.
 		}
 
 		if ( moveToEndPos && pml.groundTrace.fraction > 0.0f && pml.groundTrace.fraction < 1.0f )
@@ -1296,9 +1296,9 @@ static void PM_CategorizePosition( void )
 		}
 	}
 
-	if ( pm->numtouch < MAXTOUCH && pml.groundTrace.ent )
+	if ( pm->numtouch < MAXTOUCH && pml.groundTrace.entityNum )
 	{
-		pm->touchents[pm->numtouch] = pml.groundTrace.ent;
+		pm->touchents[pm->numtouch] = pml.groundTrace.entityNum;
 		pm->numtouch++;
 	}
 }
@@ -1645,7 +1645,7 @@ void PM_Simulate( pmove_t *pmove )
 	pm->numtouch = 0;
 	VectorClear( pm->viewangles );
 	pm->viewheight = 0;
-	pm->groundentity = nullptr;
+	pm->groundentity = 0;
 	pm->watertype = 0;
 	pm->waterlevel = 0;
 

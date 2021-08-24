@@ -454,6 +454,7 @@ static void SV_GameMap_f()
 	{	// save the map just exited
 		if (sv.state == ss_game)
 		{
+#if 0
 			// clear all the client inuse flags before saving so that
 			// when the level is re-entered, the clients will spawn
 			// at spawn points instead of occupying body shells
@@ -470,6 +471,7 @@ static void SV_GameMap_f()
 			for (i=0,cl=svs.clients ; i<maxclients->GetInt(); i++,cl++)
 				cl->edict->inuse = savedInuse[i];
 			//Mem_Free (savedInuse);
+#endif
 		}
 	}
 
@@ -592,7 +594,9 @@ static void SV_Savegame_f()
 		return;
 	}
 
-	if ( maxclients->GetInt() == 1 && svs.clients[0].edict->client->ps.stats[STAT_HEALTH] <= 0 ) {
+	playerState_t *ps = SV_PlayerStateForNum( 0 );
+
+	if ( maxclients->GetInt() == 1 && ps->stats[STAT_HEALTH] <= 0 ) {
 		Com_Print( "\nCan't savegame while dead!\n" );
 		return;
 	}
@@ -677,7 +681,8 @@ static void SV_Status_f()
 		if (!cl->state)
 			continue;
 		Com_Printf ("%3i ", i);
-		Com_Printf ("%5i ", cl->edict->client->ps.stats[STAT_FRAGS]);
+		playerState_t *ps = SV_PlayerStateForNum( i );
+		Com_Printf ("%5i ", ps->stats[STAT_FRAGS]);
 
 		if (cl->state == cs_connected)
 			Com_Print ("CNCT ");

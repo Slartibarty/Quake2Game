@@ -1,5 +1,5 @@
 
-// game_public.h -- game dll information visible to server
+// g_public.h -- game dll information visible to server
 
 #pragma once
 
@@ -21,61 +21,47 @@ enum solid_t
 	SOLID_BSP			// bsp clip, touch on edge
 };
 
-//===============================================================
+// The server looks at this POD type, which is included in the game DLL's CBaseEntity
 
-// link_t is only used for entity area links now
-struct link_t
+struct sharedEntity_t
 {
-	link_t	*prev, *next;
-};
+	entityState_t	s;				// communicated by server to clients
 
-#define	MAX_ENT_CLUSTERS	16
-
-
-struct gclient_t;
-struct edict_t;
-
-#if 1
-
-struct gclient_t
-{
-	player_state_t	ps;		// communicated by server to clients
-	int				ping;
-	// the game dll can add anything it wants after
-	// this point in the structure
-};
-
-struct edict_t
-{
-	entity_state_t	s;
-	gclient_t	*client;
-	qboolean	inuse;
+	bool		linked;				// false if not in any good cluster
 	int			linkcount;
 
-	// FIXME: move these fields to a server private sv_entity_t
-	link_t		area;				// linked to a division node or leaf
-	
-	int			num_clusters;		// if -1, use headnode instead
-	int			clusternums[MAX_ENT_CLUSTERS];
-	int			headnode;			// unused if num_clusters != -1
-	int			areanum, areanum2;
+	int			svFlags;			// SVF_NOCLIENT, SVF_BROADCAST, etc
 
-	//================================
+	// only send to this client when SVF_SINGLECLIENT is set	
+	// if SVF_CLIENTMASK is set, use bitmask for clients to send to (maxclients must be <= 32, up to the mod to enforce this)
+	int			singleClient;
 
-	int			svflags;			// SVF_NOCLIENT, SVF_DEADMONSTER, SVF_MONSTER, etc
+	bool		bmodel;				// if false, assume an explicit mins / maxs bounding box
+									// only set by trap_SetBrushModel
 	vec3_t		mins, maxs;
-	vec3_t		absmin, absmax, size;
-	solid_t		solid;
-	int			clipmask;
-	edict_t		*owner;
+	int			contents;			// CONTENTS_TRIGGER, CONTENTS_SOLID, CONTENTS_BODY, etc
+									// a non-solid entity should set to 0
 
-	// the game dll can add anything it wants after
-	// this point in the structure
+	vec3_t		absmin, absmax;		// derived from mins/maxs and origin + rotation
+
+	// currentOrigin will be used for all collision detection and world linking.
+	// it will not necessarily be the same as the trajectory evaluation for the current
+	// time, because each entity must be moved one at a time after time is advanced
+	// to avoid simultanious collision issues
+	vec3_t		currentOrigin;
+	vec3_t		currentAngles;
+
+	// when a trace call is made and passEntityNum != ENTITYNUM_NONE,
+	// an ent will be excluded from testing if:
+	// ent->s.number == passEntityNum	(don't interact with self)
+	// ent->s.ownerNum = passEntityNum	(don't interact with your own missiles)
+	// entity[ent->s.ownerNum].ownerNum = passEntityNum	(don't interact with other missiles from owner)
+	int			ownerNum;
 };
 
-#endif
+#define edict_t sharedEntity_t
 
-//===============================================================
+//=============================================================================
 
 #if 0
 
@@ -254,8 +240,8 @@ struct game_import_t
 	void	(*setmodel) (edict_t *ent, const char *name);
 
 	// collision detection
-	trace_t	(*trace) (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, edict_t *passent, int contentmask);
-	int		(*pointcontents) (vec3_t point);
+	void	(*trace) (trace_t *results, const vec3_t start, vec3_t mins, vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask);
+	int		(*pointcontents) (const vec3_t p, int passEntityNum);
 	qboolean	(*inPVS) (vec3_t p1, vec3_t p2);
 	qboolean	(*inPHS) (vec3_t p1, vec3_t p2);
 	void		(*SetAreaPortalState) (int portalnum, qboolean open);
@@ -266,7 +252,7 @@ struct game_import_t
 	// solidity changes, it must be relinked.
 	void	(*linkentity) (edict_t *ent);
 	void	(*unlinkentity) (edict_t *ent);		// call before removing an interactive edict
-	int		(*BoxEdicts) (vec3_t mins, vec3_t maxs, edict_t **list,	int maxcount, int areatype);
+	int		(*BoxEdicts) (const vec3_t mins, const vec3_t maxs, int *entityList, int maxcount);
 
 	// network messaging
 	void	(*multicast) (vec3_t origin, multicast_t to);
@@ -333,12 +319,12 @@ struct game_export_t
 	void		(*WriteLevel) (char *filename);
 	void		(*ReadLevel) (char *filename);
 
-	bool		(*ClientConnect) (edict_t *ent, char *userinfo);
-	void		(*ClientBegin) (edict_t *ent);
-	void		(*ClientUserinfoChanged) (edict_t *ent, char *userinfo);
-	void		(*ClientDisconnect) (edict_t *ent);
-	void		(*ClientCommand) (edict_t *ent);
-	void		(*ClientThink) (edict_t *ent, usercmd_t *cmd);
+	bool		(*ClientConnect) (int ent, char *userinfo);
+	void		(*ClientBegin) (int ent);
+	void		(*ClientUserinfoChanged) (int ent, char *userinfo);
+	void		(*ClientDisconnect) (int ent);
+	void		(*ClientCommand) (int ent);
+	void		(*ClientThink) (int ent, usercmd_t *cmd);
 
 	void		(*RunFrame) (void);
 
@@ -348,8 +334,10 @@ struct game_export_t
 	// of the parameters
 	void		(*ServerCommand) (void);
 
-	edict_t *	(*GetEdict) (int i);
-	int			(*GetNumEdicts) ();
+	sharedEntity_t *	(*GetEdict) (int i);
+	int					(*GetNumEdicts) ();
+
+	playerState_t *	(*GetPlayerState) (int i);
 
 };
 

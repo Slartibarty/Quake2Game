@@ -27,6 +27,15 @@
 #define	MAX_ITEMS			256
 #define MAX_GENERAL			(MAX_CLIENTS*2)	// general config strings
 
+#define MAX_GENTITIES MAX_EDICTS
+
+// entitynums are communicated with GENTITY_BITS, so any reserved
+// values that are going to be communcated over the net need to
+// also be in this range
+#define	ENTITYNUM_NONE			(MAX_GENTITIES-1)
+#define	ENTITYNUM_WORLD			(MAX_GENTITIES-2)
+#define	ENTITYNUM_MAX_NORMAL	(MAX_GENTITIES-2)
+
 // game print flags
 #define	PRINT_LOW			0		// pickup messages
 #define	PRINT_MEDIUM		1		// death messages
@@ -97,9 +106,9 @@ struct trace_t
 {
 	cplane_t	plane;		// surface normal at impact
 	vec3_t		endpos;		// final position
-	edict_t		*ent;		// not set by CM_*() functions
 	csurface_t	*surface;	// surface hit
 	float		fraction;	// time completed, 1.0 = didn't hit anything
+	int			entityNum;	// not set by CM_*() functions
 	int			contents;	// contents on other side of surface hit
 	bool		allsolid;	// if true, plane is not valid
 	bool		startsolid;	// if true, the initial point was in a solid area
@@ -196,14 +205,14 @@ struct pmove_t
 
 	// results (out)
 	int			numtouch;
-	edict_t		*touchents[MAXTOUCH];
+	int			touchents[MAXTOUCH];
 
 	vec3_t		viewangles;			// clamped
 	float		viewheight;
 
 	vec3_t		mins, maxs;			// bounding box size
 
-	edict_t		*groundentity;
+	int			groundentity;
 	int			watertype;
 	int			waterlevel;
 
@@ -407,7 +416,7 @@ struct pmove_t
 // All muzzle flashes really should be converted to events...
 //-------------------------------------------------------------------------------------------------
 
-enum entity_event_t
+enum entityEvent_t
 {
 	EV_NONE,
 	EV_ITEM_RESPAWN,
@@ -418,13 +427,18 @@ enum entity_event_t
 	EV_OTHER_TELEPORT
 };
 
+#define entity_event_t entityEvent_t
+
 //-------------------------------------------------------------------------------------------------
 // entity_state_t is the information conveyed from the server
 // in an update message about entities that the client will
 // need to render in some way
 //-------------------------------------------------------------------------------------------------
 
-struct entity_state_t
+// if entityState->solid == SOLID_BMODEL, modelindex is an inline model number
+#define	SOLID_BMODEL	0xFFFFFF
+
+struct entityState_t
 {
 	int		number;			// edict index
 
@@ -446,6 +460,8 @@ struct entity_state_t
 							// are automatically cleared each frame
 };
 
+#define entity_state_t entityState_t
+
 //-------------------------------------------------------------------------------------------------
 // player_state_t is the information needed in addition to pmove_state_t
 // to render a view.  There will only be 10 player_state_t sent each second,
@@ -453,7 +469,7 @@ struct entity_state_t
 // frame rates
 //-------------------------------------------------------------------------------------------------
 
-struct player_state_t
+struct playerState_t
 {
 	pmove_state_t	pmove;		// for prediction
 
@@ -474,4 +490,9 @@ struct player_state_t
 	int			rdflags;		// refdef flags
 
 	short		stats[MAX_STATS];		// fast status bar updates
+
+	// not communicated over the net at all
+	int			ping;			// server to game info for scoreboard
 };
+
+#define player_state_t playerState_t

@@ -293,8 +293,9 @@ void SV_StartSound( vec3_t origin, edict_t *entity, int channel,
 
 	// the client doesn't know that bmodels have weird origins
 	// the origin can also be explicitly set
-	if ( ( entity->svflags & SVF_NOCLIENT )
-		|| ( entity->solid == SOLID_BSP )
+	if ( ( entity->svFlags & SVF_NOCLIENT )
+		// TODO
+	//	|| ( entity->solid == SOLID_BSP )
 		|| origin )
 	{
 		flags |= SND_POS;
@@ -311,6 +312,8 @@ void SV_StartSound( vec3_t origin, edict_t *entity, int channel,
 	if ( !origin )
 	{
 		origin = origin_v;
+		// TODO
+#if 0
 		if ( entity->solid == SOLID_BSP )
 		{
 			for ( i = 0; i < 3; i++ ) {
@@ -318,6 +321,7 @@ void SV_StartSound( vec3_t origin, edict_t *entity, int channel,
 			}
 		}
 		else
+#endif
 		{
 			VectorCopy( entity->s.origin, origin_v );
 		}
