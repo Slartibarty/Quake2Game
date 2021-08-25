@@ -10,11 +10,13 @@
 
 #include "sys_types.h"
 
-inline constexpr uint32 PackColor( uint32 r, uint32 g, uint32 b, uint32 a ) {
+inline constexpr uint32 PackColor( uint32 r, uint32 g, uint32 b, uint32 a )
+{
 	return ( ( r ) | ( g << 8 ) | ( b << 16 ) | ( a << 24 ) );
 }
 
-inline constexpr uint32 PackColorFromFloats( float fr, float fg, float fb, float fa ) {
+inline constexpr uint32 PackColorFromFloats( float fr, float fg, float fb, float fa )
+{
 	uint32 r = static_cast<uint32>( fr * 255.0f + 0.5f );
 	uint32 g = static_cast<uint32>( fg * 255.0f + 0.5f );
 	uint32 b = static_cast<uint32>( fb * 255.0f + 0.5f );
@@ -84,12 +86,14 @@ namespace colors
 #endif
 
 // returns true if a char is a valid colour index
-inline constexpr bool IsColorIndex( int ch ) {
+inline constexpr bool IsColorIndex( int ch )
+{
 	return ch >= '0' && ch <= '9';
 }
 
 // returns a colour for a given colour index ( 0 - 9 )
-inline constexpr uint32 ColorForIndex( int ch ) {
+inline constexpr uint32 ColorForIndex( int ch )
+{
 	switch ( ch )
 	{
 	default: // C_COLOR_DEFAULT

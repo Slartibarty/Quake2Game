@@ -17,7 +17,7 @@
 // short, server-visible gclient_t and edict_t structures,
 // because we define the full size ones in this file
 #define	GAME_INCLUDE
-#include "game_public.h"
+#include "g_public.h"
 
 // the "gameversion" client command will print this plus compile date
 #define	GAMEVERSION	"base"

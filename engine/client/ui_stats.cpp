@@ -21,7 +21,7 @@ void ShowStats()
 		ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_AlwaysAutoResize |
 		ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoMove;
 
-	ImGui::SetNextWindowPos( ImVec2( 520.0f, 64.0f ), ImGuiCond_Always );
+	ImGui::SetNextWindowPos( ImVec2( g_vidDef.width - 256, 0.0f ), ImGuiCond_Always );
 	ImGui::SetNextWindowBgAlpha( 0.25f );
 
 	ImGui::Begin( "Stats Area", nullptr, windowFlags );
@@ -52,8 +52,8 @@ void ShowStats()
 			if ( total == 0.0 ) {
 				total = 1.0;
 			}
-			double fps = 1000000.0 * FPS_FRAMES / total;
-			fps = ( fps + 500.0 ) / 1000.0;
+			double fps = 1e6 * FPS_FRAMES / total;
+			fps = ( fps + 500.0 ) / 1e3;
 
 			length = Q_sprintf_s( workBuf, "Client FPS : %f", fps );
 			ImGui::TextUnformatted( workBuf, workBuf + length );

@@ -626,6 +626,7 @@ main
 */
 int main( int argc, char **argv )
 {
+	MSG msg;
 	int frameTime, oldTime, newTime;
 
 	// Make sure the CRT thinks we're a GUI app, this makes CRT asserts use a message box
@@ -671,15 +672,15 @@ int main( int argc, char **argv )
 		Com_DPrint( "Using Windows UTF-8 codepage\n" );
 	}
 
-	oldTime = Sys_Milliseconds();
+	assert( dedicated );
 
-	MSG msg;
+	oldTime = Sys_Milliseconds();
 
 	// main loop
 	while ( 1 )
 	{
 		// if at a full screen console, don't update unless needed
-		if ( !g_activeApp || ( dedicated && dedicated->GetBool() ) )
+		if ( !g_activeApp || dedicated->GetBool() )
 		{
 			Sleep( 1 );
 		}

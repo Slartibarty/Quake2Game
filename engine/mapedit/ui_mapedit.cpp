@@ -151,10 +151,13 @@ static void ShowTextureBar()
 	ImGui::End();
 }
 
-static void ShowToolWindows()
+static void ShowToolWindows( ImGuiID dockID )
 {
+	ImGui::SetNextWindowDockID( dockID, ImGuiCond_FirstUseEver );
 	ShowToolsList();
+	ImGui::SetNextWindowDockID( dockID, ImGuiCond_FirstUseEver );
 	ShowSelectionList();
+	ImGui::SetNextWindowDockID( dockID, ImGuiCond_FirstUseEver );
 	ShowTextureBar();
 }
 
@@ -179,18 +182,26 @@ void ShowMapEditor( bool *pOpen )
 	const ImGuiWindowFlags mainWindowFlags =
 		ImGuiWindowFlags_MenuBar;
 
-	ImGui::SetNextWindowSize( ImVec2( 1200.0f, 800.0f ) );
+	ImGui::SetNextWindowSize( ImVec2( 1200.0f, 800.0f ), ImGuiCond_FirstUseEver );
+	ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, ImVec2( 0.0f, 0.0f ) );
 	if ( !ImGui::Begin( "Map Editor", pOpen, mainWindowFlags ) )
 	{
+		ImGui::PopStyleVar();
 		ImGui::End();
 		return;
 	}
+	ImGui::PopStyleVar();
 
 	// menu bar
 
 	ShowMenuBar_NoDocument( pOpen );
 
-	ShowToolWindows();
+	// dockspace
+
+	ImGuiID dockID = ImGui::GetID( "ME_MainDock" );
+	ImGui::DockSpace( dockID );
+
+	ShowToolWindows( dockID );
 
 	// main window internals
 

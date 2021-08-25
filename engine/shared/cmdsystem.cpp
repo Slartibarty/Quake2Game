@@ -11,7 +11,7 @@
 
 #include "engine.h"
 
-#include "cmd.h"
+#include "cmdsystem.h"
 
 #define	MAX_ALIAS_NAME	32
 

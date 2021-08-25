@@ -21,7 +21,7 @@ static_assert( DIRECTX_MATH_VERSION >= 316 );
 #include "GL/wglew.h"
 #endif
 
-#define DEFAULT_CLEARCOLOR		0.5f, 0.5f, 0.5f, 1.0f
+#define DEFAULT_CLEARCOLOR		0.25f, 0.25f, 0.25f, 1.0f
 
 #define MAT_EXT ".mat"
 

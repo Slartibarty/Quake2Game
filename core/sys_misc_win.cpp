@@ -205,30 +205,18 @@ double Time_FloatMicroseconds()
 
 int64 Time_Milliseconds()
 {
-	int64 currentTime;
-
-	QueryPerformanceCounter( (LARGE_INTEGER *)&currentTime );
-
-	return llround( ( currentTime - startTime ) * toMilliseconds );
+	return llround( Time_FloatMilliseconds() );
 }
 
 int64 Time_Microseconds()
 {
-	int64 currentTime;
-
-	QueryPerformanceCounter( (LARGE_INTEGER *)&currentTime );
-
-	return llround( ( currentTime - startTime ) * toMicroseconds );
+	return llround( Time_FloatMicroseconds() );
 }
 
 // LEGACY
 int Sys_Milliseconds()
 {
-	int64 currentTime;
-
-	QueryPerformanceCounter( (LARGE_INTEGER *)&currentTime );
-
-	return lround( ( currentTime - startTime ) * toMilliseconds );
+	return lround( Time_FloatMilliseconds() );
 }
 
 /*
