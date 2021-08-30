@@ -22,7 +22,7 @@ bool			g_activeApp, g_minimized;
 
 static HANDLE	hinput, houtput;
 
-unsigned		sys_frame_time;
+uint			sys_frameTime;
 int				curtime;
 
 /*
@@ -456,8 +456,7 @@ void Sys_FileOpenDialog(
 			{
 				LPWSTR pName;
 				pItem->GetDisplayName( SIGDN_FILESYSPATH, &pName );
-				WideCharToMultiByte( CP_UTF8, 0, pName, static_cast<int>( wcslen( pName ) + 1 ), filenameBuffer, sizeof( filenameBuffer ), nullptr, nullptr );
-				filenameBuffer[MAX_OSPATH - 1] = '\0';
+				Sys_UTF16toUTF8( pName, static_cast<int>( wcslen( pName ) + 1 ), filenameBuffer, sizeof( filenameBuffer ) );
 				CoTaskMemFree( pName );
 				Str_FixSlashes( filenameBuffer );
 				filename.assign( filenameBuffer );
@@ -516,8 +515,7 @@ void Sys_FileOpenDialogMultiple(
 					pArray->GetItemAt( i, &pItem );
 					LPWSTR pName;
 					pItem->GetDisplayName( SIGDN_FILESYSPATH, &pName );
-					WideCharToMultiByte( CP_UTF8, 0, pName, static_cast<int>( wcslen( pName ) + 1 ), filenameBuffer, sizeof( filenameBuffer ), nullptr, nullptr );
-					filenameBuffer[MAX_OSPATH - 1] = '\0';
+					Sys_UTF16toUTF8( pName, static_cast<int>( wcslen( pName ) + 1 ), filenameBuffer, sizeof( filenameBuffer ) );
 					CoTaskMemFree( pName );
 					Str_FixSlashes( filenameBuffer );
 					filenames.push_back( filenameBuffer );
@@ -703,7 +701,7 @@ int main( int argc, char **argv )
 		} while ( frameTime < 1 );
 
 		// set legacy
-		sys_frame_time = newTime;
+		sys_frameTime = newTime;
 		curtime = newTime;
 
 		Com_Frame( frameTime );

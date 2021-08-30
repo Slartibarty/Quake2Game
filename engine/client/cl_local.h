@@ -295,6 +295,9 @@ void CL_PingServers_f();
 void CL_Snd_Restart_f();
 void CL_RequestNextDownload();
 
+void CL_ClearState();
+void CL_ReadPackets();
+
 // demos
 void CL_WriteDemoMessage();
 
@@ -303,6 +306,7 @@ void CL_Quit_f();
 //
 // cl_input
 //
+
 struct kbutton_t
 {
 	int		down[2];		// key nums holding it down
@@ -311,19 +315,9 @@ struct kbutton_t
 	int		state;
 };
 
-void CL_InitInput();
-void CL_SendCmd();
-
-void CL_ClearState();
-
-void CL_ReadPackets();
-
-void CL_BaseMove( usercmd_t *cmd );
-
-void IN_CenterView();
-
 float CL_KeyState( kbutton_t *key );
-const char *Key_KeynumToString( int keynum );
+void CL_SendCmd();
+void CL_InitInput();
 
 //
 // cl_keys
@@ -344,6 +338,8 @@ void Key_Event( int key, bool down, unsigned time );
 void Key_WriteBindings( fsHandle_t handle );
 void Key_SetBinding( int keynum, const char *binding );
 void Key_ClearStates();
+
+const char *Key_KeynumToString( int keynum );
 
 //
 // cl_ents

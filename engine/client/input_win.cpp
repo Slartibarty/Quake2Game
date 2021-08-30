@@ -12,7 +12,7 @@
 
 HWND cl_hwnd;
 
-extern unsigned sys_frame_time;
+extern unsigned sys_frameTime;
 
 // TODO: this shouldn't really be in a namespace
 namespace input
@@ -140,7 +140,7 @@ namespace input
 
 	static void HandleKeyboardInput( RAWKEYBOARD &raw )
 	{
-		Key_Event( MapKey( raw.MakeCode ), !( raw.Flags & RI_KEY_BREAK ), sys_frame_time );
+		Key_Event( MapKey( raw.MakeCode ), !( raw.Flags & RI_KEY_BREAK ), sys_frameTime );
 	}
 
 	static void HandleMouseInput_ImGui( RAWMOUSE &raw )
@@ -183,26 +183,26 @@ namespace input
 		switch ( raw.usButtonFlags )
 		{
 		case RI_MOUSE_LEFT_BUTTON_DOWN:
-			Key_Event( K_MOUSE1, true, sys_frame_time );
+			Key_Event( K_MOUSE1, true, sys_frameTime );
 			break;
 		case RI_MOUSE_LEFT_BUTTON_UP:
-			Key_Event( K_MOUSE1, false, sys_frame_time );
+			Key_Event( K_MOUSE1, false, sys_frameTime );
 			break;
 		case RI_MOUSE_RIGHT_BUTTON_DOWN:
-			Key_Event( K_MOUSE2, true, sys_frame_time );
+			Key_Event( K_MOUSE2, true, sys_frameTime );
 			break;
 		case RI_MOUSE_RIGHT_BUTTON_UP:
-			Key_Event( K_MOUSE2, false, sys_frame_time );
+			Key_Event( K_MOUSE2, false, sys_frameTime );
 			break;
 		case RI_MOUSE_MIDDLE_BUTTON_DOWN:
-			Key_Event( K_MOUSE3, true, sys_frame_time );
+			Key_Event( K_MOUSE3, true, sys_frameTime );
 			break;
 		case RI_MOUSE_MIDDLE_BUTTON_UP:
-			Key_Event( K_MOUSE3, false, sys_frame_time );
+			Key_Event( K_MOUSE3, false, sys_frameTime );
 			break;
 		case RI_MOUSE_WHEEL:
-			Key_Event( ( (short)raw.usButtonData > 0 ) ? K_MWHEELUP : K_MWHEELDOWN, true, sys_frame_time );
-			Key_Event( ( (short)raw.usButtonData > 0 ) ? K_MWHEELUP : K_MWHEELDOWN, false, sys_frame_time );
+			Key_Event( ( (short)raw.usButtonData > 0 ) ? K_MWHEELUP : K_MWHEELDOWN, true, sys_frameTime );
+			Key_Event( ( (short)raw.usButtonData > 0 ) ? K_MWHEELUP : K_MWHEELDOWN, false, sys_frameTime );
 			break;
 		}
 

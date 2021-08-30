@@ -4,6 +4,9 @@
 
 #pragma once
 
+// frameTime in milliseconds
+extern uint sys_frameTime;
+
 void	Sys_Init( int argc, char **argv );
 void	Sys_Shutdown();
 
