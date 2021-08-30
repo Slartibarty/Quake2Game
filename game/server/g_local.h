@@ -990,7 +990,7 @@ struct gclient_t
 
 struct edict_t
 {
-	entity_state_t	s;
+	entityState_t	s;
 	gclient_t		*client;		// NULL if not a player
 									// the server expects the first part
 									// of gclient_s to be a player_state_t
@@ -1011,6 +1011,7 @@ struct edict_t
 
 	int			svflags;
 	vec3_t		mins, maxs;
+	int			contents;
 	vec3_t		absmin, absmax, size;
 	solid_t		solid;
 	int			clipmask;

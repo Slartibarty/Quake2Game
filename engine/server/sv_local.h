@@ -188,8 +188,6 @@ int SV_ModelIndex( const char *name );
 int SV_SoundIndex( const char *name );
 int SV_ImageIndex( const char *name );
 
-void SV_ExecuteUserCommand( char *s );
-
 void SV_UserinfoChanged( client_t *cl );
 
 void Master_Heartbeat();
@@ -263,18 +261,18 @@ void SV_ShutdownGameProgs();
 void SV_ClearWorld (void);
 // called after the world model has been loaded, before linking any entities
 
-void SV_UnlinkEdict (edict_t *ent);
+void SV_UnlinkEntity (edict_t *ent);
 // call before removing an entity, and before trying to move one,
 // so it doesn't clip against itself
 
-void SV_LinkEdict (edict_t *ent);
+void SV_LinkEntity (edict_t *ent);
 // Needs to be called any time an entity changes origin, mins, maxs,
 // or solid.  Automatically unlinks if needed.
 // sets ent->v.absmin and ent->v.absmax
 // sets ent->leafnums[] for pvs determination even if the entity
 // is not solid
 
-int SV_AreaEdicts (vec3_t mins, vec3_t maxs, edict_t **list, int maxcount, int areatype);
+int SV_AreaEntities (vec3_t mins, vec3_t maxs, edict_t **list, int maxcount, int areatype);
 // fills in a table of edict pointers with edicts that have bounding boxes
 // that intersect the given area.  It is possible for a non-axial bmodel
 // to be returned that doesn't actually intersect the area on an exact

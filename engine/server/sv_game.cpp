@@ -159,7 +159,7 @@ static void PF_setmodel( edict_t *ent, const char *name )
 		mod = CM_InlineModel( name );
 		VectorCopy( mod->mins, ent->mins );
 		VectorCopy( mod->maxs, ent->maxs );
-		SV_LinkEdict( ent );
+		SV_LinkEntity( ent );
 	}
 }
 
@@ -334,9 +334,9 @@ void SV_InitGameProgs()
 	gi.centerprintf = PF_centerprintf;
 	gi.error = PF_error;
 
-	gi.linkentity = SV_LinkEdict;
-	gi.unlinkentity = SV_UnlinkEdict;
-	gi.BoxEdicts = SV_AreaEdicts;
+	gi.linkentity = SV_LinkEntity;
+	gi.unlinkentity = SV_UnlinkEntity;
+	gi.BoxEdicts = SV_AreaEntities;
 	gi.trace = SV_Trace;
 	gi.pointcontents = SV_PointContents;
 	gi.setmodel = PF_setmodel;

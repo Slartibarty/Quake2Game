@@ -16,8 +16,6 @@ cvar_t *cvar_vars;
 
 bool userinfo_modified;
 
-static char cvar_null_string[1]; // lame
-
 static bool Cvar_InfoValidate( const char *s )
 {
 	if ( strstr( s, "\\" ) ) {

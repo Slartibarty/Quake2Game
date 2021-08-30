@@ -371,7 +371,7 @@ project "engine"
 		"engine/renderer/*",
 		
 		"game/client/cg_public.h",
-		"game/server/game_public.h",
+		"game/server/g_public.h",
 		
 		zlib_public,
 		

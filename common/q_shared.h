@@ -72,6 +72,8 @@ bool	Info_Validate (const char *s);
 
 // gi.BoxEdicts() can return a list of either solid or trigger entities
 // FIXME: eliminate AREA_ distinction?
+// Slart: Quake 3 just checks the contents type of returned area entities
+// rather than having AREA_
 #define	AREA_SOLID		1
 #define	AREA_TRIGGERS	2
 
@@ -150,7 +152,7 @@ enum waterLevel_t
 // prediction stays in sync, so no floats are used.
 // if any part of the game code modifies this struct, it
 // will result in a prediction error of some degree.
-struct pmove_state_t
+struct pmoveState_t
 {
 	pmType_t	pm_type;
 
@@ -167,6 +169,8 @@ struct pmove_state_t
 
 	int			swim_time;
 };
+
+#define pmove_state_t pmoveState_t
 
 //
 // button bits
@@ -407,7 +411,7 @@ struct pmove_t
 // All muzzle flashes really should be converted to events...
 //-------------------------------------------------------------------------------------------------
 
-enum entity_event_t
+enum entityEvent_t
 {
 	EV_NONE,
 	EV_ITEM_RESPAWN,
@@ -424,7 +428,7 @@ enum entity_event_t
 // need to render in some way
 //-------------------------------------------------------------------------------------------------
 
-struct entity_state_t
+struct entityState_t
 {
 	int		number;			// edict index
 
@@ -446,6 +450,8 @@ struct entity_state_t
 							// are automatically cleared each frame
 };
 
+#define entity_state_t entityState_t
+
 //-------------------------------------------------------------------------------------------------
 // player_state_t is the information needed in addition to pmove_state_t
 // to render a view.  There will only be 10 player_state_t sent each second,
@@ -453,7 +459,7 @@ struct entity_state_t
 // frame rates
 //-------------------------------------------------------------------------------------------------
 
-struct player_state_t
+struct playerState_t
 {
 	pmove_state_t	pmove;		// for prediction
 
@@ -475,3 +481,5 @@ struct player_state_t
 
 	short		stats[MAX_STATS];		// fast status bar updates
 };
+
+#define player_state_t playerState_t

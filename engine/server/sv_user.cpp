@@ -1,4 +1,4 @@
-// Server code for moving users
+// Server code for dealing with clients
 
 #include "sv_local.h"
 
@@ -385,6 +385,11 @@ static void SV_ShowServerinfo_f()
 	Info_Print( Cvar_Serverinfo() );
 }
 
+/*
+========================
+SV_Nextserver
+========================
+*/
 void SV_Nextserver()
 {
 	//ZOID, ss_pic can be nextserver'd in coop mode
@@ -433,7 +438,7 @@ struct ucmd_t
 	void		(*func) (void);
 };
 
-const ucmd_t ucmds[]
+static const ucmd_t ucmds[]
 {
 	// auto issued
 	{"new", SV_New_f},
@@ -459,7 +464,7 @@ const ucmd_t ucmds[]
 SV_ExecuteUserCommand
 ========================
 */
-void SV_ExecuteUserCommand( char *s )
+static void SV_ExecuteUserCommand( char *s )
 {
 	const ucmd_t *u;
 
