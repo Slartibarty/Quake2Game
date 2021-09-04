@@ -3,15 +3,18 @@
 
 	The Virtual Filesystem 2.0
 
-	MAYBE: changing the gameDir is unsupported right now, it's always the working directory
+	TODO:
+	Pack files
+	RelativePathToAbsolutePath should return a std::string or something, not a static char *
+
+	MAYBE:
+	changing the gameDir is unsupported right now, it's always the working directory
 
 	Notes:
 	The entire filesystem uses forward slashes to separate paths, any results returned from
 	Windows system calls have their slashes fixed
-	THE CODE ASSUMES THE WRITE DIR EXISTS!
-	RelativePathToAbsolutePath should return a std::string or something, not a static char *
 
-	NO TRAILING SLASHES!!!
+	No trailing slashes!!!
 
 ===================================================================================================
 */
@@ -90,7 +93,7 @@ static struct fileSystem_t
 
 // On Windows this sets the write directory to "C:/Users/Name/Saved Games/Game Name".
 // Games regularly use Documents/My Games, but this is non-standard. That is a better place however...
-// On Linux it's the game dir (sucks a little).
+// On Linux it's the game dir, this could be better...
 static void SetWriteDirectory()
 {
 #ifdef _WIN32
@@ -133,7 +136,7 @@ static void SetContentDirectory()
 	// find the last slash
 	char *copyZone = strrchr( fs.contentDir, '/' );
 	if ( !copyZone ) {
-		// wtf! bail! this should never happen, make the content dir the write dir
+		// what! bail! this should never happen, make the content dir the write dir
 		Q_strcpy_s( fs.contentDir, fs.writeDir );
 		return;
 	}
@@ -219,15 +222,12 @@ void Shutdown()
 	ModInfo::Shutdown();
 
 	// Clean up search paths
-	searchPath_t *pLastSP = nullptr;
-	for ( searchPath_t *pSP = fs.searchPaths; pSP; pSP = pSP->pNext )
+	while ( fs.searchPaths )
 	{
-		if ( pLastSP ) {
-			delete pLastSP;
-		}
-		pLastSP = pSP;
+		searchPath_t *pNext = fs.searchPaths->pNext;
+		delete fs.searchPaths;
+		fs.searchPaths = pNext;
 	}
-	delete pLastSP;
 }
 
 //=============================================================================
@@ -238,6 +238,7 @@ bool IsAbsolutePath( const char *path )
 #ifdef _WIN32
 	// Under win32, an absolute path always begins with "<letter>:/"
 	// This doesn't consider network directories
+	// TODO: There are more cases that need to be covered here
 	return path[1] == ':';
 #else
 	// Unix absolute paths always begin with a slash
@@ -654,6 +655,7 @@ static void ParseModInfo()
 #endif
 	}
 
+	// Add search paths
 	member = modInfo.pDoc->FindMember( "FileSystem" );
 	if ( member != modInfo.pDoc->MemberEnd() && member->value.IsObject() )
 	{

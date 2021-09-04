@@ -158,7 +158,7 @@ void PrintFileFmt( fsHandle_t handle, const char *fmt, ... )
 
 void FlushFile( fsHandle_t handle )
 {
-	// Doesn't the winapi system io not have buffered IO? wtf does this function do?
+	// Doesn't the winapi system io not have buffered IO? What does this function do?
 	//FlushFileBuffers( (HANDLE)handle );
 }
 

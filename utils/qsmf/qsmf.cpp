@@ -240,7 +240,7 @@ static void AddSkeletonContribution( FbxNode *pNode, std::vector<fmtJMDL::bone_t
 	}
 }
 
-static void FBX_SkinMesh( FbxMesh *pMesh, )
+static void FBX_SkinMesh( FbxMesh *pMesh )
 {
 	const int deformerCount = pMesh->GetDeformerCount( FbxDeformer::eSkin );
 	if ( deformerCount <= 0 ) {
@@ -261,6 +261,11 @@ static void FBX_SkinMesh( FbxMesh *pMesh, )
 			FbxNode *pLinkNode = pCluster->GetLink();
 
 			if ( !pLinkNode ) {
+				continue;
+			}
+
+			const FbxCluster::ELinkMode nLinkMode = pCluster->GetLinkMode();
+			if ( nLinkMode != FbxCluster::eNormalize && nLinkMode != FbxCluster::eTotalOne ) {
 				continue;
 			}
 

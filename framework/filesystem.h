@@ -3,6 +3,18 @@
 
 	The Virtual Filesystem 2.0
 
+	Concept:
+	The filesystem acts as a simple abstraction layer for file operations. Files can exist inside
+	of large packfiles so this wraps that functionality. During production runs file cannot be
+	accessed outside of designated search paths, which must be children of the working directory.
+	File writes are redirected to a platform specific write directory, on Windows this is the
+	"saved games" folder. During non-production, this is an essential part of the asset pipeline,
+	the game typically runs in a "game" folder, where outside of that folder is a "content"
+	directory that is a 1:1 mirror of the production game folder, except instead of compiled assets
+	it contains the sources and scripts needed to build runtime stuff, this makes it really easy
+	for artists and designers to just plop files into the content directory, run a build and have
+	their stuff put where they intend it to be.
+
 	Fact: We come *very* close to having Windows.h steal our function names
 
 ===================================================================================================
@@ -88,6 +100,7 @@ namespace FileSystem
 
 }
 
+// Backwards compat
 inline consteval int Developer_searchpath()
 {
 	return 0;
@@ -100,18 +113,25 @@ class CFileSystem final : public IFileSystem
 public:
 	fsHandle_t OpenFileRead( const char *filename ) override
 	{ return FileSystem::OpenFileRead( filename ); }
+
 	fsHandle_t OpenFileWrite( const char *filename ) override
 	{ return FileSystem::OpenFileWrite( filename ); }
+
 	fsHandle_t OpenFileAppend( const char *filename ) override
 	{ return FileSystem::OpenFileAppend( filename ); }
+
 	void CloseFile( fsHandle_t handle ) override
 	{ FileSystem::CloseFile( handle ); }
+
 	fsSize_t ReadFile( void *buffer, fsSize_t length, fsHandle_t handle ) override
 	{ return FileSystem::ReadFile( buffer, length, handle ); }
+
 	fsSize_t WriteFile( const void *buffer, fsSize_t length, fsHandle_t handle ) override
 	{ return FileSystem::WriteFile( buffer, length, handle ); }
+
 	void PrintFile( const char *string, fsHandle_t handle ) override
 	{ FileSystem::PrintFile( string, handle ); }
+
 	void PrintFileFmt( fsHandle_t handle, const char *fmt, ... ) override
 	{
 		va_list args;
@@ -119,8 +139,10 @@ public:
 		FileSystem::PrintFileVFmt( handle, fmt, args );
 		va_end( args );
 	}
+
 	void FlushFile( fsHandle_t handle ) override
 	{ FileSystem::FlushFile( handle ); }
+
 	bool FileExists( const char *filename, fsPath_t fsPath = FS_GAMEDIR ) override
 	{ return FileSystem::FileExists( filename, fsPath ); }
 };

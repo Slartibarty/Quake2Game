@@ -1,8 +1,7 @@
 /*
 ===================================================================================================
 
-	The interface to the engine's filesystem
-	Go there for more detailed information
+	Filesystem types and defines that can be exposed to dynamic libraries
 
 ===================================================================================================
 */
@@ -34,6 +33,8 @@ enum fsSeek_t
 	FS_SEEK_CUR,		// SEEK_CUR or FILE_CURRENT
 	FS_SEEK_END			// SEEK_END or FILE_END
 };
+
+// DLLs access the filesystem through this minimal interface
 
 class IFileSystem
 {

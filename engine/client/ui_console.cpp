@@ -3,10 +3,12 @@
 
 	ImGui console and notify area
 
+	Implements a responsive and simple in-game console
+
 	FIXME: you can only browse history after you've submitted something, this is due to the
 	placement of con.completionPopup after Con2_Submit
 
-	TODO: Command aliases are not considered
+	TODO: Command aliases are not yet considered
 
 ===================================================================================================
 */
@@ -26,7 +28,7 @@ namespace UI::Console
 #define MAX_NOTIFIES	8			// should be a cvar
 
 static constexpr uint32 CmdColor	= colors::green;
-static constexpr uint32 aliasColor	= colors::purple;	// Not implemented
+static constexpr uint32 AliasColor	= colors::purple;	// Not implemented
 
 static cvar_t *con_notifyTime;
 static cvar_t *con_drawNotify;
@@ -249,7 +251,7 @@ static void Clear_f()
 	con.buffer.clear();
 }
 
-// this is the wrong place for this really, oh well
+// TODO: Move this to engine.cpp so the dedicated server console can use it
 static void Find_f()
 {
 	if ( Cmd_Argc() != 2 )
@@ -367,6 +369,7 @@ static void Find_f()
 
 }
 
+// TODO: Move this to engine.cpp so the dedicated server console can use it
 static void Help_f()
 {
 	if ( Cmd_Argc() != 2 )
@@ -418,7 +421,6 @@ void Init()
 /*
 ========================
 Submit
-Public
 
 Submits the text stored in con.editLine, then clears it
 ========================
