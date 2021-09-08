@@ -10,7 +10,13 @@
 
 #include "sys_types.h"
 
-#define BIT( num )		( 1 << ( num ) )
+// Macros
+
+#define BIT(num)		(1<<(num))
+
+#define countof(a)		(sizeof(a)/sizeof(*a))
+
+// Templates
 
 template< typename T >
 inline constexpr T Min( const T valMin, const T valMax ) {

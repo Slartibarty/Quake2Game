@@ -17,6 +17,7 @@ static struct mapEdit_t
 {
 	int currentTexture;
 	bool ui_about;
+	bool ui_matBrowser;
 } mapEdit;
 
 const char *s_dummyTextureList[]
@@ -46,6 +47,7 @@ static void ShowMenuBar_NoDocument( bool *pOpen )
 		}
 		if ( ImGui::BeginMenu( "Tools" ) )
 		{
+			ImGui::MenuItem( "Material Browser...", nullptr, &mapEdit.ui_matBrowser );
 			ImGui::MenuItem( "Options..." );
 
 			ImGui::EndMenu();
@@ -170,6 +172,10 @@ static void ShowOtherWindows()
 			ImGui::TextUnformatted( "Hello" );
 		}
 		ImGui::End();
+	}
+	if ( mapEdit.ui_matBrowser )
+	{
+		MaterialBrowser::ShowModal( &mapEdit.ui_matBrowser );
 	}
 }
 

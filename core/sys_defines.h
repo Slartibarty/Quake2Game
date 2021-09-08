@@ -20,8 +20,6 @@
 #error countf was previously defined by another library
 #endif
 
-#define countof(a)			(sizeof(a)/sizeof(*a))
-
 #define STRINGIFY_(a)		#a
 #define STRINGIFY(a)		STRINGIFY_(a)
 
