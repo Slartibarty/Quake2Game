@@ -24,7 +24,6 @@ void	Sys_ConsoleOutput( const char *string );
 int		Sys_GetNumVidModes();
 bool	Sys_GetVidModeInfo( int &width, int &height, int mode );
 
-void	Sys_OutputDebugString( const char *msg );
 [[noreturn]]
 void	Sys_Quit( int code );
 [[noreturn]]

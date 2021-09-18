@@ -30,6 +30,7 @@ void	Sys_CopyFile( const char *src, const char *dst );
 void	Sys_DeleteFile( const char *filename );
 void	Sys_CreateDirectory( const char *path );
 void	Sys_GetWorkingDirectory( char *path, uint length );
+void	Sys_OutputDebugString( const char *msg );
 void	Sys_UTF8ToUTF16( const char *pIn, strlen_t inSizeInChars, wchar_t *pOut, strlen_t outSizeInChars );
 void	Sys_UTF16toUTF8( const wchar_t *pIn, strlen_t inSizeInChars, char *pOut, strlen_t outSizeInChars );
 

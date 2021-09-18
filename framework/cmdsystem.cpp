@@ -9,11 +9,25 @@
 ===================================================================================================
 */
 
-#include "engine.h"
+#include "framework_local.h"
 
 #include "cmdsystem.h"
 
-#define	MAX_ALIAS_NAME	32
+// The engine feeds commands through to the command buffer
+// utils execute immediately... Bad idea?
+#ifdef Q_ENGINE
+#define DoCommand Cbuf_InsertText
+#else
+#define DoCommand Cmd_ExecuteString
+#endif
+
+#define	MAX_CMD_BUFFER	16384
+#define	MAX_CMD_LINE	1024
+
+#define	MAX_STRING_CHARS	1024	// max length of a string passed to Cmd_TokenizeString
+#define	MAX_STRING_TOKENS	80		// max tokens resulting from Cmd_TokenizeString
+
+#define	MAX_ALIAS_NAME		32
 
 struct cmdAlias_t
 {
@@ -25,7 +39,17 @@ struct cmdAlias_t
 // singly linked list of command aliases
 static cmdAlias_t *cmd_alias;
 
-static bool cmd_wait;
+struct cmd_t
+{
+	byte *	data;
+	int		maxsize;
+	int		cursize;
+};
+
+static int		cmd_wait;
+static cmd_t	cmd_text;
+static byte		cmd_text_buf[MAX_CMD_BUFFER];
+static byte		defer_text_buf[MAX_CMD_BUFFER];
 
 #define	ALIAS_LOOP_COUNT	16
 static int alias_count;		// for detecting runaway loops
@@ -45,7 +69,11 @@ bind g "impulse 5 ; +attack ; wait ; -attack ; impulse 2"
 */
 static void Cmd_Wait_f()
 {
-	cmd_wait = true;
+	if ( Cmd_Argc() == 2 ) {
+		cmd_wait = Q_atoi( Cmd_Argv( 1 ) );
+	} else {
+		cmd_wait = 1;
+	}
 }
 
 /*
@@ -56,11 +84,6 @@ static void Cmd_Wait_f()
 ===================================================================================================
 */
 
-sizebuf_t	cmd_text;
-byte		cmd_text_buf[8192];
-
-byte		defer_text_buf[8192];
-
 /*
 ========================
 Cbuf_Init
@@ -68,7 +91,9 @@ Cbuf_Init
 */
 void Cbuf_Init()
 {
-	SZ_Init( &cmd_text, cmd_text_buf, sizeof( cmd_text_buf ) );
+	cmd_text.data = cmd_text_buf;
+	cmd_text.maxsize = MAX_CMD_BUFFER;
+	cmd_text.cursize = 0;
 }
 
 /*
@@ -78,7 +103,6 @@ Cbuf_Shutdown
 */
 void Cbuf_Shutdown()
 {
-	SZ_Init( &cmd_text, cmd_text_buf, sizeof( cmd_text_buf ) );
 }
 
 /*
@@ -90,7 +114,7 @@ Adds command text at the end of the buffer
 */
 void Cbuf_AddText( const char *text )
 {
-	int l = (int)strlen( text );
+	int l = static_cast<int>( strlen( text ) );
 
 	if ( cmd_text.cursize + l >= cmd_text.maxsize )
 	{
@@ -98,7 +122,8 @@ void Cbuf_AddText( const char *text )
 		return;
 	}
 
-	SZ_Write( &cmd_text, text, l );
+	memcpy( &cmd_text.data[cmd_text.cursize], text, l );
+	cmd_text.cursize += l;
 }
 
 /*
@@ -107,31 +132,35 @@ Cbuf_InsertText
 
 Adds command text immediately after the current command
 Adds a \n to the text
-FIXME: actually change the command buffer to do less copying
 ========================
 */
 void Cbuf_InsertText( const char *text )
 {
-	char *temp;
-	int templen;
-
-	// copy off any commands still remaining in the exec buffer
-	templen = cmd_text.cursize;
-	if ( templen )
+	int len = static_cast<int>( strlen( text ) + 1 );
+	if ( len + cmd_text.cursize > cmd_text.maxsize )
 	{
-		temp = (char*)Mem_StackAlloc( templen );
-		memcpy( temp, cmd_text.data, templen );
-		SZ_Clear( &cmd_text );
+		Com_Print( "Cbuf_InsertText overflowed\n" );
+		return;
 	}
 
-	// add the entire text of the file
-	Cbuf_AddText( text );
-
-	// add the copied off data
-	if ( templen )
+	// move the existing command text
+	// TODO: How can this be translated to memmove or something intrinsic?
+#if 1
+	for ( int i = cmd_text.cursize - 1; i >= 0; i-- )
 	{
-		SZ_Write( &cmd_text, temp, templen );
+		cmd_text.data[i + len] = cmd_text.data[i];
 	}
+#else
+	memmove( cmd_text.data + len, cmd_text.data, cmd_text.cursize - 1 );
+#endif
+
+	// copy the new text in
+	memcpy( cmd_text.data, text, len - 1 );
+
+	// add a \n
+	cmd_text.data[len - 1] = '\n';
+
+	cmd_text.cursize += len;
 }
 
 /*
@@ -166,27 +195,41 @@ void Cbuf_Execute()
 {
 	int		i;
 	char	*text;
-	char	line[1024];
+	char	line[MAX_CMD_LINE];
 	int		quotes;
 
 	alias_count = 0;		// don't allow infinite alias loops
 
 	while ( cmd_text.cursize )
 	{
+		if ( cmd_wait ) {
+			// skip out while text still remains in buffer, leaving it
+			// for next frame
+			cmd_wait--;
+			break;
+		}
+
 		// find a \n or ; line break
 		text = (char *)cmd_text.data;
 
 		quotes = 0;
 		for ( i = 0; i < cmd_text.cursize; i++ )
 		{
-			if ( text[i] == '"' )
+			if ( text[i] == '"' ) {
 				quotes++;
-			if ( !( quotes & 1 ) && text[i] == ';' )
-				break;	// don't break if inside a quoted string
-			if ( text[i] == '\n' )
+			}
+			if ( !( quotes & 1 ) && text[i] == ';' ) {
+				// don't break if inside a quoted string
 				break;
+			}
+			if ( text[i] == '\n' ) {
+				break;
+			}
 		}
 
+		if ( i >= ( MAX_CMD_LINE - 1 ) ) {
+			i = MAX_CMD_LINE - 1;
+		}
 
 		memcpy( line, text, i );
 		line[i] = '\0';
@@ -208,14 +251,6 @@ void Cbuf_Execute()
 
 		// execute the command line
 		Cmd_ExecuteString( line );
-
-		if ( cmd_wait )
-		{
-			// skip out while text still remains in buffer, leaving it
-			// for next frame
-			cmd_wait = false;
-			break;
-		}
 	}
 }
 
@@ -801,7 +836,6 @@ static bool Cmd_ExecuteCvar()
 Cmd_ExecuteString
 
 A complete command line has been parsed, so try to execute it
-FIXME: lookupnoadd the token to speed search?
 ========================
 */
 void Cmd_ExecuteString( char *text )
@@ -822,7 +856,9 @@ void Cmd_ExecuteString( char *text )
 			if ( !pCmd->pFunction )
 			{
 				// forward to server command
+#ifdef Q_ENGINE
 				Cmd_ExecuteString( va( "cmd %s", text ) );
+#endif
 			}
 			else
 			{
@@ -853,7 +889,11 @@ void Cmd_ExecuteString( char *text )
 	}
 
 	// send it as a server command if we are connected
+#ifdef Q_ENGINE
 	Cmd_ForwardToServer();
+#else
+	Com_Printf( "Unknown command \"%s\"\n", text );
+#endif
 }
 
 /*

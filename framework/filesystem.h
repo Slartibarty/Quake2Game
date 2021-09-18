@@ -72,6 +72,10 @@ namespace FileSystem
 					// Deletes a file from the write directory. Only named Remove because win32 steals DeleteFile.
 	void			RemoveFile( const char *filename );
 
+	const char *	FindFirst( const char *wildcard, fsPath_t fsPath = FS_GAMEDIR );
+	const char *	FindNext();
+	void			FindClose();
+
 					// Loads a complete file.
 					// Returns the length of the file, or -1 on failure.
 					// A null buffer will just return the file length without loading.

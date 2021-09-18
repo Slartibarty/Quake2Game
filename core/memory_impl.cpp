@@ -8,7 +8,7 @@
 
 #include "memory_impl.h"
 
-#if defined Q_MEM_USE_MIMALLOC
+#ifdef Q_MEM_USE_MIMALLOC
 
 #ifdef Q_DEBUG
 #define MI_DEBUG 3

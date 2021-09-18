@@ -100,18 +100,6 @@ void Sys_Init( int argc, char **argv )
 	}
 }
 
-// MSDN says OutputDebugStringW converts the unicode string to the system codepage
-// So just directly use the A version
-void Sys_OutputDebugString( const char *msg )
-{
-#ifndef Q_RETAIL
-	if ( IsDebuggerPresent() )
-	{
-		OutputDebugStringA( msg );
-	}
-#endif
-}
-
 [[noreturn]]
 void Sys_Quit( int code )
 {

@@ -509,6 +509,49 @@ void RemoveFile( const char *filename )
 
 //=============================================================================
 
+const char *FindFirst( const char *wildcard, fsPath_t fsPath /*= FS_GAMEDIR*/ )
+{
+	char fullPath[MAX_OSPATH];
+
+	FS_VERIFYPATH( fsPath );
+	switch ( fsPath )
+	{
+	default: // FS_GAMEDIR
+	{
+		// go through each search path until we find our file
+		for ( searchPath_t *pSP = fs.searchPaths; pSP; pSP = pSP->pNext )
+		{
+			Q_sprintf_s( fullPath, "%s/%s", pSP->dirName, wildcard );
+
+			// sanity check, make sure the wildcard directory exists for this searchpath
+			if ( !Sys_FileExists( fullPath ) ) {
+				continue;
+			}
+		}
+	}
+	case FS_WRITEDIR:
+	{
+		Q_sprintf_s( fullPath, "%s/%s/%s", fs.writeDir, fs.modDir, wildcard );
+
+
+	}
+	}
+
+	return nullptr;
+}
+
+const char *FindNext()
+{
+	return nullptr;
+}
+
+void FindClose()
+{
+
+}
+
+//=============================================================================
+
 fsSize_t LoadFile( const char *filename, void **buffer, fsSize_t extraData /*= 0*/ )
 {
 	assert( filename && filename[0] );

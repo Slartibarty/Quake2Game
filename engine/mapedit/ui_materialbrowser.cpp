@@ -85,8 +85,6 @@ namespace UI::MapEdit::MaterialBrowser
 			// compute how many images we can fit into the child area
 			const int fitCount = ElementsForWidth( imageDimensions, static_cast<int>( ImGui::GetWindowWidth() ) );
 
-
-
 			for ( int i = 0; i < 16; ++i )
 			{
 				if ( i % fitCount )

@@ -24,7 +24,7 @@ enum fsPath_t
 {
 	FS_GAMEDIR,
 	FS_WRITEDIR,
-	FS_CONTENTDIR
+	FS_CONTENTDIR,
 };
 
 enum fsSeek_t

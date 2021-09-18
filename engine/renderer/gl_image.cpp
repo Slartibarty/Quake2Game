@@ -987,6 +987,11 @@ void GL_ShutdownImages( void )
 #endif
 }
 
+void *R_GetDefaultTexture()
+{
+	return (void *)(intptr_t)defaultMaterial->image->texnum;
+}
+
 /*
 ===============================================================================
 	Framebuffers

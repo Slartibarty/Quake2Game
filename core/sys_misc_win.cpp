@@ -127,6 +127,18 @@ void Sys_GetWorkingDirectory( char *path, uint length )
 	Str_FixSlashes( path );
 }
 
+// MSDN says OutputDebugStringW converts the unicode string to the system codepage
+// So just directly use the A version
+void Sys_OutputDebugString( const char *msg )
+{
+#ifndef Q_RETAIL
+	if ( IsDebuggerPresent() )
+	{
+		OutputDebugStringA( msg );
+	}
+#endif
+}
+
 // I hate this
 void Sys_UTF8ToUTF16( const char *pIn, strlen_t inSizeInChars, wchar_t *pOut, strlen_t outSizeInChars )
 {

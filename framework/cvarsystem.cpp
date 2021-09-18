@@ -5,10 +5,17 @@
 
 	CVar names are case insensitive, values are case sensitive
 
+	TODO: Move the misfit commands to cmdsystem?
+
 ===================================================================================================
 */
 
 #include "framework_local.h"
+
+// For the misfit commands
+#include <vector>
+#include <string>
+#include <algorithm>
 
 #include "cvarsystem.h"
 
@@ -514,6 +521,8 @@ char *Cvar_Serverinfo()
 	return Cvar_BitInfo( CVAR_SERVERINFO );
 }
 
+#endif
+
 // Allows setting and defining of arbitrary cvars from console
 void Cvar_Set_f()
 {
@@ -611,15 +620,171 @@ static void Cvar_List_f()
 	Com_Printf( "%u cvars\n", i );
 }
 
-#endif
+// For lack of a better place, these are here
+
+static void Find_f()
+{
+	if ( Cmd_Argc() != 2 )
+	{
+		Com_Print( "Usage: find <cmd/cvar/*>\n" );
+		return;
+	}
+
+	const char *searchName = Cmd_Argv( 1 );
+	if ( !searchName[0] )
+	{
+		return;
+	}
+
+	bool listAll = searchName[0] == '*' ? true : false;
+
+	std::vector<cmdFunction_t *> cmdMatches;
+
+	strlen_t longestName = 16;
+	strlen_t longestValue = 8;
+	strlen_t longestHelp = 8;
+
+	// find command matches
+	for ( cmdFunction_t *pCmd = cmd_functions; pCmd; pCmd = pCmd->pNext )
+	{
+		if ( listAll || Q_stristr( pCmd->pName, searchName ) )
+		{
+			strlen_t length = Q_strlen( pCmd->pName );
+			if ( length > longestName )
+			{
+				longestName = length;
+			}
+			length = pCmd->pHelp ? Q_strlen( pCmd->pHelp ) : 0;
+			if ( length > longestHelp )
+			{
+				longestHelp = length + 1;
+			}
+			cmdMatches.push_back( pCmd );
+		}
+	}
+
+	std::sort( cmdMatches.begin(), cmdMatches.end() );
+
+	std::vector<cvar_t *> cvarMatches;
+
+	// find cvar matches
+	for ( cvar_t *pVar = cvar_vars; pVar; pVar = pVar->pNext )
+	{
+		if ( listAll || Q_stristr( pVar->GetName(), searchName ) )
+		{
+			if ( pVar->name.length() > longestName )
+			{
+				longestName = pVar->name.length() + 1;
+			}
+			if ( pVar->value.length() > longestValue )
+			{
+				longestValue = pVar->value.length() + 1;
+			}
+			if ( pVar->help.length() > longestHelp )
+			{
+				longestHelp = pVar->help.length() + 1;
+			}
+			cvarMatches.push_back( pVar );
+		}
+	}
+
+	std::sort( cvarMatches.begin(), cvarMatches.end() );
+
+	// build the format string
+
+	char formatString[128];
+	char formatString2[128];	// To compensate for the green cmd names...
+	Q_sprintf_s( formatString, "%%-%us" "%%-%us" "%%-%us\n", longestName, longestValue, longestHelp );
+	Q_sprintf_s( formatString2, "%%-%us" "%%-%us" "%%-%us\n", longestName + 2, longestValue + 2, longestHelp );
+
+	Com_Printf( formatString, "name", "value", "help text" );
+
+	strlen_t maxLength = Min<strlen_t>( longestName + longestValue + longestHelp, 127 );
+
+	char underscores[128]{};
+	for ( strlen_t i = 0; ; ++i )
+	{
+		// HACK?
+		if ( i == longestName - 1 || i == longestName + longestValue - 1 )
+		{
+			underscores[i] = ' ';
+			continue;
+		}
+		underscores[i] = '_';
+		if ( i == maxLength - 1 )
+		{
+			underscores[i] = '\n';
+			break;
+		}
+	}
+
+	Com_Print( underscores );
+
+	std::string cmdNameGreen;
+
+	for ( const auto &pCmd : cmdMatches )
+	{
+		cmdNameGreen.assign( S_COLOR_GREEN );
+		cmdNameGreen.append( pCmd->pName );
+		Com_Printf( formatString2, cmdNameGreen.c_str(), S_COLOR_WHITE "", pCmd->pHelp ? pCmd->pHelp : "" );
+	}
+
+	for ( const auto &pVar : cvarMatches )
+	{
+		const char *string = pVar->GetString();
+		if ( string[0] == '\0' )
+		{
+			string = "\"\"";
+		}
+		Com_Printf( formatString, pVar->GetName(), string, pVar->GetHelp() ? pVar->GetHelp() : "" );
+	}
+
+}
+
+static void Help_f()
+{
+	if ( Cmd_Argc() != 2 )
+	{
+		Com_Print( "Usage: help <cmd/cvar>\n" );
+		return;
+	}
+
+	const char *name = Cmd_Argv( 1 );
+	if ( !name[0] )
+	{
+		return;
+	}
+
+	// search cmds
+	for ( cmdFunction_t *pCmd = cmd_functions; pCmd; pCmd = pCmd->pNext )
+	{
+		if ( Q_stricmp( pCmd->pName, name ) == 0 )
+		{
+			Com_Printf( " - %s\n", pCmd->pHelp );
+		}
+	}
+
+	// search cvars
+	for ( cvar_t *pVar = cvar_vars; pVar; pVar = pVar->pNext )
+	{
+		if ( Q_stricmp( pVar->GetName(), name ) == 0 )
+		{
+			Cvar_PrintValue( pVar );
+			Cvar_PrintFlags( pVar );
+			Cvar_PrintHelp( pVar );
+		}
+	}
+}
 
 void Cvar_Init()
 {
-#ifdef Q_ENGINE
 	Cmd_AddCommand( "set", Cvar_Set_f, "Interesting magical command." );
 	Cmd_AddCommand( "toggle", Cvar_Toggle_f, "Toggles a convar as if it were a bool." );
 	Cmd_AddCommand( "cvarList", Cvar_List_f, "Lists all cvars." );
-#endif
+
+	// Misfit commands
+	Cmd_AddCommand( "find", Find_f, "Finds all cmds and cvars with <param> in the name, use * to list all." );
+	Cmd_AddCommand( "help", Help_f, "Displays help for a given cmd or cvar." );
 }
 
 void Cvar_Shutdown()
@@ -627,6 +792,7 @@ void Cvar_Shutdown()
 	while ( cvar_vars )
 	{
 		cvar_t *pNext = cvar_vars->pNext;
+		// FIXME: LMFAO :-)
 		cvar_vars->name.~string();
 		cvar_vars->value.~string();
 		cvar_vars->help.~string();

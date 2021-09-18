@@ -43,3 +43,5 @@ void		R_DestroyFBO( int fbo );
 void		R_BindFBO( int fbo );
 void		R_BindDefaultFBO();
 uint		R_TexNumFBO( int fbo );
+
+void *		R_GetDefaultTexture();
