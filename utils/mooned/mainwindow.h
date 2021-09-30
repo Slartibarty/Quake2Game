@@ -82,3 +82,5 @@ private:
 	QAction *	toolClipAct;
 	QAction *	toolVertexAct;
 };
+
+extern MainWindow *g_pMainWindow;

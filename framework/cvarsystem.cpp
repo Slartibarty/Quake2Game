@@ -44,6 +44,13 @@ static void Cvar_SetDerivatives( cvar_t *var )
 	var->intValue = Q_atoi( var->value.c_str() );
 }
 
+static void Cvar_Add( cvar_t *var )
+{
+	// link the variable in
+	var->pNext = cvar_vars;
+	cvar_vars = var;
+}
+
 cvar_t *Cvar_Find( const char *name )
 {
 	// hashing doesn't help here, in fact it's somehow slower
@@ -88,10 +95,11 @@ char *Cvar_CompleteVariable( const char *partial )
 
 // If the variable already exists, the value will not be set
 // The flags will be or'ed in if the variable exists.
-cvar_t *Cvar_Get( const char *name, const char *value, uint32 flags, const char *help )
+cvar_t *Cvar_Get( const char *name, const char *value, uint32 flags, const char *help, changeCallback_t callback )
 {
-	assert( name );
-	assert( value );
+	assert( name && name[0] && value);
+
+	assert( !( flags & CVAR_MODIFIED ) );
 
 	if ( flags & ( CVAR_USERINFO | CVAR_SERVERINFO ) )
 	{
@@ -115,6 +123,18 @@ cvar_t *Cvar_Get( const char *name, const char *value, uint32 flags, const char 
 			else
 			{
 				Com_Printf( S_COLOR_YELLOW "Warning: cvar %s has help defined in multiple locations\n", name );
+			}
+		}
+		if ( callback )
+		{
+			// if no callback, make this the callback
+			if ( !var->pCallback )
+			{
+				var->pCallback = callback;
+			}
+			else
+			{
+				Com_Printf( S_COLOR_YELLOW "Warning: cvar %s has callback defined in multiple locations\n", name );
 			}
 		}
 		var->flags |= flags;
@@ -141,12 +161,13 @@ cvar_t *Cvar_Get( const char *name, const char *value, uint32 flags, const char 
 	if ( help ) {
 		var->help.assign( help );
 	}
+	if ( callback ) {
+		var->pCallback = callback;
+	}
 
 	Cvar_SetDerivatives( var );
 
-	// link the variable in
-	var->pNext = cvar_vars;
-	cvar_vars = var;
+	Cvar_Add( var );
 
 	var->flags = flags;
 
@@ -204,6 +225,28 @@ static cvar_t *Cvar_Set_Internal( cvar_t *var, const char *value, bool force )
 		}
 	}
 
+	char *oldString;
+	float oldFloat;
+	int oldInt;
+
+	auto setOldValues = [&]()
+	{
+		if ( var->pCallback ) {
+			// Save off the old values
+			oldString = Mem_CopyString( var->value.c_str() );
+			oldFloat = var->fltValue;
+			oldInt = var->intValue;
+		}
+	};
+
+	auto fireCallback = [&]()
+	{
+		if ( var->pCallback ) {
+			var->pCallback( var, oldString, oldFloat, oldInt );
+			Mem_Free( oldString );
+		}
+	};
+
 	if ( !force )
 	{
 		if ( var->flags & CVAR_INIT )
@@ -236,8 +279,12 @@ static cvar_t *Cvar_Set_Internal( cvar_t *var, const char *value, bool force )
 			}
 			else
 			{
+				setOldValues();
+
 				var->value.assign( value );
 				Cvar_SetDerivatives( var );
+
+				fireCallback();
 			}
 
 			return var;
@@ -262,8 +309,12 @@ static cvar_t *Cvar_Set_Internal( cvar_t *var, const char *value, bool force )
 		userinfo_modified = true;
 	}
 
+	setOldValues();
+
 	var->value.assign( value );
 	Cvar_SetDerivatives( var );
+
+	fireCallback();
 
 	var->SetModified();
 
@@ -284,20 +335,9 @@ void Cvar_FullSet( const char *name, const char *value, uint32 flags )
 		return;
 	}
 
-	if ( var->flags & CVAR_USERINFO ) {
-		// transmit at next opportunity
-		userinfo_modified = true;
-	}
-
 	var->flags = flags;
 
-	if ( Q_strcmp( value, var->value.c_str() ) != 0 ) {
-		// value changed
-		var->value.assign( value );
-		Cvar_SetDerivatives( var );
-
-		var->SetModified();
-	}
+	Cvar_Set_Internal( var, value, true );
 }
 
 //=================================================================================================
@@ -396,6 +436,10 @@ void Cvar_GetLatchedVars()
 			continue;
 		}
 
+		Cvar_Set_Internal( var, var->latchedValue.c_str(), false );
+
+		// FIXME: This doesn't call the callback... latch cvars suck
+
 		// TODO: wtf?
 		var->value = std::move( var->latchedValue );
 		//Mem_Free( var->value );
@@ -455,8 +499,26 @@ void Cvar_PrintFlags( cvar_t *var )
 	{
 		Com_Print( " modified" );
 	}*/
+	if ( flags & CVAR_STATIC )
+	{
+		Com_Print( " static" );
+	}
 
 	Com_Print( "\n" );
+}
+
+void Cvar_CallCallback( cvar_t *var )
+{
+	if ( var->pCallback )
+	{
+		var->pCallback( var, var->GetString(), var->GetFloat(), var->GetInt() );
+	}
+#ifdef Q_DEBUG
+	else
+	{
+		Com_Printf( S_COLOR_YELLOW "[CvarSystem] Tried to call callback for \"%s\", but it doesn't have one!", var->GetName() );
+	}
+#endif
 }
 
 void Cvar_WriteVariables( fsHandle_t handle )
@@ -473,8 +535,6 @@ void Cvar_WriteVariables( fsHandle_t handle )
 	}
 }
 
-#ifndef Q_ENGINE
-
 // This should probably be moved elsewhere
 
 void Cvar_AddEarlyCommands( int argc, char **argv )
@@ -488,8 +548,6 @@ void Cvar_AddEarlyCommands( int argc, char **argv )
 		}
 	}
 }
-
-#endif
 
 //=================================================================================================
 
@@ -663,7 +721,7 @@ static void Find_f()
 		}
 	}
 
-	std::sort( cmdMatches.begin(), cmdMatches.end() );
+	//std::sort( cmdMatches.begin(), cmdMatches.end() );
 
 	std::vector<cvar_t *> cvarMatches;
 
@@ -688,7 +746,7 @@ static void Find_f()
 		}
 	}
 
-	std::sort( cvarMatches.begin(), cvarMatches.end() );
+	//std::sort( cvarMatches.begin(), cvarMatches.end() );
 
 	// build the format string
 
@@ -722,14 +780,14 @@ static void Find_f()
 
 	std::string cmdNameGreen;
 
-	for ( const auto &pCmd : cmdMatches )
+	for ( const cmdFunction_t *pCmd : cmdMatches )
 	{
 		cmdNameGreen.assign( S_COLOR_GREEN );
 		cmdNameGreen.append( pCmd->pName );
 		Com_Printf( formatString2, cmdNameGreen.c_str(), S_COLOR_WHITE "", pCmd->pHelp ? pCmd->pHelp : "" );
 	}
 
-	for ( const auto &pVar : cvarMatches )
+	for ( const cvar_t *pVar : cvarMatches )
 	{
 		const char *string = pVar->GetString();
 		if ( string[0] == '\0' )
@@ -792,12 +850,47 @@ void Cvar_Shutdown()
 	while ( cvar_vars )
 	{
 		cvar_t *pNext = cvar_vars->pNext;
-		// FIXME: LMFAO :-)
-		cvar_vars->name.~string();
-		cvar_vars->value.~string();
-		cvar_vars->help.~string();
-		cvar_vars->latchedValue.~string();
-		Mem_Free( cvar_vars );
+		if ( !( cvar_vars->flags & CVAR_STATIC ) )
+		{
+			// FIXME: LMFAO :-)
+			cvar_vars->name.~string();
+			cvar_vars->value.~string();
+			cvar_vars->help.~string();
+			cvar_vars->latchedValue.~string();
+			Mem_Free( cvar_vars );
+		}
 		cvar_vars = pNext;
 	}
+}
+
+/*
+===================================================================================================
+
+	Statically defined cvars
+
+===================================================================================================
+*/
+
+StaticCvar::StaticCvar( const char *Name, const char *Value, uint32 Flags, const char *Help, changeCallback_t Callback )
+{
+	assert( Name && Name[0] && Value );
+
+#ifdef Q_DEBUG
+	if ( Cvar_Find( Name ) )
+	{
+		assert( !"Multiply defined static cvar!" );
+		exit( EXIT_FAILURE );
+	}
+#endif
+
+	name.assign( Name );
+	value.assign( Value );
+	flags = Flags |= CVAR_STATIC;
+
+	Cvar_SetDerivatives( this );
+
+	if ( Help ) help.assign( Help );
+	if ( Callback ) pCallback = Callback;
+
+	Cvar_Add( this );
 }

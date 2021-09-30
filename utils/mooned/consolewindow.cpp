@@ -1,12 +1,11 @@
 
 #include "mooned_local.h"
 
-#include "events.h"
-
 #include "ui_contest.h"
 #include "consolewindow.h"
 
-static bool s_commandsAdded;
+// The only instance of the console window
+ConsoleWindow *g_pConsoleWindow;
 
 // So we can start logging immediately
 static QString s_text;
@@ -20,22 +19,19 @@ void Con_Print( const char *msg )
 	}
 }
 
-static void Con_Clear_f()
+CON_COMMAND( clear, "Clear the console buffer.", 0 )
 {
 	s_text.clear();
-	assert( g_pConsoleWindow ); // Should not be fired before init
-	g_pConsoleWindow->Update();
-}
-
-static void Con_RegisterCommands()
-{
-	Cmd_AddCommand( "clear", Con_Clear_f, "Clear the console buffer." );
+	if ( g_pConsoleWindow )
+	{
+		g_pConsoleWindow->Update();
+	}
 }
 
 //=================================================================================================
 
 ConsoleWindow::ConsoleWindow( QWidget *parent )
-	: QWidget( parent )
+	: Super( parent )
 	, ui( new Ui::ConsoleWindow )
 {
 	ui->setupUi( this );
@@ -43,24 +39,18 @@ ConsoleWindow::ConsoleWindow( QWidget *parent )
 	connect( ui->submitButton, &QPushButton::clicked, this, &ConsoleWindow::SubmitText );
 	connect( ui->lineEdit, &QLineEdit::returnPressed, this, &ConsoleWindow::SubmitText );
 
-	if ( !s_commandsAdded )
-	{
-		Con_RegisterCommands();
-	}
-
 	Update();
 }
 
 ConsoleWindow::~ConsoleWindow()
 {
-	delete ui;
 }
 
 //=================================================================================================
 
 void ConsoleWindow::SubmitText()
 {
-	QByteArray byteArray = ui->lineEdit->text().toUtf8().constData();
+	QByteArray byteArray = ui->lineEdit->text().toUtf8();
 	const char *text = byteArray.constData();
 
 	// backslash text are commands, else chat

@@ -48,6 +48,8 @@
 #define FORCEINLINE			__forceinline
 #define ASSUME_(x)			__assume(x)
 
+#define abstract_class		class __declspec(novtable)
+
 #else
 
 #define MAX_OSPATH			UNIX_MAX_PATH
@@ -57,6 +59,8 @@
 #define RESTRICT			__restrict__
 #define FORCEINLINE			inline
 #define ASSUME_(x)
+
+#define abstract_class		class
 
 #endif
 

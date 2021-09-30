@@ -5,6 +5,9 @@
 
 #include "mainwindow.h"
 
+// The only instance of the main window
+MainWindow *g_pMainWindow;
+
 MainWindow::MainWindow()
 	: mdiArea( new QMdiArea )
 {
@@ -218,7 +221,7 @@ void MainWindow::paste()
 
 void MainWindow::about()
 {
-	QMessageBox::about( this, tr( "About " APP_NAME ), tr( "Sup..." ) );
+	QMessageBox::about( this, tr( "About " APP_NAME ), tr( "Hey. This is MoonEd.\nThis is MoonEd..." ) );
 }
 
 void MainWindow::updateMenus()
@@ -303,7 +306,7 @@ void MainWindow::createActions()
 	QMenu *pFileMenu = menuBar()->addMenu( tr( "&File" ) );
 	QToolBar *pFileToolbar = addToolBar( tr( "File" ) );
 
-	QIcon newIcon = QIcon::fromTheme( "document-new", QIcon( "toolsimages:/mooned/new.png" ) );
+	QIcon newIcon = QIcon( "toolsimages:/mooned/new.png" );
 	newAct = new QAction( newIcon, tr( "&New" ), this );
 	newAct->setShortcuts( QKeySequence::New );
 	newAct->setStatusTip( tr( "Create a new file" ) );
@@ -311,7 +314,7 @@ void MainWindow::createActions()
 	pFileMenu->addAction( newAct );
 	pFileToolbar->addAction( newAct );
 
-	const QIcon openIcon = QIcon::fromTheme( "document-open", QIcon( "toolsimages:/mooned/open.png" ) );
+	const QIcon openIcon = QIcon( "toolsimages:/mooned/open.png" );
 	QAction *openAct = new QAction( openIcon, tr( "&Open..." ), this );
 	openAct->setShortcuts( QKeySequence::Open );
 	openAct->setStatusTip( tr( "Open an existing file" ) );
@@ -319,7 +322,7 @@ void MainWindow::createActions()
 	pFileMenu->addAction( openAct );
 	pFileToolbar->addAction( openAct );
 
-	const QIcon saveIcon = QIcon::fromTheme( "document-save", QIcon( "toolsimages:/mooned/save.png" ) );
+	const QIcon saveIcon = QIcon( "toolsimages:/mooned/save.png" );
 	saveAct = new QAction( saveIcon, tr( "&Save" ), this );
 	saveAct->setShortcuts( QKeySequence::Save );
 	saveAct->setStatusTip( tr( "Save the document to disk" ) );
@@ -434,7 +437,8 @@ void MainWindow::createActions()
 
 	// Map Edit toolbar
 
-	QToolBar *mapEditToolbar = addToolBar( tr( "MapEdit" ) );
+	QToolBar *mapEditToolbar = new QToolBar( tr( "Map Edit" ), this );
+	addToolBar( Qt::LeftToolBarArea, mapEditToolbar );
 	mapEditToolbar->setIconSize( QSize( 40, 32 ) );
 
 	const QIcon selectIcon( "toolsimages:/mooned/tool_select.png" );

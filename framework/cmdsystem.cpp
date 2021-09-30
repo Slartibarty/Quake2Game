@@ -484,6 +484,12 @@ static char		cmd_args[MAX_STRING_CHARS];
 // possible commands to execute
 cmdFunction_t *cmd_functions;
 
+static void Cmd_Add( cmdFunction_t *pCmd )
+{
+	pCmd->pNext = cmd_functions;
+	cmd_functions = pCmd;
+}
+
 /*
 ========================
 Cmd_Argc
@@ -701,8 +707,8 @@ void Cmd_AddCommand( const char *cmd_name, xcommand_t function, const char *help
 	pCmd->pName = cmd_name;
 	pCmd->pHelp = help;
 	pCmd->pFunction = function;
-	pCmd->pNext = cmd_functions;
-	cmd_functions = pCmd;
+
+	Cmd_Add( pCmd );
 }
 
 /*
@@ -936,7 +942,10 @@ void Cmd_Shutdown()
 	while ( cmd_functions )
 	{
 		cmdFunction_t *pNext = cmd_functions->pNext;
-		Mem_Free( cmd_functions );
+		if ( !( cmd_functions->flags & CMD_STATIC ) )
+		{
+			Mem_Free( cmd_functions );
+		}
 		cmd_functions = pNext;
 	}
 
@@ -956,4 +965,24 @@ void Cmd_Shutdown()
 	}
 	cmd_argc = 0;
 	cmd_args[0] = 0;
+}
+
+/*
+===================================================================================================
+
+	Statically defined commands
+
+===================================================================================================
+*/
+
+StaticCmd::StaticCmd( const char *Name, xcommand_t Function, const char *Help, uint32 Flags )
+{
+	pName = Name;
+	pHelp = Help;
+	pFunction = Function;
+	pNext = nullptr;
+
+	flags = Flags |= CMD_STATIC;
+
+	Cmd_Add( this );
 }

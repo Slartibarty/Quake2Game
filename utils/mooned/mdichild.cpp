@@ -4,7 +4,17 @@
 #include "mdichild.h"
 
 MdiChild::MdiChild()
+	: gridLayout( this )
+	, view1( this ), view2( this )
+	, view3( this ), view4( this )
 {
+	//gridLayout.setSpacing( 0 );
+	gridLayout.setContentsMargins( QMargins( 0, 0, 0, 0 ) );
+	gridLayout.addWidget( &view1, 1, 1 );
+	gridLayout.addWidget( &view2, 1, 2 );
+	gridLayout.addWidget( &view3, 2, 1 );
+	gridLayout.addWidget( &view4, 2, 2 );
+
 	setAttribute( Qt::WA_DeleteOnClose );
 	isUntitled = true;
 }

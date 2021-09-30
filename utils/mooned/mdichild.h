@@ -1,9 +1,20 @@
 
 #pragma once
 
+#include "mapview2d.h"
+#include "mapview3d.h"
+
 class MdiChild : public QWidget
 {
 	Q_OBJECT
+
+private:
+
+	QGridLayout gridLayout;
+	MapView3D view1;
+	MapView2D view2;
+	MapView2D view3;
+	MapView2D view4;
 
 public:
 	MdiChild();

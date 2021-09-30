@@ -25,7 +25,7 @@
 =======================================
 */
 
-void Q_strcpy_s( char *pDest, strlen_t nDestSize, const char *pSrc )
+void Q_strcpy_s( _Post_z_ char *pDest, strlen_t nDestSize, const char *pSrc )
 {
 	assert( ( pDest && pSrc ) && nDestSize != 0 );
 

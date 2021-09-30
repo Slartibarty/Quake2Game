@@ -671,8 +671,7 @@ void Com_Init( int argc, char **argv )
 	// a basedir or cddir needs to be set before execing
 	// config files, but we want other parms to override
 	// the settings of the config files
-	Cbuf_AddEarlyCommands( argc, argv );
-	Cbuf_Execute();
+	Cvar_AddEarlyCommands( argc, argv );
 
 	// Systems before this are not allowed to fail
 
@@ -682,9 +681,10 @@ void Com_Init( int argc, char **argv )
 	Cbuf_AddText( "exec default.cfg\n" );
 	Cbuf_AddText( "exec config.cfg\n" );
 	Cbuf_AddText( "exec autoexec.cfg\n" );
-
-	Cbuf_AddEarlyCommands( argc, argv );
 	Cbuf_Execute();
+
+	// command line priority
+	Cvar_AddEarlyCommands( argc, argv );
 
 	// cvars and commands
 

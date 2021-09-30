@@ -30,6 +30,10 @@ premake.extensions.qt.modules = {
 		links = { "OpenGL32" },
 		defines = { "QT_OPENGL_LIB" }
 	},
+	-- Qt6 moved the OpenGL widgets to OpenGLWidgets.lib
+	openglhack = {
+		name = "OpenGLWidgets"
+	},
 	positioning = {
 		name = "Positioning",
 		include = "QtPositioning",

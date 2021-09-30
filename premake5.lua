@@ -71,7 +71,7 @@ warnings "Default"
 floatingpoint "Fast"
 characterset "Unicode"
 exceptionhandling "Off"
-editandcontinue "Off"
+editandcontinue "On"
 
 -- Config for all 64-bit projects
 filter( filter_64bit )
@@ -479,6 +479,18 @@ project "game"
 if not _OPTIONS["exclude-utils"] then
 
 	group "utilities"
+	
+	project "moduletest"
+		kind "ConsoleApp"
+		targetname "moduletest"
+		language "C++"
+		floatingpoint "Default"
+		targetdir( out_dir )
+		debugdir( out_dir )
+
+		files {
+			"utils/moduletest/*"
+		}
 
 	project "mooned"
 		kind "WindowedApp"
@@ -489,7 +501,7 @@ if not _OPTIONS["exclude-utils"] then
 		debugdir( out_dir )
 		defines { "QT_DISABLE_DEPRECATED_BEFORE=0x060000" }
 		links { "core", "comctl32" }
-		includedirs { "thirdparty/rapidjson/include", "utils/mooned" }
+		includedirs { "thirdparty/rapidjson/include", "thirdparty/glm", "utils/mooned" }
 		
 		filter "system:windows"
 			linkoptions { "/ENTRY:mainCRTStartup" }
@@ -518,7 +530,7 @@ if not _OPTIONS["exclude-utils"] then
 			qtsuffix "d"
 		filter {}
 		
-		qtmodules { "core", "gui", "widgets", "opengl" }
+		qtmodules { "core", "gui", "widgets", "opengl", "openglhack" }
 		
 	project "qbsp4"
 		kind "ConsoleApp"

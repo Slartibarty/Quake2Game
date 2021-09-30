@@ -41,7 +41,7 @@ char *		Cvar_CompleteVariable( const char *partial );
 			// creates the variable if it doesn't exist, or returns the existing one
 			// if it exists, the value will not be changed, but flags will be ORed in
 			// that allows variables to be unarchived without needing bitflags
-cvar_t *	Cvar_Get( const char *name, const char *value, uint32 flags, const char *help = nullptr );
+cvar_t *	Cvar_Get( const char *name, const char *value, uint32 flags, const char *help = nullptr, changeCallback_t callback = nullptr );
 
 			// finds and returns the value of a variable
 const char *Cvar_FindGetString( const char *name );			// returns an empty string if not found
@@ -81,13 +81,13 @@ void		Cvar_PrintValue( cvar_t *var );
 void		Cvar_PrintHelp( cvar_t *var );
 void		Cvar_PrintFlags( cvar_t *var );
 
+void		Cvar_CallCallback( cvar_t *var );
+
 			// appends lines containing "set variable value" for all variables
 			// with the archive flag set to true.
 void 		Cvar_WriteVariables( fsHandle_t handle );
 
-#ifndef Q_ENGINE
 void		Cvar_AddEarlyCommands( int argc, char **argv );
-#endif
 
 #ifdef Q_ENGINE
 			// returns an info string containing all the CVAR_USERINFO cvars
@@ -98,3 +98,20 @@ char *		Cvar_Serverinfo();
 
 void		Cvar_Init();
 void		Cvar_Shutdown();
+
+/*
+===================================================================================================
+
+	Statically defined cvars
+
+===================================================================================================
+*/
+
+class StaticCvar : public cvar_t
+{
+public:
+	StaticCvar( const char *Name, const char *Value, uint32 Flags, const char *Help = nullptr, changeCallback_t Callback = nullptr );
+	~StaticCvar() = default;
+};
+
+static_assert( sizeof( StaticCvar ) == sizeof( cvar_t ) );

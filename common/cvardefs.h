@@ -1,15 +1,20 @@
 
 #pragma once
 
+struct cvar_t;
+
+typedef void ( *changeCallback_t )( cvar_t *pVar, const char *pOldString, float oldFloat, int oldInt );
+
 enum cvarFlags_t : uint32
 {
-	CVAR_ARCHIVE		= 1,	// will be written to config.cfg
-	CVAR_USERINFO		= 2,	// added to userinfo when changed
-	CVAR_SERVERINFO		= 4,	// added to serverinfo when changed
-	CVAR_INIT			= 8,	// can only be set from the command-line
-	CVAR_LATCH			= 16,	// save changes until server restart
-	CVAR_CHEAT			= 32,	// variable is considered a cheat
-	CVAR_MODIFIED		= 64	// set when the variable is modified
+	CVAR_ARCHIVE		= BIT(0),	// will be written to config.cfg
+	CVAR_USERINFO		= BIT(1),	// added to userinfo when changed
+	CVAR_SERVERINFO		= BIT(2),	// added to serverinfo when changed
+	CVAR_INIT			= BIT(3),	// can only be set from the command-line
+	CVAR_LATCH			= BIT(4),	// save changes until server restart
+	CVAR_CHEAT			= BIT(5),	// variable is considered a cheat
+	CVAR_MODIFIED		= BIT(6),	// set when the variable is modified
+	CVAR_STATIC			= BIT(7)	// this cvar is static (do not free)
 };
 
 // nothing outside the Cvar_*() functions should modify these fields!
@@ -17,14 +22,15 @@ struct cvar_t
 {
 //private:
 
-	lab::string		name;
-	lab::string		value;
-	lab::string		help;				// null if no help
-	lab::string		latchedValue;		// null if no latched value
-	uint32			flags;
-	float			fltValue;
-	int				intValue;
-	cvar_t *		pNext;
+	lab::string			name;
+	lab::string			value;
+	lab::string			help;				// null if no help
+	lab::string			latchedValue;		// null if no latched value
+	uint32				flags;
+	float				fltValue;
+	int					intValue;
+	changeCallback_t	pCallback;
+	cvar_t *			pNext;
 
 //public:
 
@@ -42,3 +48,6 @@ struct cvar_t
 
 	uint32			GetFlags() const	{ return flags; }
 };
+
+#define CVAR_CALLBACK(name) \
+static void name( cvar_t *var, const char *oldString, float oldFloat, int oldInt )

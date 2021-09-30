@@ -28,9 +28,6 @@ inline void Framework_Init( int argc, char **argv )
 	Cvar_AddEarlyCommands( argc, argv );
 
 	FileSystem::Init();
-
-	// add + commands
-	Cbuf_AddLateCommands( argc, argv );
 }
 
 inline void Framework_Shutdown()

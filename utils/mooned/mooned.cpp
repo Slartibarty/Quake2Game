@@ -16,7 +16,7 @@
 #endif
 
 // Local
-#include "events.h"
+#include "r_public.h"
 
 #include "mainwindow.h"
 #include "consolewindow.h"
@@ -45,12 +45,93 @@ protected:
 };
 #endif
 
-static MainWindow *g_pMainWindow;
-ConsoleWindow *g_pConsoleWindow;
+CON_COMMAND( version, "MoonEd version info.", 0 )
+{
+	Com_Print( APP_NAME " version " APP_VERSION " by Slartibarty\n" );
+}
 
-static void MoonEd_Quit()
+CON_COMMAND( quit, "Exits MoonEd.", 0 )
 {
 	QApplication::quit();
+}
+
+CVAR_CALLBACK( StyleCallback )
+{
+	if ( var->GetString()[0] != '\0' )
+	{
+		QApplication::setStyle( var->GetString() );
+	}
+}
+
+static StaticCvar qt_style( "qt_style", "", 0, "The Qt style to use.", StyleCallback );
+
+static void MoonEd_Init( int argc, char **argv )
+{
+	Cbuf_Init();
+	Cmd_Init();
+	Cvar_Init();
+
+	Cvar_AddEarlyCommands( argc, argv );
+
+	// OVERSIGHT: filesystem doesn't get the luxury of using cvars from cfg files
+	FileSystem::Init();
+
+	// add config files
+	Cbuf_AddText( "exec moonedconfig.cfg\n" );
+	Cbuf_Execute();
+
+	// command line priority
+	Cvar_AddEarlyCommands( argc, argv );
+
+	// add + commands, will be fired after qt init
+	Cbuf_AddLateCommands( argc, argv );
+}
+
+static void MoonEd_Shutdown()
+{
+	FileSystem::Shutdown();
+	Cvar_Shutdown();
+	Cmd_Shutdown();
+	Cbuf_Shutdown();
+}
+
+static void MoonEd_FusionDark()
+{
+	// modify palette to dark
+	QPalette darkPalette = QApplication::palette();
+
+	darkPalette.setColor( QPalette::Window, QColor( 53, 53, 53 ) );
+	darkPalette.setColor( QPalette::WindowText, Qt::white );
+	darkPalette.setColor( QPalette::Disabled, QPalette::WindowText, QColor( 127, 127, 127 ) );
+	darkPalette.setColor( QPalette::Base, QColor( 42, 42, 42 ) );
+	darkPalette.setColor( QPalette::AlternateBase, QColor( 66, 66, 66 ) );
+	darkPalette.setColor( QPalette::ToolTipBase, Qt::white );
+	darkPalette.setColor( QPalette::ToolTipText, Qt::white );
+	darkPalette.setColor( QPalette::Text, Qt::white );
+	darkPalette.setColor( QPalette::Disabled, QPalette::Text, QColor( 127, 127, 127 ) );
+	darkPalette.setColor( QPalette::Dark, QColor( 35, 35, 35 ) );
+	darkPalette.setColor( QPalette::Shadow, QColor( 20, 20, 20 ) );
+	darkPalette.setColor( QPalette::Button, QColor( 53, 53, 53 ) );
+	darkPalette.setColor( QPalette::ButtonText, Qt::white );
+	darkPalette.setColor( QPalette::Disabled, QPalette::ButtonText, QColor( 127, 127, 127 ) );
+	darkPalette.setColor( QPalette::BrightText, Qt::red );
+	darkPalette.setColor( QPalette::Link, QColor( 42, 130, 218 ) );
+	darkPalette.setColor( QPalette::Highlight, QColor( 42, 130, 218 ) );
+	darkPalette.setColor( QPalette::Disabled, QPalette::Highlight, QColor( 80, 80, 80 ) );
+	darkPalette.setColor( QPalette::HighlightedText, Qt::white );
+	darkPalette.setColor( QPalette::Disabled, QPalette::HighlightedText, QColor( 127, 127, 127 ) );
+
+	QApplication::setPalette( darkPalette );
+}
+
+MainWindow *GetMainWnd()
+{
+	return g_pMainWindow;
+}
+
+ConsoleWindow *GetConsoleWnd()
+{
+	return g_pConsoleWindow;
 }
 
 int main( int argc, char **argv )
@@ -67,14 +148,12 @@ int main( int argc, char **argv )
 #endif
 #endif
 
-	Framework_Init( argc, argv );
+	MoonEd_Init( argc, argv );
 
-	Cmd_AddCommand( "quit", MoonEd_Quit, "Exits MoonEd." );
-
-	//QApplication::setStyle( "fusion" );
-	QCoreApplication::setOrganizationName( APP_COMPANYNAME );
-	QCoreApplication::setApplicationName( APP_NAME );
-	QCoreApplication::setApplicationVersion( APP_VERSION );
+	Cvar_CallCallback( &qt_style );
+	QApplication::setOrganizationName( APP_COMPANYNAME );
+	QApplication::setApplicationName( APP_NAME );
+	QApplication::setApplicationVersion( APP_VERSION );
 
 	// Add resource search paths
 	// Unfortunately the first search path with the folder gets priority for all
@@ -84,6 +163,8 @@ int main( int argc, char **argv )
 
 	QApplication app( argc, argv );
 
+	//MoonEd_FusionDark();
+
 	QApplication::setWindowIcon( QIcon( "toolsimages:/mooned/mooned.ico" ) );
 
 	g_pMainWindow = new MainWindow;
@@ -92,14 +173,18 @@ int main( int argc, char **argv )
 	g_pMainWindow->show();
 	g_pConsoleWindow->show();
 
-	//QEventLoop eventLoop;
+	// FIXME: GOTTA FIND A WAY INTO QT'S EVENT LOOP!
+	Cbuf_Execute();
 
 	int result = QApplication::exec();
 
+	// TODO: THERE IS A QT FUNCTION FOR ONEXIT, DO THIS THERE!!!
 	delete g_pConsoleWindow;
 	delete g_pMainWindow;
 
-	Framework_Shutdown();
+	R_Shutdown();
+
+	MoonEd_Shutdown();
 
 	return result;
 }

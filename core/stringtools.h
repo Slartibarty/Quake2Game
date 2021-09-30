@@ -35,10 +35,10 @@ using strlen_t = uint32;
 =======================================
 */
 
-void Q_strcpy_s( char *pDest, strlen_t nDestSize, const char *pSrc );
+void Q_strcpy_s( _Post_z_ char *pDest, strlen_t nDestSize, const char *pSrc );
 
 template< strlen_t nDestSize >
-inline void Q_strcpy_s( char( &pDest )[nDestSize], const char *pSrc ) {
+inline void Q_strcpy_s( _Post_z_ char( &pDest )[nDestSize], const char *pSrc ) {
 	Q_strcpy_s( pDest, nDestSize, pSrc );
 }
 

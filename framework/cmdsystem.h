@@ -77,6 +77,12 @@ then searches for a command or variable that matches the first token.
 
 typedef void ( *xcommand_t )( void );
 
+enum cmdFlags_t : uint32
+{
+	CMD_STATIC	= BIT(0),	// this cmd is static (do not free)
+	CMD_CHEAT	= BIT(1),	// this cmd is a cheat
+};
+
 // HACK: would be nice to find a way to iterate through commands without having this be visible
 // this is only here to satisfy the console
 struct cmdFunction_t
@@ -85,6 +91,8 @@ struct cmdFunction_t
 	const char *		pHelp;
 	xcommand_t			pFunction;
 	cmdFunction_t *		pNext;
+
+	uint32				flags;
 };
 
 // possible commands to execute
@@ -128,3 +136,25 @@ void	Cmd_ForwardToServer( void );
 // adds the current command line as a clc_stringcmd to the client message.
 // things like godmode, noclip, etc, are commands directed to the server,
 // so when they are typed in at the console, they will need to be forwarded.
+
+/*
+===================================================================================================
+
+	Statically defined commands
+
+===================================================================================================
+*/
+
+class StaticCmd : public cmdFunction_t
+{
+public:
+	StaticCmd( const char *Name, xcommand_t Function, const char *Help = nullptr, uint32 Flags = 0 );
+	~StaticCmd() = default;
+};
+
+static_assert( sizeof( StaticCmd ) == sizeof( cmdFunction_t ) );
+
+#define CON_COMMAND(name, help, flags) \
+	static void name(); \
+	static StaticCmd name##_cmd(#name, name, help); \
+	static void name()
