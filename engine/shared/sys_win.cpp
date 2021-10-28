@@ -266,31 +266,6 @@ void Sys_ConsoleOutput (const char *string)
 		WriteFile(houtput, console_text, console_textlen, &dummy, NULL);
 }
 
-char *Sys_GetClipboardData()
-{
-	char *data = nullptr;
-
-	if ( OpenClipboard( nullptr ) )
-	{
-		HANDLE clipData = GetClipboardData( CF_TEXT );
-
-		if ( clipData )
-		{
-			char *clipText = (char *)GlobalLock( clipData );
-
-			if ( clipText )
-			{
-				data = Mem_CopyString( clipText );
-				GlobalUnlock( clipData );
-			}
-		}
-
-		CloseClipboard();
-	}
-
-	return data;
-}
-
 /*
 ===================================================================================================
 
@@ -612,9 +587,6 @@ main
 */
 int main( int argc, char **argv )
 {
-	MSG msg;
-	int frameTime, oldTime, newTime;
-
 	// Make sure the CRT thinks we're a GUI app, this makes CRT asserts use a message box
 	// rather than printing to stderr
 	_set_app_type( _crt_gui_app );
@@ -624,9 +596,7 @@ int main( int argc, char **argv )
 	//SetErrorMode( SEM_FAILCRITICALERRORS );
 
 #ifdef Q_MEM_DEBUG
-	int dbgFlags = _CrtSetDbgFlag( _CRTDBG_REPORT_FLAG );
-	dbgFlags |= _CRTDBG_LEAK_CHECK_DF;
-	_CrtSetDbgFlag( dbgFlags );
+	_CrtSetDbgFlag( _CrtSetDbgFlag( _CRTDBG_REPORT_FLAG ) | _CRTDBG_LEAK_CHECK_DF );
 #endif
 
 	if ( !IsWindows7SP1OrGreater() )
@@ -659,6 +629,9 @@ int main( int argc, char **argv )
 	}
 
 	assert( dedicated );
+
+	int frameTime, oldTime, newTime;
+	MSG msg;
 
 	oldTime = Sys_Milliseconds();
 

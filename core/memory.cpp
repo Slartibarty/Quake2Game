@@ -144,6 +144,10 @@ void Mem_TagFree( void *block )
 	z = (zhead_t *)block - 1;
 
 	assert( z->magic == Z_MAGIC );
+	if ( z->magic != Z_MAGIC )
+	{
+		return;
+	}
 
 	z->prev->next = z->next;
 	z->next->prev = z->prev;

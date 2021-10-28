@@ -139,6 +139,31 @@ void Sys_OutputDebugString( const char *msg )
 #endif
 }
 
+char *Sys_GetClipboardData()
+{
+	char *data = nullptr;
+
+	if ( OpenClipboard( nullptr ) )
+	{
+		HANDLE clipData = GetClipboardData( CF_TEXT );
+
+		if ( clipData )
+		{
+			char *clipText = (char *)GlobalLock( clipData );
+
+			if ( clipText )
+			{
+				data = Mem_CopyString( clipText );
+				GlobalUnlock( clipData );
+			}
+		}
+
+		CloseClipboard();
+	}
+
+	return data;
+}
+
 // I hate this
 void Sys_UTF8ToUTF16( const char *pIn, strlen_t inSizeInChars, wchar_t *pOut, strlen_t outSizeInChars )
 {

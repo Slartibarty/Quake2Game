@@ -21,7 +21,7 @@
 
 #include "framework_local.h"
 
-#include "rapidjson/document.h"
+#include "../thirdparty/rapidjson/include/rapidjson/document.h"
 
 #ifdef _WIN32
 #include "../../core/sys_includes.h"

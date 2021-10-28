@@ -319,7 +319,7 @@ struct vec3
 };
 
 // ensure triviality
-static_assert( std::is_trivial<vec3>::value, "vec3 is not trivial" );
+static_assert( std::is_trivial<vec3>::value, "vec3 is supposed to be a trivial type!" );
 
 inline float Vec3DotProduct( const vec3 &v1, const vec3 &v2 )
 {

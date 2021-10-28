@@ -35,12 +35,12 @@ void							Mem_Free( void *block );
 
 // mem debug is never active on Linux
 
-#define Mem_Alloc( a ) malloc( a )
-#define Mem_ReAlloc( a, b ) realloc( a, b )
-#define Mem_ClearedAlloc( a ) calloc( 1, a )
-#define Mem_CopyString( a ) _strdup( a )
-#define Mem_Size( a ) _msize( a )
-#define Mem_Free( a ) free( a )
+#define Mem_Alloc( a )			malloc( a )
+#define Mem_ReAlloc( a, b )		realloc( a, b )
+#define Mem_ClearedAlloc( a )	calloc( 1, a )
+#define Mem_CopyString( a )		_strdup( a )
+#define Mem_Size( a )			_msize( a )
+#define Mem_Free( a )			free( a )
 
 #endif
 

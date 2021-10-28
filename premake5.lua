@@ -3,19 +3,25 @@
 -------------------------------------------------------------------------------
 
 -- Convenience locals
+
+-- Configurations, filters must be updated if these change
 local conf_dbg = "debug"
 local conf_rel = "release"
 local conf_rtl = "retail"
 
+-- Platforms
 local plat_64bit = "x64"
 
+-- Directories
 local build_dir = "build"
 local out_dir = "../game"
 
-local filter_dbg = "configurations:" .. conf_dbg
-local filter_rel_or_rtl = "configurations:release or retail" -- TODO: This shouldn't be necessary
-local filter_rtl = "configurations:" .. conf_rtl
+-- Filters for each config
+local filter_dbg = "configurations:debug"
+local filter_rel_or_rtl = "configurations:release or retail"
+local filter_rtl = "configurations:retail"
 
+-- Filters for each platform
 local filter_64bit = "platforms:" .. plat_64bit
 
 -- Options --------------------------------------------------------------------
@@ -67,6 +73,7 @@ includedirs { "thirdparty/stb", "thirdparty/DirectXMath" }
 flags { "MultiProcessorCompile", "NoBufferSecurityCheck" }
 staticruntime "On"
 cppdialect "C++latest"
+conformancemode "On"
 warnings "Default"
 floatingpoint "Fast"
 characterset "Unicode"
@@ -84,7 +91,7 @@ filter "system:windows"
 	defines { "WIN32", "_WINDOWS", "_CRT_SECURE_NO_WARNINGS" }
 filter {}
 
--- Config for Windows, release, clean this up!
+-- Config for Windows, release
 filter { "system:windows", filter_rel_or_rtl }
 	buildoptions { "/Gw" }
 filter {}
@@ -499,9 +506,9 @@ if not _OPTIONS["exclude-utils"] then
 		floatingpoint "Default"
 		targetdir( out_dir )
 		debugdir( out_dir )
-		defines { "QT_DISABLE_DEPRECATED_BEFORE=0x060000" }
+		defines { "GLEW_STATIC", "GLEW_NO_GLU", "QT_DISABLE_DEPRECATED_BEFORE=QT_VERSION" }
 		links { "core", "comctl32" }
-		includedirs { "thirdparty/rapidjson/include", "thirdparty/glm", "utils/mooned" }
+		includedirs { "thirdparty/glew/include", "thirdparty/rapidjson/include", "thirdparty/glm", "utils/mooned" }
 		
 		filter "system:windows"
 			linkoptions { "/ENTRY:mainCRTStartup" }
@@ -517,8 +524,12 @@ if not _OPTIONS["exclude-utils"] then
 			"resources/*",
 
 			"framework/*",
+			"framework/renderer/*",
 
 			"utils/mooned/**",
+			
+			glew_public,
+			glew_sources
 		}
 		
 		qt.enable()
@@ -532,6 +543,33 @@ if not _OPTIONS["exclude-utils"] then
 		
 		qtmodules { "core", "gui", "widgets", "opengl", "openglhack" }
 		
+	project "collisiontest"
+		kind "WindowedApp"
+		targetname "collisiontest"
+		language "C++"
+		floatingpoint "Default"
+		targetdir( out_dir )
+		debugdir( out_dir )
+		includedirs { "thirdparty/glew/include", "utils/collisiontest/Jolt" }
+		defines { "Q_CONSOLE_APP", "GLEW_STATIC", "GLEW_NO_GLU", "SDL_MAIN_HANDLED", "JPH_STAT_COLLECTOR", "JPH_PROFILE_ENABLED", "JPH_DEBUG_RENDERER", "JPH_FLOATING_POINT_EXCEPTIONS_ENABLED" }
+		links { "core", "opengl32", "comctl32", "utils/collisiontest/SDL2/lib/x64/SDL2", "utils/collisiontest/Jolt" }
+		
+		filter "system:windows"
+			linkoptions { "/ENTRY:mainCRTStartup" }
+		filter {}
+		
+		files {
+			"resources/*",
+
+			"framework/*",
+			"framework/renderer/*",
+
+			"utils/collisiontest/*",
+			
+			glew_public,
+			glew_sources
+		}
+
 	project "qbsp4"
 		kind "ConsoleApp"
 		targetname "qbsp4"

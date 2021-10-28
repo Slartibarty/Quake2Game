@@ -21,6 +21,7 @@
 #pragma once
 
 #include "../common/cvardefs.h"
+#include "../common/filesystem_interface.h"		// fsHandle_t
 
 // singly-linked list of all cvars
 extern cvar_t *cvar_vars;

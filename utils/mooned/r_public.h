@@ -11,21 +11,13 @@
 
 #pragma pop_macro("countof")
 
+#include "meshbuilder.h"
+
 /*
 =============================
 	r_main.cpp
 =============================
 */
-
-struct matrices_t
-{
-	glm::mat4 view;
-	glm::mat4 projection;
-};
-
-extern matrices_t g_matrices;
-
-extern QOpenGLFunctions_3_3_Compatibility *qgl;
 
 void R_Init();
 void R_Shutdown();
@@ -37,9 +29,6 @@ void R_Shutdown();
 */
 
 void R_Clear();
-void R_DrawWorldAxes();
-void R_DrawCrosshair( int windowWidth, int windowHeight );
-void R_DrawFrameRect( int windowWidth, int windowHeight );
 
 /*
 =============================
@@ -52,4 +41,5 @@ struct glProgs_t
 	GLuint dbgProg;
 };
 
-extern glProgs_t glProgs;
+void Shaders_Init( glProgs_t &glProgs );
+void Shaders_Shutdown( glProgs_t &glProgs );

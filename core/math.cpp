@@ -8,6 +8,8 @@
 
 #include "core.h"
 
+#include "math.h"
+
 vec3_t vec3_origin;
 
 /*

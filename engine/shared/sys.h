@@ -29,7 +29,6 @@ void	Sys_Quit( int code );
 [[noreturn]]
 void	Sys_Error( const platChar_t *mainInstruction, const char *msg );
 
-char *	Sys_GetClipboardData();
 void	Sys_CopyProtect();
 
 // common file dialog interface

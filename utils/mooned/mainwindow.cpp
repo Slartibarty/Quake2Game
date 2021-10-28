@@ -1,6 +1,7 @@
 
 #include "mooned_local.h"
 
+#include "buildnum.h"
 #include "mdichild.h"
 
 #include "mainwindow.h"
@@ -42,7 +43,7 @@ void MainWindow::closeEvent( QCloseEvent *event )
 void MainWindow::newFile()
 {
 	MdiChild *child = createMdiChild();
-	child->newFile();
+	child->NewFile();
 	child->show();
 }
 
@@ -73,7 +74,7 @@ bool MainWindow::openFile( const QString &fileName )
 bool MainWindow::loadFile( const QString &fileName )
 {
 	MdiChild *child = createMdiChild();
-	const bool succeeded = child->loadFile( fileName );
+	const bool succeeded = child->LoadFile( fileName );
 	if ( succeeded )
 	{
 		child->show();
@@ -174,7 +175,7 @@ void MainWindow::openRecentFile()
 
 void MainWindow::save()
 {
-	if ( activeMdiChild() && activeMdiChild()->save() )
+	if ( activeMdiChild() && activeMdiChild()->Save() )
 	{
 		statusBar()->showMessage( tr( "File saved" ), 2000 );
 	}
@@ -183,10 +184,10 @@ void MainWindow::save()
 void MainWindow::saveAs()
 {
 	MdiChild *child = activeMdiChild();
-	if ( child && child->saveAs() )
+	if ( child && child->SaveAs() )
 	{
 		statusBar()->showMessage( tr( "File saved" ), 2000 );
-		MainWindow::prependToRecentFiles( child->currentFile() );
+		MainWindow::prependToRecentFiles( child->CurrentFile() );
 	}
 }
 
@@ -221,7 +222,10 @@ void MainWindow::paste()
 
 void MainWindow::about()
 {
-	QMessageBox::about( this, tr( "About " APP_NAME ), tr( "Hey. This is MoonEd.\nThis is MoonEd..." ) );
+	char msg[32];
+	Q_sprintf_s( msg, "MoonEd version %d\n", GetBuildNum() );
+
+	QMessageBox::about( this, tr( "About " APP_NAME ), tr( msg ) );
 }
 
 void MainWindow::updateMenus()
@@ -273,11 +277,11 @@ void MainWindow::updateWindowMenu()
 		QString text;
 		if ( i < 9 )
 		{
-			text = tr( "&%1 %2" ).arg( i + 1 ).arg( child->userFriendlyCurrentFile() );
+			text = tr( "&%1 %2" ).arg( i + 1 ).arg( child->UserFriendlyCurrentFile() );
 		}
 		else
 		{
-			text = tr( "%1 %2" ).arg( i + 1 ).arg( child->userFriendlyCurrentFile() );
+			text = tr( "%1 %2" ).arg( i + 1 ).arg( child->UserFriendlyCurrentFile() );
 		}
 		QAction *action = windowMenu->addAction( text, mdiSubWindow, [this, mdiSubWindow]() {
 			mdiArea->setActiveSubWindow( mdiSubWindow );
@@ -529,7 +533,7 @@ QMdiSubWindow *MainWindow::findMdiChild( const QString &fileName ) const
 	for ( QMdiSubWindow *window : subWindows )
 	{
 		MdiChild *mdiChild = qobject_cast<MdiChild *>( window->widget() );
-		if ( mdiChild->currentFile() == canonicalFilePath )
+		if ( mdiChild->CurrentFile() == canonicalFilePath )
 			return window;
 	}
 	return nullptr;

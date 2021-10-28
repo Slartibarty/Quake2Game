@@ -13,14 +13,6 @@
 
 #include "cmdsystem.h"
 
-// The engine feeds commands through to the command buffer
-// utils execute immediately... Bad idea?
-#ifdef Q_ENGINE
-#define DoCommand Cbuf_InsertText
-#else
-#define DoCommand Cmd_ExecuteString
-#endif
-
 #define	MAX_CMD_BUFFER	16384
 #define	MAX_CMD_LINE	1024
 
@@ -707,6 +699,8 @@ void Cmd_AddCommand( const char *cmd_name, xcommand_t function, const char *help
 	pCmd->pName = cmd_name;
 	pCmd->pHelp = help;
 	pCmd->pFunction = function;
+
+	pCmd->flags = 0;
 
 	Cmd_Add( pCmd );
 }

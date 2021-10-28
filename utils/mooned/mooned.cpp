@@ -24,27 +24,6 @@
 // This module
 #include "mooned.h"
 
-#if 0
-class MoonEdApplication : public QApplication
-{
-	Q_OBJECT
-
-protected:
-	bool event( QEvent *event ) override
-	{
-		switch ( event->type() )
-		{
-		case EV_UPDATECBUF:
-			Cbuf_Execute();
-			return;
-		}
-
-		return QApplication::event( event );
-	}
-
-};
-#endif
-
 CON_COMMAND( version, "MoonEd version info.", 0 )
 {
 	Com_Print( APP_NAME " version " APP_VERSION " by Slartibarty\n" );
@@ -63,7 +42,7 @@ CVAR_CALLBACK( StyleCallback )
 	}
 }
 
-static StaticCvar qt_style( "qt_style", "", 0, "The Qt style to use.", StyleCallback );
+static StaticCvar qt_style( "qt_style", "fusion", 0, "The Qt style to use.", StyleCallback );
 
 static void MoonEd_Init( int argc, char **argv )
 {
@@ -140,15 +119,14 @@ int main( int argc, char **argv )
 	// Make sure the CRT thinks we're a GUI app, this makes CRT asserts use a message box
 	// rather than printing to stderr
 	_set_app_type( _crt_gui_app );
-
 #ifdef Q_MEM_DEBUG
-	int dbgFlags = _CrtSetDbgFlag( _CRTDBG_REPORT_FLAG );
-	dbgFlags |= _CRTDBG_LEAK_CHECK_DF;
-	_CrtSetDbgFlag( dbgFlags );
+	_CrtSetDbgFlag( _CrtSetDbgFlag( _CRTDBG_REPORT_FLAG ) | _CRTDBG_LEAK_CHECK_DF );
 #endif
 #endif
 
 	MoonEd_Init( argc, argv );
+
+	R_Init();
 
 	Cvar_CallCallback( &qt_style );
 	QApplication::setOrganizationName( APP_COMPANYNAME );

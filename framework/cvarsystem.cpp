@@ -513,12 +513,10 @@ void Cvar_CallCallback( cvar_t *var )
 	{
 		var->pCallback( var, var->GetString(), var->GetFloat(), var->GetInt() );
 	}
-#ifdef Q_DEBUG
 	else
 	{
 		Com_Printf( S_COLOR_YELLOW "[CvarSystem] Tried to call callback for \"%s\", but it doesn't have one!", var->GetName() );
 	}
-#endif
 }
 
 void Cvar_WriteVariables( fsHandle_t handle )
@@ -874,6 +872,7 @@ void Cvar_Shutdown()
 StaticCvar::StaticCvar( const char *Name, const char *Value, uint32 Flags, const char *Help, changeCallback_t Callback )
 {
 	assert( Name && Name[0] && Value );
+	assert( !( flags & CVAR_MODIFIED ) );
 
 #ifdef Q_DEBUG
 	if ( Cvar_Find( Name ) )
@@ -891,6 +890,9 @@ StaticCvar::StaticCvar( const char *Name, const char *Value, uint32 Flags, const
 
 	if ( Help ) help.assign( Help );
 	if ( Callback ) pCallback = Callback;
+
+	// all newly created vars are "modified"
+	SetModified();
 
 	Cvar_Add( this );
 }

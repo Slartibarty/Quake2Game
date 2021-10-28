@@ -9,20 +9,7 @@
 */
 
 #include "mooned_local.h"
-
 #include "r_local.h"
-
-struct glShaders_t
-{
-	GLuint dbgVert;
-	GLuint dbgFrag;
-
-};
-
-static glShaders_t glShaders;
-
-// Globally accessable details
-glProgs_t glProgs;
 
 /*
 ========================
@@ -33,8 +20,8 @@ static bool CheckShader( GLuint shader, const char *filename )
 {
 	GLint status, logLength;
 
-	qgl->glGetShaderiv( shader, GL_COMPILE_STATUS, &status );
-	qgl->glGetShaderiv( shader, GL_INFO_LOG_LENGTH, &logLength );
+	glGetShaderiv( shader, GL_COMPILE_STATUS, &status );
+	glGetShaderiv( shader, GL_INFO_LOG_LENGTH, &logLength );
 
 	if ( status == GL_TRUE ) {
 		Com_Printf( "Successfully compiled \"%s\"\n", filename );
@@ -44,7 +31,7 @@ static bool CheckShader( GLuint shader, const char *filename )
 
 	if ( logLength > 1 ) {
 		GLchar *msg = (GLchar *)Mem_StackAlloc( logLength );
-		qgl->glGetShaderInfoLog( shader, logLength, nullptr, msg );
+		glGetShaderInfoLog( shader, logLength, nullptr, msg );
 		Com_Printf( "Compiler reported: %s", msg );
 	}
 
@@ -68,12 +55,12 @@ static GLuint MakeShader( const char *filename, GLenum type )
 		return 0;
 	}
 
-	GLuint shader = qgl->glCreateShader( type );
-	qgl->glShaderSource( shader, 1, &buffer, &bufferLen );
+	GLuint shader = glCreateShader( type );
+	glShaderSource( shader, 1, &buffer, &bufferLen );
 
 	FileSystem::FreeFile( buffer );
 
-	qgl->glCompileShader( shader );
+	glCompileShader( shader );
 
 	if ( !CheckShader( shader, filename ) ) {
 		return 0;
@@ -87,28 +74,17 @@ static GLuint MakeShader( const char *filename, GLenum type )
 BuildAllShaders
 ========================
 */
-static void BuildAllShaders()
+static void BuildAllShaders( glProgs_t &glProgs )
 {
-	glShaders.dbgVert = MakeShader( "shaders/mooned/gui.vert", GL_VERTEX_SHADER );
-	glShaders.dbgFrag = MakeShader( "shaders/mooned/gui.frag", GL_FRAGMENT_SHADER );
+	GLuint dbgVert = MakeShader( "shaders/mooned/debug.vert", GL_VERTEX_SHADER );			//!!			// LEAK!!!
+	GLuint dbgFrag = MakeShader( "shaders/mooned/debug.frag", GL_FRAGMENT_SHADER );			//!!			// LEAK!!!
 
 	// create all our programs
-	glProgs.dbgProg = qgl->glCreateProgram();
-	qgl->glAttachShader( glProgs.dbgProg, glShaders.dbgVert );
-	qgl->glAttachShader( glProgs.dbgProg, glShaders.dbgFrag );
-	qgl->glLinkProgram( glProgs.dbgProg );
+	glProgs.dbgProg = glCreateProgram();
+	glAttachShader( glProgs.dbgProg, dbgVert );
+	glAttachShader( glProgs.dbgProg, dbgFrag );
+	glLinkProgram( glProgs.dbgProg );
 
-}
-
-/*
-========================
-RebuildShaders_f
-========================
-*/
-CON_COMMAND( r_rebuildShaders, "Rebuild shaders.", 0 )
-{
-	Shaders_Shutdown();
-	BuildAllShaders();
 }
 
 /*
@@ -116,9 +92,9 @@ CON_COMMAND( r_rebuildShaders, "Rebuild shaders.", 0 )
 Shaders_Init
 ========================
 */
-void Shaders_Init()
+void Shaders_Init( glProgs_t &glProgs )
 {
-	BuildAllShaders();
+	BuildAllShaders( glProgs );
 }
 
 /*
@@ -126,18 +102,14 @@ void Shaders_Init()
 Shaders_Shutdown
 ========================
 */
-void Shaders_Shutdown()
+void Shaders_Shutdown( glProgs_t &glProgs )
 {
-	// HACK HACK HACK HACK
-	if ( !qgl )
-		return;
-
-	qgl->glUseProgram( 0 );
+	glUseProgram( 0 );
 
 	// values of 0 are silently ignored for glDeleteShader and glDeleteProgram
 
-	qgl->glDeleteProgram( glProgs.dbgProg );
+	glDeleteProgram( glProgs.dbgProg );
 
-	qgl->glDeleteShader( glShaders.dbgFrag );
-	qgl->glDeleteShader( glShaders.dbgVert );
+//	glDeleteShader( glShaders.dbgFrag );
+//	glDeleteShader( glShaders.dbgVert );
 }
