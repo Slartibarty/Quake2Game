@@ -784,6 +784,8 @@ project "zlib"
 	defines { "_CRT_NONSTDC_NO_WARNINGS" }
 
 	disablewarnings { "4267" }
+	
+	vpaths { ["code"] = "*" }
 
 	files {
 		zlib_public,
@@ -795,6 +797,8 @@ project "libpng"
 	targetname "libpng"
 	language "C"
 	includedirs { "thirdparty/libpng_config", "thirdparty/zlib" }
+	
+	vpaths { ["code"] = "*" }
 
 	files {
 		libpng_public,

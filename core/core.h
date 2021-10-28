@@ -39,7 +39,7 @@
 #include <concepts>
 #include <numbers>
 
-#ifndef _WIN32
+#ifndef _WIN32 // Linux
 // Include our bogus sal.h
 // special thanks to the Wine team!
 #include "sal.h"

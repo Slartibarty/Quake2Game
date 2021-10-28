@@ -12,6 +12,10 @@
 
 #if defined Q_MEM_USE_MIMALLOC
 #include "../../thirdparty/mimalloc/include/mimalloc.h"
+#else
+#if !defined _WIN32 // Linux
+#include <malloc.h> // malloc extensions
+#endif
 #endif
 
 #include "memory.h"
@@ -23,7 +27,7 @@
 #define free_internal			mi_free
 
 #define msize_internal			mi_usable_size
-#define expand_internal			mi_expand
+#define expand_internal			mi_expand			// Unused
 
 #else
 
@@ -34,14 +38,12 @@
 #ifdef _WIN32
 
 #define msize_internal			_msize
-#define expand_internal			_expand
+#define expand_internal			_expand				// Unused
 
 #else
 
-#error Implement this!
-
-#define msize_internal
-#define expand_internal
+#define msize_internal			malloc_usable_size
+#define expand_internal			// ???				// Unused
 
 #endif
 
