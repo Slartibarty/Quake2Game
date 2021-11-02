@@ -18,7 +18,8 @@
 #define NOMINMAX
 #include <Windows.h>
 
-#undef DeleteFile		// Not used, but undefining anyway
+#undef CreateWindow
+#undef DeleteFile
 
 #else
 

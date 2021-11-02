@@ -46,6 +46,8 @@ static StaticCvar qt_style( "qt_style", "fusion", 0, "The Qt style to use.", Sty
 
 static void MoonEd_Init( int argc, char **argv )
 {
+	Time_Init();
+
 	Cbuf_Init();
 	Cmd_Init();
 	Cvar_Init();

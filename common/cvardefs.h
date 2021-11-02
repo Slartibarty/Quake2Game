@@ -18,6 +18,7 @@ enum cvarFlags_t : uint32
 };
 
 // nothing outside the Cvar_*() functions should modify these fields!
+// minVal and maxVal are strings so we can call .assign with them
 struct cvar_t
 {
 //private:
@@ -26,6 +27,7 @@ struct cvar_t
 	lab::string			value;
 	lab::string			help;				// null if no help
 	lab::string			latchedValue;		// null if no latched value
+	const char			*minVal, *maxVal;	// TODO: When the game DLL closes and restarts, these will be invalid ptrs!
 	uint32				flags;
 	float				fltValue;
 	int					intValue;

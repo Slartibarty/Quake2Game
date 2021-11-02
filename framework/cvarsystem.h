@@ -3,6 +3,9 @@
 
 	Console variables
 
+	minVal and maxVal are used if they're not equal to each other, it's assumed that the default
+	value is within these ranges.
+
 	Id developer notes:
 
 	cvar_t variables are used to hold scalar or string variables that can be changed or displayed
@@ -42,6 +45,8 @@ char *		Cvar_CompleteVariable( const char *partial );
 			// creates the variable if it doesn't exist, or returns the existing one
 			// if it exists, the value will not be changed, but flags will be ORed in
 			// that allows variables to be unarchived without needing bitflags
+			//
+			// TODO: Support minVal and maxVal?
 cvar_t *	Cvar_Get( const char *name, const char *value, uint32 flags, const char *help = nullptr, changeCallback_t callback = nullptr );
 
 			// finds and returns the value of a variable
@@ -111,7 +116,8 @@ void		Cvar_Shutdown();
 class StaticCvar : public cvar_t
 {
 public:
-	StaticCvar( const char *Name, const char *Value, uint32 Flags, const char *Help = nullptr, changeCallback_t Callback = nullptr );
+	StaticCvar( const char *Name, const char *Value, uint32 Flags, const char *Help = nullptr,
+		changeCallback_t Callback = nullptr, const char *MinVal = nullptr, const char *MaxVal = nullptr );
 	~StaticCvar() = default;
 };
 

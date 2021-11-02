@@ -38,10 +38,31 @@ static bool Cvar_InfoValidate( const char *s )
 	return true;
 }
 
-static void Cvar_SetDerivatives( cvar_t *var )
+static void Cvar_SetValueWork( cvar_t *var, const char *newValue )
 {
-	var->fltValue = Q_atof( var->value.c_str() );
-	var->intValue = Q_atoi( var->value.c_str() );
+	const float newFltValue = Q_atof( newValue );
+	const int newIntValue = Q_atoi( newValue ); // Just static cast newFltValue?
+
+	const float min = var->minVal ? Q_atof( var->minVal ) : newFltValue;
+	const float max = var->maxVal ? Q_atof( var->maxVal ) : newFltValue;
+
+	if ( newFltValue < min ) {
+		var->value.assign( var->minVal );
+		var->fltValue = min;
+		var->intValue = static_cast<int>( min );
+		return;
+	}
+	else if ( newFltValue > max ) {
+		var->value.assign( var->maxVal );
+		var->fltValue = max;
+		var->intValue = static_cast<int>( max );
+		return;
+	}
+
+	// We didn't hit any limits, standard assign
+	var->value.assign( newValue );
+	var->fltValue = newFltValue;
+	var->intValue = newIntValue;
 }
 
 static void Cvar_Add( cvar_t *var )
@@ -157,7 +178,6 @@ cvar_t *Cvar_Get( const char *name, const char *value, uint32 flags, const char 
 	var = (cvar_t *)Mem_ClearedAlloc( sizeof( cvar_t ) );
 
 	var->name.assign( name );
-	var->value.assign( value );
 	if ( help ) {
 		var->help.assign( help );
 	}
@@ -165,7 +185,11 @@ cvar_t *Cvar_Get( const char *name, const char *value, uint32 flags, const char 
 		var->pCallback = callback;
 	}
 
-	Cvar_SetDerivatives( var );
+	// Not supported for Cvar_Get vars yet
+	var->minVal = nullptr; var->maxVal = nullptr;
+
+	// Sets value, fltValue and intValue
+	Cvar_SetValueWork( var, value );
 
 	Cvar_Add( var );
 
@@ -281,10 +305,12 @@ static cvar_t *Cvar_Set_Internal( cvar_t *var, const char *value, bool force )
 			{
 				setOldValues();
 
-				var->value.assign( value );
-				Cvar_SetDerivatives( var );
+				// Sets value, fltValue and intValue
+				Cvar_SetValueWork( var, value );
 
 				fireCallback();
+
+				var->SetModified();
 			}
 
 			return var;
@@ -311,8 +337,8 @@ static cvar_t *Cvar_Set_Internal( cvar_t *var, const char *value, bool force )
 
 	setOldValues();
 
-	var->value.assign( value );
-	Cvar_SetDerivatives( var );
+	// Sets value, fltValue and intValue
+	Cvar_SetValueWork( var, value );
 
 	fireCallback();
 
@@ -446,7 +472,9 @@ void Cvar_GetLatchedVars()
 		//var->value = var->latchedValue;
 		//var->latchedValue = nullptr;
 
-		Cvar_SetDerivatives( var );
+		// HACK HACK HACK: LATCHED VARS HAVE GOT TO GO!!!!
+		var->fltValue = Q_atof( var->value.c_str() );
+		var->intValue = Q_atoi( var->value.c_str() );
 	}
 }
 
@@ -869,7 +897,8 @@ void Cvar_Shutdown()
 ===================================================================================================
 */
 
-StaticCvar::StaticCvar( const char *Name, const char *Value, uint32 Flags, const char *Help, changeCallback_t Callback )
+StaticCvar::StaticCvar( const char *Name, const char *Value, uint32 Flags, const char *Help,
+	changeCallback_t Callback, const char *MinVal, const char *MaxVal )
 {
 	assert( Name && Name[0] && Value );
 	assert( !( flags & CVAR_MODIFIED ) );
@@ -877,19 +906,21 @@ StaticCvar::StaticCvar( const char *Name, const char *Value, uint32 Flags, const
 #ifdef Q_DEBUG
 	if ( Cvar_Find( Name ) )
 	{
+		// Should be safe to call these before main?
 		assert( !"Multiply defined static cvar!" );
 		exit( EXIT_FAILURE );
 	}
 #endif
 
 	name.assign( Name );
-	value.assign( Value );
+	minVal = MinVal; maxVal = MaxVal;
 	flags = Flags |= CVAR_STATIC;
-
-	Cvar_SetDerivatives( this );
 
 	if ( Help ) help.assign( Help );
 	if ( Callback ) pCallback = Callback;
+
+	// Sets value, fltValue and intValue
+	Cvar_SetValueWork( this, Value );
 
 	// all newly created vars are "modified"
 	SetModified();
