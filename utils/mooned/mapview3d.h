@@ -17,7 +17,9 @@ private:
 	glProgs_t m_glProgs;
 
 	Camera m_cam;
+
 	LineBuilder m_lineBuilder;
+	GLuint m_lineVAO = 0, m_lineVBO = 0;
 
 public:
 	explicit MapView3D( QWidget* parent = nullptr );

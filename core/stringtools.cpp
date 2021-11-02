@@ -408,8 +408,8 @@ floatT Str_StringToFloat( const char *str )
 int64	Q_atoi64( const char *str )		{ return Str_StringToSignedInt<int64>( str ); }
 uint64	Q_atoui64( const char *str )	{ return Str_StringToUnsignedInt<uint64>( str ); }
 
-int32	Q_atoi32( const char *str )		{ return Str_StringToSignedInt<int>( str ); }
-uint32	Q_atoui32( const char *str )	{ return Str_StringToUnsignedInt<uint>( str ); }
+int32	Q_atoi32( const char *str )		{ return Str_StringToSignedInt<int32>( str ); }
+uint32	Q_atoui32( const char *str )	{ return Str_StringToUnsignedInt<uint32>( str ); }
 
 double	Q_atod( const char *str )		{ return Str_StringToFloat<double, int>( str ); }
 float	Q_atof( const char *str )		{ return static_cast<float>( Q_atod( str ) ); }

@@ -7,7 +7,7 @@
 
 #include "mapview3d.h"
 
-static constexpr glm::vec3 g_upVector{ 0.0f, 0.0f, 1.0f };
+static constexpr glm::vec3 g_upVector{ 0.0f, 1.0f, 0.0f };
 
 StaticCvar r_clearColour( "r_clearColour", "0.5 0.5 0.5", 0, "The glClear colour." );
 
@@ -67,12 +67,25 @@ MapView3D::MapView3D( QWidget* parent )
 
 MapView3D::~MapView3D()
 {
-
+	glDeleteBuffers( 1, &m_lineVBO );
+	glDeleteVertexArrays( 1, &m_lineVAO );
 }
 
 void MapView3D::initializeGL()
 {
 	Shaders_Init( m_glProgs );
+
+	glGenVertexArrays( 1, &m_lineVAO );
+	glGenBuffers( 1, &m_lineVBO );
+
+	glBindVertexArray( m_lineVAO );
+	glBindBuffer( GL_ARRAY_BUFFER, m_lineVBO );
+
+	glEnableVertexAttribArray( 0 );
+	glEnableVertexAttribArray( 1 );
+
+	glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, sizeof( LineBuilder::lineVertex_t ), (void *)( 0 ) );
+	glVertexAttribPointer( 1, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( LineBuilder::lineVertex_t ), (void *)( 3 * sizeof( GLfloat ) ) );
 }
 
 void MapView3D::resizeGL( int w, int h )
@@ -82,12 +95,16 @@ void MapView3D::resizeGL( int w, int h )
 	front.y = sinf( glm::radians( m_cam.angles.x ) );
 	front.z = sinf( glm::radians( m_cam.angles.y ) ) * cosf( glm::radians( m_cam.angles.x ) );
 
-	m_viewMat = glm::lookAt( m_cam.origin, m_cam.origin + front, g_upVector );
-	m_projMat = glm::perspective( glm::radians( 90.0f ), (float)w / (float)h, 0.1f, 4096.0f );
+	m_viewMat = glm::lookAt( m_cam.origin, glm::vec3( 0.0f, 0.0f, 0.0f ), g_upVector );
+	m_projMat = glm::perspective( glm::radians( 90.0f ), (float)w / (float)h, 8.0f, 4096.0f );
 }
 
 void MapView3D::paintGL()
 {
+	// Construct stuff for later
+	LineBuilder_DrawWorldAxes( m_lineBuilder );
+
+	// Burstfire all the gl commands
 	if ( r_clearColour.IsModified() )
 	{
 		r_clearColour.ClearModified();
@@ -101,17 +118,23 @@ void MapView3D::paintGL()
 		glClearColor( r, g, b, 1.0f );
 	}
 
-	R_Clear();
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
 	glUseProgram( m_glProgs.dbgProg );
-	GL_CheckErrors();
+	glBindVertexArray( m_lineVAO );
+	glBindBuffer( GL_ARRAY_BUFFER, m_lineVBO );
+
+	glBufferData( GL_ARRAY_BUFFER, m_lineBuilder.GetSizeInBytes(), m_lineBuilder.GetData(), GL_STREAM_DRAW );
 
 	glUniformMatrix4fv( 3, 1, GL_FALSE, (const GLfloat *)&m_viewMat );
 	glUniformMatrix4fv( 4, 1, GL_FALSE, (const GLfloat *)&m_projMat );
 
-	R_DrawWorldAxes();
+	glDrawArrays( GL_LINES, 0, static_cast<GLsizei>( m_lineBuilder.GetNumPoints() ) );
 
-	//R_DrawFrameRect( width(), height() );
+	glBindVertexArray( 0 );
+	glUseProgram( 0 );
+
+	m_lineBuilder.Clear();
 }
 
 void MapView3D::keyPressEvent( QKeyEvent *event )

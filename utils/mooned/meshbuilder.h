@@ -24,7 +24,7 @@
 */
 class LineBuilder
 {
-private:
+public:
 	struct lineVertex_t
 	{
 		vec3 pos;
@@ -37,11 +37,23 @@ private:
 		lineVertex_t v2;
 	};
 
-	std::vector<lineSegment_t> m_segments;
-
-public:
 	LineBuilder() = default;
 	~LineBuilder() = default;
+
+	size_t GetNumPoints() const
+	{
+		return m_segments.size() * 2;
+	}
+
+	size_t GetSizeInBytes() const
+	{
+		return m_segments.size() * sizeof( lineSegment_t );
+	}
+
+	const void *GetData() const
+	{
+		return reinterpret_cast<const void *>( m_segments.data() );
+	}
 
 	// Make a space reservation
 	void Reserve( size_t count )
@@ -49,10 +61,19 @@ public:
 		m_segments.reserve( count );
 	}
 
-	void AddLine( const vec3 &start, uint32 startCol, const vec3 &end, uint32 endCol )
+	// Empty the array
+	void Clear()
+	{
+		m_segments.clear();
+	}
+
+	void AddLine( const vec3 & start, uint32 startCol, const vec3 & end, uint32 endCol )
 	{
 		m_segments.push_back( { {start, startCol}, {end, endCol} } );
 	}
+
+private:
+	std::vector<lineSegment_t> m_segments;
 
 };
 
@@ -65,5 +86,6 @@ public:
 */
 
 void LineBuilder_DrawWorldAxes( LineBuilder &bld );
+void LineBuilder_DrawWorldGrid( LineBuilder &bld );
 void LineBuilder_DrawCrosshair( LineBuilder &bld, int windowWidth, int windowHeight );
 void LineBuilder_DrawFrameRect( LineBuilder &bld, int windowWidth, int windowHeight );

@@ -487,6 +487,18 @@ if not _OPTIONS["exclude-utils"] then
 
 	group "utilities"
 	
+	project "stbtest"
+		kind "ConsoleApp"
+		targetname "stbtest"
+		language "C++"
+		floatingpoint "Default"
+		targetdir( out_dir )
+		debugdir( out_dir )
+
+		files {
+			"utils/stbtest/*"
+		}
+
 	project "moduletest"
 		kind "ConsoleApp"
 		targetname "moduletest"

@@ -384,7 +384,7 @@ void Cvar_FindSetString( const char *name, const char *value )
 void Cvar_FindSetFloat( const char *name, float value )
 {
 	char str[128];
-	Q_sprintf_s( str, "%f", value); // %.6f
+	Q_sprintf_s( str, "%f", value ); // %.6f
 
 	cvar_t *var = Cvar_Find( name );
 	if ( !var ) {
