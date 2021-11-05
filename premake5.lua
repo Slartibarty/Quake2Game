@@ -487,6 +487,28 @@ if not _OPTIONS["exclude-utils"] then
 
 	group "utilities"
 	
+	project "d3dtest"
+		kind "WindowedApp"
+		targetname "d3dtest"
+		language "C++"
+		floatingpoint "Default"
+		targetdir( out_dir )
+		debugdir( out_dir )
+		defines { "Q_CONSOLE_APP" }
+		links { "core", "comctl32", "dxguid", "dxgi", "d3d11", "d3dcompiler" }
+		
+		filter "system:windows"
+			linkoptions { "/ENTRY:mainCRTStartup" }
+		filter {}
+		
+		files {
+			"resources/*",
+
+			"framework/*",
+
+			"utils/d3dtest/*",
+		}
+	
 	project "stbtest"
 		kind "ConsoleApp"
 		targetname "stbtest"
