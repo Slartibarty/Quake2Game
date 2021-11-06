@@ -21,14 +21,11 @@
 ===================================================================================================
 */
 
-
 #include "../../core/core.h"
 
 #include "../../framework/cvarsystem.h"
 
 #include "../../core/sys_includes.h"
-
-#include "../../thirdparty/DirectXMath/Inc/DirectXMath.h"
 
 // Local
 #include "window.h"
@@ -82,13 +79,13 @@ void Input_Init()
 	rid[0].usUsagePage = 0x01;
 	rid[0].usUsage = 0x02;
 	rid[0].dwFlags = 0;
-	rid[0].hwndTarget = GetMainWindow();
+	rid[0].hwndTarget = (HWND)GetMainWindow();
 
 	// Keyboard
 	rid[1].usUsagePage = 0x01;
 	rid[1].usUsage = 0x06;
 	rid[1].dwFlags = 0;
-	rid[1].hwndTarget = GetMainWindow();
+	rid[1].hwndTarget = (HWND)GetMainWindow();
 
 	BOOL result = RegisterRawInputDevices( rid, 2, sizeof( *rid ) );
 	if ( result == FALSE ) {
@@ -96,7 +93,7 @@ void Input_Init()
 	}
 }
 
-void Input_ReportCamera()
+static void Input_ReportCamera()
 {
 	Com_Printf( "Origin: %.6f %.6f %.6f\n", input.camera.origin.x, input.camera.origin.y, input.camera.origin.z );
 	Com_Printf( "Angles: %.6f %.6f %.6f\n", input.camera.angles.x, input.camera.angles.y, input.camera.angles.z );
@@ -206,28 +203,30 @@ void Input_Frame()
 {
 	PM_NoclipMove( s_cmd );
 	memset( &s_cmd, 0, sizeof( s_cmd ) );
+
+	//Input_ReportCamera();
 }
 
 void HandleKeyboardInput( RAWKEYBOARD &raw )
 {
 	switch ( raw.VKey )
 	{
-	case VK_LEFT:
-		s_cmd.leftMove -= 320.0f;
+	case 'A':
+		s_cmd.leftMove -= pm_maxspeed;
 		break;
-	case VK_UP:
-		s_cmd.forwardMove += 320.0f;
+	case 'W':
+		s_cmd.forwardMove += pm_maxspeed;
 		break;
-	case VK_RIGHT:
-		s_cmd.leftMove += 320.0f;
+	case 'D':
+		s_cmd.leftMove += pm_maxspeed;
 		break;
-	case VK_DOWN:
-		s_cmd.forwardMove -= 320.0f;
+	case 'S':
+		s_cmd.forwardMove -= pm_maxspeed;
 		break;
 	}
 }
 
-void HandleMouseInput( RAWMOUSE &raw )
+void HandleMouseInput( RAWMOUSE &raw, HWND wnd )
 {
 	// Always process BUTTONS!
 	switch ( raw.usButtonFlags )
@@ -241,7 +240,7 @@ void HandleMouseInput( RAWMOUSE &raw )
 	case RI_MOUSE_RIGHT_BUTTON_DOWN:
 		//Key_Event( K_MOUSE2, true, sys_frameTime );
 		input.mouseActive = true;
-		SetCapture( GetMainWindow() );
+		SetCapture( wnd );
 		ClipCursor( &input.windowRect );
 		while ( ShowCursor( FALSE ) >= 0 )
 			;
@@ -336,7 +335,7 @@ LRESULT CALLBACK D3DTestWindowProc( HWND wnd, UINT msg, WPARAM wParam, LPARAM lP
 			HandleKeyboardInput( raw.data.keyboard );
 			break;
 		case RIM_TYPEMOUSE:
-			HandleMouseInput( raw.data.mouse );
+			HandleMouseInput( raw.data.mouse, wnd );
 			break;
 		}
 	}

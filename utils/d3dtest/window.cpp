@@ -6,16 +6,16 @@
 #include "../../core/sys_includes.h"
 #include "../../resources/resource.h"
 
-#include "../../thirdparty/DirectXMath/Inc/DirectXMath.h"
-
 // Local
 #include "input.h"
 
 // This
 #include "window.h"
 
+//=================================================================================================
+
 #define W_CLASSNAME		L"EEB"
-#define W_TITLE			L"D3D Test"
+#define W_TITLE			L"A New Microwave Burger Series Emerges | Ashens"
 #define W_EXSTYLE		0
 #define W_STYLE			WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX
 
@@ -85,7 +85,7 @@ void ShowMainWindow()
 	ShowWindow( s_wndVars.window, SW_SHOWDEFAULT );
 }
 
-HWND GetMainWindow()
+void *GetMainWindow()
 {
-	return s_wndVars.window;
+	return (void *)s_wndVars.window;
 }

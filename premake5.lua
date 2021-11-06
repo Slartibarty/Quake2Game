@@ -506,7 +506,7 @@ if not _OPTIONS["exclude-utils"] then
 
 			"framework/*",
 
-			"utils/d3dtest/*",
+			"utils/d3dtest/**",
 		}
 	
 	project "stbtest"

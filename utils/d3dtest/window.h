@@ -7,4 +7,4 @@ extern StaticCvar wnd_height;
 void CreateMainWindow( int width, int height );
 void DestroyMainWindow();
 void ShowMainWindow();
-HWND GetMainWindow();
+void *GetMainWindow();

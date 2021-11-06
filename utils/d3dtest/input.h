@@ -1,12 +1,10 @@
 
 #pragma once
 
-void Input_Init();
-void Input_ReportCamera();
-void Input_Frame();
+#include "../../thirdparty/DirectXMath/Inc/DirectXMath.h"
 
-void HandleKeyboardInput( RAWKEYBOARD &raw );
-void HandleMouseInput( RAWMOUSE &raw );
+void Input_Init();
+void Input_Frame();
 
 DirectX::XMMATRIX GetViewMatrix();
 
