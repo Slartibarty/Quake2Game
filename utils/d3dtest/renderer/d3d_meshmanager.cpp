@@ -9,13 +9,21 @@
 namespace Renderer
 {
 
-struct objContext_t
+// Renderer representation of a thing in a scene
+struct model_t
 {
-	char *buffer;
-	size_t bufferLength;
+	char name[MAX_ASSETPATH];
+
+	ID3D11Buffer *vertexBuffer;
+	ID3D11Buffer *indexBuffer;
+	uint32 numVertices;
+	uint32 numIndices;
 };
 
-meshManager_t meshMan;
+static struct modelManager_t
+{
+	std::vector<model_t> models;
+} modelMan;
 
 static ID3D11Buffer *CreateVertexBuffer( void *vertices, uint32 numVertices )
 {
@@ -67,17 +75,11 @@ static ID3D11Buffer *CreateIndexBuffer( void *indices, uint32 numIndices )
 	return buffer;
 }
 
-meshID_t AddMesh( void *vertices, uint32 numVertices, void *indices, uint32 numIndices )
+struct objContext_t
 {
-	mesh_t &mesh = meshMan.meshes.emplace_back();
-
-	mesh.vertexBuffer = CreateVertexBuffer( vertices, numVertices );
-	mesh.indexBuffer = CreateIndexBuffer( indices, numIndices );
-	mesh.numVertices = numVertices;
-	mesh.numIndices = numIndices;
-
-	return 0;
-}
+	char *buffer;
+	size_t bufferLength;
+};
 
 static void LoadOBJ_Callback( void *ctx, const char *filename, int is_mtl, const char *obj_filename, char **buf, size_t *len )
 {
@@ -87,7 +89,7 @@ static void LoadOBJ_Callback( void *ctx, const char *filename, int is_mtl, const
 	*len = context->bufferLength;
 }
 
-void LoadOBJ( void *buffer, fsSize_t bufferLength )
+static void LoadOBJ( model_t &model, void *buffer, fsSize_t bufferLength )
 {
 	tinyobj_attrib_t attrib;
 	tinyobj_shape_t *shapes;
@@ -115,9 +117,45 @@ void LoadOBJ( void *buffer, fsSize_t bufferLength )
 		flatIndices[i] = attrib.faces[i].v_idx;
 	}
 
-	AddMesh( flatVertices, attrib.num_vertices, flatIndices, attrib.num_faces );
+	// Now configure our model
+
+	model.vertexBuffer = CreateVertexBuffer( flatVertices, attrib.num_vertices );
+	model.indexBuffer = CreateIndexBuffer( flatIndices, attrib.num_faces );
+	model.numVertices = attrib.num_vertices;
+	model.numIndices = attrib.num_faces;
+
+	// Done
 
 	Mem_Free( flatIndices );
+}
+
+modelIndex_t ModelForName( const char *filename, void *buffer, fsSize_t bufferLength )
+{
+	const modelIndex_t numModels = static_cast<modelIndex_t>( modelMan.models.size() );
+	for ( modelIndex_t modelIndex = 0; modelIndex < numModels; ++modelIndex )
+	{
+		const model_t &model = modelMan.models[modelIndex];
+
+		if ( Q_strcmp( model.name, filename ) == 0 )
+		{
+			// Already loaded
+			return modelIndex;
+		}
+	}
+
+	// Not loaded, so load it
+
+	if ( !buffer || bufferLength == 0 )
+	{
+		// Yeah
+		Com_FatalError( "Hey, tried to get a model with no buffer!\n" );
+	}
+
+	model_t &model = modelMan.models.emplace_back();
+
+	Q_strcpy_s( model.name, filename );
+
+	LoadOBJ( model, buffer, bufferLength );
 }
 
 } // namespace Renderer

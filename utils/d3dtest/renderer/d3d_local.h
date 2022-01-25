@@ -4,13 +4,9 @@
 
 #pragma once
 
-#include "../../../core/core.h"
+#include "../cl_local.h"
 
 #include <vector>
-
-#include "../../../framework/filesystem.h"
-#include "../../../framework/cmdsystem.h"
-#include "../../../framework/cvarsystem.h"
 
 #include "../../../thirdparty/DirectXMath/Inc/DirectXMath.h"
 
@@ -57,20 +53,5 @@ struct d3dDefs_t
 };
 
 extern d3dDefs_t d3d;
-
-struct mesh_t
-{
-	ID3D11Buffer *vertexBuffer;
-	ID3D11Buffer *indexBuffer;
-	uint32 numVertices;
-	uint32 numIndices;
-};
-
-struct meshManager_t
-{
-	std::vector<mesh_t> meshes;
-};
-
-extern meshManager_t meshMan;
 
 } // namespace Renderer

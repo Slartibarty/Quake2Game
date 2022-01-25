@@ -1,9 +1,6 @@
 
 #include "d3d_local.h"
 
-#include "../input.h"
-#include "../window.h"
-
 namespace Renderer
 {
 
@@ -18,7 +15,7 @@ void Frame()
 	//=========================================================================
 	// Mesh
 
-	mesh_t &mesh = meshMan.meshes[0];
+	//model_t &mesh = meshMan.meshes[0];
 
 	//=========================================================================
 	// Set shader constants
@@ -31,7 +28,7 @@ void Frame()
 
 	XMMATRIX workMatrix;
 
-	workMatrix = GetViewMatrix();
+	workMatrix = CL_BuildViewMatrix();
 	XMStoreFloat4x4A( &constants->viewMatrix, workMatrix );
 
 	const float fov = d3d_fov.GetFloat();
@@ -49,8 +46,8 @@ void Frame()
 
 	d3d.immediateContext->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
 	d3d.immediateContext->IASetInputLayout( d3d.inputLayout );
-	d3d.immediateContext->IASetVertexBuffers( 0, 1, &mesh.vertexBuffer, &vertexStride, &vertexOffset );
-	d3d.immediateContext->IASetIndexBuffer( mesh.indexBuffer, DXGI_FORMAT_R32_UINT, 0 );
+	//d3d.immediateContext->IASetVertexBuffers( 0, 1, &mesh.vertexBuffer, &vertexStride, &vertexOffset );
+	//d3d.immediateContext->IASetIndexBuffer( mesh.indexBuffer, DXGI_FORMAT_R32_UINT, 0 );
 
 	d3d.immediateContext->RSSetState( d3d.rastState );
 
@@ -70,7 +67,7 @@ void Frame()
 	d3d.immediateContext->OMSetDepthStencilState( d3d.depthStencilState, 0 );
 	d3d.immediateContext->OMSetBlendState( nullptr, nullptr, UINT_MAX ); // use default blend mode (i.e. disable)
 
-	d3d.immediateContext->DrawIndexed( mesh.numIndices, 0, 0 );
+	//d3d.immediateContext->DrawIndexed( mesh.numIndices, 0, 0 );
 
 	d3d.immediateContext->OMSetRenderTargets( 0, nullptr, nullptr );
 

@@ -1,8 +1,7 @@
 
 #include "d3d_local.h"
-#include <d3dcompiler.h>
 
-#include "../window.h"
+#include <d3dcompiler.h>
 
 namespace Renderer
 {
@@ -58,7 +57,7 @@ void Init()
 
 	const UINT windowWidth = (UINT)wnd_width.GetInt();
 	const UINT windowHeight = (UINT)wnd_height.GetInt();
-	const HWND windowHandle = (HWND)GetMainWindow();
+	const HWND windowHandle = (HWND)Sys_GetMainWindow();
 
 	const DXGI_SWAP_CHAIN_DESC1 swapChainDescriptor{
 		.Width = windowWidth,
@@ -248,18 +247,6 @@ void Init()
 	};
 
 	d3d.device->CreateDepthStencilState( &depthStencilDesc, &d3d.depthStencilState );
-
-	//=========================================================================
-	// Hardcoded Meshes
-
-	void *meshBuffer;
-	fsSize_t meshBufferLength = FileSystem::LoadFile( "models/scene.obj", &meshBuffer );
-	if ( !meshBuffer )
-	{
-		Com_FatalError( "DUDE!\n" );
-	}
-	LoadOBJ( meshBuffer, meshBufferLength );
-
 }
 
 void Shutdown()

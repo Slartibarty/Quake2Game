@@ -15,6 +15,7 @@ void LineBuilder_DrawWorldGrid( LineBuilder &bld )
 
 }
 
+#if 0
 void CRender3D::RenderGrid( int xAxis, int yAxis, float depth, bool bNoSmallGrid )
 {
 	// Check for too small grid.
@@ -159,6 +160,7 @@ void CRender3D::RenderGrid( int xAxis, int yAxis, float depth, bool bNoSmallGrid
 		}
 	}
 }
+#endif
 
 void LineBuilder_DrawCrosshair( LineBuilder &bld, int windowWidth, int windowHeight )
 {

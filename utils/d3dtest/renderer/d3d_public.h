@@ -20,7 +20,7 @@ namespace Renderer
 		MeshManager
 	=================================================================================================*/
 
-	using meshID_t = uint32;
+	using modelIndex_t = uint32;
 
 	struct meshVertex_t
 	{
@@ -31,8 +31,7 @@ namespace Renderer
 
 	using meshIndex_t = uint32;
 
-	// Adds a render mesh
-	meshID_t AddMesh( void *vertices, uint32 numVertices, void *indices, uint32 numIndices );
-	void LoadOBJ( void *buffer, fsSize_t bufferLength );
+	// Gets a model index by name
+	modelIndex_t ModelForName( const char *filename, void *buffer = nullptr, fsSize_t bufferLength = 0 );
 
 }

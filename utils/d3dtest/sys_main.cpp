@@ -1,10 +1,25 @@
+/*
+===================================================================================================
 
-#include "../../core/core.h"
+	Where Engine 3 begins
 
-#include "../../framework/filesystem.h"
+	This is a common module!
+
+===================================================================================================
+*/
+
+#include "engine.h"
+
+#include <process.h>
 
 #include "../../core/sys_includes.h"
 #include <ShlObj.h>
+
+/*
+===================================================================================================
+	Logging Implementations
+===================================================================================================
+*/
 
 [[noreturn]]
 static void Sys_Error( const platChar_t *mainInstruction, const char *msg )
@@ -36,7 +51,12 @@ static void Sys_Error( const platChar_t *mainInstruction, const char *msg )
 		TD_ERROR_ICON,
 		nullptr );
 
-	exit( EXIT_FAILURE );
+	if ( IsDebuggerPresent() )
+	{
+		__debugbreak();
+	}
+
+	Sys_Quit( EXIT_FAILURE );
 }
 
 /*
@@ -72,6 +92,8 @@ void Com_Print( const char *msg )
 
 	// create a copy of the msg for places that don't want the colour codes
 	CopyAndStripColorCodes( newMsg, sizeof( newMsg ), msg );
+
+	SysConsole_Print( newMsg );
 
 	Sys_OutputDebugString( newMsg );
 }
@@ -168,4 +190,118 @@ void Com_FatalErrorf( _Printf_format_string_ const char *fmt, ... )
 	va_end( argptr );
 
 	Com_FatalError( msg );
+}
+
+//=================================================================================================
+
+static void InitSteamStuff()
+{
+#ifdef Q_USE_STEAM
+	if ( SteamAPI_RestartAppIfNecessary( Q_STEAM_APPID ) )
+	{
+		exit( EXIT_FAILURE );
+	}
+
+	if ( !SteamAPI_Init() )
+	{
+		TaskDialog(
+			nullptr,
+			nullptr,
+			TEXT( ENGINE_VERSION ),
+			L"Failed to initialise Steam",
+			L"SteamAPI initialisation failed. Is Steam running?",
+			TDCBF_OK_BUTTON,
+			TD_ERROR_ICON,
+			nullptr );
+
+		exit( EXIT_FAILURE );
+	}
+#endif
+}
+
+static void ShutdownSteamStuff()
+{
+#ifdef Q_USE_STEAM
+	SteamAPI_Shutdown();
+#endif
+}
+
+// Called in main()
+static void Sys_SecretInit()
+{
+	InitSteamStuff();
+
+	CoInitializeEx( nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE );
+}
+
+// Called in Sys_Quit
+static void Sys_SecretShutdown()
+{
+	CoUninitialize();
+
+	// If Steam needed COM it'd call it itself
+	ShutdownSteamStuff();
+}
+
+[[noreturn]]
+void Sys_Quit( int code )
+{
+	// Shut down very low level stuff
+	Sys_SecretShutdown();
+
+	exit( code );
+}
+
+//=================================================================================================
+
+int main( int argc, char **argv )
+{
+	// Make sure the CRT thinks we're a GUI app, this makes CRT asserts use a message box
+	// rather than printing to stderr
+	_set_app_type( _crt_gui_app );
+#ifdef Q_MEM_DEBUG
+	_CrtSetDbgFlag( _CrtSetDbgFlag( _CRTDBG_REPORT_FLAG ) | _CRTDBG_LEAK_CHECK_DF );
+#endif
+
+	// Init very low level stuff
+	Sys_SecretInit();
+
+	Time_Init();
+
+	Com_Init( argc, argv );
+
+	double deltaTime, oldTime, newTime;
+	MSG msg;
+
+	oldTime = Time_FloatMilliseconds();
+
+	// Show the main window just before we start doing things
+	extern void Sys_ShowMainWindow(); // LOL hack
+	Sys_ShowMainWindow();
+
+	// Main loop
+	while ( 1 )
+	{
+		// Process all queued messages
+		while ( PeekMessageW( &msg, nullptr, 0, 0, PM_REMOVE ) )
+		{
+			if ( msg.message == WM_QUIT )
+			{
+				// Perform a graceful quit
+				Com_Quit( EXIT_SUCCESS );
+			}
+ 			TranslateMessage( &msg );
+			DispatchMessageW( &msg );
+		}
+
+		newTime = Time_FloatMilliseconds();
+		deltaTime = newTime - oldTime;
+
+		Com_Frame( static_cast<float>( MS2SEC( deltaTime ) ) );
+
+		oldTime = newTime;
+	}
+	
+	// Unreachable
+	return 0;
 }

@@ -494,8 +494,9 @@ if not _OPTIONS["exclude-utils"] then
 		floatingpoint "Default"
 		targetdir( out_dir )
 		debugdir( out_dir )
-		defines { "Q_CONSOLE_APP" }
-		links { "core", "comctl32", "dxguid", "dxgi", "d3d11", "d3dcompiler" }
+		defines {  }
+		sysincludedirs { "thirdparty/JoltPhysics/Jolt" }
+		links { "core", "utils/d3dtest/joltlib/Jolt", "comctl32", "dxguid", "dxgi", "d3d11", "d3dcompiler" }
 		
 		filter "system:windows"
 			linkoptions { "/ENTRY:mainCRTStartup" }
