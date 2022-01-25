@@ -524,6 +524,7 @@ if not _OPTIONS["exclude-utils"] then
 			"utils/stbtest/*"
 		}
 
+	--[[
 	project "moduletest"
 		kind "ConsoleApp"
 		targetname "moduletest"
@@ -535,6 +536,7 @@ if not _OPTIONS["exclude-utils"] then
 		files {
 			"utils/moduletest/*"
 		}
+	--]]
 
 	project "mooned"
 		kind "WindowedApp"
@@ -740,6 +742,7 @@ if not _OPTIONS["exclude-utils"] then
 			xatlas_sources
 		}
 
+	--[[
 	project "qsmf"
 		kind "ConsoleApp"
 		targetname "qsmf"
@@ -775,6 +778,7 @@ if not _OPTIONS["exclude-utils"] then
 		removefiles {
 			"utils/qsmf/obj_reader.*"
 		}
+	--]]
 
 	project "modelbuilder"
 		kind "ConsoleApp"
