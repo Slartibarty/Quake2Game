@@ -487,6 +487,7 @@ if not _OPTIONS["exclude-utils"] then
 
 	group "utilities"
 	
+	--[[
 	project "d3dtest"
 		kind "WindowedApp"
 		targetname "d3dtest"
@@ -509,6 +510,7 @@ if not _OPTIONS["exclude-utils"] then
 
 			"utils/d3dtest/**",
 		}
+	--]]
 	
 	project "stbtest"
 		kind "ConsoleApp"
