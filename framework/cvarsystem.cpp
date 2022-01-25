@@ -439,7 +439,7 @@ void Cvar_FindSetInt( const char *name, int value )
 
 void Cvar_FindSetBool( const char *name, bool value )
 {
-	char str[2]{ (char)value, '\0' };
+	char str[2]{ (char)value + '0', '\0' };
 
 	cvar_t *var = Cvar_Find( name );
 	if ( !var ) {
