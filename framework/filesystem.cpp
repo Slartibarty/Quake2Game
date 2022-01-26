@@ -91,6 +91,20 @@ static struct fileSystem_t
 
 } fs;
 
+static void CreateAbsolutePath( char *path, strlen_t skipDist )
+{
+	for ( char *ofs = path + skipDist + 1; *ofs; ++ofs )
+	{
+		if ( *ofs == '/' )
+		{
+			// create the directory
+			*ofs = '\0';
+			Sys_CreateDirectory( path );
+			*ofs = '/';
+		}
+	}
+}
+
 // On Windows this sets the write directory to "C:/Users/Name/Saved Games/Game Name".
 // Games regularly use Documents/My Games, but this is non-standard. That is a better place however...
 // On Linux it's the game dir, this could be better...
@@ -107,7 +121,13 @@ static void SetWriteDirectory()
 		Sys_UTF16toUTF8( savedGames, static_cast<int>( wcslen( savedGames ) + 1 ), fullPath, sizeof( fullPath ) );
 		CoTaskMemFree( savedGames );
 		Str_FixSlashes( fullPath );
-		Q_sprintf_s( fs.writeDir, "%s/%s", fullPath, SAVEFOLDER_NAME );
+		Q_sprintf_s( fs.writeDir, "%s/%s/", fullPath, SAVEFOLDER_NAME ); // Append an extra slash for the CreateAbsolutePath call
+
+		// Create it if it doesn't already exist
+		CreateAbsolutePath( fs.writeDir, Q_strlen( fullPath ) + 1 );
+
+		// Remove our extra slash
+		fs.writeDir[strlen( fs.writeDir ) - 1] = '\0';
 	}
 	else
 	{
@@ -329,20 +349,6 @@ const char *AbsolutePathToRelativePath( const char *absolutePath, fsPath_t fsPat
 
 		return nullptr;
 	}
-	}
-}
-
-static void CreateAbsolutePath( char *path, strlen_t skipDist )
-{
-	for ( char *ofs = path + skipDist + 1; *ofs; ++ofs )
-	{
-		if ( *ofs == '/' )
-		{
-			// create the directory
-			*ofs = '\0';
-			Sys_CreateDirectory( path );
-			*ofs = '/';
-		}
 	}
 }
 
