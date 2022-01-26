@@ -209,7 +209,7 @@ static void R_InitCVars()
 	r_mode = Cvar_Get( "r_mode", "3", CVAR_ARCHIVE, "The video mode." );
 	r_lightmap = Cvar_Get( "r_lightmap", "0", 0, "If true, displays the lightmap." );
 	r_shadows = Cvar_Get( "r_shadows", "0", CVAR_ARCHIVE, "Deprecated." );
-	r_dynamic = Cvar_Get( "r_dynamic", "1", 0, "If true, dynamic lighting is enabled." );
+	r_dynamic = Cvar_Get( "r_dynamic", "0", 0, "If true, dynamic lighting is enabled." );
 	r_picmip = Cvar_Get( "r_picmip", "0", 0, "Deprecated." );
 	r_showtris = Cvar_Get( "r_showtris", "0", 0, "Deprecated." );
 	r_wireframe = Cvar_Get( "r_wireframe", "0", 0, "If true, draws everything using lines." );

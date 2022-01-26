@@ -381,7 +381,6 @@ extern int c_visible_textures;
 void	R_DrawBrushModel( entity_t *e );
 void	R_DrawWorld();
 void	R_DrawAlphaSurfaces();
-void	R_RenderBrushPoly( msurface_t *fa );
 void	R_RotateForEntity( entity_t *e );
 void	R_MarkLeaves();
 
@@ -439,6 +438,7 @@ struct glProgs_t
 	GLuint guiProg;
 	GLuint particleProg;
 	GLuint smfMeshProg;
+	GLuint worldProg;
 	GLuint debugMeshProg;
 };
 

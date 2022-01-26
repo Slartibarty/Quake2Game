@@ -80,6 +80,8 @@ struct msurface_t
 	glpoly_t	*polys;				// multiple if warped
 	msurface_t	*texturechain;
 	msurface_t	*lightmapchain;
+	uint		firstVertex;			// First vertex into the world render data
+	uint		numVertices;			// Number of vertices to draw
 
 	mtexinfo_t	*texinfo;
 
