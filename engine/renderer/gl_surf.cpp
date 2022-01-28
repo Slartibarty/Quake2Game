@@ -3,6 +3,11 @@
 
 	World Surface Rendering
 
+	END RESULT AFTER MAP LOADING:
+	One large trilist sorted by material
+	Each surface retains the texinfo it uses, and the index into the trilist and count
+	When finding faces to render, keep a 
+
 ===================================================================================================
 */
 
@@ -11,7 +16,7 @@
 #include "../shared/imgtools.h"
 #include <vector>
 
-#define MAX_SHADERLIGHTS 32
+#define MAX_SHADERLIGHTS 4
 
 #define DYNAMIC_LIGHT_WIDTH		128
 #define DYNAMIC_LIGHT_HEIGHT	128
@@ -36,19 +41,9 @@ struct worldVertex_t
 	float	st1[2];		// Normal UVs
 	float	st2[2];		// Lightmap UVs
 	vec3_t	normal;
-	vec3_t	tangent;
 };
 
-using worldIndex_t = uint16;
-
-// Slimmed down version of msurface_t
-struct worldMesh_t
-{
-	mtexinfo_t *texinfo;
-	GLuint lightMapIndex;
-	uint firstVertex;
-	uint numVertices;
-};
+using worldIndex_t = uint32; // Should really be toggled between based on the vertex count of the map...
 
 // This is the data sent to OpenGL
 // We use a single, large vertex / index buffer
@@ -57,16 +52,28 @@ struct worldMesh_t
 struct worldRenderData_t
 {
 	std::vector<worldVertex_t>	vertices;
-	//std::vector<worldIndex_t>	indices;
+	std::vector<worldIndex_t>	indices;
+
+	GLuint vao, vbo, ebo;
+	GLuint eboCluster;		// ebo for the current viscluster
+};
+
+// A surface batch
+struct worldMesh_t
+{
+	msurface_t *	surface;
+	uint			firstIndex;
+	uint			numIndices;
 };
 
 struct worldLists_t
 {
-	std::vector<worldVertex_t>	finalVertices;		// Final list of vertices uploaded to the GPU
+	std::vector<worldIndex_t>	finalIndices;		// Indices into the render data used to draw the PVS
 	std::vector<worldMesh_t>	opaqueMeshes;		// Each worldMesh_t is a draw call
 
 	void ClearAllLists()
 	{
+		finalIndices.clear();
 		opaqueMeshes.clear();
 	}
 };
@@ -386,21 +393,24 @@ e->angles[2] = -e->angles[2];	// stupid quake bug
 ===================================================================================================
 */
 
-//
-// Adds a translucent surface to the world lists
-//
-static void R_AddTranslucentSurface( msurface_t *surface )
+// When recursing the BSP tree we give each material its own array of indices, then
+// when we finish, we append them all into one large array which we send to the GPU
+struct worldMaterialSet_t
 {
-}
+	msurface_t *surface;
+	std::vector<worldIndex_t> indices;
+};
 
-//
-// Adds a translucent surface to the world lists
-//
-static void R_AddOpaqueSurface( msurface_t *surface )
+struct worldNodeWork_t
 {
-	for ( const worldMesh_t &mesh : s_worldLists.opaqueMeshes )
+	std::vector<worldMaterialSet_t> materialSets;
+};
+
+static void R_AddSurfaceToMaterialSet( msurface_t *surf, worldMaterialSet_t &materialSet )
+{
+	for ( uint i = 0; i < surf->numVertices; ++i )
 	{
-
+		materialSet.indices.push_back( surf->firstVertex + i );
 	}
 }
 
@@ -408,7 +418,7 @@ static void R_AddOpaqueSurface( msurface_t *surface )
 // Recurses down the BSP tree inserting surfaces that need to be drawn
 // into the world lists from back to front (TODO: make it front to back)
 //
-static void R_RecursiveWorldNode( mnode_t *node )
+static void R_RecursiveWorldNode( worldNodeWork_t &work, mnode_t *node )
 {
 	int				c, side, sidebit;
 	cplane_t *		plane;
@@ -488,7 +498,7 @@ static void R_RecursiveWorldNode( mnode_t *node )
 	}
 
 	// recurse down the children, front side first
-	R_RecursiveWorldNode( node->children[side] );
+	R_RecursiveWorldNode( work, node->children[side] );
 
 	// draw stuff
 	for ( c = node->numsurfaces, surf = r_worldmodel->surfaces + node->firstsurface; c; c--, surf++ )
@@ -509,16 +519,62 @@ static void R_RecursiveWorldNode( mnode_t *node )
 		}
 		else if ( surf->texinfo->flags & ( SURF_TRANS33 | SURF_TRANS66 ) )
 		{
-			R_AddTranslucentSurface( surf );
 		}
 		else
 		{
-			R_AddOpaqueSurface( surf );
+			bool added = false;
+			for ( worldMaterialSet_t &materialSet : work.materialSets )
+			{
+				if ( materialSet.surface->texinfo == surf->texinfo )
+				{
+					// Insert into this material set
+					R_AddSurfaceToMaterialSet( surf, materialSet );
+					added = true;
+				}
+			}
+			if ( !added )
+			{
+				// Create a new material set
+				worldMaterialSet_t &materialSet = work.materialSets.emplace_back();
+				materialSet.surface = surf;
+				R_AddSurfaceToMaterialSet( surf, materialSet );
+			}
 		}
 	}
 
 	// recurse down the back side
-	R_RecursiveWorldNode( node->children[!side] );
+	R_RecursiveWorldNode( work, node->children[!side] );
+}
+
+//
+// Squashes our index lists into the final index buffer, builds the world lists
+//
+static void R_SquashAndUploadIndices( const worldNodeWork_t &work )
+{
+#if 0
+	for ( const worldMaterialSet_t &materialSet : work.materialSets )
+	{
+		// Create a new mesh
+		worldMesh_t &opaqueMesh = s_worldLists.opaqueMeshes.emplace_back();
+		opaqueMesh.surface = materialSet.surface;
+
+		uint firstIndex = static_cast<uint>( s_worldLists.finalIndices.size() );
+
+		// Insert our individual index buffer at the end of the final index buffer
+		s_worldLists.finalIndices.insert( s_worldLists.finalIndices.end(), materialSet.indices.begin(), materialSet.indices.end() );
+
+		uint endIndex = static_cast<uint>( s_worldLists.finalIndices.size() ) - 1;
+
+		opaqueMesh.firstIndex = firstIndex;
+		opaqueMesh.numIndices = endIndex;
+	}
+
+	// Squashed! Now upload the index buffer
+	glBindVertexArray( s_worldRenderData.vao );
+	glBindBuffer( GL_ARRAY_BUFFER, s_worldRenderData.vbo );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, s_worldRenderData.ebo );
+	glBufferData( GL_ELEMENT_ARRAY_BUFFER, s_worldLists.finalIndices.size() * sizeof( worldIndex_t ), s_worldLists.finalIndices.data(), GL_DYNAMIC_DRAW );
+#endif
 }
 
 //
@@ -526,22 +582,38 @@ static void R_RecursiveWorldNode( mnode_t *node )
 //
 static void R_DrawOpaqueSurfaces()
 {
+	glBindVertexArray( s_worldRenderData.vao );
+	glBindBuffer( GL_ARRAY_BUFFER, s_worldRenderData.vbo );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, s_worldRenderData.ebo );
+
+#if 0
 	for ( const worldMesh_t &mesh : s_worldLists.opaqueMeshes )
 	{
 		// Increment our counter
 		//++c_brush_polys;
 
-		const material_t *mat = R_TextureAnimation( mesh.texinfo );
+		const material_t *mat = R_TextureAnimation( mesh.surface->texinfo );
 		const image_t *image = mat->image;
 
 		glActiveTexture( GL_TEXTURE0 );
 		mat->Bind();
 		glActiveTexture( GL_TEXTURE1 );
-		GL_Bind( glState.lightmap_textures + mesh.lightMapIndex );
+		GL_Bind( glState.lightmap_textures + mesh.surface->lightmaptexturenum );
 
-		glDrawArrays( GL_TRIANGLES, mesh.firstVertex, mesh.numVertices );
+		glDrawElements( GL_POLYGON, mesh.numIndices, GL_UNSIGNED_INT, (void *)( (uintptr_t)mesh.firstIndex ) );
 	}
+#else
+	glActiveTexture( GL_TEXTURE0 );
+	defaultMaterial->Bind();
+	glActiveTexture( GL_TEXTURE1 );
+	whiteMaterial->Bind();
+	//GL_Bind( glState.lightmap_textures + 1 );
+//glDrawArrays( GL_POLYGON, 0, 32 );
+	glDrawElements( GL_TRIANGLES, s_worldRenderData.indices.size(), GL_UNSIGNED_INT, (void *)( (uintptr_t)0 ) );
+#endif
 }
+
+bool g_skippedMarkLeaves;
 
 //
 // Main entry point for drawing static, opaque world geometry
@@ -574,8 +646,21 @@ void R_DrawWorld()
 	memset( gl_lms.lightmap_surfaces, 0, sizeof( gl_lms.lightmap_surfaces ) );
 	R_ClearSkyBox();
 
+	// Build the world lists
+	if ( !g_skippedMarkLeaves )
+	{
+		worldNodeWork_t work;
+
+		s_worldLists.ClearAllLists();
+
+		// This figures out what we need to render and builds the world lists
+		R_RecursiveWorldNode( work, r_worldmodel->nodes );
+
+		R_SquashAndUploadIndices( work );
+	}
+
 	// SHADERWORLD
-#if 0
+#if 1
 
 	DirectX::XMMATRIX modelMatrix = DirectX::XMMatrixIdentity();
 
@@ -584,13 +669,13 @@ void R_DrawWorld()
 
 	glUseProgram( glProgs.worldProg );
 
-	glUniformMatrix4fv( 2, 1, GL_FALSE, (const GLfloat *)&modelMatrixStore );
-	glUniformMatrix4fv( 3, 1, GL_FALSE, (const GLfloat *)&tr.viewMatrix );
-	glUniformMatrix4fv( 4, 1, GL_FALSE, (const GLfloat *)&tr.projMatrix );
+	glUniformMatrix4fv( 4, 1, GL_FALSE, (const GLfloat *)&modelMatrixStore );
+	glUniformMatrix4fv( 5, 1, GL_FALSE, (const GLfloat *)&tr.viewMatrix );
+	glUniformMatrix4fv( 6, 1, GL_FALSE, (const GLfloat *)&tr.projMatrix );
 
-	glUniform3fv( 5, 1, tr.refdef.vieworg );
+	glUniform3fv( 7, 1, tr.refdef.vieworg );
 
-	constexpr int startIndex = 6;
+	constexpr int startIndex = 8;
 	constexpr int elementsInRenderLight = 3;
 
 	for ( int iter1 = 0, iter2 = 0; iter1 < MAX_SHADERLIGHTS; ++iter1, iter2 += elementsInRenderLight )
@@ -605,32 +690,25 @@ void R_DrawWorld()
 	glUniform1i( indexAfterLights + 0, 0 ); // diffuse
 	glUniform1i( indexAfterLights + 1, 1 ); // lightmap
 
-	glActiveTexture( GL_TEXTURE0 );
-	defaultMaterial->Bind();
-	glActiveTexture( GL_TEXTURE1 );
-	GL_Bind( glState.lightmap_textures );
-	defaultMaterial->Bind();
-
 #endif
 	// SHADERWORLD
 
-	R_RecursiveWorldNode( r_worldmodel->nodes );
-
+	// Now render stuff!
 	R_DrawOpaqueSurfaces();
 
-	s_worldLists.ClearAllLists();
-
 	// SHADERWORLD
-#if 0
+#if 1
 
 	glUseProgram( 0 );
 
 #endif
 	// SHADERWORLD
 
+	// CLEAN UP STUFF!!!!!!!!!!!!!!!!!!!!!
+
 	R_DrawSkyBox();
 
-	R_DrawTriangleOutlines();
+	//R_DrawTriangleOutlines();
 }
 
 // Mark the leaves and nodes that are in the PVS for the current cluster
@@ -645,6 +723,7 @@ void R_MarkLeaves()
 
 	if ( r_oldviewcluster == r_viewcluster && r_oldviewcluster2 == r_viewcluster2 && !r_novis->GetBool() && r_viewcluster != -1 )
 	{
+		g_skippedMarkLeaves = true;
 		return;
 	}
 
@@ -652,8 +731,11 @@ void R_MarkLeaves()
 	// extent of the current pvs
 	if ( r_lockpvs->GetBool() )
 	{
+		g_skippedMarkLeaves = true;
 		return;
 	}
+
+	g_skippedMarkLeaves = false;
 
 	++r_visframecount;
 	r_oldviewcluster = r_viewcluster;
@@ -821,31 +903,25 @@ static bool LM_AllocBlock( int w, int h, int *x, int *y )
 //
 void GL_BuildPolygonFromSurface( msurface_t *fa )
 {
-#if 1
 	const medge_t *edges = currentmodel->edges;
-	const int numVerts = fa->numedges;
+	const int numEdges = fa->numedges;
 
-	s_worldRenderData.vertices.reserve( s_worldRenderData.vertices.size() + numVerts );
+	s_worldRenderData.vertices.reserve( s_worldRenderData.vertices.size() + numEdges );
+
+	// Index of the first vertex
+	const uint firstVertex = static_cast<uint>( s_worldRenderData.vertices.size() );
 
 	// Reconstruct the polygon
 
-	for ( int i = 0; i < numVerts; ++i )
+	// First, build the vertices for this face
+
+	for ( int i = 0; i < numEdges; ++i )
 	{
-		const int lindex = currentmodel->surfedges[fa->firstedge + i];
+		const int surfEdge = currentmodel->surfedges[fa->firstedge + i];
+		const int startIndex = surfEdge > 0 ? 0 : 1;
 
-		const medge_t *r_pedge;
-		const float *verts;
-
-		if ( lindex > 0 )
-		{
-			r_pedge = &edges[lindex];
-			verts = currentmodel->vertexes[r_pedge->v[0]].position;
-		}
-		else
-		{
-			r_pedge = &edges[-lindex];
-			verts = currentmodel->vertexes[r_pedge->v[1]].position;
-		}
+		const medge_t *edge = edges + abs( surfEdge );
+		const float *vertex = currentmodel->vertexes[edge->v[startIndex]].position;
 
 		worldVertex_t &outVertex = s_worldRenderData.vertices.emplace_back();
 
@@ -853,28 +929,28 @@ void GL_BuildPolygonFromSurface( msurface_t *fa )
 
 		float s, t;
 
-		s = DotProduct( verts, fa->texinfo->vecs[0] ) + fa->texinfo->vecs[0][3];
+		s = DotProduct( vertex, fa->texinfo->vecs[0] ) + fa->texinfo->vecs[0][3];
 		s /= fa->texinfo->material->image->width;
 
-		t = DotProduct( verts, fa->texinfo->vecs[1] ) + fa->texinfo->vecs[1][3];
+		t = DotProduct( vertex, fa->texinfo->vecs[1] ) + fa->texinfo->vecs[1][3];
 		t /= fa->texinfo->material->image->height;
 
 		// Copy in the vertex positions and ST coordinates
 
-		VectorCopy( verts, outVertex.pos );
+		VectorCopy( vertex, outVertex.pos );
 
 		outVertex.st1[0] = s;
 		outVertex.st1[1] = t;
 
 		// Lightmap ST/UV coordinates
 
-		s = DotProduct( verts, fa->texinfo->vecs[0] ) + fa->texinfo->vecs[0][3];
+		s = DotProduct( vertex, fa->texinfo->vecs[0] ) + fa->texinfo->vecs[0][3];
 		s -= fa->texturemins[0];
 		s += fa->light_s * 16;
 		s += 8;
 		s /= BLOCK_WIDTH * 16; // fa->texinfo->texture->width;
 
-		t = DotProduct( verts, fa->texinfo->vecs[1] ) + fa->texinfo->vecs[1][3];
+		t = DotProduct( vertex, fa->texinfo->vecs[1] ) + fa->texinfo->vecs[1][3];
 		t -= fa->texturemins[1];
 		t += fa->light_t * 16;
 		t += 8;
@@ -883,7 +959,38 @@ void GL_BuildPolygonFromSurface( msurface_t *fa )
 		outVertex.st2[0] = s;
 		outVertex.st2[1] = t;
 	}
-#endif
+
+	const int numTriangles = fa->numedges - 2;
+
+	if ( fa->numedges == 3 )
+	{
+		// Already triangulated!
+		s_worldRenderData.indices.push_back( firstVertex + 0 );
+		s_worldRenderData.indices.push_back( firstVertex + 1 );
+		s_worldRenderData.indices.push_back( firstVertex + 2 );
+		return;
+	}
+
+	// triangulate it, fan style
+
+	int i;
+	int middle;
+
+	// for every triangle
+	for ( i = 0, middle = 1; i < numTriangles; ++i, ++middle )
+	{
+		s_worldRenderData.indices.push_back( firstVertex + 0 );
+		s_worldRenderData.indices.push_back( firstVertex + middle );
+		s_worldRenderData.indices.push_back( firstVertex + middle + 1 );
+	}
+
+	// Index of the last vertex
+	const uint endVertex = static_cast<uint>( s_worldRenderData.vertices.size() );
+
+	fa->firstVertex = firstVertex;
+	fa->numVertices = endVertex - firstVertex;
+
+	assert( fa->numVertices == numEdges );
 }
 
 //
@@ -975,4 +1082,35 @@ void GL_EndBuildingLightmaps()
 {
 	LM_UploadBlock();
 	GL_EnableMultitexture( false );
+
+	// Upload our big fat vertex buffer
+
+	glGenVertexArrays( 1, &s_worldRenderData.vao );
+	glGenBuffers( 2, &s_worldRenderData.vbo );			// Gen the vbo and ebo in one go
+
+	glBindVertexArray( s_worldRenderData.vao );
+	glBindBuffer( GL_ARRAY_BUFFER, s_worldRenderData.vbo );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, s_worldRenderData.ebo );
+
+	// xyz, st1, st2 normal
+	glEnableVertexAttribArray( 0 );
+	glEnableVertexAttribArray( 1 );
+	glEnableVertexAttribArray( 2 );
+	glEnableVertexAttribArray( 3 );
+
+	constexpr GLsizei structureSize = sizeof( worldVertex_t );
+
+	glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, structureSize, (void *)( 0 ) );
+	glVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, structureSize, (void *)( 3 * sizeof( GLfloat ) ) );
+	glVertexAttribPointer( 2, 2, GL_FLOAT, GL_FALSE, structureSize, (void *)( 5 * sizeof( GLfloat ) ) );
+	glVertexAttribPointer( 3, 3, GL_FLOAT, GL_FALSE, structureSize, (void *)( 7 * sizeof( GLfloat ) ) );
+
+	const void *vertexData = reinterpret_cast<const void *>( s_worldRenderData.vertices.data() );
+	const GLsizeiptr vertexSize = static_cast<GLsizeiptr>( s_worldRenderData.vertices.size() ) * sizeof( worldVertex_t );
+
+	const void *indexData = reinterpret_cast<const void *>( s_worldRenderData.indices.data() );
+	const GLsizeiptr indexSize = static_cast<GLsizeiptr>( s_worldRenderData.indices.size() ) * sizeof( worldIndex_t );
+
+	glBufferData( GL_ARRAY_BUFFER, vertexSize, vertexData, GL_STATIC_DRAW );
+	glBufferData( GL_ELEMENT_ARRAY_BUFFER, indexSize, indexData, GL_STATIC_DRAW );
 }

@@ -8,6 +8,8 @@
 
 #include "gl_local.h"
 
+#include <algorithm> // std::sort
+
 #define	MAX_MOD_KNOWN 1024
 
 // delete me
@@ -17,6 +19,12 @@ void Mod_LoadBrushModel( model_t *pMod, void *pBuffer, int bufferLength );
 void Mod_LoadAliasModel( model_t *pMod, void *pBuffer, int bufferLength );
 void Mod_LoadSMFModel( model_t *pMod, void *pBuffer, int bufferLength );
 void Mod_LoadSpriteModel( model_t *pMod, void *pBuffer, int bufferLength );
+
+// gl_surf.cpp
+void GL_BuildPolygonFromSurface( msurface_t *fa );
+void GL_CreateSurfaceLightmap( msurface_t *surf );
+void GL_BeginBuildingLightmaps( model_t *m );
+void GL_EndBuildingLightmaps();
 
 static byte		mod_novis[MAX_MAP_LEAFS/8];
 
@@ -538,91 +546,118 @@ static void CalcSurfaceExtents (msurface_t *s)
 	}
 }
 
-void GL_BuildPolygonFromSurface( msurface_t *fa );
-void GL_CreateSurfaceLightmap( msurface_t *surf );
-void GL_BeginBuildingLightmaps( model_t *m );
-void GL_EndBuildingLightmaps();
-
 /*
 ========================
 Mod_LoadFaces
 ========================
 */
-static void Mod_LoadFaces (lump_t *l)
+static void Mod_LoadFaces( lump_t *l )
 {
 	dface_t		*in;
-	msurface_t 	*out;
+	msurface_t	*out;
 	int			i, count, surfnum;
 	int			planenum, side;
 	int			ti;
 
-	in = (dface_t*)(mod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		Com_Errorf ("MOD_LoadBmodel: funny lump size in %s",loadmodel->name);
-	count = l->filelen / sizeof(*in);
-	out = (msurface_t*)Hunk_Alloc ( count*sizeof(*out));	
+	in = (dface_t *)( mod_base + l->fileofs );
+	if ( l->filelen % sizeof( *in ) )
+	{
+		Com_Errorf( "MOD_LoadBmodel: funny lump size in %s", loadmodel->name );
+	}
+	count = l->filelen / sizeof( *in );
+	out = (msurface_t *)Hunk_Alloc( count * sizeof( *out ) );
 
 	loadmodel->surfaces = out;
 	loadmodel->numsurfaces = count;
 
 	currentmodel = loadmodel;
 
-	GL_BeginBuildingLightmaps (loadmodel);
+	// The face data is mutable... So sort it now by texinfo!
+	std::sort( in, in + count,
+		[]( const dface_t &a, const dface_t &b )
+		{
+			return a.texinfo < b.texinfo;
+		}
+	);
 
-	for ( surfnum=0 ; surfnum<count ; surfnum++, in++, out++)
+	GL_BeginBuildingLightmaps( loadmodel );
+
+	for ( surfnum = 0; surfnum < count; ++surfnum, ++in, ++out )
 	{
-		out->firstedge = LittleLong(in->firstedge);
-		out->numedges = LittleShort(in->numedges);		
+		out->firstedge = LittleLong( in->firstedge );
+		out->numedges = LittleShort( in->numedges );
 		out->flags = 0;
 		out->polys = NULL;
 
-		planenum = LittleShort(in->planenum);
-		side = LittleShort(in->side);
-		if (side)
-			out->flags |= SURF_PLANEBACK;			
+		planenum = LittleShort( in->planenum );
+		side = LittleShort( in->side );
+		if ( side )
+		{
+			out->flags |= SURF_PLANEBACK;
+		}
 
 		out->plane = loadmodel->planes + planenum;
 
-		ti = LittleShort (in->texinfo);
-		if (ti < 0 || ti >= loadmodel->numtexinfo)
-			Com_Error ("MOD_LoadBmodel: bad texinfo number");
+		ti = LittleShort( in->texinfo );
+		if ( ti < 0 || ti >= loadmodel->numtexinfo )
+		{
+			Com_Error( "MOD_LoadBmodel: bad texinfo number" );
+		}
 		out->texinfo = loadmodel->texinfo + ti;
 
-		CalcSurfaceExtents (out);
-				
-	// lighting info
+		CalcSurfaceExtents( out );
 
-		for (i=0 ; i<MAXLIGHTMAPS ; i++)
+		// lighting info
+
+		for ( i = 0; i < MAXLIGHTMAPS; ++i )
+		{
 			out->styles[i] = in->styles[i];
-		i = LittleLong(in->lightofs);
-		if (i == -1)
+		}
+		i = LittleLong( in->lightofs );
+		if ( i == -1 )
+		{
 			out->samples = NULL;
+		}
 		else
+		{
 			out->samples = loadmodel->lightdata + i;
-		
-	// set the drawing flags
-		
-		if (out->texinfo->flags & SURF_WARP)
+		}
+
+		// set the drawing flags
+
+		if ( out->texinfo->flags & SURF_WARP )
 		{
 			out->flags |= SURF_DRAWTURB;
-			for (i=0 ; i<2 ; i++)
+			for ( i = 0; i < 2; ++i )
 			{
 				out->extents[i] = 16384;
 				out->texturemins[i] = -8192;
 			}
-			GL_SubdivideSurface (out);	// cut up polygon for warps
+			GL_SubdivideSurface( out );	// cut up polygon for warps
 		}
 
 		// create lightmaps and polygons
-		if ( !(out->texinfo->flags & (SURFMASK_UNLIT) ) )
-			GL_CreateSurfaceLightmap (out);
+		if ( !( out->texinfo->flags & ( SURFMASK_UNLIT ) ) )
+		{
+			GL_CreateSurfaceLightmap( out );
+		}
 
-		if (! (out->texinfo->flags & SURF_WARP) ) 
-			GL_BuildPolygonFromSurface(out);
+		if ( !( out->texinfo->flags & SURF_WARP ) )
+		{
+			GL_BuildPolygonFromSurface( out );
+		}
 
 	}
 
-	GL_EndBuildingLightmaps ();
+	GL_EndBuildingLightmaps();
+
+#if 1
+	for ( int i = 0; i < count; ++i )
+	{
+		msurface_t *thisSurf = loadmodel->surfaces + i;
+		Com_Printf( "Surface %-6d, numVerts: %u\n", i, thisSurf->numVertices );
+	}
+#endif
 }
 
 /*

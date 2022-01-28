@@ -37,8 +37,7 @@ struct mmodel_t
 
 struct medge_t
 {
-	unsigned short	v[2];
-	unsigned int	cachededgeoffset;
+	uint16		v[2];
 };
 
 struct mtexinfo_t
