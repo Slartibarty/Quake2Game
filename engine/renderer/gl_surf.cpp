@@ -23,10 +23,12 @@
 
 #define LIGHTMAP_BYTES	4
 
-#define	BLOCK_WIDTH		128
-#define	BLOCK_HEIGHT	128
+// Width and height of the lightmap atlas
+#define	BLOCK_WIDTH		4096
+#define	BLOCK_HEIGHT	4096
 
-#define	MAX_LIGHTMAPS	128
+// How many lightmap atlases we can have
+#define	MAX_LIGHTMAPS	4
 
 #define GL_LIGHTMAP_FORMAT GL_RGBA
 
@@ -54,7 +56,7 @@ struct worldRenderData_t
 	std::vector<worldVertex_t>	vertices;
 	std::vector<worldIndex_t>	indices;
 
-	GLuint vao, vbo, ebo;
+	GLuint vao, vbo/*, ebo*/;
 	GLuint eboCluster;		// ebo for the current viscluster
 };
 
@@ -62,8 +64,8 @@ struct worldRenderData_t
 struct worldMesh_t
 {
 	msurface_t *	surface;
-	uint			firstIndex;
-	uint			numIndices;
+	uint32			firstIndex;		// Index into s_worldLists.finalIndices
+	uint32			numIndices;
 };
 
 struct worldLists_t
@@ -408,9 +410,9 @@ struct worldNodeWork_t
 
 static void R_AddSurfaceToMaterialSet( msurface_t *surf, worldMaterialSet_t &materialSet )
 {
-	for ( uint i = 0; i < surf->numVertices; ++i )
+	for ( uint32 i = 0; i < surf->numIndices; ++i )
 	{
-		materialSet.indices.push_back( surf->firstVertex + i );
+		materialSet.indices.push_back( s_worldRenderData.indices[surf->firstIndex + i] );
 	}
 }
 
@@ -519,6 +521,7 @@ static void R_RecursiveWorldNode( worldNodeWork_t &work, mnode_t *node )
 		}
 		else if ( surf->texinfo->flags & ( SURF_TRANS33 | SURF_TRANS66 ) )
 		{
+			// Remove?
 		}
 		else
 		{
@@ -551,19 +554,19 @@ static void R_RecursiveWorldNode( worldNodeWork_t &work, mnode_t *node )
 //
 static void R_SquashAndUploadIndices( const worldNodeWork_t &work )
 {
-#if 0
+#if 1
 	for ( const worldMaterialSet_t &materialSet : work.materialSets )
 	{
 		// Create a new mesh
 		worldMesh_t &opaqueMesh = s_worldLists.opaqueMeshes.emplace_back();
 		opaqueMesh.surface = materialSet.surface;
 
-		uint firstIndex = static_cast<uint>( s_worldLists.finalIndices.size() );
+		uint32 firstIndex = static_cast<uint32>( s_worldLists.finalIndices.size() );
 
 		// Insert our individual index buffer at the end of the final index buffer
 		s_worldLists.finalIndices.insert( s_worldLists.finalIndices.end(), materialSet.indices.begin(), materialSet.indices.end() );
 
-		uint endIndex = static_cast<uint>( s_worldLists.finalIndices.size() ) - 1;
+		uint32 endIndex = static_cast<uint32>( s_worldLists.finalIndices.size() );
 
 		opaqueMesh.firstIndex = firstIndex;
 		opaqueMesh.numIndices = endIndex;
@@ -572,7 +575,7 @@ static void R_SquashAndUploadIndices( const worldNodeWork_t &work )
 	// Squashed! Now upload the index buffer
 	glBindVertexArray( s_worldRenderData.vao );
 	glBindBuffer( GL_ARRAY_BUFFER, s_worldRenderData.vbo );
-	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, s_worldRenderData.ebo );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, s_worldRenderData.eboCluster );
 	glBufferData( GL_ELEMENT_ARRAY_BUFFER, s_worldLists.finalIndices.size() * sizeof( worldIndex_t ), s_worldLists.finalIndices.data(), GL_DYNAMIC_DRAW );
 #endif
 }
@@ -584,7 +587,7 @@ static void R_DrawOpaqueSurfaces()
 {
 	glBindVertexArray( s_worldRenderData.vao );
 	glBindBuffer( GL_ARRAY_BUFFER, s_worldRenderData.vbo );
-	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, s_worldRenderData.ebo );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, s_worldRenderData.eboCluster );
 
 #if 0
 	for ( const worldMesh_t &mesh : s_worldLists.opaqueMeshes )
@@ -593,22 +596,20 @@ static void R_DrawOpaqueSurfaces()
 		//++c_brush_polys;
 
 		const material_t *mat = R_TextureAnimation( mesh.surface->texinfo );
-		const image_t *image = mat->image;
 
 		glActiveTexture( GL_TEXTURE0 );
 		mat->Bind();
 		glActiveTexture( GL_TEXTURE1 );
 		GL_Bind( glState.lightmap_textures + mesh.surface->lightmaptexturenum );
 
-		glDrawElements( GL_POLYGON, mesh.numIndices, GL_UNSIGNED_INT, (void *)( (uintptr_t)mesh.firstIndex ) );
+		glDrawElements( GL_TRIANGLES, mesh.numIndices, GL_UNSIGNED_INT, (void *)( (uintptr_t)mesh.firstIndex ) );
 	}
 #else
 	glActiveTexture( GL_TEXTURE0 );
-	defaultMaterial->Bind();
-	glActiveTexture( GL_TEXTURE1 );
 	whiteMaterial->Bind();
-	//GL_Bind( glState.lightmap_textures + 1 );
-//glDrawArrays( GL_POLYGON, 0, 32 );
+	glActiveTexture( GL_TEXTURE1 );
+	//whiteMaterial->Bind();
+	GL_Bind( glState.lightmap_textures + 1 );
 	glDrawElements( GL_TRIANGLES, s_worldRenderData.indices.size(), GL_UNSIGNED_INT, (void *)( (uintptr_t)0 ) );
 #endif
 }
@@ -647,6 +648,7 @@ void R_DrawWorld()
 	R_ClearSkyBox();
 
 	// Build the world lists
+#if 0
 	if ( !g_skippedMarkLeaves )
 	{
 		worldNodeWork_t work;
@@ -658,6 +660,7 @@ void R_DrawWorld()
 
 		R_SquashAndUploadIndices( work );
 	}
+#endif
 
 	// SHADERWORLD
 #if 1
@@ -896,6 +899,21 @@ static bool LM_AllocBlock( int w, int h, int *x, int *y )
 	return true;
 }
 
+// Populates the normal member of the vertex structures
+static void R_BuildVertexNormals( worldVertex_t &v1, worldVertex_t &v2, worldVertex_t &v3 )
+{
+	vec3_t a, b, normal;
+	VectorSubtract( v2.pos, v1.pos, a );
+	VectorSubtract( v3.pos, v1.pos, b );
+
+	CrossProduct( b, a, normal );
+	VectorNormalize( normal );
+
+	VectorCopy( normal, v1.normal );
+	VectorCopy( normal, v2.normal );
+	VectorCopy( normal, v3.normal );
+}
+
 //
 // Given an msurface_t with basic brush geometry specified
 // will create optimised render geometry and append it to s_worldRenderData
@@ -909,7 +927,7 @@ void GL_BuildPolygonFromSurface( msurface_t *fa )
 	s_worldRenderData.vertices.reserve( s_worldRenderData.vertices.size() + numEdges );
 
 	// Index of the first vertex
-	const uint firstVertex = static_cast<uint>( s_worldRenderData.vertices.size() );
+	const uint32 firstVertex = static_cast<uint32>( s_worldRenderData.vertices.size() );
 
 	// Reconstruct the polygon
 
@@ -960,11 +978,11 @@ void GL_BuildPolygonFromSurface( msurface_t *fa )
 		outVertex.st2[1] = t;
 	}
 
-	const int numTriangles = fa->numedges - 2;
-
 	if ( fa->numedges == 3 )
 	{
 		// Already triangulated!
+		fa->firstIndex = firstVertex;
+		fa->numIndices = numEdges;
 		s_worldRenderData.indices.push_back( firstVertex + 0 );
 		s_worldRenderData.indices.push_back( firstVertex + 1 );
 		s_worldRenderData.indices.push_back( firstVertex + 2 );
@@ -973,24 +991,33 @@ void GL_BuildPolygonFromSurface( msurface_t *fa )
 
 	// triangulate it, fan style
 
+	const int numTriangles = fa->numedges - 2;
+
 	int i;
 	int middle;
 
 	// for every triangle
 	for ( i = 0, middle = 1; i < numTriangles; ++i, ++middle )
 	{
+		worldVertex_t &v1 = s_worldRenderData.vertices[firstVertex + 0];
+		worldVertex_t &v2 = s_worldRenderData.vertices[firstVertex + middle];
+		worldVertex_t &v3 = s_worldRenderData.vertices[firstVertex + middle + 1];
+
+		R_BuildVertexNormals( v1, v2, v3 );
+
+		// Take this opportunity to sort out the normals too
 		s_worldRenderData.indices.push_back( firstVertex + 0 );
 		s_worldRenderData.indices.push_back( firstVertex + middle );
 		s_worldRenderData.indices.push_back( firstVertex + middle + 1 );
 	}
 
 	// Index of the last vertex
-	const uint endVertex = static_cast<uint>( s_worldRenderData.vertices.size() );
+	const uint32 endVertex = static_cast<uint32>( s_worldRenderData.vertices.size() );
 
-	fa->firstVertex = firstVertex;
-	fa->numVertices = endVertex - firstVertex;
+	fa->firstIndex = firstVertex;
+	fa->numIndices = endVertex - firstVertex;
 
-	assert( fa->numVertices == numEdges );
+	assert( fa->numIndices == numEdges );
 }
 
 //
@@ -1090,7 +1117,7 @@ void GL_EndBuildingLightmaps()
 
 	glBindVertexArray( s_worldRenderData.vao );
 	glBindBuffer( GL_ARRAY_BUFFER, s_worldRenderData.vbo );
-	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, s_worldRenderData.ebo );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, s_worldRenderData.eboCluster );
 
 	// xyz, st1, st2 normal
 	glEnableVertexAttribArray( 0 );

@@ -651,7 +651,7 @@ static void Mod_LoadFaces( lump_t *l )
 
 	GL_EndBuildingLightmaps();
 
-#if 1
+#if 0
 	for ( int i = 0; i < count; ++i )
 	{
 		msurface_t *thisSurf = loadmodel->surfaces + i;
