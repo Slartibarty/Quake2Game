@@ -186,7 +186,11 @@ static void V_TestParticles()
 
 static void V_ClearView()
 {
+	// SHADERWORLD - Clear out all used lights, because we naively upload
+	// the entire structure (or most of it) for GL shaders
+	memset( clView.dlights, 0, clView.numDLights * sizeof( dlight_t ) );
 	clView.numDLights = 0;
+
 	clView.numEntities = 0;
 	clView.numParticles = 0;
 }
