@@ -592,6 +592,13 @@ void Com_Init( int argc, char **argv )
 
 	// Systems before this are not allowed to fail
 
+	// Blah, this is a bad place for this
+#ifdef DEDICATED_ONLY
+	dedicated = Cvar_Get( "dedicated", "1", CVAR_INIT, "If true, this is a dedicated server." );
+#else
+	dedicated = Cvar_Get( "dedicated", "0", CVAR_INIT, "If true, this is a dedicated server." );
+#endif
+
 	Sys_Init( argc, argv );
 	FileSystem::Init();
 
@@ -612,12 +619,6 @@ void Com_Init( int argc, char **argv )
 	com_fixedTime = Cvar_Get( "com_fixedTime", "0", 0, "Force time to this value." );
 	com_logFile = Cvar_Get( "com_logFile", "0", 0, "Directs all logged messages to a file." );
 	com_showTrace = Cvar_Get( "com_showTrace", "0", 0, "Spams the console with trace stats." );
-
-#ifdef DEDICATED_ONLY
-	dedicated = Cvar_Get( "dedicated", "1", CVAR_INIT, "If true, this is a dedicated server." );
-#else
-	dedicated = Cvar_Get( "dedicated", "0", CVAR_INIT, "If true, this is a dedicated server." );
-#endif
 
 	Cmd_AddCommand( "com_perfTest", Com_PerfTest_f, "Perftest!" );
 	Cmd_AddCommand( "com_error", Com_Error_f, "Throws a Com_Error." );

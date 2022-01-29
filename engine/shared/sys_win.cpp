@@ -106,6 +106,15 @@ void Sys_Quit( int code )
 	// Shut down very low level stuff
 	Sys_SecretShutdown();
 
+	// If we're not exiting cleanly, give devs a chance to see what happened
+	if ( code != EXIT_SUCCESS )
+	{
+		if ( IsDebuggerPresent() )
+		{
+			__debugbreak();
+		}
+	}
+
 	exit( code );
 }
 
@@ -281,7 +290,7 @@ struct vidMode_t
 
 static constexpr size_t DefaultNumModes = 64;
 
-std::vector<vidMode_t> s_vidModes;
+static std::vector<vidMode_t> s_vidModes;
 
 static int SortModes( const void *p1, const void *p2 )
 {
@@ -336,6 +345,7 @@ static void Sys_InitVidModes()
 		++internalNum;
 	}
 
+	// TODO: Use std::sort?
 	qsort( s_vidModes.data(), s_vidModes.size(), sizeof( vidMode_t ), SortModes );
 }
 
@@ -612,7 +622,7 @@ int main( int argc, char **argv )
 			TD_ERROR_ICON,
 			nullptr );
 
-		exit( EXIT_FAILURE );
+		return EXIT_FAILURE;
 	}
 
 	// Init very low level stuff
