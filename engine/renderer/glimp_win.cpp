@@ -464,7 +464,7 @@ bool GLimp_Init()
 	glewExperimental = GL_TRUE;
 	if ( glewInit() != GLEW_OK || wglewInit() != GLEW_OK )
 	{
-		Com_Printf( "GLimp_Init() - could not load OpenGL bindings\n" );
+		Com_Print( "GLimp_Init() - could not load OpenGL bindings\n" );
 		return false;
 	}
 
@@ -473,8 +473,21 @@ bool GLimp_Init()
 	int width, height;
 	if ( !Sys_GetVidModeInfo( width, height, r_mode->GetInt() ) )
 	{
-		Com_Printf( "GLimp_Init() - invalid mode\n" );
-		return false;
+		// Try mode 0
+		if ( !Sys_GetVidModeInfo( width, height, 0 ) )
+		{
+			Com_Print( "GLimp_Init() - invalid r_mode and mode 0 was invalid\n" );
+			return false;
+		}
+
+		// Mode 0 worked
+		Com_Print(
+			S_COLOR_RED "Forcing \"r_mode\" to 0 because the index it was set to was invalid\n"
+			S_COLOR_RED "Chances are the display device was changed, or you are using remote desktop\n"
+		);
+
+		Cvar_SetInt( r_mode, 0 );
+		r_mode->ClearModified();
 	}
 
 	extern LRESULT CALLBACK MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
