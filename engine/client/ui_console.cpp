@@ -485,7 +485,7 @@ void ShowConsole( bool *pOpen )
 	// steal focus from the window upon opening, no matter what
 	bool focusOnInput = ImGui::IsWindowAppearing() ? true : false;
 
-	ImGui::PushItemWidth( ImGui::GetWindowContentRegionWidth() - 64.0f );
+	ImGui::PushItemWidth( ImGui::GetWindowContentRegionMax().x - ImGui::GetWindowContentRegionMin().x - 64.0f );
 
 	if ( ImGui::InputText( "##Input", con.editLine.data, sizeof( con.editLine.data ), inputFlags, TextEditCallback, nullptr ) )
 	{
