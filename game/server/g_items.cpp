@@ -1426,7 +1426,7 @@ always owned, never in the world
 		WEAP_GRENADELAUNCHER,
 		NULL,
 		0,
-/* precache */ "models/weapons/pipebomb.smf weapons/grenlf1a.wav weapons/grenlr1b.wav weapons/grenlb1b.wav"
+/* precache */ "models/objects/grenade/tris.md2 weapons/grenlf1a.wav weapons/grenlr1b.wav weapons/grenlb1b.wav"
 	},
 
 /*QUAKED weapon_rocketlauncher (.3 .3 1) (-16 -16 -16) (16 16 16)
