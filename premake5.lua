@@ -719,6 +719,7 @@ if not _OPTIONS["exclude-utils"] then
 			}
 		filter {}
 
+	--[[
 	project "qatlas"
 		kind "ConsoleApp"
 		targetname "qatlas"
@@ -741,6 +742,7 @@ if not _OPTIONS["exclude-utils"] then
 			xatlas_public,
 			xatlas_sources
 		}
+	--]]
 
 	--[[
 	project "qsmf"
