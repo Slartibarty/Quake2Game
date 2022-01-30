@@ -439,9 +439,9 @@ A few comments on maximum limits:
 ===================================================================================================
 */
 
-inline constexpr int IDBSPHEADER = MakeFourCC( 'Q', 'B', 'S', 'P' );
+inline constexpr int IDBSPHEADER = MakeFourCC( 'I', 'B', 'S', 'P' ); // MakeFourCC( 'Q', 'B', 'S', 'P' );
 
-#define BSPVERSION 42
+#define BSPVERSION 38 // 42
 
 // almost none of these constants are used by the game
 
@@ -492,36 +492,34 @@ inline constexpr float MAX_TRACE_LENGTH = mconst::sqrt3 * WORLD_SIZE;
 
 struct lump_t
 {
-	int		fileofs, filelen;
+	int32		fileofs, filelen;
 };
 
 #define	LUMP_ENTITIES		0
 #define	LUMP_PLANES			1
-#define	LUMP_VERTEXES		2		// deprecated, remove
+#define	LUMP_VERTEXES		2		// Array of dvertex_t
 #define	LUMP_VISIBILITY		3
 #define	LUMP_NODES			4
 #define	LUMP_TEXINFO		5
 #define	LUMP_FACES			6
-#define	LUMP_LIGHTING		7		// deprecated, remove
+#define	LUMP_LIGHTING		7		// Raw lightmap data
 #define	LUMP_LEAFS			8
 #define	LUMP_LEAFFACES		9
 #define	LUMP_LEAFBRUSHES	10
-#define	LUMP_EDGES			11		// deprecated, remove
-#define	LUMP_SURFEDGES		12		// deprecated, remove
+#define	LUMP_EDGES			11		// Array of dedge_t
+#define	LUMP_SURFEDGES		12		// Sucks
 #define	LUMP_MODELS			13
 #define	LUMP_BRUSHES		14
 #define	LUMP_BRUSHSIDES		15
-#define	LUMP_AREAS			16		// TODO: why doesn't Quake 3 have these?
-#define	LUMP_AREAPORTALS	17		// TODO: why doesn't Quake 3 have these?
-#define	LUMP_DRAWFACES		18		// NEW!
-#define	LUMP_DRAWVERTS		19		// NEW!
-#define	LUMP_DRAWINDICES	20		// NEW! uint16 indices
-#define	HEADER_LUMPS		21
+#define	LUMP_POP			16		// POP lump
+#define	LUMP_AREAS			17		// TODO: why doesn't Quake 3 have these?
+#define	LUMP_AREAPORTALS	18		// TODO: why doesn't Quake 3 have these?
+#define	HEADER_LUMPS		19
 
 struct dheader_t
 {
-	int			ident;
-	int			version;
+	int32		ident;
+	int32		version;
 	lump_t		lumps[HEADER_LUMPS];
 };
 
@@ -529,14 +527,14 @@ struct dmodel_t
 {
 	float		mins[3], maxs[3];
 	float		origin[3];				// for sounds or lights
-	int			headnode;
-	int			firstface, numfaces;	// submodels just draw faces without walking the bsp tree
+	int32		headnode;
+	int32		firstface, numfaces;	// submodels just draw faces without walking the bsp tree
 };
 
 
 struct dvertex_t
 {
-	float	point[3];
+	float		point[3];
 };
 
 
@@ -556,9 +554,9 @@ struct dvertex_t
 
 struct dplane_t
 {
-	float	normal[3];
-	float	dist;
-	int		type;		// PLANE_X - PLANE_ANYZ ?remove? trivial to regenerate
+	float		normal[3];
+	float		dist;
+	int32		type;		// PLANE_X - PLANE_ANYZ ?remove? trivial to regenerate
 };
 
 
@@ -573,18 +571,16 @@ struct dnode_t
 	int16		maxs[3];
 	uint16		firstface;
 	uint16		numfaces;		// counting both sides
-	// new
-	uint32		newFirstFace;
-	uint32		newNumFaces;
 };
 
 
 struct texinfo_t
 {
 	float		vecs[2][4];		// [s/t][xyz offset]
-	int			flags;			// miptex flags + overrides
+	int32		flags;			// miptex flags + overrides
+	int32		value;			// light emission, etc						DEPRECATED
 	char		texture[32];	// texture name (textures/*.wal)
-	int			nexttexinfo;	// for animations, -1 = end of chain
+	int32		nexttexinfo;	// for animations, -1 = end of chain
 };
 
 
@@ -592,22 +588,22 @@ struct texinfo_t
 // counterclockwise use of the edge in a face
 struct dedge_t
 {
-	unsigned short	v[2];		// vertex numbers
+	uint16		v[2];		// vertex numbers
 };
 
 #define	MAXLIGHTMAPS	4
 struct dface_t
 {
-	unsigned short	planenum;
-	short		side;
+	uint16		planenum;
+	int16		side;
 
-	int			firstedge;		// we must support > 64k edges
-	short		numedges;
-	short		texinfo;
+	int32		firstedge;		// we must support > 64k edges
+	int16		numedges;
+	int16		texinfo;
 
 // lighting info
-	byte		styles[MAXLIGHTMAPS];
-	int			lightofs;		// start of [numstyles*surfsize] samples
+	uint8		styles[MAXLIGHTMAPS];
+	int32		lightofs;		// start of [numstyles*surfsize] samples
 };
 
 struct dleaf_t
@@ -625,22 +621,19 @@ struct dleaf_t
 
 	uint16		firstleafbrush;
 	uint16		numleafbrushes;
-
-	uint16		newFirstFace;
-	uint16		newNumFaces;
 };
 
 struct dbrushside_t
 {
-	unsigned short	planenum;		// facing out of the leaf
-	short	texinfo;
+	uint16		planenum;		// facing out of the leaf
+	int16		texinfo;
 };
 
 struct dbrush_t
 {
-	int			firstside;
-	int			numsides;
-	int			contents;
+	int32		firstside;
+	int32		numsides;
+	int32		contents;
 };
 
 
@@ -651,8 +644,8 @@ struct dbrush_t
 #define	DVIS_PHS	1
 struct dvis_t
 {
-	int			numclusters;
-	int			bitofs[8][2];	// bitofs[numclusters][2]
+	int32		numclusters;
+	int32		bitofs[8][2];	// bitofs[numclusters][2]
 };
 
 // each area has a list of portals that lead into other areas
@@ -660,17 +653,19 @@ struct dvis_t
 // hearable even if the vis info says that it should be
 struct dareaportal_t
 {
-	int		portalnum;
-	int		otherarea;
+	int32		portalnum;
+	int32		otherarea;
 };
 
 struct darea_t
 {
-	int		numareaportals;
-	int		firstareaportal;
+	int32		numareaportals;
+	int32		firstareaportal;
 };
 
 //=============================================================================
+
+#if 0 // Remains of the old plans to revise the BSP format...
 
 #define TEMP_MAX_QPATH 128		// temp bigger qpath
 
@@ -691,3 +686,5 @@ struct bspDrawVert_t
 };
 
 using bspDrawIndex_t = uint16;
+
+#endif
