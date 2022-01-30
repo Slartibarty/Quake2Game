@@ -169,7 +169,7 @@ static GLuint GL_UploadCompressed( const byte *pBuffer, imageFlags_t flags )
 	GLuint id;
 
 	glGenTextures( 1, &id );
-	GL_Bind( id );
+	GL_BindTexture( id );
 
 	// by this point we know several things are for sure:
 	//  1. DDPF_FOURCC is present in ddspf
@@ -247,7 +247,7 @@ static GLuint GL_Upload( const byte *pData, int width, int height, imageFlags_t 
 	GLuint id;
 
 	glGenTextures( 1, &id );
-	GL_Bind( id );
+	GL_BindTexture( id );
 
 	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pData );
 
@@ -1031,7 +1031,7 @@ int R_CreateFBO( int width, int height )
 	glBindFramebuffer( GL_FRAMEBUFFER, fb.obj );
 
 	glGenTextures( 1, &fb.color );
-	GL_Bind( fb.color );
+	GL_BindTexture( fb.color );
 	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr );
 	GL_ApplyTextureParameters( IF_NOMIPS );
 	glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fb.color, 0 );

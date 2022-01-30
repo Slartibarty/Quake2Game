@@ -419,6 +419,8 @@ void Draw_RenderBatches()
 		glEnable( GL_BLEND );
 		glEnable( GL_PRIMITIVE_RESTART_FIXED_INDEX );
 
+		GL_ActiveTexture( GL_TEXTURE0 );
+
 		for ( const auto &cmd : s_drawCmds )
 		{
 			cmd.material->Bind();
@@ -519,7 +521,7 @@ void R_DrawStretchRaw( int x, int y, int w, int h, int cols, int rows, byte *dat
 	GLuint id;
 
 	glGenTextures( 1, &id );
-	GL_Bind( id );
+	GL_BindTexture( id );
 
 	// Upload frame
 	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, image32 );
@@ -538,7 +540,7 @@ void R_DrawStretchRaw( int x, int y, int w, int h, int cols, int rows, byte *dat
 	glVertex2i( x, y + h );
 	glEnd();
 
-	GL_Bind( 0 );
+	GL_BindTexture( 0 );
 
 	// Delete frame
 	glDeleteTextures( 1, &id );

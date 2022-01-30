@@ -21,6 +21,8 @@ static_assert( DIRECTX_MATH_VERSION >= 316 );
 #include "GL/wglew.h"
 #endif
 
+#define Q_MAX_TEXTURE_UNITS		16
+
 #define DEFAULT_CLEARCOLOR		0.25f, 0.25f, 0.25f, 1.0f
 
 #define MAT_EXT ".mat"
@@ -52,11 +54,9 @@ void R_UpgradeWals_f();
 
 // OpenGL state helpers
 
-void		GL_EnableMultitexture( bool enable );
-void		GL_SelectTexture( GLenum texture );
+void		GL_ActiveTexture( GLenum texture );
+void		GL_BindTexture( GLuint texnum );
 void		GL_TexEnv( GLint value );
-void		GL_Bind( GLuint texnum );
-void		GL_MBind( GLenum target, GLuint texnum );
 
 void		GL_CheckErrors();
 
@@ -82,14 +82,16 @@ struct glState_t
 
 	int		lightmap_textures;
 
-	GLuint	currenttextures[2];
-	int		currenttmu;
+	GLuint	currenttextures[Q_MAX_TEXTURE_UNITS];
+	GLenum	activeTexture;
 };
 
 struct renderSystemGlobals_t
 {
 	refdef_t	refdef;
 	int			registrationSequence;
+	int			visCount;				// bumped when going to a new PVS
+	int			frameCount;				// used for dlight push checking
 
 	entity_t *	pViewmodelEntity;			// so we can render this particular entity last after everything else, but before the UI
 
@@ -169,8 +171,6 @@ extern cvar_t *r_viewmodelfov;
 
 extern	entity_t	*currententity;
 extern	model_t		*currentmodel;
-extern	int			r_visframecount;
-extern	int			r_framecount;
 extern	cplane_t	frustum[4];
 extern	int			c_brush_polys, c_alias_polys;
 
@@ -311,25 +311,25 @@ struct material_t
 	// Bind the referenced image
 	void Bind() const {
 		assert( image->refcount > 0 );
-		GL_Bind( r_basemaps->GetBool() ? image->texnum : whiteMaterial->image->texnum );
+		GL_BindTexture( r_basemaps->GetBool() ? image->texnum : whiteMaterial->image->texnum );
 	}
 
 	// Bind the spec image
 	void BindSpec() const {
 		assert( specImage->refcount > 0 );
-		GL_Bind( r_specmaps->GetBool() ? specImage->texnum : blackMaterial->image->texnum );
+		GL_BindTexture( r_specmaps->GetBool() ? specImage->texnum : blackMaterial->image->texnum );
 	}
 
 	// Bind the norm image
 	void BindNorm() const {
 		assert( normImage->refcount > 0 );
-		GL_Bind( r_normmaps->GetBool() ? normImage->texnum : flatNormalImage->texnum );
+		GL_BindTexture( r_normmaps->GetBool() ? normImage->texnum : flatNormalImage->texnum );
 	}
 
 	// Bind the emission image
 	void BindEmit() const {
 		assert( emitImage->refcount > 0 );
-		GL_Bind( r_emitmaps->GetBool() ? emitImage->texnum : blackMaterial->image->texnum );
+		GL_BindTexture( r_emitmaps->GetBool() ? emitImage->texnum : blackMaterial->image->texnum );
 	}
 
 	// Deference the referenced image and clear this struct
@@ -382,7 +382,6 @@ void	R_DrawBrushModel( entity_t *e );
 void	R_DrawWorld();
 void	R_DrawAlphaSurfaces();
 void	R_RotateForEntity( entity_t *e );
-void	R_MarkLeaves();
 
 /*
 ===============================================================================

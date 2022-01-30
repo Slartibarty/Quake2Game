@@ -17,9 +17,6 @@ model_t		*currentmodel;
 
 cplane_t	frustum[4];
 
-int			r_visframecount;	// bumped when going to a new PVS
-int			r_framecount;		// used for dlight push checking
-
 int			c_brush_polys, c_alias_polys;
 
 //
@@ -573,7 +570,7 @@ static void R_SetupFrame()
 {
 	mleaf_t *leaf;
 
-	r_framecount++;
+	tr.frameCount++;
 
 	// build the transformation matrix for the given view angles
 	VectorCopy( tr.refdef.vieworg, r_origin );
@@ -767,9 +764,6 @@ static void R_RenderView( refdef_t *fd )
 
 	// reset state
 	R_SetupGL();
-
-	// done here so we know if we're in water
-	R_MarkLeaves();
 
 	// world
 	R_DrawWorld();

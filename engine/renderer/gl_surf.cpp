@@ -16,16 +16,26 @@
 #include "../shared/imgtools.h"
 #include <vector>
 
-#define MAX_SHADERLIGHTS 4
+// Use the PVS to determine what faces are visible, broken right now
+#define USE_PVS
+
+// Comment out to disable meshoptimizer optimisations
+//#define USE_MESHOPT
+
+#ifdef USE_MESHOPT
+#include "../../thirdparty/meshoptimizer/src/meshoptimizer.h"
+#endif
+
+#define MAX_SHADERLIGHTS	4
 
 #define DYNAMIC_LIGHT_WIDTH		128
 #define DYNAMIC_LIGHT_HEIGHT	128
 
-#define LIGHTMAP_BYTES	4
+#define LIGHTMAP_BYTES		4
 
 // Width and height of the lightmap atlas
-#define	BLOCK_WIDTH		4096
-#define	BLOCK_HEIGHT	4096
+#define	BLOCK_WIDTH		1024
+#define	BLOCK_HEIGHT	1024
 
 // How many lightmap atlases we can have
 #define	MAX_LIGHTMAPS	4
@@ -47,6 +57,14 @@ struct worldVertex_t
 
 using worldIndex_t = uint32; // Should really be toggled between based on the vertex count of the map...
 
+// A surface batch
+struct worldMesh_t
+{
+	mtexinfo_t *	texinfo;
+	uint32			firstIndex;		// Index into s_worldLists.finalIndices
+	uint32			numIndices;
+};
+
 // This is the data sent to OpenGL
 // We use a single, large vertex / index buffer
 // for all world geometry
@@ -56,17 +74,18 @@ struct worldRenderData_t
 	std::vector<worldVertex_t>	vertices;
 	std::vector<worldIndex_t>	indices;
 
+#ifndef USE_PVS
+	material_t *				lastMaterial;		// This is used when building the worldMeshse
+	std::vector<worldMesh_t>	meshes;
+#endif
+
 	GLuint vao, vbo/*, ebo*/;
 	GLuint eboCluster;		// ebo for the current viscluster
 };
 
-// A surface batch
-struct worldMesh_t
-{
-	msurface_t *	surface;
-	uint32			firstIndex;		// Index into s_worldLists.finalIndices
-	uint32			numIndices;
-};
+static worldRenderData_t s_worldRenderData;
+
+#ifdef USE_PVS
 
 struct worldLists_t
 {
@@ -81,27 +100,27 @@ struct worldLists_t
 };
 
 static worldLists_t s_worldLists;
-static worldRenderData_t s_worldRenderData;
+
+#endif
 
 static vec3_t		modelorg;		// relative to viewpoint
-
-static msurface_t	*r_alpha_surfaces;
 
 int		c_visible_lightmaps;
 int		c_visible_textures;
 
 struct gllightmapstate_t
 {
-	int	current_lightmap_texture;
+	int				current_lightmap_texture;
 
-	msurface_t	*lightmap_surfaces[MAX_LIGHTMAPS];
+	msurface_t *	lightmap_surfaces[MAX_LIGHTMAPS];
 
-	int			allocated[BLOCK_WIDTH];
+	int				allocated[BLOCK_WIDTH];
 
 	// the lightmap texture data needs to be kept in
 	// main memory so texsubimage can update properly
-	byte		lightmap_buffer[4*BLOCK_WIDTH*BLOCK_HEIGHT];
+	byte			lightmap_buffer[4*BLOCK_WIDTH*BLOCK_HEIGHT];
 };
+
 static gllightmapstate_t gl_lms;
 
 // gl_light
@@ -136,60 +155,6 @@ static material_t *R_TextureAnimation( mtexinfo_t *tex )
 	return tex->material;
 }
 
-static void DrawGLPoly( glpoly_t *p )
-{
-	float *v = p->verts[0];
-
-	glBegin( GL_TRIANGLES );
-	for ( int i = 0; i < p->numverts; ++i, v += VERTEXSIZE )
-	{
-		glTexCoord2f( v[3], v[4] );
-		glVertex3fv( v );
-	}
-	glEnd();
-}
-
-//
-// Draws a wireframe view of the world
-//
-void R_DrawTriangleOutlines()
-{
-	glpoly_t *p;
-
-	if ( !r_showtris->GetBool() ) {
-		return;
-	}
-
-	glDisable( GL_TEXTURE_2D );
-	glDisable( GL_DEPTH_TEST );
-	glColor4f( 1, 1, 1, 1 );
-
-	for ( int i = 1; i < MAX_LIGHTMAPS; i++ )
-	{
-		msurface_t *surf;
-
-		for ( surf = gl_lms.lightmap_surfaces[i]; surf != 0; surf = surf->lightmapchain )
-		{
-			p = surf->polys;
-			for ( ; p; p = p->chain )
-			{
-				for ( int j = 2; j < p->numverts; j++ )
-				{
-					glBegin( GL_LINE_STRIP );
-					glVertex3fv( p->verts[0] );
-					glVertex3fv( p->verts[j - 1] );
-					glVertex3fv( p->verts[j] );
-					glVertex3fv( p->verts[0] );
-					glEnd();
-				}
-			}
-		}
-	}
-
-	glEnable( GL_DEPTH_TEST );
-	glEnable( GL_TEXTURE_2D );
-}
-
 //
 // Draw water surfaces and windows.
 // The BSP tree is waled front to back, so unwinding the chain
@@ -197,32 +162,6 @@ void R_DrawTriangleOutlines()
 //
 void R_DrawAlphaSurfaces()
 {
-	msurface_t *s;
-
-	glEnable( GL_BLEND );
-	GL_TexEnv( GL_MODULATE );
-
-	for ( s = r_alpha_surfaces; s; s = s->texturechain )
-	{
-		s->texinfo->material->Bind();
-		c_brush_polys++;
-		if ( s->texinfo->flags & SURF_TRANS33 )
-			glColor4f( 1.0f, 1.0f, 1.0f, 0.33f );
-		else if ( s->texinfo->flags & SURF_TRANS66 )
-			glColor4f( 1.0f, 1.0f, 1.0f, 0.66f );
-		else
-			glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
-		if ( s->flags & SURF_DRAWTURB )
-			EmitWaterPolys( s );
-		else
-			DrawGLPoly( s->polys );
-	}
-
-	GL_TexEnv( GL_REPLACE );
-	glColor4f( 1, 1, 1, 1 );
-	glDisable( GL_BLEND );
-
-	r_alpha_surfaces = NULL;
 }
 
 //
@@ -395,11 +334,13 @@ e->angles[2] = -e->angles[2];	// stupid quake bug
 ===================================================================================================
 */
 
+#ifdef USE_PVS
+
 // When recursing the BSP tree we give each material its own array of indices, then
 // when we finish, we append them all into one large array which we send to the GPU
 struct worldMaterialSet_t
 {
-	msurface_t *surface;
+	mtexinfo_t *texinfo;
 	std::vector<worldIndex_t> indices;
 };
 
@@ -408,11 +349,152 @@ struct worldNodeWork_t
 	std::vector<worldMaterialSet_t> materialSets;
 };
 
+// Mark the leaves and nodes that are in the PVS for the current cluster
+static void R_MarkLeaves()
+{
+	byte *		vis;
+	byte		fatvis[MAX_MAP_LEAFS / 8];
+	mnode_t *	node;
+	int			i, c;
+	mleaf_t *	leaf;
+	int			cluster;
+
+	if ( r_oldviewcluster == r_viewcluster && r_oldviewcluster2 == r_viewcluster2 && !r_novis->GetBool() && r_viewcluster != -1 )
+	{
+		return;
+	}
+
+	// lockpvs lets designers walk around to determine the
+	// extent of the current pvs
+	if ( r_lockpvs->GetBool() )
+	{
+		return;
+	}
+
+	++tr.visCount;
+	r_oldviewcluster = r_viewcluster;
+	r_oldviewcluster2 = r_viewcluster2;
+
+	if ( r_novis->GetBool() || r_viewcluster == -1 || !r_worldmodel->vis )
+	{
+		// mark everything
+		for ( i = 0; i < r_worldmodel->numleafs; i++ )
+		{
+			r_worldmodel->leafs[i].visframe = tr.visCount;
+		}
+		for ( i = 0; i < r_worldmodel->numnodes; i++ )
+		{
+			r_worldmodel->nodes[i].visframe = tr.visCount;
+		}
+		return;
+	}
+
+	vis = Mod_ClusterPVS( r_viewcluster, r_worldmodel );
+
+	// may have to combine two clusters because of solid water boundaries
+	if ( r_viewcluster2 != r_viewcluster )
+	{
+		memcpy( fatvis, vis, ( r_worldmodel->numleafs + 7 ) / 8 );
+		vis = Mod_ClusterPVS( r_viewcluster2, r_worldmodel );
+		c = ( r_worldmodel->numleafs + 31 ) / 32;
+		for ( i = 0; i < c; i++ )
+		{
+			( (int *)fatvis )[i] |= ( (int *)vis )[i];
+		}
+		vis = fatvis;
+	}
+
+	for ( i = 0, leaf = r_worldmodel->leafs; i < r_worldmodel->numleafs; ++i, ++leaf )
+	{
+		cluster = leaf->cluster;
+
+		if ( cluster == -1 )
+		{
+			continue;
+		}
+
+		// Check general pvs
+		if ( !( vis[cluster >> 3] & ( 1 << ( cluster & 7 ) ) ) )
+		{
+			// not visible
+			continue;
+		}
+
+		// Check for door connected areas
+		if ( tr.refdef.areabits )
+		{
+			if ( !( tr.refdef.areabits[leaf->area >> 3] & ( 1 << ( leaf->area & 7 ) ) ) )
+			{
+				// not visible
+				continue;
+			}
+		}
+
+		node = (mnode_t *)leaf;
+		do
+		{
+			if ( node->visframe == tr.visCount )
+			{
+				break;
+			}
+			node->visframe = tr.visCount;
+			node = node->parent;
+		} while ( node );
+	}
+
+#if 0
+	for ( i = 0; i < r_worldmodel->vis->numclusters; i++ )
+	{
+		if ( vis[i >> 3] & ( 1 << ( i & 7 ) ) )
+		{
+			node = (mnode_t *)&r_worldmodel->leafs[i];	// FIXME: cluster
+			do
+			{
+				if ( node->visframe == tr.visCount )
+					break;
+				node->visframe = tr.visCount;
+				node = node->parent;
+			} while ( node );
+		}
+	}
+#endif
+}
+
 static void R_AddSurfaceToMaterialSet( msurface_t *surf, worldMaterialSet_t &materialSet )
 {
-	for ( uint32 i = 0; i < surf->numIndices; ++i )
+	const auto begin = s_worldRenderData.indices.begin() + surf->firstIndex;
+	const auto end = begin + surf->numIndices;
+
+	materialSet.indices.insert( materialSet.indices.end(), begin, end );
+
+	assert( !( materialSet.indices.size() % 3 ) );
+}
+
+static void R_AddSurface( msurface_t *surf, worldNodeWork_t &work )
+{
+	if ( surf->frameCount == tr.frameCount ) {
+		// Already added this one!
+		return;
+	}
+
+	surf->frameCount = tr.frameCount;
+
+	bool added = false;
+	for ( worldMaterialSet_t &materialSet : work.materialSets )
 	{
-		materialSet.indices.push_back( s_worldRenderData.indices[surf->firstIndex + i] );
+		if ( materialSet.texinfo->material == surf->texinfo->material )
+		{
+			// Insert into this material set
+			R_AddSurfaceToMaterialSet( surf, materialSet );
+			added = true;
+		}
+	}
+	if ( !added )
+	{
+		// Create a new material set
+		worldMaterialSet_t &materialSet = work.materialSets.emplace_back();
+		materialSet.texinfo = surf->texinfo;
+		R_AddSurfaceToMaterialSet( surf, materialSet );
 	}
 }
 
@@ -428,17 +510,22 @@ static void R_RecursiveWorldNode( worldNodeWork_t &work, mnode_t *node )
 	mleaf_t *		pleaf;
 	float			dot;
 
+	// No polygons in solid nodes
 	if ( node->contents == CONTENTS_SOLID ) {
-		// solid
 		return;
 	}
 
-	if ( node->visframe != r_visframecount ) {
+	// If the node wasn't marked by R_MarkLeaves, exit
+	if ( node->visframe != tr.visCount ) {
 		return;
 	}
 
-	if ( R_CullBox( node->minmaxs, node->minmaxs + 3 ) ) {
-		return;
+	// Cull against the screen frustum or the appropriate area's frustum.
+	if ( node->contents >= -1 )
+	{
+		if ( R_CullBox( node->minmaxs, node->minmaxs + 3 ) ) {
+			return;
+		}
 	}
 
 	// if a leaf node, draw stuff
@@ -446,22 +533,13 @@ static void R_RecursiveWorldNode( worldNodeWork_t &work, mnode_t *node )
 	{
 		pleaf = (mleaf_t *)node;
 
-		// check for door connected areas
-		if ( tr.refdef.areabits )
-		{
-			if ( !( tr.refdef.areabits[pleaf->area >> 3] & ( 1 << ( pleaf->area & 7 ) ) ) ) {
-				// not visible
-				return;
-			}
-		}
-
 		mark = pleaf->firstmarksurface;
 		c = pleaf->nummarksurfaces;
 
 		while ( c-- )
 		{
-			( *mark )->visframe = r_framecount;
-			mark++;
+			R_AddSurface( *mark, work );
+			++mark;
 		}
 
 		return;
@@ -503,12 +581,10 @@ static void R_RecursiveWorldNode( worldNodeWork_t &work, mnode_t *node )
 	R_RecursiveWorldNode( work, node->children[side] );
 
 	// draw stuff
-	for ( c = node->numsurfaces, surf = r_worldmodel->surfaces + node->firstsurface; c; c--, surf++ )
+#if 0
+	for ( c = node->numsurfaces, surf = r_worldmodel->surfaces + node->firstsurface; c; c--, surf++ )		// Back to front
+	//for ( c = 0, surf = r_worldmodel->surfaces + node->firstsurface; c < node->numsurfaces; ++c, ++surf )	// Front to back
 	{
-		if ( surf->visframe != r_framecount ) {
-			continue;
-		}
-
 		if ( ( surf->flags & SURF_PLANEBACK ) != sidebit ) {
 			// wrong side
 			continue;
@@ -525,25 +601,10 @@ static void R_RecursiveWorldNode( worldNodeWork_t &work, mnode_t *node )
 		}
 		else
 		{
-			bool added = false;
-			for ( worldMaterialSet_t &materialSet : work.materialSets )
-			{
-				if ( materialSet.surface->texinfo == surf->texinfo )
-				{
-					// Insert into this material set
-					R_AddSurfaceToMaterialSet( surf, materialSet );
-					added = true;
-				}
-			}
-			if ( !added )
-			{
-				// Create a new material set
-				worldMaterialSet_t &materialSet = work.materialSets.emplace_back();
-				materialSet.surface = surf;
-				R_AddSurfaceToMaterialSet( surf, materialSet );
-			}
+			R_AddSurface( surf, work );
 		}
 	}
+#endif
 
 	// recurse down the back side
 	R_RecursiveWorldNode( work, node->children[!side] );
@@ -559,62 +620,64 @@ static void R_SquashAndUploadIndices( const worldNodeWork_t &work )
 	{
 		// Create a new mesh
 		worldMesh_t &opaqueMesh = s_worldLists.opaqueMeshes.emplace_back();
-		opaqueMesh.surface = materialSet.surface;
+		opaqueMesh.texinfo = materialSet.texinfo;
 
 		uint32 firstIndex = static_cast<uint32>( s_worldLists.finalIndices.size() );
 
 		// Insert our individual index buffer at the end of the final index buffer
 		s_worldLists.finalIndices.insert( s_worldLists.finalIndices.end(), materialSet.indices.begin(), materialSet.indices.end() );
 
-		uint32 endIndex = static_cast<uint32>( s_worldLists.finalIndices.size() );
+		uint32 end = static_cast<uint32>( s_worldLists.finalIndices.size() );
+
+		assert( end - firstIndex == materialSet.indices.size() );
 
 		opaqueMesh.firstIndex = firstIndex;
-		opaqueMesh.numIndices = endIndex;
+		opaqueMesh.numIndices = materialSet.indices.size();
 	}
 
 	// Squashed! Now upload the index buffer
-	glBindVertexArray( s_worldRenderData.vao );
-	glBindBuffer( GL_ARRAY_BUFFER, s_worldRenderData.vbo );
-	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, s_worldRenderData.eboCluster );
-	glBufferData( GL_ELEMENT_ARRAY_BUFFER, s_worldLists.finalIndices.size() * sizeof( worldIndex_t ), s_worldLists.finalIndices.data(), GL_DYNAMIC_DRAW );
+	//glBindVertexArray( s_worldRenderData.vao );
+	//glBindBuffer( GL_ARRAY_BUFFER, s_worldRenderData.vbo );
+	//glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, s_worldRenderData.eboCluster );
+
+	const void *indexData = reinterpret_cast<const void *>( s_worldLists.finalIndices.data() );
+	const GLsizeiptr indexSize = static_cast<GLsizeiptr>( s_worldLists.finalIndices.size() ) * sizeof( worldIndex_t );
+
+	glBufferData( GL_ELEMENT_ARRAY_BUFFER, indexSize, indexData, GL_DYNAMIC_DRAW );
 #endif
 }
+
+#endif
 
 //
 // Draws all opaque surfaces in the world list
 //
 static void R_DrawOpaqueSurfaces()
 {
-	glBindVertexArray( s_worldRenderData.vao );
-	glBindBuffer( GL_ARRAY_BUFFER, s_worldRenderData.vbo );
-	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, s_worldRenderData.eboCluster );
-
-#if 0
+#ifdef USE_PVS
 	for ( const worldMesh_t &mesh : s_worldLists.opaqueMeshes )
 	{
 		// Increment our counter
 		//++c_brush_polys;
 
-		const material_t *mat = R_TextureAnimation( mesh.surface->texinfo );
+		const material_t *mat = R_TextureAnimation( mesh.texinfo );
 
-		glActiveTexture( GL_TEXTURE0 );
+		GL_ActiveTexture( GL_TEXTURE0 );
 		mat->Bind();
-		glActiveTexture( GL_TEXTURE1 );
-		GL_Bind( glState.lightmap_textures + mesh.surface->lightmaptexturenum );
+		GL_ActiveTexture( GL_TEXTURE1 );
+		GL_BindTexture( glState.lightmap_textures + 1 );
 
-		glDrawElements( GL_TRIANGLES, mesh.numIndices, GL_UNSIGNED_INT, (void *)( (uintptr_t)mesh.firstIndex ) );
+		glDrawElements( GL_TRIANGLES, mesh.numIndices, GL_UNSIGNED_INT, (void *)( (uintptr_t)mesh.firstIndex * sizeof( worldIndex_t ) ) );
 	}
 #else
-	glActiveTexture( GL_TEXTURE0 );
-	whiteMaterial->Bind();
-	glActiveTexture( GL_TEXTURE1 );
-	//whiteMaterial->Bind();
-	GL_Bind( glState.lightmap_textures + 1 );
+	GL_ActiveTexture( GL_TEXTURE0 );
+	GL_BindTexture( whiteMaterial->image->texnum );
+	GL_ActiveTexture( GL_TEXTURE1 );
+	GL_BindTexture( glState.lightmap_textures + 1 );
+
 	glDrawElements( GL_TRIANGLES, s_worldRenderData.indices.size(), GL_UNSIGNED_INT, (void *)( (uintptr_t)0 ) );
 #endif
 }
-
-bool g_skippedMarkLeaves;
 
 //
 // Main entry point for drawing static, opaque world geometry
@@ -641,19 +704,23 @@ void R_DrawWorld()
 	ent.frame = (int)( tr.refdef.time * 2 );
 	currententity = &ent;
 
-	glState.currenttextures[0] = glState.currenttextures[1] = -1;
-
-	glColor3f( 1, 1, 1 );
 	memset( gl_lms.lightmap_surfaces, 0, sizeof( gl_lms.lightmap_surfaces ) );
+
 	R_ClearSkyBox();
 
+	glBindVertexArray( s_worldRenderData.vao );
+	glBindBuffer( GL_ARRAY_BUFFER, s_worldRenderData.vbo );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, s_worldRenderData.eboCluster );
+
 	// Build the world lists
-#if 0
-	if ( !g_skippedMarkLeaves )
+#ifdef USE_PVS
 	{
 		worldNodeWork_t work;
 
 		s_worldLists.ClearAllLists();
+
+		// Determine which leaves are in the PVS / areamask
+		R_MarkLeaves();
 
 		// This figures out what we need to render and builds the world lists
 		R_RecursiveWorldNode( work, r_worldmodel->nodes );
@@ -681,12 +748,14 @@ void R_DrawWorld()
 	constexpr int startIndex = 8;
 	constexpr int elementsInRenderLight = 3;
 
+#if 1
 	for ( int iter1 = 0, iter2 = 0; iter1 < MAX_SHADERLIGHTS; ++iter1, iter2 += elementsInRenderLight )
 	{
 		glUniform3fv( startIndex + iter2 + 0, 1, tr.refdef.dlights[iter1].origin );
 		glUniform3fv( startIndex + iter2 + 1, 1, tr.refdef.dlights[iter1].color );
 		glUniform1f( startIndex + iter2 + 2, tr.refdef.dlights[iter1].intensity );
 	}
+#endif
 
 	constexpr int indexAfterLights = startIndex + elementsInRenderLight * MAX_SHADERLIGHTS;
 
@@ -704,113 +773,18 @@ void R_DrawWorld()
 
 	glUseProgram( 0 );
 
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
+	glBindBuffer( GL_ARRAY_BUFFER, 0 );
+	glBindVertexArray( 0 );
+
 #endif
 	// SHADERWORLD
 
 	// CLEAN UP STUFF!!!!!!!!!!!!!!!!!!!!!
 
-	R_DrawSkyBox();
+	//R_DrawSkyBox();
 
 	//R_DrawTriangleOutlines();
-}
-
-// Mark the leaves and nodes that are in the PVS for the current cluster
-void R_MarkLeaves()
-{
-	byte *		vis;
-	byte		fatvis[MAX_MAP_LEAFS / 8];
-	mnode_t *	node;
-	int			i, c;
-	mleaf_t *	leaf;
-	int			cluster;
-
-	if ( r_oldviewcluster == r_viewcluster && r_oldviewcluster2 == r_viewcluster2 && !r_novis->GetBool() && r_viewcluster != -1 )
-	{
-		g_skippedMarkLeaves = true;
-		return;
-	}
-
-	// lockpvs lets designers walk around to determine the
-	// extent of the current pvs
-	if ( r_lockpvs->GetBool() )
-	{
-		g_skippedMarkLeaves = true;
-		return;
-	}
-
-	g_skippedMarkLeaves = false;
-
-	++r_visframecount;
-	r_oldviewcluster = r_viewcluster;
-	r_oldviewcluster2 = r_viewcluster2;
-
-	if ( r_novis->GetBool() || r_viewcluster == -1 || !r_worldmodel->vis )
-	{
-		// mark everything
-		for ( i = 0; i < r_worldmodel->numleafs; i++ )
-		{
-			r_worldmodel->leafs[i].visframe = r_visframecount;
-		}
-		for ( i = 0; i < r_worldmodel->numnodes; i++ )
-		{
-			r_worldmodel->nodes[i].visframe = r_visframecount;
-		}
-		return;
-	}
-
-	vis = Mod_ClusterPVS( r_viewcluster, r_worldmodel );
-
-	// may have to combine two clusters because of solid water boundaries
-	if ( r_viewcluster2 != r_viewcluster )
-	{
-		memcpy( fatvis, vis, ( r_worldmodel->numleafs + 7 ) / 8 );
-		vis = Mod_ClusterPVS( r_viewcluster2, r_worldmodel );
-		c = ( r_worldmodel->numleafs + 31 ) / 32;
-		for ( i = 0; i < c; i++ )
-		{
-			( (int *)fatvis )[i] |= ( (int *)vis )[i];
-		}
-		vis = fatvis;
-	}
-
-	for ( i = 0, leaf = r_worldmodel->leafs; i < r_worldmodel->numleafs; i++, leaf++ )
-	{
-		cluster = leaf->cluster;
-		if ( cluster == -1 )
-		{
-			continue;
-		}
-		if ( vis[cluster >> 3] & ( 1 << ( cluster & 7 ) ) )
-		{
-			node = (mnode_t *)leaf;
-			do
-			{
-				if ( node->visframe == r_visframecount )
-				{
-					break;
-				}
-				node->visframe = r_visframecount;
-				node = node->parent;
-			} while ( node );
-		}
-	}
-
-#if 0
-	for ( i = 0; i < r_worldmodel->vis->numclusters; i++ )
-	{
-		if ( vis[i >> 3] & ( 1 << ( i & 7 ) ) )
-		{
-			node = (mnode_t *)&r_worldmodel->leafs[i];	// FIXME: cluster
-			do
-			{
-				if ( node->visframe == r_visframecount )
-					break;
-				node->visframe = r_visframecount;
-				node = node->parent;
-			} while ( node );
-		}
-	}
-#endif
 }
 
 /*
@@ -832,7 +806,7 @@ static void LM_UploadBlock()
 {
 	int texture = gl_lms.current_lightmap_texture;
 
-	GL_Bind( glState.lightmap_textures + texture );
+	GL_BindTexture( glState.lightmap_textures + texture );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 
@@ -921,6 +895,15 @@ static void R_BuildVertexNormals( worldVertex_t &v1, worldVertex_t &v2, worldVer
 //
 void GL_BuildPolygonFromSurface( msurface_t *fa )
 {
+#if 0
+	if ( !s_worldRenderData.lastMaterial || s_worldRenderData.lastMaterial != fa->texinfo->material )
+	{
+		worldMesh_t &mesh = s_worldRenderData.meshes.emplace_back();
+
+		mesh.texinfo = fa->texinfo;
+	}
+#endif
+
 	const medge_t *edges = currentmodel->edges;
 	const int numEdges = fa->numedges;
 
@@ -977,15 +960,29 @@ void GL_BuildPolygonFromSurface( msurface_t *fa )
 		outVertex.st2[0] = s;
 		outVertex.st2[1] = t;
 	}
+	
+	// index of the first index!
+	const uint32 firstIndex = static_cast<uint32>( s_worldRenderData.indices.size() );
 
 	if ( fa->numedges == 3 )
 	{
 		// Already triangulated!
-		fa->firstIndex = firstVertex;
-		fa->numIndices = numEdges;
+
+		worldVertex_t &v1 = s_worldRenderData.vertices[firstVertex + 0];
+		worldVertex_t &v2 = s_worldRenderData.vertices[firstVertex + 1];
+		worldVertex_t &v3 = s_worldRenderData.vertices[firstVertex + 2];
+
+		R_BuildVertexNormals( v1, v2, v3 );
+
 		s_worldRenderData.indices.push_back( firstVertex + 0 );
 		s_worldRenderData.indices.push_back( firstVertex + 1 );
 		s_worldRenderData.indices.push_back( firstVertex + 2 );
+
+		fa->firstIndex = firstIndex;
+		fa->numIndices = 3;
+
+		assert( !( fa->numIndices % 3 ) );
+
 		return;
 	}
 
@@ -1011,13 +1008,13 @@ void GL_BuildPolygonFromSurface( msurface_t *fa )
 		s_worldRenderData.indices.push_back( firstVertex + middle + 1 );
 	}
 
-	// Index of the last vertex
-	const uint32 endVertex = static_cast<uint32>( s_worldRenderData.vertices.size() );
+	// index of the last index!
+	const uint32 lastIndex = static_cast<uint32>( s_worldRenderData.indices.size() );
 
-	fa->firstIndex = firstVertex;
-	fa->numIndices = endVertex - firstVertex;
+	fa->firstIndex = firstIndex;
+	fa->numIndices = lastIndex - firstIndex;
 
-	assert( fa->numIndices == numEdges );
+	assert( !( fa->numIndices % 3 ) );
 }
 
 //
@@ -1060,10 +1057,7 @@ void GL_BeginBuildingLightmaps( model_t *m )
 
 	memset( gl_lms.allocated, 0, sizeof( gl_lms.allocated ) );
 
-	r_framecount = 1; // no dlightcache
-
-	GL_EnableMultitexture( true );
-	GL_SelectTexture( GL_TEXTURE1 );
+	tr.frameCount = 1; // no dlightcache
 
 	/*
 	** setup the base lightstyles so the lightmaps won't have to be regenerated
@@ -1088,9 +1082,9 @@ void GL_BeginBuildingLightmaps( model_t *m )
 	/*
 	** initialize the dynamic lightmap texture
 	*/
-	GL_Bind( glState.lightmap_textures + 0 );
-	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	GL_BindTexture( glState.lightmap_textures + 0 );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 	glTexImage2D( GL_TEXTURE_2D,
 		0,
 		GL_RGBA8,
@@ -1099,16 +1093,11 @@ void GL_BeginBuildingLightmaps( model_t *m )
 		GL_LIGHTMAP_FORMAT,
 		GL_UNSIGNED_BYTE,
 		nullptr );
-
-	//
-	// Create the mesh for the world
-	//
 }
 
 void GL_EndBuildingLightmaps()
 {
 	LM_UploadBlock();
-	GL_EnableMultitexture( false );
 
 	// Upload our big fat vertex buffer
 
@@ -1137,6 +1126,14 @@ void GL_EndBuildingLightmaps()
 
 	const void *indexData = reinterpret_cast<const void *>( s_worldRenderData.indices.data() );
 	const GLsizeiptr indexSize = static_cast<GLsizeiptr>( s_worldRenderData.indices.size() ) * sizeof( worldIndex_t );
+
+#ifdef USE_MESHOPT
+
+	//size_t numVertices = meshopt_optimizeVertexFetch(
+	//	outVertices.data(), tmpIndices.data(),
+	//	tmpIndices.size(), outVertices.data(), outVertices.size(), sizeof( t_vert ) );
+
+#endif
 
 	glBufferData( GL_ARRAY_BUFFER, vertexSize, vertexData, GL_STATIC_DRAW );
 	glBufferData( GL_ELEMENT_ARRAY_BUFFER, indexSize, indexData, GL_STATIC_DRAW );

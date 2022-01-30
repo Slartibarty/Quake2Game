@@ -661,6 +661,8 @@ void R_DrawAliasModel (entity_t *e)
 
 	// draw it
 
+	GL_ActiveTexture( GL_TEXTURE0 );
+
 	glShadeModel (GL_SMOOTH);
 
 	GL_TexEnv( GL_MODULATE );
@@ -897,24 +899,19 @@ void R_DrawStaticMeshFile( entity_t *e )
 	
 	for ( uint32 i = 0; i < memSMF->numMeshes; ++i )
 	{
-		// HACK: this should go away when bsp rendering is nuked
-		glActiveTexture( GL_TEXTURE0 );
+		GL_ActiveTexture( GL_TEXTURE0 );
 		meshes[i].material->Bind();
-		glActiveTexture( GL_TEXTURE1 );
+		GL_ActiveTexture( GL_TEXTURE1 );
 		meshes[i].material->BindSpec();
-		glActiveTexture( GL_TEXTURE2 );
+		GL_ActiveTexture( GL_TEXTURE2 );
 		meshes[i].material->BindNorm();
-		glActiveTexture( GL_TEXTURE3 );
+		GL_ActiveTexture( GL_TEXTURE3 );
 		meshes[i].material->BindEmit();
 
 		glDrawElements( GL_TRIANGLES, meshes[i].count, type, (void *)( (uintptr_t)meshes[i].offset ) );
 	}
 
 	glCullFace( GL_FRONT ); // TODO: eugh
-
-	// HACK: this should go away when bsp rendering is nuked
-	GLenum hackTmu = glState.currenttmu ? GL_TEXTURE1 : GL_TEXTURE0;
-	glActiveTexture( hackTmu );
 
 	glUseProgram( 0 );
 }

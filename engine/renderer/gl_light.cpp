@@ -76,7 +76,7 @@ void R_PushDlights()
 		return;
 	}
 
-	r_dlightframecount = r_framecount + 1;	// because the count hasn't
+	r_dlightframecount = tr.frameCount + 1;	// because the count hasn't
 											//  advanced yet for this frame
 	l = tr.refdef.dlights;
 	for ( i = 0; i < tr.refdef.num_dlights; i++, l++ ) {
@@ -280,6 +280,8 @@ void R_AddDynamicLights (msurface_t *surf)
 	float		*pfBL;
 	float		fsacc, ftacc;
 
+	return;
+
 	smax = (surf->extents[0]>>4)+1;
 	tmax = (surf->extents[1]>>4)+1;
 	tex = surf->texinfo;
@@ -480,7 +482,7 @@ void R_BuildLightMap(msurface_t *surf, byte *dest, int stride)
 
 	// SHADERWORLD
 	// add all the dynamic lights
-//	if (surf->dlightframe == r_framecount)
+//	if (surf->dlightframe == tr.frameCount)
 //		R_AddDynamicLights(surf);
 
 	// put into texture format

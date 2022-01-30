@@ -62,23 +62,20 @@ struct glpoly_t
 
 struct msurface_t
 {
-	int			visframe;		// should be drawn when node is crossed
+	int			frameCount;		// The frame that this surface was last visible on
 
 	cplane_t	*plane;
 	int			flags;
 
-	int			firstedge;	// look up in model->surfedges[], negative numbers
-	int			numedges;	// are backwards edges
+	int			firstedge;			// look up in model->surfedges[], negative numbers
+	int			numedges;			// are backwards edges
 	
 	short		texturemins[2];
 	short		extents[2];
 
 	int			light_s, light_t;	// gl lightmap coordinates
-	int			dlight_s, dlight_t; // gl lightmap coordinates for dynamic lightmaps
 
 	glpoly_t	*polys;				// multiple if warped
-	msurface_t	*texturechain;
-	msurface_t	*lightmapchain;
 	uint32		firstIndex;			// First vertex into the world render data
 	uint32		numIndices;			// Number of vertices to draw
 

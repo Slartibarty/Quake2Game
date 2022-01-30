@@ -403,91 +403,41 @@ void R_UpgradeWals_f()
 ===================================================================================================
 */
 
-void GL_EnableMultitexture(bool enable)
+void GL_ActiveTexture( GLenum texture )
 {
-	if (!GLEW_ARB_multitexture || !r_ext_multitexture->GetBool())
+	if ( texture - GL_TEXTURE0 == glState.activeTexture )
+	{
+		// Already active
 		return;
+	}
+	glState.activeTexture = texture - GL_TEXTURE0;
 
-	if (enable)
-	{
-		GL_SelectTexture(GL_TEXTURE1);
-		glEnable(GL_TEXTURE_2D);
-		GL_TexEnv(GL_REPLACE);
-	}
-	else
-	{
-		GL_SelectTexture(GL_TEXTURE1);
-		glDisable(GL_TEXTURE_2D);
-		GL_TexEnv(GL_REPLACE);
-	}
-	GL_SelectTexture(GL_TEXTURE0);
-	GL_TexEnv(GL_REPLACE);
+	glActiveTexture( texture );
 }
 
-void GL_SelectTexture(GLenum texture)
+void GL_BindTexture( GLuint texnum )
 {
-	if (!GLEW_ARB_multitexture || !r_ext_multitexture->GetBool())
-		return;
-
-	int tmu;
-
-	if (texture == GL_TEXTURE0)
+	if ( glState.currenttextures[glState.activeTexture] == texnum )
 	{
-		tmu = 0;
-	}
-	else
-	{
-		tmu = 1;
-	}
-
-	if (tmu == glState.currenttmu)
-	{
+		// Already bound
 		return;
 	}
+	glState.currenttextures[glState.activeTexture] = texnum;
 
-	glState.currenttmu = tmu;
-
-	glActiveTextureARB(texture);
-	glClientActiveTextureARB(texture);
+	glBindTexture( GL_TEXTURE_2D, texnum );
 }
 
-void GL_TexEnv(GLint mode)
+void GL_TexEnv( GLint mode )
 {
 #if 0
 	static GLint lastmodes[2] = { -1, -1 };
 
-	if (mode != lastmodes[glState.currenttmu])
+	if ( mode != lastmodes[glState.currenttmu] )
 	{
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, mode);
+		glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, mode );
 		lastmodes[glState.currenttmu] = mode;
 	}
 #endif
-}
-
-void GL_Bind( GLuint texnum )
-{
-	// Are we already bound?
-	if ( glState.currenttextures[glState.currenttmu] == texnum )
-		return;
-
-	glState.currenttextures[glState.currenttmu] = texnum;
-	glBindTexture( GL_TEXTURE_2D, texnum );
-}
-
-void GL_MBind(GLenum target, GLuint texnum)
-{
-	GL_SelectTexture(target);
-	if (target == GL_TEXTURE0)
-	{
-		if (glState.currenttextures[0] == texnum)
-			return;
-	}
-	else
-	{
-		if (glState.currenttextures[1] == texnum)
-			return;
-	}
-	GL_Bind(texnum);
 }
 
 /*
