@@ -260,7 +260,7 @@ void R_LightPoint( vec3_t p, vec3_t color )
 
 //===================================================================
 
-static float s_blocklights[34*34*3];
+static float s_blocklights[64*64*3];
 /*
 ===============
 R_AddDynamicLights
