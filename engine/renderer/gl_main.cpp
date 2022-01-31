@@ -570,8 +570,6 @@ static void R_SetupFrame()
 {
 	mleaf_t *leaf;
 
-	tr.frameCount++;
-
 	// build the transformation matrix for the given view angles
 	VectorCopy( tr.refdef.vieworg, r_origin );
 
@@ -739,6 +737,9 @@ static void R_RenderView( refdef_t *fd )
 	if ( r_norefresh->GetBool() ) {
 		return;
 	}
+
+	// Increment our frame counter
+	++tr.frameCount;
 
 	tr.refdef = *fd;
 

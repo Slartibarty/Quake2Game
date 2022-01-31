@@ -23,7 +23,7 @@ void Mod_LoadSpriteModel( model_t *pMod, void *pBuffer, int bufferLength );
 // gl_surf.cpp
 void GL_BuildPolygonFromSurface( msurface_t *fa );
 void GL_CreateSurfaceLightmap( msurface_t *surf );
-void GL_BeginBuildingLightmaps( model_t *m );
+void GL_BeginBuildingLightmaps( model_t *model );
 void GL_EndBuildingLightmaps();
 
 static byte		mod_novis[MAX_MAP_LEAFS/8];
@@ -757,8 +757,7 @@ static void Mod_LoadLeafs (lump_t *l)
 		out->cluster = LittleShort(in->cluster);
 		out->area = LittleShort(in->area);
 
-		out->firstmarksurface = loadmodel->marksurfaces +
-			LittleShort(in->firstleafface);
+		out->firstmarksurface = LittleShort(in->firstleafface);
 		out->nummarksurfaces = LittleShort(in->numleaffaces);
 	}	
 }

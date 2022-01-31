@@ -124,7 +124,7 @@ struct mleaf_t
 	int			cluster;
 	int			area;
 
-	msurface_t	**firstmarksurface;
+	int			firstmarksurface;
 	int			nummarksurfaces;
 };
 

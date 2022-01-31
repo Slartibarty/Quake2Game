@@ -351,7 +351,7 @@ project "engine"
 		"thirdparty/libpng_config", "thirdparty/imgui", "thirdparty/rapidjson/include"
 	}
 	defines { "Q_ENGINE", "GLEW_STATIC", "GLEW_NO_GLU", "IMGUI_USER_CONFIG=\"../../engine/client/q_imconfig.h\"" }
-	links { "core" }
+	links { "core", "meshoptimizer" }
 	filter "system:windows"
 		linkoptions { "/ENTRY:mainCRTStartup" }
 		links {

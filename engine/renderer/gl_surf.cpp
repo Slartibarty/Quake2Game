@@ -17,12 +17,13 @@
 #include <vector>
 
 // Use the PVS to determine what faces are visible, broken right now
-#define USE_PVS
+//#define USE_PVS
 
 // Comment out to disable meshoptimizer optimisations
-//#define USE_MESHOPT
+#define USE_MESHOPT
 
 #ifdef USE_MESHOPT
+#define MESHOPTIMIZER_NO_WRAPPERS
 #include "../../thirdparty/meshoptimizer/src/meshoptimizer.h"
 #endif
 
@@ -75,7 +76,7 @@ struct worldRenderData_t
 	std::vector<worldIndex_t>	indices;
 
 #ifndef USE_PVS
-	material_t *				lastMaterial;		// This is used when building the worldMeshse
+	material_t *				lastMaterial;		// This is used when building the vector below
 	std::vector<worldMesh_t>	meshes;
 #endif
 
@@ -472,13 +473,7 @@ static void R_AddSurfaceToMaterialSet( msurface_t *surf, worldMaterialSet_t &mat
 
 static void R_AddSurface( msurface_t *surf, worldNodeWork_t &work )
 {
-	if ( surf->frameCount == tr.frameCount ) {
-		// Already added this one!
-		return;
-	}
-
-	surf->frameCount = tr.frameCount;
-
+#if 0
 	bool added = false;
 	for ( worldMaterialSet_t &materialSet : work.materialSets )
 	{
@@ -496,6 +491,31 @@ static void R_AddSurface( msurface_t *surf, worldNodeWork_t &work )
 		materialSet.texinfo = surf->texinfo;
 		R_AddSurfaceToMaterialSet( surf, materialSet );
 	}
+#else
+	glBegin( GL_TRIANGLES );
+	for ( uint i = surf->firstIndex; i < surf->firstIndex + surf->numIndices; ++i )
+	{
+		const worldVertex_t &vertex = s_worldRenderData.vertices[s_worldRenderData.indices[i]];
+		glVertex3fv( (float *)&vertex.pos );
+	}
+	glEnd();
+#endif
+}
+
+static void R_HandleLeaf( worldNodeWork_t &work, mleaf_t *leaf )
+{
+	const int firstMarkSurface = leaf->firstmarksurface;
+	const int lastMarkSurface = firstMarkSurface + leaf->nummarksurfaces;
+
+	int c;
+	msurface_t *surf;
+
+	for ( c = firstMarkSurface, surf = r_worldmodel->marksurfaces[firstMarkSurface]; c < lastMarkSurface; ++c, ++surf )
+	{
+		// Mark this surface to be drawn at the node
+		surf->frameCount = tr.frameCount;
+		R_AddSurface( surf, work );
+	}
 }
 
 //
@@ -506,108 +526,108 @@ static void R_RecursiveWorldNode( worldNodeWork_t &work, mnode_t *node )
 {
 	int				c, side, sidebit;
 	cplane_t *		plane;
-	msurface_t *	surf, **mark;
-	mleaf_t *		pleaf;
+	msurface_t *	surf;
 	float			dot;
 
-	// No polygons in solid nodes
-	if ( node->contents == CONTENTS_SOLID ) {
-		return;
-	}
-
-	// If the node wasn't marked by R_MarkLeaves, exit
-	if ( node->visframe != tr.visCount ) {
-		return;
-	}
-
-	// Cull against the screen frustum or the appropriate area's frustum.
-	if ( node->contents >= -1 )
+	while ( true )
 	{
-		if ( R_CullBox( node->minmaxs, node->minmaxs + 3 ) ) {
+		// No polygons in solid nodes
+		if ( node->contents == CONTENTS_SOLID ) {
 			return;
 		}
-	}
 
-	// if a leaf node, draw stuff
-	if ( node->contents != -1 )
-	{
-		pleaf = (mleaf_t *)node;
-
-		mark = pleaf->firstmarksurface;
-		c = pleaf->nummarksurfaces;
-
-		while ( c-- )
-		{
-			R_AddSurface( *mark, work );
-			++mark;
+		// If the node wasn't marked by R_MarkLeaves, exit
+		if ( node->visframe != tr.visCount ) {
+			return;
 		}
 
-		return;
-	}
+		// Frustrum cull
+		//if ( R_CullBox( node->minmaxs, node->minmaxs + 3 ) ) {
+		//	return;
+		//}
 
-	// node is just a decision point, so go down the apropriate sides
-
-	// find which side of the node we are on
-	plane = node->plane;
-
-	switch ( plane->type )
-	{
-	case PLANE_X:
-		dot = modelorg[0] - plane->dist;
-		break;
-	case PLANE_Y:
-		dot = modelorg[1] - plane->dist;
-		break;
-	case PLANE_Z:
-		dot = modelorg[2] - plane->dist;
-		break;
-	default:
-		dot = DotProduct( modelorg, plane->normal ) - plane->dist;
-		break;
-	}
-
-	if ( dot >= 0 )
-	{
-		side = 0;
-		sidebit = 0;
-	}
-	else
-	{
-		side = 1;
-		sidebit = SURF_PLANEBACK;
-	}
-
-	// recurse down the children, front side first
-	R_RecursiveWorldNode( work, node->children[side] );
-
-	// draw stuff
-#if 0
-	for ( c = node->numsurfaces, surf = r_worldmodel->surfaces + node->firstsurface; c; c--, surf++ )		// Back to front
-	//for ( c = 0, surf = r_worldmodel->surfaces + node->firstsurface; c < node->numsurfaces; ++c, ++surf )	// Front to back
-	{
-		if ( ( surf->flags & SURF_PLANEBACK ) != sidebit ) {
-			// wrong side
-			continue;
+		// if a leaf node, draw stuff
+		if ( node->contents != -1 )
+		{
+			R_HandleLeaf( work, (mleaf_t *)node );
+			return;
 		}
 
-		if ( surf->texinfo->flags & SURF_SKY )
+		// node is just a decision point, so go down the appropriate sides
+
+		// find which side of the node we are on
+		plane = node->plane;
+
+		switch ( plane->type )
 		{
-			// just adds to visible sky bounds
-			R_AddSkySurface( surf );
+		case PLANE_X:
+			dot = modelorg[0] - plane->dist;
+			break;
+		case PLANE_Y:
+			dot = modelorg[1] - plane->dist;
+			break;
+		case PLANE_Z:
+			dot = modelorg[2] - plane->dist;
+			break;
+		default:
+			dot = DotProduct( modelorg, plane->normal ) - plane->dist;
+			break;
 		}
-		else if ( surf->texinfo->flags & ( SURF_TRANS33 | SURF_TRANS66 ) )
+
+		if ( dot >= 0 )
 		{
-			// Remove?
+			side = 0;
+			sidebit = 0;
 		}
 		else
 		{
-			R_AddSurface( surf, work );
+			side = 1;
+			sidebit = SURF_PLANEBACK;
 		}
-	}
+
+		// Recurse down the children, front side first
+		R_RecursiveWorldNode( work, node->children[side] );
+
+		// draw stuff
+#if 1
+		const int firstSurface = node->firstsurface;
+		const int lastSurface = node->firstsurface + node->numsurfaces;
+
+		for ( c = firstSurface, surf = r_worldmodel->surfaces + firstSurface; c < lastSurface; ++c, ++surf )		// Back to front
+		{
+			if ( surf->frameCount != tr.frameCount )
+			{
+				// Already visited
+				//continue;
+			}
+
+			if ( ( surf->flags & SURF_PLANEBACK ) != sidebit )
+			{
+				// Wrong side
+				//continue;
+			}
+
+			if ( surf->texinfo->flags & SURF_SKY )
+			{
+				// Just adds to visible sky bounds
+				//R_AddSkySurface( surf );
+			}
+			else if ( surf->texinfo->flags & ( SURF_TRANS33 | SURF_TRANS66 ) )
+			{
+				// Remove?
+			}
+			else
+			{
+				R_AddSurface( surf, work );
+			}
+		}
 #endif
 
-	// recurse down the back side
-	R_RecursiveWorldNode( work, node->children[!side] );
+		// Recurse down the back side
+		// We can prevent a recursion by just using this while loop
+		//R_RecursiveWorldNode( work, node->children[!side] );
+		node = node->children[!side];
+	}
 }
 
 //
@@ -656,10 +676,10 @@ static void R_DrawOpaqueSurfaces()
 {
 #ifdef USE_PVS
 	for ( const worldMesh_t &mesh : s_worldLists.opaqueMeshes )
+#else
+	for ( const worldMesh_t &mesh : s_worldRenderData.meshes )
+#endif
 	{
-		// Increment our counter
-		//++c_brush_polys;
-
 		const material_t *mat = R_TextureAnimation( mesh.texinfo );
 
 		GL_ActiveTexture( GL_TEXTURE0 );
@@ -667,16 +687,8 @@ static void R_DrawOpaqueSurfaces()
 		GL_ActiveTexture( GL_TEXTURE1 );
 		GL_BindTexture( glState.lightmap_textures + 1 );
 
-		glDrawElements( GL_TRIANGLES, mesh.numIndices, GL_UNSIGNED_INT, (void *)( (uintptr_t)mesh.firstIndex * sizeof( worldIndex_t ) ) );
+		glDrawElements( GL_TRIANGLES, mesh.numIndices, GL_UNSIGNED_INT, (void *)( (uintptr_t)( mesh.firstIndex ) * sizeof( worldIndex_t ) ) );
 	}
-#else
-	GL_ActiveTexture( GL_TEXTURE0 );
-	GL_BindTexture( whiteMaterial->image->texnum );
-	GL_ActiveTexture( GL_TEXTURE1 );
-	GL_BindTexture( glState.lightmap_textures + 1 );
-
-	glDrawElements( GL_TRIANGLES, s_worldRenderData.indices.size(), GL_UNSIGNED_INT, (void *)( (uintptr_t)0 ) );
-#endif
 }
 
 //
@@ -725,11 +737,10 @@ void R_DrawWorld()
 		// This figures out what we need to render and builds the world lists
 		R_RecursiveWorldNode( work, r_worldmodel->nodes );
 
-		R_SquashAndUploadIndices( work );
+		//R_SquashAndUploadIndices( work );
 	}
 #endif
 
-	// SHADERWORLD
 #if 1
 
 	DirectX::XMMATRIX modelMatrix = DirectX::XMMatrixIdentity();
@@ -762,14 +773,8 @@ void R_DrawWorld()
 	glUniform1i( indexAfterLights + 0, 0 ); // diffuse
 	glUniform1i( indexAfterLights + 1, 1 ); // lightmap
 
-#endif
-	// SHADERWORLD
-
 	// Now render stuff!
 	R_DrawOpaqueSurfaces();
-
-	// SHADERWORLD
-#if 1
 
 	glUseProgram( 0 );
 
@@ -778,7 +783,6 @@ void R_DrawWorld()
 	glBindVertexArray( 0 );
 
 #endif
-	// SHADERWORLD
 
 	// CLEAN UP STUFF!!!!!!!!!!!!!!!!!!!!!
 
@@ -895,34 +899,33 @@ static void R_BuildVertexNormals( worldVertex_t &v1, worldVertex_t &v2, worldVer
 //
 void GL_BuildPolygonFromSurface( msurface_t *fa )
 {
-#if 0
-	if ( !s_worldRenderData.lastMaterial || s_worldRenderData.lastMaterial != fa->texinfo->material )
-	{
-		worldMesh_t &mesh = s_worldRenderData.meshes.emplace_back();
-
-		mesh.texinfo = fa->texinfo;
-	}
-#endif
-
-	const medge_t *edges = currentmodel->edges;
-	const int numEdges = fa->numedges;
-
-	s_worldRenderData.vertices.reserve( s_worldRenderData.vertices.size() + numEdges );
+	const int *pSurfEdges = currentmodel->surfedges;
+	const medge_t *pEdges = currentmodel->edges;
+	const mvertex_t *pVertices = currentmodel->vertexes;
+	const int numEdges = fa->numedges; // Equal to the number of vertices
 
 	// Index of the first vertex
 	const uint32 firstVertex = static_cast<uint32>( s_worldRenderData.vertices.size() );
 
 	// Reconstruct the polygon
 
+#if 0
+	glpoly_t *poly = (glpoly_t *)Hunk_Alloc( sizeof( glpoly_t ) + ( numEdges - 4 ) * VERTEXSIZE * sizeof( float ) );
+	poly->next = fa->polys;
+	poly->flags = fa->flags;
+	fa->polys = poly;
+	poly->numverts = numEdges;
+#endif
+
 	// First, build the vertices for this face
 
 	for ( int i = 0; i < numEdges; ++i )
 	{
-		const int surfEdge = currentmodel->surfedges[fa->firstedge + i];
+		const int surfEdge = pSurfEdges[fa->firstedge + i];
 		const int startIndex = surfEdge > 0 ? 0 : 1;
 
-		const medge_t *edge = edges + abs( surfEdge );
-		const float *vertex = currentmodel->vertexes[edge->v[startIndex]].position;
+		const medge_t *pEdge = pEdges + abs( surfEdge );
+		const float *pVertex = pVertices[pEdge->v[startIndex]].position;
 
 		worldVertex_t &outVertex = s_worldRenderData.vertices.emplace_back();
 
@@ -930,28 +933,28 @@ void GL_BuildPolygonFromSurface( msurface_t *fa )
 
 		float s, t;
 
-		s = DotProduct( vertex, fa->texinfo->vecs[0] ) + fa->texinfo->vecs[0][3];
+		s = DotProduct( pVertex, fa->texinfo->vecs[0] ) + fa->texinfo->vecs[0][3];
 		s /= fa->texinfo->material->image->width;
 
-		t = DotProduct( vertex, fa->texinfo->vecs[1] ) + fa->texinfo->vecs[1][3];
+		t = DotProduct( pVertex, fa->texinfo->vecs[1] ) + fa->texinfo->vecs[1][3];
 		t /= fa->texinfo->material->image->height;
 
 		// Copy in the vertex positions and ST coordinates
 
-		VectorCopy( vertex, outVertex.pos );
+		VectorCopy( pVertex, outVertex.pos );
 
 		outVertex.st1[0] = s;
 		outVertex.st1[1] = t;
 
 		// Lightmap ST/UV coordinates
 
-		s = DotProduct( vertex, fa->texinfo->vecs[0] ) + fa->texinfo->vecs[0][3];
+		s = DotProduct( pVertex, fa->texinfo->vecs[0] ) + fa->texinfo->vecs[0][3];
 		s -= fa->texturemins[0];
 		s += fa->light_s * 16;
 		s += 8;
 		s /= BLOCK_WIDTH * 16; // fa->texinfo->texture->width;
 
-		t = DotProduct( vertex, fa->texinfo->vecs[1] ) + fa->texinfo->vecs[1][3];
+		t = DotProduct( pVertex, fa->texinfo->vecs[1] ) + fa->texinfo->vecs[1][3];
 		t -= fa->texturemins[1];
 		t += fa->light_t * 16;
 		t += 8;
@@ -959,62 +962,71 @@ void GL_BuildPolygonFromSurface( msurface_t *fa )
 
 		outVertex.st2[0] = s;
 		outVertex.st2[1] = t;
+
+		// TODO: This isn't the best solution, the plane normals can be reversed sometimes
+		// which breaks the shader
+		VectorCopy( fa->plane->normal, outVertex.normal );
 	}
-	
+
 	// index of the first index!
 	const uint32 firstIndex = static_cast<uint32>( s_worldRenderData.indices.size() );
 
-	if ( fa->numedges == 3 )
-	{
-		// Already triangulated!
-
-		worldVertex_t &v1 = s_worldRenderData.vertices[firstVertex + 0];
-		worldVertex_t &v2 = s_worldRenderData.vertices[firstVertex + 1];
-		worldVertex_t &v3 = s_worldRenderData.vertices[firstVertex + 2];
-
-		R_BuildVertexNormals( v1, v2, v3 );
-
-		s_worldRenderData.indices.push_back( firstVertex + 0 );
-		s_worldRenderData.indices.push_back( firstVertex + 1 );
-		s_worldRenderData.indices.push_back( firstVertex + 2 );
-
-		fa->firstIndex = firstIndex;
-		fa->numIndices = 3;
-
-		assert( !( fa->numIndices % 3 ) );
-
-		return;
-	}
-
 	// triangulate it, fan style
 
-	const int numTriangles = fa->numedges - 2;
-
-	int i;
-	int middle;
+	const int numTriangles = numEdges - 2;
 
 	// for every triangle
-	for ( i = 0, middle = 1; i < numTriangles; ++i, ++middle )
+	for ( int i = 0; i < numTriangles; ++i )
 	{
+#if 0
 		worldVertex_t &v1 = s_worldRenderData.vertices[firstVertex + 0];
-		worldVertex_t &v2 = s_worldRenderData.vertices[firstVertex + middle];
-		worldVertex_t &v3 = s_worldRenderData.vertices[firstVertex + middle + 1];
-
-		R_BuildVertexNormals( v1, v2, v3 );
+		worldVertex_t &v2 = s_worldRenderData.vertices[firstVertex + i + 1];
+		worldVertex_t &v3 = s_worldRenderData.vertices[firstVertex + i + 2];
 
 		// Take this opportunity to sort out the normals too
+		//R_BuildVertexNormals( v1, v2, v3 );
+		VectorCopy( fa->plane->normal, v1.normal );
+		VectorCopy( fa->plane->normal, v2.normal );
+		VectorCopy( fa->plane->normal, v3.normal );
+#endif
+
 		s_worldRenderData.indices.push_back( firstVertex + 0 );
-		s_worldRenderData.indices.push_back( firstVertex + middle );
-		s_worldRenderData.indices.push_back( firstVertex + middle + 1 );
+		s_worldRenderData.indices.push_back( firstVertex + i + 1 );
+		s_worldRenderData.indices.push_back( firstVertex + i + 2 );
 	}
 
 	// index of the last index!
 	const uint32 lastIndex = static_cast<uint32>( s_worldRenderData.indices.size() );
+	const uint32 numIndices = lastIndex - firstIndex;
 
 	fa->firstIndex = firstIndex;
-	fa->numIndices = lastIndex - firstIndex;
+	fa->numIndices = numIndices;
 
 	assert( !( fa->numIndices % 3 ) );
+
+#ifndef USE_PVS
+	//
+	// Figure out where we're creating the mesh
+	//
+	if ( s_worldRenderData.lastMaterial != fa->texinfo->material )
+	{
+		s_worldRenderData.lastMaterial = fa->texinfo->material;
+
+		// Create a new mesh entry
+		worldMesh_t &mesh = s_worldRenderData.meshes.emplace_back();
+
+		mesh.texinfo = fa->texinfo;
+		mesh.firstIndex = firstIndex;
+		mesh.numIndices = numIndices;
+	}
+	else
+	{
+		// Append to our existing one
+		worldMesh_t &mesh = s_worldRenderData.meshes.back();
+		mesh.texinfo = fa->texinfo;
+		mesh.numIndices += numIndices;
+	}
+#endif
 }
 
 //
@@ -1051,13 +1063,11 @@ void GL_CreateSurfaceLightmap( msurface_t *surf )
 	R_BuildLightMap( surf, base, BLOCK_WIDTH * LIGHTMAP_BYTES );
 }
 
-void GL_BeginBuildingLightmaps( model_t *m )
+void GL_BeginBuildingLightmaps( model_t *model )
 {
 	static lightstyle_t	lightstyles[MAX_LIGHTSTYLES];
 
 	memset( gl_lms.allocated, 0, sizeof( gl_lms.allocated ) );
-
-	tr.frameCount = 1; // no dlightcache
 
 	/*
 	** setup the base lightstyles so the lightmaps won't have to be regenerated
@@ -1093,6 +1103,14 @@ void GL_BeginBuildingLightmaps( model_t *m )
 		GL_LIGHTMAP_FORMAT,
 		GL_UNSIGNED_BYTE,
 		nullptr );
+
+	//
+	// Reserve at least enough space to hold all the base map vertices
+	// The reserve amount is a rough approximation of what a map will need,
+	// not what it will actually use
+	//
+	s_worldRenderData.vertices.reserve( model->numvertexes );
+	s_worldRenderData.indices.reserve( model->numvertexes * 3 );
 }
 
 void GL_EndBuildingLightmaps()
@@ -1121,20 +1139,44 @@ void GL_EndBuildingLightmaps()
 	glVertexAttribPointer( 2, 2, GL_FLOAT, GL_FALSE, structureSize, (void *)( 5 * sizeof( GLfloat ) ) );
 	glVertexAttribPointer( 3, 3, GL_FLOAT, GL_FALSE, structureSize, (void *)( 7 * sizeof( GLfloat ) ) );
 
-	const void *vertexData = reinterpret_cast<const void *>( s_worldRenderData.vertices.data() );
-	const GLsizeiptr vertexSize = static_cast<GLsizeiptr>( s_worldRenderData.vertices.size() ) * sizeof( worldVertex_t );
+	worldVertex_t *vertexData = s_worldRenderData.vertices.data();
+	const size_t vertexCount = s_worldRenderData.vertices.size();
+	const size_t vertexSize = vertexCount * sizeof( worldVertex_t );
 
-	const void *indexData = reinterpret_cast<const void *>( s_worldRenderData.indices.data() );
-	const GLsizeiptr indexSize = static_cast<GLsizeiptr>( s_worldRenderData.indices.size() ) * sizeof( worldIndex_t );
+#ifndef USE_PVS
+	worldIndex_t *indexData = s_worldRenderData.indices.data();
+	const size_t indexCount = s_worldRenderData.indices.size();
+	const size_t indexSize = indexCount * sizeof( worldIndex_t );
+#endif
 
 #ifdef USE_MESHOPT
 
-	//size_t numVertices = meshopt_optimizeVertexFetch(
-	//	outVertices.data(), tmpIndices.data(),
-	//	tmpIndices.size(), outVertices.data(), outVertices.size(), sizeof( t_vert ) );
+#ifndef USE_PVS
+
+	for ( const worldMesh_t &mesh : s_worldRenderData.meshes )
+	{
+		worldIndex_t *pOffsetIndices = indexData + mesh.firstIndex;
+
+		meshopt_optimizeVertexCache(
+			pOffsetIndices, pOffsetIndices,
+			mesh.numIndices, vertexCount );
+
+		// TODO: what do we gain from doing this?
+		meshopt_optimizeOverdraw(
+			pOffsetIndices, pOffsetIndices,
+			mesh.numIndices, (const float *)vertexData, vertexCount, sizeof( worldVertex_t ), 1.05f );
+	}
+
+#endif
+
+	size_t numVertices = meshopt_optimizeVertexFetch(
+		vertexData, indexData, indexCount,
+		vertexData, vertexCount, sizeof( worldVertex_t ) );
 
 #endif
 
 	glBufferData( GL_ARRAY_BUFFER, vertexSize, vertexData, GL_STATIC_DRAW );
+#ifndef USE_PVS
 	glBufferData( GL_ELEMENT_ARRAY_BUFFER, indexSize, indexData, GL_STATIC_DRAW );
+#endif
 }
