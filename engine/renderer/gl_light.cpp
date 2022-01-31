@@ -22,9 +22,6 @@ void R_MarkLights( dlight_t *light, int bit, mnode_t *node )
 {
 	int i;
 
-	// SHADERWORLD
-	return;
-
 	if ( node->contents != -1 ) {
 		return;
 	}
@@ -68,9 +65,6 @@ void R_PushDlights()
 {
 	int			i;
 	dlight_t	*l;
-
-	// SHADERWORLD
-	return;
 
 	if ( r_flashblend->GetBool() ) {
 		return;
@@ -280,8 +274,6 @@ void R_AddDynamicLights (msurface_t *surf)
 	float		*pfBL;
 	float		fsacc, ftacc;
 
-	return;
-
 	smax = (surf->extents[0]>>4)+1;
 	tmax = (surf->extents[1]>>4)+1;
 	tex = surf->texinfo;
@@ -480,10 +472,9 @@ void R_BuildLightMap(msurface_t *surf, byte *dest, int stride)
 		}
 	}
 
-	// SHADERWORLD
 	// add all the dynamic lights
-//	if (surf->dlightframe == tr.frameCount)
-//		R_AddDynamicLights(surf);
+	if (surf->dlightframe == tr.frameCount)
+		R_AddDynamicLights(surf);
 
 	// put into texture format
 store:
