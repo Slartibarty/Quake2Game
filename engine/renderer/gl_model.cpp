@@ -8,8 +8,6 @@
 
 #include "gl_local.h"
 
-#include <algorithm> // std::sort
-
 #define	MAX_MOD_KNOWN 1024
 
 // delete me
@@ -21,10 +19,10 @@ void Mod_LoadSMFModel( model_t *pMod, void *pBuffer, int bufferLength );
 void Mod_LoadSpriteModel( model_t *pMod, void *pBuffer, int bufferLength );
 
 // gl_surf.cpp
-void GL_BuildPolygonFromSurface( msurface_t *fa );
 void GL_CreateSurfaceLightmap( msurface_t *surf );
 void GL_BeginBuildingLightmaps( model_t *model );
 void GL_EndBuildingLightmaps();
+void R_BuildWorldLists( model_t *model );
 
 static byte		mod_novis[MAX_MAP_LEAFS/8];
 
@@ -546,6 +544,14 @@ static void CalcSurfaceExtents (msurface_t *s)
 	}
 }
 
+#if 0
+static int SortFacesByMaterial( const void *param1, const void *param2 )
+{
+	const dface_t *a = reinterpret_cast<const dface_t *>( param1 );
+	const dface_t *b = reinterpret_cast<const dface_t *>( param2 );
+}
+#endif
+
 /*
 ========================
 Mod_LoadFaces
@@ -572,13 +578,7 @@ static void Mod_LoadFaces( lump_t *l )
 
 	currentmodel = loadmodel;
 
-	// The face data is mutable... So sort it now by texinfo!
-	std::sort( in, in + count,
-		[]( const dface_t &a, const dface_t &b )
-		{
-			return a.texinfo < b.texinfo;
-		}
-	);
+	//qsort( in, count, sizeof( dface_t ), SortFacesByMaterial );
 
 	GL_BeginBuildingLightmaps( loadmodel );
 
@@ -641,23 +641,9 @@ static void Mod_LoadFaces( lump_t *l )
 		{
 			GL_CreateSurfaceLightmap( out );
 		}
-
-		if ( !( out->texinfo->flags & SURF_WARP ) )
-		{
-			GL_BuildPolygonFromSurface( out );
-		}
-
 	}
 
 	GL_EndBuildingLightmaps();
-
-#if 0
-	for ( int i = 0; i < count; ++i )
-	{
-		msurface_t *thisSurf = loadmodel->surfaces + i;
-		Com_Printf( "Surface %-6d, numVerts: %u\n", i, thisSurf->numVertices );
-	}
-#endif
 }
 
 /*
@@ -679,47 +665,60 @@ void Mod_SetParent (mnode_t *node, mnode_t *parent)
 Mod_LoadNodes
 ========================
 */
-static void Mod_LoadNodes (lump_t *l)
+static void Mod_LoadNodes( lump_t *l )
 {
+	dnode_t *	in;
+	mnode_t *	out;
 	int			i, j, count, p;
-	dnode_t		*in;
-	mnode_t 	*out;
 
-	in = (dnode_t*)(mod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		Com_Errorf ("MOD_LoadBmodel: funny lump size in %s",loadmodel->name);
-	count = l->filelen / sizeof(*in);
-	out = (mnode_t*)Hunk_Alloc ( count*sizeof(*out));	
+	in = (dnode_t *)( mod_base + l->fileofs );
+	if ( l->filelen % sizeof( *in ) )
+	{
+		Com_Errorf( "MOD_LoadBmodel: funny lump size in %s", loadmodel->name );
+	}
+	count = l->filelen / sizeof( *in );
+	out = (mnode_t *)Hunk_Alloc( count * sizeof( *out ) );
 
 	loadmodel->nodes = out;
 	loadmodel->numnodes = count;
 
-	for ( i=0 ; i<count ; i++, in++, out++)
+	for ( i = 0; i < count; ++i, ++in, ++out )
 	{
-		for (j=0 ; j<3 ; j++)
+		for ( j = 0; j < 3; ++j )
 		{
-			out->minmaxs[j] = LittleShort (in->mins[j]);
-			out->minmaxs[3+j] = LittleShort (in->maxs[j]);
+			out->mins[j] = LittleShort( in->mins[j] );
+			out->maxs[j] = LittleShort( in->maxs[j] );
 		}
-	
-		p = LittleLong(in->planenum);
+
+		p = LittleLong( in->planenum );
 		out->plane = loadmodel->planes + p;
 
-		out->firstsurface = LittleShort (in->firstface);
-		out->numsurfaces = LittleShort (in->numfaces);
-		out->contents = -1;	// differentiate from leafs
+		out->firstsurface = LittleShort( in->firstface );
+		out->numsurfaces = LittleShort( in->numfaces );
+		out->contents = -1; // differentiate from leafs
 
-		for (j=0 ; j<2 ; j++)
+		for ( j = 0; j < 2; ++j )
 		{
-			p = LittleLong (in->children[j]);
-			if (p >= 0)
+			p = LittleLong( in->children[j] );
+			if ( p >= 0 )
+			{
 				out->children[j] = loadmodel->nodes + p;
+			}
 			else
-				out->children[j] = (mnode_t *)(loadmodel->leafs + (-1 - p));
+			{
+				out->children[j] = (mnode_t *)( loadmodel->leafs + ( -1 - p ) );
+			}
+		}
+
+		// Load in the surfaces for this node
+		msurface_t *firstSurface = loadmodel->surfaces + out->firstsurface;
+		msurface_t *lastSurface = firstSurface + out->numsurfaces;
+		for ( ; firstSurface < lastSurface; ++firstSurface )
+		{
 		}
 	}
-	
-	Mod_SetParent (loadmodel->nodes, NULL);	// sets nodes and leafs
+
+	Mod_SetParent( loadmodel->nodes, nullptr ); // sets nodes and leafs
 }
 
 /*
@@ -727,39 +726,39 @@ static void Mod_LoadNodes (lump_t *l)
 Mod_LoadLeafs
 ========================
 */
-static void Mod_LoadLeafs (lump_t *l)
+static void Mod_LoadLeafs( lump_t *l )
 {
-	dleaf_t 	*in;
-	mleaf_t 	*out;
-	int			i, j, count, p;
-//	glpoly_t	*poly;
+	dleaf_t *	in;
+	mleaf_t *	out;
+	int			i, j, count;
 
-	in = (dleaf_t*)(mod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		Com_Errorf ("MOD_LoadBmodel: funny lump size in %s",loadmodel->name);
-	count = l->filelen / sizeof(*in);
-	out = (mleaf_t*)Hunk_Alloc ( count*sizeof(*out));	
+	in = (dleaf_t *)( mod_base + l->fileofs );
+	if ( l->filelen % sizeof( *in ) )
+	{
+		Com_Errorf( "MOD_LoadBmodel: funny lump size in %s", loadmodel->name );
+	}
+	count = l->filelen / sizeof( *in );
+	out = (mleaf_t *)Hunk_Alloc( count * sizeof( *out ) );
 
 	loadmodel->leafs = out;
 	loadmodel->numleafs = count;
 
-	for ( i=0 ; i<count ; i++, in++, out++)
+	for ( i = 0; i < count; ++i, ++in, ++out )
 	{
-		for (j=0 ; j<3 ; j++)
+		for ( j = 0; j < 3; ++j )
 		{
-			out->minmaxs[j] = LittleShort (in->mins[j]);
-			out->minmaxs[3+j] = LittleShort (in->maxs[j]);
+			out->mins[j] = LittleShort( in->mins[j] );
+			out->maxs[j] = LittleShort( in->maxs[j] );
 		}
 
-		p = LittleLong(in->contents);
-		out->contents = p;
+		out->contents = LittleLong( in->contents );
 
-		out->cluster = LittleShort(in->cluster);
-		out->area = LittleShort(in->area);
+		out->cluster = LittleShort( in->cluster );
+		out->area = LittleShort( in->area );
 
-		out->firstmarksurface = LittleShort(in->firstleafface);
-		out->nummarksurfaces = LittleShort(in->numleaffaces);
-	}	
+		out->firstmarksurface = LittleShort( in->firstleafface );
+		out->nummarksurfaces = LittleShort( in->numleaffaces );
+	}
 }
 
 /*
@@ -785,8 +784,11 @@ static void Mod_LoadMarksurfaces (lump_t *l)
 	for ( i=0 ; i<count ; i++)
 	{
 		j = LittleShort(in[i]);
-		if (j < 0 ||  j >= loadmodel->numsurfaces)
-			Com_Errorf ("Mod_ParseMarksurfaces: bad surface number");
+		if ( j < 0 || j >= loadmodel->numsurfaces )
+		{
+			continue;
+			//Com_Errorf( "Mod_ParseMarksurfaces: bad surface number" );
+		}
 		out[i] = loadmodel->surfaces + j;
 	}
 }
@@ -994,68 +996,90 @@ Mod_LoadBrushModel
 void Mod_LoadBrushModel( model_t *pMod, void *pBuffer, int bufferLength )
 {
 	int			i;
-	dheader_t	*header;
-	mmodel_t 	*bm;
-	
+	dheader_t *header;
+	mmodel_t *bm;
+
 	loadmodel->type = mod_brush;
-	if (loadmodel != mod_known)
-		Com_Errorf ("Loaded a brush model after the world");
+	if ( loadmodel != mod_known )
+	{
+		Com_Error( "Loaded a brush model after the world" );
+	}
 
 	header = (dheader_t *)pBuffer;
 
-	i = LittleLong (header->version);
-	if (i != BSPVERSION)
-		Com_Errorf ("Mod_LoadBrushModel: %s has wrong version number (%i should be %i)", pMod->name, i, BSPVERSION);
+	i = LittleLong( header->version );
+	if ( i != BSPVERSION )
+	{
+		Com_Errorf( "Mod_LoadBrushModel: %s has wrong version number (%i should be %i)", pMod->name, i, BSPVERSION );
+	}
 
-// swap all the lumps
+	//
+	// Swap all the lumps
+	//
 	mod_base = (byte *)header;
 
-	for (i=0 ; i<sizeof(dheader_t)/4 ; i++)
-		((int *)header)[i] = LittleLong ( ((int *)header)[i]);
+	for ( i = 0; i < sizeof( dheader_t ) / 4; ++i )
+	{
+		( (int *)header )[i] = LittleLong( ( (int *)header )[i] );
+	}
 
-// load into heap
-	
-	Mod_LoadVertexes (&header->lumps[LUMP_VERTEXES]);
-	Mod_LoadEdges (&header->lumps[LUMP_EDGES]);
-	Mod_LoadSurfedges (&header->lumps[LUMP_SURFEDGES]);
-	Mod_LoadLighting (&header->lumps[LUMP_LIGHTING]);
-	Mod_LoadPlanes (&header->lumps[LUMP_PLANES]);
-	Mod_LoadTexinfo (&header->lumps[LUMP_TEXINFO]);
-	Mod_LoadFaces (&header->lumps[LUMP_FACES]);
-	Mod_LoadMarksurfaces (&header->lumps[LUMP_LEAFFACES]);
-	Mod_LoadVisibility (&header->lumps[LUMP_VISIBILITY]);
-	Mod_LoadLeafs (&header->lumps[LUMP_LEAFS]);
-	Mod_LoadNodes (&header->lumps[LUMP_NODES]);
-	Mod_LoadSubmodels (&header->lumps[LUMP_MODELS]);
+	//
+	// Load all the lumps
+	//
+	Mod_LoadVertexes		( header->lumps + LUMP_VERTEXES );
+	Mod_LoadEdges			( header->lumps + LUMP_EDGES );
+	Mod_LoadSurfedges		( header->lumps + LUMP_SURFEDGES );
+	Mod_LoadLighting		( header->lumps + LUMP_LIGHTING );
+	Mod_LoadPlanes			( header->lumps + LUMP_PLANES );
+	Mod_LoadTexinfo			( header->lumps + LUMP_TEXINFO );
+	Mod_LoadFaces			( header->lumps + LUMP_FACES );
+	Mod_LoadMarksurfaces	( header->lumps + LUMP_LEAFFACES );
+	Mod_LoadVisibility		( header->lumps + LUMP_VISIBILITY );
+	Mod_LoadLeafs			( header->lumps + LUMP_LEAFS );
+	Mod_LoadNodes			( header->lumps + LUMP_NODES );
+	Mod_LoadSubmodels		( header->lumps + LUMP_MODELS );
 
+	// Parse lights out of the entity data... This uses the client bsp...
 	Mod_ParseLights( CM_EntityString() );
 
-	pMod->numframes = 2;		// regular and alternate animation
-	
-//
-// set up the submodels
-//
-	for (i=0 ; i<pMod->numsubmodels ; i++)
+	// Regular and alternate animation
+	pMod->numframes = 2;
+
+	//
+	// Build the world polymesh
+	// This is done after everything else because we need to know about
+	// the submodels
+	//
+	R_BuildWorldLists( pMod );
+
+	//
+	// Set up the submodels
+	//
+	for ( i = 0; i < pMod->numsubmodels; ++i )
 	{
-		model_t	*starmod;
+		model_t *starmod;
 
 		bm = &pMod->submodels[i];
 		starmod = &mod_inline[i];
 
 		*starmod = *loadmodel;
-		
+
 		starmod->firstmodelsurface = bm->firstface;
 		starmod->nummodelsurfaces = bm->numfaces;
 		starmod->firstnode = bm->headnode;
-		if (starmod->firstnode >= loadmodel->numnodes)
-			Com_Errorf ("Inline model %i has bad firstnode", i);
+		if ( starmod->firstnode >= loadmodel->numnodes )
+		{
+			Com_Errorf( "Inline model %i has bad firstnode", i );
+		}
 
-		VectorCopy (bm->maxs, starmod->maxs);
-		VectorCopy (bm->mins, starmod->mins);
+		VectorCopy( bm->maxs, starmod->maxs );
+		VectorCopy( bm->mins, starmod->mins );
 		starmod->radius = bm->radius;
-	
-		if (i == 0)
+
+		if ( i == 0 )
+		{
 			*loadmodel = *starmod;
+		}
 
 		starmod->numleafs = bm->visleafs;
 	}

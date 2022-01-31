@@ -17,15 +17,12 @@ model_t		*currentmodel;
 
 cplane_t	frustum[4];
 
-int			c_brush_polys, c_alias_polys;
-
 //
 // view origin
 //
 vec3_t	vup;
 vec3_t	vpn;
 vec3_t	vright;
-vec3_t	r_origin;
 
 int		r_viewcluster, r_viewcluster2, r_oldviewcluster, r_oldviewcluster2;
 
@@ -556,7 +553,7 @@ static void R_SetFrustum()
 	for ( i = 0; i < 4; i++ )
 	{
 		frustum[i].type = PLANE_ANYZ;
-		frustum[i].dist = DotProduct( r_origin, frustum[i].normal );
+		frustum[i].dist = DotProduct( tr.refdef.vieworg, frustum[i].normal );
 		frustum[i].signbits = SignbitsForPlane( frustum[i] );
 	}
 }
@@ -570,9 +567,13 @@ static void R_SetupFrame()
 {
 	mleaf_t *leaf;
 
-	// build the transformation matrix for the given view angles
-	VectorCopy( tr.refdef.vieworg, r_origin );
+	// Increment our frame counter
+	++tr.frameCount;
 
+	// Clear counters
+	tr.pc.Reset();
+
+	// Build the transformation matrix for the given view angles
 	AngleVectors( tr.refdef.viewangles, vpn, vright, vup );
 
 	// current viewcluster
@@ -580,7 +581,7 @@ static void R_SetupFrame()
 	{
 		r_oldviewcluster = r_viewcluster;
 		r_oldviewcluster2 = r_viewcluster2;
-		leaf = Mod_PointInLeaf( r_origin, r_worldmodel );
+		leaf = Mod_PointInLeaf( tr.refdef.vieworg, r_worldmodel );
 		r_viewcluster = r_viewcluster2 = leaf->cluster;
 
 		// check above and below so crossing solid water doesn't draw wrong
@@ -589,7 +590,7 @@ static void R_SetupFrame()
 			// look down a bit
 			vec3_t	temp;
 
-			VectorCopy( r_origin, temp );
+			VectorCopy( tr.refdef.vieworg, temp );
 			temp[2] -= 16;
 			leaf = Mod_PointInLeaf( temp, r_worldmodel );
 			if ( !( leaf->contents & CONTENTS_SOLID ) && ( leaf->cluster != r_viewcluster2 ) ) {
@@ -601,7 +602,7 @@ static void R_SetupFrame()
 			// look up a bit
 			vec3_t	temp;
 
-			VectorCopy( r_origin, temp );
+			VectorCopy( tr.refdef.vieworg, temp );
 			temp[2] += 16;
 			leaf = Mod_PointInLeaf( temp, r_worldmodel );
 			if ( !( leaf->contents & CONTENTS_SOLID ) && ( leaf->cluster != r_viewcluster2 ) ) {
@@ -609,9 +610,6 @@ static void R_SetupFrame()
 			}
 		}
 	}
-
-	c_brush_polys = 0;
-	c_alias_polys = 0;
 }
 
 // convert from our coordinate system (looking down X)
@@ -738,24 +736,17 @@ static void R_RenderView( refdef_t *fd )
 		return;
 	}
 
-	// Increment our frame counter
-	++tr.frameCount;
-
 	tr.refdef = *fd;
 
 	if ( !r_worldmodel && !( tr.refdef.rdflags & RDF_NOWORLDMODEL ) ) {
 		Com_Error( "R_RenderView: NULL worldmodel" );
 	}
 
-	if ( r_speeds->GetBool() )
-	{
-		c_brush_polys = 0;
-		c_alias_polys = 0;
-	}
-
+	// Remove me!
 	R_PushDlights();
 
 	if ( r_finish->GetBool() ) {
+		// Block until we're done with the last frame? Weird
 		glFinish();
 	}
 
@@ -793,11 +784,12 @@ static void R_RenderView( refdef_t *fd )
 
 	if ( r_speeds->GetBool() )
 	{
-		Com_Printf( "%4i wpoly %4i epoly %i tex %i lmaps\n",
-			c_brush_polys,
-			c_alias_polys,
-			c_visible_textures,
-			c_visible_lightmaps );
+		Com_Printf(
+			"%4i wpoly %4i epoly\n"
+			"%4i world draw calls\n",
+			tr.pc.worldPolys, c_alias_polys,
+			tr.pc.worldDrawCalls
+		);
 	}
 }
 

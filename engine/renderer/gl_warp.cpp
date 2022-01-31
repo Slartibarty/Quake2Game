@@ -463,7 +463,7 @@ void R_AddSkySurface( msurface_t *fa )
 	{
 		for ( i = 0; i < p->numverts; i++ )
 		{
-			VectorSubtract( p->verts[i], r_origin, verts[i] );
+			VectorSubtract( p->verts[i], tr.refdef.vieworg, verts[i] );
 		}
 		ClipSkyPolygon( p->numverts, verts[0], 0 );
 	}
@@ -541,7 +541,7 @@ void R_DrawSkyBox()
 	}
 
 	glPushMatrix();
-	glTranslatef( r_origin[0], r_origin[1], r_origin[2] );
+	glTranslatef( tr.refdef.vieworg[0], tr.refdef.vieworg[1], tr.refdef.vieworg[2] );
 	glRotatef( tr.refdef.time * skyrotate, skyaxis[0], skyaxis[1], skyaxis[2] );
 
 	for ( i = 0; i < 6; i++ )

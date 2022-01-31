@@ -14,6 +14,7 @@
 #include "gl_local.h"
 
 #include "../shared/imgtools.h"
+#include <algorithm> // std::sort
 #include <vector>
 
 // Use the PVS to determine what faces are visible, broken right now
@@ -105,9 +106,6 @@ static worldLists_t s_worldLists;
 #endif
 
 static vec3_t		modelorg;		// relative to viewpoint
-
-int		c_visible_lightmaps;
-int		c_visible_textures;
 
 struct gllightmapstate_t
 {
@@ -598,13 +596,13 @@ static void R_RecursiveWorldNode( worldNodeWork_t &work, mnode_t *node )
 			if ( surf->frameCount != tr.frameCount )
 			{
 				// Already visited
-				//continue;
+				continue;
 			}
 
 			if ( ( surf->flags & SURF_PLANEBACK ) != sidebit )
 			{
 				// Wrong side
-				//continue;
+				continue;
 			}
 
 			if ( surf->texinfo->flags & SURF_SKY )
@@ -672,22 +670,28 @@ static void R_SquashAndUploadIndices( const worldNodeWork_t &work )
 //
 // Draws all opaque surfaces in the world list
 //
-static void R_DrawOpaqueSurfaces()
+static void R_DrawStaticOpaqueWorld()
 {
 #ifdef USE_PVS
 	for ( const worldMesh_t &mesh : s_worldLists.opaqueMeshes )
 #else
-	for ( const worldMesh_t &mesh : s_worldRenderData.meshes )
+	mmodel_t &model = r_worldmodel->submodels[0];
+
+	// This will always be the first, but it's here for reference
+	worldMesh_t *firstMesh = s_worldRenderData.meshes.data() + model.firstMesh;
+	worldMesh_t *lastMesh = firstMesh + model.numMeshes;
+
+	for ( worldMesh_t *mesh = firstMesh; mesh < lastMesh; ++mesh )
 #endif
 	{
-		const material_t *mat = R_TextureAnimation( mesh.texinfo );
+		const material_t *mat = R_TextureAnimation( mesh->texinfo );
 
 		GL_ActiveTexture( GL_TEXTURE0 );
 		mat->Bind();
 		GL_ActiveTexture( GL_TEXTURE1 );
 		GL_BindTexture( glState.lightmap_textures + 1 );
 
-		glDrawElements( GL_TRIANGLES, mesh.numIndices, GL_UNSIGNED_INT, (void *)( (uintptr_t)( mesh.firstIndex ) * sizeof( worldIndex_t ) ) );
+		glDrawElements( GL_TRIANGLES, mesh->numIndices, GL_UNSIGNED_INT, (void *)( (uintptr_t)( mesh->firstIndex ) * sizeof( worldIndex_t ) ) );
 	}
 }
 
@@ -774,7 +778,7 @@ void R_DrawWorld()
 	glUniform1i( indexAfterLights + 1, 1 ); // lightmap
 
 	// Now render stuff!
-	R_DrawOpaqueSurfaces();
+	R_DrawStaticOpaqueWorld();
 
 	glUseProgram( 0 );
 
@@ -877,6 +881,87 @@ static bool LM_AllocBlock( int w, int h, int *x, int *y )
 	return true;
 }
 
+//
+// This should only ever be called between
+// GL_BeginBuildingLightmaps and
+// GL_EndBuildingLightmaps
+//
+void GL_CreateSurfaceLightmap( msurface_t *surf )
+{
+	if ( surf->flags & ( SURF_DRAWSKY | SURF_DRAWTURB ) )
+	{
+		return;
+	}
+
+	int smax = ( surf->extents[0] >> 4 ) + 1;
+	int tmax = ( surf->extents[1] >> 4 ) + 1;
+
+	if ( !LM_AllocBlock( smax, tmax, &surf->light_s, &surf->light_t ) )
+	{
+		LM_UploadBlock();
+		LM_InitBlock();
+		if ( !LM_AllocBlock( smax, tmax, &surf->light_s, &surf->light_t ) )
+		{
+			Com_FatalErrorf( "Consecutive calls to LM_AllocBlock(%d,%d) failed\n", smax, tmax );
+		}
+	}
+
+	surf->lightmaptexturenum = gl_lms.current_lightmap_texture;
+
+	byte *base = gl_lms.lightmap_buffer;
+	base += ( surf->light_t * BLOCK_WIDTH + surf->light_s ) * LIGHTMAP_BYTES;
+
+	R_SetCacheState( surf );
+	R_BuildLightMap( surf, base, BLOCK_WIDTH * LIGHTMAP_BYTES );
+}
+
+void GL_BeginBuildingLightmaps( model_t *model )
+{
+	static lightstyle_t	lightstyles[MAX_LIGHTSTYLES];
+
+	memset( gl_lms.allocated, 0, sizeof( gl_lms.allocated ) );
+
+	/*
+	** setup the base lightstyles so the lightmaps won't have to be regenerated
+	** the first time they're seen
+	*/
+	for ( int i = 0; i < MAX_LIGHTSTYLES; ++i )
+	{
+		lightstyles[i].rgb[0] = 1.0f;
+		lightstyles[i].rgb[1] = 1.0f;
+		lightstyles[i].rgb[2] = 1.0f;
+		lightstyles[i].white = 3.0f;
+	}
+	tr.refdef.lightstyles = lightstyles;
+
+	if ( !glState.lightmap_textures )
+	{
+		glState.lightmap_textures = TEXNUM_LIGHTMAPS;
+	}
+
+	gl_lms.current_lightmap_texture = 1;
+
+	/*
+	** initialize the dynamic lightmap texture
+	*/
+	GL_BindTexture( glState.lightmap_textures + 0 );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	glTexImage2D( GL_TEXTURE_2D,
+		0,
+		GL_RGBA8,
+		BLOCK_WIDTH, BLOCK_HEIGHT,
+		0,
+		GL_LIGHTMAP_FORMAT,
+		GL_UNSIGNED_BYTE,
+		nullptr );
+}
+
+void GL_EndBuildingLightmaps()
+{
+	LM_UploadBlock();
+}
+
 // Populates the normal member of the vertex structures
 static void R_BuildVertexNormals( worldVertex_t &v1, worldVertex_t &v2, worldVertex_t &v3 )
 {
@@ -897,7 +982,7 @@ static void R_BuildVertexNormals( worldVertex_t &v1, worldVertex_t &v2, worldVer
 // will create optimised render geometry and append it to s_worldRenderData
 // It then gives the index of the first renderindex to the msurface_t
 //
-void GL_BuildPolygonFromSurface( msurface_t *fa )
+static void R_BuildPolygonFromSurface( msurface_t *fa, mmodel_t *world )
 {
 	const int *pSurfEdges = currentmodel->surfedges;
 	const medge_t *pEdges = currentmodel->edges;
@@ -984,10 +1069,7 @@ void GL_BuildPolygonFromSurface( msurface_t *fa )
 		worldVertex_t &v3 = s_worldRenderData.vertices[firstVertex + i + 2];
 
 		// Take this opportunity to sort out the normals too
-		//R_BuildVertexNormals( v1, v2, v3 );
-		VectorCopy( fa->plane->normal, v1.normal );
-		VectorCopy( fa->plane->normal, v2.normal );
-		VectorCopy( fa->plane->normal, v3.normal );
+		R_BuildVertexNormals( v1, v2, v3 );
 #endif
 
 		s_worldRenderData.indices.push_back( firstVertex + 0 );
@@ -1023,101 +1105,53 @@ void GL_BuildPolygonFromSurface( msurface_t *fa )
 	{
 		// Append to our existing one
 		worldMesh_t &mesh = s_worldRenderData.meshes.back();
-		mesh.texinfo = fa->texinfo;
 		mesh.numIndices += numIndices;
 	}
 #endif
 }
 
-//
-// This should only ever be called between
-// GL_BeginBuildingLightmaps and
-// GL_EndBuildingLightmaps
-//
-void GL_CreateSurfaceLightmap( msurface_t *surf )
+void R_BuildWorldLists( model_t *world )
 {
-	if ( surf->flags & ( SURF_DRAWSKY | SURF_DRAWTURB ) )
-	{
-		return;
-	}
-
-	int smax = ( surf->extents[0] >> 4 ) + 1;
-	int tmax = ( surf->extents[1] >> 4 ) + 1;
-
-	if ( !LM_AllocBlock( smax, tmax, &surf->light_s, &surf->light_t ) )
-	{
-		LM_UploadBlock();
-		LM_InitBlock();
-		if ( !LM_AllocBlock( smax, tmax, &surf->light_s, &surf->light_t ) )
-		{
-			Com_FatalErrorf( "Consecutive calls to LM_AllocBlock(%d,%d) failed\n", smax, tmax );
-		}
-	}
-
-	surf->lightmaptexturenum = gl_lms.current_lightmap_texture;
-
-	byte *base = gl_lms.lightmap_buffer;
-	base += ( surf->light_t * BLOCK_WIDTH + surf->light_s ) * LIGHTMAP_BYTES;
-
-	R_SetCacheState( surf );
-	R_BuildLightMap( surf, base, BLOCK_WIDTH * LIGHTMAP_BYTES );
-}
-
-void GL_BeginBuildingLightmaps( model_t *model )
-{
-	static lightstyle_t	lightstyles[MAX_LIGHTSTYLES];
-
-	memset( gl_lms.allocated, 0, sizeof( gl_lms.allocated ) );
-
-	/*
-	** setup the base lightstyles so the lightmaps won't have to be regenerated
-	** the first time they're seen
-	*/
-	for ( int i = 0; i < MAX_LIGHTSTYLES; ++i )
-	{
-		lightstyles[i].rgb[0] = 1.0f;
-		lightstyles[i].rgb[1] = 1.0f;
-		lightstyles[i].rgb[2] = 1.0f;
-		lightstyles[i].white = 3.0f;
-	}
-	tr.refdef.lightstyles = lightstyles;
-
-	if ( !glState.lightmap_textures )
-	{
-		glState.lightmap_textures = TEXNUM_LIGHTMAPS;
-	}
-
-	gl_lms.current_lightmap_texture = 1;
-
-	/*
-	** initialize the dynamic lightmap texture
-	*/
-	GL_BindTexture( glState.lightmap_textures + 0 );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-	glTexImage2D( GL_TEXTURE_2D,
-		0,
-		GL_RGBA8,
-		BLOCK_WIDTH, BLOCK_HEIGHT,
-		0,
-		GL_LIGHTMAP_FORMAT,
-		GL_UNSIGNED_BYTE,
-		nullptr );
-
 	//
 	// Reserve at least enough space to hold all the base map vertices
 	// The reserve amount is a rough approximation of what a map will need,
 	// not what it will actually use
 	//
-	s_worldRenderData.vertices.reserve( model->numvertexes );
-	s_worldRenderData.indices.reserve( model->numvertexes * 3 );
-}
+	s_worldRenderData.vertices.reserve( world->numvertexes );
+	s_worldRenderData.indices.reserve( world->numvertexes * 3 );
 
-void GL_EndBuildingLightmaps()
-{
-	LM_UploadBlock();
+	mmodel_t *firstModel = world->submodels;
+	mmodel_t *endModel = firstModel + world->numsubmodels; // Not a valid submodel
 
+	for ( mmodel_t *subModel = firstModel; subModel < endModel; ++subModel )
+	{
+		const uint32 firstWorldMesh = static_cast<uint32>( s_worldRenderData.meshes.size() );
+		subModel->firstMesh = firstWorldMesh;
+
+		msurface_t *firstFace = world->surfaces + subModel->firstface;
+		msurface_t *lastFace = firstFace + subModel->numfaces;
+
+		// Sort the surfaces by model, by material
+		std::sort( firstFace, lastFace,
+			[]( const msurface_t &a, const msurface_t &b )
+			{
+				// This is incredibly silly, but it works!
+				return a.texinfo->material < b.texinfo->material;
+			}
+		);
+
+		for ( msurface_t *surface = firstFace; surface < lastFace; ++surface )
+		{
+			R_BuildPolygonFromSurface( surface, subModel );
+		}
+
+		const uint32 lastWorldMesh = static_cast<uint32>( s_worldRenderData.meshes.size() );
+		subModel->numMeshes = lastWorldMesh - firstWorldMesh;
+	}
+
+	//
 	// Upload our big fat vertex buffer
+	//
 
 	glGenVertexArrays( 1, &s_worldRenderData.vao );
 	glGenBuffers( 2, &s_worldRenderData.vbo );			// Gen the vbo and ebo in one go

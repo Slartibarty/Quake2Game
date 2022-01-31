@@ -22,11 +22,12 @@ struct mvertex_t
 struct mmodel_t
 {
 	vec3_t		mins, maxs;
-	vec3_t		origin;		// for sounds or lights
+	vec3_t		origin;			// for sounds or lights
 	float		radius;
 	int32		headnode;
 	int32		visleafs;		// not including the solid leaf 0
 	int32		firstface, numfaces;
+	uint32		firstMesh, numMeshes;
 };
 
 #define	SURF_PLANEBACK		2

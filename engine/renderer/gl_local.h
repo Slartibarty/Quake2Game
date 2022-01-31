@@ -86,12 +86,27 @@ struct glState_t
 	GLenum	activeTexture;
 };
 
+struct perfCounters_t
+{
+	uint32		worldPolys;
+	uint32		worldDrawCalls;
+	uint32		aliasPolys;
+
+	void Reset()
+	{
+		worldPolys = 0;
+		worldDrawCalls = 0;
+		aliasPolys
+	}
+};
+
 struct renderSystemGlobals_t
 {
-	refdef_t	refdef;
-	int			registrationSequence;
-	int			visCount;				// bumped when going to a new PVS
-	int			frameCount;				// used for dlight push checking
+	refdef_t		refdef;
+	perfCounters_t	pc;
+	int		registrationSequence;
+	int		visCount;				// bumped when going to a new PVS
+	int		frameCount;				// used for dlight push checking
 
 	entity_t *	pViewmodelEntity;			// so we can render this particular entity last after everything else, but before the UI
 
@@ -172,7 +187,6 @@ extern cvar_t *r_viewmodelfov;
 extern	entity_t	*currententity;
 extern	model_t		*currentmodel;
 extern	cplane_t	frustum[4];
-extern	int			c_brush_polys, c_alias_polys;
 
 //
 // view origin
@@ -180,7 +194,6 @@ extern	int			c_brush_polys, c_alias_polys;
 extern	vec3_t	vup;
 extern	vec3_t	vpn;
 extern	vec3_t	vright;
-extern	vec3_t	r_origin; // same as vec3_origin
 
 //
 // screen size info
