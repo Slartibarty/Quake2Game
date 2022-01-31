@@ -24,9 +24,9 @@ struct mmodel_t
 	vec3_t		mins, maxs;
 	vec3_t		origin;		// for sounds or lights
 	float		radius;
-	int			headnode;
-	int			visleafs;		// not including the solid leaf 0
-	int			firstface, numfaces;
+	int32		headnode;
+	int32		visleafs;		// not including the solid leaf 0
+	int32		firstface, numfaces;
 };
 
 #define	SURF_PLANEBACK		2
@@ -43,8 +43,8 @@ struct medge_t
 struct mtexinfo_t
 {
 	float		vecs[2][4];
-	int			flags;
-	int			numframes;
+	int32		flags;
+	int32		numframes;
 	mtexinfo_t	*next;		// animation chain
 	material_t	*material;
 };
@@ -62,70 +62,71 @@ struct glpoly_t
 
 struct msurface_t
 {
-	int			frameCount;		// The frame that this surface was last visible on
+	int32		frameCount;		// The frame that this surface was last visible on
 
-	cplane_t	*plane;
-	int			flags;
+	cplane_t *	plane;
+	int32		flags;
 
-	int			firstedge;			// look up in model->surfedges[], negative numbers
-	int			numedges;			// are backwards edges
+	int32		firstedge;			// look up in model->surfedges[], negative numbers
+	int32		numedges;			// are backwards edges
 	
-	short		texturemins[2];
-	short		extents[2];
+	int16		texturemins[2];
+	int16		extents[2];
 
-	int			light_s, light_t;	// gl lightmap coordinates
+	int32		light_s, light_t;	// gl lightmap coordinates
 
-	glpoly_t	*polys;				// multiple if warped
+	glpoly_t *	polys;				// multiple if warped
 	uint32		firstIndex;			// First vertex into the world render data
 	uint32		numIndices;			// Number of vertices to draw
 
 	mtexinfo_t	*texinfo;
 
 // lighting info
-	int			dlightframe;
-	int			dlightbits;
+	int32		dlightframe;
+	int32		dlightbits;
 
-	int			lightmaptexturenum;
+	int32		lightmaptexturenum;
 	byte		styles[MAXLIGHTMAPS];
 	float		cached_light[MAXLIGHTMAPS];	// values currently used in lightmap
-	byte		*samples;		// [numstyles*surfsize]
+	byte *		samples;			// [numstyles*surfsize]
 };
 
 struct mnode_t
 {
 // common with leaf
-	int			contents;		// -1, to differentiate from leafs
-	int			visframe;		// node needs to be traversed if current
+	int32		contents;		// -1, to differentiate from leafs
+	int32		visframe;		// node needs to be traversed if current
 	
-	float		minmaxs[6];		// for bounding box culling
+	vec3_t		mins;			// for bounding box culling
+	vec3_t		maxs;
 
-	mnode_t		*parent;
+	mnode_t *	parent;
 
 // node specific
-	cplane_t	*plane;
-	mnode_t		*children[2];
+	cplane_t *	plane;
+	mnode_t *	children[2];
 
-	unsigned short		firstsurface;
-	unsigned short		numsurfaces;
+	int32		firstsurface;
+	int32		numsurfaces;
 };
-
 
 struct mleaf_t
 {
 // common with node
-	int			contents;		// will be a negative contents number
-	int			visframe;		// node needs to be traversed if current
+	int32		contents;		// will be a negative contents number
+	int32		visframe;		// node needs to be traversed if current
 
-	float		minmaxs[6];		// for bounding box culling
+	vec3_t		mins;			// for bounding box culling
+	vec3_t		maxs;
 
-	mnode_t		*parent;
+	mnode_t *	parent;
 
 // leaf specific
-	int			cluster;
-	int			area;
+	int32		cluster;
+	int32		area;
 
-	int			firstmarksurface;
-	int			nummarksurfaces;
+	int32		firstmarksurface;
+	int32		nummarksurfaces;
 };
 
 /*
