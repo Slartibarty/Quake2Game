@@ -163,6 +163,8 @@ void S_Shutdown(void)
 			continue;
 		if (sfx->cache)
 			Mem_Free (sfx->cache);
+		if (sfx->truename)
+			Mem_Free(sfx->truename);
 		memset (sfx, 0, sizeof(*sfx));
 	}
 
