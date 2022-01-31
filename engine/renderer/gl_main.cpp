@@ -17,13 +17,6 @@ model_t		*currentmodel;
 
 cplane_t	frustum[4];
 
-//
-// view origin
-//
-vec3_t	vup;
-vec3_t	vpn;
-vec3_t	vright;
-
 int		r_viewcluster, r_viewcluster2, r_oldviewcluster, r_oldviewcluster2;
 
 // end vars
@@ -95,8 +88,8 @@ static void R_DrawSpriteModel( entity_t *e )
 	else
 #endif
 	{	// normal sprite
-		up = vup;
-		right = vright;
+		up = tr.vUp;
+		right = tr.vRight;
 	}
 
 	if ( e->flags & RF_TRANSLUCENT )
@@ -240,7 +233,7 @@ static void R_DrawThingy( const vec3_t origin, const vec3_t angles, uint32 color
 	XMFLOAT4X4 modelMatrixStore;
 	XMStoreFloat4x4( &modelMatrixStore, modelMatrix );
 
-	glUseProgram( glProgs.debugMeshProg );
+	GL_UseProgram( glProgs.debugMeshProg );
 
 	glUniformMatrix4fv( 1, 1, GL_FALSE, (const GLfloat *)&modelMatrixStore );
 	glUniformMatrix4fv( 2, 1, GL_FALSE, (const GLfloat *)&tr.viewMatrix );
@@ -255,7 +248,7 @@ static void R_DrawThingy( const vec3_t origin, const vec3_t angles, uint32 color
 
 	glDrawArrays( GL_TRIANGLE_FAN, 0, 11 );
 
-	glUseProgram( 0 );
+	GL_UseProgram( 0 );
 }
 
 /*
@@ -489,7 +482,7 @@ static void R_DrawParticles()
 		point.a = static_cast<byte>( p->alpha * 255.0f );
 	}
 
-	glUseProgram( glProgs.particleProg );
+	GL_UseProgram( glProgs.particleProg );
 	glUniformMatrix4fv( 2, 1, GL_FALSE, (const GLfloat *)&tr.projMatrix );
 	glUniformMatrix4fv( 3, 1, GL_FALSE, (const GLfloat *)&tr.viewMatrix );
 
@@ -508,7 +501,7 @@ static void R_DrawParticles()
 	glDisable( GL_BLEND );
 	glDepthMask( GL_TRUE );
 
-	glUseProgram( 0 );
+	GL_UseProgram( 0 );
 }
 
 //=================================================================================================
@@ -541,13 +534,13 @@ static void R_SetFrustum()
 	VectorNormalize( frustum[3].normal );
 #else
 	// rotate VPN right by FOV_X/2 degrees
-	RotatePointAroundVector( frustum[0].normal, vup, vpn, -( 90 - tr.refdef.fov_x / 2 ) );
+	RotatePointAroundVector( frustum[0].normal, tr.vUp, tr.vForward, -( 90 - tr.refdef.fov_x / 2 ) );
 	// rotate VPN left by FOV_X/2 degrees
-	RotatePointAroundVector( frustum[1].normal, vup, vpn, 90 - tr.refdef.fov_x / 2 );
+	RotatePointAroundVector( frustum[1].normal, tr.vUp, tr.vForward, 90 - tr.refdef.fov_x / 2 );
 	// rotate VPN up by FOV_X/2 degrees
-	RotatePointAroundVector( frustum[2].normal, vright, vpn, 90 - tr.refdef.fov_y / 2 );
+	RotatePointAroundVector( frustum[2].normal, tr.vRight, tr.vForward, 90 - tr.refdef.fov_y / 2 );
 	// rotate VPN down by FOV_X/2 degrees
-	RotatePointAroundVector( frustum[3].normal, vright, vpn, -( 90 - tr.refdef.fov_y / 2 ) );
+	RotatePointAroundVector( frustum[3].normal, tr.vRight, tr.vForward, -( 90 - tr.refdef.fov_y / 2 ) );
 #endif
 
 	for ( i = 0; i < 4; i++ )
@@ -574,7 +567,7 @@ static void R_SetupFrame()
 	tr.pc.Reset();
 
 	// Build the transformation matrix for the given view angles
-	AngleVectors( tr.refdef.viewangles, vpn, vright, vup );
+	AngleVectors( tr.refdef.viewangles, tr.vForward, tr.vRight, tr.vUp );
 
 	// current viewcluster
 	if ( !( tr.refdef.rdflags & RDF_NOWORLDMODEL ) )
@@ -787,7 +780,7 @@ static void R_RenderView( refdef_t *fd )
 		Com_Printf(
 			"%4i wpoly %4i epoly\n"
 			"%4i world draw calls\n",
-			tr.pc.worldPolys, c_alias_polys,
+			tr.pc.worldPolys, tr.pc.aliasPolys,
 			tr.pc.worldDrawCalls
 		);
 	}

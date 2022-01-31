@@ -56,6 +56,7 @@ void R_UpgradeWals_f();
 
 void		GL_ActiveTexture( GLenum texture );
 void		GL_BindTexture( GLuint texnum );
+void		GL_UseProgram( GLuint program );
 void		GL_TexEnv( GLint value );
 
 void		GL_CheckErrors();
@@ -82,8 +83,9 @@ struct glState_t
 
 	int		lightmap_textures;
 
-	GLuint	currenttextures[Q_MAX_TEXTURE_UNITS];
+	GLuint	currentTextures[Q_MAX_TEXTURE_UNITS];
 	GLenum	activeTexture;
+	GLuint	currentProgram;
 };
 
 struct perfCounters_t
@@ -96,7 +98,7 @@ struct perfCounters_t
 	{
 		worldPolys = 0;
 		worldDrawCalls = 0;
-		aliasPolys
+		aliasPolys = 0;
 	}
 };
 
@@ -104,14 +106,17 @@ struct renderSystemGlobals_t
 {
 	refdef_t		refdef;
 	perfCounters_t	pc;
-	int		registrationSequence;
-	int		visCount;				// bumped when going to a new PVS
-	int		frameCount;				// used for dlight push checking
+	int				registrationSequence;
+	int				visCount;				// bumped when going to a new PVS
+	int				frameCount;				// used for dlight push checking
 
-	entity_t *	pViewmodelEntity;			// so we can render this particular entity last after everything else, but before the UI
+	entity_t *pViewmodelEntity;				// so we can render this particular entity last after everything else, but before the UI
 
+	// Matrices
 	DirectX::XMFLOAT4X4A projMatrix;		// the projection matrix
 	DirectX::XMFLOAT4X4A viewMatrix;		// the view matrix
+	// Angle vectors
+	vec3_t vForward, vRight, vUp;
 
 	GLuint debugMeshVAO;
 	GLuint debugMeshVBO;
@@ -187,13 +192,6 @@ extern cvar_t *r_viewmodelfov;
 extern	entity_t	*currententity;
 extern	model_t		*currentmodel;
 extern	cplane_t	frustum[4];
-
-//
-// view origin
-//
-extern	vec3_t	vup;
-extern	vec3_t	vpn;
-extern	vec3_t	vright;
 
 //
 // screen size info
@@ -389,7 +387,6 @@ void	R_LightPoint( vec3_t p, vec3_t color );
 */
 
 extern int c_visible_lightmaps;
-extern int c_visible_textures;
 
 void	R_DrawBrushModel( entity_t *e );
 void	R_DrawWorld();

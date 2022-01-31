@@ -625,7 +625,7 @@ void R_DrawAliasModel (entity_t *e)
 	// locate the proper data
 	//
 
-	c_alias_polys += paliashdr->num_tris;
+	tr.pc.aliasPolys += paliashdr->num_tris;
 
 	//
 	// draw all the triangles
@@ -850,7 +850,7 @@ void R_DrawStaticMeshFile( entity_t *e )
 		finalLights[0].intensity = 200.0f;
 	}
 
-	glUseProgram( glProgs.smfMeshProg );
+	GL_UseProgram( glProgs.smfMeshProg );
 
 	glUniformMatrix4fv( 4, 1, GL_FALSE, (const GLfloat *)&modelMatrixStore );
 	glUniformMatrix4fv( 5, 1, GL_FALSE, (const GLfloat *)&tr.viewMatrix );
@@ -913,5 +913,5 @@ void R_DrawStaticMeshFile( entity_t *e )
 
 	glCullFace( GL_FRONT ); // TODO: eugh
 
-	glUseProgram( 0 );
+	GL_UseProgram( 0 );
 }

@@ -204,7 +204,7 @@ Shaders_Shutdown
 */
 void Shaders_Shutdown()
 {
-	glUseProgram( 0 );
+	GL_UseProgram( 0 );
 
 	// values of 0 are silently ignored for glDeleteShader and glDeleteProgram
 

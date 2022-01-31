@@ -126,6 +126,8 @@ static gllightmapstate_t gl_lms;
 void R_SetCacheState(msurface_t *surf);
 void R_BuildLightMap(msurface_t *surf, byte *dest, int stride);
 
+static void LM_BlendLightmaps();
+
 /*
 ===================================================================================================
 
@@ -752,7 +754,7 @@ void R_DrawWorld()
 	DirectX::XMFLOAT4X4A modelMatrixStore;
 	DirectX::XMStoreFloat4x4A( &modelMatrixStore, modelMatrix );
 
-	glUseProgram( glProgs.worldProg );
+	GL_UseProgram( glProgs.worldProg );
 
 	glUniformMatrix4fv( 4, 1, GL_FALSE, (const GLfloat *)&modelMatrixStore );
 	glUniformMatrix4fv( 5, 1, GL_FALSE, (const GLfloat *)&tr.viewMatrix );
@@ -780,7 +782,9 @@ void R_DrawWorld()
 	// Now render stuff!
 	R_DrawStaticOpaqueWorld();
 
-	glUseProgram( 0 );
+	LM_BlendLightmaps();
+
+	GL_UseProgram( 0 );
 
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
@@ -810,28 +814,53 @@ static void LM_InitBlock()
 	memset( gl_lms.allocated, 0, sizeof( gl_lms.allocated ) );
 }
 
-static void LM_UploadBlock()
+static void LM_UploadBlock( bool dynamic )
 {
-	int texture = gl_lms.current_lightmap_texture;
+	int texture = dynamic ? 0 : gl_lms.current_lightmap_texture;
 
+	GL_ActiveTexture( GL_TEXTURE1 );
 	GL_BindTexture( glState.lightmap_textures + texture );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 
-	glTexImage2D( GL_TEXTURE_2D,
-		0,
-		GL_RGBA8,
-		BLOCK_WIDTH, BLOCK_HEIGHT,
-		0,
-		GL_LIGHTMAP_FORMAT,
-		GL_UNSIGNED_BYTE,
-		gl_lms.lightmap_buffer );
-
-	++gl_lms.current_lightmap_texture;
-
-	if ( gl_lms.current_lightmap_texture == MAX_LIGHTMAPS )
+	if ( dynamic )
 	{
-		Com_Error( "LM_UploadBlock() - MAX_LIGHTMAPS exceeded\n" );
+		int i = 0;
+		int height = 0;
+
+		for ( ; i < BLOCK_WIDTH; ++i )
+		{
+			if ( gl_lms.allocated[i] > height )
+			{
+				height = gl_lms.allocated[i];
+			}
+		}
+
+		glTexSubImage2D( GL_TEXTURE_2D,
+			0,
+			0, 0,
+			BLOCK_WIDTH, height,
+			GL_LIGHTMAP_FORMAT,
+			GL_UNSIGNED_BYTE,
+			gl_lms.lightmap_buffer );
+	}
+	else
+	{
+		glTexImage2D( GL_TEXTURE_2D,
+			0,
+			GL_RGBA8,
+			BLOCK_WIDTH, BLOCK_HEIGHT,
+			0,
+			GL_LIGHTMAP_FORMAT,
+			GL_UNSIGNED_BYTE,
+			gl_lms.lightmap_buffer );
+
+		++gl_lms.current_lightmap_texture;
+
+		if ( gl_lms.current_lightmap_texture == MAX_LIGHTMAPS )
+		{
+			Com_Error( "LM_UploadBlock() - MAX_LIGHTMAPS exceeded\n" );
+		}
 	}
 }
 
@@ -881,6 +910,26 @@ static bool LM_AllocBlock( int w, int h, int *x, int *y )
 	return true;
 }
 
+static void LM_BlendLightmaps()
+{
+	// Don't bother if we're set to fullbright
+	if ( r_fullbright->GetBool() )
+	{
+		return;
+	}
+
+	if ( !r_worldmodel->lightdata )
+	{
+		return;
+	}
+
+	if ( r_dynamic->GetBool() )
+	{
+		LM_InitBlock();
+		LM_UploadBlock( true );
+	}
+}
+
 //
 // This should only ever be called between
 // GL_BeginBuildingLightmaps and
@@ -888,7 +937,7 @@ static bool LM_AllocBlock( int w, int h, int *x, int *y )
 //
 void GL_CreateSurfaceLightmap( msurface_t *surf )
 {
-	if ( surf->flags & ( SURF_DRAWSKY | SURF_DRAWTURB ) )
+	if ( surf->flags & SURFMASK_UNLIT )
 	{
 		return;
 	}
@@ -898,7 +947,7 @@ void GL_CreateSurfaceLightmap( msurface_t *surf )
 
 	if ( !LM_AllocBlock( smax, tmax, &surf->light_s, &surf->light_t ) )
 	{
-		LM_UploadBlock();
+		LM_UploadBlock( false );
 		LM_InitBlock();
 		if ( !LM_AllocBlock( smax, tmax, &surf->light_s, &surf->light_t ) )
 		{
@@ -920,6 +969,8 @@ void GL_BeginBuildingLightmaps( model_t *model )
 	static lightstyle_t	lightstyles[MAX_LIGHTSTYLES];
 
 	memset( gl_lms.allocated, 0, sizeof( gl_lms.allocated ) );
+
+	tr.frameCount = 1; // no dlightcache
 
 	/*
 	** setup the base lightstyles so the lightmaps won't have to be regenerated
@@ -959,7 +1010,7 @@ void GL_BeginBuildingLightmaps( model_t *model )
 
 void GL_EndBuildingLightmaps()
 {
-	LM_UploadBlock();
+	LM_UploadBlock( false );
 }
 
 // Populates the normal member of the vertex structures

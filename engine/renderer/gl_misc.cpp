@@ -417,14 +417,26 @@ void GL_ActiveTexture( GLenum texture )
 
 void GL_BindTexture( GLuint texnum )
 {
-	if ( glState.currenttextures[glState.activeTexture] == texnum )
+	if ( glState.currentTextures[glState.activeTexture] == texnum )
 	{
 		// Already bound
 		return;
 	}
-	glState.currenttextures[glState.activeTexture] = texnum;
+	glState.currentTextures[glState.activeTexture] = texnum;
 
 	glBindTexture( GL_TEXTURE_2D, texnum );
+}
+
+void GL_UseProgram( GLuint program )
+{
+	if ( glState.currentProgram == program )
+	{
+		// Already bound
+		return;
+	}
+	glState.currentProgram = program;
+
+	glUseProgram( program );
 }
 
 void GL_TexEnv( GLint mode )
