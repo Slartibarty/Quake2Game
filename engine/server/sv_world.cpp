@@ -94,7 +94,8 @@ static worldSector_t *SV_CreateWorldSector( int depth, vec3_t mins, vec3_t maxs 
 	vec3_t		size;
 	vec3_t		mins1, maxs1, mins2, maxs2;
 
-	anode = &sv_worldSectors[sv_numWorldSectors++];
+	anode = &sv_worldSectors[sv_numWorldSectors];
+	++sv_numWorldSectors;
 
 	ClearLink( &anode->trigger_edicts );
 	ClearLink( &anode->solid_edicts );
@@ -445,7 +446,8 @@ static void SV_AreaEntities_r( worldSector_t *node, areaParams_t &ap )
 			return;
 		}
 
-		ap.list[ap.count++] = check;
+		ap.list[ap.count] = check;
+		++ap.count;
 	}
 	
 	if ( node->axis == -1 ) {
