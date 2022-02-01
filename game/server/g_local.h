@@ -1011,7 +1011,7 @@ struct edict_t
 
 	int			svflags;
 	vec3_t		mins, maxs;
-	int			contents;
+	//int		contents;				// I think Quake 3 has this? Need to add to the server edict structure...
 	vec3_t		absmin, absmax, size;
 	solid_t		solid;
 	int			clipmask;
