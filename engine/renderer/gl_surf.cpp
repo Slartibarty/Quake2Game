@@ -337,6 +337,7 @@ void R_DrawBrushModel( entity_t *e )
 		GL_ActiveTexture( GL_TEXTURE1 );
 		GL_BindTexture( glState.lightmap_textures + 1 );
 
+		++tr.pc.worldDrawCalls;
 		glDrawElements( GL_TRIANGLES, mesh->numIndices, GL_UNSIGNED_INT, (void *)( (uintptr_t)( mesh->firstIndex ) * sizeof( worldIndex_t ) ) );
 	}
 
@@ -773,6 +774,7 @@ static void R_DrawStaticOpaqueWorld()
 		GL_ActiveTexture( GL_TEXTURE1 );
 		GL_BindTexture( glState.lightmap_textures + 1 );
 
+		++tr.pc.worldDrawCalls;
 		glDrawElements( GL_TRIANGLES, mesh->numIndices, GL_UNSIGNED_INT, (void *)( (uintptr_t)( mesh->firstIndex ) * sizeof( worldIndex_t ) ) );
 	}
 }
@@ -1159,7 +1161,7 @@ static void R_BuildPolygonFromSurface( msurface_t *fa, mmodel_t *world )
 
 		// TODO: This isn't the best solution, the plane normals can be reversed sometimes
 		// which breaks the shader
-		VectorCopy( fa->plane->normal, outVertex.normal );
+		//VectorCopy( fa->plane->normal, outVertex.normal );
 	}
 
 	// index of the first index!
@@ -1172,7 +1174,7 @@ static void R_BuildPolygonFromSurface( msurface_t *fa, mmodel_t *world )
 	// for every triangle
 	for ( int i = 0; i < numTriangles; ++i )
 	{
-#if 0
+#if 1
 		worldVertex_t &v1 = s_worldRenderData.vertices[firstVertex + 0];
 		worldVertex_t &v2 = s_worldRenderData.vertices[firstVertex + i + 1];
 		worldVertex_t &v3 = s_worldRenderData.vertices[firstVertex + i + 2];
