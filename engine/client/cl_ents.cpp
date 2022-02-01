@@ -1237,8 +1237,9 @@ Applies Half-Life 1 style view bob
 */
 static float CL_CalcBob( const vec3_t velocity )
 {
+#if 1
 	return 0.0f;
-#if 0
+#else
 	static float bobtime;
 	static float bob;
 	float cycle;
