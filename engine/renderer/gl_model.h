@@ -188,7 +188,7 @@ struct model_t
 //
 // brush model
 //
-	int			firstmodelsurface, nummodelsurfaces;
+	uint32		firstMesh, numMeshes;
 
 	int			numsubmodels;
 	mmodel_t	*submodels;

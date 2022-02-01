@@ -709,13 +709,6 @@ static void Mod_LoadNodes( lump_t *l )
 				out->children[j] = (mnode_t *)( loadmodel->leafs + ( -1 - p ) );
 			}
 		}
-
-		// Load in the surfaces for this node
-		msurface_t *firstSurface = loadmodel->surfaces + out->firstsurface;
-		msurface_t *lastSurface = firstSurface + out->numsurfaces;
-		for ( ; firstSurface < lastSurface; ++firstSurface )
-		{
-		}
 	}
 
 	Mod_SetParent( loadmodel->nodes, nullptr ); // sets nodes and leafs
@@ -1064,8 +1057,8 @@ void Mod_LoadBrushModel( model_t *pMod, void *pBuffer, int bufferLength )
 
 		*starmod = *loadmodel;
 
-		starmod->firstmodelsurface = bm->firstface;
-		starmod->nummodelsurfaces = bm->numfaces;
+		starmod->firstMesh = bm->firstMesh;
+		starmod->numMeshes = bm->numMeshes;
 		starmod->firstnode = bm->headnode;
 		if ( starmod->firstnode >= loadmodel->numnodes )
 		{

@@ -126,8 +126,6 @@ static gllightmapstate_t gl_lms;
 void R_SetCacheState(msurface_t *surf);
 void R_BuildLightMap(msurface_t *surf, byte *dest, int stride);
 
-static void LM_BlendLightmaps();
-
 /*
 ===================================================================================================
 
@@ -261,7 +259,89 @@ static bool R_CullBox( vec3_t mins, vec3_t maxs )
 //
 void R_DrawBrushModel( entity_t *e )
 {
-#if 0
+#if 1
+	vec3_t		mins, maxs;
+	int			i;
+	bool		rotated;
+
+	if ( currentmodel->numMeshes == 0 )
+	{
+		return;
+	}
+
+	currententity = e;
+
+	if ( e->angles[0] || e->angles[1] || e->angles[2] )
+	{
+		rotated = true;
+		for ( i = 0; i < 3; ++i )
+		{
+			mins[i] = e->origin[i] - currentmodel->radius;
+			maxs[i] = e->origin[i] + currentmodel->radius;
+		}
+	}
+	else
+	{
+		rotated = false;
+		VectorAdd( e->origin, currentmodel->mins, mins );
+		VectorAdd( e->origin, currentmodel->maxs, maxs );
+	}
+
+	if ( R_CullBox( mins, maxs ) )
+	{
+		return;
+	}
+
+	memset( gl_lms.lightmap_surfaces, 0, sizeof( gl_lms.lightmap_surfaces ) );
+
+	VectorSubtract( tr.refdef.vieworg, e->origin, modelorg );
+	if ( rotated )
+	{
+		vec3_t	temp;
+		vec3_t	forward, right, up;
+
+		VectorCopy( modelorg, temp );
+		AngleVectors( e->angles, forward, right, up );
+		modelorg[0] = DotProduct( temp, forward );
+		modelorg[1] = -DotProduct( temp, right );
+		modelorg[2] = DotProduct( temp, up );
+	}
+
+	using namespace DirectX;
+
+	XMMATRIX modelMatrix = XMMatrixMultiply(
+		XMMatrixRotationX( DEG2RAD( e->angles[ROLL] ) ) * XMMatrixRotationY( DEG2RAD( e->angles[PITCH] ) ) * XMMatrixRotationZ( DEG2RAD( e->angles[YAW] ) ),
+		XMMatrixTranslation( e->origin[0], e->origin[1], e->origin[2] )
+	);
+
+	XMFLOAT4X4A modelMatrixStore;
+	XMStoreFloat4x4A( &modelMatrixStore, modelMatrix );
+
+	glBindVertexArray( s_worldRenderData.vao );
+	glBindBuffer( GL_ARRAY_BUFFER, s_worldRenderData.vbo );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, s_worldRenderData.eboCluster );
+
+	GL_UseProgram( glProgs.worldProg );
+
+	glUniformMatrix4fv( 4, 1, GL_FALSE, (const GLfloat *)&modelMatrixStore );
+
+	worldMesh_t *firstMesh = s_worldRenderData.meshes.data() + currentmodel->firstMesh;
+	worldMesh_t *lastMesh = firstMesh + currentmodel->numMeshes;
+
+	for ( worldMesh_t *mesh = firstMesh; mesh < lastMesh; ++mesh )
+	{
+		const material_t *mat = R_TextureAnimation( mesh->texinfo );
+
+		GL_ActiveTexture( GL_TEXTURE0 );
+		mat->Bind();
+		GL_ActiveTexture( GL_TEXTURE1 );
+		GL_BindTexture( glState.lightmap_textures + 1 );
+
+		glDrawElements( GL_TRIANGLES, mesh->numIndices, GL_UNSIGNED_INT, (void *)( (uintptr_t)( mesh->firstIndex ) * sizeof( worldIndex_t ) ) );
+	}
+
+	GL_UseProgram( 0 );
+#else
 	vec3_t		mins, maxs;
 	int			i;
 	qboolean	rotated;
@@ -782,8 +862,6 @@ void R_DrawWorld()
 	// Now render stuff!
 	R_DrawStaticOpaqueWorld();
 
-	LM_BlendLightmaps();
-
 	GL_UseProgram( 0 );
 
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
@@ -908,26 +986,6 @@ static bool LM_AllocBlock( int w, int h, int *x, int *y )
 	}
 
 	return true;
-}
-
-static void LM_BlendLightmaps()
-{
-	// Don't bother if we're set to fullbright
-	if ( r_fullbright->GetBool() )
-	{
-		return;
-	}
-
-	if ( !r_worldmodel->lightdata )
-	{
-		return;
-	}
-
-	if ( r_dynamic->GetBool() )
-	{
-		LM_InitBlock();
-		LM_UploadBlock( true );
-	}
 }
 
 //
