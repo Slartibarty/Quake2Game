@@ -657,11 +657,12 @@ void R_DrawAliasModel (entity_t *e)
 	}
 	if (!skin)
 		skin = defaultMaterial;	// fallback...
+
+	GL_ActiveTexture( GL_TEXTURE0 );
+
 	skin->Bind();
 
 	// draw it
-
-	GL_ActiveTexture( GL_TEXTURE0 );
 
 	glShadeModel (GL_SMOOTH);
 

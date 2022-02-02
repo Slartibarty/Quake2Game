@@ -759,28 +759,29 @@ static void Mod_LoadLeafs( lump_t *l )
 Mod_LoadMarksurfaces
 ========================
 */
-static void Mod_LoadMarksurfaces (lump_t *l)
-{	
-	int		i, j, count;
-	short		*in;
-	msurface_t **out;
-	
-	in = (short*)(mod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		Com_Errorf ("MOD_LoadBmodel: funny lump size in %s",loadmodel->name);
-	count = l->filelen / sizeof(*in);
-	out = (msurface_t**)Hunk_Alloc ( count*sizeof(*out));	
+static void Mod_LoadMarksurfaces( lump_t *l )
+{
+	int				i, j, count;
+	int16 *			in;
+	msurface_t **	out;
+
+	in = (int16 *)( mod_base + l->fileofs );
+	if ( l->filelen % sizeof( *in ) )
+	{
+		Com_Errorf( "MOD_LoadBmodel: funny lump size in %s", loadmodel->name );
+	}
+	count = l->filelen / sizeof( *in );
+	out = (msurface_t **)Hunk_Alloc( count * sizeof( *out ) );
 
 	loadmodel->marksurfaces = out;
 	loadmodel->nummarksurfaces = count;
 
-	for ( i=0 ; i<count ; i++)
+	for ( i = 0; i < count; ++i )
 	{
-		j = LittleShort(in[i]);
+		j = LittleShort( in[i] );
 		if ( j < 0 || j >= loadmodel->numsurfaces )
 		{
-			continue;
-			//Com_Errorf( "Mod_ParseMarksurfaces: bad surface number" );
+			Com_Error( "Mod_LoadMarksurfaces: bad surface number" );
 		}
 		out[i] = loadmodel->surfaces + j;
 	}
@@ -1026,11 +1027,14 @@ void Mod_LoadBrushModel( model_t *pMod, void *pBuffer, int bufferLength )
 	Mod_LoadPlanes			( header->lumps + LUMP_PLANES );
 	Mod_LoadTexinfo			( header->lumps + LUMP_TEXINFO );
 	Mod_LoadFaces			( header->lumps + LUMP_FACES );
-	Mod_LoadMarksurfaces	( header->lumps + LUMP_LEAFFACES );
+	// Moved
+	//Mod_LoadMarksurfaces	( header->lumps + LUMP_LEAFFACES );
 	Mod_LoadVisibility		( header->lumps + LUMP_VISIBILITY );
 	Mod_LoadLeafs			( header->lumps + LUMP_LEAFS );
 	Mod_LoadNodes			( header->lumps + LUMP_NODES );
 	Mod_LoadSubmodels		( header->lumps + LUMP_MODELS );
+
+	Mod_LoadMarksurfaces	( header->lumps + LUMP_LEAFFACES );
 
 	// Parse lights out of the entity data... This uses the client bsp...
 	Mod_ParseLights( CM_EntityString() );

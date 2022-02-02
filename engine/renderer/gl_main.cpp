@@ -100,6 +100,8 @@ static void R_DrawSpriteModel( entity_t *e )
 
 	glColor4f( 1, 1, 1, alpha );
 
+	GL_ActiveTexture( GL_TEXTURE0 );
+
 	currentmodel->skins[e->frame]->Bind();
 
 	GL_TexEnv( GL_MODULATE );
@@ -773,7 +775,7 @@ static void R_RenderView( refdef_t *fd )
 	R_DrawViewmodel();
 
 	// screen overlay
-	R_DrawScreenOverlay( tr.refdef.blend );
+	//R_DrawScreenOverlay( tr.refdef.blend );
 
 	if ( r_speeds->GetBool() )
 	{
