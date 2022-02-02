@@ -355,7 +355,7 @@ project "engine"
 	filter "system:windows"
 		linkoptions { "/ENTRY:mainCRTStartup" }
 		links {
-			"shcore", "comctl32", "ws2_32", "dsound", "dxguid", "opengl32", "noenv.obj", "zlib", "libpng"
+			"shcore", "comctl32", "ws2_32", "dwmapi", "dsound", "dxguid", "opengl32", "noenv.obj", "zlib", "libpng"
 		}
 	filter {}
 	filter "system:linux"

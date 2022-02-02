@@ -5,6 +5,8 @@
 #include "cl_local.h"
 
 #include "../../core/sys_includes.h"
+#include <dwmapi.h>
+#include <VersionHelpers.h>
 #include "winquake.h"
 
 #include "imgui.h"
@@ -415,6 +417,23 @@ LRESULT CALLBACK MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 	case WM_CREATE:
 		cl_hwnd = hWnd;
 		return 0;
+
+	case WM_NCCREATE:
+		if ( IsWindows10OrGreater() )
+		{
+			// Enable the dark titlebar
+			const BOOL dark = TRUE;
+			if ( FAILED( DwmSetWindowAttribute( hWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &dark, sizeof( dark ) ) ) )
+			{
+				// 19 is the old value of DWMWA_USE_IMMERSIVE_DARK_MODE
+				DwmSetWindowAttribute( hWnd, 19, &dark, sizeof( dark ) );
+			}
+
+			// Opt into smaller corners if we can, this has no effect pre-win11
+			//const DWM_WINDOW_CORNER_PREFERENCE cornerPref = DWMWCP_ROUNDSMALL;
+			//DwmSetWindowAttribute( hWnd, DWMWA_WINDOW_CORNER_PREFERENCE, &cornerPref, sizeof( cornerPref ) );
+		}
+		break;
 
 	case WM_CLOSE:
 		PostQuitMessage( 0 );
