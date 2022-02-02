@@ -1067,7 +1067,7 @@ BOX TRACING
 */
 
 // 1/8 epsilon to keep floating point happy
-#define	DIST_EPSILON	0.125f
+#define	DIST_EPSILON	0.03125f
 
 #define NEVER_UPDATED	-99999.0f
 
