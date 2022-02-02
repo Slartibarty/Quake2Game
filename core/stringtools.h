@@ -98,6 +98,10 @@ inline int Q_sprintf( _Post_z_ char *pDest, _Printf_format_string_ const char *p
 
 // cmp
 
+#if 0
+
+// Probably not worth it...
+
 inline int Q_strcmp( const char *s1, const char *s2 ) {
 	return s1 == s2 ? 0 : strcmp( s1, s2 );
 }
@@ -105,6 +109,13 @@ inline int Q_strcmp( const char *s1, const char *s2 ) {
 inline int Q_strncmp( const char *s1, const char *s2, strlen_t maxcount ) {
 	return s1 == s2 ? 0 : strncmp( s1, s2, maxcount );
 }
+
+#else
+
+#define Q_strcmp strcmp
+#define Q_strncmp strncmp
+
+#endif
 
 int Q_strcasecmp( const char *s1, const char *s2 );
 int Q_strncasecmp( const char *s1, const char *s2, strlen_t n );
