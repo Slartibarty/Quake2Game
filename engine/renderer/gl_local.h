@@ -260,6 +260,7 @@ using imageFlags_t = uint8;
 #define IF_NEAREST		4	// Use nearest filtering (as opposed to linear filtering)
 #define IF_CLAMPS		8	// Clamp to edge (S)
 #define IF_CLAMPT		16	// Clamp to edge (T)
+#define IF_SRGB			32	// Upload as SRGB
 
 struct image_t
 {

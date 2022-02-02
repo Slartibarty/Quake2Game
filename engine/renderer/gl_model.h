@@ -30,11 +30,10 @@ struct mmodel_t
 	uint32		firstMesh, numMeshes;
 };
 
-#define	SURF_PLANEBACK		2
-#define	SURF_DRAWSKY		4
-#define SURF_DRAWTURB		0x10
-#define SURF_DRAWBACKGROUND	0x40
-#define SURF_UNDERWATER		0x80
+enum surfFlags_t
+{
+	MSURF_PLANEBACK		= BIT(0)
+};
 
 struct medge_t
 {

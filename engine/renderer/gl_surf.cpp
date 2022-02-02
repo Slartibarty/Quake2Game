@@ -40,7 +40,8 @@
 // How many lightmap atlases we can have
 #define	MAX_LIGHTMAPS	8
 
-#define GL_LIGHTMAP_FORMAT GL_RGBA
+#define GL_LIGHTMAP_INTERNAL_FORMAT		GL_RGBA8 // GL_SRGB8_ALPHA8
+#define GL_LIGHTMAP_FORMAT				GL_RGBA
 
 #define TEXNUM_LIGHTMAPS	1024
 
@@ -141,11 +142,9 @@ static material_t *R_TextureAnimation( const mtexinfo_t *tex )
 		return tex->material;
 	}
 
-	int c = currententity->frame % tex->numframes;
-	while (c)
+	for ( int c = currententity->frame % tex->numframes; c; --c )
 	{
 		tex = tex->next;
-		c--;
 	}
 
 	return tex->material;
@@ -161,6 +160,8 @@ static void R_DrawWorldMesh( const worldMesh_t &mesh )
 	GL_BindTexture( glState.lightmap_textures + 1 );
 	GL_ActiveTexture( GL_TEXTURE2 );
 	mat->BindSpec();
+	GL_ActiveTexture( GL_TEXTURE3 );
+	mat->BindEmit();
 
 	tr.pc.worldPolys += mesh.numIndices / 3;
 	++tr.pc.worldDrawCalls;
@@ -175,6 +176,7 @@ static void R_DrawWorldMesh( const worldMesh_t &mesh )
 //
 void R_DrawAlphaSurfaces()
 {
+
 }
 
 //
@@ -589,7 +591,7 @@ static void R_RecursiveWorldNode( worldNodeWork_t &work, const mnode_t *node )
 		else
 		{
 			side = 1;
-			sidebit = SURF_PLANEBACK;
+			sidebit = MSURF_PLANEBACK;
 		}
 
 		// Recurse down the children, front side first
@@ -608,7 +610,7 @@ static void R_RecursiveWorldNode( worldNodeWork_t &work, const mnode_t *node )
 				continue;
 			}
 
-			if ( ( surf->flags & SURF_PLANEBACK ) != sidebit )
+			if ( ( surf->flags & MSURF_PLANEBACK ) != sidebit )
 			{
 				// Wrong side
 				continue;
@@ -625,6 +627,14 @@ static void R_RecursiveWorldNode( worldNodeWork_t &work, const mnode_t *node )
 			}
 			else
 			{
+				if ( Q_stristr( surf->texinfo->material->name, "sky" ) )
+				{
+					if ( !( surf->texinfo->flags & SURF_SKY ) )
+					{
+						//__debugbreak();
+					}
+				}
+
 				R_AddSurface( surf, work );
 			}
 		}
@@ -774,6 +784,7 @@ void R_DrawWorld()
 	glUniform1i( indexAfterLights + 0, 0 ); // diffuse
 	glUniform1i( indexAfterLights + 1, 1 ); // lightmap
 	glUniform1i( indexAfterLights + 2, 2 ); // spec
+	glUniform1i( indexAfterLights + 3, 3 ); // spec
 
 	// Now render stuff!
 	R_DrawStaticOpaqueWorld();
@@ -840,7 +851,7 @@ static void LM_UploadBlock( bool dynamic )
 	{
 		glTexImage2D( GL_TEXTURE_2D,
 			0,
-			GL_RGBA8,
+			GL_LIGHTMAP_INTERNAL_FORMAT,
 			BLOCK_WIDTH, BLOCK_HEIGHT,
 			0,
 			GL_LIGHTMAP_FORMAT,
@@ -973,7 +984,7 @@ void GL_BeginBuildingLightmaps( model_t *model )
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 	glTexImage2D( GL_TEXTURE_2D,
 		0,
-		GL_RGBA8,
+		GL_LIGHTMAP_INTERNAL_FORMAT,
 		BLOCK_WIDTH, BLOCK_HEIGHT,
 		0,
 		GL_LIGHTMAP_FORMAT,
@@ -1067,12 +1078,25 @@ static void R_BuildPolygonFromSurface( msurface_t *fa, bool world )
 		outVertex.st2[1] = t;
 
 		VectorCopy( fa->plane->normal, outVertex.normal );
-		if ( fa->flags & SURF_PLANEBACK )
+		if ( fa->flags & MSURF_PLANEBACK )
 		{
 			// Flip the normals
 			VectorNegate( outVertex.normal, outVertex.normal );
 		}
 	}
+
+	// TODO: WARP WARP WARP!!!
+#if 0
+	if ( out->texinfo->flags & SURF_WARP )
+	{
+		for ( i = 0; i < 2; ++i )
+		{
+			out->extents[i] = 16384;
+			out->texturemins[i] = -8192;
+		}
+		GL_SubdivideSurface( out );	// cut up polygon for warps
+	}
+#endif
 
 	// Not a valid index
 	//const uint32 endVertex = static_cast<uint32>( s_worldRenderData.vertices.size() );

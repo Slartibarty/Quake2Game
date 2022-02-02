@@ -593,7 +593,7 @@ static void Mod_LoadFaces( lump_t *l )
 		side = LittleShort( in->side );
 		if ( side )
 		{
-			out->flags |= SURF_PLANEBACK;
+			out->flags |= MSURF_PLANEBACK;
 		}
 
 		out->plane = loadmodel->planes + planenum;
@@ -625,18 +625,7 @@ static void Mod_LoadFaces( lump_t *l )
 
 		// set the drawing flags
 
-		if ( out->texinfo->flags & SURF_WARP )
-		{
-			out->flags |= SURF_DRAWTURB;
-			for ( i = 0; i < 2; ++i )
-			{
-				out->extents[i] = 16384;
-				out->texturemins[i] = -8192;
-			}
-			GL_SubdivideSurface( out );	// cut up polygon for warps
-		}
-
-		// create lightmaps and polygons
+		// create lightmaps
 		if ( !( out->texinfo->flags & ( SURFMASK_UNLIT ) ) )
 		{
 			GL_CreateSurfaceLightmap( out );
@@ -1027,17 +1016,14 @@ void Mod_LoadBrushModel( model_t *pMod, void *pBuffer, int bufferLength )
 	Mod_LoadPlanes			( header->lumps + LUMP_PLANES );
 	Mod_LoadTexinfo			( header->lumps + LUMP_TEXINFO );
 	Mod_LoadFaces			( header->lumps + LUMP_FACES );
-	// Moved
-	//Mod_LoadMarksurfaces	( header->lumps + LUMP_LEAFFACES );
+	Mod_LoadMarksurfaces	( header->lumps + LUMP_LEAFFACES );
 	Mod_LoadVisibility		( header->lumps + LUMP_VISIBILITY );
 	Mod_LoadLeafs			( header->lumps + LUMP_LEAFS );
 	Mod_LoadNodes			( header->lumps + LUMP_NODES );
 	Mod_LoadSubmodels		( header->lumps + LUMP_MODELS );
 
-	Mod_LoadMarksurfaces	( header->lumps + LUMP_LEAFFACES );
-
 	// Parse lights out of the entity data... This uses the client bsp...
-	Mod_ParseLights( CM_EntityString() );
+	//Mod_ParseLights( CM_EntityString() );
 
 	// Regular and alternate animation
 	pMod->numframes = 2;

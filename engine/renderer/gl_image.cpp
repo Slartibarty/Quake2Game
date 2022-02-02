@@ -117,6 +117,8 @@ void GL_MaterialList_f()
 
 static void GL_ApplyTextureParameters( imageFlags_t flags )
 {
+	flags |= IF_NEAREST;
+
 	// Mips
 	if ( !( flags & IF_NOMIPS ) )
 	{
@@ -249,7 +251,10 @@ static GLuint GL_Upload( const byte *pData, int width, int height, imageFlags_t 
 	glGenTextures( 1, &id );
 	GL_BindTexture( id );
 
-	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pData );
+	// Sad... Need to fixup SRGB stuff eventually
+	GLint internalFormat = GL_RGBA8; // ( flags & IF_SRGB ) ? GL_SRGB8_ALPHA8 : GL_RGBA8;
+
+	glTexImage2D( GL_TEXTURE_2D, 0, internalFormat, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pData );
 
 	// auto-generate mipmaps (FIXME: sad vendor-specific extension)
 	if ( GLEW_ARB_framebuffer_object )
@@ -475,6 +480,7 @@ bool ParseMaterial( char *data, material_t *material )
 		{
 			COM_Parse2( &data, &token, sizeof( tokenhack ) );
 			Q_strcpy_s( baseTexture, token );
+			flags |= IF_SRGB;
 			continue;
 		}
 		if ( Q_strcmp( token, "$spectexture" ) == 0 )
