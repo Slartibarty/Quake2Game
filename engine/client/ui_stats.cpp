@@ -15,6 +15,9 @@ namespace UI::StatsPanel
 
 #define FPS_FRAMES 6
 
+// ui_renderstats.cpp
+extern void ShowRenderStats();
+
 void ShowStats()
 {
 	const ImGuiWindowFlags windowFlags =
@@ -55,18 +58,21 @@ void ShowStats()
 			double fps = 1e6 * FPS_FRAMES / total;
 			fps = ( fps + 500.0 ) / 1e3;
 
-			length = Q_sprintf_s( workBuf, "Client FPS : %f", fps );
+			length = Q_sprintf_s( workBuf, "%-20s: %f", "Client FPS", fps );
 			ImGui::TextUnformatted( workBuf, workBuf + length );
 			ImGui::Separator();
 		}
 	}
 
-	length = Q_sprintf_s( workBuf, "cls.framecount : %d", cls.framecount );
+	length = Q_sprintf_s( workBuf, "%-20s: %d", "cls.framecount", cls.framecount);
 	ImGui::TextUnformatted( workBuf, workBuf + length );
-	length = Q_sprintf_s( workBuf, "cls.realtime   : %d", cls.realtime );
+	length = Q_sprintf_s( workBuf, "%-20s: %d", "cls.realtime", cls.realtime);
 	ImGui::TextUnformatted( workBuf, workBuf + length );
-	length = Q_sprintf_s( workBuf, "cls.frametime  : %f", cls.frametime );
+	length = Q_sprintf_s( workBuf, "%-20s: %f", "cls.frametime", cls.frametime);
 	ImGui::TextUnformatted( workBuf, workBuf + length );
+	ImGui::Separator();
+
+	ShowRenderStats();
 
 	ImGui::End();
 }
