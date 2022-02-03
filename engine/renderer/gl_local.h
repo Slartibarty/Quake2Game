@@ -81,8 +81,6 @@ struct glState_t
 
 	int     prev_mode;
 
-	int		lightmap_textures;
-
 	GLuint	currentTextures[Q_MAX_TEXTURE_UNITS];
 	GLenum	activeTexture;
 	GLuint	currentProgram;
@@ -127,8 +125,6 @@ extern glConfig_t				glConfig;
 extern renderSystemGlobals_t	tr;			// named "tr" to ease porting from other branches
 
 extern	model_t *r_worldmodel;
-
-extern	double	gldepthmin, gldepthmax;
 
 //
 // cvars

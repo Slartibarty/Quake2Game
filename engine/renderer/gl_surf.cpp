@@ -17,16 +17,20 @@
 #include <algorithm> // std::sort
 #include <vector>
 
-// Use the PVS to determine which faces are visible
-#define USE_PVS
-
 // Comment out to disable meshoptimizer optimisations
 // TODO: Reconsider how this can be used
 //#define USE_MESHOPT
 
+// Experimental atlasing stuff
+//#define USE_XATLAS
+
 #ifdef USE_MESHOPT
 #define MESHOPTIMIZER_NO_WRAPPERS
 #include "../../thirdparty/meshoptimizer/src/meshoptimizer.h"
+#endif
+
+#ifdef USE_XATLAS
+#include "../../thirdparty/xatlas/xatlas.h"
 #endif
 
 #define MAX_SHADERLIGHTS	4
@@ -81,11 +85,11 @@ struct worldRenderData_t
 
 	GLuint vao, vbo, ebo;
 	//GLuint eboCluster;		// ebo for the current viscluster
+
+	bool initialised;
 };
 
 static worldRenderData_t s_worldRenderData;
-
-#ifdef USE_PVS
 
 struct worldLists_t
 {
@@ -99,15 +103,12 @@ struct worldLists_t
 	}
 };
 
-static worldLists_t s_worldLists;
-
-#endif
-
 static vec3_t		modelorg;		// relative to viewpoint
 
 struct gllightmapstate_t
 {
-	int				current_lightmap_texture;
+	GLuint			lightmapTextures[MAX_LIGHTMAPS];
+	GLuint			currentLightmapTexture;
 
 	msurface_t *	lightmap_surfaces[MAX_LIGHTMAPS];
 
@@ -123,6 +124,8 @@ static gllightmapstate_t gl_lms;
 // gl_light
 void R_SetCacheState(msurface_t *surf);
 void R_BuildLightMap(msurface_t *surf, byte *dest, int stride);
+
+//static GLuint fuckedUpLightmapID;
 
 /*
 ===================================================================================================
@@ -157,7 +160,7 @@ static void R_DrawWorldMesh( const worldMesh_t &mesh )
 	GL_ActiveTexture( GL_TEXTURE0 );
 	mat->Bind();
 	GL_ActiveTexture( GL_TEXTURE1 );
-	GL_BindTexture( glState.lightmap_textures + 1 );
+	GL_BindTexture( gl_lms.lightmapTextures[1] );
 	GL_ActiveTexture( GL_TEXTURE2 );
 	mat->BindSpec();
 	GL_ActiveTexture( GL_TEXTURE3 );
@@ -203,6 +206,7 @@ static bool R_CullBox( const vec3_t mins, const vec3_t maxs )
 //
 void R_DrawBrushModel( entity_t *e )
 {
+#if 1
 #if 1
 	vec3_t		mins, maxs;
 	int			i;
@@ -267,7 +271,7 @@ void R_DrawBrushModel( entity_t *e )
 
 	GL_UseProgram( glProgs.worldProg );
 
-	glUniformMatrix4fv( 4, 1, GL_FALSE, (const GLfloat *)&modelMatrixStore );
+	//glUniformMatrix4fv( 4, 1, GL_FALSE, (const GLfloat *)&modelMatrixStore );
 
 	worldMesh_t *firstMesh = s_worldRenderData.meshes.data() + currentmodel->firstMesh;
 	worldMesh_t *lastMesh = firstMesh + currentmodel->numMeshes;
@@ -342,6 +346,7 @@ e->angles[2] = -e->angles[2];	// stupid quake bug
 
 	glPopMatrix ();
 #endif
+#endif
 }
 
 /*
@@ -351,8 +356,6 @@ e->angles[2] = -e->angles[2];	// stupid quake bug
 
 ===================================================================================================
 */
-
-#ifdef USE_PVS
 
 // When recursing the BSP tree we give each material its own array of indices, then
 // when we finish, we append them all into one large array which we send to the GPU
@@ -436,16 +439,6 @@ static void R_MarkLeaves()
 		{
 			// not visible
 			continue;
-		}
-
-		// Check for door connected areas
-		if ( tr.refdef.areabits )
-		{
-			if ( !( tr.refdef.areabits[leaf->area >> 3] & ( 1 << ( leaf->area & 7 ) ) ) )
-			{
-				// not visible
-				continue;
-			}
 		}
 
 		node = (mnode_t *)leaf;
@@ -546,6 +539,16 @@ static void R_RecursiveWorldNode( worldNodeWork_t &work, const mnode_t *node )
 		if ( node->contents != -1 )
 		{
 			const mleaf_t *leaf = (mleaf_t *)node;
+
+			// Check for door connected areas
+			if ( tr.refdef.areabits )
+			{
+				if ( !( tr.refdef.areabits[leaf->area >> 3] & ( 1 << ( leaf->area & 7 ) ) ) )
+				{
+					// not visible
+					return;
+				}
+			}
 
 			msurface_t **firstMarkSurface = r_worldmodel->marksurfaces + leaf->firstmarksurface;
 			msurface_t **lastMarkSurface = firstMarkSurface + leaf->nummarksurfaces;
@@ -649,20 +652,25 @@ static void R_RecursiveWorldNode( worldNodeWork_t &work, const mnode_t *node )
 //
 // Squashes our index lists into the final index buffer, builds the world lists
 //
-static void R_SquashAndUploadIndices( const worldNodeWork_t &work )
+static void R_SquashAndUploadIndices( worldLists_t &worldLists, const worldNodeWork_t &work )
 {
+	if ( work.materialSets.empty() )
+	{
+		return;
+	}
+
 	for ( const worldMaterialSet_t &materialSet : work.materialSets )
 	{
 		// Create a new mesh
-		worldMesh_t &opaqueMesh = s_worldLists.opaqueMeshes.emplace_back();
+		worldMesh_t &opaqueMesh = worldLists.opaqueMeshes.emplace_back();
 		opaqueMesh.texinfo = materialSet.texinfo;
 
-		uint32 firstIndex = static_cast<uint32>( s_worldLists.finalIndices.size() );
+		uint32 firstIndex = static_cast<uint32>( worldLists.finalIndices.size() );
 
 		// Insert our individual index buffer at the end of the final index buffer
-		s_worldLists.finalIndices.insert( s_worldLists.finalIndices.end(), materialSet.indices.begin(), materialSet.indices.end() );
+		worldLists.finalIndices.insert( worldLists.finalIndices.end(), materialSet.indices.begin(), materialSet.indices.end() );
 
-		uint32 end = static_cast<uint32>( s_worldLists.finalIndices.size() );
+		uint32 end = static_cast<uint32>( worldLists.finalIndices.size() );
 
 		assert( end - firstIndex == materialSet.indices.size() );
 
@@ -670,35 +678,18 @@ static void R_SquashAndUploadIndices( const worldNodeWork_t &work )
 		opaqueMesh.numIndices = materialSet.indices.size();
 	}
 
-	// Squashed! Now upload the index buffer
-	//glBindVertexArray( s_worldRenderData.vao );
-	//glBindBuffer( GL_ARRAY_BUFFER, s_worldRenderData.vbo );
-	//glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, s_worldRenderData.eboCluster );
-
-	const void *indexData = reinterpret_cast<const void *>( s_worldLists.finalIndices.data() );
-	const GLsizeiptr indexSize = static_cast<GLsizeiptr>( s_worldLists.finalIndices.size() ) * sizeof( worldIndex_t );
+	const void *indexData = reinterpret_cast<const void *>( worldLists.finalIndices.data() );
+	const GLsizeiptr indexSize = static_cast<GLsizeiptr>( worldLists.finalIndices.size() ) * sizeof( worldIndex_t );
 
 	glBufferData( GL_ELEMENT_ARRAY_BUFFER, indexSize, indexData, GL_DYNAMIC_DRAW );
 }
 
-#endif
-
 //
 // Draws all opaque surfaces in the world list
 //
-static void R_DrawStaticOpaqueWorld()
+static void R_DrawStaticOpaqueWorld( const worldLists_t &worldLists )
 {
-#ifdef USE_PVS
-	for ( const worldMesh_t &mesh : s_worldLists.opaqueMeshes )
-#else
-	mmodel_t &model = r_worldmodel->submodels[0];
-
-	// This will always be the first, but it's here for reference
-	worldMesh_t *firstMesh = s_worldRenderData.meshes.data() + model.firstMesh;
-	worldMesh_t *lastMesh = firstMesh + model.numMeshes;
-
-	for ( worldMesh_t *mesh = firstMesh; mesh < lastMesh; ++mesh )
-#endif
+	for ( const worldMesh_t &mesh : worldLists.opaqueMeshes )
 	{
 		R_DrawWorldMesh( mesh );
 	}
@@ -733,16 +724,18 @@ void R_DrawWorld()
 
 	R_ClearSkyBox();
 
+	// SHADERWORLD
+
 	glBindVertexArray( s_worldRenderData.vao );
 	glBindBuffer( GL_ARRAY_BUFFER, s_worldRenderData.vbo );
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, s_worldRenderData.ebo );
 
 	// Build the world lists
-#ifdef USE_PVS
+
+	worldLists_t worldLists;
+
 	{
 		worldNodeWork_t work;
-
-		s_worldLists.ClearAllLists();
 
 		// Determine which leaves are in the PVS / areamask
 		R_MarkLeaves();
@@ -750,15 +743,15 @@ void R_DrawWorld()
 		// This figures out what we need to render and builds the world lists
 		R_RecursiveWorldNode( work, r_worldmodel->nodes );
 
-		R_SquashAndUploadIndices( work );
+		R_SquashAndUploadIndices( worldLists, work );
 	}
-#endif
 
+	// Create the model matrix
 	DirectX::XMMATRIX modelMatrix = DirectX::XMMatrixIdentity();
-
 	DirectX::XMFLOAT4X4A modelMatrixStore;
 	DirectX::XMStoreFloat4x4A( &modelMatrixStore, modelMatrix );
 
+	// Set up shader state
 	GL_UseProgram( glProgs.worldProg );
 
 	glUniformMatrix4fv( 4, 1, GL_FALSE, (const GLfloat *)&modelMatrixStore );
@@ -786,16 +779,14 @@ void R_DrawWorld()
 	glUniform1i( indexAfterLights + 2, 2 ); // spec
 	glUniform1i( indexAfterLights + 3, 3 ); // spec
 
-	// Now render stuff!
-	R_DrawStaticOpaqueWorld();
+	// Render stuff!
+	R_DrawStaticOpaqueWorld( worldLists );
 
 	GL_UseProgram( 0 );
 
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 	glBindVertexArray( 0 );
-
-	// CLEAN UP STUFF!!!!!!!!!!!!!!!!!!!!!
 
 	//R_DrawSkyBox();
 
@@ -819,10 +810,15 @@ static void LM_InitBlock()
 
 static void LM_UploadBlock( bool dynamic )
 {
-	int texture = dynamic ? 0 : gl_lms.current_lightmap_texture;
+	int texture = dynamic ? 0 : gl_lms.currentLightmapTexture;
+
+	if ( gl_lms.lightmapTextures[texture] == 0 )
+	{
+		glGenTextures( 1, &gl_lms.lightmapTextures[texture] );
+	}
 
 	GL_ActiveTexture( GL_TEXTURE1 );
-	GL_BindTexture( glState.lightmap_textures + texture );
+	GL_BindTexture( gl_lms.lightmapTextures[texture] );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 
@@ -858,9 +854,9 @@ static void LM_UploadBlock( bool dynamic )
 			GL_UNSIGNED_BYTE,
 			gl_lms.lightmap_buffer );
 
-		++gl_lms.current_lightmap_texture;
+		++gl_lms.currentLightmapTexture;
 
-		if ( gl_lms.current_lightmap_texture == MAX_LIGHTMAPS )
+		if ( gl_lms.currentLightmapTexture == MAX_LIGHTMAPS )
 		{
 			Com_Error( "LM_UploadBlock() - MAX_LIGHTMAPS exceeded\n" );
 		}
@@ -938,7 +934,7 @@ void GL_CreateSurfaceLightmap( msurface_t *surf )
 		}
 	}
 
-	surf->lightmaptexturenum = gl_lms.current_lightmap_texture;
+	surf->lightmaptexturenum = gl_lms.currentLightmapTexture;
 
 	byte *base = gl_lms.lightmap_buffer;
 	base += ( surf->light_t * BLOCK_WIDTH + surf->light_s ) * LIGHTMAP_BYTES;
@@ -968,18 +964,15 @@ void GL_BeginBuildingLightmaps( model_t *model )
 	}
 	tr.refdef.lightstyles = lightstyles;
 
-	if ( !glState.lightmap_textures )
-	{
-		glState.lightmap_textures = TEXNUM_LIGHTMAPS;
-	}
-
-	gl_lms.current_lightmap_texture = 1;
+	gl_lms.currentLightmapTexture = 1;
 
 	/*
 	** initialize the dynamic lightmap texture
 	*/
+	glGenTextures( 1, &gl_lms.lightmapTextures[0] );
+
 	GL_ActiveTexture( GL_TEXTURE1 );
-	GL_BindTexture( glState.lightmap_textures + 0 );
+	GL_BindTexture( gl_lms.lightmapTextures[0] );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 	glTexImage2D( GL_TEXTURE_2D,
@@ -1151,6 +1144,177 @@ static void R_BuildPolygonFromSurface( msurface_t *fa, bool world )
 	}
 }
 
+static int XAtlas_PrintCallback( const char *fmt, ... )
+{
+	va_list		argptr;
+	char		msg[MAX_PRINT_MSG];
+
+	va_start( argptr, fmt );
+	Q_vsprintf_s( msg, fmt, argptr );
+	va_end( argptr );
+
+	Com_Print( msg );
+
+	return 0;
+}
+
+static void R_AtlasWorldLists(
+	const char *modelName,
+	worldVertex_t *vertices, const worldIndex_t *indices,
+	uint32 numVertices, uint32 numIndices )
+{
+#ifdef USE_XATLAS
+
+	xatlas::SetPrint( XAtlas_PrintCallback, true );
+	xatlas::Atlas *pAtlas = xatlas::Create();
+
+	//constexpr size_t offsetNormals = offsetof( worldVertex_t, normal );
+	//constexpr size_t offsetUVs = offsetof( worldVertex_t, st1 );
+
+	const xatlas::MeshDecl meshDecl
+	{
+		.vertexPositionData = vertices,
+		//.vertexNormalData = (byte *)vertices + offsetNormals,
+		//.vertexUvData = (byte *)vertices + offsetUVs,
+		.indexData = indices,
+
+		.vertexCount = numVertices,
+		.vertexPositionStride = sizeof( worldVertex_t ),
+		//.vertexNormalStride = sizeof( worldVertex_t ),
+		//.vertexUvStride = sizeof( worldVertex_t ),
+		.indexCount = numIndices,
+		.indexFormat = xatlas::IndexFormat::UInt32
+	};
+
+	xatlas::AddMeshError meshError = xatlas::AddMesh( pAtlas, meshDecl, 1 );
+	if ( meshError != xatlas::AddMeshError::Success ) {
+		xatlas::Destroy( pAtlas );
+		Com_Printf( "XAtlas failed: %s\n", xatlas::StringForEnum( meshError ) );
+		return;
+	}
+
+	xatlas::ChartOptions chartOptions
+	{
+		.maxIterations = 1
+	};
+
+	xatlas::PackOptions packOptions
+	{
+		.bruteForce = false
+	};
+
+	xatlas::Generate( pAtlas, chartOptions, packOptions );
+
+	Com_Printf( "%d charts\n", pAtlas->chartCount );
+	Com_Printf( "%d atlases\n", pAtlas->atlasCount );
+
+	for ( uint32 i = 0; i < pAtlas->atlasCount; ++i )
+	{
+		Com_Printf( "%u: %0.2f%% utilization\n", i, pAtlas->utilization[i] * 100.0f );
+	}
+	Com_Printf( "%ux%u resolution\n", pAtlas->width, pAtlas->height );
+
+	for ( uint32 i = 0; i < pAtlas->meshCount; ++i )
+	{
+		const xatlas::Mesh &mesh = pAtlas->meshes[i];
+		for ( uint32 v = 0; v < mesh.vertexCount; ++v )
+		{
+			const xatlas::Vertex &vertex = mesh.vertexArray[v];
+			worldVertex_t *myVertex = vertices + vertex.xref;
+			myVertex->st2[0] = vertex.uv[0] / pAtlas->width;
+			myVertex->st2[1] = 1.0f - vertex.uv[1] / pAtlas->height;
+		}
+	}
+
+#ifdef USE_XATLAS
+
+#if 1
+
+	byte *pBuffer;
+	fsSize_t nBufLen = FileSystem::LoadFile( "world/cerberon.png", (void **)&pBuffer );
+	if ( !pBuffer )
+	{
+		return;
+	}
+
+	assert( nBufLen > 32 ); // Sanity check
+
+	if ( img::TestPNG( pBuffer ) )
+	{
+		int width, height;
+		byte *pPic = img::LoadPNG( pBuffer, width, height );
+		FileSystem::FreeFile( pBuffer );
+
+		glGenTextures( 1, &fuckedUpLightmapID );
+		GL_ActiveTexture( GL_TEXTURE1 );
+		GL_BindTexture( fuckedUpLightmapID );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+		glTexImage2D( GL_TEXTURE_2D,
+			0,
+			GL_LIGHTMAP_INTERNAL_FORMAT,
+			width, height,
+			0,
+			GL_LIGHTMAP_FORMAT,
+			GL_UNSIGNED_BYTE,
+			pPic );
+
+		Mem_Free( pPic );
+	}
+
+#else
+
+	char fileBase[MAX_QPATH];
+	COM_FileBase( modelName, fileBase );
+
+	char filename[MAX_QPATH];
+	Q_sprintf_s( filename, "world/%s.obj", fileBase );
+
+	fsHandle_t file = FileSystem::OpenFileWrite( filename, FS_GAMEDIR );
+	if ( !file )
+	{
+		xatlas::Destroy( pAtlas );
+		return;
+	}
+
+	uint32 firstVertex = 0;
+	for ( uint32 i = 0; i < pAtlas->meshCount; ++i )
+	{
+		const xatlas::Mesh &mesh = pAtlas->meshes[i];
+		for ( uint32 v = 0; v < mesh.vertexCount; ++v )
+		{
+			const xatlas::Vertex &vertex = mesh.vertexArray[v];
+			const worldVertex_t *myVertex = vertices + vertex.xref;
+			FileSystem::PrintFileFmt( file, "v %g %g %g\n", myVertex->pos[0], myVertex->pos[1], myVertex->pos[2]);
+			//fprintf( objHandle, "vt %g %g\n", vertex.uv[0] / pAtlas->width, 1.0f - ( vertex.uv[1] / pAtlas->height ) );
+			FileSystem::PrintFileFmt( file, "vt %g %g\n", vertex.uv[0] / pAtlas->width, vertex.uv[1] / pAtlas->height );
+		}
+
+		FileSystem::PrintFileFmt( file, "o %s\n", modelName );
+		FileSystem::PrintFileFmt( file, "s off\n" );
+
+		for ( uint32_t f = 0; f < mesh.indexCount; f += 3 )
+		{
+			const uint32_t index1 = firstVertex + mesh.indexArray[f + 0] + 1; // 1-indexed
+			const uint32_t index2 = firstVertex + mesh.indexArray[f + 1] + 1; // 1-indexed
+			const uint32_t index3 = firstVertex + mesh.indexArray[f + 2] + 1; // 1-indexed
+			FileSystem::PrintFileFmt( file, "f %d/%d %d/%d %d/%d\n", index1, index1, index2, index2, index3, index3 );
+		}
+
+		firstVertex += mesh.vertexCount;
+	}
+
+	FileSystem::CloseFile( file );
+
+	xatlas::Destroy( pAtlas );
+
+#endif
+
+#endif
+
+#endif
+}
+
 void R_BuildWorldLists( model_t *model )
 {
 	//
@@ -1244,6 +1408,8 @@ void R_BuildWorldLists( model_t *model )
 
 #endif
 
+	R_AtlasWorldLists( model->name, vertexData, indexData, vertexCount, indexCount );
+
 	//
 	// Upload our big fat vertex buffer
 	//
@@ -1268,4 +1434,22 @@ void R_BuildWorldLists( model_t *model )
 
 	glBufferData( GL_ARRAY_BUFFER, vertexSize, vertexData, GL_STATIC_DRAW );
 	//glBufferData( GL_ELEMENT_ARRAY_BUFFER, indexSize, indexData, GL_STATIC_DRAW );
+
+	s_worldRenderData.initialised = true;
+}
+
+void R_EraseWorldLists()
+{
+	if ( s_worldRenderData.initialised )
+	{
+		glDeleteVertexArrays( 1, &s_worldRenderData.vao );
+		glDeleteBuffers( 2, &s_worldRenderData.ebo );
+
+		s_worldRenderData.vertices.clear();
+		s_worldRenderData.indices.clear();
+		s_worldRenderData.lastMaterial = nullptr;
+		s_worldRenderData.meshes.clear();
+
+		s_worldRenderData.initialised = false;
+	}
 }

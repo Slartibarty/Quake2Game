@@ -161,11 +161,9 @@ Called only once at init
 void R_InitGLState()
 {
 	glClearColor( DEFAULT_CLEARCOLOR );
-	glCullFace( GL_BACK );
+	glFrontFace( GL_CW );
 
 	glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
-
-	glShadeModel( GL_FLAT );
 
 	GL_TexEnv( GL_REPLACE );
 

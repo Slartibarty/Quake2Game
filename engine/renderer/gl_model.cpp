@@ -23,6 +23,7 @@ void GL_CreateSurfaceLightmap( msurface_t *surf );
 void GL_BeginBuildingLightmaps( model_t *model );
 void GL_EndBuildingLightmaps();
 void R_BuildWorldLists( model_t *model );
+void R_EraseWorldLists();
 
 static byte		mod_novis[MAX_MAP_LEAFS/8];
 
@@ -1033,6 +1034,7 @@ void Mod_LoadBrushModel( model_t *pMod, void *pBuffer, int bufferLength )
 	// This is done after everything else because we need to know about
 	// the submodels
 	//
+	R_EraseWorldLists();
 	R_BuildWorldLists( pMod );
 
 	//

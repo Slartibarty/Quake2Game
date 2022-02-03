@@ -10,8 +10,6 @@
 
 model_t		*r_worldmodel;
 
-double		gldepthmin, gldepthmax;
-
 entity_t	*currententity;
 model_t		*currentmodel;
 
@@ -678,13 +676,15 @@ static void R_SetupGL()
 
 	// set drawing parms
 
-	if ( r_cullfaces->GetBool() ) {
-		glEnable( GL_CULL_FACE );
-	} else {
-		glDisable( GL_CULL_FACE );
+	if ( r_cullfaces->IsModified() )
+	{
+		r_cullfaces->ClearModified();
+		if ( r_cullfaces->GetBool() ) {
+			glEnable( GL_CULL_FACE );
+		} else {
+			glDisable( GL_CULL_FACE );
+		}
 	}
-
-	glCullFace( GL_FRONT );
 
 	// is modified really necessary here?
 	if ( r_wireframe->IsModified() ) {
@@ -711,11 +711,6 @@ static void R_Clear()
 	} else {
 		glClear( GL_DEPTH_BUFFER_BIT );
 	}
-
-	gldepthmin = 0.0;
-	gldepthmax = 1.0;
-	glDepthFunc( GL_LEQUAL );
-	glDepthRange( gldepthmin, gldepthmax );
 }
 
 /*

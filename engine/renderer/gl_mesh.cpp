@@ -1,39 +1,45 @@
-// gl_mesh.c: triangle model functions
+/*
+===================================================================================================
+
+	Model Rendering
+
+===================================================================================================
+*/
 
 #include "gl_local.h"
 
 #include <vector>
 
-#define POWERSUIT_SCALE		4.0f
-
 /*
-=============================================================
+===================================================================================================
 
-  ALIAS MODELS
+	Alias Models
 
-=============================================================
+===================================================================================================
 */
+
+#define POWERSUIT_SCALE		4.0f
 
 #define NUMVERTEXNORMALS	162
 
-static float	r_avertexnormals[NUMVERTEXNORMALS][3]{
+static const float r_avertexnormals[NUMVERTEXNORMALS][3]{
 #include "anorms.inl"
 };
 
-static vec4_t	s_lerped[MAX_VERTS];
+static vec4_t s_lerped[MAX_VERTS];
 
-static vec3_t	shadevector;
-static vec3_t	shadelight;
+static vec3_t shadevector;
+static vec3_t shadelight;
 
 // precalculated dot products for quantized angles
 #define SHADEDOT_QUANT 16
-static float	r_avertexnormal_dots[SHADEDOT_QUANT][256]{
+static const float r_avertexnormal_dots[SHADEDOT_QUANT][256]{
 #include "anormtab.inl"
 };
 
-static float	*shadedots = r_avertexnormal_dots[0];
+static const float *shadedots = r_avertexnormal_dots[0];
 
-void GL_LerpVerts( int nverts, dtrivertx_t *v, dtrivertx_t *ov, dtrivertx_t *verts, float *lerp, float move[3], float frontv[3], float backv[3] )
+static void GL_LerpVerts( int nverts, dtrivertx_t *v, dtrivertx_t *ov, dtrivertx_t *verts, float *lerp, float move[3], float frontv[3], float backv[3] )
 {
 	int i;
 
@@ -42,7 +48,7 @@ void GL_LerpVerts( int nverts, dtrivertx_t *v, dtrivertx_t *ov, dtrivertx_t *ver
 	{
 		for (i=0 ; i < nverts; i++, v++, ov++, lerp+=4 )
 		{
-			float *normal = r_avertexnormals[verts[i].lightnormalindex];
+			const float *normal = r_avertexnormals[verts[i].lightnormalindex];
 
 			lerp[0] = move[0] + ov->v[0]*backv[0] + v->v[0]*frontv[0] + normal[0] * POWERSUIT_SCALE;
 			lerp[1] = move[1] + ov->v[1]*backv[1] + v->v[1]*frontv[1] + normal[1] * POWERSUIT_SCALE;
@@ -61,15 +67,11 @@ void GL_LerpVerts( int nverts, dtrivertx_t *v, dtrivertx_t *ov, dtrivertx_t *ver
 
 }
 
-/*
-=============
-GL_DrawAliasFrameLerp
-
-interpolates between two frames and origins
-FIXME: batch lerp all vertexes
-=============
-*/
-void GL_DrawAliasFrameLerp (dmdl_t *paliashdr, float backlerp)
+//
+// interpolates between two frames and origins
+// FIXME: batch lerp all vertexes
+//
+static void GL_DrawAliasFrameLerp( dmdl_t *paliashdr, float backlerp )
 {
 	float 	l;
 	daliasframe_t	*frame, *oldframe;
@@ -276,9 +278,9 @@ void GL_DrawAliasFrameLerp (dmdl_t *paliashdr, float backlerp)
 		glEnable( GL_TEXTURE_2D );
 }
 
-/*
-** R_CullAliasModel
-*/
+//
+// Returns true if the model shouldn't be drawn
+//
 static bool R_CullAliasModel( vec3_t mins, vec3_t maxs, entity_t *e )
 {
 	int i;
@@ -419,30 +421,20 @@ static bool R_CullAliasModel( vec3_t mins, vec3_t maxs, entity_t *e )
 	}
 }
 
-/*
-=================
-R_DrawAliasModel
-
-=================
-*/
-void R_DrawAliasModel (entity_t *e)
+void R_DrawAliasModel( entity_t *e )
 {
-	int			i;
-	dmdl_t		*paliashdr;
-	float		an;
-	vec3_t		mins, maxs;
-	material_t	*skin;
+	int				i;
+	dmdl_t *		paliashdr;
+	float			an;
+	vec3_t			mins, maxs;
+	material_t *	skin;
 
+	// Can we be culled away?
 	if ( !( e->flags & RF_WEAPONMODEL ) )
 	{
-		if ( R_CullAliasModel( mins, maxs, e ) )
+		if ( R_CullAliasModel( mins, maxs, e ) ) {
 			return;
-	}
-
-	if ( e->flags & RF_WEAPONMODEL )
-	{
-		if ( r_lefthand->GetInt() == 2 )
-			return;
+		}
 	}
 
 	paliashdr = (dmdl_t *)currentmodel->extradata;
@@ -455,97 +447,37 @@ void R_DrawAliasModel (entity_t *e)
 	//
 	if ( currententity->flags & ( RF_SHELL_HALF_DAM | RF_SHELL_GREEN | RF_SHELL_RED | RF_SHELL_BLUE | RF_SHELL_DOUBLE ) )
 	{
-		VectorClear (shadelight);
-		if (currententity->flags & RF_SHELL_HALF_DAM)
+		VectorClear( shadelight );
+		if ( currententity->flags & RF_SHELL_HALF_DAM )
 		{
-				shadelight[0] = 0.56;
-				shadelight[1] = 0.59;
-				shadelight[2] = 0.45;
+			shadelight[0] = 0.56f;
+			shadelight[1] = 0.59f;
+			shadelight[2] = 0.45f;
 		}
 		if ( currententity->flags & RF_SHELL_DOUBLE )
 		{
-			shadelight[0] = 0.9;
-			shadelight[1] = 0.7;
+			shadelight[0] = 0.9f;
+			shadelight[1] = 0.7f;
 		}
-		if ( currententity->flags & RF_SHELL_RED )
-			shadelight[0] = 1.0;
-		if ( currententity->flags & RF_SHELL_GREEN )
-			shadelight[1] = 1.0;
-		if ( currententity->flags & RF_SHELL_BLUE )
-			shadelight[2] = 1.0;
-	}
-/*
-		// PMM -special case for godmode
-		if ( (currententity->flags & RF_SHELL_RED) &&
-			(currententity->flags & RF_SHELL_BLUE) &&
-			(currententity->flags & RF_SHELL_GREEN) )
-		{
-			for (i=0 ; i<3 ; i++)
-				shadelight[i] = 1.0;
+		if ( currententity->flags & RF_SHELL_RED ) {
+			shadelight[0] = 1.0f;
 		}
-		else if ( currententity->flags & ( RF_SHELL_RED | RF_SHELL_BLUE | RF_SHELL_DOUBLE ) )
-		{
-			VectorClear (shadelight);
-
-			if ( currententity->flags & RF_SHELL_RED )
-			{
-				shadelight[0] = 1.0;
-				if (currententity->flags & (RF_SHELL_BLUE|RF_SHELL_DOUBLE) )
-					shadelight[2] = 1.0;
-			}
-			else if ( currententity->flags & RF_SHELL_BLUE )
-			{
-				if ( currententity->flags & RF_SHELL_DOUBLE )
-				{
-					shadelight[1] = 1.0;
-					shadelight[2] = 1.0;
-				}
-				else
-				{
-					shadelight[2] = 1.0;
-				}
-			}
-			else if ( currententity->flags & RF_SHELL_DOUBLE )
-			{
-				shadelight[0] = 0.9;
-				shadelight[1] = 0.7;
-			}
+		if ( currententity->flags & RF_SHELL_GREEN ) {
+			shadelight[1] = 1.0f;
 		}
-		else if ( currententity->flags & ( RF_SHELL_HALF_DAM | RF_SHELL_GREEN ) )
-		{
-			VectorClear (shadelight);
-			// PMM - new colors
-			if ( currententity->flags & RF_SHELL_HALF_DAM )
-			{
-				shadelight[0] = 0.56;
-				shadelight[1] = 0.59;
-				shadelight[2] = 0.45;
-			}
-			if ( currententity->flags & RF_SHELL_GREEN )
-			{
-				shadelight[1] = 1.0;
-			}
+		if ( currententity->flags & RF_SHELL_BLUE ) {
+			shadelight[2] = 1.0f;
 		}
 	}
-			//PMM - ok, now flatten these down to range from 0 to 1.0.
-	//		max_shell_val = max(shadelight[0], max(shadelight[1], shadelight[2]));
-	//		if (max_shell_val > 0)
-	//		{
-	//			for (i=0; i<3; i++)
-	//			{
-	//				shadelight[i] = shadelight[i] / max_shell_val;
-	//			}
-	//		}
-	// pmm
-*/
 	else if ( currententity->flags & RF_FULLBRIGHT )
 	{
-		for (i=0 ; i<3 ; i++)
-			shadelight[i] = 1.0;
+		shadelight[0] = 1.0f;
+		shadelight[1] = 1.0f;
+		shadelight[2] = 1.0f;
 	}
 	else
 	{
-		R_LightPoint (currententity->origin, shadelight);
+		R_LightPoint( currententity->origin, shadelight );
 
 		// player lighting hack for communication back to server
 		// big hack!
@@ -557,29 +489,35 @@ void R_DrawAliasModel (entity_t *e)
 			// as the mono value returned by software
 			if ( shadelight[0] > shadelight[1] )
 			{
-				if ( shadelight[0] > shadelight[2] )
+				if ( shadelight[0] > shadelight[2] ) {
 					value = 150.0f * shadelight[0];
-				else
+				} else {
 					value = 150.0f * shadelight[2];
+				}
 			}
 			else
 			{
-				if ( shadelight[1] > shadelight[2] )
+				if ( shadelight[1] > shadelight[2] ) {
 					value = 150.0f * shadelight[1];
-				else
+				} else {
 					value = 150.0f * shadelight[2];
+				}
 			}
 
 			Cvar_SetFloat( r_lightlevel, value );
 		}
 	}
 
+	// Apply a minimum constant light
 	if ( currententity->flags & RF_MINLIGHT )
 	{
-		for (i=0 ; i<3 ; i++)
-			if (shadelight[i] > 0.1f)
+		for ( i = 0; i < 3; ++i )
+		{
+			if ( shadelight[i] > 0.1f ) {
 				break;
-		if (i == 3)
+			}
+		}
+		if ( i == 3 )
 		{
 			shadelight[0] = 0.1f;
 			shadelight[1] = 0.1f;
@@ -587,18 +525,20 @@ void R_DrawAliasModel (entity_t *e)
 		}
 	}
 
+	// Bonus items will pulse with time
 	if ( currententity->flags & RF_GLOW )
-	{	// bonus items will pulse with time
-		float	scale;
-		float	min;
+	{
+		float scale;
+		float min;
 
-		scale = 0.1f * sin(tr.refdef.time*7);
-		for (i=0 ; i<3 ; i++)
+		scale = 0.1f * sin( tr.refdef.time * 7.0f );
+		for ( i = 0; i < 3; ++i )
 		{
 			min = shadelight[i] * 0.8f;
 			shadelight[i] += scale;
-			if (shadelight[i] < min)
+			if ( shadelight[i] < min ) {
 				shadelight[i] = min;
+			}
 		}
 	}
 
@@ -619,7 +559,7 @@ void R_DrawAliasModel (entity_t *e)
 	shadevector[0] = cos(-an);
 	shadevector[1] = sin(-an);
 	shadevector[2] = 1;
-	VectorNormalize (shadevector);
+	VectorNormalize( shadevector );
 
 	//
 	// locate the proper data
@@ -630,90 +570,86 @@ void R_DrawAliasModel (entity_t *e)
 	//
 	// draw all the triangles
 	//
-	if (currententity->flags & RF_DEPTHHACK) // hack the depth range to prevent view model from poking into walls
-		glDepthRange (gldepthmin, gldepthmin + 0.3*(gldepthmax-gldepthmin));
-
-	// slart: these was code here that flipped the matrix if the model had RF_WEAPONMODEL
-	// and r_lefthand was true, but I removed it
 
 	glPushMatrix ();
 	e->angles[PITCH] = -e->angles[PITCH];	// sigh.
 	R_RotateForEntity (e);
 	e->angles[PITCH] = -e->angles[PITCH];	// sigh.
 
-	// select skin
-	if (currententity->skin)
-		skin = currententity->skin;	// custom player skin
-	else
-	{
-		if (currententity->skinnum >= MAX_MD2SKINS)
-			skin = currentmodel->skins[0];
-		else
-		{
-			skin = currentmodel->skins[currententity->skinnum];
-			if (!skin)
-				skin = currentmodel->skins[0];
-		}
-	}
-	if (!skin)
-		skin = defaultMaterial;	// fallback...
-
-	GL_ActiveTexture( GL_TEXTURE0 );
-
-	skin->Bind();
-
-	// draw it
-
-	glShadeModel (GL_SMOOTH);
-
 	GL_TexEnv( GL_MODULATE );
 	if ( currententity->flags & RF_TRANSLUCENT )
 	{
-		glEnable (GL_BLEND);
+		glEnable( GL_BLEND );
 	}
 
-
-	if ( (currententity->frame >= paliashdr->num_frames) 
-		|| (currententity->frame < 0) )
+	if ( ( currententity->frame >= paliashdr->num_frames ) || ( currententity->frame < 0 ) )
 	{
-		Com_Printf("R_DrawAliasModel %s: no such frame %d\n",
-			currentmodel->name, currententity->frame);
+		Com_Printf( "R_DrawAliasModel %s: no such frame %d\n",
+			currentmodel->name, currententity->frame );
 		currententity->frame = 0;
 		currententity->oldframe = 0;
 	}
 
-	if ( (currententity->oldframe >= paliashdr->num_frames)
-		|| (currententity->oldframe < 0))
+	if ( ( currententity->oldframe >= paliashdr->num_frames ) || ( currententity->oldframe < 0 ) )
 	{
-		Com_Printf("R_DrawAliasModel %s: no such oldframe %d\n",
-			currentmodel->name, currententity->oldframe);
+		Com_Printf( "R_DrawAliasModel %s: no such oldframe %d\n",
+			currentmodel->name, currententity->oldframe );
 		currententity->frame = 0;
 		currententity->oldframe = 0;
 	}
 
-	if ( !r_lerpmodels->GetBool() )
+	if ( !r_lerpmodels->GetBool() ) {
 		currententity->backlerp = 0;
+	}
+
+	// select skin
+	if ( currententity->skin )
+	{
+		// custom player skin
+		skin = currententity->skin;
+	}
+	else
+	{
+		if ( currententity->skinnum >= MAX_MD2SKINS )
+		{
+			skin = currentmodel->skins[0];
+		}
+		else
+		{
+			skin = currentmodel->skins[currententity->skinnum];
+			if ( !skin ) {
+				skin = currentmodel->skins[0];
+			}
+		}
+	}
+	if ( !skin )
+	{
+		skin = defaultMaterial;	// fallback...
+	}
+
+	GL_ActiveTexture( GL_TEXTURE0 );
+	skin->Bind();
+
+	// Cull front faces for now
+	//glCullFace( GL_FRONT );
+
 	GL_DrawAliasFrameLerp (paliashdr, currententity->backlerp);
+
+	// Return to culling back faces
+	//glCullFace( GL_BACK );
+
+	// Reset any colour stuff we might've done
+	glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
 
 	//R_DrawBounds( mins, maxs );
 
-	GL_TexEnv( GL_REPLACE );
-	glShadeModel (GL_FLAT);
-
-	glPopMatrix ();
-
-	// slart: these was code here that flipped the matrix if the model had RF_WEAPONMODEL
-	// and r_lefthand was true, but I removed it
-
 	if ( currententity->flags & RF_TRANSLUCENT )
 	{
-		glDisable (GL_BLEND);
+		glDisable( GL_BLEND );
 	}
+	GL_TexEnv( GL_REPLACE );
 
-	if (currententity->flags & RF_DEPTHHACK)
-		glDepthRange (gldepthmin, gldepthmax);
-
-	glColor4f (1,1,1,1);
+	glPopMatrix ();
 }
 
 /*
@@ -892,11 +828,12 @@ void R_DrawStaticMeshFile( entity_t *e )
 		glUniformMatrix4fv( 6, 1, GL_FALSE, (const GLfloat *)&newStore );
 	}
 
-	glCullFace( GL_BACK ); // TODO: eugh
-
 	mSMFMesh_t *meshes = reinterpret_cast<mSMFMesh_t *>( (byte *)memSMF + sizeof( mSMF_t ) );
 
 	GLenum type = memSMF->type;
+
+	// Sigh
+	glFrontFace( GL_CCW );
 	
 	for ( uint32 i = 0; i < memSMF->numMeshes; ++i )
 	{
@@ -912,7 +849,8 @@ void R_DrawStaticMeshFile( entity_t *e )
 		glDrawElements( GL_TRIANGLES, meshes[i].count, type, (void *)( (uintptr_t)meshes[i].offset ) );
 	}
 
-	glCullFace( GL_FRONT ); // TODO: eugh
+	// Sigh
+	glFrontFace( GL_CW );
 
 	GL_UseProgram( 0 );
 }
