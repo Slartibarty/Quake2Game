@@ -20,7 +20,7 @@ extern cvar_t *r_multisamples;
 
 extern LRESULT CALLBACK ChildWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
-#define USE_STEAM_SKIN
+//#define USE_STEAM_SKIN
 
 /*
 ===================================================================================================
