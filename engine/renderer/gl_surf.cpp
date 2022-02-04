@@ -13,6 +13,8 @@
 
 #include "gl_local.h"
 
+#include "../../core/threading.h"
+
 #include "../shared/imgtools.h"
 #include <algorithm> // std::sort
 #include <vector>
@@ -47,8 +49,6 @@
 #define GL_LIGHTMAP_INTERNAL_FORMAT		GL_RGBA8 // GL_SRGB8_ALPHA8
 #define GL_LIGHTMAP_FORMAT				GL_RGBA
 
-#define TEXNUM_LIGHTMAPS	1024
-
 // Globals
 
 // Must be contiguous to send to OpenGL
@@ -68,7 +68,7 @@ struct worldMesh_t
 	mtexinfo_t *	texinfo;
 	uint32			firstIndex;		// Index into s_worldLists.finalIndices
 	uint32			numIndices;
-	uint32			numVertices;	// For meshoptimizer
+	//uint32		numVertices;	// For meshoptimizer
 };
 
 // This is the data sent to OpenGL
@@ -602,44 +602,24 @@ static void R_RecursiveWorldNode( worldNodeWork_t &work, const mnode_t *node )
 
 		// draw stuff
 
-		const msurface_t *firstSurface = r_worldmodel->surfaces + node->firstsurface;
-		const msurface_t *lastSurface = firstSurface + node->numsurfaces;
+		msurface_t *firstSurface = r_worldmodel->surfaces + node->firstsurface;
+		msurface_t *lastSurface = firstSurface + node->numsurfaces;
 
 		for ( const msurface_t *surf = firstSurface; surf < lastSurface; ++surf )
 		{
 			if ( surf->frameCount != tr.frameCount )
 			{
-				// Unvisited
+				// Not visited in the leafs
 				continue;
 			}
 
 			if ( ( surf->flags & MSURF_PLANEBACK ) != sidebit )
 			{
-				// Wrong side
+				// Surface is facing away from us
 				continue;
 			}
 
-			if ( surf->texinfo->flags & SURF_SKY )
-			{
-				// Just adds to visible sky bounds
-				//R_AddSkySurface( surf );
-			}
-			else if ( surf->texinfo->flags & ( SURF_TRANS33 | SURF_TRANS66 ) )
-			{
-				// Remove?
-			}
-			else
-			{
-				if ( Q_stristr( surf->texinfo->material->name, "sky" ) )
-				{
-					if ( !( surf->texinfo->flags & SURF_SKY ) )
-					{
-						//__debugbreak();
-					}
-				}
-
-				R_AddSurface( surf, work );
-			}
+			R_AddSurface( surf, work );
 		}
 
 		// Recurse down the back side
@@ -1231,7 +1211,7 @@ static void R_AtlasWorldLists(
 #if 1
 
 	byte *pBuffer;
-	fsSize_t nBufLen = FileSystem::LoadFile( "world/cerberon.png", (void **)&pBuffer );
+	fsSize_t nBufLen = FileSystem::LoadFile( "world/test_biggerbox.png", (void **)&pBuffer );
 	if ( !pBuffer )
 	{
 		return;
@@ -1340,14 +1320,14 @@ void R_BuildWorldLists( model_t *model )
 		{
 			R_BuildPolygonFromSurface( surface, true );
 		}
-
-		worldModel->firstMesh = 0;
-		worldModel->numMeshes = 0;
 	}
 
-	// Where the world vertices and indices end
-	const uint32 endWorldVertices = static_cast<uint32>( s_worldRenderData.vertices.size() );
+	// Where the world indices end
 	const uint32 endWorldIndices = static_cast<uint32>( s_worldRenderData.indices.size() );
+
+	// Store the number of indices in the mesh stuff, for r_dumpworld
+	worldModel->firstMesh = 0;
+	worldModel->numMeshes = endWorldIndices;
 
 	mmodel_t *firstModel = model->submodels + 1;
 	mmodel_t *endModel = model->submodels + model->numsubmodels; // Not a valid submodel
@@ -1452,4 +1432,170 @@ void R_EraseWorldLists()
 
 		s_worldRenderData.initialised = false;
 	}
+}
+
+/*
+===================================================================================================
+
+	Wavefront OBJ Output
+
+===================================================================================================
+*/
+
+static bool R_FindIndexInVector( worldIndex_t index, const std::vector<worldIndex_t> &checkedIndices )
+{
+	for ( const worldIndex_t checkIndex : checkedIndices )
+	{
+		if ( checkIndex == index )
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+static void R_ExportRenderData( fsHandle_t file, const uint32 firstIndex, const uint32 lastIndex, const uint32 pass )
+{
+	assert( !( lastIndex % 3 ) );
+
+	const uint32 numIndices = lastIndex - firstIndex;
+
+	std::vector<worldIndex_t> checkedIndices;
+	checkedIndices.reserve( numIndices );
+
+	if ( pass == 0 )
+	{
+		for ( uint32 iIndex = firstIndex; iIndex < lastIndex; ++iIndex )
+		{
+			// Print vertices
+			const worldIndex_t index = s_worldRenderData.indices[iIndex];
+
+			if ( R_FindIndexInVector( index, checkedIndices ) )
+			{
+				continue;
+			}
+
+			checkedIndices.push_back( index );
+
+			const worldVertex_t &vertex = s_worldRenderData.vertices[index];
+
+			FileSystem::PrintFileFmt( file,
+				"v %g %g %g\n"
+				"vt %g %g\n"
+				"vn %g %g %g\n",
+				vertex.pos[0], vertex.pos[1], vertex.pos[2],
+				vertex.st2[0], vertex.st2[1],
+				vertex.normal[0], vertex.normal[1], vertex.normal[2]
+			);
+		}
+	}
+	else
+	{
+		for ( uint32 iIndex = firstIndex; iIndex < lastIndex; iIndex += 3 )
+		{
+			const worldIndex_t index1 = s_worldRenderData.indices[iIndex + 0] + 1;
+			const worldIndex_t index2 = s_worldRenderData.indices[iIndex + 1] + 1;
+			const worldIndex_t index3 = s_worldRenderData.indices[iIndex + 2] + 1;
+
+			// Print indices
+			FileSystem::PrintFileFmt( file,
+				"f %d/%d/%d %d/%d/%d %d/%d/%d\n",
+				index1, index1, index1,
+				index2, index2, index2,
+				index3, index3, index3 );
+		}
+	}
+}
+
+//
+// Outputs world/<mapname>.obj
+//
+static void R_ExportWorldAsOBJ( const model_t *model )
+{
+	char fileBase[MAX_QPATH];
+	COM_FileBase( model->name, fileBase );
+
+	char filename[MAX_QPATH];
+	Q_sprintf_s( filename, "world/%s.obj", fileBase );
+
+	fsHandle_t file = FileSystem::OpenFileWrite( filename, FS_GAMEDIR );
+	if ( !file )
+	{
+		return;
+	}
+
+	Com_Printf( "Starting export of %s as an OBJ, please wait...\n", fileBase );
+
+	//uint32 firstVertex = 0;
+
+	for ( uint32 iPass = 0; iPass <= 1; ++iPass )
+	{
+		// The world is special and doesn't have a mesh definition because it's a waste of memory
+		// to have one due to how we draw it
+		const uint32 firstWorldIndex = model->submodels[0].firstMesh;
+		const uint32 lastWorldIndex = firstWorldIndex + model->submodels[0].numMeshes;
+
+		if ( iPass != 0 )
+		{
+			FileSystem::PrintFile(
+				"o world\n"
+				"s off\n",
+				file );
+		}
+
+		R_ExportRenderData( file, firstWorldIndex, lastWorldIndex, iPass );
+
+		const uint32 numSubModels = static_cast<uint32>( model->numsubmodels );
+
+		for ( uint32 iSubModel = 1; iSubModel < numSubModels; ++iSubModel )
+		{
+			const mmodel_t *subModel = model->submodels + iSubModel;
+
+			const uint32 firstMesh = subModel->firstMesh;
+			const uint32 lastMesh = firstMesh + subModel->numMeshes;
+
+			if ( iPass != 0 )
+			{
+				FileSystem::PrintFileFmt( file,
+					"o submodel%03u\n"
+					"s off\n",
+					iSubModel );
+			}
+
+			for ( uint32 iMesh = firstMesh; iMesh < lastMesh; ++iMesh )
+			{
+				const worldMesh_t &mesh = s_worldRenderData.meshes[iMesh];
+
+				const uint32 firstIndex = mesh.firstIndex;
+				const uint32 lastIndex = firstIndex + mesh.numIndices;
+
+				R_ExportRenderData( file, firstIndex, lastIndex, iPass );
+			}
+		}
+	}
+
+	FileSystem::CloseFile( file );
+
+	Com_Printf( "Exported %s to %s!\n", fileBase, filename );
+}
+
+static uint32 R_DumpWorldThreadProc( void *params )
+{
+	R_ExportWorldAsOBJ( r_worldmodel );
+
+	return 0;
+}
+
+CON_COMMAND( r_dumpworld, "Exports the world to an OBJ file in the maps folder.", 0 )
+{
+	if ( !r_worldmodel )
+	{
+		Com_Print( S_COLOR_YELLOW "No map loaded, can't dump the world\n" );
+		return;
+	}
+
+	// fire and forget
+	threadHandle_t thread = Sys_CreateThread( R_DumpWorldThreadProc, nullptr, THREAD_NORMAL, PLATTEXT( "Dump World Thread" ), CORE_ANY );
+	Sys_DestroyThread( thread );
 }

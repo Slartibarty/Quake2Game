@@ -1024,7 +1024,7 @@ void Mod_LoadBrushModel( model_t *pMod, void *pBuffer, int bufferLength )
 	Mod_LoadSubmodels		( header->lumps + LUMP_MODELS );
 
 	// Parse lights out of the entity data... This uses the client bsp...
-	//Mod_ParseLights( CM_EntityString() );
+	Mod_ParseLights( CM_EntityString() );
 
 	// Regular and alternate animation
 	pMod->numframes = 2;

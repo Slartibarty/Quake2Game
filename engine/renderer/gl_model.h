@@ -22,12 +22,12 @@ struct mvertex_t
 struct mmodel_t
 {
 	vec3_t		mins, maxs;
-	vec3_t		origin;			// for sounds or lights
+	vec3_t		origin;						// for sounds or lights
 	float		radius;
 	int32		headnode;
-	int32		visleafs;		// not including the solid leaf 0
+	int32		visleafs;					// not including the solid leaf 0
 	int32		firstface, numfaces;
-	uint32		firstMesh, numMeshes;
+	uint32		firstMesh, numMeshes;		// firstIndex and numIndices if this is submodel 0 (the world)
 };
 
 enum surfFlags_t
@@ -97,8 +97,7 @@ struct mnode_t
 	int32		contents;		// -1, to differentiate from leafs
 	int32		visframe;		// node needs to be traversed if current
 	
-	vec3_t		mins;			// for bounding box culling
-	vec3_t		maxs;
+	vec3_t		mins, maxs;		// for bounding box culling
 
 	mnode_t *	parent;
 
@@ -116,8 +115,7 @@ struct mleaf_t
 	int32		contents;		// will be a negative contents number
 	int32		visframe;		// node needs to be traversed if current
 
-	vec3_t		mins;			// for bounding box culling
-	vec3_t		maxs;
+	vec3_t		mins, maxs;		// for bounding box culling
 
 	mnode_t *	parent;
 
@@ -159,65 +157,59 @@ struct mSMF_t
 // Whole model
 //
 
-enum modtype_t { mod_bad, mod_brush, mod_sprite, mod_alias, mod_smf, mod_jmdl };
+enum modType_t { mod_bad, mod_brush, mod_sprite, mod_alias, mod_smf, mod_jmdl };
 
 struct model_t
 {
 	char		name[MAX_QPATH];
 
-	int			registration_sequence;
+	int32		registration_sequence;
 
-	modtype_t	type;
-	int			numframes;
+	modType_t	type;
+	int32		numframes;
 	
-	int			flags;
+	int32		flags;
 
-//
-// volume occupied by the model graphics
-//		
+	//
+	// volume occupied by the model graphics
+	//
 	vec3_t		mins, maxs;
 	float		radius;
 
-//
-// solid volume for clipping (unused)
-//
-//	qboolean	clipbox;
-//	vec3_t		clipmins, clipmaxs;
-
-//
-// brush model
-//
+	//
+	// brush model
+	//
 	uint32		firstMesh, numMeshes;
 
-	int			numsubmodels;
+	int32		numsubmodels;
 	mmodel_t	*submodels;
 
-	int			numplanes;
+	int32		numplanes;
 	cplane_t	*planes;
 
-	int			numleafs;		// number of visible leafs, not counting 0
+	int32		numleafs;		// number of visible leafs, not counting 0
 	mleaf_t		*leafs;
 
-	int			numvertexes;
+	int32		numvertexes;
 	mvertex_t	*vertexes;
 
-	int			numedges;
+	int32		numedges;
 	medge_t		*edges;
 
-	int			numnodes;
-	int			firstnode;
+	int32		numnodes;
+	int32		firstnode;
 	mnode_t		*nodes;
 
-	int			numtexinfo;
+	int32		numtexinfo;
 	mtexinfo_t	*texinfo;
 
-	int			numsurfaces;
+	int32		numsurfaces;
 	msurface_t	*surfaces;
 
-	int			numsurfedges;
-	int			*surfedges;
+	int32		numsurfedges;
+	int32		*surfedges;
 
-	int			nummarksurfaces;
+	int32		nummarksurfaces;
 	msurface_t	**marksurfaces;
 
 	dvis_t		*vis;
