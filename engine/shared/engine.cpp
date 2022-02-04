@@ -4,6 +4,8 @@
 
 #include "engine.h"
 
+#include "../../core/threading.h"
+
 #include <csetjmp>
 
 extern void SCR_EndLoadingPlaque();
@@ -36,6 +38,8 @@ int		time_before_ref;
 int		time_after_ref;
 
 static thread_local bool	isMainThread;
+
+static mutexHandle_t		s_printMutex;		// Mutex for Com_Print
 
 /*
 ============================================================================
@@ -106,6 +110,9 @@ void Com_Print( const char *msg )
 	// create a copy of the msg for places that don't want the colour codes
 	CopyAndStripColorCodes( newMsg, sizeof( newMsg ), msg );
 
+	// Lock mutex
+	Sys_MutexLock( s_printMutex, true );
+
 	if ( rd_target ) {
 		if ( ( strlen( newMsg ) + strlen( rd_buffer ) ) > ( rd_buffersize - 1 ) ) {
 			rd_flush( rd_target, rd_buffer );
@@ -116,10 +123,6 @@ void Com_Print( const char *msg )
 	}
 
 	Sys_OutputDebugString( newMsg );
-
-	if ( !Com_IsMainThread() ) {
-		return;
-	}
 
 	UI::Console::Print( msg );
 
@@ -150,6 +153,9 @@ void Com_Print( const char *msg )
 			FileSystem::FlushFile( logfile );
 		}
 	}
+
+	// Unlock mutex
+	Sys_MutexUnlock( s_printMutex );
 }
 
 void Com_Printf( _Printf_format_string_ const char *fmt, ... )
@@ -570,6 +576,8 @@ void Com_Init( int argc, char **argv )
 		Com_FatalError( "Error during initialization\n" );
 	}
 
+	Sys_MutexCreate( s_printMutex );
+
 	Mem_Init();
 
 	// prepare enough of the subsystems to handle
@@ -778,6 +786,8 @@ void Com_Shutdown()
 	Cvar_Shutdown();
 	Cmd_Shutdown();
 	Mem_Shutdown();
+
+	Sys_MutexDestroy( s_printMutex );
 }
 
 /*
