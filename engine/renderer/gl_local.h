@@ -287,12 +287,9 @@ struct image_t
 	}
 };
 
-struct msurface_t;
-
 struct material_t
 {
 	char				name[MAX_QPATH];			// game path, including extension
-	msurface_t *		texturechain;				// for sort-by-material world drawing
 	image_t *			image;						// the diffuse map
 	image_t *			specImage;					// the specular map (defaults to black)
 	image_t *			normImage;					// the normal map (defaults to funny blue)
