@@ -63,6 +63,8 @@ R_PushDlights
 */
 void R_PushDlights()
 {
+	ZoneScoped
+
 	int			i;
 	dlight_t	*l;
 

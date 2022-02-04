@@ -21,6 +21,8 @@ static_assert( DIRECTX_MATH_VERSION >= 316 );
 #include "GL/wglew.h"
 #endif
 
+#include "../../thirdparty/tracy/Tracy.hpp"
+
 #define Q_MAX_TEXTURE_UNITS		16
 
 #define DEFAULT_CLEARCOLOR		0.25f, 0.25f, 0.25f, 1.0f

@@ -35,3 +35,6 @@
 [submodule "thirdparty/JoltPhysics"]
 	path = thirdparty/JoltPhysics
 	url = https://github.com/jrouwe/JoltPhysics.git
+[submodule "thirdparty/tracy"]
+	path = thirdparty/tracy
+	url = https://github.com/wolfpld/tracy.git

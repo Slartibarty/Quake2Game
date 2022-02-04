@@ -155,6 +155,8 @@ static material_t *R_TextureAnimation( const mtexinfo_t *tex )
 
 static void R_DrawWorldMesh( const worldMesh_t &mesh )
 {
+	ZoneScoped
+
 	const material_t *mat = R_TextureAnimation( mesh.texinfo );
 
 	GL_ActiveTexture( GL_TEXTURE0 );
@@ -373,6 +375,8 @@ struct worldNodeWork_t
 // Mark the leaves and nodes that are in the PVS for the current cluster
 static void R_MarkLeaves()
 {
+	ZoneScoped
+
 	byte *		vis;
 	byte		fatvis[MAX_MAP_LEAFS / 8];
 	mnode_t *	node;
@@ -518,6 +522,8 @@ static void R_AddSurface( const msurface_t *surf, worldNodeWork_t &work )
 //
 static void R_RecursiveWorldNode( worldNodeWork_t &work, const mnode_t *node )
 {
+	ZoneScoped
+
 	while ( true )
 	{
 		// No polygons in solid nodes
@@ -634,6 +640,8 @@ static void R_RecursiveWorldNode( worldNodeWork_t &work, const mnode_t *node )
 //
 static void R_SquashAndUploadIndices( worldLists_t &worldLists, const worldNodeWork_t &work )
 {
+	ZoneScoped
+
 	if ( work.materialSets.empty() )
 	{
 		return;
@@ -669,6 +677,8 @@ static void R_SquashAndUploadIndices( worldLists_t &worldLists, const worldNodeW
 //
 static void R_DrawStaticOpaqueWorld( const worldLists_t &worldLists )
 {
+	ZoneScoped
+
 	for ( const worldMesh_t &mesh : worldLists.opaqueMeshes )
 	{
 		R_DrawWorldMesh( mesh );
@@ -680,6 +690,8 @@ static void R_DrawStaticOpaqueWorld( const worldLists_t &worldLists )
 //
 void R_DrawWorld()
 {
+	ZoneScoped
+
 	if ( !r_drawworld->GetBool() ) {
 		return;
 	}
@@ -994,6 +1006,8 @@ static void R_BuildVertexNormals( worldVertex_t &v1, worldVertex_t &v2, worldVer
 //
 static void R_BuildPolygonFromSurface( msurface_t *fa, bool world )
 {
+	ZoneScoped
+
 	const int *pSurfEdges = currentmodel->surfedges;
 	const medge_t *pEdges = currentmodel->edges;
 	const mvertex_t *pVertices = currentmodel->vertexes;
@@ -1297,6 +1311,8 @@ static void R_AtlasWorldLists(
 
 void R_BuildWorldLists( model_t *model )
 {
+	ZoneScoped
+
 	//
 	// Reserve at least enough space to hold all the base map vertices
 	// The reserve amount is a rough approximation of what a map will need,

@@ -6,6 +6,8 @@
 
 #include "../../core/threading.h"
 
+#include "../../thirdparty/tracy/Tracy.hpp"
+
 #include <csetjmp>
 
 extern void SCR_EndLoadingPlaque();
@@ -570,6 +572,8 @@ Com_Init
 */
 void Com_Init( int argc, char **argv )
 {
+	ZoneScoped
+
 	isMainThread = true;
 
 	if ( setjmp( abortframe ) ) {
@@ -670,6 +674,8 @@ Com_Frame
 */
 void Com_Frame( int frameTime )
 {
+	ZoneScoped
+
 	char	*s;
 	int		time_before, time_between, time_after;
 
@@ -765,6 +771,8 @@ void Com_Frame( int frameTime )
 		Com_Printf( "all:%3i sv:%3i gm:%3i cl:%3i rf:%3i\n",
 			all, sv, gm, cl, rf );
 	}
+
+	FrameMark
 }
 
 /*

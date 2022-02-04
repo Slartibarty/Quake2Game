@@ -30,6 +30,10 @@ newoption {
 	trigger = "exclude-utils",
 	description = "Exclude utilities"
 }
+newoption {
+	trigger = "profile",
+	description = "Enable profiling"
+}
 
 newoption {
 	trigger = "distro",
@@ -41,6 +45,15 @@ newoption {
 		{ "steam", "Build for Steam" }
 	}
 }
+
+function LinkToProfiler()
+	if _OPTIONS["profile"] then
+		includedirs { "thirdparty/steamworks/include" }
+		defines { "TRACY_ENABLE" }
+		files { "thirdparty/tracy/TracyClient.cpp" }
+		editandcontinue "Off"
+	end
+end
 
 function LinkToDistro()
 	if _OPTIONS["distro"] == "steam" then
@@ -365,6 +378,7 @@ project "engine"
 	filter {}
 
 	LinkToDistro()
+	LinkToProfiler()
 
 	disablewarnings { "4244", "4267" }
 

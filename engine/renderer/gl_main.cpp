@@ -337,6 +337,8 @@ R_DrawEntities
 */
 static void R_DrawEntities()
 {
+	ZoneScoped
+
 	if ( !r_drawentities->GetBool() ) {
 		return;
 	}
@@ -458,6 +460,8 @@ R_DrawParticles
 */
 static void R_DrawParticles()
 {
+	ZoneScoped
+
 	if ( tr.refdef.num_particles <= 0 ) {
 		return;
 	}
@@ -513,7 +517,7 @@ R_SetFrustum
 */
 static void R_SetFrustum()
 {
-	int i;
+	ZoneScoped
 
 #if 0
 	/*
@@ -543,7 +547,7 @@ static void R_SetFrustum()
 	RotatePointAroundVector( frustum[3].normal, tr.vRight, tr.vForward, -( 90 - tr.refdef.fov_y / 2 ) );
 #endif
 
-	for ( i = 0; i < 4; i++ )
+	for ( uint i = 0; i < 4; ++i )
 	{
 		frustum[i].type = PLANE_ANYZ;
 		frustum[i].dist = DotProduct( tr.refdef.vieworg, frustum[i].normal );
@@ -558,6 +562,8 @@ R_SetupFrame
 */
 static void R_SetupFrame()
 {
+	ZoneScoped
+
 	mleaf_t *leaf;
 
 	// Increment our frame counter
@@ -624,7 +630,11 @@ GET RID OF ME!!!
 */
 static void R_SetupGL()
 {
+	ZoneScoped
+
 	using namespace DirectX;
+
+#if 0
 
 	// projection matrix
 
@@ -674,6 +684,8 @@ static void R_SetupGL()
 	// TODO: fucking matrices, do this with dxmath
 	glGetFloatv( GL_MODELVIEW_MATRIX, (GLfloat *)&tr.viewMatrix );
 
+#endif
+
 	// set drawing parms
 
 	if ( r_cullfaces->IsModified() )
@@ -722,6 +734,8 @@ tr.refdef must be set before the first call
 */
 static void R_RenderView( refdef_t *fd )
 {
+	ZoneScoped
+
 	if ( r_norefresh->GetBool() ) {
 		return;
 	}
