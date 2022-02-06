@@ -160,16 +160,6 @@ Called only once at init
 */
 void R_InitGLState()
 {
-	glClearColor( DEFAULT_CLEARCOLOR );
-	glFrontFace( GL_CW );
-
-	glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
-
-	GL_TexEnv( GL_REPLACE );
-
-	glEnable( GL_PROGRAM_POINT_SIZE );
-	//glEnable( GL_FRAMEBUFFER_SRGB );
-
 #ifdef Q_DEBUG_GL
 
 	if ( GLEW_KHR_debug )
@@ -180,6 +170,14 @@ void R_InitGLState()
 	}
 
 #endif
+
+	glClearColor( DEFAULT_CLEARCOLOR );
+	glFrontFace( GL_CW );
+
+	GL_TexEnv( GL_REPLACE );
+
+	glEnable( GL_PROGRAM_POINT_SIZE );
+	//glEnable( GL_FRAMEBUFFER_SRGB );
 }
 
 /*

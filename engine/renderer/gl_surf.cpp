@@ -125,6 +125,8 @@ static gllightmapstate_t gl_lms;
 void R_SetCacheState(msurface_t *surf);
 void R_BuildLightMap(msurface_t *surf, byte *dest, int stride);
 
+static StaticCvar r_fastProfile( "r_fastProfile", "0", 0 );
+
 //static GLuint fuckedUpLightmapID;
 
 /*
@@ -208,7 +210,7 @@ static bool R_CullBox( const vec3_t mins, const vec3_t maxs )
 //
 void R_DrawBrushModel( entity_t *e )
 {
-#if 1
+#if 0
 #if 1
 	vec3_t		mins, maxs;
 	int			i;
@@ -259,10 +261,14 @@ void R_DrawBrushModel( entity_t *e )
 
 	using namespace DirectX;
 
+#if 0
 	XMMATRIX modelMatrix = XMMatrixMultiply(
 		XMMatrixRotationX( DEG2RAD( e->angles[ROLL] ) ) * XMMatrixRotationY( DEG2RAD( e->angles[PITCH] ) ) * XMMatrixRotationZ( DEG2RAD( e->angles[YAW] ) ),
 		XMMatrixTranslation( e->origin[0], e->origin[1], e->origin[2] )
 	);
+#else
+	XMMATRIX modelMatrix = XMMatrixIdentity();
+#endif
 
 	XMFLOAT4X4A modelMatrixStore;
 	XMStoreFloat4x4A( &modelMatrixStore, modelMatrix );
@@ -547,13 +553,10 @@ static void R_RecursiveWorldNode( worldNodeWork_t &work, const mnode_t *node )
 			const mleaf_t *leaf = (mleaf_t *)node;
 
 			// Check for door connected areas
-			if ( tr.refdef.areabits )
+			if ( !( tr.refdef.areabits[leaf->area >> 3] & ( 1 << ( leaf->area & 7 ) ) ) )
 			{
-				if ( !( tr.refdef.areabits[leaf->area >> 3] & ( 1 << ( leaf->area & 7 ) ) ) )
-				{
-					// not visible
-					return;
-				}
+				// not visible
+				return;
 			}
 
 			msurface_t **firstMarkSurface = r_worldmodel->marksurfaces + leaf->firstmarksurface;
@@ -608,8 +611,8 @@ static void R_RecursiveWorldNode( worldNodeWork_t &work, const mnode_t *node )
 
 		// draw stuff
 
-		msurface_t *firstSurface = r_worldmodel->surfaces + node->firstsurface;
-		msurface_t *lastSurface = firstSurface + node->numsurfaces;
+		const msurface_t *firstSurface = r_worldmodel->surfaces + node->firstsurface;
+		const msurface_t *lastSurface = firstSurface + node->numsurfaces;
 
 		for ( const msurface_t *surf = firstSurface; surf < lastSurface; ++surf )
 		{
@@ -700,6 +703,9 @@ void R_DrawWorld()
 		return;
 	}
 
+	// Code that doesn't set areabits will never get here
+	assert( tr.refdef.areabits );
+
 	currentmodel = r_worldmodel;
 
 	VectorCopy( tr.refdef.vieworg, modelorg );
@@ -732,8 +738,26 @@ void R_DrawWorld()
 		// Determine which leaves are in the PVS / areamask
 		R_MarkLeaves();
 
+		int64 start, end;
+
+		if ( r_fastProfile.GetBool() )
+		{
+			start = Time_Microseconds();
+		}
+
 		// This figures out what we need to render and builds the world lists
 		R_RecursiveWorldNode( work, r_worldmodel->nodes );
+
+		if ( r_fastProfile.GetBool() )
+		{
+			end = Time_Microseconds();
+
+			Cvar_SetBool( &r_fastProfile, false );
+
+			int64 timeTaken = end - start;
+
+			Com_Printf( "Spent %llu microseconds inside R_RecursiveWorldNode\n", timeTaken );
+		}
 
 		R_SquashAndUploadIndices( worldLists, work );
 	}

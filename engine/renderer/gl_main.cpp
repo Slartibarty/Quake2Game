@@ -316,13 +316,17 @@ static void R_DrawEntity( entity_t *e )
 			R_DrawStaticMeshFile( e );
 			break;
 		case mod_alias:
+#ifndef GL_USE_CORE_PROFILE
 			R_DrawAliasModel( e );
+#endif
 			break;
 		case mod_brush:
 			R_DrawBrushModel( e );
 			break;
 		case mod_sprite:
+#ifndef GL_USE_CORE_PROFILE
 			R_DrawSpriteModel( e );
+#endif
 			break;
 		default:
 			Com_Error( "Bad modeltype" );
@@ -611,16 +615,6 @@ static void R_SetupFrame()
 	}
 }
 
-// convert from our coordinate system (looking down X)
-// to OpenGL's coordinate system (looking down -Z)
-static const float s_flipMatrix[16]
-{
-	0, 0, -1, 0,
-	-1, 0, 0, 0,
-	0, 1, 0, 0,
-	0, 0, 0, 1
-};
-
 /*
 ========================
 R_SetupGL
@@ -634,41 +628,18 @@ static void R_SetupGL()
 
 	using namespace DirectX;
 
-#if 0
-
 	// projection matrix
 
 	XMMATRIX workMatrix = XMMatrixPerspectiveFovRH( DEG2RAD( tr.refdef.fov_y ), (float)tr.refdef.width / (float)tr.refdef.height, 4.0f, 4096.0f );
 	XMStoreFloat4x4A( &tr.projMatrix, workMatrix );
+
+#ifndef GL_USE_CORE_PROFILE
 
 	// send it to the fixed function pipeline
 	glMatrixMode( GL_PROJECTION );
 	glLoadMatrixf( (const GLfloat *)&tr.projMatrix );
 
 	// view matrix
-
-#if 0
-	vec3_t &viewOrg = tr.refdef.vieworg;
-	vec3_t &viewAng = tr.refdef.viewangles;
-
-	vec3 forward;
-	forward.x = cos( DEG2RAD( viewAng[YAW] ) ) * cos( DEG2RAD( viewAng[PITCH] ) );
-	forward.y = sin( DEG2RAD( viewAng[PITCH] ) );
-	forward.z = sin( DEG2RAD( viewAng[YAW] ) ) * cos( DEG2RAD( viewAng[PITCH] ) );
-	forward.NormalizeFast();
-
-	XMVECTOR eyePosition = XMVectorSet( viewOrg[0], viewOrg[1], viewOrg[2], 0.0f );
-	XMVECTOR focusPoint = XMVectorSet( viewOrg[0] + forward[0], viewOrg[1] + forward[1], viewOrg[2] + forward[2], 0.0f );
-	XMVECTOR upAxis = XMVectorSet( 0.0f, 0.0f, 1.0f, 0.0f );
-
-	workMatrix = XMMatrixLookAtRH( eyePosition, focusPoint, upAxis );
-
-	//XMMATRIX mulMatrix = XMMatrixSet( s_flipMatrix[0], s_flipMatrix[1], s_flipMatrix[2], s_flipMatrix[3], s_flipMatrix[4], s_flipMatrix[5], s_flipMatrix[6], s_flipMatrix[7], s_flipMatrix[8], s_flipMatrix[9], s_flipMatrix[10], s_flipMatrix[11], s_flipMatrix[12], s_flipMatrix[13], s_flipMatrix[14], s_flipMatrix[15] );
-
-	//workMatrix = XMMatrixMultiply( workMatrix, mulMatrix );
-
-	XMStoreFloat4x4A( &tr.viewMatrix, workMatrix );
-#endif
 
 	glMatrixMode( GL_MODELVIEW );
 
@@ -683,6 +654,23 @@ static void R_SetupGL()
 
 	// TODO: fucking matrices, do this with dxmath
 	glGetFloatv( GL_MODELVIEW_MATRIX, (GLfloat *)&tr.viewMatrix );
+
+#else
+
+	vec3_t &viewOrg = tr.refdef.vieworg;
+	vec3_t &viewAng = tr.refdef.viewangles;
+
+	vec3_t forward;
+
+	AngleVectors( viewAng, forward, nullptr, nullptr );
+
+	XMVECTOR eyePosition = XMVectorSet( viewOrg[0], viewOrg[1], viewOrg[2], 0.0f );
+	XMVECTOR focusPoint = XMVectorSet( viewOrg[0] + forward[0], viewOrg[1] + forward[1], viewOrg[2] + forward[2], 0.0f );
+	XMVECTOR upAxis = XMVectorSet( 0.0f, 0.0f, 1.0f, 0.0f );
+
+	workMatrix = XMMatrixLookAtRH( eyePosition, focusPoint, upAxis );
+
+	XMStoreFloat4x4A( &tr.viewMatrix, workMatrix );
 
 #endif
 
@@ -706,7 +694,9 @@ static void R_SetupGL()
 
 	glDisable( GL_BLEND );
 	glEnable( GL_DEPTH_TEST );
+#ifndef GL_USE_CORE_PROFILE
 	glEnable( GL_TEXTURE_2D );
+#endif
 }
 
 /*
@@ -751,7 +741,7 @@ static void R_RenderView( refdef_t *fd )
 
 	if ( r_finish->GetBool() ) {
 		// Block until we're done with the last frame? Weird
-		glFinish();
+		//glFinish();
 	}
 
 	R_SetupFrame();

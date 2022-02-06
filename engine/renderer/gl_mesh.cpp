@@ -39,43 +39,28 @@ static const float r_avertexnormal_dots[SHADEDOT_QUANT][256]{
 
 static const float *shadedots = r_avertexnormal_dots[0];
 
-static void GL_LerpVerts( int nverts, dtrivertx_t *v, dtrivertx_t *ov, dtrivertx_t *verts, float *lerp, float move[3], float frontv[3], float backv[3] )
+static void GL_LerpVerts(
+	int numVerts, const dtrivertx_t *verts, const dtrivertx_t *oldVerts,
+	const vec3_t move, const vec3_t frontv, const vec3_t backv,
+	vec4_t lerp )
 {
-	int i;
-
-	//PMM -- added RF_SHELL_DOUBLE, RF_SHELL_HALF_DAM
-	if ( currententity->flags & ( RF_SHELL_RED | RF_SHELL_GREEN | RF_SHELL_BLUE | RF_SHELL_DOUBLE | RF_SHELL_HALF_DAM) )
+	for ( int i = 0; i < numVerts; ++i, ++verts, ++oldVerts, lerp += 4 )
 	{
-		for (i=0 ; i < nverts; i++, v++, ov++, lerp+=4 )
-		{
-			const float *normal = r_avertexnormals[verts[i].lightnormalindex];
-
-			lerp[0] = move[0] + ov->v[0]*backv[0] + v->v[0]*frontv[0] + normal[0] * POWERSUIT_SCALE;
-			lerp[1] = move[1] + ov->v[1]*backv[1] + v->v[1]*frontv[1] + normal[1] * POWERSUIT_SCALE;
-			lerp[2] = move[2] + ov->v[2]*backv[2] + v->v[2]*frontv[2] + normal[2] * POWERSUIT_SCALE; 
-		}
+		lerp[0] = move[0] + oldVerts->v[0]*backv[0] + verts->v[0]*frontv[0];
+		lerp[1] = move[1] + oldVerts->v[1]*backv[1] + verts->v[1]*frontv[1];
+		lerp[2] = move[2] + oldVerts->v[2]*backv[2] + verts->v[2]*frontv[2];
 	}
-	else
-	{
-		for (i=0 ; i < nverts; i++, v++, ov++, lerp+=4)
-		{
-			lerp[0] = move[0] + ov->v[0]*backv[0] + v->v[0]*frontv[0];
-			lerp[1] = move[1] + ov->v[1]*backv[1] + v->v[1]*frontv[1];
-			lerp[2] = move[2] + ov->v[2]*backv[2] + v->v[2]*frontv[2];
-		}
-	}
-
 }
 
 //
 // interpolates between two frames and origins
 // FIXME: batch lerp all vertexes
 //
-static void GL_DrawAliasFrameLerp( dmdl_t *paliashdr, float backlerp )
+static void GL_DrawAliasFrameLerp( const dmdl_t *paliashdr, float backlerp )
 {
 	float 	l;
 	daliasframe_t	*frame, *oldframe;
-	dtrivertx_t	*v, *ov, *verts;
+	dtrivertx_t	*ov, *verts;
 	int		*order;
 	int		count;
 	float	frontlerp;
@@ -88,7 +73,7 @@ static void GL_DrawAliasFrameLerp( dmdl_t *paliashdr, float backlerp )
 
 	frame = (daliasframe_t *)((byte *)paliashdr + paliashdr->ofs_frames 
 		+ currententity->frame * paliashdr->framesize);
-	verts = v = frame->verts;
+	verts = frame->verts;
 
 	oldframe = (daliasframe_t *)((byte *)paliashdr + paliashdr->ofs_frames 
 		+ currententity->oldframe * paliashdr->framesize);
@@ -96,186 +81,152 @@ static void GL_DrawAliasFrameLerp( dmdl_t *paliashdr, float backlerp )
 
 	order = (int *)((byte *)paliashdr + paliashdr->ofs_glcmds);
 
-//	glTranslatef (frame->translate[0], frame->translate[1], frame->translate[2]);
-//	glScalef (frame->scale[0], frame->scale[1], frame->scale[2]);
-
-	if (currententity->flags & RF_TRANSLUCENT)
+	if ( currententity->flags & RF_TRANSLUCENT )
+	{
 		alpha = currententity->alpha;
+	}
 	else
+	{
 		alpha = 1.0f;
-
-	// PMM - added double shell
-	if ( currententity->flags & ( RF_SHELL_RED | RF_SHELL_GREEN | RF_SHELL_BLUE | RF_SHELL_DOUBLE | RF_SHELL_HALF_DAM) )
-		glDisable( GL_TEXTURE_2D );
+	}
 
 	frontlerp = 1.0f - backlerp;
 
 	// move should be the delta back to the previous frame * backlerp
-	VectorSubtract (currententity->oldorigin, currententity->origin, delta);
-	AngleVectors (currententity->angles, vectors[0], vectors[1], vectors[2]);
+	VectorSubtract( currententity->oldorigin, currententity->origin, delta );
+	AngleVectors( currententity->angles, vectors[0], vectors[1], vectors[2] );
 
-	move[0] = DotProduct (delta, vectors[0]);	// forward
-	move[1] = -DotProduct (delta, vectors[1]);	// left
-	move[2] = DotProduct (delta, vectors[2]);	// up
+	move[0] = DotProduct( delta, vectors[0] );		// forward
+	move[1] = -DotProduct( delta, vectors[1] );		// left
+	move[2] = DotProduct( delta, vectors[2] );		// up
 
-	VectorAdd (move, oldframe->translate, move);
+	VectorAdd( move, oldframe->translate, move );
 
-	for (i=0 ; i<3 ; i++)
+	for ( i = 0; i < 3; i++ )
 	{
-		move[i] = backlerp*move[i] + frontlerp*frame->translate[i];
+		move[i] = backlerp * move[i] + frontlerp * frame->translate[i];
 	}
 
-	for (i=0 ; i<3 ; i++)
+	for ( i = 0; i < 3; i++ )
 	{
-		frontv[i] = frontlerp*frame->scale[i];
-		backv[i] = backlerp*oldframe->scale[i];
+		frontv[i] = frontlerp * frame->scale[i];
+		backv[i] = backlerp * oldframe->scale[i];
 	}
 
 	lerp = s_lerped[0];
 
-	GL_LerpVerts( paliashdr->num_xyz, v, ov, verts, lerp, move, frontv, backv );
+	GL_LerpVerts( paliashdr->num_xyz, verts, ov, move, frontv, backv, lerp );
 
 	if ( r_vertex_arrays->GetBool() )
 	{
-		static float colorArray[MAX_VERTS*4];
+		static float colorArray[MAX_VERTS * 4];
 
 		glEnableClientState( GL_VERTEX_ARRAY );
 		glVertexPointer( 3, GL_FLOAT, 16, s_lerped );	// padded for SIMD
 
-//		if ( currententity->flags & ( RF_SHELL_RED | RF_SHELL_GREEN | RF_SHELL_BLUE ) )
-		// PMM - added double damage shell
-		if ( currententity->flags & ( RF_SHELL_RED | RF_SHELL_GREEN | RF_SHELL_BLUE | RF_SHELL_DOUBLE | RF_SHELL_HALF_DAM) )
-		{
-			glColor4f( shadelight[0], shadelight[1], shadelight[2], alpha );
-		}
-		else
-		{
-			glEnableClientState( GL_COLOR_ARRAY );
-			glColorPointer( 3, GL_FLOAT, 0, colorArray );
+		glEnableClientState( GL_COLOR_ARRAY );
+		glColorPointer( 3, GL_FLOAT, 0, colorArray );
 
-			//
-			// pre light everything
-			//
-			for ( i = 0; i < paliashdr->num_xyz; i++ )
-			{
-				float l = shadedots[verts[i].lightnormalindex];
+		//
+		// pre light everything
+		//
+		for ( i = 0; i < paliashdr->num_xyz; i++ )
+		{
+			float l = shadedots[verts[i].lightnormalindex];
 
-				colorArray[i*3+0] = l * shadelight[0];
-				colorArray[i*3+1] = l * shadelight[1];
-				colorArray[i*3+2] = l * shadelight[2];
-			}
+			colorArray[i * 3 + 0] = l * shadelight[0];
+			colorArray[i * 3 + 1] = l * shadelight[1];
+			colorArray[i * 3 + 2] = l * shadelight[2];
 		}
 
 		if ( GLEW_EXT_compiled_vertex_array && r_ext_compiled_vertex_array->GetBool() )
+		{
 			glLockArraysEXT( 0, paliashdr->num_xyz );
+		}
 
-		while (1)
+		while ( 1 )
 		{
 			// get the vertex count and primitive type
 			count = *order++;
-			if (!count)
-				break;		// done
-			if (count < 0)
+			if ( !count )
+			{
+				// done
+				break;
+			}
+
+			if ( count < 0 )
 			{
 				count = -count;
-				glBegin (GL_TRIANGLE_FAN);
+				glBegin( GL_TRIANGLE_FAN );
 			}
 			else
 			{
-				glBegin (GL_TRIANGLE_STRIP);
+				glBegin( GL_TRIANGLE_STRIP );
 			}
 
-			// PMM - added double damage shell
-			if ( currententity->flags & ( RF_SHELL_RED | RF_SHELL_GREEN | RF_SHELL_BLUE | RF_SHELL_DOUBLE | RF_SHELL_HALF_DAM) )
+			do
 			{
-				do
-				{
-					index_xyz = order[2];
-					order += 3;
+				// texture coordinates come from the draw list
+				glTexCoord2f( ( (float *)order )[0], ( (float *)order )[1] );
+				index_xyz = order[2];
 
-					glVertex3fv( s_lerped[index_xyz] );
+				order += 3;
 
-				} while (--count);
-			}
-			else
-			{
-				do
-				{
-					// texture coordinates come from the draw list
-					glTexCoord2f (((float *)order)[0], ((float *)order)[1]);
-					index_xyz = order[2];
+				// normals and vertexes come from the frame list
+				//l = shadedots[verts[index_xyz].lightnormalindex];
 
-					order += 3;
+				//glColor4f (l* shadelight[0], l*shadelight[1], l*shadelight[2], alpha);
+				glArrayElement( index_xyz );
 
-					// normals and vertexes come from the frame list
-//					l = shadedots[verts[index_xyz].lightnormalindex];
-					
-//					glColor4f (l* shadelight[0], l*shadelight[1], l*shadelight[2], alpha);
-					glArrayElement( index_xyz );
+			} while ( --count );
 
-				} while (--count);
-			}
-			glEnd ();
+			glEnd();
 		}
 
 		if ( GLEW_EXT_compiled_vertex_array && r_ext_compiled_vertex_array->GetBool() )
+		{
 			glUnlockArraysEXT();
+		}
 	}
 	else
 	{
-		while (1)
+		while ( 1 )
 		{
 			// get the vertex count and primitive type
 			count = *order++;
-			if (!count)
-				break;		// done
-			if (count < 0)
+			if ( !count )
+			{
+				// done
+				break;
+			}
+
+			if ( count < 0 )
 			{
 				count = -count;
-				glBegin (GL_TRIANGLE_FAN);
+				glBegin( GL_TRIANGLE_FAN );
 			}
 			else
 			{
-				glBegin (GL_TRIANGLE_STRIP);
+				glBegin( GL_TRIANGLE_STRIP );
 			}
 
-			if ( currententity->flags & ( RF_SHELL_RED | RF_SHELL_GREEN | RF_SHELL_BLUE ) )
+			do
 			{
-				do
-				{
-					index_xyz = order[2];
-					order += 3;
+				// texture coordinates come from the draw list
+				glTexCoord2f( ( (float *)order )[0], ( (float *)order )[1] );
+				index_xyz = order[2];
+				order += 3;
 
-					glColor4f( shadelight[0], shadelight[1], shadelight[2], alpha);
-					glVertex3fv (s_lerped[index_xyz]);
+				// normals and vertexes come from the frame list
+				l = shadedots[verts[index_xyz].lightnormalindex];
 
-				} while (--count);
-			}
-			else
-			{
-				do
-				{
-					// texture coordinates come from the draw list
-					glTexCoord2f (((float *)order)[0], ((float *)order)[1]);
-					index_xyz = order[2];
-					order += 3;
+				glColor4f( l * shadelight[0], l * shadelight[1], l * shadelight[2], alpha );
+				glVertex3fv( s_lerped[index_xyz] );
+			} while ( --count );
 
-					// normals and vertexes come from the frame list
-					l = shadedots[verts[index_xyz].lightnormalindex];
-					
-					glColor4f (l* shadelight[0], l*shadelight[1], l*shadelight[2], alpha);
-					glVertex3fv (s_lerped[index_xyz]);
-				} while (--count);
-			}
-
-			glEnd ();
+			glEnd();
 		}
 	}
-
-//	if ( currententity->flags & ( RF_SHELL_RED | RF_SHELL_GREEN | RF_SHELL_BLUE ) )
-	// PMM - added double damage shell
-	if ( currententity->flags & ( RF_SHELL_RED | RF_SHELL_GREEN | RF_SHELL_BLUE | RF_SHELL_DOUBLE | RF_SHELL_HALF_DAM) )
-		glEnable( GL_TEXTURE_2D );
 }
 
 //
@@ -630,13 +581,7 @@ void R_DrawAliasModel( entity_t *e )
 	GL_ActiveTexture( GL_TEXTURE0 );
 	skin->Bind();
 
-	// Cull front faces for now
-	//glCullFace( GL_FRONT );
-
-	GL_DrawAliasFrameLerp (paliashdr, currententity->backlerp);
-
-	// Return to culling back faces
-	//glCullFace( GL_BACK );
+	GL_DrawAliasFrameLerp( paliashdr, currententity->backlerp );
 
 	// Reset any colour stuff we might've done
 	glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );

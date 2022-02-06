@@ -48,10 +48,12 @@ newoption {
 
 function LinkToProfiler()
 	if _OPTIONS["profile"] then
-		includedirs { "thirdparty/steamworks/include" }
-		defines { "TRACY_ENABLE" }
-		files { "thirdparty/tracy/TracyClient.cpp" }
-		editandcontinue "Off"
+		-- Don't profile in debug...
+		filter( filter_rel_or_rtl )
+			defines { "TRACY_ENABLE" }
+			files { "thirdparty/tracy/TracyClient.cpp" }
+			editandcontinue "Off"
+		filter {}
 	end
 end
 

@@ -29,6 +29,9 @@ static_assert( DIRECTX_MATH_VERSION >= 316 );
 
 #define MAT_EXT ".mat"
 
+// Uncomment to disable codelines that touch deprecated functions
+#define GL_USE_CORE_PROFILE
+
 //=============================================================================
 
 #include "gl_model.h"
