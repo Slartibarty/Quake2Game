@@ -569,7 +569,7 @@ void Cvar_AddEarlyCommands( int argc, char **argv )
 	{
 		if ( Q_strcmp( argv[i], "+set" ) == 0 && ( i + 2 ) < argc )
 		{
-			Cvar_Get( argv[i + 1], argv[i + 2], 0, nullptr );
+			Cvar_FindSetString( argv[i + 1], argv[i + 2] );
 			i += 2;
 		}
 	}
