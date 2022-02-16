@@ -641,14 +641,6 @@ SCR_BeginLoadingPlaque
 */
 void SCR_BeginLoadingPlaque()
 {
-	// TEMP
-	// TEMP
-	// TEMP
-	// TEMP
-	// TEMP
-	// TEMP
-	return;
-
 	S_StopAllSounds();
 	cl.sound_prepped = false;		// don't play ambients
 	CDAudio_Stop();
