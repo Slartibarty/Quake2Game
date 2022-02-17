@@ -796,6 +796,4 @@ void R_DrawStaticMeshFile( entity_t *e )
 
 	// Sigh
 	glFrontFace( GL_CW );
-
-	GL_UseProgram( 0 );
 }
