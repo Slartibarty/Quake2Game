@@ -407,6 +407,8 @@ void ExitLevel (void)
 
 }
 
+static cvar_t *crapcvar;
+
 /*
 ================
 G_RunFrame
@@ -418,6 +420,11 @@ void G_RunFrame (void)
 {
 	int		i;
 	edict_t	*ent;
+
+	if ( !crapcvar )
+	{
+		crapcvar = gi.cvar( "crapcvar", "0", 0 );
+	}
 
 	level.framenum++;
 	level.time = level.framenum*FRAMETIME;
@@ -474,5 +481,7 @@ void G_RunFrame (void)
 
 	// build the playerstate_t structures for all players
 	ClientEndServerFrames ();
+
+	Phys_Simulate( FRAMETIME );
 }
 

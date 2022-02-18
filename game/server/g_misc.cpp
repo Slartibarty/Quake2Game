@@ -158,6 +158,8 @@ void ThrowGib (edict_t *self, const char *gibname, int damage, int type)
 	gib->think = G_FreeEdict;
 	gib->nextthink = level.time + 10 + random()*10;
 
+	Phys_SetupPhysicsForEntity( gib, gi.physSystem->CreateBodySphere( gib->s.origin, gib->s.angles, 8.0f ) );
+
 	gi.linkentity (gib);
 }
 
@@ -1854,4 +1856,3 @@ void SP_misc_teleporter_dest (edict_t *ent)
 	VectorSet (ent->maxs, 32, 32, -16);
 	gi.linkentity (ent);
 }
-

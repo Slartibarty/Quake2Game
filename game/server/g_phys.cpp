@@ -436,7 +436,8 @@ static bool SV_Push( edict_t *pusher, vec3_t move, vec3_t amove )
 		if ( check->movetype == MOVETYPE_PUSH
 			|| check->movetype == MOVETYPE_STOP
 			|| check->movetype == MOVETYPE_NONE
-			|| check->movetype == MOVETYPE_NOCLIP )
+			|| check->movetype == MOVETYPE_NOCLIP
+			|| check->movetype == MOVETYPE_PHYSICS )
 			continue;
 
 		if ( !check->area.prev )
@@ -933,6 +934,7 @@ void G_RunEntity( edict_t *ent )
 		SV_Physics_Pusher( ent );
 		break;
 	case MOVETYPE_NONE:
+	case MOVETYPE_PHYSICS:
 		SV_Physics_None( ent );
 		break;
 	case MOVETYPE_NOCLIP:

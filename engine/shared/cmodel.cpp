@@ -6,6 +6,8 @@
 
 #include <vector>
 
+#include "physics.h"
+
 #include "cmodel.h"
 
 struct cnode_t
@@ -634,6 +636,93 @@ static void CMod_LoadEntityString( byte *cmod_base, lump_t *l )
 	memcpy( cm.entitystring.Base(), cmod_base + l->fileofs, count );
 }
 
+//
+// Builds a horrid collision mesh for Jolt
+//
+static void CM_BuildCollisionMesh( const byte *base )
+{
+	const dheader_t *header = (const dheader_t *)base;
+
+	JPH::VertexList outVertexList;
+	JPH::IndexedTriangleList outIndexList;
+
+	std::vector<uint16> faceIndexList;
+	faceIndexList.reserve( 16 );
+
+	// Vertices
+	{
+		const lump_t *vertexLump = header->lumps + LUMP_VERTEXES;
+		const dvertex_t *vertices = (const dvertex_t *)( base + vertexLump->fileofs );
+		const int numVertices = vertexLump->filelen / sizeof( dvertex_t );
+
+		outVertexList.resize( numVertices );
+
+#if 1
+		memcpy( outVertexList.data(), vertices, vertexLump->filelen );
+#else
+		for ( int i = 0; i < numVertices; ++i )
+		{
+			outVertexList[i].x = vertices[i].point[0];
+			outVertexList[i].y = vertices[i].point[2];
+			outVertexList[i].z = vertices[i].point[1];
+		}
+#endif
+	}
+
+	// Indices
+	{
+		const lump_t *modelLump = header->lumps + LUMP_MODELS;
+		const dmodel_t *models = (const dmodel_t *)( base + modelLump->fileofs );
+
+		const lump_t *edgeLump = header->lumps + LUMP_EDGES;
+		const dedge_t *edges = (const dedge_t *)( base + edgeLump->fileofs );
+
+		const lump_t *surfEdgeLump = header->lumps + LUMP_SURFEDGES;
+		const int *surfEdges = (const int *)( base + surfEdgeLump->fileofs );
+
+		const lump_t *faceLump = header->lumps + LUMP_FACES;
+		const dface_t *faces = (const dface_t *)( base + faceLump->fileofs );
+
+		const int numFaces = faceLump->filelen / sizeof( dface_t ); // models->numfaces
+
+		for ( int iFace = 0; iFace < numFaces; ++iFace )
+		{
+			const dface_t *face = faces + iFace;
+
+			const int firstEdge = face->firstedge;
+			const int numEdges = face->numedges;
+
+			for ( int iEdge = 0; iEdge < numEdges; ++iEdge )
+			{
+				const int surfEdge = surfEdges[face->firstedge + iEdge];
+				const int startIndex = surfEdge > 0 ? 0 : 1;
+
+				const dedge_t *edge = edges + abs( surfEdge );
+
+				faceIndexList.push_back( edge->v[startIndex] );
+			}
+
+			const int numTriangles = numEdges - 2;
+
+			for ( int i = 0; i < numTriangles; ++i )
+			{
+				JPH::IndexedTriangle &triangle = outIndexList.emplace_back();
+
+				// Jolt expects CCW I think
+				triangle.mIdx[0] = faceIndexList[i + 2];
+				triangle.mIdx[1] = faceIndexList[i + 1];
+				triangle.mIdx[2] = faceIndexList[0];
+				triangle.mMaterialIndex = 0;
+			}
+
+			faceIndexList.clear();
+		}
+	}
+
+	Physics::AddWorld( outVertexList, outIndexList );
+}
+
+//=================================================================================================
 
 /*
 =================
@@ -703,6 +792,8 @@ cmodel_t *CM_LoadMap( const char *name, bool clientload, unsigned *checksum )
 	CMod_LoadAreaPortals( buf, &header->lumps[LUMP_AREAPORTALS] );
 	CMod_LoadVisibility( buf, &header->lumps[LUMP_VISIBILITY] );
 	CMod_LoadEntityString( buf, &header->lumps[LUMP_ENTITIES] );
+
+	CM_BuildCollisionMesh( buf );
 
 	FileSystem::FreeFile( buf );
 
@@ -1866,10 +1957,14 @@ bool CM_HeadnodeVisible (int nodenum, byte *visbits)
 
 void CM_Init()
 {
+	Physics::Init();
+
 	cm_noAreas = Cvar_Get( "cm_noAreas", "0", 0, "" );
 }
 
 void CM_Shutdown()
 {
 	cm.Free();
+
+	Physics::Shutdown();
 }

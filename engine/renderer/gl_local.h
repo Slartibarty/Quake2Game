@@ -30,12 +30,15 @@ static_assert( DIRECTX_MATH_VERSION >= 316 );
 #define MAT_EXT ".mat"
 
 // Uncomment to disable codelines that touch deprecated functions
-#define GL_USE_CORE_PROFILE
+//#define GL_USE_CORE_PROFILE
+
+//#define NO_JOLT_DEBUG
 
 //=============================================================================
 
 #include "gl_model.h"
 #include "gl_jaffamodel.h"
+#include "gl_iqm.h"
 
 #define BACKFACE_EPSILON	0.01f
 
@@ -444,16 +447,42 @@ void	R_DrawSkyBox();
 struct glProgs_t
 {
 	GLuint guiProg;
+	GLuint lineProg;
 	GLuint particleProg;
+	GLuint aliasProg;
+	GLuint iqmProg;
 	GLuint smfMeshProg;
 	GLuint worldProg;
 	GLuint debugMeshProg;
+	GLuint joltProg;
 };
 
 extern glProgs_t glProgs;
 
 void	Shaders_Init();
 void	Shaders_Shutdown();
+
+/*
+===============================================================================
+
+	gl_joltrender.cpp
+
+===============================================================================
+*/
+
+#ifndef NO_JOLT_DEBUG
+
+void	R_JoltInitRenderer();
+void	R_JoltShutdownRenderer();
+void	R_JoltDrawBodies();
+
+#else
+
+#define R_JoltInitRenderer()
+#define R_JoltShutdownRenderer()
+#define R_JoltDrawBodies()
+
+#endif
 
 /*
 ===============================================================================

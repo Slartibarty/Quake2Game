@@ -2,6 +2,8 @@
 
 #include "sv_local.h"
 
+#include "../shared/physics.h"
+
 game_export_t *ge;
 
 /*
@@ -379,6 +381,7 @@ void SV_InitGameProgs()
 	gi.AreasConnected = CM_AreasConnected;
 
 	gi.fileSystem = &g_fileSystem;
+	gi.physSystem = g_physSystem;
 
 	ge = (game_export_t *)Sys_GetGameAPI( &gi );
 

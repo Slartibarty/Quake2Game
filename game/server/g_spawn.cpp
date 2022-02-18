@@ -125,6 +125,8 @@ void SP_monster_ogre( edict_t *self );
 void SP_monster_army( edict_t *self );
 void SP_monster_dog( edict_t *self );
 
+// Physics Test
+void Spawn_PhysicsTest( edict_t *ent );
 
 struct spawn_t
 {
@@ -257,7 +259,11 @@ static const spawn_t g_spawns[]
 
 	{"monster_ogre", SP_monster_ogre},
 	{"monster_army", SP_monster_army},
-	{"monster_dog", SP_monster_dog}
+	{"monster_dog", SP_monster_dog},
+
+	// Physics Test
+
+	{"phystest", Spawn_PhysicsTest},
 
 };
 

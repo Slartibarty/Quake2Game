@@ -3,7 +3,6 @@
 #pragma once
 
 #include "../../common/q_shared.h"
-#include "../../common/filesystem_interface.h"
 
 #ifdef _WIN32
 #include <malloc.h>
@@ -185,7 +184,9 @@ enum movetype_t
 	MOVETYPE_FLY,
 	MOVETYPE_TOSS,			// gravity
 	MOVETYPE_FLYMISSILE,	// extra size to monsters
-	MOVETYPE_BOUNCE
+	MOVETYPE_BOUNCE,
+
+	MOVETYPE_PHYSICS		// rigid body driven
 };
 
 
@@ -654,25 +655,25 @@ void Touch_Item (edict_t *ent, edict_t *other, cplane_t *plane, csurface_t *surf
 // g_utils.c
 //
 qboolean	KillBox (edict_t *ent);
-void	G_ProjectSource (vec3_t point, vec3_t distance, vec3_t forward, vec3_t right, vec3_t result);
-edict_t *G_Find (edict_t *from, int fieldofs, const char *match);
-edict_t *findradius (edict_t *from, vec3_t org, float rad);
-edict_t *G_PickTarget (const char *targetname);
-void	G_UseTargets (edict_t *ent, edict_t *activator);
-void	G_SetMovedir (vec3_t angles, vec3_t movedir);
+void		G_ProjectSource (vec3_t point, vec3_t distance, vec3_t forward, vec3_t right, vec3_t result);
+edict_t *	G_Find (edict_t *from, int fieldofs, const char *match);
+edict_t *	findradius (edict_t *from, vec3_t org, float rad);
+edict_t *	G_PickTarget (const char *targetname);
+void		G_UseTargets (edict_t *ent, edict_t *activator);
+void		G_SetMovedir (vec3_t angles, vec3_t movedir);
 
-void	G_InitEdict (edict_t *e);
-edict_t	*G_Spawn (void);
-void	G_FreeEdict (edict_t *e);
+void		G_InitEdict (edict_t *e);
+edict_t	*	G_Spawn (void);
+void		G_FreeEdict (edict_t *e);
 
-void	G_TouchTriggers (edict_t *ent);
-void	G_TouchSolids (edict_t *ent);
+void		G_TouchTriggers (edict_t *ent);
+void		G_TouchSolids (edict_t *ent);
 
-float	*tv (float x, float y, float z);
-char	*vtos (vec3_t v);
+float *		tv (float x, float y, float z);
+char *		vtos (vec3_t v);
 
-float vectoyaw( const vec3_t vec );
-void vectoangles( const vec3_t vec, vec3_t angles );
+float		vectoyaw( const vec3_t vec );
+void		vectoangles( const vec3_t vec, vec3_t angles );
 
 //
 // g_combat.c
@@ -839,6 +840,12 @@ void UpdateChaseCam(edict_t *ent);
 void ChaseNext(edict_t *ent);
 void ChasePrev(edict_t *ent);
 void GetChaseTarget(edict_t *ent);
+
+//
+// g_joltphysics.cpp
+//
+void Phys_Simulate( float deltaTime );
+void Phys_SetupPhysicsForEntity( edict_t *ent, bodyID_t bodyID );
 
 //============================================================================
 
@@ -1017,11 +1024,13 @@ struct edict_t
 	int			clipmask;
 	edict_t		*owner;
 
+	//================================
 
 	// DO NOT MODIFY ANYTHING ABOVE THIS, THE SERVER
 	// EXPECTS THE FIELDS IN THAT ORDER!
 
 	//================================
+
 	int			movetype;
 	int			flags;
 
@@ -1136,4 +1145,7 @@ struct edict_t
 	// common data blocks
 	moveinfo_t		moveinfo;
 	monsterinfo_t	monsterinfo;
+
+	// physics
+	bodyID_t	bodyID;
 };

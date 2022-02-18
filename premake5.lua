@@ -70,6 +70,11 @@ function LinkToDistro()
 	end
 end
 
+function LinkToJolt()
+	sysincludedirs { "thirdparty/JoltPhysics/Jolt" }
+	defines { "JPH_STAT_COLLECTOR", "JPH_PROFILE_ENABLED", "JPH_DEBUG_RENDERER", "JPH_FLOATING_POINT_EXCEPTIONS_ENABLED" }
+end
+
 -- Workspace definition -------------------------------------------------------
 
 workspace "jaffaquake"
@@ -381,6 +386,7 @@ project "engine"
 
 	LinkToDistro()
 	LinkToProfiler()
+	LinkToJolt()
 
 	disablewarnings { "4244", "4267" }
 
@@ -866,8 +872,6 @@ project "libpng"
 		"thirdparty/libpng_config/pnglibconf.h"
 	}
 
-if not _OPTIONS["exclude-utils"] then
-
 	project "meshoptimizer"
 		kind "StaticLib"
 		targetname "meshoptimizer"
@@ -879,8 +883,6 @@ if not _OPTIONS["exclude-utils"] then
 			meshoptimizer_public,
 			meshoptimizer_sources,
 		}
-
-end
 
 --[[
 project "freetype"

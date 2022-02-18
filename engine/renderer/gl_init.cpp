@@ -318,6 +318,8 @@ void R_Restart()
 
 	GL_ShutdownImages();
 
+	R_JoltShutdownRenderer();
+
 	R_DestroyDebugMesh();
 
 	Shaders_Shutdown();
@@ -407,6 +409,8 @@ bool R_Init()
 
 	R_CreateDebugMesh();
 
+	R_JoltInitRenderer();
+
 	GL_InitImages();
 
 	Mod_Init();
@@ -432,6 +436,8 @@ void R_Shutdown()
 	Mod_FreeAll();
 
 	GL_ShutdownImages();
+
+	R_JoltShutdownRenderer();
 
 	R_DestroyDebugMesh();
 

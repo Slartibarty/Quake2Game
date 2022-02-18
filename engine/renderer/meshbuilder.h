@@ -56,10 +56,10 @@ struct guiRect_t
 };
 
 template< typename index_t >
-class qGUIMeshBuilder_Base
+class GUIMeshBuilder_Base
 {
 public:
-	qGUIMeshBuilder_Base()
+	GUIMeshBuilder_Base()
 	{
 		// reserve 128 quads
 		m_elements.reserve( 128 );
@@ -150,7 +150,7 @@ private:
 
 };
 
-using qGUIMeshBuilder = qGUIMeshBuilder_Base< uint16 >;
+using GUIMeshBuilder = GUIMeshBuilder_Base< uint16 >;
 
 /*
 ===================================================================================================
@@ -173,10 +173,10 @@ struct debugVertex_t
 };
 
 template< typename index_t >
-class qDebugMeshBuilder
+class DebugMeshBuilder
 {
 public:
-	qDebugMeshBuilder()
+	DebugMeshBuilder()
 	{
 		m_vertices.reserve( 128 );
 	}

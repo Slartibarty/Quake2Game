@@ -3,6 +3,9 @@
 
 #pragma once
 
+#include "../../common/filesystem_interface.h"
+#include "../../common/physics_interface.h"
+
 #define	GAME_API_VERSION	3
 
 // edict->svflags
@@ -157,6 +160,7 @@ struct game_import_t
 	void	(*DebugGraph) (float value, uint32 color);
 
 	IFileSystem *fileSystem;
+	IPhysicsSystem *physSystem;
 };
 
 //

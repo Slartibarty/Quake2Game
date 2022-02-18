@@ -581,10 +581,12 @@ void R_DrawAliasModel( entity_t *e )
 	GL_ActiveTexture( GL_TEXTURE0 );
 	skin->Bind();
 
+	GL_UseProgram( 0 );
+	glEnable( GL_TEXTURE_2D );
+
 	GL_DrawAliasFrameLerp( paliashdr, currententity->backlerp );
 
-	// Reset any colour stuff we might've done
-	glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
+	glDisable( GL_TEXTURE_2D );
 
 	//R_DrawBounds( mins, maxs );
 

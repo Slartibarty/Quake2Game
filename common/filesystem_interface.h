@@ -36,7 +36,7 @@ enum fsSeek_t
 
 // DLLs access the filesystem through this minimal interface
 
-class IFileSystem
+abstract_class IFileSystem
 {
 public:
 	virtual fsHandle_t		OpenFileRead( const char *filename ) = 0;

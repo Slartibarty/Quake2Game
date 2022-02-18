@@ -8,6 +8,8 @@
 
 #include "gl_local.h"
 
+#include "iqm.h"
+
 #define	MAX_MOD_KNOWN 1024
 
 // delete me
@@ -269,6 +271,13 @@ model_t *Mod_ForName( const char *name, bool crash )
 		break;
 
 	default:
+		if ( memcmp( pBuffer, IQM_MAGIC, sizeof( IQM_MAGIC ) ) == 0 )
+		{
+			loadmodel->extradata = Hunk_Begin( 0x10000 );
+			Mod_LoadIQM( pMod, pBuffer, bufferLength );
+			break;
+		}
+
 		Com_Errorf( "Mod_NumForName: unknown FourCC for %s", pMod->name );
 		break;
 	}
@@ -1024,7 +1033,7 @@ void Mod_LoadBrushModel( model_t *pMod, void *pBuffer, int bufferLength )
 	Mod_LoadSubmodels		( header->lumps + LUMP_MODELS );
 
 	// Parse lights out of the entity data... This uses the client bsp...
-	Mod_ParseLights( CM_EntityString() );
+	//Mod_ParseLights( CM_EntityString() );
 
 	// Regular and alternate animation
 	pMod->numframes = 2;
@@ -1414,6 +1423,9 @@ model_t *R_RegisterModel( const char *name )
 //PGM
 			pModel->numframes = pAliasHeader->num_frames;
 //PGM
+			break;
+
+		case mod_iqm:
 			break;
 
 		case mod_sprite:

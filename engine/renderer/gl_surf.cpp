@@ -21,7 +21,7 @@
 
 // Comment out to disable meshoptimizer optimisations
 // TODO: Reconsider how this can be used
-//#define USE_MESHOPT
+#define USE_MESHOPT
 
 // Experimental atlasing stuff
 //#define USE_XATLAS
@@ -213,7 +213,6 @@ void R_DrawBrushModel( entity_t *e )
 #if 0
 #if 1
 	vec3_t		mins, maxs;
-	int			i;
 	bool		rotated;
 
 	if ( currentmodel->numMeshes == 0 )
@@ -226,7 +225,7 @@ void R_DrawBrushModel( entity_t *e )
 	if ( e->angles[0] || e->angles[1] || e->angles[2] )
 	{
 		rotated = true;
-		for ( i = 0; i < 3; ++i )
+		for ( uint i = 0; i < 3; ++i )
 		{
 			mins[i] = e->origin[i] - currentmodel->radius;
 			maxs[i] = e->origin[i] + currentmodel->radius;
@@ -279,7 +278,7 @@ void R_DrawBrushModel( entity_t *e )
 
 	GL_UseProgram( glProgs.worldProg );
 
-	//glUniformMatrix4fv( 4, 1, GL_FALSE, (const GLfloat *)&modelMatrixStore );
+	glUniformMatrix4fv( 4, 1, GL_FALSE, (const GLfloat *)&modelMatrixStore );
 
 	worldMesh_t *firstMesh = s_worldRenderData.meshes.data() + currentmodel->firstMesh;
 	worldMesh_t *lastMesh = firstMesh + currentmodel->numMeshes;
@@ -738,16 +737,19 @@ void R_DrawWorld()
 		// Determine which leaves are in the PVS / areamask
 		R_MarkLeaves();
 
+#if 0
 		int64 start, end;
 
 		if ( r_fastProfile.GetBool() )
 		{
 			start = Time_Microseconds();
 		}
+#endif
 
 		// This figures out what we need to render and builds the world lists
 		R_RecursiveWorldNode( work, r_worldmodel->nodes );
 
+#if 0
 		if ( r_fastProfile.GetBool() )
 		{
 			end = Time_Microseconds();
@@ -758,6 +760,7 @@ void R_DrawWorld()
 
 			Com_Printf( "Spent %llu microseconds inside R_RecursiveWorldNode\n", timeTaken );
 		}
+#endif
 
 		R_SquashAndUploadIndices( worldLists, work );
 	}
@@ -1345,6 +1348,8 @@ void R_BuildWorldLists( model_t *model )
 	s_worldRenderData.vertices.reserve( model->numvertexes );
 	s_worldRenderData.indices.reserve( model->numvertexes * 3 );
 
+#if 0
+
 	// Handle the world specially, it shouldn't have a mesh entry, this is because we don't
 	// reference it when using the PVS for culling (we do that per-surface) and we also
 	// can't sort its surfaces, because marksurfaces references them directly and we need
@@ -1369,7 +1374,9 @@ void R_BuildWorldLists( model_t *model )
 	worldModel->firstMesh = 0;
 	worldModel->numMeshes = endWorldIndices;
 
-	mmodel_t *firstModel = model->submodels + 1;
+#endif
+
+	mmodel_t *firstModel = model->submodels;
 	mmodel_t *endModel = model->submodels + model->numsubmodels; // Not a valid submodel
 
 	for ( mmodel_t *subModel = firstModel; subModel < endModel; ++subModel )
@@ -1381,13 +1388,16 @@ void R_BuildWorldLists( model_t *model )
 		msurface_t *lastFace = firstFace + subModel->numfaces;
 
 		// Sort the surfaces by model, by material
-		std::sort( firstFace, lastFace,
-			[]( const msurface_t &a, const msurface_t &b )
-			{
-				// This is incredibly silly, but it works!
-				return a.texinfo->material < b.texinfo->material;
-			}
-		);
+		if ( subModel != firstModel )
+		{
+			std::sort( firstFace, lastFace,
+				[]( const msurface_t &a, const msurface_t &b )
+				{
+					// This is incredibly silly, but it works!
+					return a.texinfo->material < b.texinfo->material;
+				}
+			);
+		}
 
 		for ( msurface_t *surface = firstFace; surface < lastFace; ++surface )
 		{
@@ -1417,9 +1427,11 @@ void R_BuildWorldLists( model_t *model )
 			mesh.numIndices, vertexCount );
 
 		// TODO: what do we gain from doing this?
+#if 0
 		meshopt_optimizeOverdraw(
 			pOffsetIndices, pOffsetIndices,
-			mesh.numIndices, (const float *)vertexData, vertexCount, sizeof( worldVertex_t ), 1.05f );
+			mesh.numIndices, (const float *)vertexData, TODO, sizeof( worldVertex_t ), 1.05f );
+#endif
 	}
 
 	size_t numVertices = meshopt_optimizeVertexFetch(
@@ -1429,6 +1441,22 @@ void R_BuildWorldLists( model_t *model )
 #endif
 
 	R_AtlasWorldLists( model->name, vertexData, indexData, vertexCount, indexCount );
+
+	// Stats
+	Com_Printf(
+		S_COLOR_GREEN "------------------ World Stats ------------------\n"
+		S_COLOR_GREEN "Uploaded to GPU:\n"
+		S_COLOR_GREEN " Number of vertices:     %'zu\n"
+		S_COLOR_GREEN " Vertices size in bytes: %$zu\n"
+		S_COLOR_GREEN "Not uploaded to GPU:\n"
+		S_COLOR_GREEN " Number of indices:      %'zu\n"
+		S_COLOR_GREEN " Indices size in bytes:  %$zu\n"
+		S_COLOR_GREEN "-------------------------------------------------\n",
+		vertexCount,
+		vertexSize,
+		indexCount,
+		indexSize
+	);
 
 	//
 	// Upload our big fat vertex buffer

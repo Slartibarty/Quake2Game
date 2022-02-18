@@ -24,36 +24,31 @@ struct guiDrawCmd_t
 	uint32 offset, count;
 };
 
+struct simpleVertex_t
+{
+	vec3_t pos;
+	uint32 rgba;
+};
+
+static_assert( sizeof( simpleVertex_t ) == 16 );
+
 static material_t *s_drawChars;
 
-static qGUIMeshBuilder s_drawMeshBuilder;
+static GUIMeshBuilder s_drawMeshBuilder;
 
-static GLuint s_drawVAO;
-static GLuint s_drawVBO;
-static GLuint s_drawEBO;
+static GLuint s_drawVAO, s_drawVBO, s_drawEBO;
+static GLuint s_lineVAO, s_lineVBO;
 
 static std::vector<guiDrawCmd_t> s_drawCmds;
+static std::vector<simpleVertex_t> s_lineVertices;
+static std::vector<simpleVertex_t> s_polyVertices;
 
 // Used so we can chain consecutive function calls
 static guiDrawCmd_t *s_currentCmd;
 static uint32 s_lastOffset;
 
-/*
-========================
-Draw_Init
-
-Grabs the console font and sets up our buffers
-========================
-*/
-void Draw_Init()
+static void Draw_InitGUIStuff()
 {
-	// load console characters
-	s_drawChars = GL_FindMaterial( ConCharsName, true );
-	if ( !s_drawChars->IsOkay() ) {
-		// we NEED the console font
-		Com_FatalErrorf( "Could not find font: %s\n", ConCharsName );
-	}
-
 	// reserve 64 draw commands
 	s_drawCmds.reserve( 64 );
 
@@ -74,6 +69,42 @@ void Draw_Init()
 	glVertexAttribPointer( 2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( guiVertex_t ), (void *)( 4 * sizeof( GLfloat ) ) );
 }
 
+static void Draw_InitLineStuff()
+{
+	glGenVertexArrays( 1, &s_lineVAO );
+	glGenBuffers( 1, &s_lineVBO );
+
+	glBindVertexArray( s_lineVAO );
+	glBindBuffer( GL_ARRAY_BUFFER, s_lineVBO );
+
+	glEnableVertexAttribArray( 0 );
+	glEnableVertexAttribArray( 1 );
+
+	glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, sizeof( simpleVertex_t ), (void *)( 0 ) );
+	glVertexAttribPointer( 1, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( simpleVertex_t ), (void *)( 3 * sizeof( GLfloat ) ) );
+
+}
+
+/*
+========================
+Draw_Init
+
+Grabs the console font and sets up our buffers
+========================
+*/
+void Draw_Init()
+{
+	// load console characters
+	s_drawChars = GL_FindMaterial( ConCharsName, true );
+	if ( !s_drawChars->IsOkay() ) {
+		// we NEED the console font
+		Com_FatalErrorf( "Could not find font: %s\n", ConCharsName );
+	}
+
+	Draw_InitGUIStuff();
+	Draw_InitLineStuff();
+}
+
 /*
 ========================
 Draw_Shutdown
@@ -81,6 +112,9 @@ Draw_Shutdown
 */
 void Draw_Shutdown()
 {
+	glDeleteBuffers( 1, &s_lineVBO );
+	glDeleteVertexArrays( 1, &s_lineVAO );
+
 	glDeleteBuffers( 1, &s_drawEBO );
 	glDeleteBuffers( 1, &s_drawVBO );
 	glDeleteVertexArrays( 1, &s_drawVAO );
@@ -389,6 +423,37 @@ void Draw_RenderBatches()
 {
 	using namespace DirectX;
 
+	// render all lines
+
+	if ( !s_polyVertices.empty() || !s_lineVertices.empty() )
+	{
+		GL_UseProgram( glProgs.lineProg );
+
+		glUniformMatrix4fv( 2, 1, GL_FALSE, (const GLfloat *)&tr.viewMatrix );
+		glUniformMatrix4fv( 3, 1, GL_FALSE, (const GLfloat *)&tr.projMatrix );
+
+		glBindVertexArray( s_lineVAO );
+		glBindBuffer( GL_ARRAY_BUFFER, s_lineVBO );
+	}
+
+	if ( !s_polyVertices.empty() )
+	{
+		glBufferData( GL_ARRAY_BUFFER, s_polyVertices.size() * sizeof( simpleVertex_t ), s_polyVertices.data(), GL_STREAM_DRAW );
+
+		glDrawArrays( GL_TRIANGLES, 0, s_polyVertices.size() );
+
+		s_polyVertices.clear();
+	}
+
+	if ( !s_lineVertices.empty() )
+	{
+		glBufferData( GL_ARRAY_BUFFER, s_lineVertices.size() * sizeof( simpleVertex_t ), s_lineVertices.data(), GL_STREAM_DRAW );
+
+		glDrawArrays( GL_LINES, 0, s_lineVertices.size() );
+
+		s_lineVertices.clear();
+	}
+
 	// render all gui draw calls
 
 	if ( s_drawMeshBuilder.HasData() )
@@ -557,6 +622,9 @@ void R_DrawStretchRaw( int x, int y, int w, int h, int cols, int rows, byte *dat
 
 void R_DrawBounds( const vec3_t mins, const vec3_t maxs )
 {
+#if 0
+	GL_UseProgram( 0 );
+
 	glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
 
 	glBegin( GL_LINE_LOOP );
@@ -585,12 +653,36 @@ void R_DrawBounds( const vec3_t mins, const vec3_t maxs )
 	glVertex3f( maxs[0], maxs[1], mins[2] );
 	glVertex3f( maxs[0], maxs[1], maxs[2] );
 	glEnd();
+#endif
 }
 
-void R_DrawLine( const vec3_t start, const vec3_t end )
+void R_DrawLine( const vec3_t start, const vec3_t end, uint32 color )
 {
-	glBegin( GL_LINES );
-	glVertex3fv( start );
-	glVertex3fv( end );
-	glEnd();
+	simpleVertex_t &startVertex = s_lineVertices.emplace_back();
+	VectorCopy( start, startVertex.pos );
+	startVertex.rgba = color;
+
+	simpleVertex_t &endVertex = s_lineVertices.emplace_back();
+	VectorCopy( end, endVertex.pos );
+	endVertex.rgba = color;
+}
+
+void R_DrawPoly( const vec3_t p1, const vec3_t p2, const vec3_t p3, uint32 color )
+{
+	simpleVertex_t vertex;
+
+	VectorCopy( p1, vertex.pos );
+	vertex.rgba = color;
+
+	s_polyVertices.push_back( vertex );
+
+	VectorCopy( p2, vertex.pos );
+	vertex.rgba = color;
+
+	s_polyVertices.push_back( vertex );
+
+	VectorCopy( p3, vertex.pos );
+	vertex.rgba = color;
+
+	s_polyVertices.push_back( vertex );
 }

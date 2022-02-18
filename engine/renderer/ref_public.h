@@ -32,7 +32,8 @@ void		R_SetRawPalette( const byte *palette );
 
 			// 3D elements
 void		R_DrawBounds( const vec3_t mins, const vec3_t maxs );
-void		R_DrawLine( const vec3_t start, const vec3_t end );
+void		R_DrawLine( const vec3_t start, const vec3_t end, uint32 color );
+void		R_DrawPoly( const vec3_t p1, const vec3_t p2, const vec3_t p3, uint32 color );
 
 void *		R_GetWindowHandle();
 void		R_GetWindowDimensions( int &width, int &height );

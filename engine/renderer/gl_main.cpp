@@ -316,9 +316,10 @@ static void R_DrawEntity( entity_t *e )
 			R_DrawStaticMeshFile( e );
 			break;
 		case mod_alias:
-#ifndef GL_USE_CORE_PROFILE
 			R_DrawAliasModel( e );
-#endif
+			break;
+		case mod_iqm:
+			R_DrawIQM( e );
 			break;
 		case mod_brush:
 			R_DrawBrushModel( e );
@@ -633,29 +634,7 @@ static void R_SetupGL()
 	XMMATRIX workMatrix = XMMatrixPerspectiveFovRH( DEG2RAD( tr.refdef.fov_y ), (float)tr.refdef.width / (float)tr.refdef.height, 4.0f, 4096.0f );
 	XMStoreFloat4x4A( &tr.projMatrix, workMatrix );
 
-#ifndef GL_USE_CORE_PROFILE
-
-	// send it to the fixed function pipeline
-	glMatrixMode( GL_PROJECTION );
-	glLoadMatrixf( (const GLfloat *)&tr.projMatrix );
-
 	// view matrix
-
-	glMatrixMode( GL_MODELVIEW );
-
-	glLoadIdentity();
-
-	glRotatef( -90, 1, 0, 0 );	    // put Z going up
-	glRotatef( 90, 0, 0, 1 );	    // put Z going up
-	glRotatef( -tr.refdef.viewangles[2], 1, 0, 0 );
-	glRotatef( -tr.refdef.viewangles[0], 0, 1, 0 );
-	glRotatef( -tr.refdef.viewangles[1], 0, 0, 1 );
-	glTranslatef( -tr.refdef.vieworg[0], -tr.refdef.vieworg[1], -tr.refdef.vieworg[2] );
-
-	// TODO: fucking matrices, do this with dxmath
-	glGetFloatv( GL_MODELVIEW_MATRIX, (GLfloat *)&tr.viewMatrix );
-
-#else
 
 	vec3_t &viewOrg = tr.refdef.vieworg;
 	vec3_t &viewAng = tr.refdef.viewangles;
@@ -669,9 +648,14 @@ static void R_SetupGL()
 	XMVECTOR upAxis = XMVectorSet( 0.0f, 0.0f, 1.0f, 0.0f );
 
 	workMatrix = XMMatrixLookAtRH( eyePosition, focusPoint, upAxis );
-
 	XMStoreFloat4x4A( &tr.viewMatrix, workMatrix );
 
+#ifndef GL_USE_CORE_PROFILE
+	// send them to the fixed function pipeline
+	glMatrixMode( GL_PROJECTION );
+	glLoadMatrixf( (const GLfloat *)&tr.projMatrix );
+	glMatrixMode( GL_MODELVIEW );
+	glLoadMatrixf( (const GLfloat *)&tr.viewMatrix );
 #endif
 
 	// set drawing parms
@@ -692,11 +676,7 @@ static void R_SetupGL()
 		glPolygonMode( GL_FRONT_AND_BACK, r_wireframe->GetBool() ? GL_LINE : GL_FILL );
 	}
 
-	glDisable( GL_BLEND );
 	glEnable( GL_DEPTH_TEST );
-#ifndef GL_USE_CORE_PROFILE
-	glEnable( GL_TEXTURE_2D );
-#endif
 }
 
 /*
@@ -765,6 +745,9 @@ static void R_RenderView( refdef_t *fd )
 
 	// world alpha surfaces
 	R_DrawAlphaSurfaces();
+
+	// jolt debug
+	R_JoltDrawBodies();
 
 	// all operations from here on out do not need the existing depth buffer
 	// so nuke it, just the viewmodel for now

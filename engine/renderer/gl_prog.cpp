@@ -15,8 +15,17 @@ struct glShaders_t
 	GLuint guiVert;
 	GLuint guiFrag;
 
+	GLuint lineVert;
+	GLuint lineFrag;
+
 	GLuint particleVert;
 	GLuint particleFrag;
+
+	GLuint aliasVert;
+	GLuint aliasFrag;
+
+	GLuint iqmVert;
+	GLuint iqmFrag;
 
 	GLuint smfMeshVert;
 	GLuint smfMeshFrag;
@@ -26,6 +35,9 @@ struct glShaders_t
 
 	GLuint debugMeshVert;
 	GLuint debugMeshFrag;
+
+	GLuint joltVert;
+	GLuint joltFrag;
 
 };
 
@@ -130,8 +142,17 @@ static void BuildAllShaders()
 	glShaders.guiVert = MakeShader( "shaders/gui.vert", GL_VERTEX_SHADER );
 	glShaders.guiFrag = MakeShader( "shaders/gui.frag", GL_FRAGMENT_SHADER );
 
+	glShaders.lineVert = MakeShader( "shaders/line.vert", GL_VERTEX_SHADER );
+	glShaders.lineFrag = MakeShader( "shaders/line.frag", GL_FRAGMENT_SHADER );
+
 	glShaders.particleVert = MakeShader( "shaders/particle.vert", GL_VERTEX_SHADER );
 	glShaders.particleFrag = MakeShader( "shaders/particle.frag", GL_FRAGMENT_SHADER );
+
+	glShaders.aliasVert = MakeShader( "shaders/alias.vert", GL_VERTEX_SHADER );
+	glShaders.aliasFrag = MakeShader( "shaders/alias.frag", GL_FRAGMENT_SHADER );
+
+	glShaders.iqmVert = MakeShader( "shaders/iqm.vert", GL_VERTEX_SHADER );
+	glShaders.iqmFrag = MakeShader( "shaders/iqm.frag", GL_FRAGMENT_SHADER );
 
 	glShaders.smfMeshVert = MakeShader( "shaders/smfmesh.vert", GL_VERTEX_SHADER );
 	glShaders.smfMeshFrag = MakeShader( "shaders/smfmesh.frag", GL_FRAGMENT_SHADER );
@@ -142,6 +163,9 @@ static void BuildAllShaders()
 	glShaders.debugMeshVert = MakeShader( "shaders/debugmesh.vert", GL_VERTEX_SHADER );
 	glShaders.debugMeshFrag = MakeShader( "shaders/debugmesh.frag", GL_FRAGMENT_SHADER );
 
+	glShaders.joltVert = MakeShader( "shaders/jolt.vert", GL_VERTEX_SHADER );
+	glShaders.joltFrag = MakeShader( "shaders/jolt.frag", GL_FRAGMENT_SHADER );
+
 	// create all our programs
 	glProgs.guiProg = glCreateProgram();
 	glAttachShader( glProgs.guiProg, glShaders.guiVert );
@@ -149,11 +173,29 @@ static void BuildAllShaders()
 	glLinkProgram( glProgs.guiProg );
 	CheckProgram( glProgs.guiProg );
 
+	glProgs.lineProg = glCreateProgram();
+	glAttachShader( glProgs.lineProg, glShaders.lineVert );
+	glAttachShader( glProgs.lineProg, glShaders.lineFrag );
+	glLinkProgram( glProgs.lineProg );
+	CheckProgram( glProgs.lineProg );
+
 	glProgs.particleProg = glCreateProgram();
 	glAttachShader( glProgs.particleProg, glShaders.particleVert );
 	glAttachShader( glProgs.particleProg, glShaders.particleFrag );
 	glLinkProgram( glProgs.particleProg );
 	CheckProgram( glProgs.particleProg );
+
+	glProgs.aliasProg = glCreateProgram();
+	glAttachShader( glProgs.aliasProg, glShaders.aliasVert );
+	glAttachShader( glProgs.aliasProg, glShaders.aliasFrag );
+	glLinkProgram( glProgs.aliasProg );
+	CheckProgram( glProgs.aliasProg );
+
+	glProgs.iqmProg = glCreateProgram();
+	glAttachShader( glProgs.iqmProg, glShaders.iqmVert );
+	glAttachShader( glProgs.iqmProg, glShaders.iqmFrag );
+	glLinkProgram( glProgs.iqmProg );
+	CheckProgram( glProgs.iqmProg );
 
 	glProgs.smfMeshProg = glCreateProgram();
 	glAttachShader( glProgs.smfMeshProg, glShaders.smfMeshVert );
@@ -172,6 +214,12 @@ static void BuildAllShaders()
 	glAttachShader( glProgs.debugMeshProg, glShaders.debugMeshFrag );
 	glLinkProgram( glProgs.debugMeshProg );
 	CheckProgram( glProgs.debugMeshProg );
+
+	glProgs.joltProg = glCreateProgram();
+	glAttachShader( glProgs.joltProg, glShaders.joltVert );
+	glAttachShader( glProgs.joltProg, glShaders.joltFrag );
+	glLinkProgram( glProgs.joltProg );
+	CheckProgram( glProgs.joltProg );
 }
 
 /*

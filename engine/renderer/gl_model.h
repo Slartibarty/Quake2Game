@@ -157,7 +157,7 @@ struct mSMF_t
 // Whole model
 //
 
-enum modType_t { mod_bad, mod_brush, mod_sprite, mod_alias, mod_smf, mod_jmdl };
+enum modType_t { mod_bad, mod_brush, mod_sprite, mod_alias, mod_iqm, mod_smf, mod_jmdl };
 
 struct model_t
 {
