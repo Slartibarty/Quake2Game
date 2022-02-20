@@ -657,16 +657,7 @@ static void CM_BuildCollisionMesh( const byte *base )
 
 		outVertexList.resize( numVertices );
 
-#if 1
 		memcpy( outVertexList.data(), vertices, vertexLump->filelen );
-#else
-		for ( int i = 0; i < numVertices; ++i )
-		{
-			outVertexList[i].x = vertices[i].point[0];
-			outVertexList[i].y = vertices[i].point[2];
-			outVertexList[i].z = vertices[i].point[1];
-		}
-#endif
 	}
 
 	// Indices
@@ -683,7 +674,7 @@ static void CM_BuildCollisionMesh( const byte *base )
 		const lump_t *faceLump = header->lumps + LUMP_FACES;
 		const dface_t *faces = (const dface_t *)( base + faceLump->fileofs );
 
-		const int numFaces = faceLump->filelen / sizeof( dface_t ); // models->numfaces
+		const int numFaces = models->numfaces;
 
 		for ( int iFace = 0; iFace < numFaces; ++iFace )
 		{

@@ -342,42 +342,52 @@ void RotatePointAroundVector( vec3_t dst, const vec3_t dir, const vec3_t point, 
 	}
 }
 
-void AngleQuaternion( const vec3_t angles, vec4_t quaternion )
+void AngleQuaternion( const vec3_t angles, vec4_t quat )
 {
-	float		angle;
-	float		sr, sp, sy, cr, cp, cy;
+	float angle;
+	float sr, sp, sy, cr, cp, cy;
 
-	// FIXME: rescale the inputs to 1/2 angle
-	angle = angles[2] * 0.5f;
+	angle = DEG2RAD( angles[1] ) * 0.5f;
 	sy = sin( angle );
 	cy = cos( angle );
-	angle = angles[1] * 0.5f;
+	angle = DEG2RAD( angles[0] ) * 0.5f;
 	sp = sin( angle );
 	cp = cos( angle );
-	angle = angles[0] * 0.5f;
+	angle = DEG2RAD( angles[2] ) * 0.5f;
 	sr = sin( angle );
 	cr = cos( angle );
 
-	quaternion[0] = sr * cp * cy - cr * sp * sy; // X
-	quaternion[1] = cr * sp * cy + sr * cp * sy; // Y
-	quaternion[2] = cr * cp * sy - sr * sp * cy; // Z
-	quaternion[3] = cr * cp * cy + sr * sp * sy; // W
+	quat[0] = sr * cp * cy - cr * sp * sy; // X
+	quat[1] = cr * sp * cy + sr * cp * sy; // Y
+	quat[2] = cr * cp * sy - sr * sp * cy; // Z
+	quat[3] = cr * cp * cy + sr * sp * sy; // W
 }
 
-void QuaternionMatrix( const vec4_t quaternion, float( *matrix )[4] )
+void QuaternionAngles( const vec4_t quat, vec3_t angles )
 {
+	// FIXME: doing it this way calculates too much data, needs to do an optimized version...
+	float matrix[3][4];
+	QuaternionMatrix( quat, matrix );
+	MatrixAngles( matrix, angles );
+}
 
-	matrix[0][0] = 1.0f - 2.0f * quaternion[1] * quaternion[1] - 2.0f * quaternion[2] * quaternion[2];
-	matrix[1][0] = 2.0f * quaternion[0] * quaternion[1] + 2.0f * quaternion[3] * quaternion[2];
-	matrix[2][0] = 2.0f * quaternion[0] * quaternion[2] - 2.0f * quaternion[3] * quaternion[1];
+void QuaternionMatrix( const vec4_t quat, float( *matrix )[4] )
+{
+	matrix[0][0] = 1.0f - 2.0f * quat[1] * quat[1] - 2.0f * quat[2] * quat[2];
+	matrix[1][0] = 2.0f * quat[0] * quat[1] + 2.0f * quat[3] * quat[2];
+	matrix[2][0] = 2.0f * quat[0] * quat[2] - 2.0f * quat[3] * quat[1];
 
-	matrix[0][1] = 2.0f * quaternion[0] * quaternion[1] - 2.0f * quaternion[3] * quaternion[2];
-	matrix[1][1] = 1.0f - 2.0f * quaternion[0] * quaternion[0] - 2.0f * quaternion[2] * quaternion[2];
-	matrix[2][1] = 2.0f * quaternion[1] * quaternion[2] + 2.0f * quaternion[3] * quaternion[0];
+	matrix[0][1] = 2.0f * quat[0] * quat[1] - 2.0f * quat[3] * quat[2];
+	matrix[1][1] = 1.0f - 2.0f * quat[0] * quat[0] - 2.0f * quat[2] * quat[2];
+	matrix[2][1] = 2.0f * quat[1] * quat[2] + 2.0f * quat[3] * quat[0];
 
-	matrix[0][2] = 2.0f * quaternion[0] * quaternion[2] + 2.0f * quaternion[3] * quaternion[1];
-	matrix[1][2] = 2.0f * quaternion[1] * quaternion[2] - 2.0f * quaternion[3] * quaternion[0];
-	matrix[2][2] = 1.0f - 2.0f * quaternion[0] * quaternion[0] - 2.0f * quaternion[1] * quaternion[1];
+	matrix[0][2] = 2.0f * quat[0] * quat[2] + 2.0f * quat[3] * quat[1];
+	matrix[1][2] = 2.0f * quat[1] * quat[2] - 2.0f * quat[3] * quat[0];
+	matrix[2][2] = 1.0f - 2.0f * quat[0] * quat[0] - 2.0f * quat[1] * quat[1];
+
+	matrix[0][3] = 0.0f;
+	matrix[1][3] = 0.0f;
+	matrix[2][3] = 0.0f;
 }
 
 void QuaternionSlerp( const vec4_t p, vec4_t q, float t, vec4_t qt )
@@ -427,6 +437,51 @@ void QuaternionSlerp( const vec4_t p, vec4_t q, float t, vec4_t qt )
 		for ( i = 0; i < 3; i++ ) {
 			qt[i] = sclp * p[i] + sclq * qt[i];
 		}
+	}
+}
+
+void MatrixAngles( const float( *matrix )[4], float *angles )
+{
+	float forward[3];
+	float left[3];
+	float up[3];
+
+	//
+	// Extract the basis vectors from the matrix. Since we only need the Z
+	// component of the up vector, we don't get X and Y.
+	//
+	forward[0] = matrix[0][0];
+	forward[1] = matrix[1][0];
+	forward[2] = matrix[2][0];
+	left[0] = matrix[0][1];
+	left[1] = matrix[1][1];
+	left[2] = matrix[2][1];
+	up[2] = matrix[2][2];
+
+	float xyDist = sqrtf( forward[0] * forward[0] + forward[1] * forward[1] );
+
+	// enough here to get angles?
+	if ( xyDist > 0.001f )
+	{
+		// (yaw)	y = ATAN( forward.y, forward.x );		-- in our space, forward is the X axis
+		angles[1] = RAD2DEG( atan2f( forward[1], forward[0] ) );
+
+		// (pitch)	x = ATAN( -forward.z, sqrt(forward.x*forward.x+forward.y*forward.y) );
+		angles[0] = RAD2DEG( atan2f( -forward[2], xyDist ) );
+
+		// (roll)	z = ATAN( left.z, up.z );
+		angles[2] = RAD2DEG( atan2f( left[2], up[2] ) );
+	}
+	else	// forward is mostly Z, gimbal lock-
+	{
+		// (yaw)	y = ATAN( -left.x, left.y );			-- forward is mostly z, so use right for yaw
+		angles[1] = RAD2DEG( atan2f( -left[0], left[1] ) );
+
+		// (pitch)	x = ATAN( -forward.z, sqrt(forward.x*forward.x+forward.y*forward.y) );
+		angles[0] = RAD2DEG( atan2f( -forward[2], xyDist ) );
+
+		// Assume no roll in this case as one degree of freedom has been lost (i.e. yaw == roll)
+		angles[2] = 0.0f;
 	}
 }
 

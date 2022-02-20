@@ -102,7 +102,7 @@ static void GL_Screenshot_Internal( bool png )
 		threadData->height = height;
 
 		// fire and forget
-		threadHandle_t thread = Sys_CreateThread( PNG_ThreadProc, threadData, THREAD_NORMAL, PLATTEXT( "PNG Screenshot Thread" ), CORE_ANY );
+		threadHandle_t thread = Sys_CreateThread( PNG_ThreadProc, threadData, THREAD_NORMAL, PLATTEXT( "PNG Screenshot Thread" ) );
 		Sys_DestroyThread( thread );
 	}
 	else

@@ -41,7 +41,7 @@ int		time_after_ref;
 
 static thread_local bool	isMainThread;
 
-static mutexHandle_t		s_printMutex;		// Mutex for Com_Print
+static mutex_t				s_printMutex;		// Mutex for Com_Print
 
 /*
 ============================================================================
@@ -113,7 +113,7 @@ void Com_Print( const char *msg )
 	CopyAndStripColorCodes( newMsg, sizeof( newMsg ), msg );
 
 	// Lock mutex
-	Sys_MutexLock( s_printMutex, true );
+	Sys_MutexLock( s_printMutex );
 
 	if ( rd_target ) {
 		if ( ( strlen( newMsg ) + strlen( rd_buffer ) ) > ( rd_buffersize - 1 ) ) {
@@ -121,6 +121,10 @@ void Com_Print( const char *msg )
 			*rd_buffer = 0;
 		}
 		strcat( rd_buffer, newMsg );
+
+		// Unlock mutex
+		Sys_MutexUnlock( s_printMutex );
+
 		return;
 	}
 

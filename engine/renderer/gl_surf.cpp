@@ -1664,6 +1664,6 @@ CON_COMMAND( r_dumpworld, "Exports the world to an OBJ file in the maps folder."
 	}
 
 	// fire and forget
-	threadHandle_t thread = Sys_CreateThread( R_DumpWorldThreadProc, nullptr, THREAD_NORMAL, PLATTEXT( "Dump World Thread" ), CORE_ANY );
+	threadHandle_t thread = Sys_CreateThread( R_DumpWorldThreadProc, nullptr, THREAD_NORMAL, PLATTEXT( "Dump World Thread" ) );
 	Sys_DestroyThread( thread );
 }

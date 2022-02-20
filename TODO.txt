@@ -2,11 +2,20 @@ The game has a serious problem if the cinematics are not present
 
 OPTIX for raytracing
 
-music system
-
 X+ = slide forward
 X- = slide back
 Y+ = slide right
 Y- = slide left
 Z+ = slide up
 Z- = slide down
+
+Remove crapcvar
+
+Rotations:
+Quaternions for rotations
+Slerp the quaternions
+ALTERNATIVELY:
+Convert to quat, slerp, convert to euler
+
+GameNetworkingSockets
+

@@ -22,28 +22,31 @@
 
 #if defined Q_MEM_USE_MIMALLOC
 
-#define malloc_internal			mi_malloc
-#define realloc_internal		mi_realloc
-#define free_internal			mi_free
+#define malloc_internal				mi_malloc
+#define realloc_internal			mi_realloc
+#define free_internal				mi_free
 
-#define msize_internal			mi_usable_size
-#define expand_internal			mi_expand			// Unused
+#define malloc_aligned_internal		mi_malloc_aligned
+#define free_aligned_internal		mi_free
+
+#define msize_internal				mi_usable_size
 
 #else
 
-#define malloc_internal			malloc
-#define realloc_internal		realloc
-#define free_internal			free
+#define malloc_internal				malloc
+#define realloc_internal			realloc
+#define free_internal				free
+
+#define malloc_aligned_internal		_aligned_malloc
+#define free_aligned_internal		_aligned_free
 
 #ifdef _WIN32
 
-#define msize_internal			_msize
-#define expand_internal			_expand				// Unused
+#define msize_internal				_msize
 
 #else
 
-#define msize_internal			malloc_usable_size
-#define expand_internal			// ???				// Unused
+#define msize_internal				malloc_usable_size
 
 #endif
 
@@ -187,4 +190,23 @@ void Mem_Init()
 void Mem_Shutdown()
 {
 	
+}
+
+/*
+=================================================
+	Jolt Overrides
+=================================================
+*/
+
+namespace JPH
+{
+	RESTRICTFN void *AlignedAlloc( size_t size, size_t alignment )
+	{
+		return malloc_aligned_internal( size, alignment );
+	}
+
+	void AlignedFree( void *block )
+	{
+		free_aligned_internal( block );
+	}
 }

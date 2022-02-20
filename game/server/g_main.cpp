@@ -57,6 +57,8 @@ cvar_t	*flood_waitdelay;
 
 cvar_t	*sv_maplist;
 
+cvar_t	*crapcvar;
+
 void SpawnEntities (const char *mapname, char *entities, const char *spawnpoint);
 void ClientThink (edict_t *ent, usercmd_t *cmd);
 qboolean ClientConnect (edict_t *ent, char *userinfo);
@@ -79,6 +81,8 @@ void G_RunFrame (void);
 void ShutdownGame (void)
 {
 	gi.dprintf ("==== ShutdownGame ====\n");
+
+	Phys_DeleteCachedShapes();
 
 	gi.FreeTags (TAG_LEVEL);
 	gi.FreeTags (TAG_GAME);
@@ -407,8 +411,6 @@ void ExitLevel (void)
 
 }
 
-static cvar_t *crapcvar;
-
 /*
 ================
 G_RunFrame
@@ -420,11 +422,6 @@ void G_RunFrame (void)
 {
 	int		i;
 	edict_t	*ent;
-
-	if ( !crapcvar )
-	{
-		crapcvar = gi.cvar( "crapcvar", "0", 0 );
-	}
 
 	level.framenum++;
 	level.time = level.framenum*FRAMETIME;

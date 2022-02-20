@@ -1615,6 +1615,8 @@ void CL_Frame( int msec )
 
 	// decide the simulation time
 	cls.frametime = MS2SEC( (float)extratime ); // SlartTime
+	static StaticCvar crapcvar( "crapcvar", "0", 0 );
+	Cvar_SetFloat( &crapcvar, cls.frametime );
 	cl.time += extratime;
 	cls.realtime = curtime;
 

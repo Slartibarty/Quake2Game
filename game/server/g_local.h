@@ -530,49 +530,51 @@ inline float crandom()
 #define G_StackAlloc alloca
 #endif
 
-extern	cvar_t	*maxentities;
-extern	cvar_t	*deathmatch;
-extern	cvar_t	*coop;
-extern	cvar_t	*dmflags;
-extern	cvar_t	*skill;
-extern	cvar_t	*fraglimit;
-extern	cvar_t	*timelimit;
-extern	cvar_t	*password;
-extern	cvar_t	*spectator_password;
-extern	cvar_t	*needpass;
-extern	cvar_t	*g_select_empty;
-extern	cvar_t	*dedicated;
+extern cvar_t	*maxentities;
+extern cvar_t	*deathmatch;
+extern cvar_t	*coop;
+extern cvar_t	*dmflags;
+extern cvar_t	*skill;
+extern cvar_t	*fraglimit;
+extern cvar_t	*timelimit;
+extern cvar_t	*password;
+extern cvar_t	*spectator_password;
+extern cvar_t	*needpass;
+extern cvar_t	*g_select_empty;
+extern cvar_t	*dedicated;
 
-extern	cvar_t	*filterban;
+extern cvar_t	*filterban;
 
-extern	cvar_t	*sv_gravity;
-extern	cvar_t	*sv_maxvelocity;
+extern cvar_t	*sv_gravity;
+extern cvar_t	*sv_maxvelocity;
 
-extern	cvar_t	*gun_x, *gun_y, *gun_z;
-extern	cvar_t	*sv_rollspeed;
-extern	cvar_t	*sv_rollangle;
+extern cvar_t	*gun_x, *gun_y, *gun_z;
+extern cvar_t	*sv_rollspeed;
+extern cvar_t	*sv_rollangle;
 
-extern	cvar_t	*g_viewthing;
-extern	cvar_t	*g_frametime;
-extern	cvar_t	*g_playersOnly;
+extern cvar_t	*g_viewthing;
+extern cvar_t	*g_frametime;
+extern cvar_t	*g_playersOnly;
 
-extern	cvar_t	*run_pitch;
-extern	cvar_t	*run_roll;
-extern	cvar_t	*bob_up;
-extern	cvar_t	*bob_pitch;
-extern	cvar_t	*bob_roll;
+extern cvar_t	*run_pitch;
+extern cvar_t	*run_roll;
+extern cvar_t	*bob_up;
+extern cvar_t	*bob_pitch;
+extern cvar_t	*bob_roll;
 
-extern	cvar_t	*sv_cheats;
-extern	cvar_t	*maxclients;
-extern	cvar_t	*maxspectators;
+extern cvar_t	*sv_cheats;
+extern cvar_t	*maxclients;
+extern cvar_t	*maxspectators;
 
-extern	cvar_t	*flood_msgs;
-extern	cvar_t	*flood_persecond;
-extern	cvar_t	*flood_waitdelay;
+extern cvar_t	*flood_msgs;
+extern cvar_t	*flood_persecond;
+extern cvar_t	*flood_waitdelay;
 
-extern	cvar_t	*sv_maplist;
+extern cvar_t	*sv_maplist;
 
-#define	FRAMETIME	g_frametime->GetFloat()
+extern cvar_t	*crapcvar;
+
+#define	FRAMETIME	0.1f
 
 #define world		(&g_edicts[0])
 
@@ -844,8 +846,14 @@ void GetChaseTarget(edict_t *ent);
 //
 // g_joltphysics.cpp
 //
+using shapeIndex_t = uint32;
+
+void Phys_CacheShape( shapeHandle_t handle );
+void Phys_DeleteCachedShapes();
+
 void Phys_Simulate( float deltaTime );
-void Phys_SetupPhysicsForEntity( edict_t *ent, bodyID_t bodyID );
+
+void Phys_SetupPhysicsForEntity( edict_t *ent, bodyCreationSettings_t &settings, shapeHandle_t shapeHandle );
 
 //============================================================================
 

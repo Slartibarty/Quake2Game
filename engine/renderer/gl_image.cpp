@@ -117,7 +117,7 @@ void GL_MaterialList_f()
 
 static void GL_ApplyTextureParameters( imageFlags_t flags )
 {
-	flags |= IF_NEAREST;
+	//flags |= IF_NEAREST;
 
 	// Mips
 	if ( !( flags & IF_NOMIPS ) )

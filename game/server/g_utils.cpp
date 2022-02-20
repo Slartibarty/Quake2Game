@@ -427,8 +427,13 @@ void G_FreeEdict (edict_t *ed)
 
 	if ((ed - g_edicts) <= (maxclients->GetInt() + BODY_QUEUE_SIZE))
 	{
-//		gi.dprintf("tried to free special edict\n");
+		//gi.dprintf("tried to free special edict\n");
 		return;
+	}
+
+	if ( ed->bodyID )
+	{
+		gi.physSystem->RemoveAndDestroyBody( ed->bodyID );
 	}
 
 	memset (ed, 0, sizeof(*ed));

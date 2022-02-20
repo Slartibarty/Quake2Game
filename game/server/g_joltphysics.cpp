@@ -1,6 +1,8 @@
 
 #include "g_local.h"
 
+#include <vector>
+
 /*
 ===================================================================================================
 
@@ -8,6 +10,31 @@
 
 ===================================================================================================
 */
+
+static std::vector<shapeHandle_t> s_cachedShapes;
+
+void Phys_CacheShape( shapeHandle_t handle )
+{
+#ifdef Q_DEBUG
+	for ( const shapeHandle_t cachedHandle : s_cachedShapes )
+	{
+		if ( cachedHandle == handle )
+		{
+			gi.error( "Tried to re-add an existing handle to s_cachedShapes!" );
+		}
+	}
+#endif
+
+	s_cachedShapes.push_back( handle );
+}
+
+void Phys_DeleteCachedShapes()
+{
+	for ( const shapeHandle_t cachedHandle : s_cachedShapes )
+	{
+		gi.physSystem->DestroyShape( cachedHandle );
+	}
+}
 
 void Phys_Simulate( float deltaTime )
 {
@@ -22,16 +49,16 @@ void Phys_Simulate( float deltaTime )
 			continue;
 		}
 
-		gi.physSystem->GetBodyTransform( ent->bodyID, ent->s.origin, ent->s.angles );
+		gi.physSystem->GetBodyPositionAndRotation( ent->bodyID, ent->s.origin, ent->s.angles );
 
 		gi.linkentity( ent );
 	}
 }
 
-void Phys_SetupPhysicsForEntity( edict_t *ent, bodyID_t bodyID )
+void Phys_SetupPhysicsForEntity( edict_t *ent, bodyCreationSettings_t &settings, shapeHandle_t shapeHandle )
 {
 	ent->movetype = MOVETYPE_PHYSICS;
-	ent->bodyID = bodyID;
+	ent->bodyID = gi.physSystem->CreateAndAddBody( settings, shapeHandle );
 
 	gi.physSystem->SetLinearAndAngularVelocity( ent->bodyID, ent->velocity, ent->avelocity );
 }
@@ -43,6 +70,8 @@ void Phys_SetupPhysicsForEntity( edict_t *ent, bodyID_t bodyID )
 
 ===================================================================================================
 */
+
+static shapeHandle_t s_physicsTestShape;
 
 static void Think_PhysicsTest( edict_t *self )
 {
@@ -57,9 +86,18 @@ void Spawn_PhysicsTest( edict_t *self )
 	VectorSet( self->maxs, 16, 16, 72 );
 	self->s.modelindex = gi.modelindex( g_viewthing->GetString() );
 
-	bodyID_t bodyID = gi.physSystem->CreateBodySphere( self->s.origin, self->s.angles, 32.0f );
+	bodyCreationSettings_t bodyCreationSettings;
+	VectorCopy( self->s.origin, bodyCreationSettings.position );
+	VectorCopy( self->s.angles, bodyCreationSettings.rotation );
 
-	Phys_SetupPhysicsForEntity( self, bodyID );
+	if ( !s_physicsTestShape )
+	{
+		vec3_t halfExtent{ 16.0f, 16.0f, 16.0f };
+		s_physicsTestShape = gi.physSystem->CreateBoxShape( halfExtent );
+		Phys_CacheShape( s_physicsTestShape );
+	}
+
+	Phys_SetupPhysicsForEntity( self, bodyCreationSettings, s_physicsTestShape );
 
 	gi.linkentity( self );
 

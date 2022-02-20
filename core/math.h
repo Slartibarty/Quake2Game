@@ -613,9 +613,12 @@ void PerpendicularVector( vec3_t dst, const vec3_t src );
 void RotatePointAroundVector( vec3_t dst, const vec3_t dir, const vec3_t point, float degrees );
 
 // converts radian-euler axis aligned angles to a quaternion
-void AngleQuaternion( const vec3_t angles, vec4_t quaternion );
-void QuaternionMatrix( const vec4_t quaternion, float( *matrix )[4] );
+void AngleQuaternion( const vec3_t angles, vec4_t quat );
+void QuaternionAngles( const vec4_t quat, vec3_t angles );
+void QuaternionMatrix( const vec4_t quat, float( *matrix )[4] );
 void QuaternionSlerp( const vec4_t p, vec4_t q, float t, vec4_t qt );
+
+void MatrixAngles( const float( *matrix )[4], float *angles );
 
 // legacy macros
 #define _DotProduct(x,y)		(x[0]*y[0]+x[1]*y[1]+x[2]*y[2])

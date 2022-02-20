@@ -1,43 +1,30 @@
 
 #include "core.h"
 
+#include "sys_includes.h"
+
 #include "threading.h"
 
 /*
 ===================================================================================================
 
-	Low level threading interface from Doom 3 BFG Edition
+	Thread
 
 ===================================================================================================
 */
 
-/*
-========================
-Sys_SetThreadName
-========================
-*/
 static void Sys_SetThreadName( HANDLE thread, const platChar_t *name )
 {
 	SetThreadDescription( thread, name );
 }
 
-/*
-========================
-Sys_SetCurrentThreadName
-========================
-*/
 void Sys_SetCurrentThreadName( const platChar_t *name )
 {
 	Sys_SetThreadName( GetCurrentThread(), name );
 }
 
-/*
-========================
-Sys_Createthread
-========================
-*/
-threadHandle_t Sys_CreateThread( xthread_t function, void *parms, xthreadPriority priority, const platChar_t *name, core_t core, size_t stackSize, bool suspended ) {
-
+threadHandle_t Sys_CreateThread( threadProc_t function, void *parms, threadPriority_t priority, const platChar_t *name, size_t stackSize, bool suspended )
+{
 	DWORD flags = ( suspended ? CREATE_SUSPENDED : 0 );
 
 	// Without this flag the 'dwStackSize' parameter to CreateThread specifies the "Stack Commit Size"
@@ -86,105 +73,24 @@ threadHandle_t Sys_CreateThread( xthread_t function, void *parms, xthreadPriorit
 	return (threadHandle_t)handle;
 }
 
-/*
-========================
-Sys_GetCurrentThreadID
-========================
-*/
 threadID_t Sys_GetCurrentThreadID()
 {
 	return (threadID_t)GetCurrentThreadId();
 }
 
-/*
-========================
-Sys_WaitForThread
-========================
-*/
 void Sys_WaitForThread( threadHandle_t threadHandle )
 {
 	WaitForSingleObject( (HANDLE)threadHandle, INFINITE );
 }
 
-/*
-========================
-Sys_DestroyThread
-========================
-*/
 void Sys_DestroyThread( threadHandle_t threadHandle )
 {
 	CloseHandle( (HANDLE)threadHandle );
 }
 
-/*
-========================
-Sys_Yield
-========================
-*/
 void Sys_Yield()
 {
 	SwitchToThread();
-}
-
-/*
-===================================================================================================
-
-	Signal
-
-===================================================================================================
-*/
-
-/*
-========================
-Sys_SignalCreate
-========================
-*/
-void Sys_SignalCreate( signalHandle_t &handle, bool manualReset )
-{
-	handle = CreateEventW( nullptr, (BOOL)manualReset, FALSE, nullptr );
-}
-
-/*
-========================
-Sys_SignalDestroy
-========================
-*/
-void Sys_SignalDestroy( signalHandle_t &handle )
-{
-	CloseHandle( handle );
-}
-
-/*
-========================
-Sys_SignalRaise
-========================
-*/
-void Sys_SignalRaise( signalHandle_t &handle )
-{
-	SetEvent( handle );
-}
-
-/*
-========================
-Sys_SignalClear
-========================
-*/
-void Sys_SignalClear( signalHandle_t &handle )
-{
-	// events are created as auto-reset so this should never be needed
-	ResetEvent( handle );
-}
-
-/*
-========================
-Sys_SignalWait
-========================
-*/
-bool Sys_SignalWait( signalHandle_t &handle, uint timeout )
-{
-	DWORD result = WaitForSingleObject( handle, timeout == WAIT_INFINITE ? INFINITE : timeout );
-	assert( result == WAIT_OBJECT_0 || ( timeout != WAIT_INFINITE && result == WAIT_TIMEOUT ) );
-	return ( result == WAIT_OBJECT_0 );
 }
 
 /*
@@ -195,138 +101,27 @@ bool Sys_SignalWait( signalHandle_t &handle, uint timeout )
 ===================================================================================================
 */
 
-/*
-========================
-Sys_MutexCreate
-========================
-*/
-void Sys_MutexCreate( mutexHandle_t &handle )
+void Sys_MutexCreate( mutex_t &mutex )
 {
-	InitializeCriticalSection( &handle );
+	mutex.ptr = nullptr;
 }
 
-/*
-========================
-Sys_MutexDestroy
-========================
-*/
-void Sys_MutexDestroy( mutexHandle_t &handle )
+void Sys_MutexDestroy( mutex_t &mutex )
 {
-	DeleteCriticalSection( &handle );
+	// Nothing to do
 }
 
-/*
-========================
-Sys_MutexLock
-========================
-*/
-bool Sys_MutexLock( mutexHandle_t &handle, bool blocking )
+bool Sys_MutexTryLock( mutex_t &mutex )
 {
-	if ( TryEnterCriticalSection( &handle ) == FALSE ) {
-		if ( !blocking ) {
-			return false;
-		}
-		EnterCriticalSection( &handle );
-	}
-	return true;
+	return TryAcquireSRWLockExclusive( (PSRWLOCK)&mutex );
 }
 
-/*
-========================
-Sys_MutexUnlock
-========================
-*/
-void Sys_MutexUnlock( mutexHandle_t &handle )
+void Sys_MutexLock( mutex_t &mutex )
 {
-	LeaveCriticalSection( &handle );
+	AcquireSRWLockExclusive( (PSRWLOCK)&mutex );
 }
 
-/*
-===================================================================================================
-
-	Interlocked Integer
-
-===================================================================================================
-*/
-
-/*
-========================
-Sys_InterlockedIncrement
-========================
-*/
-interlockedInt_t Sys_InterlockedIncrement( interlockedInt_t &value ) {
-	return InterlockedIncrementAcquire( &value );
-}
-
-/*
-========================
-Sys_InterlockedDecrement
-========================
-*/
-interlockedInt_t Sys_InterlockedDecrement( interlockedInt_t &value ) {
-	return InterlockedDecrementRelease( &value );
-}
-
-/*
-========================
-Sys_InterlockedAdd
-========================
-*/
-interlockedInt_t Sys_InterlockedAdd( interlockedInt_t &value, interlockedInt_t i ) {
-	return InterlockedExchangeAdd( &value, i ) + i;
-}
-
-/*
-========================
-Sys_InterlockedSub
-========================
-*/
-interlockedInt_t Sys_InterlockedSub( interlockedInt_t &value, interlockedInt_t i ) {
-	return InterlockedExchangeAdd( &value, -i ) - i;
-}
-
-/*
-========================
-Sys_InterlockedExchange
-========================
-*/
-interlockedInt_t Sys_InterlockedExchange( interlockedInt_t &value, interlockedInt_t exchange ) {
-	return InterlockedExchange( &value, exchange );
-}
-
-/*
-========================
-Sys_InterlockedCompareExchange
-========================
-*/
-interlockedInt_t Sys_InterlockedCompareExchange( interlockedInt_t &value, interlockedInt_t comparand, interlockedInt_t exchange ) {
-	return InterlockedCompareExchange( &value, exchange, comparand );
-}
-
-/*
-===================================================================================================
-
-	Interlocked Pointer
-
-===================================================================================================
-*/
-
-/*
-========================
-Sys_InterlockedExchangePointer
-========================
-*/
-void *Sys_InterlockedExchangePointer( void *&ptr, void *exchange )
+void Sys_MutexUnlock( mutex_t &mutex )
 {
-	return InterlockedExchangePointer( &ptr, exchange );
-}
-
-/*
-========================
-Sys_InterlockedCompareExchangePointer
-========================
-*/
-void *Sys_InterlockedCompareExchangePointer( void *&ptr, void *comparand, void *exchange )
-{
-	return InterlockedCompareExchangePointer( &ptr, exchange, comparand );
+	ReleaseSRWLockExclusive( (PSRWLOCK)&mutex );
 }

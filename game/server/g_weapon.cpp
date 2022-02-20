@@ -464,6 +464,24 @@ static void Grenade_Touch (edict_t *ent, edict_t *other, cplane_t *plane, csurfa
 	Grenade_Explode (ent);
 }
 
+static void Grenade_SetupPhysics( edict_t *ent )
+{
+	static shapeHandle_t s_grenadeShape;
+
+	if ( !s_grenadeShape )
+	{
+		s_grenadeShape = gi.physSystem->CreateSphereShape( 8.0f );
+	}
+
+	bodyCreationSettings_t bcs;
+	VectorCopy( ent->s.origin, bcs.position );
+	VectorCopy( ent->s.angles, bcs.rotation );
+	bcs.friction = 0.94f;
+	bcs.restitution = 0.2f;
+
+	Phys_SetupPhysicsForEntity( ent, bcs, s_grenadeShape );
+}
+
 void fire_grenade (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float timer, float damage_radius)
 {
 	edict_t	*grenade;
@@ -494,7 +512,7 @@ void fire_grenade (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int s
 	grenade->dmg_radius = damage_radius;
 	grenade->classname = "grenade";
 
-	Phys_SetupPhysicsForEntity( grenade, gi.physSystem->CreateBodySphere( grenade->s.origin, grenade->s.angles, 8.0f ) );
+	Grenade_SetupPhysics( grenade );
 
 	gi.linkentity (grenade);
 }
@@ -528,17 +546,25 @@ void fire_grenade2 (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int 
 	grenade->dmg = damage;
 	grenade->dmg_radius = damage_radius;
 	grenade->classname = "hgrenade";
-	if (held)
+
+	if ( held ) {
 		grenade->spawnflags = 3;
-	else
+	} else {
 		grenade->spawnflags = 1;
+	}
+
 	grenade->s.sound = gi.soundindex("weapons/hgrenc1b.wav");
 
-	if (timer <= 0.0)
-		Grenade_Explode (grenade);
+	if ( timer <= 0.0 )
+	{
+		Grenade_Explode( grenade );
+	}
 	else
 	{
+		Grenade_SetupPhysics( grenade );
+
 		gi.sound (self, CHAN_WEAPON, gi.soundindex ("weapons/hgrent1a.wav"), 1, ATTN_NORM, 0);
+
 		gi.linkentity (grenade);
 	}
 }

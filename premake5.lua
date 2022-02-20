@@ -72,7 +72,9 @@ end
 
 function LinkToJolt()
 	sysincludedirs { "thirdparty/JoltPhysics/Jolt" }
-	defines { "JPH_STAT_COLLECTOR", "JPH_PROFILE_ENABLED", "JPH_DEBUG_RENDERER", "JPH_FLOATING_POINT_EXCEPTIONS_ENABLED" }
+	-- JPH_STAT_COLLECTOR, "JPH_PROFILE_ENABLED", "JPH_FLOATING_POINT_EXCEPTIONS_ENABLED"
+	defines { "JPH_DEBUG_RENDERER" }
+	links { "joltphysics" }
 end
 
 -- Workspace definition -------------------------------------------------------
@@ -149,179 +151,7 @@ filter {}
 
 -- Project definitions --------------------------------------------------------
 
-local zlib_public = {
-	"thirdparty/zlib/zconf.h",
-	"thirdparty/zlib/zlib.h"
-}
-
-local zlib_sources = {
-	"thirdparty/zlib/adler32.c",
-	"thirdparty/zlib/compress.c",
-	"thirdparty/zlib/crc32.c",
-	"thirdparty/zlib/crc32.h",
-	"thirdparty/zlib/deflate.c",
-	"thirdparty/zlib/deflate.h",
-	"thirdparty/zlib/gzclose.c",
-	"thirdparty/zlib/gzguts.h",
-	"thirdparty/zlib/gzlib.c",
-	"thirdparty/zlib/gzread.c",
-	"thirdparty/zlib/gzwrite.c",
-	"thirdparty/zlib/infback.c",
-	"thirdparty/zlib/inffast.c",
-	"thirdparty/zlib/inffast.h",
-	"thirdparty/zlib/inffixed.h",
-	"thirdparty/zlib/inflate.c",
-	"thirdparty/zlib/inflate.h",
-	"thirdparty/zlib/inftrees.c",
-	"thirdparty/zlib/inftrees.h",
-	"thirdparty/zlib/trees.c",
-	"thirdparty/zlib/trees.h",
-	"thirdparty/zlib/uncompr.c",
-	"thirdparty/zlib/zutil.c",
-	"thirdparty/zlib/zutil.h"
-}
-
-local libpng_public = {
-	"thirdparty/libpng/png.h",
-	"thirdparty/libpng/pngconf.h"
-}
-
-local libpng_sources = {
-	"thirdparty/libpng/png.c",
-	"thirdparty/libpng/pngpriv.h",
-	"thirdparty/libpng/pngstruct.h",
-	"thirdparty/libpng/pnginfo.h",
-	"thirdparty/libpng/pngdebug.h",
-	"thirdparty/libpng/pngerror.c",
-	"thirdparty/libpng/pngget.c",
-	"thirdparty/libpng/pngmem.c",
-	"thirdparty/libpng/pngpread.c",
-	"thirdparty/libpng/pngread.c",
-	"thirdparty/libpng/pngrio.c",
-	"thirdparty/libpng/pngrtran.c",
-	"thirdparty/libpng/pngrutil.c",
-	"thirdparty/libpng/pngset.c",
-	"thirdparty/libpng/pngtrans.c",
-	"thirdparty/libpng/pngwio.c",
-	"thirdparty/libpng/pngwrite.c",
-	"thirdparty/libpng/pngwtran.c",
-	"thirdparty/libpng/pngwutil.c"
-}
-
-local glew_public = {
-	"thirdparty/glew/include/GL/glew.h",
-	"thirdparty/glew/include/GL/wglew.h"
-}
-
-local glew_sources = {
-	"thirdparty/glew/src/glew.c"
-}
-
-local xatlas_public = {
-	"thirdparty/xatlas/xatlas.h",
-}
-
-local xatlas_sources = {
-	"thirdparty/xatlas/xatlas.cpp",
-}
-
-local uvatlas_public = {
-	"thirdparty/UVAtlas/UVAtlas/inc/UVAtlas.h",
-}
-
-local uvatlas_sources = {
-	"thirdparty/UVAtlas/UVAtlas/geodesics/*.cpp",
-	"thirdparty/UVAtlas/UVAtlas/geodesics/*.h",
-	"thirdparty/UVAtlas/UVAtlas/isochart/*.cpp",
-	"thirdparty/UVAtlas/UVAtlas/isochart/*.h"
-}
-
-local imgui_public = {
-	"thirdparty/imgui/imgui.h",
-	"thirdparty/imgui/imconfig.h"
-}
-
-local imgui_sources = {
-	"thirdparty/imgui/imgui_internal.h",
-	"thirdparty/imgui/imgui.cpp",
-	"thirdparty/imgui/imgui_demo.cpp",
-	"thirdparty/imgui/imgui_draw.cpp",
-	"thirdparty/imgui/imgui_tables.cpp",
-	"thirdparty/imgui/imgui_widgets.cpp",
-
-	--"thirdparty/imgui/misc/freetype/imgui_freetype.*",
-
-	"thirdparty/imgui/backends/imgui_impl_opengl3.*"
-}
-
-local meshoptimizer_public = {
-	"thirdparty/meshoptimizer/src/meshoptimizer.h"
-}
-
-local meshoptimizer_sources = {
-	"thirdparty/meshoptimizer/src/*.cpp",
-}
-
--- freetype
-
-local freetype_public_headers = {
-	"thirdparty/freetype/include/ft2build.h",
-	"thirdparty/freetype/include/freetype/*.h"
-}
-
-local freetype_config_headers = {
-	"thirdparty/freetype/include/freetype/config/*.h"
-}
-
-local freetype_private_headers = {
-	"thirdparty/freetype/include/freetype/internal/*.h"
-}
-
-local freetype_sources = {
-	-- base
-	"thirdparty/freetype/src/autofit/autofit.c",
-	"thirdparty/freetype/src/base/ftbase.c",
-	"thirdparty/freetype/src/base/ftbbox.c",
-	"thirdparty/freetype/src/base/ftbdf.c",
-	"thirdparty/freetype/src/base/ftbitmap.c",
-	"thirdparty/freetype/src/base/ftcid.c",
-	"thirdparty/freetype/src/base/ftfstype.c",
-	"thirdparty/freetype/src/base/ftgasp.c",
-	"thirdparty/freetype/src/base/ftglyph.c",
-	"thirdparty/freetype/src/base/ftgxval.c",
-	"thirdparty/freetype/src/base/ftinit.c",
-	"thirdparty/freetype/src/base/ftmm.c",
-	"thirdparty/freetype/src/base/ftotval.c",
-	"thirdparty/freetype/src/base/ftpatent.c",
-	"thirdparty/freetype/src/base/ftpfr.c",
-	"thirdparty/freetype/src/base/ftstroke.c",
-	"thirdparty/freetype/src/base/ftsynth.c",
-	"thirdparty/freetype/src/base/fttype1.c",
-	"thirdparty/freetype/src/base/ftwinfnt.c",
-	"thirdparty/freetype/src/bdf/bdf.c",
-	"thirdparty/freetype/src/bzip2/ftbzip2.c",
-	"thirdparty/freetype/src/cache/ftcache.c",
-	"thirdparty/freetype/src/cff/cff.c",
-	"thirdparty/freetype/src/cid/type1cid.c",
-	"thirdparty/freetype/src/gzip/ftgzip.c",
-	"thirdparty/freetype/src/lzw/ftlzw.c",
-	"thirdparty/freetype/src/pcf/pcf.c",
-	"thirdparty/freetype/src/pfr/pfr.c",
-	"thirdparty/freetype/src/psaux/psaux.c",
-	"thirdparty/freetype/src/pshinter/pshinter.c",
-	"thirdparty/freetype/src/psnames/psnames.c",
-	"thirdparty/freetype/src/raster/raster.c",
-	"thirdparty/freetype/src/sdf/sdf.c",
-	"thirdparty/freetype/src/sfnt/sfnt.c",
-	"thirdparty/freetype/src/smooth/smooth.c",
-	"thirdparty/freetype/src/truetype/truetype.c",
-	"thirdparty/freetype/src/type1/type1.c",
-	"thirdparty/freetype/src/type42/type42.c",
-	"thirdparty/freetype/src/winfonts/winfnt.c",
-
-	"thirdparty/freetype/builds/windows/ftsystem.c",
-	"thirdparty/freetype/builds/windows/ftdebug.c"
-}
+require "premake/thirdparty"
 
 local fbxsdk_dir = os.getenv( "FBXSDK_DIR" )
 local fbxsdk_include_dir = fbxsdk_dir .. "/include"
@@ -872,17 +702,32 @@ project "libpng"
 		"thirdparty/libpng_config/pnglibconf.h"
 	}
 
-	project "meshoptimizer"
-		kind "StaticLib"
-		targetname "meshoptimizer"
-		language "C++"
+project "meshoptimizer"
+	kind "StaticLib"
+	targetname "meshoptimizer"
+	language "C++"
 
-		vpaths { ["code"] = "*" }
+	vpaths { ["code"] = "*" }
 
-		files {
-			meshoptimizer_public,
-			meshoptimizer_sources,
-		}
+	files {
+		meshoptimizer_public,
+		meshoptimizer_sources,
+	}
+	
+project "joltphysics"
+	kind "StaticLib"
+	targetname "joltphysics"
+	language "C++"
+	
+	sysincludedirs { "thirdparty/JoltPhysics/Jolt" }
+	defines { "JPH_DEBUG_RENDERER" }
+	
+	pchsource( "thirdparty/JoltPhysics/Jolt/pch.cpp" )
+	pchheader( "Jolt.h" )
+	
+	files {
+		joltphysics_sources
+	}
 
 --[[
 project "freetype"

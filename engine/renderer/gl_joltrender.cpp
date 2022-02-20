@@ -12,7 +12,7 @@
 
 #include "../shared/physics.h"
 
-#if 0
+#if 1
 
 class MyDebugRenderer final : public JPH::DebugRenderer
 {
@@ -82,6 +82,7 @@ void MyDebugRenderer::DrawTriangle( JPH::Vec3Arg inV1, JPH::Vec3Arg inV2, JPH::V
 
 MyDebugRenderer::Batch MyDebugRenderer::CreateTriangleBatch( const Triangle *inTriangles, int inTriangleCount )
 {
+#if 0
 	glBindVertexArray( m_vao );
 	glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
 
@@ -99,12 +100,14 @@ MyDebugRenderer::Batch MyDebugRenderer::CreateTriangleBatch( const Triangle *inT
 	glUniformMatrix4fv( 6, 1, GL_FALSE, (const GLfloat *)&tr.projMatrix );
 
 	glDrawArrays( GL_TRIANGLES, 0, inTriangleCount / 3 );
+#endif
 
 	return nullptr;
 }
 
 MyDebugRenderer::Batch MyDebugRenderer::CreateTriangleBatch( const Vertex *inVertices, int inVertexCount, const uint32 *inIndices, int inIndexCount )
 {
+#if 0
 	glBindVertexArray( m_vao );
 	glBindBuffer( GL_ARRAY_BUFFER, m_vbo );
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_ebo );
@@ -124,6 +127,7 @@ MyDebugRenderer::Batch MyDebugRenderer::CreateTriangleBatch( const Vertex *inVer
 	glUniformMatrix4fv( 6, 1, GL_FALSE, (const GLfloat *)&tr.projMatrix );
 
 	glDrawElements( GL_TRIANGLES, inIndexCount, GL_UNSIGNED_INT, nullptr );
+#endif
 
 	return nullptr;
 }
@@ -180,29 +184,32 @@ public:
 };
 
 static QuakeStreamOut *s_streamOut;
-static JPH::DebugRendererRecorder *s_debugRenderer;
+static MyDebugRenderer *s_debugRenderer;
+//static JPH::DebugRendererRecorder *s_debugRendererRecorder;
 
 void R_JoltInitRenderer()
 {
+	s_debugRenderer = new MyDebugRenderer();
 	s_streamOut = new QuakeStreamOut( "jolt.bin" );
-	s_debugRenderer = new JPH::DebugRendererRecorder( *s_streamOut );
+	//s_debugRendererRecorder = new JPH::DebugRendererRecorder( *s_streamOut );
 }
 
 void R_JoltShutdownRenderer()
 {
-	delete s_debugRenderer;
+	//delete s_debugRendererRecorder;
 	delete s_streamOut;
+	delete s_debugRenderer;
 }
 
 void R_JoltDrawBodies()
 {	
 	JPH::BodyManager::DrawSettings drawSettings
 	{
-		.mDrawGetSupportFunction = true,						///< Draw the GetSupport() function, used for convex collision detection	
-		.mDrawSupportDirection = true,							///< When drawing the support function, also draw which direction mapped to a specific support point
-		.mDrawGetSupportingFace = true,							///< Draw the faces that were found colliding during collision detection
+		.mDrawGetSupportFunction = false,						///< Draw the GetSupport() function, used for convex collision detection	
+		.mDrawSupportDirection = false,							///< When drawing the support function, also draw which direction mapped to a specific support point
+		.mDrawGetSupportingFace = false,						///< Draw the faces that were found colliding during collision detection
 		.mDrawShape = true,										///< Draw the shapes of all bodies
-		.mDrawShapeWireframe = false,							///< When mDrawShape is true and this is true, the shapes will be drawn in wireframe instead of solid.
+		.mDrawShapeWireframe = true,							///< When mDrawShape is true and this is true, the shapes will be drawn in wireframe instead of solid.
 		//.mDrawShapeColor = JPH::EShapeColor::MotionTypeColor,	///< Coloring scheme to use for shapes
 		.mDrawBoundingBox = true,								///< Draw a bounding box per body
 		.mDrawCenterOfMassTransform = true,						///< Draw the center of mass for each body
@@ -216,7 +223,10 @@ void R_JoltDrawBodies()
 	JPH::PhysicsSystem *physicsSystem = Physics::GetPhysicsSystem();
 
 	physicsSystem->DrawBodies( drawSettings, s_debugRenderer );
-	s_debugRenderer->EndFrame();
+#if 0
+	physicsSystem->DrawBodies( drawSettings, s_debugRendererRecorder );
+	s_debugRendererRecorder->EndFrame();
+#endif
 }
  
 #endif // !NO_JOLT_DEBUG

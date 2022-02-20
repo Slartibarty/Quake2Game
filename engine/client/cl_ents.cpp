@@ -2,6 +2,8 @@
 
 #include "cl_local.h"
 
+#include <Jolt.h>
+
 static constexpr float MaxViewmodelLag = 1.5f;
 static_assert( MaxViewmodelLag > 0.0f );
 
@@ -26,6 +28,23 @@ static constexpr float cl_rollspeed = 200.0f;
 
 ===================================================================================================
 */
+
+static void InterpolateAngles( const vec3_t start, const vec3_t end, vec3_t output, float frac )
+{
+	vec4_t src, dest;
+
+	// Convert to quaternions
+	AngleQuaternion( start, src );
+	AngleQuaternion( end, dest );
+
+	vec4_t result;
+
+	// Slerp
+	QuaternionSlerp( src, dest, frac, result );
+
+	// Convert to euler
+	QuaternionAngles( result, output );
+}
 
 /*
 ========================
@@ -831,7 +850,9 @@ static void CL_AddPacketEntities( clSnapshot_t *frame )
 			}
 		}
 		else
-		{	// interpolate angles
+		{
+			// interpolate angles
+#if 0
 			float a1, a2;
 
 			for ( i = 0; i < 3; i++ )
@@ -840,6 +861,9 @@ static void CL_AddPacketEntities( clSnapshot_t *frame )
 				a2 = cent->prev.angles[i];
 				ent.angles[i] = LerpAngle( a2, a1, cl.lerpfrac );
 			}
+#else
+			InterpolateAngles( cent->prev.angles, cent->current.angles, ent.angles, cl.lerpfrac );
+#endif
 		}
 
 		if ( s1->number == cl.playernum + 1 )

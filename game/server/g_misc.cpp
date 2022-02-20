@@ -2,6 +2,32 @@
 
 #include "g_local.h"
 
+/*
+=================================================
+	Physics Stuff
+=================================================
+*/
+
+static void G_SetupGibPhysics( edict_t *ent )
+{
+	static shapeHandle_t s_miscShape;
+
+	if ( !s_miscShape )
+	{
+		vec3_t halfExtent{ 2.0f, 2.0f, 2.0f };
+		s_miscShape = gi.physSystem->CreateBoxShape( halfExtent );
+	}
+
+	bodyCreationSettings_t bcs;
+	VectorCopy( ent->s.origin, bcs.position );
+	VectorCopy( ent->s.angles, bcs.rotation );
+	bcs.friction = 0.75f;
+	bcs.restitution = 0.2f;
+
+	Phys_SetupPhysicsForEntity( ent, bcs, s_miscShape );
+}
+
+//=====================================================
 
 /*QUAKED func_group (0 0 0) ?
 Used to group brushes together just for editor convenience.
@@ -158,7 +184,7 @@ void ThrowGib (edict_t *self, const char *gibname, int damage, int type)
 	gib->think = G_FreeEdict;
 	gib->nextthink = level.time + 10 + random()*10;
 
-	Phys_SetupPhysicsForEntity( gib, gi.physSystem->CreateBodySphere( gib->s.origin, gib->s.angles, 8.0f ) );
+	G_SetupGibPhysics( gib );
 
 	gi.linkentity (gib);
 }
@@ -290,6 +316,9 @@ void ThrowDebris (edict_t *self, const char *modelname, float speed, vec3_t orig
 	chunk->classname = "debris";
 	chunk->takedamage = DAMAGE_YES;
 	chunk->die = debris_die;
+
+	G_SetupGibPhysics( chunk );
+
 	gi.linkentity (chunk);
 }
 

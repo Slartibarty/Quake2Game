@@ -11,13 +11,30 @@
 
 namespace Physics
 {
+	//
+	// Internals
+	//
+
 	void Init();
 	void Shutdown();
 	void Simulate( float deltaTime );
 
-	bodyID_t CreateBodySphere( const vec3_t position, const vec3_t angles, float radius );
+	//
+	// Shape Creation
+	//
 
-	void GetBodyTransform( bodyID_t bodyID, vec3_t position, vec3_t angles );
+	shapeHandle_t CreateBoxShape( vec3_t halfExtent );
+	shapeHandle_t CreateSphereShape( float radius );
+	void DestroyShape( shapeHandle_t handle );
+
+	//
+	// Bodies
+	//
+
+	bodyID_t CreateAndAddBody( const bodyCreationSettings_t &settings, shapeHandle_t shape );
+	void RemoveAndDestroyBody( bodyID_t bodyID );
+
+	void GetBodyPositionAndRotation( bodyID_t bodyID, vec3_t position, vec3_t angles );
 
 	void SetLinearAndAngularVelocity( bodyID_t bodyID, vec3_t velocity, vec3_t avelocity );
 
