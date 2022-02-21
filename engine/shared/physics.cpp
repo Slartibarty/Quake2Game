@@ -195,25 +195,45 @@ static struct physicsLocal_t
 
 //=================================================================================================
 
-#define QUAKE2JOLT_FACTOR		0.0254				// Factor to convert game units to meters
-#define JOLT2QUAKE_FACTOR		39.3700787402		// Factor to convert meters to game units
+#define QUAKE2JOLT_FACTOR		0.0254f				// Factor to convert game units to meters
+#define JOLT2QUAKE_FACTOR		39.3700787402f		// Factor to convert meters to game units
 
-template< std::floating_point T >
-inline constexpr T QUAKE2JPH( T x ) { return x * static_cast<T>( QUAKE2JOLT_FACTOR ); }
+inline constexpr float QUAKE2JOLT( float x ) { return x * QUAKE2JOLT_FACTOR; }
 
-template< std::floating_point T >
-inline constexpr T JPH2QUAKE( T x ) { return x * static_cast<T>( JOLT2QUAKE_FACTOR ); }
+inline constexpr float JOLT2QUAKE( float x ) { return x * JOLT2QUAKE_FACTOR; }
 
-// Converts a Quake vec3_t to a Jolt SIMD Vec3
-static JPH::Vec3 QuakeVec3ToJPHVec3( const vec3_t vec )
+// Position
+
+static JPH::Vec3 QuakePositionToJolt( const vec3_t pos )
 {
-	return JPH::Vec3( vec[0], vec[1], vec[2] );
+	return JPH::Vec3( QUAKE2JOLT( pos[0] ), QUAKE2JOLT( pos[1] ), QUAKE2JOLT( pos[2] ) );
 }
 
+static void JoltPositionToQuake( JPH::Vec3Arg jpos, vec3_t qpos )
+{
+	jpos *= JOLT2QUAKE_FACTOR;
+	jpos.StoreFloat3( (JPH::Float3 *)qpos );
+}
+
+// Rotation
+
 // Converts Quake Euler angles to a Jolt Quaternion
-static JPH::Quat QuakeVec3ToJPHQuat( const vec3_t vec )
+static JPH::Quat QuakeEulerToJoltQuat( const vec3_t vec )
 {
 	return JPH::Quat::sEulerAngles( JPH::Vec3( vec[0], vec[2], vec[1] ) );
+}
+
+static void JoltQuatToQuakeEuler( JPH::QuatArg quat, vec3_t euler )
+{
+	JPH::Vec3 vec = quat.GetEulerAngles();
+	vec = vec.Swizzle<JPH::SWIZZLE_Y, JPH::SWIZZLE_Z, JPH::SWIZZLE_X>();
+	vec.StoreFloat3( reinterpret_cast<JPH::Float3 *>( euler ) );
+
+	// Y Z X
+
+	euler[0] = RAD2DEG( euler[0] );
+	euler[1] = RAD2DEG( euler[1] );
+	euler[2] = RAD2DEG( euler[2] );
 }
 
 static JPH::EMotionType QuakeMotionTypeToJPHMotionType( motionType_t type )
@@ -276,7 +296,6 @@ void Init()
 
 	JPH::Vec3 gravity = vars.physicsSystem->GetGravity();
 	gravity = gravity.Swizzle<JPH::SWIZZLE_X, JPH::SWIZZLE_Z, JPH::SWIZZLE_Y>();
-	//gravity *= JOLT2QUAKE_FACTOR;
 	vars.physicsSystem->SetGravity( gravity );
 }
 
@@ -292,8 +311,8 @@ void Simulate( float deltaTime )
 	// We simulate the physics world in discrete time steps. 60 Hz is a good rate to update the physics system.
 	constexpr float cDeltaTime = 1.0f / 60.0f;
 
-	constexpr uint numSteps = 16;
-	for ( uint s = 0; s < numSteps; ++s )
+	constexpr uint numSteps = 6;
+	for ( uint step = 0; step < numSteps; ++step )
 	{
 		vars.physicsSystem->Update( cDeltaTime, 1, 1, vars.tempAllocator, vars.jobSystem );
 	}
@@ -307,7 +326,7 @@ void Simulate( float deltaTime )
 
 shapeHandle_t CreateBoxShape( vec3_t halfExtent )
 {
-	JPH::Vec3 jphHalfExtent( halfExtent[0], halfExtent[1], halfExtent[2] );
+	JPH::Vec3 jphHalfExtent = QuakePositionToJolt( halfExtent );
 
 	JPH::BoxShape *shape = new JPH::BoxShape( jphHalfExtent );
 	shape->AddRef();
@@ -319,7 +338,7 @@ shapeHandle_t CreateBoxShape( vec3_t halfExtent )
 
 shapeHandle_t CreateSphereShape( float radius )
 {
-	JPH::SphereShape *shape = new JPH::SphereShape( radius );
+	JPH::SphereShape *shape = new JPH::SphereShape( QUAKE2JOLT( radius ) );
 	shape->AddRef();
 
 	vars.shapeCache.push_back( shape );
@@ -330,6 +349,8 @@ shapeHandle_t CreateSphereShape( float radius )
 void DestroyShape( shapeHandle_t handle )
 {
 	JPH::Shape *shape = reinterpret_cast<JPH::Shape *>( handle );
+
+	assert( shape->GetRefCount() == 1 );
 	
 	shape->Release();
 }
@@ -344,8 +365,8 @@ bodyID_t CreateAndAddBody( const bodyCreationSettings_t &settings, shapeHandle_t
 {
 	JPH::BodyCreationSettings creationSettings(
 		reinterpret_cast<JPH::Shape *>( shape ),
-		QuakeVec3ToJPHVec3( settings.position ),
-		QuakeVec3ToJPHQuat( settings.rotation ),
+		QuakePositionToJolt( settings.position ),
+		QuakeEulerToJoltQuat( settings.rotation ),
 		QuakeMotionTypeToJPHMotionType( settings.motionType ),
 		Layers::MOVING ); // TODO: Must be variable based on motion type...
 
@@ -359,7 +380,7 @@ bodyID_t CreateAndAddBody( const bodyCreationSettings_t &settings, shapeHandle_t
 
 	creationSettings.mInertiaMultiplier = settings.inertiaMultiplier;
 
-	creationSettings.mMotionQuality = JPH::EMotionQuality::LinearCast;
+	//creationSettings.mMotionQuality = JPH::EMotionQuality::LinearCast;
 
 	JPH::BodyInterface &bodyInterface = GetBodyInterfaceNoLock();
 
@@ -376,41 +397,39 @@ void RemoveAndDestroyBody( bodyID_t bodyID )
 	bodyInterface.DestroyBody( std::bit_cast<JPH::BodyID>( bodyID ) );
 }
 
-void CreatePhysExplosion()
-{
-	JPH::BodyInterface &bodyInterface = GetBodyInterfaceNoLock();
-}
-
-void GetBodyPositionAndRotation( bodyID_t bodyID, vec3_t position, vec3_t angles )
+void GetBodyPositionAndRotation( bodyID_t bodyID, vec3_t position, vec3_t rotation )
 {
 	JPH::BodyInterface &bodyInterface = GetBodyInterfaceNoLock();
 
 	JPH::Vec3 jphPos;
 	JPH::Quat jphRot;
 
-	bodyInterface.GetPositionAndRotation( std::bit_cast<JPH::BodyID>( bodyID ), jphPos, jphRot );
+	JPH::BodyID jphBodyID = std::bit_cast<JPH::BodyID>( bodyID );
+	bodyInterface.GetPositionAndRotation( jphBodyID, jphPos, jphRot );
 
-	jphPos.StoreFloat3( reinterpret_cast<JPH::Float3 *>( position ) );
-	jphPos = jphRot.GetEulerAngles();
+	JoltPositionToQuake( jphPos, position );
+	JoltQuatToQuakeEuler( jphRot, rotation );
+}
 
-	// Z X Y
-	JPH::Vec3 newPos( RAD2DEG( jphPos.GetY() ), RAD2DEG( jphPos.GetZ() ), RAD2DEG( jphPos.GetX() ) );
+void AddLinearVelocity( bodyID_t bodyID, vec3_t velocity )
+{
+	JPH::Vec3 jphLinearVelocity = QuakePositionToJolt( velocity );
 
-	newPos.StoreFloat3( reinterpret_cast<JPH::Float3 *>( angles ) );
+	JPH::BodyInterface &bodyInterface = GetBodyInterfaceNoLock();
 
-	//angles[0] = 0.0f;
-	//angles[1] = 0.0f;
-	//angles[2] = 0.0f;
+	JPH::BodyID jphBodyID = std::bit_cast<JPH::BodyID>( bodyID );
+	bodyInterface.AddLinearVelocity( jphBodyID, jphLinearVelocity );
 }
 
 void SetLinearAndAngularVelocity( bodyID_t bodyID, vec3_t velocity, vec3_t avelocity )
 {
-	JPH::Vec3 jphLinearVelocity = QuakeVec3ToJPHVec3( velocity );
-	JPH::Vec3 jphAngularVelocity = QuakeVec3ToJPHVec3( avelocity );
+	JPH::Vec3 jphLinearVelocity = QuakePositionToJolt( velocity );
+	JPH::Vec3 jphAngularVelocity = QuakePositionToJolt( avelocity );
 
 	JPH::BodyInterface &bodyInterface = GetBodyInterfaceNoLock();
 
-	bodyInterface.SetLinearAndAngularVelocity( std::bit_cast<JPH::BodyID>( bodyID ), jphLinearVelocity, jphAngularVelocity );
+	JPH::BodyID jphBodyID = std::bit_cast<JPH::BodyID>( bodyID );
+	bodyInterface.SetLinearAndAngularVelocity( jphBodyID, jphLinearVelocity, jphAngularVelocity );
 }
 
 JPH::PhysicsSystem *GetPhysicsSystem()
@@ -418,8 +437,15 @@ JPH::PhysicsSystem *GetPhysicsSystem()
 	return vars.physicsSystem;
 }
 
-void AddWorld( const JPH::VertexList &vertexList, const JPH::IndexedTriangleList &indexList )
+void AddWorld( JPH::VertexList &vertexList, JPH::IndexedTriangleList &indexList )
 {
+	for ( JPH::Float3 &vert : vertexList )
+	{
+		vert.x = QUAKE2JOLT( vert.x );
+		vert.y = QUAKE2JOLT( vert.y );
+		vert.z = QUAKE2JOLT( vert.z );
+	}
+
 	// The main way to interact with the bodies in the physics system is through the body interface. There is a locking and a non-locking
 	// variant of this. We're going to use the locking version (even though we're not planning to access bodies from multiple threads)
 	JPH::BodyInterface &bodyInterface = GetBodyInterfaceNoLock();
@@ -476,14 +502,19 @@ public:
 		return Physics::CreateAndAddBody( settings, shape );
 	}
 
-	void RemoveAndDestroyBody( bodyID_t bodyID )
+	void RemoveAndDestroyBody( bodyID_t bodyID ) override
 	{
 		Physics::RemoveAndDestroyBody( bodyID );
 	}
 
-	void GetBodyPositionAndRotation( bodyID_t bodyID, vec3_t position, vec3_t angles ) override
+	void GetBodyPositionAndRotation( bodyID_t bodyID, vec3_t position, vec3_t rotation ) override
 	{
-		Physics::GetBodyPositionAndRotation( bodyID, position, angles );
+		Physics::GetBodyPositionAndRotation( bodyID, position, rotation );
+	}
+
+	void AddLinearVelocity( bodyID_t bodyID, vec3_t velocity ) override
+	{
+		Physics::AddLinearVelocity( bodyID, velocity );
 	}
 
 	void SetLinearAndAngularVelocity( bodyID_t bodyID, vec3_t velocity, vec3_t avelocity ) override

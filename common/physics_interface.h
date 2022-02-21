@@ -48,7 +48,8 @@ public:
 	virtual bodyID_t		CreateAndAddBody( const bodyCreationSettings_t &settings, shapeHandle_t shape ) = 0;
 	virtual void			RemoveAndDestroyBody( bodyID_t bodyID ) = 0;
 
-	virtual void			GetBodyPositionAndRotation( bodyID_t bodyID, vec3_t position, vec3_t angles ) = 0;
+	virtual void			GetBodyPositionAndRotation( bodyID_t bodyID, vec3_t position, vec3_t rotation ) = 0;
 
+	virtual void			AddLinearVelocity( bodyID_t bodyID, vec3_t velocity ) = 0;
 	virtual void			SetLinearAndAngularVelocity( bodyID_t bodyID, vec3_t velocity, vec3_t avelocity ) = 0;
 };

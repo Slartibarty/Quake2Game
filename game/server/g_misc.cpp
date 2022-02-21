@@ -231,6 +231,8 @@ void ThrowHead (edict_t *self, const char *gibname, int damage, int type)
 	self->think = G_FreeEdict;
 	self->nextthink = level.time + 10 + random()*10;
 
+	G_SetupGibPhysics( self );
+
 	gi.linkentity (self);
 }
 

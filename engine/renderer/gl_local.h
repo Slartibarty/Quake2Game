@@ -211,6 +211,25 @@ void R_SetLightLevel();
 /*
 ===============================================================================
 
+	gl_mesh.cpp
+
+===============================================================================
+*/
+
+#define MAX_LIGHTS 4
+
+struct renderLight_t
+{
+	vec3_t position;
+	vec3_t color;
+	float intensity;
+};
+
+void R_FourNearestLights( vec3_t origin, renderLight_t *finalLights, vec3_t ambientColor );
+
+/*
+===============================================================================
+
 	gl_image.cpp
 
 ===============================================================================
@@ -378,7 +397,7 @@ struct material_t
 
 void	R_MarkLights( dlight_t *light, int bit, mnode_t *node );
 void	R_PushDlights();
-void	R_LightPoint( vec3_t p, vec3_t color );
+void	R_LightPoint( const vec3_t p, vec3_t color );
 
 /*
 ===============================================================================

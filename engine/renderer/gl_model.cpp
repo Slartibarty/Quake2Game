@@ -907,6 +907,19 @@ static char *Mod_ParseEntity( char *entString, staticLight_t &light, bool &found
 			light.color[2] = b / 255.0f;
 			light.intensity = i;
 		}
+		else if ( Q_strcmp( keyname, "light" ) == 0 ) // Quake 2
+		{
+			light.intensity = Q_atoui32( com_token );
+		}
+		else if ( Q_strcmp( keyname, "_color" ) == 0 ) // Quake 2
+		{
+			float r, g, b;
+			sscanf( com_token, "%f %f %f", &r, &g, &b );
+
+			light.color[0] = r;
+			light.color[1] = g;
+			light.color[2] = b;
+		}
 		else if ( Q_strcmp( keyname, "classname" ) == 0 )
 		{
 			if ( Q_strcmp( com_token, "light" ) == 0 )
@@ -953,6 +966,10 @@ static void Mod_ParseLights( char *entString )
 		if ( com_token[0] != '{' ) {
 			Com_Errorf( "Mod_ParseLights: found %s when expecting {\n", com_token );
 		}
+
+		VectorClear( light.origin );
+		VectorClear( light.color );
+		light.intensity = 100.0f;
 
 		bool foundLight = false;
 		entString = Mod_ParseEntity( entString, light, foundLight );
@@ -1033,7 +1050,7 @@ void Mod_LoadBrushModel( model_t *pMod, void *pBuffer, int bufferLength )
 	Mod_LoadSubmodels		( header->lumps + LUMP_MODELS );
 
 	// Parse lights out of the entity data... This uses the client bsp...
-	//Mod_ParseLights( CM_EntityString() );
+	Mod_ParseLights( CM_EntityString() );
 
 	// Regular and alternate animation
 	pMod->numframes = 2;

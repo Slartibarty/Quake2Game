@@ -12,6 +12,10 @@
 
 #include "../shared/physics.h"
 
+#define JOLT2QUAKE_FACTOR		39.3700787402f		// Factor to convert meters to game units
+
+static StaticCvar r_drawJolt( "r_drawJolt", "0", 0, "Controls Jolt debug drawing." );
+
 #if 1
 
 class MyDebugRenderer final : public JPH::DebugRenderer
@@ -35,12 +39,13 @@ public:
 private:
 	void DrawTriangle_Internal( const JPH::Float3 &v1, const JPH::Float3 &v2, const JPH::Float3 &v3, JPH::Color color );
 
-	GLuint m_vao, m_vbo, m_ebo;
+	//GLuint m_vao, m_vbo, m_ebo;
 
 };
 
 MyDebugRenderer::MyDebugRenderer()
 {
+#if 0
 	glGenVertexArrays( 1, &m_vao );
 	glGenBuffers( 1, &m_vbo );
 	glGenBuffers( 1, &m_ebo );
@@ -58,26 +63,40 @@ MyDebugRenderer::MyDebugRenderer()
 	glVertexAttribPointer( 1, 3, GL_FLOAT, GL_FALSE, sizeof( Vertex ), (void *)( offsetof( Vertex, mNormal ) ) );
 	glVertexAttribPointer( 2, 2, GL_FLOAT, GL_FALSE, sizeof( Vertex ), (void *)( offsetof( Vertex, mUV ) ) );
 	glVertexAttribPointer( 3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( Vertex ), (void *)( offsetof( Vertex, mColor ) ) );
+#endif
 
 	DebugRenderer::Initialize();
 }
 
 MyDebugRenderer::~MyDebugRenderer()
 {
+#if 0
 	glDeleteBuffers( 1, &m_ebo );
 	glDeleteBuffers( 1, &m_vbo );
 	glDeleteVertexArrays( 1, &m_vao );
+#endif
 }
 
 void MyDebugRenderer::DrawLine( const JPH::Float3 &inFrom, const JPH::Float3 &inTo, JPH::ColorArg inColor )
 {
+	vec3_t v1, v2;
+	VectorCopy( (const float *)&inFrom, v1 );
+	VectorCopy( (const float *)&inTo, v2 );
+
+	v1[0] *= JOLT2QUAKE_FACTOR;
+	v1[1] *= JOLT2QUAKE_FACTOR;
+	v1[2] *= JOLT2QUAKE_FACTOR;
+	v2[0] *= JOLT2QUAKE_FACTOR;
+	v2[1] *= JOLT2QUAKE_FACTOR;
+	v2[2] *= JOLT2QUAKE_FACTOR;
+
 	// Just use the R_Draw function
-	R_DrawLine( (const float *)&inFrom, (const float *)&inTo, inColor.GetUInt32() );
+	R_DrawLine( v1, v2, inColor.GetUInt32() );
 }
 
 void MyDebugRenderer::DrawTriangle( JPH::Vec3Arg inV1, JPH::Vec3Arg inV2, JPH::Vec3Arg inV3, JPH::ColorArg inColor )
 {
-	DrawTriangle_Internal( JPH::Float3( inV1.GetX(), inV1.GetY(), inV1.GetZ() ), JPH::Float3( inV2.GetX(), inV2.GetY(), inV2.GetZ() ), JPH::Float3( inV3.GetX(), inV3.GetY(), inV3.GetZ() ), inColor );
+	//DrawTriangle_Internal( JPH::Float3( inV1.GetX(), inV1.GetY(), inV1.GetZ() ), JPH::Float3( inV2.GetX(), inV2.GetY(), inV2.GetZ() ), JPH::Float3( inV3.GetX(), inV3.GetY(), inV3.GetZ() ), inColor );
 }
 
 MyDebugRenderer::Batch MyDebugRenderer::CreateTriangleBatch( const Triangle *inTriangles, int inTriangleCount )
@@ -202,12 +221,17 @@ void R_JoltShutdownRenderer()
 }
 
 void R_JoltDrawBodies()
-{	
+{
+	if ( !r_drawJolt.GetBool() )
+	{
+		return;
+	}
+
 	JPH::BodyManager::DrawSettings drawSettings
 	{
-		.mDrawGetSupportFunction = false,						///< Draw the GetSupport() function, used for convex collision detection	
-		.mDrawSupportDirection = false,							///< When drawing the support function, also draw which direction mapped to a specific support point
-		.mDrawGetSupportingFace = false,						///< Draw the faces that were found colliding during collision detection
+		.mDrawGetSupportFunction = true,						///< Draw the GetSupport() function, used for convex collision detection	
+		.mDrawSupportDirection = true,							///< When drawing the support function, also draw which direction mapped to a specific support point
+		.mDrawGetSupportingFace = true,						///< Draw the faces that were found colliding during collision detection
 		.mDrawShape = true,										///< Draw the shapes of all bodies
 		.mDrawShapeWireframe = true,							///< When mDrawShape is true and this is true, the shapes will be drawn in wireframe instead of solid.
 		//.mDrawShapeColor = JPH::EShapeColor::MotionTypeColor,	///< Coloring scheme to use for shapes
@@ -216,7 +240,7 @@ void R_JoltDrawBodies()
 		.mDrawWorldTransform = true,							///< Draw the world transform (which can be different than the center of mass) for each body
 		.mDrawVelocity = true,									///< Draw the velocity vector for each body
 		.mDrawMassAndInertia = true,							///< Draw the mass and inertia (as the box equivalent) for each body
-		.mDrawSleepStats = false,								///< Draw stats regarding the sleeping algorithm of each body
+		.mDrawSleepStats = true,								///< Draw stats regarding the sleeping algorithm of each body
 		.mDrawNames = false										///< (Debug only) Draw the object names for each body
 	};
 

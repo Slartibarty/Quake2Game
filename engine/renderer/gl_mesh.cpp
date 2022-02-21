@@ -13,6 +13,114 @@
 /*
 ===================================================================================================
 
+	Generic Operations
+
+===================================================================================================
+*/
+
+static trace_t R_LightTrace( vec3_t start, vec3_t end )
+{
+	vec3_t mins{}, maxs{};
+
+	return CM_BoxTrace( start, end, mins, maxs, 0, MASK_OPAQUE );
+}
+
+void R_FourNearestLights( vec3_t origin, renderLight_t *finalLights, vec3_t ambientColor )
+{
+	memset( finalLights, 0, sizeof( renderLight_t ) * MAX_LIGHTS );
+
+	if ( !( tr.refdef.rdflags & RDF_NOWORLDMODEL ) )
+	{
+		R_LightPoint( origin, ambientColor );
+
+		// build a list of all lights in our PVS
+
+		std::vector<staticLight_t> lightsInPVS;
+		lightsInPVS.reserve( 32 );
+
+		trace_t trace;
+
+		for ( int i = 0; i < mod_numStaticLights; ++i )
+		{
+			// hack into the server code, this doesn't call any server functions so we're safe, it's just a wrapper
+			extern qboolean PF_inPVS( vec3_t p1, vec3_t p2 );
+
+			if ( PF_inPVS( origin, mod_staticLights[i].origin ) )
+			{
+				// TODO: is this really necessary?
+				trace = R_LightTrace( origin, mod_staticLights[i].origin );
+				if ( trace.fraction == 1.0f )
+				{
+					lightsInPVS.push_back( mod_staticLights[i] );
+				}
+			}
+		}
+
+		if ( lightsInPVS.size() != 0 )
+		{
+			int skipIndices[MAX_LIGHTS]{ -1, -1, -1, -1 };
+
+			// for all the lights in our PVS, find the four values that have the shortest distance to the origin, do this MAX_LIGHTS times
+			for ( int iter1 = 0; iter1 < MAX_LIGHTS && iter1 < (int)lightsInPVS.size(); ++iter1 )
+			{
+				float smallestDistance = MAX_TRACE_LENGTH;
+				int smallestIndex = 0;
+
+				// in all our PVS lights, find the smallest distance, then mark it as skippable
+				for ( int iter2 = 0; iter2 < (int)lightsInPVS.size(); ++iter2 )
+				{
+					float distance = VectorDistance( origin, lightsInPVS[iter2].origin );
+					if ( distance < smallestDistance )
+					{
+						bool skip = false;
+						// check our skip indices
+						for ( int iter3 = 0; iter3 < MAX_LIGHTS; ++iter3 )
+						{
+							if ( skipIndices[iter3] == iter2 )
+							{
+								skip = true;
+							}
+						}
+						if ( !skip )
+						{
+							smallestDistance = distance;
+							smallestIndex = iter2;
+						}
+					}
+				}
+
+				// mark off the smallest index
+				skipIndices[iter1] = smallestIndex;
+
+				renderLight_t &finalLight = finalLights[iter1];
+				const staticLight_t &staticLight = lightsInPVS[smallestIndex];
+
+				VectorCopy( staticLight.origin, finalLight.position );
+				VectorCopy( staticLight.color, finalLight.color );
+				finalLight.intensity = static_cast<float>( staticLight.intensity ); // compensate
+			}
+		}
+	}
+	else
+	{
+		ambientColor[0] = 0.41f;
+		ambientColor[1] = 0.41f;
+		ambientColor[2] = 0.41f;
+
+		// we have no world, so set up some fake lights
+		finalLights[0].position[0] = 128.0f;
+		finalLights[0].position[1] = 128.0f;
+		finalLights[0].position[2] = 128.0f;
+		finalLights[0].color[0] = 1.0f;
+		finalLights[0].color[1] = 1.0f;
+		finalLights[0].color[2] = 1.0f;
+		finalLights[0].intensity = 200.0f;
+	}
+}
+
+/*
+===================================================================================================
+
 	Alias Models
 
 ===================================================================================================
@@ -607,22 +715,6 @@ void R_DrawAliasModel( entity_t *e )
 ===================================================================================================
 */
 
-#define MAX_LIGHTS 4
-
-struct renderLight_t
-{
-	vec3_t position;
-	vec3_t color;
-	float intensity;
-};
-
-static trace_t R_LightTrace( vec3_t start, vec3_t end )
-{
-	vec3_t mins{}, maxs{};
-
-	return CM_BoxTrace( start, end, mins, maxs, 0, MASK_OPAQUE );
-}
-
 void R_DrawStaticMeshFile( entity_t *e )
 {
 	using namespace DirectX;
@@ -644,95 +736,8 @@ void R_DrawStaticMeshFile( entity_t *e )
 	// lighting
 
 	vec3_t ambientColor;
-	renderLight_t finalLights[MAX_LIGHTS]{};
-
-	if ( !( tr.refdef.rdflags & RDF_NOWORLDMODEL ) )
-	{
-		R_LightPoint( e->origin, ambientColor );
-
-		// build a list of all lights in our PVS
-
-		std::vector<staticLight_t> lightsInPVS;
-		lightsInPVS.reserve( 32 );
-
-		trace_t trace;
-
-		for ( int i = 0; i < mod_numStaticLights; ++i )
-		{
-			// hack into the server code, this doesn't call any server functions so we're safe, it's just a wrapper
-			extern qboolean PF_inPVS( vec3_t p1, vec3_t p2 );
-
-			if ( PF_inPVS( e->origin, mod_staticLights[i].origin ) )
-			{
-				// TODO: is this really necessary?
-				trace = R_LightTrace( e->origin, mod_staticLights[i].origin );
-				if ( trace.fraction == 1.0f )
-				{
-					lightsInPVS.push_back( mod_staticLights[i] );
-				}
-			}
-		}
-
-		if ( lightsInPVS.size() != 0 )
-		{
-			int skipIndices[MAX_LIGHTS]{ -1, -1, -1, -1 };
-
-			// for all the lights in our PVS, find the four values that have the shortest distance to the origin, do this MAX_LIGHTS times
-			for ( int iter1 = 0; iter1 < MAX_LIGHTS && iter1 < (int)lightsInPVS.size(); ++iter1 )
-			{
-				float smallestDistance = MAX_TRACE_LENGTH;
-				int smallestIndex = 0;
-
-				// in all our PVS lights, find the smallest distance, then mark it as skippable
-				for ( int iter2 = 0; iter2 < (int)lightsInPVS.size(); ++iter2 )
-				{
-					float distance = VectorDistance( e->origin, lightsInPVS[iter2].origin );
-					if ( distance < smallestDistance )
-					{
-						bool skip = false;
-						// check our skip indices
-						for ( int iter3 = 0; iter3 < MAX_LIGHTS; ++iter3 )
-						{
-							if ( skipIndices[iter3] == iter2 )
-							{
-								skip = true;
-							}
-						}
-						if ( !skip )
-						{
-							smallestDistance = distance;
-							smallestIndex = iter2;
-						}
-					}
-				}
-
-				// mark off the smallest index
-				skipIndices[iter1] = smallestIndex;
-
-				renderLight_t &finalLight = finalLights[iter1];
-				const staticLight_t &staticLight = lightsInPVS[smallestIndex];
-
-				VectorCopy( staticLight.origin, finalLight.position );
-				VectorCopy( staticLight.color, finalLight.color );
-				finalLight.intensity = static_cast<float>( staticLight.intensity ); // compensate
-			}
-		}
-	}
-	else
-	{
-		ambientColor[0] = 0.41f;
-		ambientColor[1] = 0.41f;
-		ambientColor[2] = 0.41f;
-
-		// we have no world, so set up some fake lights
-		finalLights[0].position[0] = 128.0f;
-		finalLights[0].position[1] = 128.0f;
-		finalLights[0].position[2] = 128.0f;
-		finalLights[0].color[0] = 1.0f;
-		finalLights[0].color[1] = 1.0f;
-		finalLights[0].color[2] = 1.0f;
-		finalLights[0].intensity = 200.0f;
-	}
+	renderLight_t finalLights[MAX_LIGHTS];
+	R_FourNearestLights( e->origin, finalLights, ambientColor );
 
 	GL_UseProgram( glProgs.smfMeshProg );
 

@@ -103,7 +103,9 @@ static void IQM_UploadIndices( const iqmheader *hdr )
 
 static void IQM_LoadMeshes( const iqmheader *hdr, mIQM_t *iqm )
 {
-	if ( hdr->num_meshes == 0 )
+	const uint numMeshes = hdr->num_meshes;
+
+	if ( numMeshes == 0 )
 	{
 		return;
 	}
@@ -111,13 +113,20 @@ static void IQM_LoadMeshes( const iqmheader *hdr, mIQM_t *iqm )
 	IQM_UploadVertices( hdr );
 	IQM_UploadIndices( hdr );
 
-	mIQMMesh_t &iqmMesh = iqm->meshes.emplace_back();
+	const byte *buffer = (const byte *)hdr;
 
-	iqmMesh.pMaterial = nullptr;
-	iqmMesh.numIndices = hdr->num_triangles * 3;
-	iqmMesh.indexOffset = 0;
+	//iqm->meshes.reserve( numMeshes );
 
-	//const void *buffer = (const void *)hdr;
+	for ( uint i = 0; i < numMeshes; ++i )
+	{
+		const iqmmesh *mesh = (const iqmmesh *)( buffer + hdr->ofs_meshes + i );
+		const char *materialName = (const char *)( buffer + hdr->ofs_text + mesh->material );
+
+		mIQMMesh_t &iqmMesh = iqm->meshes.emplace_back();
+		iqmMesh.pMaterial = GL_FindMaterial( materialName );
+		iqmMesh.numIndices = mesh->num_triangles * 3;
+		iqmMesh.indexOffset = mesh->first_triangle * 3;
+	}
 }
 
 void Mod_LoadIQM( model_t *mod, const void *buffer, fsSize_t bufferLength )
@@ -195,16 +204,47 @@ void R_DrawIQM( entity_t *e )
 	glUniformMatrix4fv( 5, 1, GL_FALSE, (const GLfloat *)&tr.viewMatrix );
 	glUniformMatrix4fv( 6, 1, GL_FALSE, (const GLfloat *)&tr.projMatrix );
 
+	vec3_t ambientColor;
+	renderLight_t finalLights[MAX_LIGHTS];
+	R_FourNearestLights( e->origin, finalLights, ambientColor );
+
+	glUniform3fv( 7, 1, tr.refdef.vieworg );
+	glUniform3fv( 8, 1, ambientColor );
+
+	constexpr int startIndex = 9;
+	constexpr int elementsInRenderLight = 3;
+
+	for ( int iter1 = 0, iter2 = 0; iter1 < MAX_LIGHTS; ++iter1, iter2 += elementsInRenderLight )
+	{
+		glUniform3fv( startIndex + iter2 + 0, 1, finalLights[iter1].position );
+		glUniform3fv( startIndex + iter2 + 1, 1, finalLights[iter1].color );
+		glUniform1f( startIndex + iter2 + 2, finalLights[iter1].intensity );
+	}
+
+	constexpr int indexAfterLights = startIndex + elementsInRenderLight * MAX_LIGHTS;
+
+	glUniform1i( indexAfterLights + 0, 0 ); // diffuse
+	glUniform1i( indexAfterLights + 1, 1 ); // specular
+	glUniform1i( indexAfterLights + 2, 2 ); // normal
+	glUniform1i( indexAfterLights + 3, 3 ); // emission
+
 	const mIQM_t *iqm = (mIQM_t * )e->model->extradata;
 
 	glBindVertexArray( iqm->vao );
 	glBindBuffer( GL_ARRAY_BUFFER, iqm->vbo );
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, iqm->ebo );
 
-	glDrawElements( GL_TRIANGLES, iqm->meshes[0].numIndices, GL_UNSIGNED_INT, (void *)( 0 ) );
-
-	/*for ( uint i = 0; i < (uint)iqm->meshes.size(); ++i )
+	for ( uint i = 0; i < (uint)iqm->meshes.size(); ++i )
 	{
-		glDrawElements( GL_TRIANGLES, iqm->meshes[i].numIndices, GL_UNSIGNED_INT, (void *)( (uintptr_t)( iqm->meshes[i].numIndices / sizeof( uint32 ) ) ) );
-	}*/
+		GL_ActiveTexture( GL_TEXTURE0 );
+		iqm->meshes[i].pMaterial->Bind();
+		GL_ActiveTexture( GL_TEXTURE1 );
+		iqm->meshes[i].pMaterial->BindSpec();
+		GL_ActiveTexture( GL_TEXTURE2 );
+		iqm->meshes[i].pMaterial->BindNorm();
+		GL_ActiveTexture( GL_TEXTURE3 );
+		iqm->meshes[i].pMaterial->BindEmit();
+
+		glDrawElements( GL_TRIANGLES, iqm->meshes[i].numIndices, GL_UNSIGNED_INT, (void *)( (uintptr_t)( iqm->meshes[i].indexOffset * sizeof( uint32 ) ) ) );
+	}
 }

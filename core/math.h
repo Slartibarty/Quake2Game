@@ -210,7 +210,11 @@ struct vec3
 	vec3( vec3 && ) = default;
 	vec3 &operator=( vec3 && ) = default;
 
+	vec3 &operator=( const float *pArray ) { x = pArray[0]; y = pArray[1]; z = pArray[2]; }
+
 	constexpr vec3( float X, float Y, float Z ) noexcept : x( X ), y( Y ), z( Z ) {}
+
+	constexpr vec3( const float *pArray ) noexcept : x( pArray[0] ), y( pArray[1] ), z( pArray[2] ) {}
 
 	// I wonder how the compiler deals with this
 	// SlartTodo: GCC doesn't like this
@@ -305,14 +309,12 @@ struct vec3
 		return reinterpret_cast<const float *>( this );
 	}
 
-	// avoid, use vec.v[i]
-	float &operator[]( int i )
+	float &operator[]( size_t i )
 	{
 		return v[i];
 	}
 
-	// avoid, use vec.v[i]
-	float operator[]( int i ) const
+	float operator[]( size_t i ) const
 	{
 		return v[i];
 	}
@@ -368,11 +370,7 @@ inline void Vec3Copy( const vec3 &in, vec3 &out )
 
 inline bool Vec3Compare( const vec3 &v1, const vec3 &v2 )
 {
-#if 0
-	return v1 == v2;
-#else
 	return ( v1.x == v2.x && v1.y == v2.y && v1.z == v2.z );
-#endif
 }
 
 /*

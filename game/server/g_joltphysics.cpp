@@ -79,20 +79,35 @@ static void Think_PhysicsTest( edict_t *self )
 	self->nextthink = level.time + FRAMETIME;
 }
 
+static void Pain_PhysicsTest( edict_t *self, edict_t *other, float kick, int damage )
+{
+
+}
+
+static void Die_PhysicsTest( edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point )
+{
+
+}
+
 void Spawn_PhysicsTest( edict_t *self )
 {
-	self->solid = SOLID_NOT;
-	VectorSet( self->mins, -16, -16, 0 );
-	VectorSet( self->maxs, 16, 16, 72 );
-	self->s.modelindex = gi.modelindex( g_viewthing->GetString() );
+	self->solid = SOLID_BBOX;
+	VectorSet( self->mins, -16, -16, -16 );
+	VectorSet( self->maxs, 16, 16, 16 );
+	self->s.modelindex = gi.modelindex( "models/devtest/metalbox.iqm" );
+
+	self->takedamage = true;
+	self->pain = Pain_PhysicsTest;
+	self->die = Die_PhysicsTest;
 
 	bodyCreationSettings_t bodyCreationSettings;
 	VectorCopy( self->s.origin, bodyCreationSettings.position );
 	VectorCopy( self->s.angles, bodyCreationSettings.rotation );
+	bodyCreationSettings.friction = 0.77f;
 
 	if ( !s_physicsTestShape )
 	{
-		vec3_t halfExtent{ 16.0f, 16.0f, 16.0f };
+		vec3_t halfExtent{ 20.0f, 20.0f, 20.0f };
 		s_physicsTestShape = gi.physSystem->CreateBoxShape( halfExtent );
 		Phys_CacheShape( s_physicsTestShape );
 	}

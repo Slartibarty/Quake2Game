@@ -34,13 +34,14 @@ namespace Physics
 	bodyID_t CreateAndAddBody( const bodyCreationSettings_t &settings, shapeHandle_t shape );
 	void RemoveAndDestroyBody( bodyID_t bodyID );
 
-	void GetBodyPositionAndRotation( bodyID_t bodyID, vec3_t position, vec3_t angles );
+	void GetBodyPositionAndRotation( bodyID_t bodyID, vec3_t position, vec3_t rotation );
 
+	void AddLinearVelocity( bodyID_t bodyID, vec3_t velocity );
 	void SetLinearAndAngularVelocity( bodyID_t bodyID, vec3_t velocity, vec3_t avelocity );
 
 	JPH::PhysicsSystem *GetPhysicsSystem();
 
-	void AddWorld( const JPH::VertexList &vertexList, const JPH::IndexedTriangleList &indexList );
+	void AddWorld( JPH::VertexList &vertexList, JPH::IndexedTriangleList &indexList );
 }
 
 extern IPhysicsSystem *g_physSystem;

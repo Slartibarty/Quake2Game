@@ -96,7 +96,7 @@ vec3_t	lightspot;
 RecursiveLightPoint
 ===================
 */
-static int RecursiveLightPoint( mnode_t *node, vec3_t start, vec3_t end )
+static int RecursiveLightPoint( mnode_t *node, const vec3_t start, const vec3_t end )
 {
 	float		front, back, frac;
 	int			side;
@@ -204,7 +204,7 @@ static int RecursiveLightPoint( mnode_t *node, vec3_t start, vec3_t end )
 R_LightPoint
 ===================
 */
-void R_LightPoint( vec3_t p, vec3_t color )
+void R_LightPoint( const vec3_t p, vec3_t color )
 {
 	vec3_t		end;
 	float		r;

@@ -407,24 +407,34 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 		knockback = 0;
 
 // figure momentum add
-	if (!(dflags & DAMAGE_NO_KNOCKBACK))
+	if ( !( dflags & DAMAGE_NO_KNOCKBACK ) )
 	{
-		if ((knockback) && (targ->movetype != MOVETYPE_NONE) && (targ->movetype != MOVETYPE_BOUNCE) && (targ->movetype != MOVETYPE_PUSH) && (targ->movetype != MOVETYPE_STOP))
+		if ( knockback &&
+			( targ->movetype != MOVETYPE_NONE ) &&
+			( targ->movetype != MOVETYPE_BOUNCE ) &&
+			( targ->movetype != MOVETYPE_PUSH ) &&
+			( targ->movetype != MOVETYPE_STOP ) )
 		{
 			vec3_t	kvel;
 			float	mass;
 
-			if (targ->mass < 50)
+			if ( targ->mass < 50 )
 				mass = 50;
 			else
 				mass = targ->mass;
 
-			if (targ->client  && attacker == targ)
-				VectorScale (dir, 1600.0f * (float)knockback / mass, kvel);	// the rocket jump hack...
+			if ( targ->client && attacker == targ )
+				VectorScale( dir, 1600.0f * (float)knockback / mass, kvel );	// the rocket jump hack...
 			else
-				VectorScale (dir, 500.0f * (float)knockback / mass, kvel);
+				VectorScale( dir, 500.0f * (float)knockback / mass, kvel );
 
-			VectorAdd (targ->velocity, kvel, targ->velocity);
+			VectorAdd( targ->velocity, kvel, targ->velocity );
+
+			// TODO: This won't work with physics objects
+			if ( targ->bodyID )
+			{
+				gi.physSystem->AddLinearVelocity( targ->bodyID, kvel );
+			}
 		}
 	}
 
