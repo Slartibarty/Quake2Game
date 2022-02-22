@@ -15,6 +15,8 @@
 #include <Physics/Collision/CastResult.h>
 #include <Physics/Collision/RayCast.h>
 #include <Physics/Collision/NarrowPhaseQuery.h>
+#include <Physics/Collision/CollisionCollector.h>
+#include <Physics/Collision/CollisionCollectorImpl.h>
 
 #include <Physics/Collision/Shape/BoxShape.h>
 #include <Physics/Collision/Shape/MeshShape.h>
@@ -24,6 +26,8 @@
 #include <Physics/Body/BodyActivationListener.h>
 
 #include "physics.h"
+
+extern csurface_t s_nullsurface;;
 
 // If this changes, our type has to change too :(
 static_assert( sizeof( JPH::BodyID ) == sizeof( uint32 ) );
@@ -468,8 +472,73 @@ void AddWorld( JPH::VertexList &vertexList, JPH::IndexedTriangleList &indexList 
 	//AddDebugBall();
 }
 
-void LineTrace( const vec3 &start, const vec3 &end )
+trace_t LineTrace( vec3_t start, vec3_t end, vec3_t mins, vec3_t maxs, int headnode, int brushmask )
 {
+	JPH::Vec3 origin = QuakePositionToJolt( start );
+	JPH::Vec3 direction = QuakePositionToJolt( end ) - origin;
+
+	// Create ray
+	JPH::RayCast ray{ origin, direction };
+
+	// Create settings
+	JPH::RayCastSettings settings;
+	settings.mBackFaceMode = JPH::EBackFaceMode::CollideWithBackFaces;
+	settings.mTreatConvexAsSolid = true;
+
+	trace_t trace;
+	memset( &trace, 0, sizeof( trace ) );
+	trace.fraction = 1.0f;
+	trace.surface = &s_nullsurface;
+
+	JPH::AnyHitCollisionCollector<JPH::CastRayCollector> collector;
+	vars.physicsSystem->GetNarrowPhaseQuery().CastRay( ray, settings, collector );
+	if ( !collector.HadHit() )
+	{
+		return trace;
+	}
+
+	// Fill in results
+	trace.plane;
+	trace.endpos;
+	trace.ent;
+	trace.surface;
+	trace.fraction = collector.mHit.mFraction;
+	trace.contents;
+	trace.allsolid;
+	trace.startsolid;
+	
+	// Draw results
+
+	// Draw line
+	JPH::Vec3 position = origin + collector.mHit.mFraction * direction;
+	//mDebugRenderer->DrawLine( prev_position, position, c ? Color::sGrey : Color::sWhite );
+
+	JPH::BodyLockRead lock( vars.physicsSystem->GetBodyLockInterface(), collector.mHit.mBodyID );
+	if ( lock.Succeeded() )
+	{
+		const JPH::Body &hit_body = lock.GetBody();
+
+		// Draw material
+		//const PhysicsMaterial *material2 = hit_body.GetShape()->GetMaterial( hit.mSubShapeID2 );
+		//mDebugRenderer->DrawText3D( position, material2->GetDebugName() );
+
+		// Draw normal
+		//Color color = hit_body.IsDynamic() ? Color::sYellow : Color::sOrange;
+		JPH::Vec3 normal = hit_body.GetWorldSpaceSurfaceNormal( collector.mHit.mSubShapeID2, position );
+		normal.StoreFloat3( (JPH::Float3 *)trace.plane.normal );
+		//mDebugRenderer->DrawArrow( position, position + normal, color, 0.01f );
+
+		// Draw perpendicular axis to indicate hit position
+		//Vec3 perp1 = normal.GetNormalizedPerpendicular();
+		//Vec3 perp2 = normal.Cross( perp1 );
+		//mDebugRenderer->DrawLine( position - 0.1f * perp1, position + 0.1f * perp1, color );
+		//mDebugRenderer->DrawLine( position - 0.1f * perp2, position + 0.1f * perp2, color );
+	}
+
+	// Draw remainder of line
+	//mDebugRenderer->DrawLine(start + hits.back().mFraction * direction, start + direction, Color::sRed);
+
+	return trace;
 }
 
 } // namespace PhysicsSystem

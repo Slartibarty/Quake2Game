@@ -6,6 +6,8 @@
 
 //=================================================================================================
 
+extern game_export_t *ge;
+
 #define	MAX_MASTERS	8				// max recipients for heartbeat packets
 
 enum serverState_t
@@ -255,8 +257,6 @@ void SV_BuildClientFrame (client_t *client);
 //
 // sv_game.c
 //
-extern game_export_t *ge;
-
 void SV_InitGameProgs();
 void SV_ShutdownGameProgs();
 

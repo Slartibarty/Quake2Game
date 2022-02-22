@@ -38,6 +38,11 @@ void Phys_DeleteCachedShapes()
 
 void Phys_Simulate( float deltaTime )
 {
+	// Players don't use this function
+	if ( g_playersOnly->GetBool() ) {
+		return;
+	}
+
 	gi.physSystem->Simulate( deltaTime );
 
 	for ( int i = game.maxclients + 1; i < globals.num_edicts; ++i )

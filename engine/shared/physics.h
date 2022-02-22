@@ -19,6 +19,8 @@ namespace Physics
 	void Shutdown();
 	void Simulate( float deltaTime );
 
+	trace_t LineTrace( vec3_t start, vec3_t end, vec3_t mins, vec3_t maxs, int headnode, int brushmask );
+
 	//
 	// Shape Creation
 	//

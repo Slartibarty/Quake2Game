@@ -19,3 +19,6 @@ Convert to quat, slerp, convert to euler
 
 GameNetworkingSockets
 
+TRACING AND JOLT!
+Do what Source does, right now Q2 traces against the world, then does an extra check for entities
+I can insert a Jolt trace into the entity check

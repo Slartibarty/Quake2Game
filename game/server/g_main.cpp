@@ -470,6 +470,8 @@ void G_RunFrame (void)
 		G_RunEntity (ent);
 	}
 
+	Phys_Simulate( FRAMETIME );
+
 	// see if it is time to end a deathmatch
 	CheckDMRules ();
 
@@ -478,7 +480,5 @@ void G_RunFrame (void)
 
 	// build the playerstate_t structures for all players
 	ClientEndServerFrames ();
-
-	Phys_Simulate( FRAMETIME );
 }
 
