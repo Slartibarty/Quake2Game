@@ -594,6 +594,8 @@ static void Mod_LoadFaces( lump_t *l )
 
 	for ( surfnum = 0; surfnum < count; ++surfnum, ++in, ++out )
 	{
+		out->bspFaceIndex = surfnum;
+
 		out->firstedge = LittleLong( in->firstedge );
 		out->numedges = LittleShort( in->numedges );
 		out->flags = 0;
@@ -1056,14 +1058,6 @@ void Mod_LoadBrushModel( model_t *pMod, void *pBuffer, int bufferLength )
 	pMod->numframes = 2;
 
 	//
-	// Build the world polymesh
-	// This is done after everything else because we need to know about
-	// the submodels
-	//
-	R_EraseWorldLists();
-	R_BuildWorldLists( pMod );
-
-	//
 	// Set up the submodels
 	//
 	for ( i = 0; i < pMod->numsubmodels; ++i )
@@ -1094,6 +1088,22 @@ void Mod_LoadBrushModel( model_t *pMod, void *pBuffer, int bufferLength )
 
 		starmod->numleafs = bm->visleafs;
 	}
+
+	R_EraseWorldLists();
+
+	//
+	// Load the bspext if present
+	//
+	if ( !BspExt_Load( pMod ) )
+	{
+		//
+		// Build the world polymesh
+		// This is done after everything else because we need to know about
+		// the submodels
+		//
+		R_BuildWorldLists( pMod );
+	}
+
 }
 
 /*

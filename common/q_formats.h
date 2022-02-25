@@ -60,7 +60,7 @@ inline constexpr int IDALIASHEADER = MakeFourCC('I', 'D', 'P', '2');
 #define	MAX_TRIANGLES	4096
 #define MAX_VERTS		2048
 #define MAX_FRAMES		512
-#define MAX_MD2SKINS	64		// Slart: Bumped to 64 from 32, the opfor scientist has 33 textures
+#define MAX_MD2SKINS	32
 #define	MAX_SKINNAME	64
 
 struct dstvert_t
@@ -688,3 +688,68 @@ struct bspDrawVert_t
 using bspDrawIndex_t = uint16;
 
 #endif
+
+/*
+===================================================================================================
+	BSPEXT file format
+
+	An extension of the existing BSP format
+===================================================================================================
+*/
+
+inline constexpr uint32 BSPEXT_IDENT = MakeFourCC( 'I', 'E', 'X', 'T' );
+inline constexpr uint32 BSPEXT_VERSION = 1;
+
+enum
+{
+	LUMP_DRAWVERTICES,		// Raw vertex buffer
+	LUMP_DRAWINDICES,		// Raw index buffer
+	LUMP_DRAWMESHES,
+	LUMP_MODELS_EXT,
+	LUMP_FACES_EXT,
+	BSPEXT_LUMPS
+};
+
+struct bspExtLump_t
+{
+	uint32 fileofs, filelen;
+};
+
+struct bspExtHeader_t
+{
+	uint32 ident;
+	uint32 version;
+	bspExtLump_t lumps[BSPEXT_LUMPS];
+};
+
+// LUMP_DRAWVERTICES
+struct bspDrawVert_t
+{
+	vec3_t pos;
+	vec2_t st1;			// Normal UVs
+	vec2_t st2;			// Lightmap UVs
+	vec3_t normal;
+};
+
+// LUMP_DRAWINDICES
+using bspDrawIndex_t = uint32;
+
+// LUMP_DRAWMESHES
+struct bspDrawMesh_t
+{
+	uint16 texinfo;
+	uint32 firstIndex;
+	uint32 numIndices;
+};
+
+// LUMP_MODELS_EXT
+struct bspModelExt_t
+{
+	uint32 firstMesh, numMeshes;
+};
+
+// LUMP_FACES_EXT
+struct bspFaceExt_t
+{
+	uint32 firstIndex, numIndices;
+};

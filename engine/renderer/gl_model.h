@@ -62,7 +62,8 @@ struct glpoly_t
 
 struct msurface_t
 {
-	int32		frameCount;		// The frame that this surface was last visible on
+	uint32		bspFaceIndex;		// So we can keep track of which dface_t this surface was generated from, since we sort this structure
+	int32		frameCount;			// The frame that this surface was last visible on
 
 	cplane_t *	plane;
 	int32		flags;

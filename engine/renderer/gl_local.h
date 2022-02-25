@@ -414,6 +414,9 @@ void	R_DrawWorld();
 void	R_DrawAlphaSurfaces();
 void	R_RotateForEntity( entity_t *e );
 
+bool	BspExt_Load( const model_t *worldModel );
+void	BspExt_Save( const model_t *worldModel );
+
 /*
 ===============================================================================
 

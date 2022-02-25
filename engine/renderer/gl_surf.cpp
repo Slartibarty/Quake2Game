@@ -1334,6 +1334,36 @@ static void R_AtlasWorldLists(
 #endif
 }
 
+static void R_UploadBuffers()
+{
+	worldVertex_t *vertexData = s_worldRenderData.vertices.data();
+	size_t vertexCount = s_worldRenderData.vertices.size();
+	size_t vertexSize = vertexCount * sizeof( worldVertex_t );
+
+	glGenVertexArrays( 1, &s_worldRenderData.vao );
+	glGenBuffers( 2, &s_worldRenderData.vbo );			// Gen the vbo and ebo in one go
+
+	glBindVertexArray( s_worldRenderData.vao );
+	glBindBuffer( GL_ARRAY_BUFFER, s_worldRenderData.vbo );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, s_worldRenderData.ebo );
+
+	// xyz, st1, st2 normal
+	glEnableVertexAttribArray( 0 );
+	glEnableVertexAttribArray( 1 );
+	glEnableVertexAttribArray( 2 );
+	glEnableVertexAttribArray( 3 );
+
+	glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, sizeof( worldVertex_t ), (void *)( 0 ) );
+	glVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, sizeof( worldVertex_t ), (void *)( 3 * sizeof( GLfloat ) ) );
+	glVertexAttribPointer( 2, 2, GL_FLOAT, GL_FALSE, sizeof( worldVertex_t ), (void *)( 5 * sizeof( GLfloat ) ) );
+	glVertexAttribPointer( 3, 3, GL_FLOAT, GL_FALSE, sizeof( worldVertex_t ), (void *)( 7 * sizeof( GLfloat ) ) );
+
+	glBufferData( GL_ARRAY_BUFFER, vertexSize, vertexData, GL_STATIC_DRAW );
+	//glBufferData( GL_ELEMENT_ARRAY_BUFFER, indexSize, indexData, GL_STATIC_DRAW );
+
+	s_worldRenderData.initialised = true;
+}
+
 void R_BuildWorldLists( model_t *model )
 {
 	ZoneScoped
@@ -1459,29 +1489,7 @@ void R_BuildWorldLists( model_t *model )
 	//
 	// Upload our big fat vertex buffer
 	//
-
-	glGenVertexArrays( 1, &s_worldRenderData.vao );
-	glGenBuffers( 2, &s_worldRenderData.vbo );			// Gen the vbo and ebo in one go
-
-	glBindVertexArray( s_worldRenderData.vao );
-	glBindBuffer( GL_ARRAY_BUFFER, s_worldRenderData.vbo );
-	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, s_worldRenderData.ebo );
-
-	// xyz, st1, st2 normal
-	glEnableVertexAttribArray( 0 );
-	glEnableVertexAttribArray( 1 );
-	glEnableVertexAttribArray( 2 );
-	glEnableVertexAttribArray( 3 );
-
-	glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, sizeof( worldVertex_t ), (void *)( 0 ) );
-	glVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, sizeof( worldVertex_t ), (void *)( 3 * sizeof( GLfloat ) ) );
-	glVertexAttribPointer( 2, 2, GL_FLOAT, GL_FALSE, sizeof( worldVertex_t ), (void *)( 5 * sizeof( GLfloat ) ) );
-	glVertexAttribPointer( 3, 3, GL_FLOAT, GL_FALSE, sizeof( worldVertex_t ), (void *)( 7 * sizeof( GLfloat ) ) );
-
-	glBufferData( GL_ARRAY_BUFFER, vertexSize, vertexData, GL_STATIC_DRAW );
-	//glBufferData( GL_ELEMENT_ARRAY_BUFFER, indexSize, indexData, GL_STATIC_DRAW );
-
-	s_worldRenderData.initialised = true;
+	R_UploadBuffers();
 }
 
 void R_EraseWorldLists()
@@ -1653,7 +1661,7 @@ static uint32 R_DumpWorldThreadProc( void *params )
 	return 0;
 }
 
-CON_COMMAND( r_dumpworld, "Exports the world to an OBJ file in the maps folder.", 0 )
+CON_COMMAND( r_dumpWorld, "Exports the world to an OBJ file in the maps folder.", 0 )
 {
 	if ( !r_worldmodel )
 	{
@@ -1664,4 +1672,351 @@ CON_COMMAND( r_dumpworld, "Exports the world to an OBJ file in the maps folder."
 	// fire and forget
 	threadHandle_t thread = Sys_CreateThread( R_DumpWorldThreadProc, nullptr, THREAD_NORMAL, PLATTEXT( "Dump World Thread" ) );
 	Sys_DestroyThread( thread );
+}
+
+/*
+===================================================================================================
+
+	BspExt Support
+
+===================================================================================================
+*/
+
+static_assert( sizeof( bspDrawVert_t ) == sizeof( worldVertex_t ) );
+static_assert( sizeof( bspDrawIndex_t ) == sizeof( worldIndex_t ) );
+
+static void BspExt_LoadVertices( byte *base, bspExtLump_t *l )
+{
+	bspDrawVert_t *		in;
+	worldVertex_t *		out;
+	uint32				count;
+
+	in = (bspDrawVert_t *)( base + l->fileofs );
+	if ( l->filelen % sizeof( bspDrawVert_t ) )
+	{
+		Com_Error( "BspExt_Load: Funny lump size" );
+	}
+	count = l->filelen / sizeof( bspDrawVert_t );
+
+	s_worldRenderData.vertices.resize( count );
+
+	out = s_worldRenderData.vertices.data();
+
+	// Identical binary structures, just do a memcpy
+	memcpy( out, in, l->filelen );
+}
+
+static void BspExt_LoadIndices( byte *base, bspExtLump_t *l )
+{
+	bspDrawIndex_t *	in;
+	worldIndex_t *		out;
+	uint32				count;
+
+	in = (bspDrawIndex_t *)( base + l->fileofs );
+	if ( l->filelen % sizeof( bspDrawIndex_t ) )
+	{
+		Com_Error( "BspExt_Load: Funny lump size" );
+	}
+	count = l->filelen / sizeof( bspDrawIndex_t );
+
+	s_worldRenderData.indices.resize( count );
+
+	out = s_worldRenderData.indices.data();
+
+	// Identical binary structures, just do a memcpy
+	memcpy( out, in, l->filelen );
+}
+
+static void BspExt_LoadMeshes( const model_t *worldModel, byte *base, bspExtLump_t *l )
+{
+	bspDrawMesh_t *		in;
+	worldMesh_t *		out;
+	uint32				count;
+
+	in = (bspDrawMesh_t *)( base + l->fileofs );
+	if ( l->filelen % sizeof( bspDrawMesh_t ) )
+	{
+		Com_Error( "BspExt_Load: Funny lump size" );
+	}
+	count = l->filelen / sizeof( bspDrawMesh_t );
+
+	s_worldRenderData.meshes.resize( count );
+
+	out = s_worldRenderData.meshes.data();
+
+	for ( uint32 i = 0; i < count; ++i )
+	{
+		out[i].texinfo = worldModel->texinfo + in->texinfo;
+		out[i].firstIndex = in->firstIndex;
+		out[i].numIndices = in->numIndices;
+	}
+}
+
+static void BspExt_LoadModelsExt( const model_t *worldModel, byte *base, bspExtLump_t *l )
+{
+	bspModelExt_t *		in;
+	mmodel_t *			out;
+	uint32				count;
+
+	in = (bspModelExt_t *)( base + l->fileofs );
+	if ( l->filelen % sizeof( bspModelExt_t ) )
+	{
+		Com_Error( "BspExt_Load: Funny lump size" );
+	}
+	count = l->filelen / sizeof( bspModelExt_t );
+
+	assert( count == worldModel->numsubmodels );
+
+	out = worldModel->submodels;
+
+	for ( uint32 i = 0; i < count; ++i )
+	{
+		out[i].firstMesh = in[i].firstMesh;
+		out[i].numMeshes = in[i].numMeshes;
+	}
+}
+
+static void BspExt_LoadFacesExt( const model_t *worldModel, byte *base, bspExtLump_t *l )
+{
+	bspFaceExt_t *		in;
+	msurface_t *		out;
+	uint32				count;
+
+	in = (bspFaceExt_t *)( base + l->fileofs );
+	if ( l->filelen % sizeof( bspFaceExt_t ) )
+	{
+		Com_Error( "BspExt_Load: Funny lump size" );
+	}
+	count = l->filelen / sizeof( bspFaceExt_t );
+
+	assert( count == worldModel->numsurfaces );
+
+	out = worldModel->surfaces;
+
+	for ( uint32 i = 0; i < count; ++i )
+	{
+		out[i].firstIndex = in[i].firstIndex;
+		out[i].numIndices = in[i].numIndices;
+	}
+}
+
+static void BspExt_SortSurfacesByMaterial( const model_t *worldModel )
+{
+	const mmodel_t *firstModel = worldModel->submodels + 1; // Skip world
+	const mmodel_t *endModel = worldModel->submodels + worldModel->numsubmodels; // Not a valid submodel
+
+	for ( const mmodel_t *subModel = firstModel; subModel < endModel; ++subModel )
+	{
+		msurface_t *firstFace = worldModel->surfaces + subModel->firstface;
+		msurface_t *lastFace = firstFace + subModel->numfaces;
+
+		// Sort the surfaces by model, by material
+		std::sort( firstFace, lastFace,
+			[]( const msurface_t &a, const msurface_t &b )
+			{
+				// This is incredibly silly, but it works!
+				return a.texinfo->material < b.texinfo->material;
+			}
+		);
+	}
+}
+
+static void BspExt_UnSortSurfacesByMaterial( msurface_t *unsortedSurfaces, const model_t *worldModel )
+{
+	const mmodel_t *firstModel = worldModel->submodels + 1; // Skip world
+	const mmodel_t *endModel = worldModel->submodels + worldModel->numsubmodels; // Not a valid submodel
+
+	for ( const mmodel_t *subModel = firstModel; subModel < endModel; ++subModel )
+	{
+		msurface_t *firstFace = unsortedSurfaces + subModel->firstface;
+		msurface_t *lastFace = firstFace + subModel->numfaces;
+
+		// Sort the surfaces by model, by material
+		std::sort( firstFace, lastFace,
+			[]( const msurface_t &a, const msurface_t &b )
+			{
+				// This is incredibly silly, but it works!
+				return a.bspFaceIndex < b.bspFaceIndex;
+			}
+		);
+	}
+}
+
+bool BspExt_Load( const model_t *worldModel )
+{
+	char bspExtName[MAX_QPATH];
+	Q_sprintf_s( bspExtName, "maps/%s.bspext", worldModel->name );
+
+	byte *buffer;
+	fsSize_t bspExtSize = FileSystem::LoadFile( bspExtName, (void **)&buffer );
+	if ( !buffer )
+	{
+		return false;
+	}
+
+	if ( bspExtSize <= sizeof( bspExtHeader_t ) )
+	{
+		FileSystem::FreeFile( buffer );
+		return false;
+	}
+
+	bspExtHeader_t *hdr = (bspExtHeader_t *)buffer;
+
+	if ( hdr->ident != BSPEXT_IDENT || hdr->version != BSPEXT_VERSION )
+	{
+		FileSystem::FreeFile( buffer );
+		return false;
+	}
+
+	BspExt_LoadVertices( buffer, hdr->lumps + LUMP_DRAWVERTICES );
+	BspExt_LoadIndices( buffer, hdr->lumps + LUMP_DRAWINDICES );
+
+	BspExt_LoadMeshes( worldModel, buffer, hdr->lumps + LUMP_DRAWMESHES );
+	BspExt_LoadModelsExt( worldModel, buffer, hdr->lumps + LUMP_MODELS_EXT );
+	BspExt_LoadFacesExt( worldModel, buffer, hdr->lumps + LUMP_FACES_EXT );
+
+	FileSystem::FreeFile( buffer );
+
+	BspExt_SortSurfacesByMaterial( worldModel );
+
+	R_UploadBuffers();
+
+	return true;
+}
+
+static void BspExt_SaveHeader( fsHandle_t handle, const model_t *worldModel )
+{
+	bspExtHeader_t hdr;
+	hdr.ident = BSPEXT_IDENT;
+	hdr.version = BSPEXT_VERSION;
+
+	uint32 offset = sizeof( bspExtHeader_t );
+
+	const uint32 drawVerticesLen = s_worldRenderData.vertices.size() * sizeof( bspDrawVert_t );
+	hdr.lumps[LUMP_DRAWVERTICES].fileofs = offset;
+	hdr.lumps[LUMP_DRAWVERTICES].filelen = drawVerticesLen;
+	offset += drawVerticesLen;
+
+	const uint32 drawIndicesLen = s_worldRenderData.indices.size() * sizeof( bspDrawIndex_t );
+	hdr.lumps[LUMP_DRAWINDICES].fileofs = offset;
+	hdr.lumps[LUMP_DRAWINDICES].filelen = drawIndicesLen;
+	offset += drawIndicesLen;
+
+	const uint32 drawMeshesLen = s_worldRenderData.meshes.size() * sizeof( bspDrawMesh_t );
+	hdr.lumps[LUMP_DRAWMESHES].fileofs = offset;
+	hdr.lumps[LUMP_DRAWMESHES].filelen = drawMeshesLen;
+	offset += drawMeshesLen;
+
+	const uint32 modelsExtLen = worldModel->numsubmodels * sizeof( bspModelExt_t );
+	hdr.lumps[LUMP_MODELS_EXT].fileofs = offset;
+	hdr.lumps[LUMP_MODELS_EXT].filelen = modelsExtLen;
+	offset += modelsExtLen;
+
+	const uint32 facesExtLen = worldModel->numsurfaces * sizeof( bspFaceExt_t );
+	hdr.lumps[LUMP_FACES_EXT].fileofs = offset;
+	hdr.lumps[LUMP_FACES_EXT].filelen = facesExtLen;
+	offset += facesExtLen;
+
+	FileSystem::WriteFile( &hdr, sizeof( hdr ), handle );
+}
+
+static void BspExt_SaveVertices( fsHandle_t handle )
+{
+	FileSystem::WriteFile( s_worldRenderData.vertices.data(), s_worldRenderData.vertices.size() * sizeof( worldVertex_t ), handle );
+}
+
+static void BspExt_SaveIndices( fsHandle_t handle )
+{
+	FileSystem::WriteFile( s_worldRenderData.indices.data(), s_worldRenderData.indices.size() * sizeof( worldIndex_t ), handle );
+}
+
+static void BspExt_SaveMeshes( fsHandle_t handle, const model_t *worldModel )
+{
+	bspDrawMesh_t out;
+
+	const worldMesh_t *meshes = s_worldRenderData.meshes.data();
+	const uint32 numMeshes = s_worldRenderData.meshes.size();
+
+	// NOTE: Could batch this but it really doesn't matter as long as it ends up in the file
+	for ( uint32 i = 0; i < numMeshes; ++i )
+	{
+		out.texinfo = static_cast<uint16>( meshes[i].texinfo - worldModel->texinfo );
+		out.firstIndex = meshes[i].firstIndex;
+		out.numIndices = meshes[i].numIndices;
+
+		FileSystem::WriteFile( &out, sizeof( out ), handle );
+	}
+}
+
+static void BspExt_SaveModelsExt( fsHandle_t handle, const model_t *worldModel )
+{
+	bspModelExt_t out;
+
+	const mmodel_t *models = worldModel->submodels;
+	const uint32 numModels = worldModel->numsubmodels;
+
+	for ( uint32 i = 0; i < numModels; ++i )
+	{
+		out.firstMesh = models[i].firstMesh;
+		out.numMeshes = models[i].numMeshes;
+
+		FileSystem::WriteFile( &out, sizeof( out ), handle );
+	}
+}
+
+static void BspExt_SaveFacesExt( fsHandle_t handle, const model_t *worldModel )
+{
+	bspFaceExt_t out;
+
+	const msurface_t *surfs = worldModel->surfaces;
+	const uint32 numSurfs = worldModel->numsurfaces;
+
+	// Unsort our surfaces like a maniac
+	std::vector<msurface_t> unsortedSurfaces( numSurfs );
+	memcpy( unsortedSurfaces.data(), surfs, numSurfs * sizeof( msurface_t ) );
+
+	BspExt_UnSortSurfacesByMaterial( unsortedSurfaces.data(), worldModel );
+
+	surfs = unsortedSurfaces.data();
+
+	for ( uint32 i = 0; i < numSurfs; ++i )
+	{
+		out.firstIndex = surfs[i].firstIndex;
+		out.numIndices = surfs[i].numIndices;
+
+		FileSystem::WriteFile( &out, sizeof( out ), handle );
+	}
+}
+
+void BspExt_Save( const model_t *worldModel )
+{
+	char bspExtName[MAX_QPATH];
+	Q_sprintf_s( bspExtName, "maps/%s.bspext", worldModel->name );
+
+	fsHandle_t handle = FileSystem::OpenFileWrite( bspExtName, FS_GAMEDIR );
+	if ( !handle )
+	{
+		Com_Print( S_COLOR_YELLOW "Failed to write bspext\n" );
+		return;
+	}
+
+	BspExt_SaveHeader( handle, worldModel );
+	BspExt_SaveVertices( handle );
+	BspExt_SaveIndices( handle );
+	BspExt_SaveMeshes( handle, worldModel );
+	BspExt_SaveModelsExt( handle, worldModel );
+	BspExt_SaveFacesExt( handle, worldModel );
+
+	FileSystem::CloseFile( handle );
+}
+
+CON_COMMAND( r_writeBSPExt, "Writes out the bspext file for the loaded bsp.", 0 )
+{
+	if ( !r_worldmodel )
+	{
+		Com_Print( S_COLOR_YELLOW "No map loaded, can't write bspext\n" );
+		return;
+	}
+
+	BspExt_Save( r_worldmodel );
 }
