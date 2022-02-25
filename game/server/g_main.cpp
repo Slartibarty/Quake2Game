@@ -122,7 +122,9 @@ extern "C" DLLEXPORT game_export_t *GetGameAPI (game_import_t *import)
 
 	globals.ServerCommand = ServerCommand;
 
-	globals.edict_size = sizeof(edict_t);
+	globals.Phys_Impact = Phys_Impact;
+
+	globals.edict_size = sizeof( edict_t );
 
 	return &globals;
 }

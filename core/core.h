@@ -56,13 +56,12 @@
 #include "math.h"			// blahhh, nasty filename?
 #include "byteswap.h"
 #include "stringtools.h"
+#include "threading.h"
 #include "sys_misc.h"
 
 // classes
 #include "labstring.h"
 
-// optional, since it includes windows.h 
-//#include "threading.h"
 // optional, not everyone wants system headers
 //#include "sys_includes.h"
 

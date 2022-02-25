@@ -470,14 +470,15 @@ static void Grenade_SetupPhysics( edict_t *ent )
 
 	if ( !s_grenadeShape )
 	{
-		s_grenadeShape = gi.physSystem->CreateSphereShape( 8.0f );
+		s_grenadeShape = gi.physSystem->CreateSphereShape( 4.0f );
+		//s_grenadeShape = gi.physSystem->CreateTaperedCapsuleShape( 4.0f, 4.0f, 2.0f );
 	}
 
 	bodyCreationSettings_t bcs;
 	VectorCopy( ent->s.origin, bcs.position );
 	VectorCopy( ent->s.angles, bcs.rotation );
-	bcs.friction = 0.94f;
-	bcs.restitution = 0.2f;
+	bcs.friction = 0.92f;
+	bcs.restitution = 0.38f;
 
 	Phys_SetupPhysicsForEntity( ent, bcs, s_grenadeShape );
 }

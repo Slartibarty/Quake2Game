@@ -39,17 +39,22 @@ struct bodyCreationSettings_t
 abstract_class IPhysicsSystem
 {
 public:
+	virtual void			RegisterWorld( edict_t *ent ) = 0;
 	virtual void			Simulate( float deltaTime ) = 0;
 
 	virtual shapeHandle_t	CreateBoxShape( vec3_t halfExtent ) = 0;
+	virtual shapeHandle_t	CreateCapsuleShape( float halfHeightOfCylinder, float radius ) = 0;
+	virtual shapeHandle_t	CreateCylinderShape( float halfHeight, float radius ) = 0;
 	virtual shapeHandle_t	CreateSphereShape( float radius ) = 0;
+	virtual shapeHandle_t	CreateTaperedCapsuleShape( float halfHeightOfTaperedCylinder, float topRadius, float bottomRadius ) = 0;
 	virtual void			DestroyShape( shapeHandle_t handle ) = 0;
 
-	virtual bodyID_t		CreateAndAddBody( const bodyCreationSettings_t &settings, shapeHandle_t shape ) = 0;
+	virtual bodyID_t		CreateAndAddBody( const bodyCreationSettings_t &settings, shapeHandle_t shape, void *userData ) = 0;
 	virtual void			RemoveAndDestroyBody( bodyID_t bodyID ) = 0;
 
 	virtual void			GetBodyPositionAndRotation( bodyID_t bodyID, vec3_t position, vec3_t rotation ) = 0;
 
 	virtual void			AddLinearVelocity( bodyID_t bodyID, vec3_t velocity ) = 0;
 	virtual void			SetLinearAndAngularVelocity( bodyID_t bodyID, vec3_t velocity, vec3_t avelocity ) = 0;
+	virtual void			GetLinearAndAngularVelocity( bodyID_t bodyID, vec3_t velocity, vec3_t avelocity ) = 0;
 };

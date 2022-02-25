@@ -853,7 +853,9 @@ void Phys_DeleteCachedShapes();
 
 void Phys_Simulate( float deltaTime );
 
-void Phys_SetupPhysicsForEntity( edict_t *ent, bodyCreationSettings_t &settings, shapeHandle_t shapeHandle );
+void Phys_SetupPhysicsForEntity( edict_t *ent, const bodyCreationSettings_t &settings, shapeHandle_t shapeHandle );
+
+void Phys_Impact( edict_t *ent1, edict_t *ent2, cplane_t *plane, csurface_t *surf );
 
 //============================================================================
 

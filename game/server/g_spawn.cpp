@@ -126,7 +126,8 @@ void SP_monster_army( edict_t *self );
 void SP_monster_dog( edict_t *self );
 
 // Physics Test
-void Spawn_PhysicsTest( edict_t *ent );
+void Spawn_PhysCube( edict_t *ent );
+void Spawn_PhysBarrel( edict_t *ent );
 
 struct spawn_t
 {
@@ -263,7 +264,8 @@ static const spawn_t g_spawns[]
 
 	// Physics Test
 
-	{"phystest", Spawn_PhysicsTest},
+	{"physcube", Spawn_PhysCube},
+	{"physbarrel", Spawn_PhysBarrel},
 
 };
 
@@ -1009,5 +1011,6 @@ void SP_worldspawn (edict_t *ent)
 
 	// 63 testing
 	gi.configstring(CS_LIGHTS+63, "a");
-}
 
+	gi.physSystem->RegisterWorld( ent );
+}

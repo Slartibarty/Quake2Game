@@ -577,7 +577,7 @@ static void CMod_LoadAreaPortals( byte *cmod_base, lump_t *l )
 	cm.portalopen.PrepForNewData( count );
 	cm.portalopen.Clear();
 
-	cm.areaportals.PrepForNewData( count );
+	cm.areaportals.PrepForNewData( count + 1 );
 	dareaportal_t *out = cm.areaportals.Base();
 
 	for ( int i = 0; i < count; i++, in++, out++ )

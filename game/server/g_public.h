@@ -206,6 +206,9 @@ struct game_export_t
 	// of the parameters
 	void		(*ServerCommand) (void);
 
+	// The engine's physics system detected a collision between these two entities
+	void		(*Phys_Impact) (edict_t *ent1, edict_t *ent2, cplane_t *plane, csurface_t *surf);
+
 	//
 	// global variables shared between game and server
 	//

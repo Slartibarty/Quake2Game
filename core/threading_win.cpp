@@ -80,7 +80,14 @@ threadID_t Sys_GetCurrentThreadID()
 
 void Sys_WaitForThread( threadHandle_t threadHandle )
 {
+	// TODO: Add some kind of security for runaway threads, INFINITE is not the solution
 	WaitForSingleObject( (HANDLE)threadHandle, INFINITE );
+}
+
+void Sys_WaitForMultipleThreads( const threadHandle_t *threadHandles, uint32 numThreads )
+{
+	// TODO: Add some kind of security for runaway threads, INFINITE is not the solution
+	WaitForMultipleObjects( numThreads, (const HANDLE *)threadHandles, TRUE, INFINITE );
 }
 
 void Sys_DestroyThread( threadHandle_t threadHandle )

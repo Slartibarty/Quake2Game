@@ -4,11 +4,10 @@
 
 #include "engine.h"
 
-#include "../../core/threading.h"
+#include <csetjmp>
+#include <numeric>
 
 #include "../../thirdparty/tracy/Tracy.hpp"
-
-#include <csetjmp>
 
 extern void SCR_EndLoadingPlaque();
 extern void Key_Init();
@@ -558,6 +557,17 @@ static void Com_Version_f()
 	Com_Printf( "%s - %s, %s\n", BLD_STRING, __DATE__, __TIME__ );
 }
 
+#define NUM_TEST_THREADS 16
+
+static uint32 ThreadPrinter( void *params )
+{
+	uint *num = (uint *)params;
+
+	Com_Printf( "Hello from thread %u\n", *num );
+
+	return 0;
+}
+
 /*
 ========================
 Com_PerfTest_f
@@ -567,6 +577,21 @@ Test stuff here!
 */
 static void Com_PerfTest_f()
 {
+	uint threadNums[NUM_TEST_THREADS];
+	threadHandle_t threadHandles[NUM_TEST_THREADS];
+
+	for ( uint i = 0; i < NUM_TEST_THREADS; ++i )
+	{
+		threadNums[i] = i;
+		threadHandles[i] = Sys_CreateThread( ThreadPrinter, &threadNums[i], THREAD_NORMAL, PLATTEXT( "TestThread" ) );
+	}
+
+	Sys_WaitForMultipleThreads( threadHandles, NUM_TEST_THREADS );
+
+	for ( uint i = 0; i < NUM_TEST_THREADS; ++i )
+	{
+		Sys_DestroyThread( threadHandles[i] );
+	}
 }
 
 /*

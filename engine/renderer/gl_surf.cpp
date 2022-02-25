@@ -13,8 +13,6 @@
 
 #include "gl_local.h"
 
-#include "../../core/threading.h"
-
 #include "../shared/imgtools.h"
 #include <algorithm> // std::sort
 #include <vector>

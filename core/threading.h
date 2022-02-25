@@ -70,6 +70,7 @@ threadHandle_t		Sys_CreateThread( threadProc_t function, void *parms, threadPrio
 									  bool suspended = false );
 
 void				Sys_WaitForThread( threadHandle_t threadHandle );
+void				Sys_WaitForMultipleThreads( const threadHandle_t *threadHandles, uint32 numThreads );
 void				Sys_DestroyThread( threadHandle_t threadHandle );
 void				Sys_SetCurrentThreadName( const platChar_t *name );
 

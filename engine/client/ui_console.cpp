@@ -498,6 +498,11 @@ void ShowConsole( bool *pOpen )
 	// set the input text as the default item
 	ImGui::SetItemDefaultFocus();
 
+	if ( focusOnInput )
+	{
+		ImGui::SetKeyboardFocusHere( -1 );
+	}
+
 	// store the bottom left position of the input window, then add the spacing X Y
 	const ImVec2 popupPosition( ImGui::GetItemRectMin().x - ImGui::GetStyle().ItemSpacing.x, ImGui::GetItemRectMax().y + ImGui::GetStyle().ItemSpacing.y + 5.0f );
 
@@ -506,13 +511,13 @@ void ShowConsole( bool *pOpen )
 	if ( ImGui::Button( "Submit" ) )
 	{
 		Submit();
-		focusOnInput = true;
+		//focusOnInput = true;
 	}
 
-	if ( focusOnInput )
-	{
-		ImGui::SetKeyboardFocusHere( 2 );
-	}
+	//if ( focusOnInput )
+	//{
+	//	ImGui::SetKeyboardFocusHere( -1 );
+	//}
 
 	if ( con.completionPopup )
 	{
