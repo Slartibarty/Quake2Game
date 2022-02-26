@@ -9,7 +9,7 @@
 #include "core.h"
 
 #define STB_SPRINTF_IMPLEMENTATION
-#include "stb_sprintf.h"
+#include "../thirdparty/stb/stb_sprintf.h"
 
 /*
 ===================================================================================================

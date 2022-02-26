@@ -177,7 +177,7 @@ void R_InitGLState()
 	GL_TexEnv( GL_REPLACE );
 
 	glEnable( GL_PROGRAM_POINT_SIZE );
-	//glEnable( GL_FRAMEBUFFER_SRGB );
+	glEnable( GL_FRAMEBUFFER_SRGB );
 }
 
 /*

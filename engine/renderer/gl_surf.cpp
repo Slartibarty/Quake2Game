@@ -17,12 +17,17 @@
 #include <algorithm> // std::sort
 #include <vector>
 
+#define STBI_NO_STDIO
+#define STBI_ONLY_HDR
+#define STB_IMAGE_STATIC
+#define STB_IMAGE_IMPLEMENTATION
+#include "../../thirdparty/stb/stb_image.h"
+
 // Comment out to disable meshoptimizer optimisations
-// TODO: Reconsider how this can be used
 #define USE_MESHOPT
 
 // Experimental atlasing stuff
-//#define USE_XATLAS
+#define USE_XATLAS
 
 #ifdef USE_MESHOPT
 #define MESHOPTIMIZER_NO_WRAPPERS
@@ -49,45 +54,7 @@
 
 // Globals
 
-// Must be contiguous to send to OpenGL
-struct worldVertex_t
-{
-	vec3_t	pos;
-	float	st1[2];		// Normal UVs
-	float	st2[2];		// Lightmap UVs
-	vec3_t	normal;
-};
-
-using worldIndex_t = uint32; // Should really be toggled between based on the vertex count of the map...
-
-// A surface batch
-struct worldMesh_t
-{
-	mtexinfo_t *	texinfo;
-	uint32			firstIndex;		// Index into s_worldLists.finalIndices
-	uint32			numIndices;
-	//uint32		numVertices;	// For meshoptimizer
-};
-
-// This is the data sent to OpenGL
-// We use a single, large vertex / index buffer
-// for all world geometry
-// Surfaces store indices into the index buffer
-struct worldRenderData_t
-{
-	std::vector<worldVertex_t>	vertices;
-	std::vector<worldIndex_t>	indices;
-
-	material_t *				lastMaterial;		// This is used when building the vector below
-	std::vector<worldMesh_t>	meshes;
-
-	GLuint vao, vbo, ebo;
-	//GLuint eboCluster;		// ebo for the current viscluster
-
-	bool initialised;
-};
-
-static worldRenderData_t s_worldRenderData;
+worldRenderData_t g_worldData;
 
 struct worldLists_t
 {
@@ -101,7 +68,7 @@ struct worldLists_t
 	}
 };
 
-static vec3_t		modelorg;		// relative to viewpoint
+static vec3_t modelorg;		// relative to viewpoint
 
 struct gllightmapstate_t
 {
@@ -162,7 +129,7 @@ static void R_DrawWorldMesh( const worldMesh_t &mesh )
 	GL_ActiveTexture( GL_TEXTURE0 );
 	mat->Bind();
 	GL_ActiveTexture( GL_TEXTURE1 );
-	GL_BindTexture( gl_lms.lightmapTextures[1] );
+	GL_BindTexture( g_worldData.lightmapTexnum ? g_worldData.lightmapTexnum : gl_lms.lightmapTextures[1] );
 	GL_ActiveTexture( GL_TEXTURE2 );
 	mat->BindSpec();
 	GL_ActiveTexture( GL_TEXTURE3 );
@@ -208,7 +175,7 @@ static bool R_CullBox( const vec3_t mins, const vec3_t maxs )
 //
 void R_DrawBrushModel( entity_t *e )
 {
-#if 0
+#if 1
 #if 1
 	vec3_t		mins, maxs;
 	bool		rotated;
@@ -270,23 +237,21 @@ void R_DrawBrushModel( entity_t *e )
 	XMFLOAT4X4A modelMatrixStore;
 	XMStoreFloat4x4A( &modelMatrixStore, modelMatrix );
 
-	glBindVertexArray( s_worldRenderData.vao );
-	glBindBuffer( GL_ARRAY_BUFFER, s_worldRenderData.vbo );
-	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, s_worldRenderData.ebo );
+	glBindVertexArray( g_worldData.vao );
+	glBindBuffer( GL_ARRAY_BUFFER, g_worldData.vbo );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, g_worldData.eboSubmodels );
 
 	GL_UseProgram( glProgs.worldProg );
 
 	glUniformMatrix4fv( 4, 1, GL_FALSE, (const GLfloat *)&modelMatrixStore );
 
-	worldMesh_t *firstMesh = s_worldRenderData.meshes.data() + currentmodel->firstMesh;
+	worldMesh_t *firstMesh = g_worldData.meshes.data() + currentmodel->firstMesh;
 	worldMesh_t *lastMesh = firstMesh + currentmodel->numMeshes;
 
 	for ( worldMesh_t *mesh = firstMesh; mesh < lastMesh; ++mesh )
 	{
 		R_DrawWorldMesh( *mesh );
 	}
-
-	GL_UseProgram( 0 );
 #else
 	vec3_t		mins, maxs;
 	int			i;
@@ -480,7 +445,13 @@ static void R_MarkLeaves()
 
 static void R_AddSurfaceToMaterialSet( const msurface_t *surf, worldMaterialSet_t &materialSet )
 {
-	const auto begin = s_worldRenderData.indices.begin() + surf->firstIndex;
+	if ( surf->texinfoFlags & SURF_SKY )
+	{
+		R_AddSkySurface( surf );
+		return;
+	}
+
+	const auto begin = g_worldData.indices.begin() + surf->firstIndex;
 	const auto end = begin + surf->numIndices;
 
 	materialSet.indices.insert( materialSet.indices.end(), begin, end );
@@ -512,7 +483,7 @@ static void R_AddSurface( const msurface_t *surf, worldNodeWork_t &work )
 	glBegin( GL_TRIANGLES );
 	for ( uint32 i = surf->firstIndex; i < surf->firstIndex + surf->numIndices; ++i )
 	{
-		const worldVertex_t &vertex = s_worldRenderData.vertices[s_worldRenderData.indices[i]];
+		const worldVertex_t &vertex = g_worldData.vertices[g_worldData.indices[i]];
 		glVertex3fv( (float *)&vertex.pos );
 	}
 	glEnd();
@@ -721,9 +692,9 @@ void R_DrawWorld()
 
 	// SHADERWORLD
 
-	glBindVertexArray( s_worldRenderData.vao );
-	glBindBuffer( GL_ARRAY_BUFFER, s_worldRenderData.vbo );
-	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, s_worldRenderData.ebo );
+	glBindVertexArray( g_worldData.vao );
+	glBindBuffer( GL_ARRAY_BUFFER, g_worldData.vbo );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, g_worldData.ebo );
 
 	// Build the world lists
 
@@ -805,7 +776,7 @@ void R_DrawWorld()
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 	glBindVertexArray( 0 );
 
-	//R_DrawSkyBox();
+	R_DrawSkyBox();
 
 	//R_DrawTriangleOutlines();
 }
@@ -1026,7 +997,7 @@ static void R_BuildVertexNormals( worldVertex_t &v1, worldVertex_t &v2, worldVer
 
 //
 // Given an msurface_t with basic brush geometry specified
-// will create optimised render geometry and append it to s_worldRenderData
+// will create optimised render geometry and append it to g_worldData
 // It then gives the index of the first renderindex to the msurface_t
 //
 static void R_BuildPolygonFromSurface( msurface_t *fa, bool world )
@@ -1038,8 +1009,10 @@ static void R_BuildPolygonFromSurface( msurface_t *fa, bool world )
 	const mvertex_t *pVertices = currentmodel->vertexes;
 	const int numEdges = fa->numedges; // Equal to the number of vertices
 
+	assert( numEdges >= 3 );
+
 	// Index of the first vertex
-	const uint32 firstVertex = static_cast<uint32>( s_worldRenderData.vertices.size() );
+	const uint32 firstVertex = static_cast<uint32>( g_worldData.vertices.size() );
 
 	// Reconstruct the polygon
 
@@ -1053,7 +1026,7 @@ static void R_BuildPolygonFromSurface( msurface_t *fa, bool world )
 		const medge_t *pEdge = pEdges + abs( surfEdge );
 		const float *pVertex = pVertices[pEdge->v[startIndex]].position;
 
-		worldVertex_t &outVertex = s_worldRenderData.vertices.emplace_back();
+		worldVertex_t &outVertex = g_worldData.vertices.emplace_back();
 
 		// ST/UV coordinates
 
@@ -1111,11 +1084,11 @@ static void R_BuildPolygonFromSurface( msurface_t *fa, bool world )
 #endif
 
 	// Not a valid index
-	//const uint32 endVertex = static_cast<uint32>( s_worldRenderData.vertices.size() );
+	//const uint32 endVertex = static_cast<uint32>( g_worldData.vertices.size() );
 	//const uint32 numVertices = endVertex - firstVertex;
 
 	// Index of the first index!
-	const uint32 firstIndex = static_cast<uint32>( s_worldRenderData.indices.size() );
+	const uint32 firstIndex = static_cast<uint32>( g_worldData.indices.size() );
 
 	// Triangulate it, fan style
 
@@ -1124,13 +1097,13 @@ static void R_BuildPolygonFromSurface( msurface_t *fa, bool world )
 	// For every triangle
 	for ( int i = 0; i < numTriangles; ++i )
 	{
-		s_worldRenderData.indices.push_back( firstVertex + 0 );
-		s_worldRenderData.indices.push_back( firstVertex + i + 1 );
-		s_worldRenderData.indices.push_back( firstVertex + i + 2 );
+		g_worldData.indices.push_back( firstVertex + 0 );
+		g_worldData.indices.push_back( firstVertex + i + 1 );
+		g_worldData.indices.push_back( firstVertex + i + 2 );
 	}
 
 	// Not a valid index
-	const uint32 endIndex = static_cast<uint32>( s_worldRenderData.indices.size() );
+	const uint32 endIndex = static_cast<uint32>( g_worldData.indices.size() );
 	const uint32 numIndices = endIndex - firstIndex;
 
 	fa->firstIndex = firstIndex;
@@ -1143,12 +1116,12 @@ static void R_BuildPolygonFromSurface( msurface_t *fa, bool world )
 	//
 	if ( !world )
 	{
-		if ( s_worldRenderData.lastMaterial != fa->texinfo->material )
+		if ( g_worldData.lastMaterial != fa->texinfo->material )
 		{
-			s_worldRenderData.lastMaterial = fa->texinfo->material;
+			g_worldData.lastMaterial = fa->texinfo->material;
 
 			// Create a new mesh entry
-			worldMesh_t &mesh = s_worldRenderData.meshes.emplace_back();
+			worldMesh_t &mesh = g_worldData.meshes.emplace_back();
 
 			mesh.texinfo = fa->texinfo;
 			mesh.firstIndex = firstIndex;
@@ -1157,7 +1130,7 @@ static void R_BuildPolygonFromSurface( msurface_t *fa, bool world )
 		else
 		{
 			// Append to our existing one
-			worldMesh_t &mesh = s_worldRenderData.meshes.back();
+			worldMesh_t &mesh = g_worldData.meshes.back();
 			mesh.numIndices += numIndices;
 		}
 	}
@@ -1187,20 +1160,20 @@ static void R_AtlasWorldLists(
 	xatlas::SetPrint( XAtlas_PrintCallback, true );
 	xatlas::Atlas *pAtlas = xatlas::Create();
 
-	//constexpr size_t offsetNormals = offsetof( worldVertex_t, normal );
-	//constexpr size_t offsetUVs = offsetof( worldVertex_t, st1 );
+	constexpr size_t offsetNormals = offsetof( worldVertex_t, normal );
+	constexpr size_t offsetUVs = offsetof( worldVertex_t, st1 );
 
 	const xatlas::MeshDecl meshDecl
 	{
 		.vertexPositionData = vertices,
-		//.vertexNormalData = (byte *)vertices + offsetNormals,
-		//.vertexUvData = (byte *)vertices + offsetUVs,
+		.vertexNormalData = (byte *)vertices + offsetNormals,
+		.vertexUvData = (byte *)vertices + offsetUVs,
 		.indexData = indices,
 
 		.vertexCount = numVertices,
 		.vertexPositionStride = sizeof( worldVertex_t ),
-		//.vertexNormalStride = sizeof( worldVertex_t ),
-		//.vertexUvStride = sizeof( worldVertex_t ),
+		.vertexNormalStride = sizeof( worldVertex_t ),
+		.vertexUvStride = sizeof( worldVertex_t ),
 		.indexCount = numIndices,
 		.indexFormat = xatlas::IndexFormat::UInt32
 	};
@@ -1214,12 +1187,12 @@ static void R_AtlasWorldLists(
 
 	xatlas::ChartOptions chartOptions
 	{
-		.maxIterations = 1
+		.maxIterations = 4
 	};
 
 	xatlas::PackOptions packOptions
 	{
-		.bruteForce = false
+		.bruteForce = true
 	};
 
 	xatlas::Generate( pAtlas, chartOptions, packOptions );
@@ -1241,47 +1214,11 @@ static void R_AtlasWorldLists(
 			const xatlas::Vertex &vertex = mesh.vertexArray[v];
 			worldVertex_t *myVertex = vertices + vertex.xref;
 			myVertex->st2[0] = vertex.uv[0] / pAtlas->width;
-			myVertex->st2[1] = 1.0f - vertex.uv[1] / pAtlas->height;
+			myVertex->st2[1] = 1.0f - ( vertex.uv[1] / pAtlas->height );
 		}
 	}
 
-#ifdef USE_XATLAS
-
 #if 1
-
-	byte *pBuffer;
-	fsSize_t nBufLen = FileSystem::LoadFile( "world/test_biggerbox.png", (void **)&pBuffer );
-	if ( !pBuffer )
-	{
-		return;
-	}
-
-	assert( nBufLen > 32 ); // Sanity check
-
-	if ( img::TestPNG( pBuffer ) )
-	{
-		int width, height;
-		byte *pPic = img::LoadPNG( pBuffer, width, height );
-		FileSystem::FreeFile( pBuffer );
-
-		glGenTextures( 1, &fuckedUpLightmapID );
-		GL_ActiveTexture( GL_TEXTURE1 );
-		GL_BindTexture( fuckedUpLightmapID );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-		glTexImage2D( GL_TEXTURE_2D,
-			0,
-			GL_LIGHTMAP_INTERNAL_FORMAT,
-			width, height,
-			0,
-			GL_LIGHTMAP_FORMAT,
-			GL_UNSIGNED_BYTE,
-			pPic );
-
-		Mem_Free( pPic );
-	}
-
-#else
 
 	char fileBase[MAX_QPATH];
 	COM_FileBase( modelName, fileBase );
@@ -1330,22 +1267,77 @@ static void R_AtlasWorldLists(
 #endif
 
 #endif
-
-#endif
 }
 
-static void R_UploadBuffers()
+static void R_LoadExternalLightmap( const char *bspName )
 {
-	worldVertex_t *vertexData = s_worldRenderData.vertices.data();
-	size_t vertexCount = s_worldRenderData.vertices.size();
-	size_t vertexSize = vertexCount * sizeof( worldVertex_t );
+	char strippedName[MAX_QPATH];
+	COM_FileBase( bspName, strippedName );
 
-	glGenVertexArrays( 1, &s_worldRenderData.vao );
-	glGenBuffers( 2, &s_worldRenderData.vbo );			// Gen the vbo and ebo in one go
+	char imageName[MAX_QPATH];
+	Q_sprintf_s( imageName, "world/%s.hdr", strippedName );
 
-	glBindVertexArray( s_worldRenderData.vao );
-	glBindBuffer( GL_ARRAY_BUFFER, s_worldRenderData.vbo );
-	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, s_worldRenderData.ebo );
+	byte *pBuffer;
+	fsSize_t nBufLen = FileSystem::LoadFile( imageName, (void **)&pBuffer );
+	if ( !pBuffer )
+	{
+		return;
+	}
+
+	assert( nBufLen > 32 ); // Sanity check
+
+	int width, height;
+	float *hdrData = stbi_loadf_from_memory( pBuffer, nBufLen, &width, &height, nullptr, 0 );
+
+	FileSystem::FreeFile( pBuffer );
+
+	if ( !hdrData )
+	{
+		return;
+	}
+
+	glGenTextures( 1, &g_worldData.lightmapTexnum );
+	GL_ActiveTexture( GL_TEXTURE1 );
+	GL_BindTexture( g_worldData.lightmapTexnum );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	glTexImage2D( GL_TEXTURE_2D,
+		0,
+		GL_RGB32F,
+		width, height,
+		0,
+		GL_RGB,
+		GL_FLOAT,
+		hdrData );
+
+	Mem_Free( hdrData );
+}
+
+static void R_UploadBuffers( model_t *worldModel )
+{
+	worldVertex_t *vertexData = g_worldData.vertices.data();
+	size_t vertexSize = g_worldData.vertices.size() * sizeof( worldVertex_t );
+
+	bool hasSubmodels = worldModel->numsubmodels > 1;
+	uint32 ignoreIndices = worldModel->submodels->numMeshes;
+
+	worldIndex_t *indexData = g_worldData.indices.data() + ignoreIndices;
+	size_t indexSize = ( g_worldData.indices.size() - ignoreIndices ) * sizeof( worldIndex_t );
+
+	glGenVertexArrays( 1, &g_worldData.vao );
+	glGenBuffers( 1, &g_worldData.vbo );
+	glGenBuffers( 1, &g_worldData.ebo );
+	if ( hasSubmodels )
+	{
+		glGenBuffers( 1, &g_worldData.eboSubmodels );
+	}
+
+	glBindVertexArray( g_worldData.vao );
+	glBindBuffer( GL_ARRAY_BUFFER, g_worldData.vbo );
+	if ( hasSubmodels )
+	{
+		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, g_worldData.eboSubmodels );
+	}
 
 	// xyz, st1, st2 normal
 	glEnableVertexAttribArray( 0 );
@@ -1359,9 +1351,96 @@ static void R_UploadBuffers()
 	glVertexAttribPointer( 3, 3, GL_FLOAT, GL_FALSE, sizeof( worldVertex_t ), (void *)( 7 * sizeof( GLfloat ) ) );
 
 	glBufferData( GL_ARRAY_BUFFER, vertexSize, vertexData, GL_STATIC_DRAW );
-	//glBufferData( GL_ELEMENT_ARRAY_BUFFER, indexSize, indexData, GL_STATIC_DRAW );
+	if ( hasSubmodels )
+	{
+		glBufferData( GL_ELEMENT_ARRAY_BUFFER, indexSize, indexData, GL_STATIC_DRAW );
+	}
 
-	s_worldRenderData.initialised = true;
+	g_worldData.initialised = true;
+}
+
+#if 0
+static void ValveCleanMesh( worldVertex_t *vertices, worldIndex_t *indices, uint32 numVertices, uint32 numIndices )
+{
+	constexpr uint32 unusedIndex = ~0u;
+
+	std::vector<uint32> indexMap;
+	indexMap.resize( numVertices );
+	std::fill( indexMap.begin(), indexMap.end(), unusedIndex );
+
+	// Build a compact map of vertices
+	uint32 nVertexOut = 0;
+	uint32 nIndexOut = 0;
+	for ( uint32 i = 0; i < numIndices; i += 3 )
+	{
+		// Skip degenerate triangles
+		int nV0 = indices[i + 0];
+		int nV1 = indices[i + 1];
+		int nV2 = indices[i + 2];
+		if ( nV0 == nV1 || nV1 == nV2 || nV0 == nV2 )
+		{
+			continue;
+		}
+
+		if ( indexMap[nV0] == unusedIndex )
+		{
+			indexMap[nV0] = nVertexOut++;
+		}
+		if ( indexMap[nV1] == unusedIndex )
+		{
+			indexMap[nV1] = nVertexOut++;
+		}
+		if ( indexMap[nV2] == unusedIndex )
+		{
+			indexMap[nV2] = nVertexOut++;
+		}
+		nIndexOut += 3;
+	}
+
+	worldVertex_t *outVertices = vertices;
+	worldIndex_t *outIndices = indices;
+
+	// Allocate the cleaned mesh now that we know its size
+	//pMeshOut->AllocateMesh( nVertexOut, nIndexOut, inputMesh.m_nVertexStrideFloats, inputMesh.m_pAttributes, inputMesh.m_nAttributeCount );
+	nIndexOut = 0;
+	for ( uint32 i = 0; i < numIndices; i += 3 )
+	{
+		// skip degenerate triangles (again)
+		worldIndex_t nV0 = indices[i + 0];
+		worldIndex_t nV1 = indices[i + 1];
+		worldIndex_t nV2 = indices[i + 2];
+		if ( nV0 == nV1 || nV1 == nV2 || nV0 == nV2 )
+		{
+			continue;
+		}
+
+		// copy and remap the indices
+		outIndices[nIndexOut++] = indexMap[nV0];
+		outIndices[nIndexOut++] = indexMap[nV1];
+		outIndices[nIndexOut++] = indexMap[nV2];
+	}
+	assert( nIndexOut == numIndices );
+
+	// copy out the vertices in order by use
+	for ( uint32 v = 0; v < numVertices; ++v )
+	{
+		if ( indexMap[v] == unusedIndex )
+		{
+			continue;
+		}
+
+		uint32 vOut = indexMap[v];
+		memmove( outVertices + vOut, vertices + v, sizeof( worldVertex_t ) );
+	}
+}
+#endif
+
+static void R_CleanMesh( worldVertex_t *vertices, worldIndex_t *indices, uint32 numVertices, uint32 numIndices )
+{
+	//ValveCleanMesh( vertices, indices, numVertices, numIndices );
+	//uint32 numFaces = numIndices / 3;
+
+	//DirectX::Clean(indices, numFaces, numVertices, nullptr, nullptr, )
 }
 
 void R_BuildWorldLists( model_t *model )
@@ -1373,10 +1452,10 @@ void R_BuildWorldLists( model_t *model )
 	// The reserve amount is a rough approximation of what a map will need,
 	// not what it will actually use
 	//
-	s_worldRenderData.vertices.reserve( model->numvertexes );
-	s_worldRenderData.indices.reserve( model->numvertexes * 3 );
+	g_worldData.vertices.reserve( model->numvertexes );
+	g_worldData.indices.reserve( model->numvertexes * 3 );
 
-#if 0
+#if 1
 
 	// Handle the world specially, it shouldn't have a mesh entry, this is because we don't
 	// reference it when using the PVS for culling (we do that per-surface) and we also
@@ -1396,7 +1475,7 @@ void R_BuildWorldLists( model_t *model )
 	}
 
 	// Where the world indices end
-	const uint32 endWorldIndices = static_cast<uint32>( s_worldRenderData.indices.size() );
+	const uint32 endWorldIndices = static_cast<uint32>( g_worldData.indices.size() );
 
 	// Store the number of indices in the mesh stuff, for r_dumpworld
 	worldModel->firstMesh = 0;
@@ -1404,49 +1483,48 @@ void R_BuildWorldLists( model_t *model )
 
 #endif
 
-	mmodel_t *firstModel = model->submodels;
+	mmodel_t *firstModel = model->submodels + 1; // Skip world
 	mmodel_t *endModel = model->submodels + model->numsubmodels; // Not a valid submodel
 
 	for ( mmodel_t *subModel = firstModel; subModel < endModel; ++subModel )
 	{
-		const uint32 firstWorldMesh = static_cast<uint32>( s_worldRenderData.meshes.size() );
+		const uint32 firstWorldMesh = static_cast<uint32>( g_worldData.meshes.size() );
 		subModel->firstMesh = firstWorldMesh;
 
 		msurface_t *firstFace = model->surfaces + subModel->firstface;
 		msurface_t *lastFace = firstFace + subModel->numfaces;
 
 		// Sort the surfaces by model, by material
-		if ( subModel != firstModel )
-		{
-			std::sort( firstFace, lastFace,
-				[]( const msurface_t &a, const msurface_t &b )
-				{
-					// This is incredibly silly, but it works!
-					return a.texinfo->material < b.texinfo->material;
-				}
-			);
-		}
+		std::sort( firstFace, lastFace,
+			[]( const msurface_t &a, const msurface_t &b )
+			{
+				// This is incredibly silly, but it works!
+				return a.texinfo->material < b.texinfo->material;
+			}
+		);
 
 		for ( msurface_t *surface = firstFace; surface < lastFace; ++surface )
 		{
 			R_BuildPolygonFromSurface( surface, false );
 		}
 
-		const uint32 lastWorldMesh = static_cast<uint32>( s_worldRenderData.meshes.size() );
+		const uint32 lastWorldMesh = static_cast<uint32>( g_worldData.meshes.size() );
 		subModel->numMeshes = lastWorldMesh - firstWorldMesh;
 	}
 
-	worldVertex_t *vertexData = s_worldRenderData.vertices.data();
-	const size_t vertexCount = s_worldRenderData.vertices.size();
+	worldVertex_t *vertexData = g_worldData.vertices.data();
+	const size_t vertexCount = g_worldData.vertices.size();
 	const size_t vertexSize = vertexCount * sizeof( worldVertex_t );
 
-	worldIndex_t *indexData = s_worldRenderData.indices.data();
-	const size_t indexCount = s_worldRenderData.indices.size();
+	worldIndex_t *indexData = g_worldData.indices.data();
+	const size_t indexCount = g_worldData.indices.size();
 	const size_t indexSize = indexCount * sizeof( worldIndex_t );
+
+	R_CleanMesh( vertexData, indexData, vertexCount, indexCount );
 
 #ifdef USE_MESHOPT
 
-	for ( const worldMesh_t &mesh : s_worldRenderData.meshes )
+	for ( const worldMesh_t &mesh : g_worldData.meshes )
 	{
 		worldIndex_t *pOffsetIndices = indexData + mesh.firstIndex;
 
@@ -1468,8 +1546,6 @@ void R_BuildWorldLists( model_t *model )
 
 #endif
 
-	R_AtlasWorldLists( model->name, vertexData, indexData, vertexCount, indexCount );
-
 	// Stats
 	Com_Printf(
 		S_COLOR_GREEN "------------------ World Stats ------------------\n"
@@ -1489,22 +1565,22 @@ void R_BuildWorldLists( model_t *model )
 	//
 	// Upload our big fat vertex buffer
 	//
-	R_UploadBuffers();
+	R_UploadBuffers( model );
 }
 
 void R_EraseWorldLists()
 {
-	if ( s_worldRenderData.initialised )
+	if ( g_worldData.initialised )
 	{
-		glDeleteVertexArrays( 1, &s_worldRenderData.vao );
-		glDeleteBuffers( 2, &s_worldRenderData.ebo );
+		glDeleteVertexArrays( 1, &g_worldData.vao );
+		glDeleteBuffers( 2, &g_worldData.ebo );
 
-		s_worldRenderData.vertices.clear();
-		s_worldRenderData.indices.clear();
-		s_worldRenderData.lastMaterial = nullptr;
-		s_worldRenderData.meshes.clear();
+		g_worldData.vertices.clear();
+		g_worldData.indices.clear();
+		g_worldData.lastMaterial = nullptr;
+		g_worldData.meshes.clear();
 
-		s_worldRenderData.initialised = false;
+		g_worldData.initialised = false;
 	}
 }
 
@@ -1529,7 +1605,7 @@ static bool R_FindIndexInVector( worldIndex_t index, const std::vector<worldInde
 	return false;
 }
 
-static void R_ExportRenderData( fsHandle_t file, const uint32 firstIndex, const uint32 lastIndex, const uint32 pass )
+static void R_ExportRenderData( fsHandle_t file, const uint32 firstIndex, const uint32 lastIndex, const uint32 pass, const std::vector<worldVertex_t> &vertices )
 {
 	assert( !( lastIndex % 3 ) );
 
@@ -1543,7 +1619,7 @@ static void R_ExportRenderData( fsHandle_t file, const uint32 firstIndex, const 
 		for ( uint32 iIndex = firstIndex; iIndex < lastIndex; ++iIndex )
 		{
 			// Print vertices
-			const worldIndex_t index = s_worldRenderData.indices[iIndex];
+			const worldIndex_t index = g_worldData.indices[iIndex];
 
 			if ( R_FindIndexInVector( index, checkedIndices ) )
 			{
@@ -1552,7 +1628,7 @@ static void R_ExportRenderData( fsHandle_t file, const uint32 firstIndex, const 
 
 			checkedIndices.push_back( index );
 
-			const worldVertex_t &vertex = s_worldRenderData.vertices[index];
+			const worldVertex_t &vertex = vertices[index];
 
 			FileSystem::PrintFileFmt( file,
 				"v %g %g %g\n"
@@ -1568,9 +1644,9 @@ static void R_ExportRenderData( fsHandle_t file, const uint32 firstIndex, const 
 	{
 		for ( uint32 iIndex = firstIndex; iIndex < lastIndex; iIndex += 3 )
 		{
-			const worldIndex_t index1 = s_worldRenderData.indices[iIndex + 0] + 1;
-			const worldIndex_t index2 = s_worldRenderData.indices[iIndex + 1] + 1;
-			const worldIndex_t index3 = s_worldRenderData.indices[iIndex + 2] + 1;
+			const worldIndex_t index1 = g_worldData.indices[iIndex + 0] + 1;
+			const worldIndex_t index2 = g_worldData.indices[iIndex + 1] + 1;
+			const worldIndex_t index3 = g_worldData.indices[iIndex + 2] + 1;
 
 			// Print indices
 			FileSystem::PrintFileFmt( file,
@@ -1585,7 +1661,7 @@ static void R_ExportRenderData( fsHandle_t file, const uint32 firstIndex, const 
 //
 // Outputs world/<mapname>.obj
 //
-static void R_ExportWorldAsOBJ( const model_t *model )
+static void R_ExportWorldAsOBJ( const model_t *model, const std::vector<worldVertex_t> &vertices )
 {
 	char fileBase[MAX_QPATH];
 	COM_FileBase( model->name, fileBase );
@@ -1618,7 +1694,7 @@ static void R_ExportWorldAsOBJ( const model_t *model )
 				file );
 		}
 
-		R_ExportRenderData( file, firstWorldIndex, lastWorldIndex, iPass );
+		R_ExportRenderData( file, firstWorldIndex, lastWorldIndex, iPass, vertices );
 
 		const uint32 numSubModels = static_cast<uint32>( model->numsubmodels );
 
@@ -1639,12 +1715,12 @@ static void R_ExportWorldAsOBJ( const model_t *model )
 
 			for ( uint32 iMesh = firstMesh; iMesh < lastMesh; ++iMesh )
 			{
-				const worldMesh_t &mesh = s_worldRenderData.meshes[iMesh];
+				const worldMesh_t &mesh = g_worldData.meshes[iMesh];
 
 				const uint32 firstIndex = mesh.firstIndex;
 				const uint32 lastIndex = firstIndex + mesh.numIndices;
 
-				R_ExportRenderData( file, firstIndex, lastIndex, iPass );
+				R_ExportRenderData( file, firstIndex, lastIndex, iPass, vertices );
 			}
 		}
 	}
@@ -1656,7 +1732,7 @@ static void R_ExportWorldAsOBJ( const model_t *model )
 
 static uint32 R_DumpWorldThreadProc( void *params )
 {
-	R_ExportWorldAsOBJ( r_worldmodel );
+	R_ExportWorldAsOBJ( r_worldmodel, g_worldData.vertices );
 
 	return 0;
 }
@@ -1685,6 +1761,14 @@ CON_COMMAND( r_dumpWorld, "Exports the world to an OBJ file in the maps folder."
 static_assert( sizeof( bspDrawVert_t ) == sizeof( worldVertex_t ) );
 static_assert( sizeof( bspDrawIndex_t ) == sizeof( worldIndex_t ) );
 
+static void BspExt_GetBspExtName( const char *bspName, char *bspExtName, strlen_t maxLen )
+{
+	char strippedName[MAX_QPATH];
+	COM_StripExtension( bspName, strippedName );
+
+	Q_sprintf_s( bspExtName, maxLen, "%s.bspext", strippedName );
+}
+
 static void BspExt_LoadVertices( byte *base, bspExtLump_t *l )
 {
 	bspDrawVert_t *		in;
@@ -1698,9 +1782,9 @@ static void BspExt_LoadVertices( byte *base, bspExtLump_t *l )
 	}
 	count = l->filelen / sizeof( bspDrawVert_t );
 
-	s_worldRenderData.vertices.resize( count );
+	g_worldData.vertices.resize( count );
 
-	out = s_worldRenderData.vertices.data();
+	out = g_worldData.vertices.data();
 
 	// Identical binary structures, just do a memcpy
 	memcpy( out, in, l->filelen );
@@ -1719,9 +1803,9 @@ static void BspExt_LoadIndices( byte *base, bspExtLump_t *l )
 	}
 	count = l->filelen / sizeof( bspDrawIndex_t );
 
-	s_worldRenderData.indices.resize( count );
+	g_worldData.indices.resize( count );
 
-	out = s_worldRenderData.indices.data();
+	out = g_worldData.indices.data();
 
 	// Identical binary structures, just do a memcpy
 	memcpy( out, in, l->filelen );
@@ -1740,9 +1824,9 @@ static void BspExt_LoadMeshes( const model_t *worldModel, byte *base, bspExtLump
 	}
 	count = l->filelen / sizeof( bspDrawMesh_t );
 
-	s_worldRenderData.meshes.resize( count );
+	g_worldData.meshes.resize( count );
 
-	out = s_worldRenderData.meshes.data();
+	out = g_worldData.meshes.data();
 
 	for ( uint32 i = 0; i < count; ++i )
 	{
@@ -1842,10 +1926,10 @@ static void BspExt_UnSortSurfacesByMaterial( msurface_t *unsortedSurfaces, const
 	}
 }
 
-bool BspExt_Load( const model_t *worldModel )
+bool BspExt_Load( model_t *worldModel )
 {
 	char bspExtName[MAX_QPATH];
-	Q_sprintf_s( bspExtName, "maps/%s.bspext", worldModel->name );
+	BspExt_GetBspExtName( worldModel->name, bspExtName, sizeof( bspExtName ) );
 
 	byte *buffer;
 	fsSize_t bspExtSize = FileSystem::LoadFile( bspExtName, (void **)&buffer );
@@ -1868,6 +1952,8 @@ bool BspExt_Load( const model_t *worldModel )
 		return false;
 	}
 
+	worldModel->flags = hdr->flags;
+
 	BspExt_LoadVertices( buffer, hdr->lumps + LUMP_DRAWVERTICES );
 	BspExt_LoadIndices( buffer, hdr->lumps + LUMP_DRAWINDICES );
 
@@ -1879,30 +1965,36 @@ bool BspExt_Load( const model_t *worldModel )
 
 	BspExt_SortSurfacesByMaterial( worldModel );
 
-	R_UploadBuffers();
+	R_UploadBuffers( worldModel );
+
+	if ( worldModel->flags & BSPFLAG_EXTERNAL_LIGHTMAP )
+	{
+		R_LoadExternalLightmap( worldModel->name );
+	}
 
 	return true;
 }
 
-static void BspExt_SaveHeader( fsHandle_t handle, const model_t *worldModel )
+static void BspExt_SaveHeader( fsHandle_t handle, const model_t *worldModel, uint32 flags )
 {
 	bspExtHeader_t hdr;
 	hdr.ident = BSPEXT_IDENT;
 	hdr.version = BSPEXT_VERSION;
+	hdr.flags = flags;
 
 	uint32 offset = sizeof( bspExtHeader_t );
 
-	const uint32 drawVerticesLen = s_worldRenderData.vertices.size() * sizeof( bspDrawVert_t );
+	const uint32 drawVerticesLen = g_worldData.vertices.size() * sizeof( bspDrawVert_t );
 	hdr.lumps[LUMP_DRAWVERTICES].fileofs = offset;
 	hdr.lumps[LUMP_DRAWVERTICES].filelen = drawVerticesLen;
 	offset += drawVerticesLen;
 
-	const uint32 drawIndicesLen = s_worldRenderData.indices.size() * sizeof( bspDrawIndex_t );
+	const uint32 drawIndicesLen = g_worldData.indices.size() * sizeof( bspDrawIndex_t );
 	hdr.lumps[LUMP_DRAWINDICES].fileofs = offset;
 	hdr.lumps[LUMP_DRAWINDICES].filelen = drawIndicesLen;
 	offset += drawIndicesLen;
 
-	const uint32 drawMeshesLen = s_worldRenderData.meshes.size() * sizeof( bspDrawMesh_t );
+	const uint32 drawMeshesLen = g_worldData.meshes.size() * sizeof( bspDrawMesh_t );
 	hdr.lumps[LUMP_DRAWMESHES].fileofs = offset;
 	hdr.lumps[LUMP_DRAWMESHES].filelen = drawMeshesLen;
 	offset += drawMeshesLen;
@@ -1920,22 +2012,12 @@ static void BspExt_SaveHeader( fsHandle_t handle, const model_t *worldModel )
 	FileSystem::WriteFile( &hdr, sizeof( hdr ), handle );
 }
 
-static void BspExt_SaveVertices( fsHandle_t handle )
-{
-	FileSystem::WriteFile( s_worldRenderData.vertices.data(), s_worldRenderData.vertices.size() * sizeof( worldVertex_t ), handle );
-}
-
-static void BspExt_SaveIndices( fsHandle_t handle )
-{
-	FileSystem::WriteFile( s_worldRenderData.indices.data(), s_worldRenderData.indices.size() * sizeof( worldIndex_t ), handle );
-}
-
 static void BspExt_SaveMeshes( fsHandle_t handle, const model_t *worldModel )
 {
 	bspDrawMesh_t out;
 
-	const worldMesh_t *meshes = s_worldRenderData.meshes.data();
-	const uint32 numMeshes = s_worldRenderData.meshes.size();
+	const worldMesh_t *meshes = g_worldData.meshes.data();
+	const uint32 numMeshes = g_worldData.meshes.size();
 
 	// NOTE: Could batch this but it really doesn't matter as long as it ends up in the file
 	for ( uint32 i = 0; i < numMeshes; ++i )
@@ -1988,10 +2070,10 @@ static void BspExt_SaveFacesExt( fsHandle_t handle, const model_t *worldModel )
 	}
 }
 
-void BspExt_Save( const model_t *worldModel )
+void BspExt_Save( const model_t *worldModel, uint32 flags )
 {
 	char bspExtName[MAX_QPATH];
-	Q_sprintf_s( bspExtName, "maps/%s.bspext", worldModel->name );
+	BspExt_GetBspExtName( worldModel->name, bspExtName, sizeof( bspExtName ) );
 
 	fsHandle_t handle = FileSystem::OpenFileWrite( bspExtName, FS_GAMEDIR );
 	if ( !handle )
@@ -2000,14 +2082,51 @@ void BspExt_Save( const model_t *worldModel )
 		return;
 	}
 
-	BspExt_SaveHeader( handle, worldModel );
-	BspExt_SaveVertices( handle );
-	BspExt_SaveIndices( handle );
+	BspExt_SaveHeader( handle, worldModel, flags );
+
+	//
+	// Vertices
+	//
+	if ( flags & BSPFLAG_EXTERNAL_LIGHTMAP )
+	{
+		// THIS IS SLOW SLOW SLOW!!!
+
+		Com_Print( "Atlasing world, this may take a while...\n" );
+
+		std::vector<worldVertex_t> atlasVertices = g_worldData.vertices;
+
+		R_AtlasWorldLists( worldModel->name, atlasVertices.data(), g_worldData.indices.data(), atlasVertices.size(), g_worldData.indices.size() );
+
+		Com_Print( "Atlasing complete!\n" );
+
+		FileSystem::WriteFile( atlasVertices.data(), atlasVertices.size() * sizeof( worldVertex_t ), handle );
+	}
+	else
+	{
+		FileSystem::WriteFile( g_worldData.vertices.data(), g_worldData.vertices.size() * sizeof( worldVertex_t ), handle );
+	}
+	
+	//
+	// Indices
+	//
+	FileSystem::WriteFile( g_worldData.indices.data(), g_worldData.indices.size() * sizeof( worldIndex_t ), handle );
+
 	BspExt_SaveMeshes( handle, worldModel );
 	BspExt_SaveModelsExt( handle, worldModel );
 	BspExt_SaveFacesExt( handle, worldModel );
 
 	FileSystem::CloseFile( handle );
+}
+
+static uint32 R_WriteBSPExtThreadProc( void *params )
+{
+	uint32 *flags = (uint32 *)params;
+
+	BspExt_Save( r_worldmodel, *flags );
+
+	Mem_Free( params );
+
+	return 0;
 }
 
 CON_COMMAND( r_writeBSPExt, "Writes out the bspext file for the loaded bsp.", 0 )
@@ -2018,5 +2137,31 @@ CON_COMMAND( r_writeBSPExt, "Writes out the bspext file for the loaded bsp.", 0 
 		return;
 	}
 
-	BspExt_Save( r_worldmodel );
+	uint32 flags = 0;
+
+	const int argc = Cmd_Argc();
+	for ( int i = 0; i < argc; ++i )
+	{
+		const char *arg = Cmd_Argv( i );
+
+		if ( Q_strcmp( arg, "--external-lightmap" ) == 0 )
+		{
+			flags |= BSPFLAG_EXTERNAL_LIGHTMAP;
+			continue;
+		}
+	}
+
+	uint32 *params = (uint32 *)Mem_Alloc( sizeof( uint32 ) );
+	*params = flags;
+
+	// fire and forget
+	threadHandle_t thread = Sys_CreateThread( R_WriteBSPExtThreadProc, params, THREAD_NORMAL, PLATTEXT( "BSPEXT Writer Thread" ) );
+	Sys_DestroyThread( thread );
 }
+
+/*
+===================================================================================================
+===================================================================================================
+*/
+
+

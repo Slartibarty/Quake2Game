@@ -452,21 +452,17 @@ static void ClipSkyPolygon( int nump, vec3_t vecs, int stage )
 R_AddSkySurface
 ========================
 */
-void R_AddSkySurface( msurface_t *fa )
+void R_AddSkySurface( const msurface_t *fa )
 {
-	int			i;
-	vec3_t		verts[MAX_CLIP_VERTS];
-	glpoly_t	*p;
+	vec3_t verts[MAX_CLIP_VERTS];
 
-	// calculate vertex values for sky box
-	for ( p = fa->polys; p; p = p->next )
+	// Calculate vertex values for skybox
+	for ( uint32 i = 0; i < fa->numIndices; ++i )
 	{
-		for ( i = 0; i < p->numverts; i++ )
-		{
-			VectorSubtract( p->verts[i], tr.refdef.vieworg, verts[i] );
-		}
-		ClipSkyPolygon( p->numverts, verts[0], 0 );
+		VectorSubtract( g_worldData.vertices[g_worldData.indices[fa->firstIndex + i]].pos, tr.refdef.vieworg, verts[i] );
 	}
+
+	ClipSkyPolygon( fa->numIndices, verts[0], 0 );
 }
 
 /*
@@ -543,6 +539,8 @@ void R_DrawSkyBox()
 	glPushMatrix();
 	glTranslatef( tr.refdef.vieworg[0], tr.refdef.vieworg[1], tr.refdef.vieworg[2] );
 	glRotatef( tr.refdef.time * skyrotate, skyaxis[0], skyaxis[1], skyaxis[2] );
+
+	GL_ActiveTexture( GL_TEXTURE0 );
 
 	for ( i = 0; i < 6; i++ )
 	{

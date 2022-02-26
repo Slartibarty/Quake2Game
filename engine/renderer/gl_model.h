@@ -67,6 +67,7 @@ struct msurface_t
 
 	cplane_t *	plane;
 	int32		flags;
+	int32		texinfoFlags;		// Identical to texinfo->flags
 
 	int32		firstedge;			// look up in model->surfedges[], negative numbers
 	int32		numedges;			// are backwards edges

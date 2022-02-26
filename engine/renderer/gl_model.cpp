@@ -482,6 +482,13 @@ static void Mod_LoadTexinfo (lump_t *l)
 		else
 		    out->next = NULL;
 
+		if ( Q_strstr( in->texture, "/sky" ) )
+		{
+			// There's a bug in original Quake 2 maps where sky faces wouldn't be tagged appropriately
+			// so correct that here
+			out->flags |= SURF_SKY;
+		}
+
 		Q_sprintf_s( name, "materials/%s.mat", in->texture );
 		out->material = GL_FindMaterial( name );
 		if ( out->material == defaultMaterial )
@@ -616,6 +623,8 @@ static void Mod_LoadFaces( lump_t *l )
 			Com_Error( "MOD_LoadBmodel: bad texinfo number" );
 		}
 		out->texinfo = loadmodel->texinfo + ti;
+
+		out->texinfoFlags = out->texinfo->flags;
 
 		CalcSurfaceExtents( out );
 
@@ -1007,33 +1016,20 @@ Mod_LoadBrushModel
 */
 void Mod_LoadBrushModel( model_t *pMod, void *pBuffer, int bufferLength )
 {
-	int			i;
-	dheader_t *header;
-	mmodel_t *bm;
-
 	loadmodel->type = mod_brush;
 	if ( loadmodel != mod_known )
 	{
 		Com_Error( "Loaded a brush model after the world" );
 	}
 
-	header = (dheader_t *)pBuffer;
+	dheader_t *header = (dheader_t *)pBuffer;
 
-	i = LittleLong( header->version );
-	if ( i != BSPVERSION )
+	if ( header->version != BSPVERSION )
 	{
-		Com_Errorf( "Mod_LoadBrushModel: %s has wrong version number (%i should be %i)", pMod->name, i, BSPVERSION );
+		Com_Errorf( "Mod_LoadBrushModel: %s has wrong version number (%i should be %i)", pMod->name, header->version, BSPVERSION );
 	}
 
-	//
-	// Swap all the lumps
-	//
 	mod_base = (byte *)header;
-
-	for ( i = 0; i < sizeof( dheader_t ) / 4; ++i )
-	{
-		( (int *)header )[i] = LittleLong( ( (int *)header )[i] );
-	}
 
 	//
 	// Load all the lumps
@@ -1057,38 +1053,6 @@ void Mod_LoadBrushModel( model_t *pMod, void *pBuffer, int bufferLength )
 	// Regular and alternate animation
 	pMod->numframes = 2;
 
-	//
-	// Set up the submodels
-	//
-	for ( i = 0; i < pMod->numsubmodels; ++i )
-	{
-		model_t *starmod;
-
-		bm = &pMod->submodels[i];
-		starmod = &mod_inline[i];
-
-		*starmod = *loadmodel;
-
-		starmod->firstMesh = bm->firstMesh;
-		starmod->numMeshes = bm->numMeshes;
-		starmod->firstnode = bm->headnode;
-		if ( starmod->firstnode >= loadmodel->numnodes )
-		{
-			Com_Errorf( "Inline model %i has bad firstnode", i );
-		}
-
-		VectorCopy( bm->maxs, starmod->maxs );
-		VectorCopy( bm->mins, starmod->mins );
-		starmod->radius = bm->radius;
-
-		if ( i == 0 )
-		{
-			*loadmodel = *starmod;
-		}
-
-		starmod->numleafs = bm->visleafs;
-	}
-
 	R_EraseWorldLists();
 
 	//
@@ -1104,6 +1068,35 @@ void Mod_LoadBrushModel( model_t *pMod, void *pBuffer, int bufferLength )
 		R_BuildWorldLists( pMod );
 	}
 
+	//
+	// Set up the submodels
+	//
+	for ( int32 i = 0; i < pMod->numsubmodels; ++i )
+	{
+		const mmodel_t *subModel = pMod->submodels + i;
+		model_t *inlineModel = mod_inline + i;
+
+		memcpy( inlineModel, loadmodel, sizeof( model_t ) );
+
+		inlineModel->firstMesh = subModel->firstMesh;
+		inlineModel->numMeshes = subModel->numMeshes;
+		inlineModel->firstnode = subModel->headnode;
+		if ( inlineModel->firstnode >= loadmodel->numnodes )
+		{
+			Com_Errorf( "Inline model %i has bad firstnode", i );
+		}
+
+		VectorCopy( subModel->maxs, inlineModel->maxs );
+		VectorCopy( subModel->mins, inlineModel->mins );
+		inlineModel->radius = subModel->radius;
+
+		if ( i == 0 )
+		{
+			memcpy( loadmodel, inlineModel, sizeof( model_t ) );
+		}
+
+		inlineModel->numleafs = subModel->visleafs;
+	}
 }
 
 /*

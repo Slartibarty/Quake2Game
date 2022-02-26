@@ -7,9 +7,12 @@
 #include "ref_types.h"
 #include "ref_public.h"
 
-// slart: have to include it this way otherwise it uses the winsdk version...
-#include "Inc/DirectXMath.h"
-static_assert( DIRECTX_MATH_VERSION >= 316 );
+#ifndef _WIN32
+#include "../../thirdparty/DirectXMath/Inc/DirectXMath.h"
+#else
+#include <DirectXMath.h>
+#endif
+static_assert( DIRECTX_MATH_VERSION >= 317 );
 
 #ifdef _WIN32
 // only need system headers on win
@@ -407,15 +410,53 @@ void	R_LightPoint( const vec3_t p, vec3_t color );
 ===============================================================================
 */
 
-extern int c_visible_lightmaps;
+// Must be contiguous to send to OpenGL
+struct worldVertex_t
+{
+	vec3_t	pos;
+	vec2_t	st1;		// Normal UVs
+	vec2_t	st2;		// Lightmap UVs
+	vec3_t	normal;
+};
+
+using worldIndex_t = uint32; // Should really be toggled between based on the vertex count of the map...
+
+// A surface batch
+struct worldMesh_t
+{
+	mtexinfo_t *texinfo;
+	uint32			firstIndex;		// Index into s_worldLists.finalIndices
+	uint32			numIndices;
+	//uint32		numVertices;	// For meshoptimizer
+};
+
+// This is the data sent to OpenGL
+// We use a single, large vertex / index buffer
+// for all world geometry
+// Surfaces store indices into the index buffer
+struct worldRenderData_t
+{
+	std::vector<worldVertex_t>	vertices;
+	std::vector<worldIndex_t>	indices;
+
+	material_t *lastMaterial;		// This is used when building the vector below
+	std::vector<worldMesh_t>	meshes;
+
+	GLuint vao, vbo, ebo, eboSubmodels;
+	GLuint lightmapTexnum;
+
+	bool initialised;
+};
+
+extern worldRenderData_t g_worldData;
 
 void	R_DrawBrushModel( entity_t *e );
 void	R_DrawWorld();
 void	R_DrawAlphaSurfaces();
 void	R_RotateForEntity( entity_t *e );
 
-bool	BspExt_Load( const model_t *worldModel );
-void	BspExt_Save( const model_t *worldModel );
+bool	BspExt_Load( model_t *worldModel );
+void	BspExt_Save( const model_t *worldModel, uint32 flags );
 
 /*
 ===============================================================================
@@ -454,7 +495,7 @@ void	Draw_RenderBatches();
 void	GL_SubdivideSurface( msurface_t *fa );
 
 void	EmitWaterPolys( msurface_t *fa );
-void	R_AddSkySurface( msurface_t *fa );
+void	R_AddSkySurface( const msurface_t *fa );
 void	R_ClearSkyBox();
 void	R_DrawSkyBox();
 

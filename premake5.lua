@@ -90,8 +90,6 @@ workspace "jaffaquake"
 
 -- Misc flags for all projects
 
-includedirs { "thirdparty/stb", "thirdparty/DirectXMath" }
-
 flags { "MultiProcessorCompile", "NoBufferSecurityCheck" }
 staticruntime "On"
 cppdialect "C++latest"
@@ -245,6 +243,9 @@ project "engine"
 
 		glew_public,
 		glew_sources,
+		
+		xatlas_public,
+		xatlas_sources,
 	}
 
 	filter "system:windows"

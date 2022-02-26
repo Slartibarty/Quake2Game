@@ -700,7 +700,12 @@ using bspDrawIndex_t = uint16;
 inline constexpr uint32 BSPEXT_IDENT = MakeFourCC( 'I', 'E', 'X', 'T' );
 inline constexpr uint32 BSPEXT_VERSION = 1;
 
-enum
+enum bspFlags_t
+{
+	BSPFLAG_EXTERNAL_LIGHTMAP = BIT( 0 )	// BSP uses an external lightmap
+};
+
+enum bspLumps_t
 {
 	LUMP_DRAWVERTICES,		// Raw vertex buffer
 	LUMP_DRAWINDICES,		// Raw index buffer
@@ -719,6 +724,7 @@ struct bspExtHeader_t
 {
 	uint32 ident;
 	uint32 version;
+	uint32 flags;
 	bspExtLump_t lumps[BSPEXT_LUMPS];
 };
 
