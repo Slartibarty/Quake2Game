@@ -475,11 +475,11 @@ static void R_DrawParticles()
 	particle_t *p;
 
 	// ensure we have enough room
-	s_partVector.reserve( tr.refdef.num_particles );
+	s_partVector.resize( tr.refdef.num_particles );
 
 	for ( i = 0, p = tr.refdef.particles; i < tr.refdef.num_particles; i++, p++ )
 	{
-		partPoint_t &point = s_partVector.emplace_back();
+		partPoint_t &point = s_partVector[i];
 
 		point.x = p->origin[0];
 		point.y = p->origin[1];
@@ -509,8 +509,6 @@ static void R_DrawParticles()
 
 	glDisable( GL_BLEND );
 	glDepthMask( GL_TRUE );
-
-	GL_UseProgram( 0 );
 }
 
 //=================================================================================================

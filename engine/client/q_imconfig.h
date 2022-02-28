@@ -18,8 +18,8 @@
 #define IMGUI_DISABLE_DEFAULT_FORMAT_FUNCTIONS
 #define IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS
 
-#define IMGUI_STB_TRUETYPE_FILENAME		"stb_truetype.h"
-#define IMGUI_STB_RECT_PACK_FILENAME	"stb_rect_pack.h"
+#define IMGUI_STB_TRUETYPE_FILENAME		"../stb/stb_truetype.h"
+#define IMGUI_STB_RECT_PACK_FILENAME	"../stb/stb_rect_pack.h"
 
 #ifdef Q_RETAIL
 //#define IMGUI_DISABLE_DEMO_WINDOWS

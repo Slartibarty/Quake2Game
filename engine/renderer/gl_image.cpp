@@ -154,13 +154,13 @@ static void GL_ApplyTextureParameters( imageFlags_t flags )
 	}
 
 	// Clamp
-	if ( GLEW_EXT_texture_edge_clamp && ( flags & IF_CLAMPS ) )
+	if ( flags & IF_CLAMPS )
 	{
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE_EXT );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
 	}
-	if ( GLEW_EXT_texture_edge_clamp && ( flags & IF_CLAMPT ) )
+	if ( flags & IF_CLAMPT )
 	{
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE_EXT );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 	}
 }
 
