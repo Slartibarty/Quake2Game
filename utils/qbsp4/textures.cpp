@@ -189,6 +189,7 @@ static void ParseMaterial( char *data, textureref_t *ref )
 
 	for ( ; token[0] != '}'; COM_Parse2( &data, &token, sizeof( tokenhack ) ) )
 	{
+		// Used by game
 		if ( Q_strcmp( token, "$nextframe" ) == 0 )
 		{
 			COM_Parse2( &data, &token, sizeof( tokenhack ) );
@@ -201,18 +202,71 @@ static void ParseMaterial( char *data, textureref_t *ref )
 			ref->flags |= StringToSurfaceType( token );
 			continue;
 		}
+		// Used by tools
+		if ( Q_strcmp( token, "%compileclip" ) == 0 )
+		{
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
+			if ( Q_atoi( token ) ) {
+				ref->contents |= CONTENTS_PLAYERCLIP | CONTENTS_MONSTERCLIP;
+				ref->flags |= SURF_NODRAW;
+			}
+			continue;
+		}
+		if ( Q_strcmp( token, "%compileplayerclip" ) == 0 )
+		{
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
+			if ( Q_atoi( token ) ) {
+				ref->contents |= CONTENTS_PLAYERCLIP;
+				ref->flags |= SURF_NODRAW;
+			}
+			continue;
+		}
+		if ( Q_strcmp( token, "%compilenpcclip" ) == 0 )
+		{
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
+			if ( Q_atoi( token ) ) {
+				ref->contents |= CONTENTS_MONSTERCLIP;
+				ref->flags |= SURF_NODRAW;
+			}
+			continue;
+		}
+		if ( Q_strcmp( token, "%compilehint" ) == 0 )
+		{
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
+			if ( Q_atoi( token ) ) {
+				ref->flags |= SURF_NODRAW | SURF_HINT;
+			}
+			continue;
+		}
+		if ( Q_strcmp( token, "%compileskip" ) == 0 )
+		{
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
+			if ( Q_atoi( token ) ) {
+				ref->flags |= SURF_NODRAW | SURF_SKIP;
+			}
+			continue;
+		}
 		if ( Q_strcmp( token, "%compilesky" ) == 0 )
 		{
 			COM_Parse2( &data, &token, sizeof( tokenhack ) );
-			if ( atoi( token ) ) {
+			if ( Q_atoi( token ) ) {
 				ref->flags |= SURF_NODRAW | SURF_SKY;
 			}
 			continue;
 		}
-		if ( Q_strcmp( token, "%compilenodraw" ) == 0 )
+		if ( Q_strcmp( token, "%compileorigin" ) == 0 )
 		{
 			COM_Parse2( &data, &token, sizeof( tokenhack ) );
-			if ( atoi( token ) ) {
+			if ( Q_atoi( token ) ) {
+				ref->contents |= CONTENTS_ORIGIN;
+				ref->flags |= SURF_NODRAW;
+			}
+			continue;
+		}
+		if ( Q_strcmp( token, "%compilenodraw" ) == 0 || Q_strcmp( token, "%compiletrigger" ) == 0 )
+		{
+			COM_Parse2( &data, &token, sizeof( tokenhack ) );
+			if ( Q_atoi( token ) ) {
 				ref->flags |= SURF_NODRAW;
 			}
 			continue;
@@ -428,7 +482,7 @@ skip:;
 	// load the next animation
 	mt = FindMiptex (bt->name);
 	// SLARTTODO: WTF?? This is a problem
-	bt->flags = tc->flags = mt->flags; // This didn't used to be here!!!
+	//bt->flags = tc->flags = mt->flags; // This didn't used to be here!!!
 	if (mt->animname[0])
 	{
 		anim = *bt;

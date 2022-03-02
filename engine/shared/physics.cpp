@@ -439,12 +439,16 @@ void DestroyShape( shapeHandle_t handle )
 
 bodyID_t CreateAndAddBody( const bodyCreationSettings_t &settings, shapeHandle_t shape, void *userData )
 {
+	const bool isStatic = settings.motionType == MOTION_STATIC;
+	const uint8 layer = isStatic ? Layers::NON_MOVING : Layers::MOVING;
+	const JPH::EActivation activationState = isStatic ? JPH::EActivation::DontActivate : JPH::EActivation::Activate;
+
 	JPH::BodyCreationSettings creationSettings(
 		reinterpret_cast<JPH::Shape *>( shape ),
 		QuakePositionToJolt( settings.position ),
 		QuakeEulerToJoltQuat( settings.rotation ),
 		QuakeMotionTypeToJPHMotionType( settings.motionType ),
-		Layers::MOVING ); // TODO: Must be variable based on motion type...
+		layer );
 
 	creationSettings.mFriction = settings.friction;
 	creationSettings.mRestitution = settings.restitution;
@@ -464,7 +468,7 @@ bodyID_t CreateAndAddBody( const bodyCreationSettings_t &settings, shapeHandle_t
 
 	body->SetUserData( (uint64)userData );
 
-	bodyInterface.AddBody( body->GetID(), JPH::EActivation::Activate ); // TODO: Must be variable based on motion type...
+	bodyInterface.AddBody( body->GetID(), activationState ); // TODO: Must be variable based on motion type...
 
 	return std::bit_cast<bodyID_t>( body->GetID() );
 }

@@ -995,6 +995,21 @@ static void R_BuildVertexNormals( worldVertex_t &v1, worldVertex_t &v2, worldVer
 }
 #endif
 
+// Move to mathlib or types
+static bool IsZero( float f, float epsilon )
+{
+	return fabs( f ) <= epsilon;
+}
+
+static float R_TriangleArea( const worldVertex_t &v0, const worldVertex_t &v1, const worldVertex_t &v2 )
+{
+	vec3_t edge0, edge1, cross;
+	VectorSubtract( v1.pos, v0.pos, edge0 );
+	VectorSubtract( v2.pos, v0.pos, edge1 );
+	CrossProduct( edge0, edge1, cross );
+	return VectorLength( cross ) * 0.5f;
+}
+
 //
 // Given an msurface_t with basic brush geometry specified
 // will create optimised render geometry and append it to g_worldData
@@ -1011,6 +1026,19 @@ static void R_BuildPolygonFromSurface( msurface_t *fa, bool world )
 
 	assert( numEdges >= 3 );
 
+	// Helper lambda to get a vertex for a surface
+	auto R_GetVertexForSurface =
+		[pSurfEdges, pEdges, pVertices]( msurface_t *fa, int index )
+	{
+		const int surfEdge = pSurfEdges[fa->firstedge + index];
+		const int startIndex = surfEdge > 0 ? 0 : 1;
+
+		const medge_t *edge = pEdges + abs( surfEdge );
+		const float *vertex = pVertices[edge->v[startIndex]].position;
+
+		return vertex;
+	};
+
 	// Index of the first vertex
 	const uint32 firstVertex = static_cast<uint32>( g_worldData.vertices.size() );
 
@@ -1020,11 +1048,7 @@ static void R_BuildPolygonFromSurface( msurface_t *fa, bool world )
 
 	for ( int i = 0; i < numEdges; ++i )
 	{
-		const int surfEdge = pSurfEdges[fa->firstedge + i];
-		const int startIndex = surfEdge > 0 ? 0 : 1;
-
-		const medge_t *pEdge = pEdges + abs( surfEdge );
-		const float *pVertex = pVertices[pEdge->v[startIndex]].position;
+		const float *pVertex = R_GetVertexForSurface( fa, i );
 
 		worldVertex_t &outVertex = g_worldData.vertices.emplace_back();
 
@@ -1097,7 +1121,15 @@ static void R_BuildPolygonFromSurface( msurface_t *fa, bool world )
 	// For every triangle
 	for ( int i = 0; i < numTriangles; ++i )
 	{
-		g_worldData.indices.push_back( firstVertex + 0 );
+		if ( IsZero( R_TriangleArea(
+			g_worldData.vertices[firstVertex],
+			g_worldData.vertices[firstVertex + i + 1],
+			g_worldData.vertices[firstVertex + i + 2] ), FLT_EPSILON ) )
+		{
+			continue;
+		}
+
+		g_worldData.indices.push_back( firstVertex );
 		g_worldData.indices.push_back( firstVertex + i + 1 );
 		g_worldData.indices.push_back( firstVertex + i + 2 );
 	}
@@ -1175,7 +1207,9 @@ static void R_AtlasWorldLists(
 		.vertexNormalStride = sizeof( worldVertex_t ),
 		.vertexUvStride = sizeof( worldVertex_t ),
 		.indexCount = numIndices,
-		.indexFormat = xatlas::IndexFormat::UInt32
+		.indexFormat = xatlas::IndexFormat::UInt32,
+
+		.epsilon = 0.03125f
 	};
 
 	xatlas::AddMeshError meshError = xatlas::AddMesh( pAtlas, meshDecl, 1 );
@@ -1241,7 +1275,7 @@ static void R_AtlasWorldLists(
 		{
 			const xatlas::Vertex &vertex = mesh.vertexArray[v];
 			const worldVertex_t *myVertex = vertices + vertex.xref;
-			FileSystem::PrintFileFmt( file, "v %g %g %g\n", myVertex->pos[0], myVertex->pos[1], myVertex->pos[2]);
+			FileSystem::PrintFileFmt( file, "v %g %g %g\n", myVertex->pos[0], myVertex->pos[1], myVertex->pos[2] );
 			//fprintf( objHandle, "vt %g %g\n", vertex.uv[0] / pAtlas->width, 1.0f - ( vertex.uv[1] / pAtlas->height ) );
 			FileSystem::PrintFileFmt( file, "vt %g %g\n", vertex.uv[0] / pAtlas->width, vertex.uv[1] / pAtlas->height );
 		}
@@ -1301,6 +1335,8 @@ static void R_LoadExternalLightmap( const char *bspName )
 	GL_BindTexture( g_worldData.lightmapTexnum );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 	glTexImage2D( GL_TEXTURE_2D,
 		0,
 		GL_RGB32F,
@@ -1357,90 +1393,6 @@ static void R_UploadBuffers( model_t *worldModel )
 	}
 
 	g_worldData.initialised = true;
-}
-
-#if 0
-static void ValveCleanMesh( worldVertex_t *vertices, worldIndex_t *indices, uint32 numVertices, uint32 numIndices )
-{
-	constexpr uint32 unusedIndex = ~0u;
-
-	std::vector<uint32> indexMap;
-	indexMap.resize( numVertices );
-	std::fill( indexMap.begin(), indexMap.end(), unusedIndex );
-
-	// Build a compact map of vertices
-	uint32 nVertexOut = 0;
-	uint32 nIndexOut = 0;
-	for ( uint32 i = 0; i < numIndices; i += 3 )
-	{
-		// Skip degenerate triangles
-		int nV0 = indices[i + 0];
-		int nV1 = indices[i + 1];
-		int nV2 = indices[i + 2];
-		if ( nV0 == nV1 || nV1 == nV2 || nV0 == nV2 )
-		{
-			continue;
-		}
-
-		if ( indexMap[nV0] == unusedIndex )
-		{
-			indexMap[nV0] = nVertexOut++;
-		}
-		if ( indexMap[nV1] == unusedIndex )
-		{
-			indexMap[nV1] = nVertexOut++;
-		}
-		if ( indexMap[nV2] == unusedIndex )
-		{
-			indexMap[nV2] = nVertexOut++;
-		}
-		nIndexOut += 3;
-	}
-
-	worldVertex_t *outVertices = vertices;
-	worldIndex_t *outIndices = indices;
-
-	// Allocate the cleaned mesh now that we know its size
-	//pMeshOut->AllocateMesh( nVertexOut, nIndexOut, inputMesh.m_nVertexStrideFloats, inputMesh.m_pAttributes, inputMesh.m_nAttributeCount );
-	nIndexOut = 0;
-	for ( uint32 i = 0; i < numIndices; i += 3 )
-	{
-		// skip degenerate triangles (again)
-		worldIndex_t nV0 = indices[i + 0];
-		worldIndex_t nV1 = indices[i + 1];
-		worldIndex_t nV2 = indices[i + 2];
-		if ( nV0 == nV1 || nV1 == nV2 || nV0 == nV2 )
-		{
-			continue;
-		}
-
-		// copy and remap the indices
-		outIndices[nIndexOut++] = indexMap[nV0];
-		outIndices[nIndexOut++] = indexMap[nV1];
-		outIndices[nIndexOut++] = indexMap[nV2];
-	}
-	assert( nIndexOut == numIndices );
-
-	// copy out the vertices in order by use
-	for ( uint32 v = 0; v < numVertices; ++v )
-	{
-		if ( indexMap[v] == unusedIndex )
-		{
-			continue;
-		}
-
-		uint32 vOut = indexMap[v];
-		memmove( outVertices + vOut, vertices + v, sizeof( worldVertex_t ) );
-	}
-}
-#endif
-
-static void R_CleanMesh( worldVertex_t *vertices, worldIndex_t *indices, uint32 numVertices, uint32 numIndices )
-{
-	//ValveCleanMesh( vertices, indices, numVertices, numIndices );
-	//uint32 numFaces = numIndices / 3;
-
-	//DirectX::Clean(indices, numFaces, numVertices, nullptr, nullptr, )
 }
 
 void R_BuildWorldLists( model_t *model )
@@ -1519,8 +1471,6 @@ void R_BuildWorldLists( model_t *model )
 	worldIndex_t *indexData = g_worldData.indices.data();
 	const size_t indexCount = g_worldData.indices.size();
 	const size_t indexSize = indexCount * sizeof( worldIndex_t );
-
-	R_CleanMesh( vertexData, indexData, vertexCount, indexCount );
 
 #ifdef USE_MESHOPT
 
@@ -2144,7 +2094,7 @@ CON_COMMAND( r_writeBSPExt, "Writes out the bspext file for the loaded bsp.", 0 
 	{
 		const char *arg = Cmd_Argv( i );
 
-		if ( Q_strcmp( arg, "--external-lightmap" ) == 0 )
+		if ( Q_strcmp( arg, "--atlas" ) == 0 )
 		{
 			flags |= BSPFLAG_EXTERNAL_LIGHTMAP;
 			continue;
