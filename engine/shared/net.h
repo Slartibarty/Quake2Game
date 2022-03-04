@@ -16,8 +16,8 @@
 
 #define	PORT_ANY		-1
 
-#define	MAX_MSGLEN		1400		// max length of a message
-#define	MAX_PACKETLEN	1400		// max size of a network packet
+#define	MAX_MSGLEN		32768		// max length of a message
+#define	MAX_PACKETLEN	32768		// max size of a network packet
 
 // Short so netadr_t is a nice 8 bytes
 enum netadrtype_t : uint16 { NA_LOOPBACK, NA_BROADCAST, NA_IP };
