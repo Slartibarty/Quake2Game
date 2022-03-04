@@ -254,20 +254,13 @@ void SV_StartSound( vec3_t origin, edict_t *entity, int channel,
 	bool		use_phs;
 	vec3_t		origin_v;
 
-	if ( volume < 0.0f || volume > 1.0f ) {
-		Com_FatalErrorf( "SV_StartSound: volume = %f\n", volume );
-	}
-
-	if ( attenuation < 0.0f || attenuation > 4.0f ) {
-		Com_FatalErrorf( "SV_StartSound: attenuation = %f\n", attenuation );
-	}
+	volume = Clamp( volume, 0.0f, 1.0f );
+	attenuation = Clamp( attenuation, 0.0f, 4.0f );
 
 //	if (channel < 0 || channel > 15)
 //		Com_FatalErrorf("SV_StartSound: channel = %i\n", channel);
 
-	if ( timeofs < 0.0f || timeofs > 0.255f ) {
-		Com_FatalErrorf( "SV_StartSound: timeofs = %f\n", timeofs );
-	}
+	timeofs = Clamp( timeofs, 0.0f, 0.255f );
 
 	ent = NUM_FOR_EDICT( entity );
 
@@ -293,9 +286,9 @@ void SV_StartSound( vec3_t origin, edict_t *entity, int channel,
 
 	// the client doesn't know that bmodels have weird origins
 	// the origin can also be explicitly set
-	if ( ( entity->svflags & SVF_NOCLIENT )
-		|| ( entity->solid == SOLID_BSP )
-		|| origin )
+	if ( entity->svflags & SVF_NOCLIENT ||
+		 entity->solid == SOLID_BSP ||
+		 origin )
 	{
 		flags |= SND_POS;
 	}
@@ -322,6 +315,8 @@ void SV_StartSound( vec3_t origin, edict_t *entity, int channel,
 			VectorCopy( entity->s.origin, origin_v );
 		}
 	}
+
+	Sys_MutexLock( sv.multicastMutex );
 
 	MSG_WriteByte( &sv.multicast, svc_sound );
 	MSG_WriteByte( &sv.multicast, flags );
@@ -367,6 +362,8 @@ void SV_StartSound( vec3_t origin, edict_t *entity, int channel,
 			SV_Multicast( origin, MULTICAST_ALL );
 		}
 	}
+
+	Sys_MutexUnlock( sv.multicastMutex );
 }
 
 /*

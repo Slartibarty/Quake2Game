@@ -572,8 +572,6 @@ extern cvar_t	*flood_waitdelay;
 
 extern cvar_t	*sv_maplist;
 
-extern cvar_t	*crapcvar;
-
 #define	FRAMETIME	0.1f
 
 #define world		(&g_edicts[0])

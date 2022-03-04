@@ -57,8 +57,6 @@ cvar_t	*flood_waitdelay;
 
 cvar_t	*sv_maplist;
 
-cvar_t	*crapcvar;
-
 void SpawnEntities (const char *mapname, char *entities, const char *spawnpoint);
 void ClientThink (edict_t *ent, usercmd_t *cmd);
 qboolean ClientConnect (edict_t *ent, char *userinfo);

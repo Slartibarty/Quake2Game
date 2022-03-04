@@ -2,6 +2,8 @@
 
 #include "sv_local.h"
 
+#include "../shared/physics.h"
+
 /*
 ===================================================================================================
 
@@ -571,6 +573,11 @@ int SV_PointContents( vec3_t p )
 
 //=================================================================================================
 
+static void SV_ClipMoveToPhysics( const moveclip_t &clip, trace_t &trace )
+{
+	//Physics::LineTrace( clip.start, clip.end, clip.mins, clip.maxs );
+}
+
 /*
 ========================
 SV_ClipMoveToEntities
@@ -578,17 +585,17 @@ SV_ClipMoveToEntities
 */
 static void SV_ClipMoveToEntities( moveclip_t &clip )
 {
-	int			i, num;
+	int			i, numEntities;
 	edict_t		*touchlist[MAX_EDICTS], *touch;
 	trace_t		trace;
 	int			headnode;
 	float		*angles;
 
-	num = SV_AreaEntities( clip.boxmins, clip.boxmaxs, touchlist, MAX_EDICTS, AREA_SOLID );
+	numEntities = SV_AreaEntities( clip.boxmins, clip.boxmaxs, touchlist, MAX_EDICTS, AREA_SOLID );
 
 	// be careful, it is possible to have an entity in this
 	// list removed before we get to it (killtriggered)
-	for ( i = 0; i < num; i++ )
+	for ( i = 0; i < numEntities; ++i )
 	{
 		touch = touchlist[i];
 		if ( touch->solid == SOLID_NOT ) {
@@ -625,17 +632,26 @@ static void SV_ClipMoveToEntities( moveclip_t &clip )
 			angles = vec3_origin;
 		}
 
-		if ( touch->svflags & SVF_MONSTER )
+#if 0
+		if ( touch->solid == SOLID_PHYSICS )
 		{
-			CM_TransformedBoxTrace( clip.start, clip.end,
-				clip.mins2, clip.maxs2, headnode, clip.contentmask,
-				touch->s.origin, angles, trace );
+			SV_ClipMoveToPhysics( clip, trace );
 		}
 		else
+#endif
 		{
-			CM_TransformedBoxTrace( clip.start, clip.end,
-				clip.mins, clip.maxs, headnode, clip.contentmask,
-				touch->s.origin, angles, trace );
+			if ( touch->svflags & SVF_MONSTER )
+			{
+				CM_TransformedBoxTrace( clip.start, clip.end,
+					clip.mins2, clip.maxs2, headnode, clip.contentmask,
+					touch->s.origin, angles, trace );
+			}
+			else
+			{
+				CM_TransformedBoxTrace( clip.start, clip.end,
+					clip.mins, clip.maxs, headnode, clip.contentmask,
+					touch->s.origin, angles, trace );
+			}
 		}
 
 		if ( trace.allsolid || trace.startsolid || trace.fraction < clip.trace.fraction )
@@ -663,7 +679,7 @@ static void SV_ClipMoveToEntities( moveclip_t &clip )
 SV_TraceBounds
 ========================
 */
-static void SV_TraceBounds( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, vec3_t boxmins, vec3_t boxmaxs )
+static void SV_TraceBounds( const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, vec3_t boxmins, vec3_t boxmaxs )
 {
 #if 0
 	// debug to test against everything

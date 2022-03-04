@@ -264,6 +264,7 @@ static const spawn_t g_spawns[]
 
 	// Physics Test
 
+	{"prop_physics", Spawn_PhysCube},
 	{"physcube", Spawn_PhysCube},
 	{"physbarrel", Spawn_PhysBarrel},
 

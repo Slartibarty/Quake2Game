@@ -63,6 +63,7 @@ void Phys_Simulate( float deltaTime )
 
 void Phys_SetupPhysicsForEntity( edict_t *ent, const bodyCreationSettings_t &settings, shapeHandle_t shapeHandle )
 {
+	ent->solid = SOLID_PHYSICS;
 	ent->movetype = MOVETYPE_PHYSICS;
 	ent->bodyID = gi.physSystem->CreateAndAddBody( settings, shapeHandle, ent );
 
@@ -123,20 +124,29 @@ static void Think_Any( edict_t *self )
 
 static void Touch_Cube( edict_t *self, edict_t *other, cplane_t *plane, csurface_t *surf )
 {
-	float speed = fabsf( self->velocity[0] ) + fabsf( self->velocity[1] ) + fabsf( self->velocity[2] );
-	float volume = Min( speed * ( 1.0f / ( 320.0f * 320.0f ) ), 1.0f );
+#if 1
+	float speed = VectorLength( self->velocity );
+	float kineticEnergy = ( speed * speed ) * 0.5f;
+
+	// HACKHACKHACKHACK
+	float volume = Min( kineticEnergy * ( 1.0f / ( 320.0f * 320.0f ) ), 1.0f ); // max volume at 320 in/s
+
+	if ( volume <= FLT_EPSILON )
+	{
+		return;
+	}
 
 	const char *fmtString;
 
-	if ( speed > 100000.0f )
+	if ( kineticEnergy > 40.0f )
 	{
 		fmtString = "physics/metal_solid_impact_hard%d.wav";
-		Com_Printf( "Hard collision with speed: %4.2f\n", speed );
+		//Com_Printf( "Hard collision with speed: %4.2f, volume %4.2f\n", kineticEnergy, volume );
 	}
 	else
 	{
 		fmtString = "physics/metal_solid_impact_soft%d.wav";
-		Com_Printf( "Soft collision with speed: %4.2f\n", speed );
+		//Com_Printf( "Soft collision with speed: %4.2f, volume %4.2f\n", kineticEnergy, volume );
 	}
 
 	char soundName[MAX_QPATH];
@@ -145,6 +155,7 @@ static void Touch_Cube( edict_t *self, edict_t *other, cplane_t *plane, csurface
 	//Com_Printf( "%4.2f\n", length );
 
 	gi.sound( self, CHAN_AUTO, gi.soundindex( soundName ), volume, ATTN_NORM, 0.0f );
+#endif
 }
 
 static void Pain_Null( edict_t *self, edict_t *other, float kick, int damage )
@@ -162,7 +173,7 @@ void Spawn_PhysCube( edict_t *self )
 	self->solid = SOLID_BBOX;
 	VectorSet( self->mins, -16, -16, -16 );
 	VectorSet( self->maxs, 16, 16, 16 );
-	self->s.modelindex = gi.modelindex( "models/props/metalbox.iqm" );
+	self->s.modelindex = gi.modelindex( self->model );
 
 	self->takedamage = true;
 	self->touch = Touch_Cube;
@@ -172,8 +183,10 @@ void Spawn_PhysCube( edict_t *self )
 	bodyCreationSettings_t bodyCreationSettings;
 	VectorCopy( self->s.origin, bodyCreationSettings.position );
 	VectorCopy( self->s.angles, bodyCreationSettings.rotation );
-	bodyCreationSettings.friction = 0.77f;
-	bodyCreationSettings.restitution = 0.13f;
+	//bodyCreationSettings.friction = 0.77f;
+	//bodyCreationSettings.restitution = 0.13f;
+	bodyCreationSettings.friction = 1.0f;
+	bodyCreationSettings.restitution = 0.0f;
 
 	if ( !s_cubeShape )
 	{

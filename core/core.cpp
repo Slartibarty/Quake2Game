@@ -41,8 +41,7 @@ void COM_FileBase( const char *in, char *out )
 		++start;
 
 	//memcpy( out, in + start, end - start );
-	strncpy( out, in + start, end - start + 1 );
-	*( out + end - start + 1 ) = '\0';
+	Q_strcpy_s( out, end - start + 1, in + start );
 }
 
 void COM_FilePath( const char *in, char *out )

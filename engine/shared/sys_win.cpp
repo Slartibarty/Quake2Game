@@ -429,7 +429,7 @@ void Sys_FileOpenDialog(
 			{
 				LPWSTR pName;
 				pItem->GetDisplayName( SIGDN_FILESYSPATH, &pName );
-				Sys_UTF16toUTF8( pName, static_cast<int>( wcslen( pName ) + 1 ), filenameBuffer, sizeof( filenameBuffer ) );
+				Sys_UTF16toUTF8( pName, static_cast<strlen_t>( wcslen( pName ) + 1 ), filenameBuffer, sizeof( filenameBuffer ) );
 				CoTaskMemFree( pName );
 				Str_FixSlashes( filenameBuffer );
 				filename.assign( filenameBuffer );
@@ -488,7 +488,7 @@ void Sys_FileOpenDialogMultiple(
 					pArray->GetItemAt( i, &pItem );
 					LPWSTR pName;
 					pItem->GetDisplayName( SIGDN_FILESYSPATH, &pName );
-					Sys_UTF16toUTF8( pName, static_cast<int>( wcslen( pName ) + 1 ), filenameBuffer, sizeof( filenameBuffer ) );
+					Sys_UTF16toUTF8( pName, static_cast<strlen_t>( wcslen( pName ) + 1 ), filenameBuffer, sizeof( filenameBuffer ) );
 					CoTaskMemFree( pName );
 					Str_FixSlashes( filenameBuffer );
 					filenames.push_back( filenameBuffer );

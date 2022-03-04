@@ -20,7 +20,7 @@ namespace Physics
 	void SetContactListener( void *listener );
 	void Simulate( float deltaTime );
 
-	trace_t LineTrace( vec3_t start, vec3_t end, vec3_t mins, vec3_t maxs, int headnode, int brushmask );
+	void LineTrace( const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, trace_t &inTrace );
 
 	//
 	// Shape Creation

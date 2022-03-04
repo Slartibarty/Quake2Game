@@ -1628,11 +1628,11 @@ Handles offseting and rotation of the end points for moving and
 rotating entities
 ==================
 */
-void CM_TransformedBoxTrace (vec3_t start, vec3_t end,
+void CM_TransformedBoxTrace( vec3_t start, vec3_t end,
 							 vec3_t mins, vec3_t maxs,
 							 int headnode, int brushmask,
 							 vec3_t origin, vec3_t angles,
-							 trace_t &trace)
+							 trace_t &trace )
 {
 	vec3_t		start_l, end_l;
 	vec3_t		a;
@@ -1641,40 +1641,40 @@ void CM_TransformedBoxTrace (vec3_t start, vec3_t end,
 	bool		rotated;
 
 	// subtract origin offset
-	VectorSubtract (start, origin, start_l);
-	VectorSubtract (end, origin, end_l);
+	VectorSubtract( start, origin, start_l );
+	VectorSubtract( end, origin, end_l );
 
 	// rotate start and end into the models frame of reference
 	rotated = ( headnode != box_headnode && ( angles[0] || angles[1] || angles[2] ) );
 
-	if (rotated)
+	if ( rotated )
 	{
-		AngleVectors (angles, forward, right, up);
+		AngleVectors( angles, forward, right, up );
 
-		VectorCopy (start_l, temp);
-		start_l[0] = DotProduct (temp, forward);
-		start_l[1] = -DotProduct (temp, right);
-		start_l[2] = DotProduct (temp, up);
+		VectorCopy( start_l, temp );
+		start_l[0] = DotProduct( temp, forward );
+		start_l[1] = -DotProduct( temp, right );
+		start_l[2] = DotProduct( temp, up );
 
-		VectorCopy (end_l, temp);
-		end_l[0] = DotProduct (temp, forward);
-		end_l[1] = -DotProduct (temp, right);
-		end_l[2] = DotProduct (temp, up);
+		VectorCopy( end_l, temp );
+		end_l[0] = DotProduct( temp, forward );
+		end_l[1] = -DotProduct( temp, right );
+		end_l[2] = DotProduct( temp, up );
 	}
 
 	// sweep the box through the model
-	trace = CM_BoxTrace (start_l, end_l, mins, maxs, headnode, brushmask);
+	trace = CM_BoxTrace( start_l, end_l, mins, maxs, headnode, brushmask );
 
-	if (rotated && trace.fraction != 1.0f)
+	if ( rotated && trace.fraction != 1.0f )
 	{
 		// FIXME: figure out how to do this with existing angles
-		VectorNegate (angles, a);
-		AngleVectors (a, forward, right, up);
+		VectorNegate( angles, a );
+		AngleVectors( a, forward, right, up );
 
-		VectorCopy (trace.plane.normal, temp);
-		trace.plane.normal[0] = DotProduct (temp, forward);
-		trace.plane.normal[1] = -DotProduct (temp, right);
-		trace.plane.normal[2] = DotProduct (temp, up);
+		VectorCopy( trace.plane.normal, temp );
+		trace.plane.normal[0] = DotProduct( temp, forward );
+		trace.plane.normal[1] = -DotProduct( temp, right );
+		trace.plane.normal[2] = DotProduct( temp, up );
 	}
 
 	VectorLerp( start, end, trace.fraction, trace.endpos );

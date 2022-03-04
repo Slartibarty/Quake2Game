@@ -38,6 +38,7 @@ struct server_t
 
 	// the multicast buffer is used to send a message to a set of clients
 	// it is only used to marshall data until SV_Multicast is called
+	mutex_t		multicastMutex;
 	sizebuf_t	multicast;
 	byte		multicast_buf[MAX_MSGLEN];
 

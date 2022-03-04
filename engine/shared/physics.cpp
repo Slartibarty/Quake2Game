@@ -173,6 +173,45 @@ namespace BroadPhaseLayers
 	static constexpr JPH::BroadPhaseLayer MOVING( 1 );
 };
 
+// BroadPhaseLayerInterface implementation
+// This defines a mapping between object and broadphase layers.
+class MyBPLayerInterfaceImpl final : public JPH::BroadPhaseLayerInterface
+{
+public:
+	MyBPLayerInterfaceImpl()
+	{
+		// Create a mapping table from object to broad phase layer
+		mObjectToBroadPhase[Layers::NON_MOVING] = BroadPhaseLayers::NON_MOVING;
+		mObjectToBroadPhase[Layers::MOVING] = BroadPhaseLayers::MOVING;
+	}
+
+	uint GetNumBroadPhaseLayers() const override
+	{
+		return Layers::NUM_LAYERS;
+	}
+
+	JPH::BroadPhaseLayer GetBroadPhaseLayer( JPH::ObjectLayer inLayer ) const override
+	{
+		assert( inLayer < Layers::NUM_LAYERS );
+		return mObjectToBroadPhase[inLayer];
+	}
+
+#if defined( JPH_EXTERNAL_PROFILE ) || defined( JPH_PROFILE_ENABLED )
+	const char *GetBroadPhaseLayerName( JPH::BroadPhaseLayer inLayer ) const override
+	{
+		switch ( (JPH::BroadPhaseLayer::Type)inLayer )
+		{
+		case (JPH::BroadPhaseLayer::Type)BroadPhaseLayers::NON_MOVING:	return "NON_MOVING";
+		case (JPH::BroadPhaseLayer::Type)BroadPhaseLayers::MOVING:		return "MOVING";
+		default:														assert( false ); return "INVALID";
+		}
+	}
+#endif
+
+private:
+	JPH::BroadPhaseLayer mObjectToBroadPhase[Layers::NUM_LAYERS];
+};
+
 // Function that determines if two broadphase layers can collide
 bool MyBroadPhaseCanCollide( JPH::ObjectLayer inLayer1, JPH::BroadPhaseLayer inLayer2 )
 {
@@ -263,7 +302,7 @@ static struct physicsLocal_t
 	JPH::PhysicsSystem *	physicsSystem;			// The physics system that simulates the world
 	JPH::Body *				worldBody;				// The world body!
 
-	JPH::ObjectToBroadPhaseLayer objectToBroadphase;
+	MyBPLayerInterfaceImpl bpLayerInterface;
 	//MyBodyActivationListener bodyActivationListener;
 	MyContactListener contactListener;
 
@@ -307,14 +346,9 @@ void Init()
 	// of your own job scheduler. JobSystemThreadPool is an example implementation.
 	vars.jobSystem = new JPH::JobSystemThreadPool( JPH::cMaxPhysicsJobs, JPH::cMaxPhysicsBarriers, NUM_THREADS - 1 );
 
-	// Create mapping table from object layer to broadphase layer
-	vars.objectToBroadphase.resize( Layers::NUM_LAYERS );
-	vars.objectToBroadphase[Layers::NON_MOVING] = BroadPhaseLayers::NON_MOVING;
-	vars.objectToBroadphase[Layers::MOVING] = BroadPhaseLayers::MOVING;
-
 	// Now we can create the actual physics system.
 	vars.physicsSystem = new JPH::PhysicsSystem;
-	vars.physicsSystem->Init( MAX_BODIES, NUM_BODY_MUTEXES, MAX_BODY_PAIRS, MAX_CONTACT_CONSTRAINTS, vars.objectToBroadphase, MyBroadPhaseCanCollide, MyObjectCanCollide );
+	vars.physicsSystem->Init( MAX_BODIES, NUM_BODY_MUTEXES, MAX_BODY_PAIRS, MAX_CONTACT_CONSTRAINTS, vars.bpLayerInterface, MyBroadPhaseCanCollide, MyObjectCanCollide );
 
 	// A body activation listener gets notified when bodies activate and go to sleep
 	// Note that this is called from a job so whatever you do here needs to be thread safe.
@@ -460,7 +494,7 @@ bodyID_t CreateAndAddBody( const bodyCreationSettings_t &settings, shapeHandle_t
 
 	creationSettings.mInertiaMultiplier = settings.inertiaMultiplier;
 
-	creationSettings.mMotionQuality = JPH::EMotionQuality::LinearCast;
+	//creationSettings.mMotionQuality = JPH::EMotionQuality::LinearCast;
 
 	JPH::BodyInterface &bodyInterface = GetBodyInterfaceNoLock();
 
@@ -468,7 +502,7 @@ bodyID_t CreateAndAddBody( const bodyCreationSettings_t &settings, shapeHandle_t
 
 	body->SetUserData( (uint64)userData );
 
-	bodyInterface.AddBody( body->GetID(), activationState ); // TODO: Must be variable based on motion type...
+	bodyInterface.AddBody( body->GetID(), activationState );
 
 	return std::bit_cast<bodyID_t>( body->GetID() );
 }
@@ -577,7 +611,7 @@ void RegisterWorld( edict_t *ent )
 	vars.worldBody->SetUserData( (uint64)ent );
 }
 
-trace_t LineTrace( vec3_t start, vec3_t end, vec3_t mins, vec3_t maxs, int headnode, int brushmask )
+void LineTrace( const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, trace_t &inTrace )
 {
 	JPH::Vec3 origin = QuakePositionToJolt( start );
 	JPH::Vec3 direction = QuakePositionToJolt( end ) - origin;
@@ -599,7 +633,7 @@ trace_t LineTrace( vec3_t start, vec3_t end, vec3_t mins, vec3_t maxs, int headn
 	vars.physicsSystem->GetNarrowPhaseQuery().CastRay( ray, settings, collector );
 	if ( !collector.HadHit() )
 	{
-		return trace;
+		inTrace = trace;
 	}
 
 	// Fill in results
@@ -643,7 +677,7 @@ trace_t LineTrace( vec3_t start, vec3_t end, vec3_t mins, vec3_t maxs, int headn
 	// Draw remainder of line
 	//mDebugRenderer->DrawLine(start + hits.back().mFraction * direction, start + direction, Color::sRed);
 
-	return trace;
+	inTrace = trace;
 }
 
 } // namespace PhysicsSystem
