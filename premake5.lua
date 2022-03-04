@@ -435,6 +435,7 @@ if not _OPTIONS["exclude-utils"] then
 		
 		qtmodules { "core", "gui", "widgets", "opengl", "openglhack" }
 		
+--[[
 	project "collisiontest"
 		kind "WindowedApp"
 		targetname "collisiontest"
@@ -461,6 +462,7 @@ if not _OPTIONS["exclude-utils"] then
 			glew_public,
 			glew_sources
 		}
+--]]
 
 	project "qbsp4"
 		kind "ConsoleApp"
