@@ -18,6 +18,8 @@
 #include <Physics/Collision/NarrowPhaseQuery.h>
 #include <Physics/Collision/CollisionCollector.h>
 #include <Physics/Collision/CollisionCollectorImpl.h>
+#include <Physics/Collision/ShapeCast.h>
+#include <Physics/Collision/CollisionDispatch.h>
 
 #include <Physics/Collision/Shape/BoxShape.h>
 #include <Physics/Collision/Shape/CapsuleShape.h>
@@ -32,7 +34,9 @@
 
 #include "physics.h"
 
-extern csurface_t s_nullsurface;;
+#define DIST_EPSILON 0.03125f
+
+extern csurface_t s_nullsurface;
 
 // If this changes, our type has to change too :(
 static_assert( sizeof( JPH::BodyID ) == sizeof( uint32 ) );
@@ -83,25 +87,19 @@ static void JoltPositionToQuake( JPH::Vec3Arg jpos, vec3_t qpos )
 // Rotation
 
 // Converts Quake Euler angles to a Jolt Quaternion
-static JPH::Quat QuakeEulerToJoltQuat( const vec3_t vec )
+static JPH::Quat QuakeEulerToJoltQuat( const vec3_t euler )
 {
-	return JPH::Quat::sEulerAngles( JPH::Vec3( vec[0], vec[2], vec[1] ) );
+	vec4_t quat;
+	AngleQuaternion( euler, quat );
+	return JPH::Quat( quat[0], quat[1], quat[2], quat[3] );
 }
 
 static void JoltQuatToQuakeEuler( JPH::QuatArg quat, vec3_t euler )
 {
-	JPH::Vec3 vec = quat.GetEulerAngles();
-	vec = vec.Swizzle<JPH::SWIZZLE_Y, JPH::SWIZZLE_Z, JPH::SWIZZLE_X>();
-	vec *= mconst::rad2deg;
-	vec.StoreFloat3( reinterpret_cast<JPH::Float3 *>( euler ) );
+	vec4_t quakeQuat{ quat.GetX(), quat.GetY(), quat.GetZ(), quat.GetW() };
 
-	// Y Z X
+	QuaternionAngles( quakeQuat, euler );
 
-	//std::swap( euler[PITCH], euler[YAW] );
-
-	//euler[PITCH] = RAD2DEG( euler[PITCH] );
-	//euler[YAW] = RAD2DEG( euler[YAW] );
-	//euler[ROLL] = RAD2DEG( euler[ROLL] );
 }
 
 static JPH::EMotionType QuakeMotionTypeToJPHMotionType( motionType_t type )
@@ -213,7 +211,7 @@ private:
 };
 
 // Function that determines if two broadphase layers can collide
-bool MyBroadPhaseCanCollide( JPH::ObjectLayer inLayer1, JPH::BroadPhaseLayer inLayer2 )
+static bool MyBroadPhaseCanCollide( JPH::ObjectLayer inLayer1, JPH::BroadPhaseLayer inLayer2 )
 {
 	switch ( inLayer1 )
 	{
@@ -229,7 +227,7 @@ bool MyBroadPhaseCanCollide( JPH::ObjectLayer inLayer1, JPH::BroadPhaseLayer inL
 
 // An example contact listener
 #if 1
-class MyContactListener : public JPH::ContactListener
+class MyContactListener final : public JPH::ContactListener
 {
 public:
 	// See: ContactListener
@@ -276,7 +274,7 @@ public:
 
 // An example activation listener
 #if 0
-class MyBodyActivationListener : public JPH::BodyActivationListener
+class MyBodyActivationListener final : public JPH::BodyActivationListener
 {
 public:
 	void OnBodyActivated( const JPH::BodyID &inBodyID, void *inBodyUserData ) override
@@ -465,13 +463,29 @@ void DestroyShape( shapeHandle_t handle )
 	shape->Release();
 }
 
+const shapeHandle_t GetShape( bodyID_t bodyID )
+{
+	const JPH::BodyLockInterfaceLocking &lockInterface = vars.physicsSystem->GetBodyLockInterface();
+
+	JPH::BodyLockRead lock( lockInterface, static_cast<JPH::BodyID>( bodyID ) );
+	if ( lock.Succeeded() )
+	{
+		// ffs this shouldn't be a bit cast but reinterpret_cast doesn't let me do the conversion
+		return std::bit_cast<const shapeHandle_t>( lock.GetBody().GetShape() );
+	}
+	else
+	{
+		Com_FatalError( "BodyLockRead failed!\n" );
+	}
+}
+
 /*
 =================================================
 	Bodies
 =================================================
 */
 
-bodyID_t CreateAndAddBody( const bodyCreationSettings_t &settings, shapeHandle_t shape, void *userData )
+bodyID_t CreateAndAddBody( const bodyCreationSettings_t &settings, const shapeHandle_t shape, void *userData )
 {
 	const bool isStatic = settings.motionType == MOTION_STATIC;
 	const uint8 layer = isStatic ? Layers::NON_MOVING : Layers::MOVING;
@@ -494,7 +508,7 @@ bodyID_t CreateAndAddBody( const bodyCreationSettings_t &settings, shapeHandle_t
 
 	creationSettings.mInertiaMultiplier = settings.inertiaMultiplier;
 
-	//creationSettings.mMotionQuality = JPH::EMotionQuality::LinearCast;
+	creationSettings.mMotionQuality = JPH::EMotionQuality::LinearCast;
 
 	JPH::BodyInterface &bodyInterface = GetBodyInterfaceNoLock();
 
@@ -611,73 +625,116 @@ void RegisterWorld( edict_t *ent )
 	vars.worldBody->SetUserData( (uint64)ent );
 }
 
-void LineTrace( const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, trace_t &inTrace )
+void Trace( const RayCast &rayCast, const shapeHandle_t shapeHandle, const vec3_t shapeOrigin, const vec3_t shapeAngles, trace_t &trace )
 {
-	JPH::Vec3 origin = QuakePositionToJolt( start );
-	JPH::Vec3 direction = QuakePositionToJolt( end ) - origin;
-
-	// Create ray
-	JPH::RayCast ray{ origin, direction };
-
-	// Create settings
-	JPH::RayCastSettings settings;
-	settings.mBackFaceMode = JPH::EBackFaceMode::CollideWithBackFaces;
-	settings.mTreatConvexAsSolid = true;
-
-	trace_t trace;
 	memset( &trace, 0, sizeof( trace ) );
-	trace.fraction = 1.0f;
 	trace.surface = &s_nullsurface;
+	trace.fraction = 1.0f;
+	trace.contents = CONTENTS_SOLID;
 
-	JPH::AnyHitCollisionCollector<JPH::CastRayCollector> collector;
-	vars.physicsSystem->GetNarrowPhaseQuery().CastRay( ray, settings, collector );
-	if ( !collector.HadHit() )
+	JPH::Vec3 origin = QuakePositionToJolt( rayCast.start );
+	JPH::Vec3 direction = QuakePositionToJolt( rayCast.direction );
+	JPH::Vec3 halfExtent = QuakePositionToJolt( rayCast.halfExtent );
+
+	bool isRay = halfExtent.ReduceMin() < JPH::cDefaultConvexRadius;
+	bool isCollide = direction.IsNearZero();
+
+	JPH::Shape *shape = reinterpret_cast<JPH::Shape *>( shapeHandle );
+
+	JPH::Vec3 position = QuakePositionToJolt( shapeOrigin );
+	JPH::Quat rotation = QuakeEulerToJoltQuat( shapeAngles );
+
+	JPH::Mat44 queryTransform = JPH::Mat44::sRotationTranslation( rotation, position + rotation * shape->GetCenterOfMass() );
+
+	if ( isRay )
 	{
-		inTrace = trace;
+		// Create ray
+		JPH::RayCast baseRay = { origin, direction };
+		// Transform our ray by the inverse of the collideOrigin/collideAngles
+		JPH::RayCast joltRay = baseRay.Transformed( queryTransform.InversedRotationTranslation() );
+
+		JPH::RayCastResult hit;
+		bool bHit = shape->CastRay( joltRay, JPH::SubShapeIDCreator(), hit );
+
+		trace.fraction = bHit ? hit.mFraction : 1.0f;
+		vec3_t distance;
+		VectorScale( rayCast.direction, trace.fraction, distance );
+		VectorAdd( rayCast.start, distance, trace.endpos );
+		trace.allsolid = trace.fraction == 0.0f;
+		trace.startsolid = trace.fraction == 0.0f;
+		if ( bHit )
+		{
+			// Set up the trace plane
+			JPH::Vec3 normal = queryTransform.GetRotation() * shape->GetSurfaceNormal( hit.mSubShapeID2, joltRay.GetPointOnRay( hit.mFraction ) );
+
+			VectorSet( trace.plane.normal, normal.GetX(), normal.GetY(), normal.GetZ() );
+			trace.plane.dist = DotProduct( trace.endpos, trace.plane.normal );
+		}
 	}
-
-	// Fill in results
-	trace.plane;
-	trace.endpos;
-	trace.ent;
-	trace.surface;
-	trace.fraction = collector.mHit.mFraction;
-	trace.contents;
-	trace.allsolid;
-	trace.startsolid;
-	
-	// Draw results
-
-	// Draw line
-	JPH::Vec3 position = origin + collector.mHit.mFraction * direction;
-	//mDebugRenderer->DrawLine( prev_position, position, c ? Color::sGrey : Color::sWhite );
-
-	JPH::BodyLockRead lock( vars.physicsSystem->GetBodyLockInterface(), collector.mHit.mBodyID );
-	if ( lock.Succeeded() )
+	else
 	{
-		const JPH::Body &hit_body = lock.GetBody();
+		constexpr float testEpsilon = QUAKE2JOLT( DIST_EPSILON );
 
-		// Draw material
-		//const PhysicsMaterial *material2 = hit_body.GetShape()->GetMaterial( hit.mSubShapeID2 );
-		//mDebugRenderer->DrawText3D( position, material2->GetDebugName() );
+		JPH::BoxShape boxShape( halfExtent );
+		JPH::ShapeCast initialShapeCast( &boxShape, JPH::Vec3::sReplicate( 1.0f ), JPH::Mat44::sTranslation( origin ), direction );
+		JPH::ShapeCast shapeCast = initialShapeCast.PostTransformed( queryTransform.InversedRotationTranslation() );
 
-		// Draw normal
-		//Color color = hit_body.IsDynamic() ? Color::sYellow : Color::sOrange;
-		JPH::Vec3 normal = hit_body.GetWorldSpaceSurfaceNormal( collector.mHit.mSubShapeID2, position );
-		normal.StoreFloat3( (JPH::Float3 *)trace.plane.normal );
-		//mDebugRenderer->DrawArrow( position, position + normal, color, 0.01f );
+		JPH::ShapeCastSettings settings;
+		settings.mBackFaceModeTriangles = JPH::EBackFaceMode::IgnoreBackFaces;
+		settings.mBackFaceModeConvex = JPH::EBackFaceMode::CollideWithBackFaces;
+		settings.mCollisionTolerance = testEpsilon;
+		settings.mPenetrationTolerance = testEpsilon;
+		settings.mUseShrunkenShapeAndConvexRadius = true;
 
-		// Draw perpendicular axis to indicate hit position
-		//Vec3 perp1 = normal.GetNormalizedPerpendicular();
-		//Vec3 perp2 = normal.Cross( perp1 );
-		//mDebugRenderer->DrawLine( position - 0.1f * perp1, position + 0.1f * perp1, color );
-		//mDebugRenderer->DrawLine( position - 0.1f * perp2, position + 0.1f * perp2, color );
+		JPH::ClosestHitCollisionCollector< JPH::CastShapeCollector > collector;
+		JPH::CollisionDispatch::sCastShapeVsShape( shapeCast, settings, shape, JPH::Vec3::sReplicate( 1.0f ), JPH::ShapeFilter(), JPH::Mat44::sIdentity(), JPH::SubShapeIDCreator(), JPH::SubShapeIDCreator(), collector);
+
+		float flInitialFraction = collector.HadHit() ? collector.GetEarlyOutFraction() : 1.0f;
+		if ( collector.HadHit() )
+		{
+			JPH::Vec3 normal = queryTransform.GetRotation() * shape->GetSurfaceNormal( collector.mHit.mSubShapeID2, collector.mHit.mContactPointOn2 );
+			VectorSet( trace.plane.normal, normal.GetX(), normal.GetY(), normal.GetZ() );
+
+			vec3_t rayDir;
+			VectorCopy( rayCast.direction, rayDir );
+			const float flRayLength = VectorLength( rayDir );
+
+			float ooBaseLength = 0.0f;
+			if ( flRayLength )
+			{
+				VectorNormalize( rayDir );
+				ooBaseLength = 1.0f / flRayLength;
+			}
+			float flHitLength = flRayLength * flInitialFraction;
+			float flDot = DotProduct( rayDir, trace.plane.normal );
+			if ( flDot < 0.0f )
+				flHitLength += DIST_EPSILON / flDot;
+
+			flHitLength = Max( flHitLength, 0.0f );
+
+			trace.fraction = flHitLength * ooBaseLength;
+		}
+		else
+		{
+			trace.fraction = 1.0f;
+		}
+
+		vec3_t distance;
+		VectorScale( rayCast.direction, trace.fraction, distance );
+		VectorAdd( rayCast.start, distance, trace.endpos );
+
+		trace.plane.dist = DotProduct( trace.endpos, trace.plane.normal );
+
+		trace.allsolid = flInitialFraction == 0.0f;
+		trace.startsolid = flInitialFraction == 0.0f;
 	}
+}
 
-	// Draw remainder of line
-	//mDebugRenderer->DrawLine(start + hits.back().mFraction * direction, start + direction, Color::sRed);
-
-	inTrace = trace;
+void ClientPlayerTrace( const RayCast &rayCast, const vec3_t shapeOrigin, const vec3_t shapeAngles, trace_t &trace )
+{
+	// Hardcoded player halfextents
+	JPH::BoxShape shape( JPH::Vec3( 10.0f, 10.0f, 10.0f ) );
+	Trace( rayCast, reinterpret_cast<shapeHandle_t>( &shape ), shapeOrigin, shapeAngles, trace );
 }
 
 } // namespace PhysicsSystem

@@ -53,8 +53,9 @@ struct gclient_t
 
 struct edict_t
 {
-	entity_state_t	s;
-	gclient_t	*client;
+	entityState_t	s;
+	gclient_t *		client;
+
 	qboolean	inuse;
 	int			linkcount;
 
@@ -71,7 +72,9 @@ struct edict_t
 	int			svflags;			// SVF_NOCLIENT, SVF_DEADMONSTER, SVF_MONSTER, etc
 	vec3_t		mins, maxs;
 	vec3_t		absmin, absmax, size;
+	//int		contents;				// I think Quake 3 has this? Need to add to the server edict structure...
 	solid_t		solid;
+	bodyID_t	bodyID;					// Physics bodyID
 	int			clipmask;
 	edict_t		*owner;
 

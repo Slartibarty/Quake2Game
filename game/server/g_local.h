@@ -1006,10 +1006,10 @@ struct gclient_t
 struct edict_t
 {
 	entityState_t	s;
-	gclient_t		*client;		// NULL if not a player
-									// the server expects the first part
-									// of gclient_s to be a player_state_t
-									// but the rest of it is opaque
+	gclient_t *		client;		// NULL if not a player
+								// the server expects the first part
+								// of gclient_s to be a player_state_t
+								// but the rest of it is opaque
 
 	qboolean	inuse;
 	int			linkcount;
@@ -1026,9 +1026,10 @@ struct edict_t
 
 	int			svflags;
 	vec3_t		mins, maxs;
-	//int		contents;				// I think Quake 3 has this? Need to add to the server edict structure...
+	//int		contents;				// Quake 3 added
 	vec3_t		absmin, absmax, size;
 	solid_t		solid;
+	bodyID_t	bodyID;					// Physics bodyID
 	int			clipmask;
 	edict_t		*owner;
 
@@ -1153,7 +1154,4 @@ struct edict_t
 	// common data blocks
 	moveinfo_t		moveinfo;
 	monsterinfo_t	monsterinfo;
-
-	// physics
-	bodyID_t	bodyID;
 };

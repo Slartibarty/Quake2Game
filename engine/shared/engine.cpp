@@ -761,6 +761,7 @@ void Com_Frame( int frameTime )
 		c_pointcontents = 0;
 	}
 
+	// Add input from the dedicated server console
 	do
 	{
 		s = Sys_ConsoleInput();
@@ -768,6 +769,7 @@ void Com_Frame( int frameTime )
 			Cbuf_AddText( va( "%s\n", s ) );
 		}
 	} while ( s );
+
 	Cbuf_Execute();
 
 	if ( com_speeds->GetBool() ) {
@@ -797,8 +799,7 @@ void Com_Frame( int frameTime )
 		rf = time_after_ref - time_before_ref;
 		sv -= gm;
 		cl -= rf;
-		Com_Printf( "all:%3i sv:%3i gm:%3i cl:%3i rf:%3i\n",
-			all, sv, gm, cl, rf );
+		Com_Printf( "all:%3i sv:%3i gm:%3i cl:%3i rf:%3i\n", all, sv, gm, cl, rf );
 	}
 
 	FrameMark

@@ -286,8 +286,6 @@ void VID_Shutdown();
 //
 // cl_main
 //
-void CL_Init();
-
 void CL_FixUpGender();
 void CL_Disconnect();
 void CL_Disconnect_f();

@@ -573,11 +573,6 @@ int SV_PointContents( vec3_t p )
 
 //=================================================================================================
 
-static void SV_ClipMoveToPhysics( const moveclip_t &clip, trace_t &trace )
-{
-	//Physics::LineTrace( clip.start, clip.end, clip.mins, clip.maxs );
-}
-
 /*
 ========================
 SV_ClipMoveToEntities
@@ -585,19 +580,16 @@ SV_ClipMoveToEntities
 */
 static void SV_ClipMoveToEntities( moveclip_t &clip )
 {
-	int			i, numEntities;
-	edict_t		*touchlist[MAX_EDICTS], *touch;
-	trace_t		trace;
-	int			headnode;
-	float		*angles;
+	edict_t *touchlist[MAX_EDICTS];
+	trace_t trace;
 
-	numEntities = SV_AreaEntities( clip.boxmins, clip.boxmaxs, touchlist, MAX_EDICTS, AREA_SOLID );
+	const int numEntities = SV_AreaEntities( clip.boxmins, clip.boxmaxs, touchlist, MAX_EDICTS, AREA_SOLID );
 
 	// be careful, it is possible to have an entity in this
 	// list removed before we get to it (killtriggered)
-	for ( i = 0; i < numEntities; ++i )
+	for ( int i = 0; i < numEntities; ++i )
 	{
-		touch = touchlist[i];
+		edict_t *touch = touchlist[i];
 		if ( touch->solid == SOLID_NOT ) {
 			continue;
 		}
@@ -624,22 +616,23 @@ static void SV_ClipMoveToEntities( moveclip_t &clip )
 			continue;
 		}
 
-		// might intersect, so do an exact clip
-		headnode = SV_HullForEntity( touch );
-		angles = touch->s.angles;
-		if ( touch->solid != SOLID_BSP ) {
-			// boxes don't rotate
-			angles = vec3_origin;
-		}
-
-#if 0
+#if 1
 		if ( touch->solid == SOLID_PHYSICS )
 		{
-			SV_ClipMoveToPhysics( clip, trace );
+			Physics::RayCast rayCast( clip.start, clip.end, clip.mins, clip.maxs );
+			Physics::Trace( rayCast, Physics::GetShape( touch->bodyID ), touch->s.origin, touch->s.angles, trace );
 		}
 		else
 #endif
 		{
+			// might intersect, so do an exact clip
+			int headnode = SV_HullForEntity( touch );
+			float *angles = touch->s.angles;
+			if ( touch->solid != SOLID_BSP ) {
+				// boxes don't rotate
+				angles = vec3_origin;
+			}
+
 			if ( touch->svflags & SVF_MONSTER )
 			{
 				CM_TransformedBoxTrace( clip.start, clip.end,

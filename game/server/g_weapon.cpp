@@ -438,6 +438,9 @@ static void Grenade_Touch (edict_t *ent, edict_t *other, cplane_t *plane, csurfa
 	if (other == ent->owner)
 		return;
 
+	if (other->solid == SOLID_PHYSICS)
+		return;
+
 	if (surf && (surf->flags & SURF_SKY))
 	{
 		G_FreeEdict (ent);

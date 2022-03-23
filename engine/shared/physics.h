@@ -11,6 +11,23 @@
 
 namespace Physics
 {
+	// Convenience structure
+	// should move this elsewhere
+	struct RayCast
+	{
+		vec3_t start, direction;	// Origin and distance to travel for the cast
+		vec3_t halfExtent;			// Half extents of the AABB to cast
+
+		RayCast( const vec3_t inStart, const vec3_t inEnd, const vec3_t inMins, const vec3_t inMaxs )
+		{
+			VectorCopy( inStart, start );
+			VectorSubtract( inEnd, inStart, direction );
+
+			VectorSubtract( inMaxs, inMins, halfExtent );
+			VectorScale( halfExtent, 0.5f, halfExtent );
+		}
+	};
+
 	//
 	// Internals
 	//
@@ -20,7 +37,9 @@ namespace Physics
 	void SetContactListener( void *listener );
 	void Simulate( float deltaTime );
 
-	void LineTrace( const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, trace_t &inTrace );
+	// Clip a ray against a specific entity
+	void Trace( const RayCast &rayCast, const shapeHandle_t shapeHandle, const vec3_t shapeOrigin, const vec3_t shapeAngles, trace_t &inTrace );
+	void ClientPlayerTrace( const RayCast &rayCast, const vec3_t shapeOrigin, const vec3_t shapeAngles, trace_t &trace );
 
 	//
 	// Shape Creation
@@ -32,6 +51,8 @@ namespace Physics
 	shapeHandle_t CreateSphereShape( float radius );
 	shapeHandle_t CreateTaperedCapsuleShape( float halfHeightOfTaperedCylinder, float topRadius, float bottomRadius );
 	void DestroyShape( shapeHandle_t handle );
+
+	const shapeHandle_t GetShape( bodyID_t bodyID );
 
 	//
 	// Bodies

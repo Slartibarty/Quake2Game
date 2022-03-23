@@ -168,9 +168,9 @@ static void Die_Null( edict_t *self, edict_t *inflictor, edict_t *attacker, int 
 
 }
 
-void Spawn_PhysCube( edict_t *self )
+void Spawn_PropPhysics( edict_t *self )
 {
-	self->solid = SOLID_BBOX;
+	self->solid = SOLID_PHYSICS;
 	VectorSet( self->mins, -16, -16, -16 );
 	VectorSet( self->maxs, 16, 16, 16 );
 	self->s.modelindex = gi.modelindex( self->model );
@@ -203,9 +203,44 @@ void Spawn_PhysCube( edict_t *self )
 	self->nextthink = level.time + FRAMETIME;
 }
 
+void Spawn_PhysCube( edict_t *self )
+{
+	self->solid = SOLID_PHYSICS;
+	VectorSet( self->mins, -16, -16, -16 );
+	VectorSet( self->maxs, 16, 16, 16 );
+	self->s.modelindex = gi.modelindex( "models/props/metalbox.iqm" );
+
+	self->takedamage = true;
+	self->touch = Touch_Cube;
+	self->pain = Pain_Null;
+	self->die = Die_Null;
+
+	bodyCreationSettings_t bodyCreationSettings;
+	VectorCopy( self->s.origin, bodyCreationSettings.position );
+	VectorCopy( self->s.angles, bodyCreationSettings.rotation );
+	//bodyCreationSettings.friction = 0.77f;
+	//bodyCreationSettings.restitution = 0.13f;
+	bodyCreationSettings.friction = 1.0f;
+	bodyCreationSettings.restitution = 0.0f;
+
+	if ( !s_cubeShape )
+	{
+		vec3_t halfExtent{ 20.0f, 20.0f, 20.0f };
+		s_cubeShape = gi.physSystem->CreateBoxShape( halfExtent );
+		Phys_CacheShape( s_cubeShape );
+	}
+
+	Phys_SetupPhysicsForEntity( self, bodyCreationSettings, s_cubeShape );
+
+	gi.linkentity( self );
+
+	self->think = Think_Any;
+	self->nextthink = level.time + FRAMETIME;
+}
+
 void Spawn_PhysBarrel( edict_t *self )
 {
-	self->solid = SOLID_BBOX;
+	self->solid = SOLID_PHYSICS;
 	VectorSet( self->mins, -16, -16, -16 );
 	VectorSet( self->maxs, 16, 16, 16 );
 	self->s.modelindex = gi.modelindex( "models/props/oildrum.iqm" );

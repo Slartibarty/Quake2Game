@@ -9,16 +9,11 @@ Y- = slide left
 Z+ = slide up
 Z- = slide down
 
-Remove crapcvar
-
-Rotations:
-Quaternions for rotations
-Slerp the quaternions
-ALTERNATIVELY:
-Convert to quat, slerp, convert to euler
-
 GameNetworkingSockets
 
 TRACING AND JOLT!
 Do what Source does, right now Q2 traces against the world, then does an extra check for entities
 I can insert a Jolt trace into the entity check
+
+use server tick instead of time for usercmd like Source
+https://developer.valvesoftware.com/w/index.php?title=Latency_Compensating_Methods_in_Client/Server_In-game_Protocol_Design_and_Optimization&oldid=34244

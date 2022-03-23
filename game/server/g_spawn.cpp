@@ -126,6 +126,7 @@ void SP_monster_army( edict_t *self );
 void SP_monster_dog( edict_t *self );
 
 // Physics Test
+void Spawn_PropPhysics( edict_t *ent );
 void Spawn_PhysCube( edict_t *ent );
 void Spawn_PhysBarrel( edict_t *ent );
 
@@ -264,7 +265,7 @@ static const spawn_t g_spawns[]
 
 	// Physics Test
 
-	{"prop_physics", Spawn_PhysCube},
+	{"prop_physics", Spawn_PropPhysics},
 	{"physcube", Spawn_PhysCube},
 	{"physbarrel", Spawn_PhysBarrel},
 

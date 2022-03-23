@@ -8,6 +8,8 @@
 
 #include "cl_local.h"
 
+#include "../shared/physics.h"
+
 /*
 ========================
 CL_CheckPredictionError
@@ -50,6 +52,15 @@ void CL_CheckPredictionError()
 
 //=================================================================================================
 
+enum solid_t
+{
+	SOLID_NOT,			// no interaction with other objects
+	SOLID_TRIGGER,		// only touch when inside, after moving
+	SOLID_BBOX,			// touch on edge
+	SOLID_BSP,			// bsp clip, touch on edge
+	SOLID_PHYSICS		// rigid body
+};
+
 /*
 ========================
 CL_ClipMoveToEntities
@@ -57,14 +68,14 @@ CL_ClipMoveToEntities
 */
 static void CL_ClipMoveToEntities ( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, trace_t *tr )
 {
-	int			i, x, zd, zu;
-	trace_t		trace;
-	int			headnode;
-	float		*angles;
-	entity_state_t	*ent;
-	int			num;
-	cmodel_t		*cmodel;
-	vec3_t		bmins, bmaxs;
+	int				i, x, zd, zu;
+	trace_t			trace;
+	int				headnode;
+	float *			angles;
+	entityState_t *	ent;
+	int				num;
+	cmodel_t *		cmodel;
+	vec3_t			bmins, bmaxs;
 
 	for (i=0 ; i<cl.frame.num_entities ; i++)
 	{
@@ -78,7 +89,8 @@ static void CL_ClipMoveToEntities ( vec3_t start, vec3_t mins, vec3_t maxs, vec3
 			continue;
 
 		if (ent->solid == 31)
-		{	// special value for bmodel
+		{
+			// special value for bmodel
 			cmodel = cl.model_clip[ent->modelindex];
 			if (!cmodel)
 				continue;
@@ -86,7 +98,8 @@ static void CL_ClipMoveToEntities ( vec3_t start, vec3_t mins, vec3_t maxs, vec3
 			angles = ent->angles;
 		}
 		else
-		{	// encoded bbox
+		{
+			// encoded bbox
 			x = 8*(ent->solid & 31);
 			zd = 8*((ent->solid>>5) & 31);
 			zu = 8*((ent->solid>>10) & 63) - 32;
@@ -103,24 +116,35 @@ static void CL_ClipMoveToEntities ( vec3_t start, vec3_t mins, vec3_t maxs, vec3
 		if (tr->allsolid)
 			return;
 
-		CM_TransformedBoxTrace (start, end,
-			mins, maxs, headnode, MASK_PLAYERSOLID,
-			ent->origin, angles, trace);
+		if ( ent->solid == SOLID_PHYSICS )
+		{
+			Physics::RayCast rayCast( start, end, mins, maxs );
+			Physics::ClientPlayerTrace( rayCast, ent->origin, ent->angles, trace );
+		}
+		else
+		{
+			CM_TransformedBoxTrace( start, end,
+				mins, maxs, headnode, MASK_PLAYERSOLID,
+				ent->origin, angles, trace );
+		}
 
-		if (trace.allsolid || trace.startsolid ||
-		trace.fraction < tr->fraction)
+		if ( trace.allsolid || trace.startsolid || trace.fraction < tr->fraction )
 		{
 			trace.ent = (edict_t *)ent;
-		 	if (tr->startsolid)
+			if ( tr->startsolid )
 			{
 				*tr = trace;
 				tr->startsolid = true;
 			}
 			else
+			{
 				*tr = trace;
+			}
 		}
-		else if (trace.startsolid)
+		else if ( trace.startsolid )
+		{
 			tr->startsolid = true;
+		}
 	}
 }
 
