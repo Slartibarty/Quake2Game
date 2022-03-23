@@ -45,10 +45,12 @@ void	Time_Init();
 double	Time_FloatSeconds();
 double	Time_FloatMilliseconds();
 double	Time_FloatMicroseconds();
+double	Time_FloatNanoseconds();
 
 /*int64	Time_Seconds();*/
 int64	Time_Milliseconds();
 int64	Time_Microseconds();
+int64	Time_Nanoseconds();
 
 // Legacy
 int		Sys_Milliseconds();

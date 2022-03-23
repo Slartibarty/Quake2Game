@@ -192,6 +192,7 @@ static int64	startTime;
 static double	toSeconds;
 static double	toMilliseconds;
 static double	toMicroseconds;
+static int64	toNanoseconds;
 
 void Time_Init()
 {
@@ -199,6 +200,7 @@ void Time_Init()
 	toSeconds = 1e0 / startTime;
 	toMilliseconds = 1e3 / startTime;
 	toMicroseconds = 1e6 / startTime;
+	toNanoseconds = static_cast<int64>( 1e9 ) / startTime;
 
 	QueryPerformanceCounter( (LARGE_INTEGER *)&startTime );
 }
@@ -230,6 +232,11 @@ double Time_FloatMicroseconds()
 	return ( currentTime - startTime ) * toMicroseconds;
 }
 
+double Time_FloatNanoseconds()
+{
+	return static_cast<double>( Time_Nanoseconds() );
+}
+
 // Practically useless
 /*int64 Time_Seconds()
 {
@@ -248,6 +255,16 @@ int64 Time_Milliseconds()
 int64 Time_Microseconds()
 {
 	return llround( Time_FloatMicroseconds() );
+}
+
+int64 Time_Nanoseconds()
+{
+	// Nanoseconds are the first unit of measure to rise above 1.0, so do the maths directly here
+	int64 currentTime;
+
+	QueryPerformanceCounter( (LARGE_INTEGER *)&currentTime );
+
+	return ( currentTime - startTime ) * toNanoseconds;
 }
 
 // LEGACY

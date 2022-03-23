@@ -129,12 +129,24 @@ constexpr T MS2SEC( T milliseconds ) {
 	return milliseconds * static_cast<T>( 0.001 );
 }
 
+constexpr double NANO2SEC( double nanoseconds ) {
+	return nanoseconds / static_cast<double>( 1e9 );
+}
+
 // integers
 
 template< std::integral T >
 constexpr T SEC2MS( T seconds ) {
 	static_assert( sizeof( T ) >= sizeof( int32 ) );
 	return seconds * static_cast<T>( 1000 );
+}
+
+constexpr int64 SEC2NANO( int64 nanoseconds ) {
+	return nanoseconds * static_cast<int64>( 1e9 );
+}
+
+constexpr int64 MS2NANO( int64 nanoseconds ) {
+	return nanoseconds * static_cast<int64>( 1e6 );
 }
 
 // Avoid using this... It'll return 0 if you input a value below 1000, use floats
@@ -203,6 +215,10 @@ struct vec3
 		float v[3];
 	};
 
+	//==================
+	// Init
+	//==================
+
 	vec3() = default;
 
 	vec3( const vec3 & ) = default;
@@ -222,6 +238,10 @@ struct vec3
 #if 0
 	friend bool operator==( const vec3 &v1, const vec3 &v2 ) = default;
 #endif
+
+	//==================
+	// Set
+	//==================
 
 	void Set( float X, float Y, float Z )
 	{
@@ -243,12 +263,20 @@ struct vec3
 		x = 0.0f; y = 0.0f; z = 0.0f;
 	}
 
+	//==================
+	// Operations
+	//==================
+
 	void Negate()
 	{
 		x = -x;
 		y = -y;
 		z = -z;
 	}
+
+	//==================
+	// Operations
+	//==================
 
 	void Add( const vec3 &v )
 	{
@@ -270,6 +298,10 @@ struct vec3
 		y *= v.y;
 		z *= v.z;
 	}
+
+	//==================
+	// Utilities
+	//==================
 
 	float Length() const
 	{
@@ -475,9 +507,14 @@ inline void CrossProduct( const vec3_t v1, const vec3_t v2, vec3_t cross )
 	cross[2] = v1[0]*v2[1] - v1[1]*v2[0];
 }
 
-inline float VectorLength( vec3_t v )
+inline float VectorLength( const vec3_t v )
 {
 	return sqrt( v[0]*v[0] + v[1]*v[1] + v[2]*v[2] );
+}
+
+inline float VectorLengthSquare( const vec3_t v )
+{
+	return ( v[0]*v[0] + v[1]*v[1] + v[2]*v[2] );
 }
 
 inline void VectorSubtract( const vec3_t veca, const vec3_t vecb, vec3_t out )
