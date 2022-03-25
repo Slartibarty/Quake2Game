@@ -508,7 +508,7 @@ static bool PM_SlideMove( bool gravity )
 		//
 
 		// reflect player velocity (UNUSEDUNUSED: NOTE THE && 0!)
-		if ( !pm->groundentity || pm_friction != 1 && 0 )
+		if ( ( !pm->groundentity || pm_friction != 1 ) && 0 )
 		{
 			for ( i = 0; i < numplanes; i++ )
 			{

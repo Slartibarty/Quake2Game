@@ -11,7 +11,7 @@
 ===================================================================================================
 */
 
-static constexpr size_t MaxScreenshots = 999;
+static constexpr uint MaxScreenshots = 999;
 
 struct threadData_t
 {
@@ -53,17 +53,13 @@ static void GL_Screenshot_Internal( bool png )
 	strcpy( checkname, "screenshots" );
 	FileSystem::CreatePath( checkname );
 
-	// find a file name to save it to
-	char picname[16];
-	Q_sprintf( picname, "quake00.%s", png ? "png" : "tga" );
+	const char *extension = png ? "png" : "tga";
 
-	size_t i;
-
+	uint i;
 	for ( i = 0; i <= MaxScreenshots; ++i )
 	{
-		picname[5] = i / 10 + '0';
-		picname[6] = i % 10 + '0';
-		Q_sprintf_s( checkname, "screenshots/%s", picname );
+		// find a file name to save it to
+		Q_sprintf_s( checkname, "screenshots/quake%.3u.%s", i, extension );
 		if ( !FileSystem::FileExists( checkname, FS_WRITEDIR ) ) {
 			// file doesn't exist
 			break;
@@ -71,16 +67,16 @@ static void GL_Screenshot_Internal( bool png )
 	}
 	if ( i == MaxScreenshots + 1 )
 	{
-		Com_Print( "GL_Screenshot: Couldn't create a file\n" );
+		Com_Print( "GL_Screenshot: Ran out of screenshot slots\n" );
 		return;
 	}
 
 	// w/h of the framebuffer
-	const int width = tr.refdef.width;
-	const int height = tr.refdef.height;
+	const uint width = tr.refdef.width;
+	const uint height = tr.refdef.height;
 
-	size_t c = (size_t)width * (size_t)height * 3;
-	size_t addsize = 0;
+	uint c = width * height * 3;
+	uint addsize = 0;
 	if ( !png )
 	{
 		addsize = 18; // TGA Header
@@ -92,7 +88,7 @@ static void GL_Screenshot_Internal( bool png )
 
 	if ( png )
 	{
-		Com_Printf( "Writing %s\n", picname );
+		Com_Printf( "Writing %s\n", checkname );
 
 		threadData_t *threadData = (threadData_t *)Mem_Alloc( sizeof( threadData_t ) );
 		strcpy( threadData->filename, checkname );
@@ -117,11 +113,10 @@ static void GL_Screenshot_Internal( bool png )
 		pixbuffer[15] = height >> 8;
 		pixbuffer[16] = 24; // pixel size
 
-		byte temp;
 		// swap rgb to bgr
 		for ( i = 18; i < c; i += 3 )
 		{
-			temp = pixbuffer[i];
+			byte temp = pixbuffer[i];
 			pixbuffer[i] = pixbuffer[i + 2];
 			pixbuffer[i + 2] = temp;
 		}
@@ -131,7 +126,7 @@ static void GL_Screenshot_Internal( bool png )
 		FileSystem::CloseFile( handle );
 		Mem_Free( pixbuffer );
 
-		Com_Printf( "Wrote %s\n", picname );
+		Com_Printf( "Wrote %s\n", checkname );
 	}
 }
 

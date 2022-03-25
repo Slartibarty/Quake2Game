@@ -92,8 +92,6 @@ void R_BuildLightMap(msurface_t *surf, byte *dest, int stride);
 
 static StaticCvar r_fastProfile( "r_fastProfile", "0", 0 );
 
-//static GLuint fuckedUpLightmapID;
-
 /*
 ===================================================================================================
 
