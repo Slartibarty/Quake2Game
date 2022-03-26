@@ -4,6 +4,8 @@
 
 #pragma once
 
+//#define USE_SURFACETYPES
+
 // contents flags are seperate bits
 // a given brush can contribute multiple content bits
 // multiple brushes can be in a single leaf
@@ -74,22 +76,24 @@ enum surfaceTypes_t
 
 enum surfaceFlags_t
 {
+#ifdef USE_SURFACETYPES
 	SURF_TYPE_BIT0 = 0x1,	// First X bits are surface type parameters
 	SURF_TYPE_BIT1 = 0x2,
 	SURF_TYPE_BIT2 = 0x4,
 	SURF_TYPE_BIT3 = 0x8,
 	SURF_TYPE_MASK = ( 1 << NUM_SURFACE_BITS ) - 1,
+#endif
 
-	SURF_LIGHT		= 0x10,		// value will hold the light strength
+	SURF_LIGHT		= 0x1,		// value will hold the light strength
 
-	SURF_SLICK		= 0x20,		// affects game physics
+	SURF_SLICK		= 0x2,		// affects game physics
 
-	SURF_SKY		= 0x40,		// don't draw, but add to skybox
-	SURF_WARP		= 0x80,		// turbulent water warp
-	SURF_TRANS33	= 0x100,
-	SURF_TRANS66	= 0x200,
-	SURF_FLOWING	= 0x400,	// scroll towards angle
-	SURF_NODRAW		= 0x800,	// don't bother referencing the texture
+	SURF_SKY		= 0x4,		// don't draw, but add to skybox
+	SURF_WARP		= 0x8,		// turbulent water warp
+	SURF_TRANS33	= 0x10,
+	SURF_TRANS66	= 0x20,
+	SURF_FLOWING	= 0x40,		// scroll towards angle
+	SURF_NODRAW		= 0x80,		// don't bother referencing the texture
 
 	// From utils qfiles.h
 	SURF_HINT		= 0x1000,	// make a primary bsp splitter
@@ -98,7 +102,11 @@ enum surfaceFlags_t
 
 inline surfaceTypes_t SurfaceTypeFromFlags( int flags )
 {
+#ifdef USE_SURFACETYPES
 	return (surfaceTypes_t)( flags & SURF_TYPE_MASK );
+#else
+	return SURFTYPE_CONCRETE;
+#endif
 }
 
 // Content masks
