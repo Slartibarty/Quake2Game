@@ -499,6 +499,9 @@ void	R_AddSkySurface( const msurface_t *fa );
 void	R_ClearSkyBox();
 void	R_DrawSkyBox();
 
+void	Sky_Init();
+void	Sky_Shutdown();
+
 /*
 ===============================================================================
 
@@ -516,6 +519,7 @@ struct glProgs_t
 	GLuint iqmProg;
 	GLuint smfMeshProg;
 	GLuint worldProg;
+	GLuint skyProg;
 	GLuint debugMeshProg;
 	GLuint joltProg;
 };

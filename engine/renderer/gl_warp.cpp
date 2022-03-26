@@ -8,12 +8,19 @@ Code for drawing sky and water polygons
 
 #include "gl_local.h"
 
+struct skyVertex_t
+{
+	float x, y, z;
+	float s, t;
+};
+
 extern model_t		*loadmodel;
 
 static char			skyname[MAX_QPATH];
 static float		skyrotate;
 static vec3_t		skyaxis;
 static material_t	*sky_images[6];
+static GLuint		skyVAO, skyVBO;
 
 static msurface_t	*warpface;
 
@@ -481,7 +488,7 @@ void R_ClearSkyBox()
 
 #define SQRT3INV	0.57735026919f	// 1 / sqrt(3)
 
-static void MakeSkyVec( float s, float t, int axis )
+static void MakeSkyVec( skyVertex_t *skyVertex, float s, float t, int axis )
 {
 	vec3_t		v, b;
 	int			j, k;
@@ -507,9 +514,11 @@ static void MakeSkyVec( float s, float t, int axis )
 	s = ( s + 1.0f ) * 0.5f;
 	t = ( t + 1.0f ) * 0.5f;
 
-	t = 1.0f - t;
-	glTexCoord2f( s, t );
-	glVertex3fv( v );
+	skyVertex->x = v[0];
+	skyVertex->y = v[1];
+	skyVertex->z = v[2];
+	skyVertex->s = s;
+	skyVertex->t = 1.0f - t;
 }
 
 /*
@@ -525,7 +534,7 @@ void R_DrawSkyBox()
 
 	if ( skyrotate ) {
 		// check for no sky at all
-		for ( i = 0; i < 6; i++ ) {
+		for ( i = 0; i < 6; ++i ) {
 			if ( skymins[0][i] < skymaxs[0][i] &&
 				skymins[1][i] < skymaxs[1][i] ) {
 				break;
@@ -536,13 +545,11 @@ void R_DrawSkyBox()
 		}
 	}
 
-	glPushMatrix();
-	glTranslatef( tr.refdef.vieworg[0], tr.refdef.vieworg[1], tr.refdef.vieworg[2] );
-	glRotatef( tr.refdef.time * skyrotate, skyaxis[0], skyaxis[1], skyaxis[2] );
+	skyVertex_t skyVertices[6 * 4];
+	material_t *skyDrawCalls[6];
+	int numSides;
 
-	GL_ActiveTexture( GL_TEXTURE0 );
-
-	for ( i = 0; i < 6; i++ )
+	for ( i = 0, numSides = 0; i < 6; ++i )
 	{
 		if ( skyrotate ) {
 			// hack, forces full sky to draw when rotating
@@ -552,22 +559,66 @@ void R_DrawSkyBox()
 			skymaxs[1][i] = 1.0f;
 		}
 
-		if ( skymins[0][i] >= skymaxs[0][i] ||
-			skymins[1][i] >= skymaxs[1][i] ) {
+		if ( skymins[0][i] >= skymaxs[0][i] || skymins[1][i] >= skymaxs[1][i] ) {
 			continue;
 		}
 
-		sky_images[skytexorder[i]]->Bind();
+		MakeSkyVec( skyVertices + ( numSides * 4 ) + 0, skymins[0][i], skymins[1][i], i );
+		MakeSkyVec( skyVertices + ( numSides * 4 ) + 1, skymins[0][i], skymaxs[1][i], i );
+		MakeSkyVec( skyVertices + ( numSides * 4 ) + 2, skymaxs[0][i], skymaxs[1][i], i );
+		MakeSkyVec( skyVertices + ( numSides * 4 ) + 3, skymaxs[0][i], skymins[1][i], i );
 
-		glBegin( GL_QUADS );
-		MakeSkyVec( skymins[0][i], skymins[1][i], i );
-		MakeSkyVec( skymins[0][i], skymaxs[1][i], i );
-		MakeSkyVec( skymaxs[0][i], skymaxs[1][i], i );
-		MakeSkyVec( skymaxs[0][i], skymins[1][i], i );
-		glEnd();
+		skyDrawCalls[numSides] = sky_images[skytexorder[i]];
+
+		++numSides;
 	}
 
+#if 0
+	using namespace DirectX;
+	vec3_t &viewOrg = tr.refdef.vieworg;
+	vec3_t &viewAng = tr.refdef.viewangles;
+
+	vec3_t forward;
+
+	AngleVectors( viewAng, forward, nullptr, nullptr );
+
+	XMVECTOR translate = XMVectorSet( viewOrg[0], viewOrg[1], viewOrg[2], 0.0f );
+	XMVECTOR rotate = XMVectorSet(  )
+	XMVECTOR focusPoint = XMVectorSet( viewOrg[0] + forward[0], viewOrg[1] + forward[1], viewOrg[2] + forward[2], 0.0f );
+	XMVECTOR upAxis = XMVectorSet( 0.0f, 0.0f, 1.0f, 0.0f );
+
+	XMMATRIX workMatrix = XMMatrixLookAtRH( eyePosition, focusPoint, upAxis );
+	XMFLOAT4X4A viewMatrix;
+	XMStoreFloat4x4A( &viewMatrix, workMatrix );
+#endif
+
+	GL_UseProgram( glProgs.skyProg );
+
+	glPushMatrix();
+	glTranslatef( tr.refdef.vieworg[0], tr.refdef.vieworg[1], tr.refdef.vieworg[2] );
+	glRotatef( tr.refdef.time * skyrotate, skyaxis[0], skyaxis[1], skyaxis[2] );
+
+	float viewMatrix[4][4];
+	glGetFloatv( GL_MODELVIEW_MATRIX, (GLfloat *)viewMatrix );
+
 	glPopMatrix();
+
+	glUniformMatrix4fv( 2, 1, GL_FALSE, (const GLfloat *)&viewMatrix );
+	glUniformMatrix4fv( 3, 1, GL_FALSE, (const GLfloat *)&tr.projMatrix );
+	glUniform1i( 4, 0 );
+
+	glBindVertexArray( skyVAO );
+	glBindBuffer( GL_ARRAY_BUFFER, skyVBO );
+
+	GL_ActiveTexture( GL_TEXTURE0 );
+
+	glBufferData( GL_ARRAY_BUFFER, numSides * ( 4 * sizeof( skyVertex_t ) ), skyVertices, GL_STREAM_DRAW );
+
+	for ( i = 0; i < numSides; ++i )
+	{
+		skyDrawCalls[i]->Bind();
+		glDrawArrays( GL_TRIANGLE_FAN, i * 4, 4 );
+	}
 }
 
 /*
@@ -591,4 +642,25 @@ void R_SetSky( const char *name, float rotate, vec3_t axis )
 
 		sky_images[i] = GL_FindMaterial( pathname );
 	}
+}
+
+void Sky_Init()
+{
+	glGenVertexArrays( 1, &skyVAO );
+	glGenBuffers( 1, &skyVBO );
+
+	glBindVertexArray( skyVAO );
+	glBindBuffer( GL_ARRAY_BUFFER, skyVBO );
+
+	glEnableVertexAttribArray( 0 );
+	glEnableVertexAttribArray( 1 );
+
+	glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, sizeof( skyVertex_t ), (void *)( 0 ) );
+	glVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, sizeof( skyVertex_t ), (void *)( 3 * sizeof( GLfloat ) ) );
+}
+
+void Sky_Shutdown()
+{
+	glDeleteBuffers( 1, &skyVBO );
+	glDeleteVertexArrays( 1, &skyVAO );
 }

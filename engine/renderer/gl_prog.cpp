@@ -33,6 +33,9 @@ struct glShaders_t
 	GLuint worldVert;
 	GLuint worldFrag;
 
+	GLuint skyVert;
+	GLuint skyFrag;
+
 	GLuint debugMeshVert;
 	GLuint debugMeshFrag;
 
@@ -160,6 +163,9 @@ static void BuildAllShaders()
 	glShaders.worldVert = MakeShader( "shaders/world.vert", GL_VERTEX_SHADER );
 	glShaders.worldFrag = MakeShader( "shaders/world.frag", GL_FRAGMENT_SHADER );
 
+	glShaders.skyVert = MakeShader( "shaders/sky.vert", GL_VERTEX_SHADER );
+	glShaders.skyFrag = MakeShader( "shaders/sky.frag", GL_FRAGMENT_SHADER );
+
 	glShaders.debugMeshVert = MakeShader( "shaders/debugmesh.vert", GL_VERTEX_SHADER );
 	glShaders.debugMeshFrag = MakeShader( "shaders/debugmesh.frag", GL_FRAGMENT_SHADER );
 
@@ -208,6 +214,12 @@ static void BuildAllShaders()
 	glAttachShader( glProgs.worldProg, glShaders.worldFrag );
 	glLinkProgram( glProgs.worldProg );
 	CheckProgram( glProgs.worldProg );
+
+	glProgs.skyProg = glCreateProgram();
+	glAttachShader( glProgs.skyProg, glShaders.skyVert );
+	glAttachShader( glProgs.skyProg, glShaders.skyFrag );
+	glLinkProgram( glProgs.skyProg );
+	CheckProgram( glProgs.skyProg );
 
 	glProgs.debugMeshProg = glCreateProgram();
 	glAttachShader( glProgs.debugMeshProg, glShaders.debugMeshVert );

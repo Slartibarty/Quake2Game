@@ -177,7 +177,7 @@ void R_InitGLState()
 	GL_TexEnv( GL_REPLACE );
 
 	glEnable( GL_PROGRAM_POINT_SIZE );
-	glEnable( GL_FRAMEBUFFER_SRGB );
+	//glEnable( GL_FRAMEBUFFER_SRGB );
 }
 
 /*
@@ -315,6 +315,7 @@ void R_Restart()
 	Particles_Shutdown();
 	Draw_Shutdown();
 	Mod_FreeAll();
+	Sky_Shutdown();
 
 	GL_ShutdownImages();
 
@@ -346,6 +347,7 @@ void R_Restart()
 
 	GL_InitImages();
 
+	Sky_Init();
 	Mod_Init();
 	Draw_Init();
 	Particles_Init();
@@ -413,6 +415,7 @@ bool R_Init()
 
 	GL_InitImages();
 
+	Sky_Init();
 	Mod_Init();
 	Draw_Init();
 	Particles_Init();
@@ -434,6 +437,7 @@ void R_Shutdown()
 	Particles_Shutdown();
 	Draw_Shutdown();
 	Mod_FreeAll();
+	Sky_Shutdown();
 
 	GL_ShutdownImages();
 

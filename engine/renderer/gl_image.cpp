@@ -252,7 +252,7 @@ static GLuint GL_Upload( const byte *pData, int width, int height, imageFlags_t 
 	GL_BindTexture( id );
 
 	// Sad... Need to fixup SRGB stuff eventually
-	GLint internalFormat = ( flags & IF_SRGB ) ? GL_SRGB8_ALPHA8 : GL_RGBA8;
+	GLint internalFormat = GL_RGBA8; // ( flags & IF_SRGB ) ? GL_SRGB8_ALPHA8 : GL_RGBA8;
 
 	glTexImage2D( GL_TEXTURE_2D, 0, internalFormat, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pData );
 

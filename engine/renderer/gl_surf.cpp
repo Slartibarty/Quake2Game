@@ -445,7 +445,7 @@ static void R_AddSurfaceToMaterialSet( const msurface_t *surf, worldMaterialSet_
 {
 	if ( surf->texinfoFlags & SURF_SKY )
 	{
-		//R_AddSkySurface( surf );
+		R_AddSkySurface( surf );
 		return;
 	}
 

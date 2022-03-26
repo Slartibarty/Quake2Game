@@ -482,13 +482,6 @@ static void Mod_LoadTexinfo (lump_t *l)
 		else
 		    out->next = NULL;
 
-		if ( Q_strstr( in->texture, "/sky" ) )
-		{
-			// There's a bug in original Quake 2 maps where sky faces wouldn't be tagged appropriately
-			// so correct that here
-			out->flags |= SURF_SKY;
-		}
-
 		Q_sprintf_s( name, "materials/%s.mat", in->texture );
 		out->material = GL_FindMaterial( name );
 		if ( out->material == defaultMaterial )
