@@ -56,7 +56,10 @@ static void CreateMaterialsForTextures()
 			continue;
 		}
 
-		fsHandle_t handle = FileSystem::OpenFileWrite( relativePath, FS_GAMEDIR );
+		char newFilename[MAX_QPATH];
+		Com_FileSetExtension( relativePath, newFilename, ".mat" );
+
+		fsHandle_t handle = FileSystem::OpenFileWrite( newFilename, FS_GAMEDIR );
 		if ( !handle ) {
 			continue;
 		}
