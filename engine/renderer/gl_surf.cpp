@@ -135,7 +135,7 @@ static void R_DrawWorldMesh( const worldMesh_t &mesh )
 
 	tr.pc.worldPolys += mesh.numIndices / 3;
 	++tr.pc.worldDrawCalls;
-
+	
 	glDrawElements( GL_TRIANGLES, mesh.numIndices, GL_UNSIGNED_INT, (void *)( (uintptr_t)( mesh.firstIndex ) * sizeof( worldIndex_t ) ) );
 }
 
@@ -201,10 +201,10 @@ void R_DrawBrushModel( entity_t *e )
 		VectorAdd( e->origin, currentmodel->maxs, maxs );
 	}
 
-	if ( R_CullBox( mins, maxs ) )
-	{
-		return;
-	}
+	//if ( R_CullBox( mins, maxs ) )
+	//{
+	//	return;
+	//}
 
 	memset( gl_lms.lightmap_surfaces, 0, sizeof( gl_lms.lightmap_surfaces ) );
 
@@ -223,7 +223,7 @@ void R_DrawBrushModel( entity_t *e )
 
 	using namespace DirectX;
 
-#if 0
+#if 1
 	XMMATRIX modelMatrix = XMMatrixMultiply(
 		XMMatrixRotationX( DEG2RAD( e->angles[ROLL] ) ) * XMMatrixRotationY( DEG2RAD( e->angles[PITCH] ) ) * XMMatrixRotationZ( DEG2RAD( e->angles[YAW] ) ),
 		XMMatrixTranslation( e->origin[0], e->origin[1], e->origin[2] )
@@ -1013,7 +1013,7 @@ static float R_TriangleArea( const worldVertex_t &v0, const worldVertex_t &v1, c
 // will create optimised render geometry and append it to g_worldData
 // It then gives the index of the first renderindex to the msurface_t
 //
-static void R_BuildPolygonFromSurface( msurface_t *fa, bool world )
+static void R_BuildPolygonFromSurface( msurface_t *fa, int skipIndices )
 {
 	ZoneScoped
 
@@ -1144,7 +1144,7 @@ static void R_BuildPolygonFromSurface( msurface_t *fa, bool world )
 	//
 	// Figure out where we're creating the mesh
 	//
-	if ( !world )
+	if ( skipIndices != 0 )
 	{
 		if ( g_worldData.lastMaterial != fa->texinfo->material )
 		{
@@ -1154,7 +1154,7 @@ static void R_BuildPolygonFromSurface( msurface_t *fa, bool world )
 			worldMesh_t &mesh = g_worldData.meshes.emplace_back();
 
 			mesh.texinfo = fa->texinfo;
-			mesh.firstIndex = firstIndex;
+			mesh.firstIndex = firstIndex - skipIndices;
 			mesh.numIndices = numIndices;
 		}
 		else
@@ -1420,7 +1420,7 @@ void R_BuildWorldLists( model_t *model )
 
 		for ( msurface_t *surface = firstFace; surface < lastFace; ++surface )
 		{
-			R_BuildPolygonFromSurface( surface, true );
+			R_BuildPolygonFromSurface( surface, 0 );
 		}
 	}
 
@@ -1430,6 +1430,8 @@ void R_BuildWorldLists( model_t *model )
 	// Store the number of indices in the mesh stuff, for r_dumpworld
 	worldModel->firstMesh = 0;
 	worldModel->numMeshes = endWorldIndices;
+
+	assert( endWorldIndices != 0 );
 
 #endif
 
@@ -1455,7 +1457,7 @@ void R_BuildWorldLists( model_t *model )
 
 		for ( msurface_t *surface = firstFace; surface < lastFace; ++surface )
 		{
-			R_BuildPolygonFromSurface( surface, false );
+			R_BuildPolygonFromSurface( surface, endWorldIndices );
 		}
 
 		const uint32 lastWorldMesh = static_cast<uint32>( g_worldData.meshes.size() );

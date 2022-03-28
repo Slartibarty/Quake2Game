@@ -115,6 +115,33 @@ void GL_MaterialList_f()
 
 //-------------------------------------------------------------------------------------------------
 
+CON_COMMAND( force_lowbias, "Blah", 0 )
+{
+	for ( int i = 0; i < numgltextures; ++i )
+	{
+		GL_BindTexture( gltextures[i].texnum );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -1 );
+	}
+}
+
+CON_COMMAND( force_medbias, "Blah", 0 )
+{
+	for ( int i = 0; i < numgltextures; ++i )
+	{
+		GL_BindTexture( gltextures[i].texnum );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, 0 );
+	}
+}
+
+CON_COMMAND( force_highbias, "Blah", 0 )
+{
+	for ( int i = 0; i < numgltextures; ++i )
+	{
+		GL_BindTexture( gltextures[i].texnum );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, 1 );
+	}
+}
+
 static void GL_ApplyTextureParameters( imageFlags_t flags )
 {
 	//flags |= IF_NEAREST;
@@ -137,6 +164,8 @@ static void GL_ApplyTextureParameters( imageFlags_t flags )
 		{
 			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, 16.0f ); // don't hardcode this value
 		}
+
+		//glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -1 );
 	}
 	else
 	{
@@ -257,7 +286,7 @@ static GLuint GL_Upload( const byte *pData, int width, int height, imageFlags_t 
 	glTexImage2D( GL_TEXTURE_2D, 0, internalFormat, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pData );
 
 	// auto-generate mipmaps (FIXME: sad vendor-specific extension)
-	if ( GLEW_ARB_framebuffer_object )
+	if ( GLEW_ARB_framebuffer_object && !( flags & IF_NOMIPS ) )
 	{
 		glGenerateMipmap( GL_TEXTURE_2D );
 	}
