@@ -1,11 +1,11 @@
 
 #pragma once
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Physics/PhysicsSystem.h>
+#include <Jolt/Physics/PhysicsSystem.h>
 
-#include <Geometry/IndexedTriangle.h>
+#include <Jolt/Geometry/IndexedTriangle.h>
 
 #include "../../common/physics_interface.h"
 

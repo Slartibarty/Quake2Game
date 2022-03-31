@@ -4,33 +4,33 @@
 // TODO: Move server specific code to the server!
 #include "../server/sv_local.h"
 
-#include <Jolt.h>
-#include <RegisterTypes.h>
+#include <Jolt/Jolt.h>
+#include <Jolt/RegisterTypes.h>
 
-#include <Core/TempAllocator.h>
-#include <Core/JobSystemThreadPool.h>
+#include <Jolt/Core/TempAllocator.h>
+#include <Jolt/Core/JobSystemThreadPool.h>
 
-#include <Physics/PhysicsSettings.h>
-#include <Physics/PhysicsSystem.h>
+#include <Jolt/Physics/PhysicsSettings.h>
+#include <Jolt/Physics/PhysicsSystem.h>
 
-#include <Physics/Collision/CastResult.h>
-#include <Physics/Collision/RayCast.h>
-#include <Physics/Collision/NarrowPhaseQuery.h>
-#include <Physics/Collision/CollisionCollector.h>
-#include <Physics/Collision/CollisionCollectorImpl.h>
-#include <Physics/Collision/ShapeCast.h>
-#include <Physics/Collision/CollisionDispatch.h>
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Collision/NarrowPhaseQuery.h>
+#include <Jolt/Physics/Collision/CollisionCollector.h>
+#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
+#include <Jolt/Physics/Collision/ShapeCast.h>
+#include <Jolt/Physics/Collision/CollisionDispatch.h>
 
-#include <Physics/Collision/Shape/BoxShape.h>
-#include <Physics/Collision/Shape/CapsuleShape.h>
-#include <Physics/Collision/Shape/CylinderShape.h>
-#include <Physics/Collision/Shape/MeshShape.h>
-#include <Physics/Collision/Shape/SphereShape.h>
-#include <Physics/Collision/Shape/TaperedCapsuleShape.h>
-#include <Physics/Collision/Shape/RotatedTranslatedShape.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/CylinderShape.h>
+#include <Jolt/Physics/Collision/Shape/MeshShape.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/TaperedCapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 
-#include <Physics/Body/BodyCreationSettings.h>
-#include <Physics/Body/BodyActivationListener.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Body/BodyActivationListener.h>
 
 #include "physics.h"
 

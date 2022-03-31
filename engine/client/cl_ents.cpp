@@ -2,7 +2,7 @@
 
 #include "cl_local.h"
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
 static constexpr float MaxViewmodelLag = 1.5f;
 static_assert( MaxViewmodelLag > 0.0f );

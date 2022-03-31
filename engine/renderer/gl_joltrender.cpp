@@ -3,12 +3,12 @@
 
 #ifndef NO_JOLT_DEBUG
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Physics/PhysicsSystem.h>
+#include <Jolt/Physics/PhysicsSystem.h>
 
-#include <Renderer/DebugRenderer.h>
-#include <Renderer/DebugRendererRecorder.h>
+#include <Jolt/Renderer/DebugRenderer.h>
+#include <Jolt/Renderer/DebugRendererRecorder.h>
 
 #include "../shared/physics.h"
 
