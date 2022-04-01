@@ -46,6 +46,13 @@ newoption {
 	}
 }
 
+function LinkToCore( isExe )
+	links { "core" }
+	if isExe then
+		files { "core/assert_dialog.rc" }
+	end
+end
+
 function LinkToProfiler()
 	if _OPTIONS["profile"] then
 		-- Don't profile in debug...
@@ -71,7 +78,7 @@ function LinkToDistro()
 end
 
 function LinkToJolt()
-	sysincludedirs { "thirdparty/JoltPhysics/Jolt" }
+	sysincludedirs { "thirdparty/JoltPhysics" }
 	-- JPH_STAT_COLLECTOR, "JPH_PROFILE_ENABLED", "JPH_FLOATING_POINT_EXCEPTIONS_ENABLED"
 	defines { "JPH_DEBUG_RENDERER" }
 	links { "joltphysics" }
@@ -144,6 +151,7 @@ filter {}
 
 -- Config for shared library projects
 filter "kind:SharedLib"
+	defines { "Q_DLL" }
 	flags { "NoManifest" } -- We don't want manifests for DLLs
 filter {}
 
@@ -172,7 +180,9 @@ project "core"
 
 	files {
 		"core/*.cpp",
-		"core/*.h"
+		"core/*.h",
+		
+		"core/assert_dialog.rc"
 	}
 
 	filter "system:windows"
@@ -199,7 +209,7 @@ project "engine"
 		"thirdparty/libpng_config", "thirdparty/imgui", "thirdparty/rapidjson/include"
 	}
 	defines { "Q_ENGINE", "GLEW_STATIC", "GLEW_NO_GLU", "IMGUI_USER_CONFIG=\"../../engine/client/q_imconfig.h\"" }
-	links { "core", "meshoptimizer" }
+	links { "meshoptimizer" }
 	filter "system:windows"
 		linkoptions { "/ENTRY:mainCRTStartup" }
 		links {
@@ -212,6 +222,7 @@ project "engine"
 		}
 	filter {}
 
+	LinkToCore( true )
 	LinkToDistro()
 	LinkToProfiler()
 	LinkToJolt()
@@ -220,6 +231,7 @@ project "engine"
 
 	files {
 		"common/*",
+		"common/assertions/*",
 		"resources/*",
 
 		"framework/*",
@@ -275,7 +287,8 @@ project "cgame"
 	targetname "cgame"
 	language "C++"
 	targetdir "../game/base"
-	links { "core" }
+
+	LinkToCore( false )
 
 	disablewarnings { "4244", "4267" }
 
@@ -307,7 +320,8 @@ project "game"
 	targetname "game"
 	language "C++"
 	targetdir "../game/base"
-	links { "core" }
+
+	LinkToCore( false )
 
 	disablewarnings { "4244", "4311", "4302" }
 
@@ -340,31 +354,6 @@ if not _OPTIONS["exclude-utils"] then
 
 	group "utilities"
 	
-	--[[
-	project "d3dtest"
-		kind "WindowedApp"
-		targetname "d3dtest"
-		language "C++"
-		floatingpoint "Default"
-		targetdir( out_dir )
-		debugdir( out_dir )
-		defines {  }
-		sysincludedirs { "thirdparty/JoltPhysics/Jolt" }
-		links { "core", "utils/d3dtest/joltlib/Jolt", "comctl32", "dxguid", "dxgi", "d3d11", "d3dcompiler" }
-		
-		filter "system:windows"
-			linkoptions { "/ENTRY:mainCRTStartup" }
-		filter {}
-		
-		files {
-			"resources/*",
-
-			"framework/*",
-
-			"utils/d3dtest/**",
-		}
-	--]]
-	
 	project "stbtest"
 		kind "ConsoleApp"
 		targetname "stbtest"
@@ -376,20 +365,6 @@ if not _OPTIONS["exclude-utils"] then
 		files {
 			"utils/stbtest/*"
 		}
-
-	--[[
-	project "moduletest"
-		kind "ConsoleApp"
-		targetname "moduletest"
-		language "C++"
-		floatingpoint "Default"
-		targetdir( out_dir )
-		debugdir( out_dir )
-
-		files {
-			"utils/moduletest/*"
-		}
-	--]]
 
 	project "mooned"
 		kind "WindowedApp"
@@ -472,8 +447,9 @@ if not _OPTIONS["exclude-utils"] then
 		targetdir( out_dir )
 		debugdir( out_dir )
 		defines { "Q_CONSOLE_APP" }
-		links { "core" }
 		includedirs { "utils/common2", "common" }
+		
+		LinkToCore( true )
 
 		files {
 			"resources/windows_default.manifest",
@@ -509,8 +485,9 @@ if not _OPTIONS["exclude-utils"] then
 		targetdir( out_dir )
 		debugdir( out_dir )
 		defines { "Q_CONSOLE_APP" }
-		links { "core" }
 		includedirs { "utils/common2", "common" }
+		
+		LinkToCore( true )
 
 		files {
 			"resources/windows_default.manifest",
@@ -545,8 +522,9 @@ if not _OPTIONS["exclude-utils"] then
 		targetdir( out_dir )
 		debugdir( out_dir )
 		defines { "Q_CONSOLE_APP" }
-		links { "core" }
 		includedirs { "utils/common2", "common", "thirdparty/stb" }
+		
+		LinkToCore( true )
 
 		files {
 			"resources/windows_default.manifest",
@@ -583,8 +561,9 @@ if not _OPTIONS["exclude-utils"] then
 		targetdir( out_dir )
 		debugdir( out_dir )
 		defines { "Q_CONSOLE_APP" }
-		links { "core" }
 		includedirs { "utils/common2", "thirdparty/xatlas" }
+		
+		LinkToCore( true )
 
 		files {
 			"resources/windows_default.manifest",
@@ -608,8 +587,10 @@ if not _OPTIONS["exclude-utils"] then
 		targetdir( out_dir )
 		debugdir( out_dir )
 		defines { "Q_CONSOLE_APP" }
-		links { "core", "zlib", "meshoptimizer" }
+		links { "zlib", "meshoptimizer" }
 		includedirs { "utils/common2", "thirdparty/meshoptimizer/src", fbxsdk_include_dir }
+		
+		LinkToCore( true )
 
 		-- link to the FBX SDK
 		filter( filter_dbg )
@@ -645,8 +626,10 @@ if not _OPTIONS["exclude-utils"] then
 		targetdir( out_dir )
 		debugdir( out_dir )
 		defines { "Q_CONSOLE_APP" }
-		links { "core", "zlib", "meshoptimizer" }
+		links { "zlib", "meshoptimizer" }
 		includedirs { "utils/common2", "thirdparty/meshoptimizer/src", "thirdparty/rapidjson/include", fbxsdk_include_dir }
+		
+		LinkToCore( true )
 
 		-- link to the FBX SDK
 		filter( filter_dbg )
@@ -722,11 +705,11 @@ project "joltphysics"
 	targetname "joltphysics"
 	language "C++"
 	
-	sysincludedirs { "thirdparty/JoltPhysics/Jolt" }
+	sysincludedirs { "thirdparty/JoltPhysics" }
 	defines { "JPH_DEBUG_RENDERER" }
 	
 	pchsource( "thirdparty/JoltPhysics/Jolt/pch.cpp" )
-	pchheader( "Jolt.h" )
+	pchheader( "Jolt/Jolt.h" )
 	
 	files {
 		joltphysics_sources

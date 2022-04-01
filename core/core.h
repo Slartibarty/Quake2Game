@@ -34,7 +34,6 @@
 #include <cstdio>
 #include <cctype>
 #include <ctime>
-#include <cassert>
 
 #include <concepts>
 #include <numbers>
@@ -45,13 +44,12 @@
 #include "sal.h"
 #endif
 
-// entirely inline
 #include "sys_defines.h"
 #include "sys_types.h"
+#include "assertions.h"
 #include "utilities.h"
 #include "color.h"
 
-// partially inline
 #include "memory.h"
 #include "math.h"			// blahhh, nasty filename?
 #include "byteswap.h"

@@ -130,7 +130,7 @@ int Q_strncasecmp( const char *s1, const char *s2, strlen_t n );
 const char *Q_stristr( const char *str, const char *substr );
 
 inline char *Q_stristr( char *str, const char *substr ) {
-	return const_cast<char *>( Q_stristr( reinterpret_cast<const char *>( str ), substr ) );
+	return const_cast<char *>( Q_stristr( str, substr ) );
 }
 
 /*

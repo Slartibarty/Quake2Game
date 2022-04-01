@@ -1,0 +1,121 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "assert_dialog.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United Kingdom) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
+#pragma code_page(1252)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "assert_dialog.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""winres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ASSERT_DIALOG DIALOGEX 0, 0, 309, 110
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Assertion Failed"
+FONT 9, "Segoe UI", 400, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "Break in Debugger",IDC_BREAK,202,7,100,14
+    PUSHBUTTON      "Ignore This Assert",IDC_IGNORE_ONCE,202,25,100,14
+    PUSHBUTTON      "Always Ignore This Assert",IDC_IGNORE_ALWAYS,202,43,100,14
+    PUSHBUTTON      "Ignore All Asserts",IDC_IGNORE_ALL,202,61,100,14
+    CONTROL         "File:",IDC_STATIC,"Static",SS_SIMPLE | WS_GROUP,7,7,13,8
+    CONTROL         "Line:",IDC_STATIC,"Static",SS_SIMPLE | WS_GROUP,7,18,15,8
+    CONTROL         "Expression:",IDC_STATIC,"Static",SS_SIMPLE | WS_GROUP,7,79,35,8
+    LTEXT           "game\\server\\g_ai.cpp",IDC_FILE,25,7,170,8,SS_PATHELLIPSIS
+    EDITTEXT        IDC_EXPRESSION,7,89,295,14,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "2708",IDC_LINE,25,18,170,8
+    CONTROL         "Message:",IDC_STATIC,"Static",SS_SIMPLE | WS_GROUP,7,33,29,8
+    EDITTEXT        IDC_MESSAGE,7,43,188,28,ES_MULTILINE | ES_READONLY | WS_VSCROLL
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_ASSERT_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 302
+        VERTGUIDE, 25
+        VERTGUIDE, 195
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 103
+        HORZGUIDE, 43
+        HORZGUIDE, 75
+        HORZGUIDE, 89
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_ASSERT_DIALOG AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+#endif    // English (United Kingdom) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
