@@ -180,7 +180,7 @@ project "core"
 
 	files {
 		"core/*.cpp",
-		"core/*.h",
+		"core/*.h"
 	}
 
 	filter "system:windows"

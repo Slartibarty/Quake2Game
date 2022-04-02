@@ -188,8 +188,6 @@ void AssertionFailed( const char *message, const char *expression, const char *f
 //
 void _wassert( _In_z_ wchar_t const *message, _In_z_ wchar_t const *file, _In_ unsigned line )
 {
-	Com_Print( "An assertion passed through _wassert, which is sad\n" );
-
 	char narrowMessage[MAX_ASSERT_STRING_LENGTH];
 	char narrowFile[MAX_ASSERT_STRING_LENGTH];
 
