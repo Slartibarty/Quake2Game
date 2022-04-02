@@ -176,7 +176,7 @@ int main( int argc, char **argv )
 */
 
 [[noreturn]]
-static void Sys_Error( const platChar_t *mainInstruction, const char *msg )
+static void Sys_Error( const pchar_t *mainInstruction, const char *msg )
 {
 	// Trim the newline
 	char newMsg[MAX_PRINT_MSG];
@@ -193,7 +193,7 @@ static void Sys_Error( const platChar_t *mainInstruction, const char *msg )
 	wchar_t reason[MAX_PRINT_MSG];
 	Sys_UTF8ToUTF16( newMsg, Q_strlen( newMsg ) + 1, reason, countof( reason ) );
 
-	const platChar_t *windowTitle = FileSystem::ModInfo::GetWindowTitle();
+	const pchar_t *windowTitle = FileSystem::ModInfo::GetWindowTitle();
 
 	TaskDialog(
 		nullptr,

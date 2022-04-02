@@ -27,7 +27,7 @@ bool	Sys_GetVidModeInfo( int &width, int &height, int mode );
 [[noreturn]]
 void	Sys_Quit( int code );
 [[noreturn]]
-void	Sys_Error( const platChar_t *mainInstruction, const char *msg );
+void	Sys_Error( const pchar_t *mainInstruction, const char *msg );
 
 void	Sys_CopyProtect();
 
@@ -35,20 +35,20 @@ void	Sys_CopyProtect();
 
 struct filterSpec_t
 {
-	const platChar_t *pszName;
-	const platChar_t *pszSpec;
+	const pchar_t *pszName;
+	const pchar_t *pszSpec;
 };
 
 void Sys_FileOpenDialog(
 	std::string &filename,
-	const platChar_t *title,
+	const pchar_t *title,
 	const filterSpec_t *supportedTypes,
 	const uint numTypes,
 	const uint defaultIndex );
 
 void Sys_FileOpenDialogMultiple(
 	std::vector<std::string> &filenames,
-	const platChar_t *title,
+	const pchar_t *title,
 	const filterSpec_t *supportedTypes,
 	const uint numTypes,
 	const uint defaultIndex );

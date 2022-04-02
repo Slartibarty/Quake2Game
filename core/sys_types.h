@@ -33,7 +33,7 @@ using qboolean = int32;		// obsolete
 
 // UTF-16 on Windows
 
-using platChar_t = wchar_t;
+using pchar_t = wchar_t;
 
 #define PLATTEXT_( quote ) L##quote
 #define PLATTEXT( quote ) PLATTEXT_( quote )
@@ -42,7 +42,7 @@ using platChar_t = wchar_t;
 
 // UTF-8 on Linux
 
-using platChar_t = char;
+using pchar_t = char;
 
 #define PLATTEXT( quote ) ( quote )
 

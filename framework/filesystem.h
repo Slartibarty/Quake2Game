@@ -97,7 +97,7 @@ namespace FileSystem
 		// Gets the title of the current game.
 		const char *GetGameTitle();
 		// Gets the title all windows created by the engine should use.
-		const platChar_t *GetWindowTitle();
+		const pchar_t *GetWindowTitle();
 		// Returns the ModInfo RapidJSON document.
 		void *GetModInfoDocument();
 	}

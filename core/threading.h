@@ -66,13 +66,13 @@ threadID_t			Sys_GetCurrentThreadID();
 
 // Returns a threadHandle
 threadHandle_t		Sys_CreateThread( threadProc_t function, void *parms, threadPriority_t priority,
-									  const platChar_t *name, size_t stackSize = DEFAULT_THREAD_STACK_SIZE,
+									  const pchar_t *name, size_t stackSize = DEFAULT_THREAD_STACK_SIZE,
 									  bool suspended = false );
 
 void				Sys_WaitForThread( threadHandle_t threadHandle );
 void				Sys_WaitForMultipleThreads( const threadHandle_t *threadHandles, uint32 numThreads );
 void				Sys_DestroyThread( threadHandle_t threadHandle );
-void				Sys_SetCurrentThreadName( const platChar_t *name );
+void				Sys_SetCurrentThreadName( const pchar_t *name );
 
 void				Sys_Yield();
 

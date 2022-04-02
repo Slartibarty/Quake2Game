@@ -19,7 +19,7 @@
 
 #include "assertions.h"
 
-#define MAX_ASSERT_STRING_LENGTH 128
+#define MAX_ASSERT_STRING_LENGTH 256
 
 struct dialogInitInfo_t
 {
@@ -148,6 +148,10 @@ void AssertionFailed( const char *message, const char *expression, const char *f
 		}
 	}
 
+	// If we have no message, set it to a default now
+	// expression and file are guaranteed to have a value
+	if ( !message ) { message = "N/A"; }
+
 #ifdef _WIN32
 	// Trim the filename down to "code", this obviously only works if the code is in a folder called "code"
 	const char *trimmedFile = Q_strstr( file, "code" );
@@ -161,7 +165,7 @@ void AssertionFailed( const char *message, const char *expression, const char *f
 	}
 
 	dialogInitInfo_t info;
-	info.message = message ? message : "N/A";
+	info.message = message;
 	info.expression = expression;
 	info.file = trimmedFile;
 	info.line = line;
@@ -176,3 +180,23 @@ void AssertionFailed( const char *message, const char *expression, const char *f
 	}
 #endif
 }
+
+#ifdef _WIN32
+
+//
+// Override the CRT's assertion handler with our own
+//
+void _wassert( _In_z_ wchar_t const *message, _In_z_ wchar_t const *file, _In_ unsigned line )
+{
+	Com_Print( "An assertion passed through _wassert, which is sad\n" );
+
+	char narrowMessage[MAX_ASSERT_STRING_LENGTH];
+	char narrowFile[MAX_ASSERT_STRING_LENGTH];
+
+	Sys_UTF16toUTF8( message, static_cast<strlen_t>( wcslen( message ) ) + 1, narrowMessage, MAX_ASSERT_STRING_LENGTH );
+	Sys_UTF16toUTF8( file,    static_cast<strlen_t>( wcslen( file ) ) + 1,    narrowFile,    MAX_ASSERT_STRING_LENGTH );
+
+	AssertionFailed( nullptr, narrowMessage, narrowFile, line );
+}
+
+#endif

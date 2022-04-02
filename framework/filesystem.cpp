@@ -646,7 +646,7 @@ namespace ModInfo
 static struct modInfo_t
 {
 	char gameTitle[64];				// The game title
-	platChar_t windowTitle[64];		// The title created windows will have
+	pchar_t windowTitle[64];		// The title created windows will have
 
 	rapidjson::Document *pDoc;
 } modInfo;
@@ -739,7 +739,7 @@ const char *GetGameTitle()
 	return modInfo.gameTitle;
 }
 
-const platChar_t *GetWindowTitle()
+const pchar_t *GetWindowTitle()
 {
 	if ( modInfo.windowTitle[0] == 0 )
 	{

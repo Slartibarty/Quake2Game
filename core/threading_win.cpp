@@ -13,17 +13,17 @@
 ===================================================================================================
 */
 
-static void Sys_SetThreadName( HANDLE thread, const platChar_t *name )
+static void Sys_SetThreadName( HANDLE thread, const pchar_t *name )
 {
 	SetThreadDescription( thread, name );
 }
 
-void Sys_SetCurrentThreadName( const platChar_t *name )
+void Sys_SetCurrentThreadName( const pchar_t *name )
 {
 	Sys_SetThreadName( GetCurrentThread(), name );
 }
 
-threadHandle_t Sys_CreateThread( threadProc_t function, void *parms, threadPriority_t priority, const platChar_t *name, size_t stackSize, bool suspended )
+threadHandle_t Sys_CreateThread( threadProc_t function, void *parms, threadPriority_t priority, const pchar_t *name, size_t stackSize, bool suspended )
 {
 	DWORD flags = ( suspended ? CREATE_SUSPENDED : 0 );
 

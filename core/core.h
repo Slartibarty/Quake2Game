@@ -34,6 +34,7 @@
 #include <cstdio>
 #include <cctype>
 #include <ctime>
+#include <cassert>
 
 #include <concepts>
 #include <numbers>

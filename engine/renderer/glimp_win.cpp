@@ -379,7 +379,7 @@ static void GLimp_CreateWindow( WNDPROC wndproc, int width, int height, bool ful
 	RECT r{ 0, 0, width, height };
 	AdjustWindowRectEx( &r, dwStyle, false, dwExStyle );
 
-	const platChar_t *windowTitle = FileSystem::ModInfo::GetWindowTitle();
+	const pchar_t *windowTitle = FileSystem::ModInfo::GetWindowTitle();
 
 	s_glwState.hWnd = CreateWindowExW(
 		dwExStyle,				// Ex-Style

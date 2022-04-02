@@ -17,6 +17,7 @@
 #include <algorithm> // std::sort
 #include <vector>
 
+#define STBI_ASSERT(exp) Assert(exp)
 #define STBI_NO_STDIO
 #define STBI_ONLY_HDR
 #define STB_IMAGE_STATIC

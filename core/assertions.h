@@ -6,6 +6,9 @@
 	Permanently ignoring an assertion on a specific line will disable all asserts on that line
 	so don't put assertions on the same line!
 
+	cassert and assert.h in MSVC do NOT have include guards for some reason, which means every
+	include would stomp on our override if we had one! That sucks
+
 ===================================================================================================
 */
 
@@ -30,9 +33,3 @@ extern void AssertionFailed( const char *message, const char *expression, const 
 #define AssertMsg(exp, msg)
 
 #endif
-
-#ifdef assert
-#error some standard header included assert before we could define it ourselves!
-#endif
-
-#define assert Assert

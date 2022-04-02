@@ -119,7 +119,7 @@ void Sys_Quit( int code )
 }
 
 [[noreturn]]
-void Sys_Error( const platChar_t *mainInstruction, const char *msg )
+void Sys_Error( const pchar_t *mainInstruction, const char *msg )
 {
 	// Trim the newline
 	char newMsg[MAX_PRINT_MSG];
@@ -136,7 +136,7 @@ void Sys_Error( const platChar_t *mainInstruction, const char *msg )
 	wchar_t reason[MAX_PRINT_MSG];
 	Sys_UTF8ToUTF16( newMsg, Q_strlen( newMsg ) + 1, reason, countof( reason ) );
 
-	const platChar_t *windowTitle = FileSystem::ModInfo::GetWindowTitle();
+	const pchar_t *windowTitle = FileSystem::ModInfo::GetWindowTitle();
 
 	TaskDialog(
 		nullptr,
@@ -391,7 +391,7 @@ void Sys_AppActivate()
 
 void Sys_FileOpenDialog(
 	std::string &filename,
-	const platChar_t *title,
+	const pchar_t *title,
 	const filterSpec_t *supportedTypes,
 	const uint numTypes,
 	const uint defaultIndex )
@@ -443,7 +443,7 @@ void Sys_FileOpenDialog(
 
 void Sys_FileOpenDialogMultiple(
 	std::vector<std::string> &filenames,
-	const platChar_t *title,
+	const pchar_t *title,
 	const filterSpec_t *supportedTypes,
 	const uint numTypes,
 	const uint defaultIndex )
