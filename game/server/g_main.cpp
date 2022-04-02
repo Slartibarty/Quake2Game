@@ -72,9 +72,7 @@ void ReadLevel (char *filename);
 void InitGame (void);
 void G_RunFrame (void);
 
-
 //===================================================================
-
 
 void ShutdownGame (void)
 {
@@ -85,7 +83,6 @@ void ShutdownGame (void)
 	gi.FreeTags (TAG_LEVEL);
 	gi.FreeTags (TAG_GAME);
 }
-
 
 /*
 =================
