@@ -154,7 +154,7 @@ static void FindChunk( const char *name )
 GetWavinfo
 ========================
 */
-wavinfo_t GetWavinfo( const char *name, byte *wav, int wavlength )
+static wavinfo_t GetWavinfo( const char *name, byte *wav, int wavlength )
 {
 	wavinfo_t	info;
 	int     i;

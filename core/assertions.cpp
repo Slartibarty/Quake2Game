@@ -35,9 +35,9 @@ struct assertDisable_t
 	uint32 line;
 };
 
-std::vector<assertDisable_t> g_assertDisables;
+static std::vector<assertDisable_t> s_assertDisables;
 
-static bool g_bIgnoreAllAsserts;
+static bool s_bIgnoreAllAsserts;
 
 //-------------------------------------------------------------------------------------------------
 
@@ -94,7 +94,7 @@ static INT_PTR CALLBACK AssertDialogProc( HWND hDlg, UINT uMsg, WPARAM wParam, L
 
 				case IDC_IGNORE_ALWAYS:
 				{
-					g_assertDisables.push_back( { s_pInfo->file, s_pInfo->line } );
+					s_assertDisables.push_back( { s_pInfo->file, s_pInfo->line } );
 
 					EndDialog( hDlg, FALSE );
 					return TRUE;
@@ -102,7 +102,7 @@ static INT_PTR CALLBACK AssertDialogProc( HWND hDlg, UINT uMsg, WPARAM wParam, L
 
 				case IDC_IGNORE_ALL:
 				{
-					g_bIgnoreAllAsserts = true;
+					s_bIgnoreAllAsserts = true;
 
 					EndDialog( hDlg, FALSE );
 					return TRUE;
@@ -157,13 +157,13 @@ void AssertionFailed( const char *message, const char *expression, const char *f
 	Com_Printf( "[Assert] %s:%u: (%s) %s\n", trimmedFile, line, expression, message != nullptr ? message : "" );
 
 	// Are we ignoring all asserts?
-	if ( g_bIgnoreAllAsserts )
+	if ( s_bIgnoreAllAsserts )
 	{
 		return;
 	}
 
 	// Are we ignoring *this* assert?
-	for ( const assertDisable_t &disable : g_assertDisables )
+	for ( const assertDisable_t &disable : s_assertDisables )
 	{
 		if ( disable.file == trimmedFile && disable.line == line )
 		{

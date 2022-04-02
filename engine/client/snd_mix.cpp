@@ -2,13 +2,15 @@
 
 #include "snd_local.h"
 
-#define	PAINTBUFFER_SIZE	2048
-portable_samplepair_t paintbuffer[PAINTBUFFER_SIZE];
-int		snd_scaletable[32][256];
-int 	*snd_p, snd_linear_count, snd_vol;
-short	*snd_out;
+#define	PAINTBUFFER_SIZE 2048
+static portable_samplepair_t paintbuffer[PAINTBUFFER_SIZE];
 
-static void S_WriteLinearBlastStereo16 (void)
+static int		snd_scaletable[32][256];
+static int *	snd_p;
+static int		snd_linear_count, snd_vol;
+static short *	snd_out;
+
+static void S_WriteLinearBlastStereo16()
 {
 	int		i;
 	int		val;
@@ -90,7 +92,6 @@ static void S_TransferPaintBuffer(int endtime)
 		for (i=0 ; i<count ; i++)
 			paintbuffer[i].left = paintbuffer[i].right = sinf((paintedtime+i)*0.1f)*20000*256;
 	}
-
 
 	if (dma.samplebits == 16 && dma.channels == 2)
 	{	// optimized case
@@ -329,14 +330,14 @@ void S_PaintChannels(int endtime)
 
 void S_InitScaletable()
 {
-	int i, j;
-	int scale;
-
 	s_volume->ClearModified();
-	for ( i = 0; i < 32; i++ )
+
+	const float volume = s_volume->GetFloat();
+
+	for ( int i = 0; i < 32; ++i )
 	{
-		scale = i * 8 * 256 * s_volume->GetFloat();
-		for ( j = 0; j < 256; j++ )
+		const int scale = i * 8 * 256 * volume;
+		for ( int j = 0; j < 256; ++j )
 		{
 			snd_scaletable[i][j] = ( (char)j ) * scale;
 		}

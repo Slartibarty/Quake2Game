@@ -175,7 +175,7 @@ void S_Shutdown(void)
 // Activate the soundsystem
 // =======================================================================
 
-void S_Activate(qboolean active)
+void S_Activate(bool active)
 {
 	SNDDMA_Activate(active);
 }
@@ -190,7 +190,7 @@ S_FindName
 
 ==================
 */
-sfx_t *S_FindName (const char *name, qboolean create)
+sfx_t *S_FindName (const char *name, bool create)
 {
 	int		i;
 	sfx_t	*sfx;
