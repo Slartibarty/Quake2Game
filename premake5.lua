@@ -181,8 +181,6 @@ project "core"
 	files {
 		"core/*.cpp",
 		"core/*.h",
-		
-		"core/assert_dialog.rc"
 	}
 
 	filter "system:windows"
