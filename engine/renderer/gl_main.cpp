@@ -513,6 +513,8 @@ static void R_DrawParticles()
 
 //=================================================================================================
 
+static StaticCvar r_lockfrustum( "r_lockfrustum", "0", 0 );
+
 /*
 ========================
 R_SetFrustum
@@ -520,7 +522,10 @@ R_SetFrustum
 */
 static void R_SetFrustum()
 {
-	ZoneScoped
+	if ( r_lockfrustum.GetBool() )
+	{
+		return;
+	}
 
 #if 0
 	/*
