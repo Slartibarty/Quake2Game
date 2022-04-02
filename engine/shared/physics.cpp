@@ -126,7 +126,7 @@ static void MyTrace( const char *fmt, ... )
 // Callback for asserts, connect this to your own assert handler if you have one
 static bool MyAssertFailed( const char *inExpression, const char *inMessage, const char *inFile, uint inLine )
 {
-	Com_Printf( "[JPH ASSERT] %s:%u: (%s) %s\n", inFile, inLine, inExpression, inMessage != nullptr ? inMessage : "" );
+	AssertionFailed( inMessage, inExpression, inFile, inLine );
 
 	// Breakpoint?
 	return false;
@@ -690,9 +690,19 @@ void Trace( const RayCast &rayCast, const shapeHandle_t shapeHandle, const vec3_
 		JPH::CollisionDispatch::sCastShapeVsShape( shapeCast, settings, shape, JPH::Vec3::sReplicate( 1.0f ), JPH::ShapeFilter(), JPH::Mat44::sIdentity(), JPH::SubShapeIDCreator(), JPH::SubShapeIDCreator(), collector);
 
 		float flInitialFraction = collector.HadHit() ? collector.GetEarlyOutFraction() : 1.0f;
-		if ( collector.HadHit() )
+		
+		bool bHit = collector.HadHit();
+		if ( bHit )
 		{
-			JPH::Vec3 normal = queryTransform.GetRotation() * shape->GetSurfaceNormal( collector.mHit.mSubShapeID2, collector.mHit.mContactPointOn2 );
+			// From trace.cpp
+			constexpr float TestEpsilon = 1.0f / 256.0f;
+			if ( flInitialFraction == 0.0f && collector.mHit.mPenetrationDepth <= TestEpsilon )
+				bHit = false;
+		}
+		
+		if ( bHit )
+		{
+			JPH::Vec3 normal = -( queryTransform.GetRotation() * collector.mHit.mPenetrationAxis ).Normalized();
 			VectorSet( trace.plane.normal, normal.GetX(), normal.GetY(), normal.GetZ() );
 
 			vec3_t rayDir;
@@ -713,10 +723,30 @@ void Trace( const RayCast &rayCast, const shapeHandle_t shapeHandle, const vec3_
 			flHitLength = Max( flHitLength, 0.0f );
 
 			trace.fraction = flHitLength * ooBaseLength;
+		
+			vec3_t distance;
+			VectorScale( rayCast.direction, trace.fraction, distance );
+			VectorAdd( rayCast.start, distance, trace.endpos );
+
+			trace.plane.dist = DotProduct( trace.endpos, trace.plane.normal );
+			trace.contents = CONTENTS_SOLID;
+
+			// If penetrating more than DIST_EPSILON, consider it an intersection
+			constexpr float PenetrationEpsilon = DIST_EPSILON;
+
+			trace.allsolid = collector.mHit.mPenetrationDepth > PenetrationEpsilon && trace.fraction == 0.0f;
+			trace.startsolid = collector.mHit.mPenetrationDepth > PenetrationEpsilon && trace.fraction == 0.0f;
 		}
 		else
 		{
 			trace.fraction = 1.0f;
+			vec3_t distance;
+			VectorScale( rayCast.direction, trace.fraction, distance );
+			VectorAdd( rayCast.start, distance, trace.endpos );
+
+			// We didn't hit anything, so we must be completely free right?
+			trace.allsolid = false;
+			trace.startsolid = false;
 		}
 
 		vec3_t distance;

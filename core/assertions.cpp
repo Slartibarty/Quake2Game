@@ -117,12 +117,22 @@ static INT_PTR CALLBACK AssertDialogProc( HWND hDlg, UINT uMsg, WPARAM wParam, L
 
 			case WM_KEYDOWN:
 			{
-				if ( wParam == VK_ESCAPE )
+				if ( wParam == 2 ) // This is escape for some reason
 				{
+					// Ignore once
 					EndDialog( hDlg, FALSE );
 					return TRUE;
 				}
 			}
+
+			return FALSE;
+		}
+
+		case WM_CLOSE:
+		{
+			// Ignore once
+			EndDialog( hDlg, FALSE );
+			return TRUE;
 		}
 	}
 
@@ -133,26 +143,6 @@ static INT_PTR CALLBACK AssertDialogProc( HWND hDlg, UINT uMsg, WPARAM wParam, L
 
 void AssertionFailed( const char *message, const char *expression, const char *file, uint32 line )
 {
-	// Are we ignoring all asserts?
-	if ( g_bIgnoreAllAsserts )
-	{
-		return;
-	}
-
-	// Are we ignoring *this* assert?
-	for ( const assertDisable_t &disable : g_assertDisables )
-	{
-		if ( Q_strcmp( disable.file, file ) == 0 && disable.line == line )
-		{
-			return;
-		}
-	}
-
-	// If we have no message, set it to a default now
-	// expression and file are guaranteed to have a value
-	if ( !message ) { message = "N/A"; }
-
-#ifdef _WIN32
 	// Trim the filename down to "code", this obviously only works if the code is in a folder called "code"
 	const char *trimmedFile = Q_strstr( file, "code" );
 	if ( trimmedFile )
@@ -164,8 +154,26 @@ void AssertionFailed( const char *message, const char *expression, const char *f
 		trimmedFile = file;
 	}
 
+	Com_Printf( "[Assert] %s:%u: (%s) %s\n", trimmedFile, line, expression, message != nullptr ? message : "" );
+
+	// Are we ignoring all asserts?
+	if ( g_bIgnoreAllAsserts )
+	{
+		return;
+	}
+
+	// Are we ignoring *this* assert?
+	for ( const assertDisable_t &disable : g_assertDisables )
+	{
+		if ( disable.file == trimmedFile && disable.line == line )
+		{
+			return;
+		}
+	}
+
+#ifdef _WIN32
 	dialogInitInfo_t info;
-	info.message = message;
+	info.message = message ? message : "N/A";
 	info.expression = expression;
 	info.file = trimmedFile;
 	info.line = line;
