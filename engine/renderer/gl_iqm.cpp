@@ -1,3 +1,6 @@
+//
+// This code leaks GL objects and leaks memory allocated by the std::vector in mIQM_t
+//
 
 #include "gl_local.h"
 
@@ -65,7 +68,7 @@ static void IQM_UploadVertices( const iqmheader *hdr )
 		}
 	}
 
-	assert( inPosition && inTexcoord && inNormal && inTangent && inBlendIndex && inBlendWeight );
+	Assert( inPosition && inTexcoord && inNormal && inTangent && inBlendIndex && inBlendWeight );
 
 	/*if ( !( inPosition && inTexcoord && inNormal && inTangent && inBlendIndex && inBlendWeight ) )
 	{
@@ -104,7 +107,6 @@ static void IQM_UploadIndices( const iqmheader *hdr )
 static void IQM_LoadMeshes( const iqmheader *hdr, mIQM_t *iqm )
 {
 	const uint numMeshes = hdr->num_meshes;
-
 	if ( numMeshes == 0 )
 	{
 		return;
@@ -115,14 +117,14 @@ static void IQM_LoadMeshes( const iqmheader *hdr, mIQM_t *iqm )
 
 	const byte *buffer = (const byte *)hdr;
 
-	//iqm->meshes.reserve( numMeshes );
+	iqm->meshes.resize( numMeshes );
 
 	for ( uint i = 0; i < numMeshes; ++i )
 	{
 		const iqmmesh *mesh = (const iqmmesh *)( buffer + hdr->ofs_meshes + i );
 		const char *materialName = (const char *)( buffer + hdr->ofs_text + mesh->material );
 
-		mIQMMesh_t &iqmMesh = iqm->meshes.emplace_back();
+		mIQMMesh_t &iqmMesh = iqm->meshes[i];
 		iqmMesh.pMaterial = GL_FindMaterial( materialName );
 		iqmMesh.numIndices = mesh->num_triangles * 3;
 		iqmMesh.indexOffset = mesh->first_triangle * 3;
