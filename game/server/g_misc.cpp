@@ -10,6 +10,7 @@
 
 static void G_SetupGibPhysics( edict_t *ent )
 {
+#if 0
 	static shapeHandle_t s_miscShape;
 
 	if ( !s_miscShape )
@@ -25,6 +26,7 @@ static void G_SetupGibPhysics( edict_t *ent )
 	bcs.restitution = 0.2f;
 
 	Phys_SetupPhysicsForEntity( ent, bcs, s_miscShape );
+#endif
 }
 
 //=====================================================

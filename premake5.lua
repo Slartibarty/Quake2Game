@@ -80,7 +80,11 @@ end
 function LinkToJolt()
 	sysincludedirs { "thirdparty/JoltPhysics" }
 	-- JPH_STAT_COLLECTOR, "JPH_PROFILE_ENABLED", "JPH_FLOATING_POINT_EXCEPTIONS_ENABLED"
-	defines { "JPH_DEBUG_RENDERER" }
+	defines {
+		"JPH_DEBUG_RENDERER", "JPH_ENABLE_ASSERTS",
+		"JPH_USE_SSE4_1", "JPH_USE_SSE4_2", "JPH_USE_LZCNT", "JPH_USE_TZCNT", "JPH_USE_F16C", "JPH_USE_FMADD"
+	}
+	vectorextensions "AVX2"
 	links { "joltphysics" }
 end
 
@@ -233,6 +237,7 @@ project "engine"
 		"resources/*",
 
 		"framework/*",
+		"physics/*",
 
 		"engine/client/*",
 		"engine/server/*",

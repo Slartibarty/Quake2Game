@@ -4,7 +4,7 @@
 #pragma once
 
 #include "../../common/filesystem_interface.h"
-#include "../../common/physics_interface.h"
+#include "../../physics/phys_public.h"
 
 #define	GAME_API_VERSION	3
 
@@ -56,27 +56,27 @@ struct edict_t
 	entityState_t	s;
 	gclient_t *		client;
 
-	qboolean	inuse;
-	int			linkcount;
+	qboolean		inuse;
+	int				linkcount;
 
 	// FIXME: move these fields to a server private sv_entity_t
-	link_t		area;				// linked to a division node or leaf
+	link_t			area;				// linked to a division node or leaf
 	
-	int			num_clusters;		// if -1, use headnode instead
-	int			clusternums[MAX_ENT_CLUSTERS];
-	int			headnode;			// unused if num_clusters != -1
-	int			areanum, areanum2;
+	int				num_clusters;		// if -1, use headnode instead
+	int				clusternums[MAX_ENT_CLUSTERS];
+	int				headnode;			// unused if num_clusters != -1
+	int				areanum, areanum2;
 
 	//================================
 
-	int			svflags;			// SVF_NOCLIENT, SVF_DEADMONSTER, SVF_MONSTER, etc
-	vec3_t		mins, maxs;
-	vec3_t		absmin, absmax, size;
-	//int		contents;				// I think Quake 3 has this? Need to add to the server edict structure...
-	solid_t		solid;
-	bodyID_t	bodyID;					// Physics bodyID
-	int			clipmask;
-	edict_t		*owner;
+	int				svflags;			// SVF_NOCLIENT, SVF_DEADMONSTER, SVF_MONSTER, etc
+	vec3_t			mins, maxs;
+	vec3_t			absmin, absmax, size;
+	//int			contents;				// I think Quake 3 has this? Need to add to the server edict structure...
+	solid_t			solid;
+	IPhysicsBody *	pPhysBody;
+	int				clipmask;
+	edict_t *		owner;
 
 	// the game dll can add anything it wants after
 	// this point in the structure
@@ -163,8 +163,9 @@ struct game_import_t
 
 	void	(*DebugGraph) (float value, uint32 color);
 
-	IFileSystem *fileSystem;
-	IPhysicsSystem *physSystem;
+	IFileSystem *		fileSystem;
+	IPhysicsSystem *	physSystem;
+	IPhysicsScene *		physScene;
 };
 
 //

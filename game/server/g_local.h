@@ -844,14 +844,12 @@ void GetChaseTarget(edict_t *ent);
 //
 // g_joltphysics.cpp
 //
-using shapeIndex_t = uint32;
-
-void Phys_CacheShape( shapeHandle_t handle );
+void Phys_CacheShape( IPhysicsShape *pShape );
 void Phys_DeleteCachedShapes();
 
 void Phys_Simulate( float deltaTime );
 
-void Phys_SetupPhysicsForEntity( edict_t *ent, const bodyCreationSettings_t &settings, shapeHandle_t shapeHandle );
+void Phys_SetupPhysicsForEntity( edict_t *ent, const bodyCreationSettings_t &settings, IPhysicsShape *pShape );
 
 void Phys_Impact( edict_t *ent1, edict_t *ent2, cplane_t *plane, csurface_t *surf );
 
@@ -1011,27 +1009,27 @@ struct edict_t
 								// of gclient_s to be a player_state_t
 								// but the rest of it is opaque
 
-	qboolean	inuse;
-	int			linkcount;
+	qboolean		inuse;
+	int				linkcount;
 
 	// FIXME: move these fields to a server private sv_entity_t
-	link_t		area;				// linked to a division node or leaf
+	link_t			area;				// linked to a division node or leaf
 	
-	int			num_clusters;		// if -1, use headnode instead
-	int			clusternums[MAX_ENT_CLUSTERS];
-	int			headnode;			// unused if num_clusters != -1
-	int			areanum, areanum2;
+	int				num_clusters;		// if -1, use headnode instead
+	int				clusternums[MAX_ENT_CLUSTERS];
+	int				headnode;			// unused if num_clusters != -1
+	int				areanum, areanum2;
 
 	//================================
 
-	int			svflags;
-	vec3_t		mins, maxs;
-	//int		contents;				// Quake 3 added
-	vec3_t		absmin, absmax, size;
-	solid_t		solid;
-	bodyID_t	bodyID;					// Physics bodyID
-	int			clipmask;
-	edict_t		*owner;
+	int				svflags;
+	vec3_t			mins, maxs;
+	//int			contents;				// Quake 3 added
+	vec3_t			absmin, absmax, size;
+	solid_t			solid;
+	IPhysicsBody *	pPhysBody;
+	int				clipmask;
+	edict_t *		owner;
 
 	//================================
 

@@ -670,6 +670,7 @@ void Com_Init( int argc, char **argv )
 
 	NET_Init();
 	Netchan_Init();
+	PhysicsImpl::Init();
 	CM_Init();
 
 	SV_Init();
@@ -818,6 +819,7 @@ void Com_Shutdown()
 	}
 
 	CM_Shutdown();
+	PhysicsImpl::Shutdown();
 	Sys_Shutdown();
 	FileSystem::Shutdown();
 	Key_Shutdown();

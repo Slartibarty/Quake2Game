@@ -469,6 +469,7 @@ static void Grenade_Touch (edict_t *ent, edict_t *other, cplane_t *plane, csurfa
 
 static void Grenade_SetupPhysics( edict_t *ent )
 {
+#if 0
 	static shapeHandle_t s_grenadeShape;
 
 	if ( !s_grenadeShape )
@@ -484,6 +485,7 @@ static void Grenade_SetupPhysics( edict_t *ent )
 	bcs.restitution = 0.38f;
 
 	Phys_SetupPhysicsForEntity( ent, bcs, s_grenadeShape );
+#endif
 }
 
 void fire_grenade (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float timer, float damage_radius)

@@ -6,7 +6,9 @@
 
 #include <vector>
 
-#include "physics.h"
+#include <Jolt/Jolt.h>
+#include <Jolt/Math/Float3.h>
+#include <Jolt/Geometry/IndexedTriangle.h>
 
 #include "cmodel.h"
 
@@ -148,6 +150,8 @@ struct cmMapData_t
 	cmArray_t<char>				entitystring;
 	cmArray_t<carea_t>			areas;
 	cmArray_t<dareaportal_t>	areaportals;
+
+	IPhysicsShape *				pPhysicsShape;
 
 	int			numclusters = 1;
 
@@ -685,7 +689,7 @@ static void CM_BuildCollisionMesh( const byte *base )
 		}
 	}
 
-	Physics::AddWorld( outVertexList, outIndexList );
+	PhysicsImpl::GetScene()->CreateAndAddBody_World( reinterpret_cast<void *>( &outVertexList ), reinterpret_cast<void *>( &outIndexList ) );
 }
 
 //=================================================================================================
@@ -1923,12 +1927,9 @@ bool CM_HeadnodeVisible (int nodenum, byte *visbits)
 
 void CM_Init()
 {
-	Physics::Init();
 }
 
 void CM_Shutdown()
 {
 	cm.Free();
-
-	Physics::Shutdown();
 }

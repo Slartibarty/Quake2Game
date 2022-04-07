@@ -8,8 +8,6 @@
 
 #include "cl_local.h"
 
-#include "../shared/physics.h"
-
 /*
 ========================
 CL_CheckPredictionError
@@ -116,12 +114,14 @@ static void CL_ClipMoveToEntities ( vec3_t start, vec3_t mins, vec3_t maxs, vec3
 		if (tr->allsolid)
 			return;
 
+#if 0
 		if ( ent->solid == SOLID_PHYSICS )
 		{
 			Physics::RayCast rayCast( start, end, mins, maxs );
 			Physics::ClientPlayerTrace( rayCast, ent->origin, ent->angles, trace );
 		}
 		else
+#endif
 		{
 			CM_TransformedBoxTrace( start, end,
 				mins, maxs, headnode, MASK_PLAYERSOLID,

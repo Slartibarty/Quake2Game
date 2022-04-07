@@ -2,8 +2,6 @@
 
 #include "sv_local.h"
 
-#include "../shared/physics.h"
-
 /*
 ===================================================================================================
 
@@ -616,7 +614,7 @@ static void SV_ClipMoveToEntities( moveclip_t &clip )
 			continue;
 		}
 
-#if 1
+#if 0
 		if ( touch->solid == SOLID_PHYSICS )
 		{
 			Physics::RayCast rayCast( clip.start, clip.end, clip.mins, clip.maxs );

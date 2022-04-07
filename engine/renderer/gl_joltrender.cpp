@@ -10,8 +10,6 @@
 #include <Jolt/Renderer/DebugRenderer.h>
 #include <Jolt/Renderer/DebugRendererRecorder.h>
 
-#include "../shared/physics.h"
-
 #define JOLT2QUAKE_FACTOR		39.3700787402f		// Factor to convert meters to game units
 
 static StaticCvar r_drawJolt( "r_drawJolt", "0", 0, "Controls Jolt debug drawing." );
@@ -244,7 +242,7 @@ void R_JoltDrawBodies()
 		.mDrawNames = false										///< (Debug only) Draw the object names for each body
 	};
 
-	JPH::PhysicsSystem *physicsSystem = Physics::GetPhysicsSystem();
+	JPH::PhysicsSystem *physicsSystem = reinterpret_cast<JPH::PhysicsSystem *>( PhysicsImpl::GetScene()->GetInternalStructure() );
 
 	physicsSystem->DrawBodies( drawSettings, s_debugRenderer );
 #if 0

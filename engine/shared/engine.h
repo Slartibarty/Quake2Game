@@ -16,11 +16,15 @@
 // framework
 #include "../../framework/framework_public.h"
 
+// physics
+#include "../../physics/phys_public.h"
+
 #include "cmodel.h"
 #include "conproc.h"
 #include "crc.h"
 #include "msg.h"
 #include "net.h"
+#include "physics.h"
 #include "protocol.h"
 #include "sizebuf.h"
 #include "sys.h"

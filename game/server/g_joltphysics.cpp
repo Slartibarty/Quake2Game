@@ -11,63 +11,63 @@
 ===================================================================================================
 */
 
-static std::vector<shapeHandle_t> s_cachedShapes;
+static std::vector<IPhysicsShape *> s_cachedShapes;
 
-void Phys_CacheShape( shapeHandle_t handle )
+void Phys_CacheShape( IPhysicsShape *pShape )
 {
 #ifdef Q_DEBUG
-	for ( const shapeHandle_t cachedHandle : s_cachedShapes )
+	for ( const IPhysicsShape *pCachedShape : s_cachedShapes )
 	{
-		if ( cachedHandle == handle )
+		if ( pCachedShape == pShape )
 		{
 			gi.error( "Tried to re-add an existing handle to s_cachedShapes!" );
 		}
 	}
 #endif
 
-	s_cachedShapes.push_back( handle );
+	s_cachedShapes.push_back( pShape );
 }
 
 void Phys_DeleteCachedShapes()
 {
-	for ( const shapeHandle_t cachedHandle : s_cachedShapes )
+	for ( IPhysicsShape *pCachedShape : s_cachedShapes )
 	{
-		gi.physSystem->DestroyShape( cachedHandle );
+		gi.physSystem->DestroyShape( pCachedShape );
 	}
 }
 
 void Phys_Simulate( float deltaTime )
 {
-	// Players don't use this function
+	// Don't simulate physics if we're doing players only
 	if ( g_playersOnly->GetBool() ) {
 		return;
 	}
 
-	gi.physSystem->Simulate( deltaTime );
+	gi.physScene->Simulate( deltaTime );
 
 	for ( int i = game.maxclients + 1; i < globals.num_edicts; ++i )
 	{
 		edict_t *ent = g_edicts + i;
 
-		if ( !ent->bodyID )
+		if ( !ent->pPhysBody )
 		{
 			continue;
 		}
 
-		gi.physSystem->GetBodyPositionAndRotation( ent->bodyID, ent->s.origin, ent->s.angles );
-		gi.physSystem->GetLinearAndAngularVelocity( ent->bodyID, ent->velocity, ent->avelocity );
+		ent->pPhysBody->GetPositionAndRotation( ent->s.origin, ent->s.angles );
+		ent->pPhysBody->GetLinearAndAngularVelocity( ent->velocity, ent->avelocity );
 
 		gi.linkentity( ent );
 	}
 }
 
-void Phys_SetupPhysicsForEntity( edict_t *ent, const bodyCreationSettings_t &settings, shapeHandle_t shapeHandle )
+void Phys_SetupPhysicsForEntity( edict_t *ent, const bodyCreationSettings_t &settings, IPhysicsShape *shapeHandle )
 {
 	ent->solid = SOLID_PHYSICS;
 	ent->movetype = MOVETYPE_PHYSICS;
-	ent->bodyID = gi.physSystem->CreateAndAddBody( settings, shapeHandle, ent );
+	ent->pPhysBody = gi.physScene->CreateAndAddBody( settings, shapeHandle, ent );
 
-	gi.physSystem->SetLinearAndAngularVelocity( ent->bodyID, ent->velocity, ent->avelocity );
+	ent->pPhysBody->SetLinearAndAngularVelocity( ent->velocity, ent->avelocity );
 }
 
 void Phys_Impact( edict_t *ent1, edict_t *ent2, cplane_t *plane, csurface_t *surf )
@@ -91,8 +91,8 @@ void Phys_Impact( edict_t *ent1, edict_t *ent2, cplane_t *plane, csurface_t *sur
 ===================================================================================================
 */
 
-static shapeHandle_t s_cubeShape;
-static shapeHandle_t s_oilDrumShape;
+static IPhysicsShape *s_cubeShape;
+static IPhysicsShape *s_oilDrumShape;
 
 static int HackRandom( int low, int high )
 {
@@ -258,7 +258,7 @@ void Spawn_PhysBarrel( edict_t *self )
 
 	if ( !s_oilDrumShape )
 	{
-		s_oilDrumShape = gi.physSystem->CreateCylinderShape( 22.5f, 13.75f );
+		//s_oilDrumShape = gi.physSystem->CreateCylinderShape( 22.5f, 13.75f );
 		Phys_CacheShape( s_oilDrumShape );
 	}
 
