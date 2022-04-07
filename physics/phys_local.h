@@ -1,6 +1,7 @@
 
 // Core
 #include "../core/core.h"
+#include "../common/q_shared.h" // trace_t
 
 // JoltPhysics
 #include <Jolt/Jolt.h>

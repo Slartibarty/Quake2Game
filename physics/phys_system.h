@@ -16,6 +16,8 @@ public:
 	IPhysicsShape *CreateSphereShape( float radius ) override;
 	void DestroyShape( IPhysicsShape *pShape ) override;
 
+	void Trace( const rayCast_t &rayCast, const IPhysicsShape *shapeHandle, const vec3_t shapeOrigin, const vec3_t shapeAngles, trace_t &trace ) override;
+
 public:
 	static CPhysicsSystem *GetInstance() { return &s_physicsSystem; };
 	JPH::TempAllocator *GetTempAllocator() { return m_pTempAllocator; };

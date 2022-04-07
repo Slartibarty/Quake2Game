@@ -15,6 +15,8 @@ public:
 	void GetLinearAndAngularVelocity( vec3_t velocity, vec3_t avelocity ) override;
 	void AddLinearVelocity( const vec3_t velocity ) override;
 
+	const IPhysicsShape *GetShape() override;
+
 public:
 	JPH::BodyID GetBodyID() { return m_pBody->GetID(); }
 	JPH::Body *GetBody() { return m_pBody; }

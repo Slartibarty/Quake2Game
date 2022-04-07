@@ -50,4 +50,11 @@ void CPhysicsBody::AddLinearVelocity( const vec3_t velocity )
 	bodyInterface.AddLinearVelocity( m_pBody->GetID(), jphLinearVelocity );
 }
 
+//-------------------------------------------------------------------------------------------------
+
+const IPhysicsShape *CPhysicsBody::GetShape()
+{
+	return reinterpret_cast<const IPhysicsShape *>( m_pBody->GetShape() );
+}
+
 } // namespace PhysicsPrivate

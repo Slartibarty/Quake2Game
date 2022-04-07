@@ -614,14 +614,12 @@ static void SV_ClipMoveToEntities( moveclip_t &clip )
 			continue;
 		}
 
-#if 0
 		if ( touch->solid == SOLID_PHYSICS )
 		{
-			Physics::RayCast rayCast( clip.start, clip.end, clip.mins, clip.maxs );
-			Physics::Trace( rayCast, Physics::GetShape( touch->bodyID ), touch->s.origin, touch->s.angles, trace );
+			rayCast_t rayCast( clip.start, clip.end, clip.mins, clip.maxs );
+			Physics::GetPhysicsSystem()->Trace( rayCast, touch->pPhysBody->GetShape(), touch->s.origin, touch->s.angles, trace );
 		}
 		else
-#endif
 		{
 			// might intersect, so do an exact clip
 			int headnode = SV_HullForEntity( touch );
