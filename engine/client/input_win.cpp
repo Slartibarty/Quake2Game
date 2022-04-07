@@ -133,7 +133,7 @@ namespace input
 
 	static void HandleKeyboardInput_ImGui( RAWKEYBOARD &raw )
 	{
-		assert( raw.VKey < 256 );
+		Assert( raw.VKey < 256 );
 
 		ImGuiIO &io = ImGui::GetIO();
 

@@ -27,7 +27,7 @@
 
 void Q_strcpy_s( _Post_z_ char *pDest, strlen_t nDestSize, const char *pSrc )
 {
-	assert( ( pDest && pSrc ) && nDestSize != 0 );
+	Assert( ( pDest && pSrc ) && nDestSize != 0 );
 
 	char *pLast = pDest + nDestSize - 1;
 	while ( ( pDest < pLast ) && ( *pSrc != 0 ) )
@@ -118,7 +118,7 @@ int Q_strcasecmp( const char *s1, const char *s2 )
 
 int Q_strncasecmp( const char *s1, const char *s2, strlen_t n )
 {
-	assert( n > 0 );
+	Assert( n > 0 );
 
 	if ( s1 == s2 )
 	{
@@ -158,7 +158,7 @@ int Q_strncasecmp( const char *s1, const char *s2, strlen_t n )
 
 const char *Q_stristr( const char *str, const char *substr )
 {
-	assert( str && substr );
+	Assert( str && substr );
 
 	const char *letter = str;
 
@@ -206,7 +206,7 @@ intT Str_StringToSignedInt( const char *str )
 	intT sign;
 	intT c;
 
-	assert( str );
+	Assert( str );
 
 	switch ( str[0] )
 	{
@@ -268,7 +268,7 @@ intT Str_StringToUnsignedInt( const char *str )
 	intT val;
 	intT c;
 
-	assert( str );
+	Assert( str );
 
 	val = 0;
 
@@ -318,7 +318,7 @@ floatT Str_StringToFloat( const char *str )
 	intT decimal, total;
 	intT exponent;
 
-	assert( str );
+	Assert( str );
 	
 	switch ( str[0] )
 	{

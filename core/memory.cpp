@@ -124,7 +124,7 @@ void *Mem_TagAlloc( size_t size, uint16 tag )
 
 	size += sizeof( zhead_t );
 	z = (zhead_t *)Mem_Alloc( size );
-	assert( z );
+	Assert( z );
 
 	++z_tagcount;
 	z_tagbytes += size;
@@ -148,7 +148,7 @@ void Mem_TagFree( void *block )
 
 	z = (zhead_t *)block - 1;
 
-	assert( z->magic == Z_MAGIC );
+	Assert( z->magic == Z_MAGIC );
 	if ( z->magic != Z_MAGIC )
 	{
 		return;

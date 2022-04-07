@@ -410,15 +410,15 @@ void Sys_FileOpenDialog(
 	if ( SUCCEEDED( hr ) )
 	{
 		FILEOPENDIALOGOPTIONS flags;
-		hr = pDialog->GetOptions( &flags ); assert( SUCCEEDED( hr ) );
+		hr = pDialog->GetOptions( &flags ); Assert( SUCCEEDED( hr ) );
 		flags |= FOS_FORCEFILESYSTEM | FOS_NOCHANGEDIR;
-		hr = pDialog->SetOptions( flags ); assert( SUCCEEDED( hr ) );
-		hr = pDialog->SetFileTypes( numTypes, filterSpec ); assert( SUCCEEDED( hr ) );
+		hr = pDialog->SetOptions( flags ); Assert( SUCCEEDED( hr ) );
+		hr = pDialog->SetFileTypes( numTypes, filterSpec ); Assert( SUCCEEDED( hr ) );
 
-		hr = pDialog->SetTitle( title ); assert( SUCCEEDED( hr ) );
+		hr = pDialog->SetTitle( title ); Assert( SUCCEEDED( hr ) );
 
-		hr = pDialog->SetFileTypeIndex( defaultIndex ); assert( SUCCEEDED( hr ) );
-		//hr = pDialog->SetDefaultExtension( L"dds" ); assert( SUCCEEDED( hr ) );
+		hr = pDialog->SetFileTypeIndex( defaultIndex ); Assert( SUCCEEDED( hr ) );
+		//hr = pDialog->SetDefaultExtension( L"dds" ); Assert( SUCCEEDED( hr ) );
 
 		hr = pDialog->Show( cl_hwnd );
 		if ( SUCCEEDED( hr ) )
@@ -462,15 +462,15 @@ void Sys_FileOpenDialogMultiple(
 	if ( SUCCEEDED( hr ) )
 	{
 		FILEOPENDIALOGOPTIONS flags;
-		hr = pDialog->GetOptions( &flags ); assert( SUCCEEDED( hr ) );
+		hr = pDialog->GetOptions( &flags ); Assert( SUCCEEDED( hr ) );
 		flags |= FOS_FORCEFILESYSTEM | FOS_NOCHANGEDIR | FOS_ALLOWMULTISELECT;
-		hr = pDialog->SetOptions( flags ); assert( SUCCEEDED( hr ) );
-		hr = pDialog->SetFileTypes( numTypes, filterSpec ); assert( SUCCEEDED( hr ) );
+		hr = pDialog->SetOptions( flags ); Assert( SUCCEEDED( hr ) );
+		hr = pDialog->SetFileTypes( numTypes, filterSpec ); Assert( SUCCEEDED( hr ) );
 
-		hr = pDialog->SetTitle( title ); assert( SUCCEEDED( hr ) );
+		hr = pDialog->SetTitle( title ); Assert( SUCCEEDED( hr ) );
 
-		hr = pDialog->SetFileTypeIndex( defaultIndex ); assert( SUCCEEDED( hr ) );
-		//hr = pDialog->SetDefaultExtension( L"dds" ); assert( SUCCEEDED( hr ) );
+		hr = pDialog->SetFileTypeIndex( defaultIndex ); Assert( SUCCEEDED( hr ) );
+		//hr = pDialog->SetDefaultExtension( L"dds" ); Assert( SUCCEEDED( hr ) );
 
 		hr = pDialog->Show( cl_hwnd );
 		if ( SUCCEEDED( hr ) )
@@ -638,7 +638,7 @@ int main( int argc, char **argv )
 		Com_DPrint( "Using Windows UTF-8 codepage\n" );
 	}
 
-	assert( dedicated );
+	Assert( dedicated );
 
 	int frameTime, oldTime, newTime;
 	MSG msg;
@@ -674,6 +674,10 @@ int main( int argc, char **argv )
 		// set legacy
 		sys_frameTime = newTime;
 		curtime = newTime;
+
+#ifdef Q_USE_STEAM
+		SteamAPI_RunCallbacks();
+#endif
 
 		Com_Frame( frameTime );
 

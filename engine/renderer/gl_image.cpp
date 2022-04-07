@@ -55,7 +55,7 @@ void GL_ImageList_f( void )
 
 	for ( i = 0, image = gltextures; i < numgltextures; i++, image++ )
 	{
-		assert( image->texnum > 0 );
+		Assert( image->texnum > 0 );
 	//	if ( image->texnum <= 0 )
 	//		continue;
 		texels += (size_t)image->width * (size_t)image->height;
@@ -209,7 +209,7 @@ static GLuint GL_UploadCompressed( const byte *pBuffer, imageFlags_t flags )
 
 	const img::DDS_HEADER *pHeader = (const img::DDS_HEADER *)pBuffer;
 
-	assert( pHeader->mipMapCount >= 1 );
+	Assert( pHeader->mipMapCount >= 1 );
 
 	GLint mipCount = (GLint)pHeader->mipMapCount;
 
@@ -390,7 +390,7 @@ static bool GL_LoadImage( const char *pName, int &width, int &height, byte *&pPi
 		return false;
 	}
 
-	assert( nBufLen > 32 ); // Sanity check
+	Assert( nBufLen > 32 ); // Sanity check
 
 	if ( img::TestPNG( pBuffer ) )
 	{
@@ -438,7 +438,7 @@ static image_t *GL_FindImage( const char *name, imageFlags_t flags )
 	image_t *image;
 	int width, height;
 
-	assert( name && name[0] );
+	Assert( name && name[0] );
 
 	// look for it
 	for ( i = 0, image = gltextures; i < numgltextures; ++i, ++image )
@@ -678,12 +678,12 @@ static material_t *GL_CreateMaterialFromData( const char *name, image_t *image, 
 
 static material_t *GL_CreateMaterial( const char *name )
 {
-	assert( !strstr( name, "pcx" ) );
+	Assert( !strstr( name, "pcx" ) );
 
 	// Horrible hack, clean this up
 #if 0
 	char newname[MAX_QPATH];
-	assert( strlen( name ) < MAX_QPATH );
+	Assert( strlen( name ) < MAX_QPATH );
 	Q_strcpy_s( newname, name );
 	strcat( newname, ".mat" );
 #endif
@@ -1017,7 +1017,7 @@ void GL_ShutdownImages( void )
 	image_t *image;
 	for ( i = 0, image = gltextures; i < MAX_GLTEXTURES; ++i, ++image )
 	{
-		assert( image->refcount == 0 && image->texnum == 0 );
+		Assert( image->refcount == 0 && image->texnum == 0 );
 	}
 #endif
 }
@@ -1088,7 +1088,7 @@ int R_CreateFBO( int width, int height )
 
 void R_DestroyFBO( int fbo )
 {
-	assert( fbo >= 0 && fbo < MAX_FRAMEBUFFERS );
+	Assert( fbo >= 0 && fbo < MAX_FRAMEBUFFERS );
 	frameBuffer_t &fb = s_frameBuffers[fbo];
 
 	glDeleteRenderbuffers( 1, &fb.depthStencil );
@@ -1100,7 +1100,7 @@ void R_DestroyFBO( int fbo )
 
 void R_BindFBO( int fbo )
 {
-	assert( fbo >= 0 && fbo < MAX_FRAMEBUFFERS );
+	Assert( fbo >= 0 && fbo < MAX_FRAMEBUFFERS );
 	const frameBuffer_t &fb = s_frameBuffers[fbo];
 
 	glBindFramebuffer( GL_FRAMEBUFFER, fb.obj );
@@ -1120,7 +1120,7 @@ void R_BindDefaultFBO()
 
 uint R_TexNumFBO( int fbo )
 {
-	assert( fbo >= 0 && fbo < MAX_FRAMEBUFFERS );
+	Assert( fbo >= 0 && fbo < MAX_FRAMEBUFFERS );
 	const frameBuffer_t &fb = s_frameBuffers[fbo];
 
 	return fb.color;

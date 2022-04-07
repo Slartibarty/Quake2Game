@@ -9,6 +9,11 @@
 
 #include "../../thirdparty/tracy/Tracy.hpp"
 
+#ifdef Q_USE_STEAM
+#include "steam/steam_api.h"
+#include "steam/isteamuserstats.h"
+#endif
+
 extern void SCR_EndLoadingPlaque();
 extern void Key_Init();
 extern void Key_Shutdown();
@@ -43,11 +48,40 @@ static thread_local bool	isMainThread;
 static mutex_t				s_printMutex;		// Mutex for Com_Print
 
 /*
-============================================================================
+===================================================================================================
 
-CLIENT / SERVER interactions
+	Steam Integration
 
-============================================================================
+===================================================================================================
+*/
+
+#ifdef Q_USE_STEAM
+
+class SteamGameManager
+{
+	STEAM_CALLBACK( SteamGameManager, OnGameOverlayActivated, GameOverlayActivated_t );
+};
+
+static SteamGameManager g_steamGameManager;
+
+void SteamGameManager::OnGameOverlayActivated( GameOverlayActivated_t *pCallback )
+{
+	Assert( Com_IsMainThread() );
+
+	Com_Printf( "%s the Steam overlay\n", pCallback->m_bActive ? "Opening" : "Closing" );
+
+	extern cvar_t *cl_paused;
+	Cvar_SetBool( cl_paused, pCallback->m_bActive );
+}
+
+#endif
+
+/*
+===================================================================================================
+
+	Client / Server Interactions
+
+===================================================================================================
 */
 
 static int	rd_target;
@@ -825,6 +859,7 @@ void Com_Shutdown()
 	Key_Shutdown();
 	Cvar_Shutdown();
 	Cmd_Shutdown();
+
 	Mem_Shutdown();
 
 	Sys_MutexDestroy( s_printMutex );
@@ -839,3 +874,21 @@ bool Com_IsMainThread()
 {
 	return isMainThread;
 }
+
+#ifdef Q_USE_STEAM
+
+CON_COMMAND( steam_givetestachievement, "Gives you the test achievement.", 0 )
+{
+	SteamUserStats()->RequestCurrentStats();
+
+	if ( SteamUserStats()->SetAchievement( "ACH_TEST_SIMPLE" ) )
+	{
+		Com_Print( "Gave you the loam achievement\n" );
+	}
+	else
+	{
+		Com_Print( "Didn't give you anything\n" );
+	}
+}
+
+#endif

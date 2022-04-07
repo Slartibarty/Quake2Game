@@ -103,7 +103,7 @@ static void GL_Screenshot_Internal( bool png )
 	else
 	{
 		fsHandle_t handle = FileSystem::OpenFileWrite( checkname );
-		assert( handle );
+		Assert( handle );
 
 		memset( pixbuffer, 0, 18 );
 		pixbuffer[2] = 2; // uncompressed type
@@ -227,7 +227,7 @@ void R_ExtractWad_f()
 
 	for ( int32 i = 0; i < wadheader.numlumps; ++i )
 	{
-		assert( wadlumps[i].compression == wad2::CMP_NONE );
+		Assert( wadlumps[i].compression == wad2::CMP_NONE );
 
 		Com_Printf( "  lump %d name: %s\n", i, wadlumps[i].name );
 
@@ -240,7 +240,7 @@ void R_ExtractWad_f()
 		fseek( wadhandle, wadlumps[i].filepos, SEEK_SET );
 		fread( &miptex, sizeof( miptex ), 1, wadhandle );
 
-		assert( miptex.nOffsets[0] == 40 );
+		Assert( miptex.nOffsets[0] == 40 );
 
 		int32 c;
 		byte *pic8, *pic24;
@@ -255,7 +255,7 @@ void R_ExtractWad_f()
 
 		for ( int32 pixel = 0, pixel2 = 0; pixel < ( c * 3 ); pixel += 3, pixel2 += 3 )
 		{
-			assert( pixel2 < c );
+			Assert( pixel2 < c );
 			pic24[pixel + 0] = palette[pic8[pixel + 0]];
 			pic24[pixel + 1] = palette[pic8[pixel + 1]];
 			pic24[pixel + 2] = palette[pic8[pixel + 2]];
@@ -378,7 +378,7 @@ void R_UpgradeWals_f()
 		strcpy( strstr( tempname, ".wal" ), ".png" );
 
 		handle = fopen( tempname, "wb" );
-		assert( handle );
+		Assert( handle );
 		img::WritePNG( width, height, true, data, handle );
 		fclose( handle );
 

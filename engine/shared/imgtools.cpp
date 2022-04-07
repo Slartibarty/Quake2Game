@@ -224,10 +224,10 @@ namespace img
 		png_infop info_ptr;
 
 		png_ptr = png_create_read_struct( PNG_LIBPNG_VER_STRING, nullptr, LoadPNG_ErrorCallback, LoadPNG_WarningCallback );
-		assert( png_ptr );
+		Assert( png_ptr );
 
 		info_ptr = png_create_info_struct( png_ptr );
-		assert( info_ptr );
+		Assert( info_ptr );
 
 		LoadPNG_UserData_t userdata;
 		userdata.buffer = buf;
@@ -303,10 +303,10 @@ namespace img
 		png_infop info_ptr;
 
 		png_ptr = png_create_write_struct( PNG_LIBPNG_VER_STRING, nullptr, LoadPNG_ErrorCallback, LoadPNG_WarningCallback );
-		assert( png_ptr );
+		Assert( png_ptr );
 
 		info_ptr = png_create_info_struct( png_ptr );
-		assert( info_ptr );
+		Assert( info_ptr );
 
 		png_set_write_fn( png_ptr, handle, PNG_CustomWrite, PNG_CustomFlush );
 

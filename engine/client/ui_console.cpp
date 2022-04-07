@@ -202,7 +202,7 @@ static int TextEditCallback( ImGuiInputTextCallbackData *data )
 			if ( match_str[0] != '\0' )
 			{
 				strlen_t match_len = Q_strlen( match_str );
-				assert( match_len > 0 );
+				Assert( match_len > 0 );
 				data->InsertChars( data->CursorPos, match_str, match_str + match_len );
 				// If we don't already end with a space, add one to ease typing numbers
 				if ( match_str[match_len - 1] != ' ' )
@@ -360,7 +360,7 @@ Draws the console using ImGui
 */
 void ShowConsole( bool *pOpen )
 {
-	assert( *pOpen );
+	Assert( *pOpen );
 
 	ImGui::PushStyleVar( ImGuiStyleVar_WindowMinSize, ImVec2( 330.0f, 250.0f ) );
 

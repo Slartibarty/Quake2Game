@@ -179,12 +179,12 @@ public:
 	QuakeStreamOut( const char *filename )
 	{
 		m_handle = FileSystem::OpenFileWrite( filename, FS_GAMEDIR );
-		assert( m_handle );
+		Assert( m_handle );
 	}
 
 	~QuakeStreamOut() override
 	{
-		assert( m_handle );
+		Assert( m_handle );
 		FileSystem::CloseFile( m_handle );
 	}
 

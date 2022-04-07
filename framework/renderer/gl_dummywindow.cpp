@@ -8,8 +8,7 @@
 
 #ifdef _WIN32
 
-#include <cassert>
-
+#include "../../core/core.h"
 #include "../../core/sys_includes.h"
 
 #include "gl_dummywindow.h"
@@ -51,7 +50,7 @@ void WGLimp_CreateDummyWindow( DummyVars &dvars )
 		hInstance,
 		NULL
 	);
-	assert( dvars.hWnd );
+	Assert( dvars.hWnd );
 
 	// Create our dummy PFD
 	const PIXELFORMATDESCRIPTOR pfd =
@@ -77,19 +76,19 @@ void WGLimp_CreateDummyWindow( DummyVars &dvars )
 	// Get this window's DC, we don't need to release it afterwards due to
 	// CS_OWNDC
 	HDC hDC = GetDC( (HWND)dvars.hWnd );
-	assert( hDC );
+	Assert( hDC );
 
 	int pixelformat = ChoosePixelFormat( hDC, &pfd );
-	assert( pixelformat != 0 );
+	Assert( pixelformat != 0 );
 
 	result = SetPixelFormat( hDC, pixelformat, &pfd );
-	assert( result );
+	Assert( result );
 
 	dvars.hGLRC = wglCreateContext( hDC );
-	assert( dvars.hGLRC );
+	Assert( dvars.hGLRC );
 
 	result = wglMakeCurrent( hDC, (HGLRC)dvars.hGLRC );
-	assert( result );
+	Assert( result );
 }
 
 void WGLimp_DestroyDummyWindow( DummyVars &dvars )
@@ -97,11 +96,11 @@ void WGLimp_DestroyDummyWindow( DummyVars &dvars )
 	BOOL result;
 
 	result = wglDeleteContext( (HGLRC)dvars.hGLRC );
-	assert( result );
+	Assert( result );
 	result = DestroyWindow( (HWND)dvars.hWnd );
-	assert( result );
+	Assert( result );
 	result = UnregisterClassW( DUMMY_WINDOW_CLASSNAME, GetModuleHandleW( nullptr ) );
-	assert( result );
+	Assert( result );
 }
 
 #endif

@@ -300,14 +300,14 @@ struct image_t
 
 	void IncrementRefCount()
 	{
-		assert( refcount >= 0 );
+		Assert( refcount >= 0 );
 		++refcount;
 	}
 
 	void DecrementRefCount()
 	{
 		--refcount;
-		assert( refcount >= 0 );
+		Assert( refcount >= 0 );
 	}
 
 	void Delete()
@@ -345,25 +345,25 @@ struct material_t
 
 	// Bind the referenced image
 	void Bind() const {
-		assert( image->refcount > 0 );
+		Assert( image->refcount > 0 );
 		GL_BindTexture( r_basemaps->GetBool() ? image->texnum : whiteMaterial->image->texnum );
 	}
 
 	// Bind the spec image
 	void BindSpec() const {
-		assert( specImage->refcount > 0 );
+		Assert( specImage->refcount > 0 );
 		GL_BindTexture( r_specmaps->GetBool() ? specImage->texnum : blackMaterial->image->texnum );
 	}
 
 	// Bind the norm image
 	void BindNorm() const {
-		assert( normImage->refcount > 0 );
+		Assert( normImage->refcount > 0 );
 		GL_BindTexture( r_normmaps->GetBool() ? normImage->texnum : flatNormalImage->texnum );
 	}
 
 	// Bind the emission image
 	void BindEmit() const {
-		assert( emitImage->refcount > 0 );
+		Assert( emitImage->refcount > 0 );
 		GL_BindTexture( r_emitmaps->GetBool() ? emitImage->texnum : blackMaterial->image->texnum );
 	}
 

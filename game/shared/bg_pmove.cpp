@@ -310,7 +310,7 @@ static void PM_UpdateStepSound()
 	{
 		// find texture under player, if different from current texture, 
 		// get material type
-		assert( pml.groundTrace.surface );
+		Assert( pml.groundTrace.surface );
 		step = SurfaceTypeFromFlags( pml.groundTrace.surface->flags );
 
 		switch ( step )
@@ -495,7 +495,7 @@ static bool PM_SlideMove( bool gravity )
 			// this shouldn't really happen
 			//  Stop our movement if so.
 			VectorClear( pml.velocity );
-			assert( 0 );
+			Assert( 0 );
 			return true;
 		}
 

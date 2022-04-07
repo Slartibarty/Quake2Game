@@ -108,14 +108,14 @@ uint64 ImFileGetSize( ImFileHandle file )
 
 uint64 ImFileRead( void *data, uint64 size, uint64 count, ImFileHandle file )
 {
-	assert( size * count != 0 );
+	Assert( size * count != 0 );
 
 	return static_cast<uint64>( FileSystem::ReadFile( data, static_cast<fsSize_t>( size * count ), file ) );
 }
 
 uint64 ImFileWrite( const void *data, uint64 size, uint64 count, ImFileHandle file )
 {
-	assert( size * count != 0 );
+	Assert( size * count != 0 );
 
 	FileSystem::WriteFile( data, static_cast<fsSize_t>( size * count ), file );
 

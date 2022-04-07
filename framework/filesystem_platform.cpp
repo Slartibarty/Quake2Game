@@ -87,7 +87,7 @@ fsSize_t GetFileSize( fsHandle_t handle )
 	LONGLONG fileSize;
 
 	GetFileSizeEx( reinterpret_cast<HANDLE>( handle ), reinterpret_cast<LARGE_INTEGER *>( &fileSize ) );
-	assert( fileSize <= UINT32_MAX );
+	Assert( fileSize <= UINT32_MAX );
 
 	return static_cast<fsSize_t>( fileSize );
 }
@@ -113,7 +113,7 @@ void CloseFile( fsHandle_t handle )
 
 fsSize_t ReadFile( void *buffer, fsSize_t length, fsHandle_t handle )
 {
-	assert( length > 0 );
+	Assert( length > 0 );
 
 	DWORD bytesRead;
 
@@ -124,7 +124,7 @@ fsSize_t ReadFile( void *buffer, fsSize_t length, fsHandle_t handle )
 
 fsSize_t WriteFile( const void *buffer, fsSize_t length, fsHandle_t handle )
 {
-	assert( length > 0 );
+	Assert( length > 0 );
 
 	DWORD bytesWritten;
 
@@ -141,7 +141,7 @@ void PrintFile( const char *string, fsHandle_t handle )
 void PrintFileVFmt( fsHandle_t handle, const char *fmt, va_list args )
 {
 	int strSize = Q_vsprintf_s( nullptr, 0, fmt, args ) + 1;
-	assert( strSize <= MAX_PRINT_MSG );
+	Assert( strSize <= MAX_PRINT_MSG );
 	char *str = (char *)Mem_StackAlloc( strSize );
 	Q_vsprintf( str, fmt, args );
 
@@ -236,22 +236,22 @@ void CloseFile( fsHandle_t handle )
 
 fsSize_t ReadFile( void *buffer, fsSize_t length, fsHandle_t handle )
 {
-	assert( length > 0 );
+	Assert( length > 0 );
 
 	fsSize_t read = static_cast<fsSize_t>( fread( buffer, (size_t)length, 1, (FILE*)handle ) );
 
-	assert( read != 0 );
+	Assert( read != 0 );
 
 	return read;
 }
 
 fsSize_t WriteFile( const void *buffer, fsSize_t length, fsHandle_t handle )
 {
-	assert( length > 0 );
+	Assert( length > 0 );
 
 	fsSize_t written = static_cast<fsSize_t>( fwrite( buffer, (size_t)length, 1, (FILE*)handle ) );
 
-	assert( written != 0 );
+	Assert( written != 0 );
 
 	return written;
 }

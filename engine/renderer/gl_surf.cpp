@@ -455,7 +455,7 @@ static void R_AddSurfaceToMaterialSet( const msurface_t *surf, worldMaterialSet_
 
 	materialSet.indices.insert( materialSet.indices.end(), begin, end );
 
-	//assert( !( materialSet.indices.size() % 3 ) );
+	//Assert( !( materialSet.indices.size() % 3 ) );
 }
 
 static void R_AddSurface( const msurface_t *surf, worldNodeWork_t &work )
@@ -630,7 +630,7 @@ static void R_SquashAndUploadIndices( worldLists_t &worldLists, const worldNodeW
 
 		uint32 end = static_cast<uint32>( worldLists.finalIndices.size() );
 
-		assert( end - firstIndex == materialSet.indices.size() );
+		Assert( end - firstIndex == materialSet.indices.size() );
 
 		opaqueMesh.firstIndex = firstIndex;
 		opaqueMesh.numIndices = materialSet.indices.size();
@@ -671,7 +671,7 @@ void R_DrawWorld()
 	}
 
 	// Code that doesn't set areabits will never get here
-	assert( tr.refdef.areabits );
+	Assert( tr.refdef.areabits );
 
 	currentmodel = r_worldmodel;
 
@@ -1023,7 +1023,7 @@ static void R_BuildPolygonFromSurface( msurface_t *fa, int skipIndices )
 	const mvertex_t *pVertices = currentmodel->vertexes;
 	const int numEdges = fa->numedges; // Equal to the number of vertices
 
-	assert( numEdges >= 3 );
+	Assert( numEdges >= 3 );
 
 	// Helper lambda to get a vertex for a surface
 	auto R_GetVertexForSurface =
@@ -1140,7 +1140,7 @@ static void R_BuildPolygonFromSurface( msurface_t *fa, int skipIndices )
 	fa->firstIndex = firstIndex;
 	fa->numIndices = numIndices;
 
-	assert( !( fa->numIndices % 3 ) );
+	Assert( !( fa->numIndices % 3 ) );
 
 	//
 	// Figure out where we're creating the mesh
@@ -1317,7 +1317,7 @@ static void R_LoadExternalLightmap( const char *bspName )
 		return;
 	}
 
-	assert( nBufLen > 32 ); // Sanity check
+	Assert( nBufLen > 32 ); // Sanity check
 
 	int width, height;
 	float *hdrData = stbi_loadf_from_memory( pBuffer, nBufLen, &width, &height, nullptr, 0 );
@@ -1432,7 +1432,7 @@ void R_BuildWorldLists( model_t *model )
 	worldModel->firstMesh = 0;
 	worldModel->numMeshes = endWorldIndices;
 
-	assert( endWorldIndices != 0 );
+	Assert( endWorldIndices != 0 );
 
 #endif
 
@@ -1558,7 +1558,7 @@ static bool R_FindIndexInVector( worldIndex_t index, const std::vector<worldInde
 
 static void R_ExportRenderData( fsHandle_t file, const uint32 firstIndex, const uint32 lastIndex, const uint32 pass, const std::vector<worldVertex_t> &vertices )
 {
-	assert( !( lastIndex % 3 ) );
+	Assert( !( lastIndex % 3 ) );
 
 	const uint32 numIndices = lastIndex - firstIndex;
 
@@ -1800,7 +1800,7 @@ static void BspExt_LoadModelsExt( const model_t *worldModel, byte *base, bspExtL
 	}
 	count = l->filelen / sizeof( bspModelExt_t );
 
-	assert( count == worldModel->numsubmodels );
+	Assert( count == worldModel->numsubmodels );
 
 	out = worldModel->submodels;
 
@@ -1824,7 +1824,7 @@ static void BspExt_LoadFacesExt( const model_t *worldModel, byte *base, bspExtLu
 	}
 	count = l->filelen / sizeof( bspFaceExt_t );
 
-	assert( count == worldModel->numsurfaces );
+	Assert( count == worldModel->numsurfaces );
 
 	out = worldModel->surfaces;
 

@@ -228,7 +228,7 @@ int BoxOnPlaneSide( const vec3_t emins, const vec3_t emaxs, const cplane_t *p )
 	default:
 		dist1 = 0.0f;
 		dist2 = 0.0f;
-		assert( 0 );
+		Assert( 0 );
 		break;
 	}
 
@@ -240,7 +240,7 @@ int BoxOnPlaneSide( const vec3_t emins, const vec3_t emaxs, const cplane_t *p )
 		sides |= 2;
 	}
 
-	assert( sides != 0 );
+	Assert( sides != 0 );
 
 	return sides;
 }

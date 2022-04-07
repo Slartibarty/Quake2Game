@@ -68,7 +68,7 @@
 
 #ifdef Q_DEBUG
 
-#define ASSUME(x)			assert(x)
+#define ASSUME(x)			Assert(x)
 
 #else
 

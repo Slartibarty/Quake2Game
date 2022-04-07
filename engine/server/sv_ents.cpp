@@ -62,7 +62,7 @@ static void SV_EmitPacketEntities( clientSnapshot_t *from, clientSnapshot_t *to,
 			// in any bytes being emited if the entity has not changed at all
 			// note that players are always 'newentities', this updates their oldorigin always
 			// and prevents warping
-			assert( oldent ); assert( newent );
+			Assert( oldent ); Assert( newent );
 			MSG_WriteDeltaEntity( oldent, newent, msg, false, newent->number <= maxclients->GetInt() );
 			oldindex++;
 			newindex++;
@@ -72,7 +72,7 @@ static void SV_EmitPacketEntities( clientSnapshot_t *from, clientSnapshot_t *to,
 		if ( newnum < oldnum )
 		{
 			// this is a new entity, send it from the baseline
-			assert( newent );
+			Assert( newent );
 			MSG_WriteDeltaEntity( &sv.baselines[newnum], newent, msg, true, true );
 			newindex++;
 			continue;

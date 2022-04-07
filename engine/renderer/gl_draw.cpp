@@ -137,7 +137,7 @@ static void Draw_CheckChain( material_t *material )
 		cmd.offset = 0;
 		cmd.count = 8;
 
-		assert( s_drawMeshBuilder.GetIndexArrayCount() == 8 );
+		Assert( s_drawMeshBuilder.GetIndexArrayCount() == 8 );
 
 		s_lastOffset = 8;
 
@@ -176,7 +176,7 @@ material_t *R_RegisterPic( const char *name )
 {
 	char fullname[MAX_QPATH];
 	Q_sprintf_s( fullname, "materials/pics/%s.mat", name );
-	assert( !strstr( fullname, "//" ) ); // Check for double slashes
+	Assert( !strstr( fullname, "//" ) ); // Check for double slashes
 
 	return GL_FindMaterial( fullname );
 }

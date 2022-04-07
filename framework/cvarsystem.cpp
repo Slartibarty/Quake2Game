@@ -118,9 +118,9 @@ char *Cvar_CompleteVariable( const char *partial )
 // The flags will be or'ed in if the variable exists.
 cvar_t *Cvar_Get( const char *name, const char *value, uint32 flags, const char *help, changeCallback_t callback )
 {
-	assert( name && name[0] && value);
+	Assert( name && name[0] && value);
 
-	assert( !( flags & CVAR_MODIFIED ) );
+	Assert( !( flags & CVAR_MODIFIED ) );
 
 	if ( flags & ( CVAR_USERINFO | CVAR_SERVERINFO ) )
 	{
@@ -376,7 +376,7 @@ void Cvar_SetString( cvar_t *var, const char *value )
 void Cvar_SetFloat( cvar_t *var, float value )
 {
 	char str[32];
-	Q_sprintf_s( str, "%f", value); // %.6f
+	Q_sprintf_s( str, "%f", value ); // %.6f
 	Cvar_Set_Internal( var, str, false );
 }
 
@@ -900,14 +900,14 @@ void Cvar_Shutdown()
 StaticCvar::StaticCvar( const char *Name, const char *Value, uint32 Flags, const char *Help,
 	changeCallback_t Callback, const char *MinVal, const char *MaxVal )
 {
-	assert( Name && Name[0] && Value );
-	assert( !( flags & CVAR_MODIFIED ) );
+	Assert( Name && Name[0] && Value );
+	Assert( !( flags & CVAR_MODIFIED ) );
 
 #ifdef Q_DEBUG
 	if ( Cvar_Find( Name ) )
 	{
 		// Should be safe to call these before main?
-		assert( !"Multiply defined static cvar!" );
+		AssertMsg( false, "Multiply defined static cvar!" );
 		exit( EXIT_FAILURE );
 	}
 #endif

@@ -65,7 +65,7 @@ public:
 	// Return a reference to an element in this array
 	T &Data( int index )
 	{
-		assert( index < reserved );	// Kinda sucks, we need to do this for the secret box hull crap
+		Assert( index < reserved );	// Kinda sucks, we need to do this for the secret box hull crap
 		return data[index];
 	}
 
@@ -1232,7 +1232,7 @@ void CM_ClipBoxToBrush (vec3_t mins, vec3_t maxs, vec3_t p1, vec3_t p2,
 		else
 		{	// leave
 			f = (d1+DIST_EPSILON) / (d1-d2);
-			assert( f <= 1.0f );
+			Assert( f <= 1.0f );
 			// Quake 3 addition (not verified):
 			/*if ( f > 1.0f )
 			{

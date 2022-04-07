@@ -57,7 +57,7 @@ namespace qImGui
 		if ( IsWindows8Point1OrGreater() )
 		{
 			GetDpiForMonitor( (HMONITOR)monitor, MDT_EFFECTIVE_DPI, &xdpi, &ydpi );
-			assert( xdpi == ydpi );
+			Assert( xdpi == ydpi );
 			return xdpi / 96.0f;
 		}
 		else
@@ -65,7 +65,7 @@ namespace qImGui
 			const HDC dc = GetDC( nullptr );
 			xdpi = GetDeviceCaps( dc, LOGPIXELSX );
 			ydpi = GetDeviceCaps( dc, LOGPIXELSY );
-			assert( xdpi == ydpi );
+			Assert( xdpi == ydpi );
 			ReleaseDC( nullptr, dc );
 			return xdpi / 96.0f;
 		}
@@ -166,7 +166,7 @@ namespace qImGui
 		viewport->PlatformUserData = data;
 
 		data->dc = GetDC( hWnd );
-		assert( data->dc );
+		Assert( data->dc );
 
 		data->glrc = reinterpret_cast<HGLRC>( GLimp_SetupContext( data->dc, true ) );
 
@@ -181,7 +181,7 @@ namespace qImGui
 		HWND window = reinterpret_cast<HWND>( viewport->PlatformHandle );
 		if ( window == pv.mainWindow )
 		{
-			assert( viewport->PlatformUserData == nullptr );
+			Assert( viewport->PlatformUserData == nullptr );
 			return;
 		}
 		if ( window )
@@ -193,7 +193,7 @@ namespace qImGui
 				SetCapture( window );
 			}
 			viewportData_t *data = (viewportData_t *)viewport->PlatformUserData;
-			assert( data );
+			Assert( data );
 			if ( data->glrc )
 			{
 				wglMakeCurrent( nullptr, nullptr );
@@ -210,7 +210,7 @@ namespace qImGui
 	static void OSImp_ShowWindow( ImGuiViewport* viewport )
 	{
 		HWND window = reinterpret_cast<HWND>( viewport->PlatformHandle );
-		assert( window != 0 );
+		Assert( window != 0 );
 
 		if ( viewport->Flags & ImGuiViewportFlags_NoFocusOnAppearing ) {
 			ShowWindow( window, SW_SHOWNA );
@@ -222,7 +222,7 @@ namespace qImGui
 	static void OSImp_UpdateWindow( ImGuiViewport* viewport )
 	{
 		HWND window = reinterpret_cast<HWND>( viewport->PlatformHandle );
-		assert( window != 0 );
+		Assert( window != 0 );
 
 		// (Optional) Update Win32 style if it changed _after_ creation.
 		// Generally they won't change unless configuration flags are changed, but advanced uses (such as manually rewriting viewport flags) make this useful.
@@ -254,7 +254,7 @@ namespace qImGui
 	static ImVec2 OSImp_GetWindowPos( ImGuiViewport* viewport )
 	{
 		HWND window = reinterpret_cast<HWND>( viewport->PlatformHandle );
-		assert( window != 0 );
+		Assert( window != 0 );
 
 		POINT pos{};
 		ClientToScreen( window, &pos );
@@ -264,7 +264,7 @@ namespace qImGui
 	static void OSImp_SetWindowPos( ImGuiViewport* viewport, ImVec2 pos )
 	{
 		HWND window = reinterpret_cast<HWND>( viewport->PlatformHandle );
-		assert( window != 0 );
+		Assert( window != 0 );
 
 		RECT rect{ (LONG)pos.x, (LONG)pos.y, (LONG)pos.x, (LONG)pos.y };
 		AdjustWindowRectEx( &rect, GetWindowLongW( window, GWL_STYLE ), FALSE, GetWindowLongW( window, GWL_EXSTYLE ) );
@@ -274,7 +274,7 @@ namespace qImGui
 	static ImVec2 OSImp_GetWindowSize( ImGuiViewport* viewport )
 	{
 		HWND window = reinterpret_cast<HWND>( viewport->PlatformHandle );
-		assert( window != 0 );
+		Assert( window != 0 );
 
 		RECT rect;
 		GetClientRect( window, &rect );
@@ -284,7 +284,7 @@ namespace qImGui
 	static void OSImp_SetWindowSize( ImGuiViewport* viewport, ImVec2 size )
 	{
 		HWND window = reinterpret_cast<HWND>( viewport->PlatformHandle );
-		assert( window != 0 );
+		Assert( window != 0 );
 
 		RECT rect = { 0, 0, (LONG)size.x, (LONG)size.y };
 		AdjustWindowRectEx( &rect, GetWindowLongW( window, GWL_STYLE ), FALSE, GetWindowLongW( window, GWL_EXSTYLE ) ); // Client to Screen
@@ -294,7 +294,7 @@ namespace qImGui
 	static void OSImp_SetWindowFocus( ImGuiViewport* viewport )
 	{
 		HWND window = reinterpret_cast<HWND>( viewport->PlatformHandle );
-		assert( window != 0 );
+		Assert( window != 0 );
 
 		BringWindowToTop( window );
 		SetForegroundWindow( window );
@@ -304,7 +304,7 @@ namespace qImGui
 	static bool OSImp_GetWindowFocus( ImGuiViewport* viewport )
 	{
 		HWND window = reinterpret_cast<HWND>( viewport->PlatformHandle );
-		assert( window != 0 );
+		Assert( window != 0 );
 
 		return GetForegroundWindow() == window;
 	}
@@ -312,7 +312,7 @@ namespace qImGui
 	static bool OSImp_GetWindowMinimized( ImGuiViewport* viewport )
 	{
 		HWND window = reinterpret_cast<HWND>( viewport->PlatformHandle );
-		assert( window != 0 );
+		Assert( window != 0 );
 
 		return IsIconic( window ) != FALSE;
 	}
@@ -321,7 +321,7 @@ namespace qImGui
 	{
 		// Slart: On Windows 10 SetWindowTextA accepts UTF-8 with our app config
 		HWND window = reinterpret_cast<HWND>( viewport->PlatformHandle );
-		assert( window != 0 );
+		Assert( window != 0 );
 #if 0
 		// ::SetWindowTextA() doesn't properly handle UTF-8 so we explicitely convert our string.
 		int n = ::MultiByteToWideChar( CP_UTF8, 0, title, -1, NULL, 0 );
@@ -337,9 +337,9 @@ namespace qImGui
 	static void OSImp_SetWindowAlpha( ImGuiViewport* viewport, float alpha )
 	{
 		HWND window = reinterpret_cast<HWND>( viewport->PlatformHandle );
-		assert( window != 0 );
+		Assert( window != 0 );
 
-		assert( alpha >= 0.0f && alpha <= 1.0f );
+		Assert( alpha >= 0.0f && alpha <= 1.0f );
 		if ( alpha < 1.0f )
 		{
 			DWORD style = GetWindowLongW( window, GWL_EXSTYLE ) | WS_EX_LAYERED;
@@ -356,7 +356,7 @@ namespace qImGui
 	static float OSImp_GetWindowDpiScale( ImGuiViewport* viewport )
 	{
 		HWND window = reinterpret_cast<HWND>( viewport->PlatformHandle );
-		assert( window != 0 );
+		Assert( window != 0 );
 
 		return OSImp_GetDpiScaleForHwnd( window );
 	}
@@ -381,21 +381,21 @@ namespace qImGui
 	static void OSImp_RenderWindow( ImGuiViewport* viewport, void* renderArg )
 	{
 		viewportData_t *data = (viewportData_t *)viewport->PlatformUserData;
-		assert( data );
+		Assert( data );
 
 		BOOL blah = wglMakeCurrent( data->dc, data->glrc );
-		assert( blah );
+		Assert( blah );
 	}
 
 	static void OSImp_SwapBuffers( ImGuiViewport* viewport, void* renderArg )
 	{
 		viewportData_t *data = (viewportData_t *)viewport->PlatformUserData;
-		assert( data );
+		Assert( data );
 
 		BOOL blah = wglMakeCurrent( data->dc, data->glrc );
-		assert( blah );
+		Assert( blah );
 		blah = SwapBuffers( data->dc );
-		assert( blah );
+		Assert( blah );
 	}
 
 #if 0
@@ -772,7 +772,7 @@ namespace qImGui
 	void OSImp_NewFrame()
 	{
 		ImGuiIO &io = ImGui::GetIO();
-		assert( io.Fonts->IsBuilt() ); // Make sure the renderer implementation's NewFrame was called before this one
+		Assert( io.Fonts->IsBuilt() ); // Make sure the renderer implementation's NewFrame was called before this one
 
 		// Setup display size (every frame to accommodate for window resizing)
 		RECT rect;

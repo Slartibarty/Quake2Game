@@ -499,7 +499,7 @@ Cmd_Argv
 */
 char *Cmd_Argv( int arg )
 {
-	assert( arg >= 0 && arg < cmd_argc );
+	Assert( arg >= 0 && arg < cmd_argc );
 	if ( arg >= cmd_argc ) {
 		return cmd_null_string;
 	}

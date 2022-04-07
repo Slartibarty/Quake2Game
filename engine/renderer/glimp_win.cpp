@@ -80,7 +80,7 @@ static void GLimp_CreateDummyWindow( DummyVars &dvars )
 		s_glwState.hInstance,
 		NULL
 	);
-	assert( dvars.hWnd );
+	Assert( dvars.hWnd );
 
 	// Create our dummy PFD
 	const PIXELFORMATDESCRIPTOR pfd =
@@ -106,19 +106,19 @@ static void GLimp_CreateDummyWindow( DummyVars &dvars )
 	// Get this window's DC, we don't need to release it afterwards due to
 	// CS_OWNDC
 	HDC hDC = GetDC( dvars.hWnd );
-	assert( hDC );
+	Assert( hDC );
 
 	int pixelformat = ChoosePixelFormat( hDC, &pfd );
-	assert( pixelformat != 0 );
+	Assert( pixelformat != 0 );
 
 	result = SetPixelFormat( hDC, pixelformat, &pfd );
-	assert( result );
+	Assert( result );
 
 	dvars.hGLRC = wglCreateContext( hDC );
-	assert( dvars.hGLRC );
+	Assert( dvars.hGLRC );
 
 	result = wglMakeCurrent( hDC, dvars.hGLRC );
-	assert( result );
+	Assert( result );
 }
 
 static void GLimp_DestroyDummyWindow( DummyVars &dvars )
@@ -126,11 +126,11 @@ static void GLimp_DestroyDummyWindow( DummyVars &dvars )
 	BOOL result;
 
 	result = wglDeleteContext( dvars.hGLRC );
-	assert( result );
+	Assert( result );
 	result = DestroyWindow( dvars.hWnd );
-	assert( result );
+	Assert( result );
 	result = UnregisterClassW( DummyClassname, s_glwState.hInstance );
-	assert( result );
+	Assert( result );
 }
 
 /*
@@ -276,10 +276,10 @@ void *GLimp_SetupContext( void *localContext, bool shareWithMain )
 		UINT numformats;
 
 		result = wglChoosePixelFormatARB( hDC, attriblist, NULL, 1, &pixelformat, &numformats );
-		assert( result );
+		Assert( result );
 
 		result = DescribePixelFormat( hDC, pixelformat, sizeof( pfd ), &pfd );
-		assert( result != 0 );
+		Assert( result != 0 );
 	}
 	else
 	{
@@ -288,7 +288,7 @@ void *GLimp_SetupContext( void *localContext, bool shareWithMain )
 	}
 
 	result = SetPixelFormat( hDC, pixelformat, &pfd );
-	assert( result );
+	Assert( result );
 
 	HGLRC hGLRC;
 
@@ -308,16 +308,16 @@ void *GLimp_SetupContext( void *localContext, bool shareWithMain )
 		};
 
 		hGLRC = wglCreateContextAttribsARB( hDC, NULL, contextAttribs );
-		assert( hGLRC );
+		Assert( hGLRC );
 	}
 	else
 	{
 		hGLRC = wglCreateContext( hDC );
-		assert( hGLRC );
+		Assert( hGLRC );
 	}
 
 	result = wglMakeCurrent( hDC, hGLRC );
-	assert( result );
+	Assert( result );
 
 	if ( shareWithMain )
 	{
@@ -397,7 +397,7 @@ static void GLimp_CreateWindow( WNDPROC wndproc, int width, int height, bool ful
 	);
 
 	s_glwState.hDC = GetDC( s_glwState.hWnd );
-	assert( s_glwState.hDC );
+	Assert( s_glwState.hDC );
 
 	s_glwState.hGLRC = reinterpret_cast<HGLRC>( GLimp_SetupContext( s_glwState.hDC, false ) );
 

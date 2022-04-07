@@ -21,6 +21,8 @@
 #define IMGUI_STB_TRUETYPE_FILENAME		"../stb/stb_truetype.h"
 #define IMGUI_STB_RECT_PACK_FILENAME	"../stb/stb_rect_pack.h"
 
+#define IM_ASSERT(exp) Assert(exp)
+
 #ifdef Q_RETAIL
 //#define IMGUI_DISABLE_DEMO_WINDOWS
 #endif

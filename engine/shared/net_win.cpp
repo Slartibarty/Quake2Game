@@ -100,7 +100,7 @@ NET_NetadrToSockadr
 static void NET_NetadrToSockadr( const netadr_t *a, sockaddr_in *s )
 {
 	// Never loopback
-	assert( a->type != NA_LOOPBACK );
+	Assert( a->type != NA_LOOPBACK );
 
 	memset( s, 0, sizeof( *s ) );
 
@@ -201,7 +201,7 @@ char *NET_NetadrToString( const netadr_t &a )
 	static char s[64];
 
 	// Never broadcast
-	assert( a.type != NA_BROADCAST );
+	Assert( a.type != NA_BROADCAST );
 
 	switch ( a.type )
 	{

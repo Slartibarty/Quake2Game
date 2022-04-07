@@ -132,7 +132,7 @@ static void SetWriteDirectory()
 	else
 	{
 		// this will never happen
-		assert( 0 );
+		Assert( 0 );
 		Q_strcpy_s( fs.writeDir, fs.gameDir );
 	}
 
@@ -254,7 +254,7 @@ void Shutdown()
 
 bool IsAbsolutePath( const char *path )
 {
-	assert( strlen( path ) > 2 );
+	Assert( strlen( path ) > 2 );
 #ifdef _WIN32
 	// Under win32, an absolute path always begins with "<letter>:/"
 	// This doesn't consider network directories
@@ -560,8 +560,8 @@ void FindClose()
 
 fsSize_t LoadFile( const char *filename, void **buffer, fsSize_t extraData /*= 0*/ )
 {
-	assert( filename && filename[0] );
-	assert( extraData >= 0 );
+	Assert( filename && filename[0] );
+	Assert( extraData >= 0 );
 
 	fsHandle_t handle = OpenFileRead( filename );
 	if ( handle == FS_INVALID_HANDLE )
