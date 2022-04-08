@@ -1309,8 +1309,11 @@ before allowing the client into the server
 */
 void CL_Precache_f (void)
 {
+	AssertMsg( Cmd_Argc() >= 2, "The old precache sequence was triggered!");
+
 	//Yet another hack to let old demos work
 	//the old precache sequence
+#if 0
 	if (Cmd_Argc() < 2) {
 		unsigned	map_checksum;		// for detecting cheater maps
 
@@ -1319,6 +1322,7 @@ void CL_Precache_f (void)
 		CL_PrepRefresh ();
 		return;
 	}
+#endif
 
 	precache_check = CS_MODELS;
 	precache_spawncount = Q_atoi(Cmd_Argv(1));
