@@ -19,24 +19,20 @@
 #include "backends/imgui_impl_opengl3.h"
 #include "q_imgui_imp.h"
 
-cvar_t		*scr_crosshair;
+StaticCvar scr_crosshair( "scr_crosshair", "0", CVAR_ARCHIVE );
 
-cvar_t		*scr_centertime;
-cvar_t		*scr_showpause;
+static StaticCvar scr_showpause( "scr_showpause", "1", 0, "If true, <paused> is displayed on the screen whilst paused." );
+static StaticCvar scr_centertime( "scr_centertime", "2.5", 0, "The time in seconds that centerprint text should stay on screen." );
+static StaticCvar scr_netgraph( "scr_netgraph", "0", 0 );
+static StaticCvar scr_timegraph( "scr_timegraph", "0", 0 );
+static StaticCvar scr_debuggraph( "scr_debuggraph", "0", 0, "If true, shows the general debug graph." );
+static StaticCvar scr_graphheight( "scr_graphheight", "32", 0 );
+static StaticCvar scr_graphscale( "scr_graphscale", "1", 0 );
+static StaticCvar scr_graphshift( "scr_graphshift", "0", 0 );
 
-cvar_t		*scr_netgraph;
-cvar_t		*scr_timegraph;
-cvar_t		*scr_debuggraph;
-cvar_t		*scr_graphheight;
-cvar_t		*scr_graphscale;
-cvar_t		*scr_graphshift;
-
-cvar_t		*scr_multiview;
-cvar_t		*scr_devpause;
-cvar_t		*scr_showfps;
-
-void SCR_TimeRefresh_f();
-void SCR_Loading_f();
+static StaticCvar scr_multiview( "scr_multiview", "0", CVAR_INIT, "If true, you can drag ImGui windows out of the game window." );
+static StaticCvar scr_devpause( "scr_devpause", "0", 0, "If true, the game pauses whilst the devui is up." );
+static StaticCvar scr_showfps( "scr_showfps", "0", 0, "If true, shows a stats panel on screen." );
 
 static struct screenGlobals_t
 {
@@ -100,7 +96,7 @@ void CL_AddNetgraph()
 
 	// if using the debuggraph for something else, don't
 	// add the net lines
-	if ( scr_debuggraph->GetBool() || scr_timegraph->GetBool() ) {
+	if ( scr_debuggraph.GetBool() || scr_timegraph.GetBool() ) {
 		return;
 	}
 
@@ -141,19 +137,19 @@ static void SCR_DrawDebugGraph()
 
 	x = 0;
 	y = g_vidDef.height;
-	R_DrawFilled( x, y - scr_graphheight->GetInt(), w, scr_graphheight->GetInt(), colors::dkGray );
+	R_DrawFilled( x, y - scr_graphheight.GetInt(), w, scr_graphheight.GetInt(), colors::dkGray );
 
 	for (a=0 ; a<w ; a++)
 	{
 		i = (current-1-a+1024) & 1023;
 		v = values[i].value;
 		color = values[i].color;
-		v = v*scr_graphscale->GetFloat() + scr_graphshift->GetFloat();
+		v = v*scr_graphscale.GetFloat() + scr_graphshift.GetFloat();
 		
 		if ( v < 0.0f ) {
-			v += scr_graphheight->GetInt() * (1+(int)(-v/scr_graphheight->GetFloat()));
+			v += scr_graphheight.GetInt() * (1+(int)(-v/scr_graphheight.GetFloat()));
 		}
-		h = (int)v % scr_graphheight->GetInt();
+		h = (int)v % scr_graphheight.GetInt();
 		R_DrawFilled(x+w-1-a, y - h, 1, h, color);
 	}
 #else
@@ -238,7 +234,7 @@ void SCR_CenterPrint( const char *str )
 	int			i, j, l;
 
 	Q_strcpy_s( scr_centerstring, str );
-	scr_centertime_off = scr_centertime->GetFloat();
+	scr_centertime_off = scr_centertime.GetFloat();
 	scr_centertime_start = static_cast<float>( cl.time );
 
 	// count the number of lines for centering
@@ -352,7 +348,7 @@ static bool SCR_InitImGui()
 	ImGui::CreateContext();
 	ImGuiIO &io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_DockingEnable;
-	if ( scr_multiview->GetBool() ) {
+	if ( scr_multiview.GetBool() ) {
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 	}
 	io.IniFilename = nullptr;
@@ -399,24 +395,6 @@ SCR_Init
 */
 void SCR_Init()
 {
-	scr_crosshair = Cvar_Get( "scr_crosshair", "0", CVAR_ARCHIVE );
-
-	scr_showpause = Cvar_Get( "scr_showpause", "1", 0, "If true, <paused> is displayed on the screen whilst paused.");
-	scr_centertime = Cvar_Get( "scr_centertime", "2.5", 0, "The time in seconds that centerprint text should stay on screen.");
-	scr_netgraph = Cvar_Get( "scr_netgraph", "0", 0 );
-	scr_timegraph = Cvar_Get( "scr_timegraph", "0", 0 );
-	scr_debuggraph = Cvar_Get( "scr_debuggraph", "0", 0, "If true, shows the general debug graph.");
-	scr_graphheight = Cvar_Get( "scr_graphheight", "32", 0 );
-	scr_graphscale = Cvar_Get( "scr_graphscale", "1", 0 );
-	scr_graphshift = Cvar_Get( "scr_graphshift", "0", 0 );
-
-	scr_multiview = Cvar_Get( "scr_multiview", "0", CVAR_INIT, "If true, you can drag ImGui windows out of the game window.");
-	scr_devpause = Cvar_Get( "scr_devpause", "0", 0, "If true, the game pauses whilst the devui is up.");
-	scr_showfps = Cvar_Get( "scr_showfps", "0", 0, "If true, shows a stats panel on screen.");
-
-	Cmd_AddCommand( "timerefresh", SCR_TimeRefresh_f );
-	Cmd_AddCommand( "loading", SCR_Loading_f );
-
 	SCR_InitImGui();
 
 	// always show the console by default
@@ -456,11 +434,11 @@ SCR_DrawPause
 */
 static void SCR_DrawPause()
 {
-	if ( !cl_paused->GetBool() ) {
+	if ( !cl_paused.GetBool() ) {
 		return;
 	}
 
-	if ( !scr_showpause->GetBool() ) {
+	if ( !scr_showpause.GetBool() ) {
 		return;
 	}
 
@@ -495,12 +473,12 @@ SCR_DrawCrosshair
 */
 static void SCR_DrawCrosshair()
 {
-	if ( !scr_crosshair->GetBool() ) {
+	if ( !scr_crosshair.GetBool() ) {
 		return;
 	}
 
-	if ( scr_crosshair->IsModified() ) {
-		scr_crosshair->ClearModified();
+	if ( scr_crosshair.IsModified() ) {
+		scr_crosshair.ClearModified();
 		SCR_TouchPics();
 	}
 
@@ -568,8 +546,8 @@ void SCR_ToggleDevUI()
 	if ( cls.key_dest == key_console )
 	{
 		M_ForceMenuOff();
-		if ( scr_devpause->GetBool() ) {
-			Cvar_SetBool( cl_paused, false );
+		if ( scr_devpause.GetBool() ) {
+			Cvar_SetBool( &cl_paused, false );
 		}
 	}
 	else
@@ -577,8 +555,8 @@ void SCR_ToggleDevUI()
 		M_ForceMenuOff();
 		cls.key_dest = key_console;
 
-		if ( scr_devpause->GetBool() && Cvar_FindGetFloat( "maxclients" ) == 1 && Com_ServerState() ) {
-			Cvar_SetBool( cl_paused, true );
+		if ( scr_devpause.GetBool() && Cvar_FindGetFloat( "maxclients" ) == 1 && Com_ServerState() ) {
+			Cvar_SetBool( &cl_paused, true );
 		}
 	}
 }
@@ -594,7 +572,7 @@ static void SCR_DrawImGui()
 {
 	// non-interactive panels
 
-	if ( scr_showfps->GetBool() ) {
+	if ( scr_showfps.GetBool() ) {
 		UI::StatsPanel::ShowStats();
 	}
 
@@ -688,7 +666,7 @@ void SCR_EndLoadingPlaque()
 SCR_Loading_f
 ========================
 */
-void SCR_Loading_f()
+CON_COMMAND_NAME( SCR_Loading_f, loading, nullptr, 0 )
 {
 	SCR_BeginLoadingPlaque();
 }
@@ -698,7 +676,7 @@ void SCR_Loading_f()
 SCR_TimeRefresh_f
 ========================
 */
-void SCR_TimeRefresh_f()
+CON_COMMAND_NAME( SCR_TimeRefresh_f, timerefresh, nullptr, 0 )
 {
 	int i;
 
@@ -894,13 +872,13 @@ void SCR_TouchPics()
 		}
 	}
 
-	if ( scr_crosshair->GetBool() )
+	if ( scr_crosshair.GetBool() )
 	{
-		if ( scr_crosshair->GetInt() > 3 || scr_crosshair->GetInt() < 0 ) {
-			Cvar_SetInt( scr_crosshair, 3 );
+		if ( scr_crosshair.GetInt() > 3 || scr_crosshair.GetInt() < 0 ) {
+			Cvar_SetInt( &scr_crosshair, 3 );
 		}
 
-		Q_sprintf_s( scr.crosshairName, "ch%i", scr_crosshair->GetInt() );
+		Q_sprintf_s( scr.crosshairName, "ch%i", scr_crosshair.GetInt() );
 		R_DrawGetPicSize( &scr.crosshairWidth, &scr.crosshairHeight, scr.crosshairName );
 		if ( !scr.crosshairWidth ) {
 			scr.crosshairName[0] = '\0';
@@ -1297,11 +1275,11 @@ void SCR_UpdateScreen()
 		SCR_DrawNet();
 		SCR_CheckDrawCenterString();
 
-		if ( scr_timegraph->GetBool() ) {
+		if ( scr_timegraph.GetBool() ) {
 			SCR_DebugGraph( cls.frametime * 300, colors::black );
 		}
 
-		if ( scr_debuggraph->GetBool() || scr_timegraph->GetBool() || scr_netgraph->GetBool() ) {
+		if ( scr_debuggraph.GetBool() || scr_timegraph.GetBool() || scr_netgraph.GetBool() ) {
 			SCR_DrawDebugGraph();
 		}
 

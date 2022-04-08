@@ -30,9 +30,9 @@ namespace UI::Console
 static constexpr uint32 CmdColor	= colors::green;
 static constexpr uint32 AliasColor	= colors::purple;	// Not implemented
 
-static cvar_t *con_notifyTime;
-static cvar_t *con_drawNotify;
-static cvar_t *con_allowNotify;
+static StaticCvar con_notifyTime( "con_notifyTime", "8", CVAR_NONE, "Time in seconds that notifies are visible before expiring." );
+static StaticCvar con_drawNotify( "con_drawNotify", "1", CVAR_NONE, "If true, notifies can be drawn." );
+static StaticCvar con_allowNotify( "con_allowNotify", "1", CVAR_NONE, "If true, notifies can be posted." );
 
 struct notify_t
 {
@@ -73,7 +73,6 @@ struct console2_t
 	bool					completionPopup;
 	bool					wordWrap;
 	bool					ignoreEdit;					// when true, CallbackEdit will be ignored once
-	bool					initialized;
 
 	// so we can use the console instantly from main
 	console2_t()
@@ -91,18 +90,19 @@ static console2_t con;
 
 //=================================================================================================
 
+CON_COMMAND( clear, "Clears the console buffer.", CVAR_NONE )
+{
+	con.buffer.clear();
+}
+
 static bool CanAddNotifies()
 {
-	if ( !con.initialized ) {
-		return false;
-	}
-
 	// TEMP
-	/*if ( !com_developer->GetBool() ) {
+	/*if ( !com_developer.GetBool() ) {
 		return false;
 	}*/
 
-	if ( !con_allowNotify->GetBool() ) {
+	if ( !con_allowNotify.GetBool() ) {
 		return false;
 	}
 
@@ -112,11 +112,11 @@ static bool CanAddNotifies()
 static bool CanDrawNotifies()
 {
 	// TEMP
-	/*if ( !com_developer->GetBool() ) {
+	/*if ( !com_developer.GetBool() ) {
 		return false;
 	}*/
 
-	if ( !con_drawNotify->GetBool() ) {
+	if ( !con_drawNotify.GetBool() ) {
 		return false;
 	}
 
@@ -134,7 +134,7 @@ void Print( const char *txt )
 	notify_t &notify = con.notifies[con.currentNotify & ( MAX_NOTIFIES - 1 )];
 
 	Q_strcpy_s( notify.message, txt );
-	notify.timeLeft = con_notifyTime->GetFloat();
+	notify.timeLeft = con_notifyTime.GetFloat();
 
 	++con.currentNotify;
 }
@@ -244,22 +244,6 @@ static int TextEditCallback( ImGuiInputTextCallbackData *data )
 	}
 
 	return 0;
-}
-
-static void Clear_f()
-{
-	con.buffer.clear();
-}
-
-void Init()
-{
-	con_notifyTime = Cvar_Get( "con_notifyTime", "8", 0, "Time in seconds that notifies are visible before expiring." );
-	con_drawNotify = Cvar_Get( "con_drawNotify", "1", 0, "If true, notifies can be drawn." );
-	con_allowNotify = Cvar_Get( "con_allowNotify", "1", 0, "If true, notifies can be posted." );
-
-	Cmd_AddCommand( "clear", Clear_f, "Clears the console buffer." );
-
-	con.initialized = true;
 }
 
 /*

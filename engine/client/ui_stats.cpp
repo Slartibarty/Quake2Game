@@ -64,11 +64,13 @@ void ShowStats()
 		}
 	}
 
-	length = Q_sprintf_s( workBuf, "%-20s: %d", "cls.framecount", cls.framecount);
+	length = Q_sprintf_s( workBuf, "%-20s: %d", "cl.time", cl.time );
 	ImGui::TextUnformatted( workBuf, workBuf + length );
-	length = Q_sprintf_s( workBuf, "%-20s: %d", "cls.realtime", cls.realtime);
+	length = Q_sprintf_s( workBuf, "%-20s: %d", "cls.framecount", cls.framecount );
 	ImGui::TextUnformatted( workBuf, workBuf + length );
-	length = Q_sprintf_s( workBuf, "%-20s: %f", "cls.frametime", cls.frametime);
+	length = Q_sprintf_s( workBuf, "%-20s: %d", "cls.realtime", cls.realtime );
+	ImGui::TextUnformatted( workBuf, workBuf + length );
+	length = Q_sprintf_s( workBuf, "%-20s: %f", "cls.frametime", cls.frametime );
 	ImGui::TextUnformatted( workBuf, workBuf + length );
 	ImGui::Separator();
 

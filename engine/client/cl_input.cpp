@@ -2,18 +2,7 @@
 
 #include "cl_local.h"
 
-cvar_t	*cl_upspeed;
-cvar_t	*cl_forwardspeed;
-cvar_t	*cl_sidespeed;
-
-cvar_t	*cl_yawspeed;
-cvar_t	*cl_pitchspeed;
-
-cvar_t	*cl_run;
-
-cvar_t	*cl_anglespeedkey;
-
-cvar_t	*cl_nodelta;
+static StaticCvar cl_nodelta( "cl_nodelta", "0", 0 );
 
 static uint old_sys_frameTime;
 static uint frame_msec;
@@ -228,13 +217,13 @@ static void CL_AdjustAngles()
 	float speed;
 
 	if ( in_speed.state & 1 ) {
-		speed = cls.frametime * cl_anglespeedkey->GetFloat();
+		speed = cls.frametime * cl_anglespeedkey.GetFloat();
 	} else {
 		speed = cls.frametime;
 	}
 
-	cl.viewangles[PITCH] -= speed * cl_pitchspeed->GetFloat() * CL_KeyState( &in_lookup );
-	cl.viewangles[PITCH] += speed * cl_pitchspeed->GetFloat() * CL_KeyState( &in_lookdown );
+	cl.viewangles[PITCH] -= speed * cl_pitchspeed.GetFloat() * CL_KeyState( &in_lookup );
+	cl.viewangles[PITCH] += speed * cl_pitchspeed.GetFloat() * CL_KeyState( &in_lookdown );
 }
 
 /*
@@ -248,19 +237,19 @@ static void CL_BaseMove( usercmd_t &cmd )
 
 	VectorCopy( cl.viewangles, cmd.angles );
 
-	cmd.forwardmove += cl_forwardspeed->GetFloat() * CL_KeyState( &in_forward );
-	cmd.forwardmove -= cl_forwardspeed->GetFloat() * CL_KeyState( &in_back );
+	cmd.forwardmove += cl_forwardspeed.GetFloat() * CL_KeyState( &in_forward );
+	cmd.forwardmove -= cl_forwardspeed.GetFloat() * CL_KeyState( &in_back );
 
-	cmd.sidemove += cl_sidespeed->GetFloat() * CL_KeyState( &in_moveright );
-	cmd.sidemove -= cl_sidespeed->GetFloat() * CL_KeyState( &in_moveleft );
+	cmd.sidemove += cl_sidespeed.GetFloat() * CL_KeyState( &in_moveright );
+	cmd.sidemove -= cl_sidespeed.GetFloat() * CL_KeyState( &in_moveleft );
 
-	cmd.upmove += cl_upspeed->GetFloat() * CL_KeyState( &in_up );
-	cmd.upmove -= cl_upspeed->GetFloat() * CL_KeyState( &in_down );
+	cmd.upmove += cl_upspeed.GetFloat() * CL_KeyState( &in_up );
+	cmd.upmove -= cl_upspeed.GetFloat() * CL_KeyState( &in_down );
 
 	//
 	// adjust for speed key / running
 	//
-	if ( ( in_speed.state & 1 ) ^ (int)( cl_run->GetBool() ) )
+	if ( ( in_speed.state & 1 ) ^ (int)( cl_run.GetBool() ) )
 	{
 		cmd.forwardmove *= 2;
 		cmd.sidemove *= 2;
@@ -335,7 +324,7 @@ static void CL_FinishMove( usercmd_t &cmd )
 	}
 
 	// send the ambient light level at the player's current position
-	cmd.lightlevel = (byte)cl_lightlevel->GetInt();
+	cmd.lightlevel = (byte)cl_lightlevel.GetInt();
 }
 
 /*
@@ -424,7 +413,7 @@ void CL_SendCmd()
 
 	// let the server know what the last frame we
 	// got was, so the next message can be delta compressed
-	if (cl_nodelta->GetBool() || !cl.frame.valid || cls.demowaiting)
+	if (cl_nodelta.GetBool() || !cl.frame.valid || cls.demowaiting)
 		MSG_WriteLong (&buf, -1);	// no compression
 	else
 		MSG_WriteLong (&buf, cl.frame.serverframe);
@@ -492,6 +481,4 @@ void CL_InitInput()
 	Cmd_AddCommand( "-attack", IN_AttackUp );
 	Cmd_AddCommand( "+use", IN_UseDown );
 	Cmd_AddCommand( "-use", IN_UseUp );
-
-	cl_nodelta = Cvar_Get( "cl_nodelta", "0", 0 );
 }

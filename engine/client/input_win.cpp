@@ -217,8 +217,8 @@ namespace input
 		sysIn.last_xpos = raw.lLastX;
 		sysIn.last_ypos = raw.lLastY;
 
-		xpos *= m_yaw->GetFloat() * sensitivity->GetFloat();
-		ypos *= m_pitch->GetFloat() * sensitivity->GetFloat();
+		xpos *= m_yaw.GetFloat() * sensitivity.GetFloat();
+		ypos *= m_pitch.GetFloat() * sensitivity.GetFloat();
 
 #if 0
 		// force the mouse to the center, so there's room to move

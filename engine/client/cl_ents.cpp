@@ -307,7 +307,7 @@ static void CL_ParsePacketEntities( clSnapshot_t *oldframe, clSnapshot_t *newfra
 		while ( oldnum < newnum )
 		{
 			// one or more entities from the old packet are unchanged
-			if ( cl_shownet->GetInt() == 3 ) {
+			if ( cl_shownet.GetInt() == 3 ) {
 				Com_Printf( "   unchanged: %i\n", oldnum );
 			}
 			CL_DeltaEntity( newframe, oldnum, oldstate, 0 );
@@ -328,7 +328,7 @@ static void CL_ParsePacketEntities( clSnapshot_t *oldframe, clSnapshot_t *newfra
 		if ( bits & U_REMOVE )
 		{
 			// the entity present in oldframe is not in the current frame
-			if ( cl_shownet->GetInt() == 3 ) {
+			if ( cl_shownet.GetInt() == 3 ) {
 				Com_Printf( "   remove: %i\n", newnum );
 			}
 			if ( oldnum != newnum ) {
@@ -351,7 +351,7 @@ static void CL_ParsePacketEntities( clSnapshot_t *oldframe, clSnapshot_t *newfra
 
 		if ( oldnum == newnum )
 		{	// delta from previous state
-			if ( cl_shownet->GetInt() == 3 ) {
+			if ( cl_shownet.GetInt() == 3 ) {
 				Com_Printf( "   delta: %i\n", newnum );
 			}
 			CL_DeltaEntity( newframe, newnum, oldstate, bits );
@@ -373,7 +373,7 @@ static void CL_ParsePacketEntities( clSnapshot_t *oldframe, clSnapshot_t *newfra
 		if ( oldnum > newnum )
 		{
 			// delta from baseline
-			if ( cl_shownet->GetInt() == 3 ) {
+			if ( cl_shownet.GetInt() == 3 ) {
 				Com_Printf( "   baseline: %i\n", newnum );
 			}
 			CL_DeltaEntity( newframe, newnum, &cl_entities[newnum].baseline, bits );
@@ -386,7 +386,7 @@ static void CL_ParsePacketEntities( clSnapshot_t *oldframe, clSnapshot_t *newfra
 	while ( oldnum != 99999 )
 	{
 		// one or more entities from the old packet are unchanged
-		if ( cl_shownet->GetInt() == 3 ) {
+		if ( cl_shownet.GetInt() == 3 ) {
 			Com_Printf( "   unchanged: %i\n", oldnum );
 		}
 		CL_DeltaEntity( newframe, oldnum, oldstate, 0 );
@@ -577,7 +577,7 @@ void CL_ParseFrame()
 
 	cl.surpressCount = MSG_ReadByte( &net_message );
 
-	if ( cl_shownet->GetInt() == 3 ) {
+	if ( cl_shownet.GetInt() == 3 ) {
 		Com_Printf( "   frame:%i  delta:%i\n", cl.frame.serverframe, cl.frame.deltaframe );
 	}
 
@@ -985,7 +985,7 @@ static void CL_AddPacketEntities( clSnapshot_t *frame )
 				// custom weapon
 				ci = &cl.clientinfo[s1->skinnum & 0xff];
 				i = ( s1->skinnum >> 8 ); // 0 is default weapon model
-				if ( !cl_vwep->GetBool() || i > MAX_CLIENTWEAPONMODELS - 1 ) {
+				if ( !cl_vwep.GetBool() || i > MAX_CLIENTWEAPONMODELS - 1 ) {
 					i = 0;
 				}
 				ent.model = ci->weaponmodel[i];
@@ -1184,7 +1184,7 @@ static void CL_AddViewModel( player_state_t *ps, player_state_t *ops, float bob 
 	entity_t view;
 
 	// allow the gun to be completely removed
-	if ( !cl_drawviewmodel->GetBool() ) {
+	if ( !cl_drawviewmodel.GetBool() ) {
 		return;
 	}
 
@@ -1372,7 +1372,7 @@ void CL_CalcViewValues()
 	lerp = cl.lerpfrac;
 
 	// calculate the origin
-	if ( cl_predict->GetBool() && !( cl.frame.playerstate.pmove.pm_flags & PMF_NO_PREDICTION ) )
+	if ( cl_predict.GetBool() && !( cl.frame.playerstate.pmove.pm_flags & PMF_NO_PREDICTION ) )
 	{
 		// use predicted values
 		backlerp = 1.0f - lerp;
@@ -1463,7 +1463,7 @@ void CL_AddEntities()
 
 	if ( cl.time > cl.frame.servertime )
 	{
-		if ( cl_showclamp->GetBool() ) {
+		if ( cl_showclamp.GetBool() ) {
 			Com_Printf( "high clamp %i\n", cl.time - cl.frame.servertime );
 		}
 		cl.time = cl.frame.servertime;
@@ -1471,7 +1471,7 @@ void CL_AddEntities()
 	}
 	else if ( cl.time < cl.frame.servertime - 100 )
 	{
-		if ( cl_showclamp->GetBool() ) {
+		if ( cl_showclamp.GetBool() ) {
 			Com_Printf( "low clamp %i\n", cl.frame.servertime - 100 - cl.time );
 		}
 		cl.time = cl.frame.servertime - 100;
@@ -1482,7 +1482,7 @@ void CL_AddEntities()
 		cl.lerpfrac = 1.0f - ( cl.frame.servertime - cl.time ) * 0.01f;
 	}
 
-	if ( cl_timedemo->GetBool() ) {
+	if ( cl_timedemo.GetBool() ) {
 		cl.lerpfrac = 1.0f;
 	}
 

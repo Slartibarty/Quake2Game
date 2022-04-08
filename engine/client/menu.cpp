@@ -8,8 +8,14 @@
 // cvars from elsewhere
 
 // client
-extern cvar_t *rate;
-extern cvar_t *hand;
+extern StaticCvar rate;
+extern StaticCvar hand;
+
+extern StaticCvar scr_crosshair;
+
+extern StaticCvar name;
+extern cvar_t *team;
+extern StaticCvar skin;
 
 // sound
 extern cvar_t *s_volume;
@@ -86,7 +92,7 @@ void M_PushMenu ( void (*draw) (void), const char *(*key) (int k) )
 	if ( Cvar_FindGetFloat( "maxclients" ) == 1
 		&& Com_ServerState() )
 	{
-		Cvar_SetBool( cl_paused, true );
+		Cvar_SetBool( &cl_paused, true );
 	}
 
 	// if this menu is already present, drop back to that level
@@ -122,7 +128,7 @@ void M_ForceMenuOff (void)
 	cls.key_dest = key_game;
 	m_menudepth = 0;
 	Key_ClearStates ();
-	Cvar_SetBool( cl_paused, false );
+	Cvar_SetBool( &cl_paused, false );
 }
 
 void M_PopMenu (void)
@@ -962,7 +968,7 @@ static menuslider_s		s_options_sfxvolume_slider;
 
 static void CrosshairFunc( void *unused )
 {
-	Cvar_SetInt( scr_crosshair, s_options_crosshair_box.curvalue );
+	Cvar_SetInt( &scr_crosshair, s_options_crosshair_box.curvalue );
 }
 
 static void CustomizeControlsFunc( void *unused )
@@ -972,26 +978,26 @@ static void CustomizeControlsFunc( void *unused )
 
 static void AlwaysRunFunc( void *unused )
 {
-	Cvar_SetInt( cl_run, s_options_alwaysrun_box.curvalue );
+	Cvar_SetInt( &cl_run, s_options_alwaysrun_box.curvalue );
 }
 
 static void MouseSpeedFunc( void *unused )
 {
-	Cvar_SetFloat( sensitivity, s_options_sensitivity_slider.curvalue / 2.0f );
+	Cvar_SetFloat( &sensitivity, s_options_sensitivity_slider.curvalue / 2.0f );
 }
 
 static void ControlsSetMenuItemValues( void )
 {
 	s_options_sfxvolume_slider.curvalue		= s_volume->GetFloat() * 10;
-	s_options_sensitivity_slider.curvalue	= sensitivity->GetFloat() * 2;
+	s_options_sensitivity_slider.curvalue	= sensitivity.GetFloat() * 2;
 
-	Cvar_SetInt( cl_run, Clamp( cl_run->GetInt(), 0, 1 ) );
-	s_options_alwaysrun_box.curvalue		= cl_run->GetInt();
+	Cvar_SetInt( &cl_run, Clamp( cl_run.GetInt(), 0, 1 ) );
+	s_options_alwaysrun_box.curvalue		= cl_run.GetInt();
 
-	s_options_invertmouse_box.curvalue		= m_pitch->GetInt() < 0;
+	s_options_invertmouse_box.curvalue		= m_pitch.GetInt() < 0;
 
-	Cvar_SetInt( scr_crosshair, Clamp( scr_crosshair->GetInt(), 0, 3 ) );
-	s_options_crosshair_box.curvalue		= scr_crosshair->GetInt();
+	Cvar_SetInt( &scr_crosshair, Clamp( scr_crosshair.GetInt(), 0, 3 ) );
+	s_options_crosshair_box.curvalue		= scr_crosshair.GetInt();
 }
 
 static void ControlsResetDefaultsFunc( void *unused )
@@ -1004,7 +1010,7 @@ static void ControlsResetDefaultsFunc( void *unused )
 
 static void InvertMouseFunc( void *unused )
 {
-	Cvar_SetFloat( m_pitch, -m_pitch->GetFloat() );
+	Cvar_SetFloat( &m_pitch, -m_pitch.GetFloat() );
 }
 
 static void UpdateVolumeFunc( void *unused )
@@ -3311,13 +3317,13 @@ void DownloadOptionsFunc( void *self )
 
 static void HandednessCallback( void *unused )
 {
-	Cvar_SetInt( hand, s_player_handedness_box.curvalue );
+	Cvar_SetInt( &hand, s_player_handedness_box.curvalue );
 }
 
 static void RateCallback( void *unused )
 {
 	if (s_player_rate_box.curvalue != sizeof(rate_tbl) / sizeof(*rate_tbl) - 1)
-		Cvar_SetInt( rate, rate_tbl[s_player_rate_box.curvalue] );
+		Cvar_SetInt( &rate, rate_tbl[s_player_rate_box.curvalue] );
 }
 
 static void ModelCallback( void *unused )
@@ -3388,9 +3394,6 @@ static int pmicmpfnc( const void *_a, const void *_b )
 
 qboolean PlayerConfig_MenuInit( void )
 {
-	extern cvar_t *name;
-	extern cvar_t *team;
-	extern cvar_t *skin;
 	char currentdirectory[1024];
 	char currentskin[1024];
 	int i = 0;
@@ -3412,7 +3415,7 @@ qboolean PlayerConfig_MenuInit( void )
 		Cvar_SetInt( hand, 0 );
 	}
 
-	strcpy( currentdirectory, skin->GetString() );
+	strcpy( currentdirectory, skin.GetString() );
 
 	if ( strchr( currentdirectory, '/' ) )
 	{
@@ -3464,8 +3467,8 @@ qboolean PlayerConfig_MenuInit( void )
 	s_player_name_field.generic.y		= 0;
 	s_player_name_field.length	= 20;
 	s_player_name_field.visible_length = 20;
-	Q_strcpy_s( s_player_name_field.buffer, name->GetString() );
-	s_player_name_field.cursor = (int)strlen( name->GetString() );
+	Q_strcpy_s( s_player_name_field.buffer, name.GetString() );
+	s_player_name_field.cursor = (int)strlen( name.GetString() );
 
 	s_player_model_title.generic.type = MTYPE_SEPARATOR;
 	s_player_model_title.generic.name = "model";
@@ -3509,7 +3512,7 @@ qboolean PlayerConfig_MenuInit( void )
 	s_player_handedness_box.itemnames = handedness;
 
 	for (i = 0; i < sizeof(rate_tbl) / sizeof(*rate_tbl) - 1; i++)
-		if ((int)Cvar_FindGetFloat("rate") == rate_tbl[i])
+		if (rate.GetInt() == rate_tbl[i] )
 			break;
 
 	s_player_rate_title.generic.type = MTYPE_SEPARATOR;

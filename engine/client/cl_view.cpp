@@ -1,17 +1,17 @@
 
 #include "cl_local.h"
 
-static cvar_t *	v_addParticles;
-static cvar_t *	v_addLights;
-static cvar_t *	v_addEntities;
-static cvar_t *	v_addBlend;
+static StaticCvar v_addBlend( "v_addBlend", "1", 0 );
+static StaticCvar v_addLights( "v_addLights", "1", 0 );
+static StaticCvar v_addParticles( "v_addParticles", "1", 0 );
+static StaticCvar v_addEntities( "v_addEntities", "1", 0 );
 
-static cvar_t *	v_testParticles;
-static cvar_t *	v_testEntities;
-static cvar_t *	v_testLights;
-static cvar_t *	v_testBlend;
+static StaticCvar v_testBlend( "v_testBlend", "0", 0 );
+static StaticCvar v_testParticles( "v_testParticles", "0", 0 );
+static StaticCvar v_testEntities( "v_testEntities", "0", 0 );
+static StaticCvar v_testLights( "v_testLights", "0", 0 );
 
-static cvar_t *	v_stats;
+static StaticCvar v_stats( "v_stats", "0", 0 );
 
 // development tools for weapons
 int			g_gunFrame;
@@ -180,7 +180,7 @@ static void V_TestParticles()
 		}
 
 		p->color = 8;
-		p->alpha = v_testParticles->GetFloat();
+		p->alpha = v_testParticles.GetFloat();
 	}
 }
 
@@ -423,7 +423,7 @@ void V_RenderView()
 		return;
 	}
 
-	if ( cl_timedemo->GetBool() ) {
+	if ( cl_timedemo.GetBool() ) {
 		if ( !cl.timedemo_start ) {
 			cl.timedemo_start = Sys_Milliseconds();
 		}
@@ -432,7 +432,7 @@ void V_RenderView()
 
 	// an invalid frame will just use the exact previous refdef
 	// we can't use the old frame if the video mode has changed, though...
-	if ( cl.frame.valid && ( cl.force_refdef || !cl_paused->GetBool() ) )
+	if ( cl.frame.valid && ( cl.force_refdef || !cl_paused.GetBool() ) )
 	{
 		cl.force_refdef = false;
 
@@ -443,16 +443,16 @@ void V_RenderView()
 		// v_forward, etc.
 		CL_AddEntities();
 
-		if ( v_testParticles->GetBool() ) {
+		if ( v_testParticles.GetBool() ) {
 			V_TestParticles();
 		}
-		if ( v_testEntities->GetBool() ) {
+		if ( v_testEntities.GetBool() ) {
 			V_TestEntities();
 		}
-		if ( v_testLights->GetBool() ) {
+		if ( v_testLights.GetBool() ) {
 			V_TestDLights();
 		}
-		if ( v_testBlend->GetBool() )
+		if ( v_testBlend.GetBool() )
 		{
 			cl.refdef.blend[0] = 1.0f;
 			cl.refdef.blend[1] = 0.5f;
@@ -478,16 +478,16 @@ void V_RenderView()
 
 		cl.refdef.areabits = cl.frame.areabits;
 
-		if ( !v_addEntities->GetBool() ) {
+		if ( !v_addEntities.GetBool() ) {
 			clView.numEntities = 0;
 		}
-		if ( !v_addParticles->GetBool() ) {
+		if ( !v_addParticles.GetBool() ) {
 			clView.numParticles = 0;
 		}
-		if ( !v_addLights->GetBool() ) {
+		if ( !v_addLights.GetBool() ) {
 			clView.numDLights = 0;
 		}
-		if ( !v_addBlend->GetBool() ) {
+		if ( !v_addBlend.GetBool() ) {
 			VectorClear( cl.refdef.blend );
 		}
 
@@ -508,7 +508,7 @@ void V_RenderView()
 
 	R_RenderFrame( &cl.refdef );
 
-	if ( v_stats->GetBool() ) {
+	if ( v_stats.GetBool() ) {
 		Com_Printf( "ent:%i  lt:%i  part:%i\n", clView.numEntities, clView.numDLights, clView.numParticles );
 	}
 	if ( com_logStats->GetBool() && ( log_stats_file != nullptr ) ) {
@@ -575,18 +575,6 @@ V_Init
 */
 void V_Init()
 {
-	v_addBlend = Cvar_Get( "v_addBlend", "1", 0 );
-	v_addLights = Cvar_Get( "v_addLights", "1", 0 );
-	v_addParticles = Cvar_Get( "v_addParticles", "1", 0 );
-	v_addEntities = Cvar_Get( "v_addEntities", "1", 0 );
-
-	v_testBlend = Cvar_Get( "v_testBlend", "0", 0 );
-	v_testParticles = Cvar_Get( "v_testParticles", "0", 0 );
-	v_testEntities = Cvar_Get( "v_testEntities", "0", 0 );
-	v_testLights = Cvar_Get( "v_testLights", "0", 0 );
-
-	v_stats = Cvar_Get( "v_stats", "0", 0 );
-
 	Cmd_AddCommand( "v_gun_next", V_Gun_Next_f );
 	Cmd_AddCommand( "v_gun_prev", V_Gun_Prev_f );
 	Cmd_AddCommand( "v_gun_model", V_Gun_Model_f );

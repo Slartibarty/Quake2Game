@@ -366,7 +366,7 @@ void CL_LoadClientinfo (clientinfo_t *ci, char *s)
 		s = t+1;
 	}
 
-	if (cl_noskins->GetBool() || *s == 0)
+	if (cl_noskins.GetBool() || *s == 0)
 	{
 		strcpy (model_filename, "players/male/tris.md2");
 		strcpy (weapon_filename, "players/male/weapon.md2");
@@ -437,7 +437,7 @@ void CL_LoadClientinfo (clientinfo_t *ci, char *s)
 				Q_sprintf_s (weapon_filename, "players/male/%s", cl_weaponmodels[i]);
 				ci->weaponmodel[i] = R_RegisterModel(weapon_filename);
 			}
-			if (!cl_vwep->GetBool())
+			if (!cl_vwep.GetBool())
 				break; // only one when vwep is off
 		}
 
@@ -613,7 +613,7 @@ void CL_ParseStartSoundPacket(void)
 
 void SHOWNET(const char *s)
 {
-	if (cl_shownet->GetInt()>=2)
+	if (cl_shownet.GetInt()>=2)
 		Com_Printf ("%3i:%s\n", net_message.readcount-1, s);
 }
 
@@ -631,9 +631,9 @@ void CL_ParseServerMessage (void)
 //
 // if recording demos, copy the message out
 //
-	if (cl_shownet->GetInt() == 1)
+	if (cl_shownet.GetInt() == 1)
 		Com_Printf ("%i ",net_message.cursize);
-	else if (cl_shownet->GetInt() >= 2)
+	else if (cl_shownet.GetInt() >= 2)
 		Com_Print ("------------------\n");
 
 
@@ -656,7 +656,7 @@ void CL_ParseServerMessage (void)
 			break;
 		}
 
-		if (cl_shownet->GetInt()>=2)
+		if (cl_shownet.GetInt()>=2)
 		{
 			if (!svc_strings[cmd])
 				Com_Printf ("%3i:BAD CMD %i\n", net_message.readcount-1,cmd);

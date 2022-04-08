@@ -19,7 +19,7 @@ void CL_CheckPredictionError()
 	vec3_t	delta;
 	float	len;
 
-	if (!cl_predict->GetBool() || (cl.frame.playerstate.pmove.pm_flags & PMF_NO_PREDICTION))
+	if (!cl_predict.GetBool() || (cl.frame.playerstate.pmove.pm_flags & PMF_NO_PREDICTION))
 		return;
 
 	// calculate the last usercmd_t we sent that the server has processed
@@ -37,7 +37,7 @@ void CL_CheckPredictionError()
 	}
 	else
 	{
-		if (cl_showmiss->GetBool() && (delta[0] || delta[1] || delta[2]) )
+		if (cl_showmiss.GetBool() && (delta[0] || delta[1] || delta[2]) )
 			Com_Printf ("prediction miss on %i: %f\n", cl.frame.serverframe, 
 			delta[0] + delta[1] + delta[2]);
 
@@ -215,12 +215,12 @@ void CL_PredictMovement()
 	}
 
 	// don't predict if paused
-	if ( cl_paused->GetBool() )
+	if ( cl_paused.GetBool() )
 	{
 		return;
 	}
 
-	if ( !cl_predict->GetBool() || ( cl.frame.playerstate.pmove.pm_flags & PMF_NO_PREDICTION ) )
+	if ( !cl_predict.GetBool() || ( cl.frame.playerstate.pmove.pm_flags & PMF_NO_PREDICTION ) )
 	{
 		// just set angles
 		for ( int i = 0; i < 3; ++i )
@@ -236,7 +236,7 @@ void CL_PredictMovement()
 	// if we are too far out of date, just freeze
 	if ( current - ack >= CMD_BACKUP )
 	{
-		if ( cl_showmiss->GetBool() )
+		if ( cl_showmiss.GetBool() )
 		{
 			Com_Print( "exceeded CMD_BACKUP\n" );
 		}

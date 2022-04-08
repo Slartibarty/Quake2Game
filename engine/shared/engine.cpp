@@ -70,8 +70,8 @@ void SteamGameManager::OnGameOverlayActivated( GameOverlayActivated_t *pCallback
 
 	Com_Printf( "%s the Steam overlay\n", pCallback->m_bActive ? "Opening" : "Closing" );
 
-	extern cvar_t *cl_paused;
-	Cvar_SetBool( cl_paused, pCallback->m_bActive );
+	extern void CL_Pause_f();
+	CL_Pause_f();
 }
 
 #endif

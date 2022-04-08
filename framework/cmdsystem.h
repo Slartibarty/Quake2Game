@@ -158,3 +158,8 @@ static_assert( sizeof( StaticCmd ) == sizeof( cmdFunction_t ) );
 	static void name(); \
 	static StaticCmd name##_cmd(#name, name, help); \
 	static void name()
+
+#define CON_COMMAND_NAME(func, name, help, flags) \
+	static void func(); \
+	static StaticCmd name##_cmd(#name, func, help); \
+	static void func()

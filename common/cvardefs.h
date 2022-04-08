@@ -7,6 +7,7 @@ typedef void ( *changeCallback_t )( cvar_t *pVar, const char *pOldString, float 
 
 enum cvarFlags_t : uint32
 {
+	CVAR_NONE			= 0,		// no flags
 	CVAR_ARCHIVE		= BIT(0),	// will be written to config.cfg
 	CVAR_USERINFO		= BIT(1),	// added to userinfo when changed
 	CVAR_SERVERINFO		= BIT(2),	// added to serverinfo when changed

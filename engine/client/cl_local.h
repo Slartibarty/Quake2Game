@@ -219,40 +219,38 @@ extern entity_state_t cl_parse_entities[MAX_PARSE_ENTITIES];
 //
 // cvars
 //
-extern cvar_t	*cl_drawviewmodel;
-extern cvar_t	*cl_predict;
-extern cvar_t	*cl_footsteps;
-extern cvar_t	*cl_noskins;
-extern cvar_t	*cl_autoskins;
+extern StaticCvar cl_drawviewmodel;
+extern StaticCvar cl_predict;
+extern StaticCvar cl_footsteps;
+extern StaticCvar cl_noskins;
+extern StaticCvar cl_autoskins;
 
-extern cvar_t	*cl_upspeed;
-extern cvar_t	*cl_forwardspeed;
-extern cvar_t	*cl_sidespeed;
+extern StaticCvar cl_upspeed;
+extern StaticCvar cl_forwardspeed;
+extern StaticCvar cl_sidespeed;
+extern StaticCvar cl_yawspeed;
+extern StaticCvar cl_pitchspeed;
+extern StaticCvar cl_anglespeedkey;
 
-extern cvar_t	*cl_yawspeed;
-extern cvar_t	*cl_pitchspeed;
+extern StaticCvar cl_run;
+extern StaticCvar sensitivity;
 
-extern cvar_t	*cl_run;
+extern StaticCvar cl_shownet;
+extern StaticCvar cl_showmiss;
+extern StaticCvar cl_showclamp;
 
-extern cvar_t	*cl_anglespeedkey;
+extern StaticCvar m_pitch;
+extern StaticCvar m_yaw;
+extern StaticCvar m_forward;
+extern StaticCvar m_side;
 
-extern cvar_t	*cl_shownet;
-extern cvar_t	*cl_showmiss;
-extern cvar_t	*cl_showclamp;
+extern StaticCvar cl_paused;
+extern StaticCvar cl_timedemo;
 
-extern cvar_t	*sensitivity;
+extern StaticCvar cl_lightlevel;	// FIXME HACK
 
-extern cvar_t	*m_pitch;
-extern cvar_t	*m_yaw;
-extern cvar_t	*m_forward;
-extern cvar_t	*m_side;
-
-extern cvar_t	*cl_lightlevel;	// FIXME HACK
-
-extern cvar_t	*cl_paused;
-extern cvar_t	*cl_timedemo;
-
-extern cvar_t	*cl_vwep;
+// userinfo
+extern StaticCvar cl_vwep;
 
 //=================================================================================================
 
@@ -287,14 +285,11 @@ void VID_Shutdown();
 // cl_main
 //
 void CL_FixUpGender();
-void CL_Disconnect();
-void CL_Disconnect_f();
 void CL_PingServers_f();
 void CL_Snd_Restart_f();
 void CL_RequestNextDownload();
 
 void CL_ClearState();
-void CL_ReadPackets();
 
 // demos
 void CL_WriteDemoMessage();
@@ -366,8 +361,6 @@ void CL_RegisterSounds();
 //
 // cl_scrn
 //
-extern cvar_t *scr_crosshair;
-
 void SCR_Init();
 void SCR_Shutdown();
 
@@ -483,7 +476,6 @@ void CDAudio_Activate( bool active );
 
 namespace UI::Console
 {
-	void Init();
 	void ShowConsole( bool *pOpen );
 
 	void ShowNotify();

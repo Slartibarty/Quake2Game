@@ -812,7 +812,7 @@ void S_AddLoopSounds (void)
 	int			num;
 	entity_state_t	*ent;
 
-	if (cl_paused->GetBool())
+	if (cl_paused.GetBool())
 		return;
 
 	if (cls.state != ca_active)
