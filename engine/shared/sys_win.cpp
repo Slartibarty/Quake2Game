@@ -55,6 +55,9 @@ static void InitSteamStuff()
 
 		exit( EXIT_FAILURE );
 	}
+	
+	// We don't use exceptions, so tell Steam not to use try/catch in callback handlers
+	SteamAPI_SetTryCatchCallbacks( false );
 #endif
 }
 
@@ -674,10 +677,6 @@ int main( int argc, char **argv )
 		// set legacy
 		sys_frameTime = newTime;
 		curtime = newTime;
-
-#ifdef Q_USE_STEAM
-		SteamAPI_RunCallbacks();
-#endif
 
 		Com_Frame( frameTime );
 

@@ -1048,7 +1048,7 @@ void CL_Snd_Restart_f()
 	CL_RegisterSounds();
 }
 
-#if 0
+#if 1
 
 int precache_check; // for autodownload of precache items
 int precache_spawncount;
@@ -1345,7 +1345,7 @@ before allowing the client into the server
 */
 static void CL_Precache_f()
 {
-#if 1
+#if 0
 	uint mapChecksum; // for detecting cheater maps
 
 	CM_LoadMap( cl.configstrings[CS_MODELS + 1], true, &mapChecksum );

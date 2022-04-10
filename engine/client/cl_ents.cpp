@@ -1390,7 +1390,7 @@ void CL_CalcViewValues()
 		if ( delta < 100 )
 		{
 			// TODO: sucks
-			//cl.refdef.vieworg[2] -= cl.predicted_step * float( 100 - delta ) * 0.01f;
+			cl.refdef.vieworg[2] -= cl.predicted_step * float( 100 - delta ) * 0.01f;
 		}
 	}
 	else
@@ -1508,14 +1508,13 @@ Called to get the sound spatialization origin
 */
 void CL_GetEntitySoundOrigin( int ent, vec3_t org )
 {
-	centity_t *cent;
-
 	if ( ent < 0 || ent >= MAX_EDICTS ) {
-		// TODO: Make this survivable?
-		Com_Error( "CL_GetEntitySoundOrigin: bad ent" );
+		AssertMsg( false, "CL_GetEntitySoundOrigin: bad ent" );
+		VectorClear( org );
+		return;
 	}
 
-	cent = cl_entities + ent;
+	centity_t *cent = cl_entities + ent;
 	VectorCopy( cent->lerp_origin, org );
 
 	// FIXME: bmodel issues...

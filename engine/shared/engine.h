@@ -27,6 +27,7 @@
 #include "physics.h"
 #include "protocol.h"
 #include "sizebuf.h"
+#include "steam.h"
 #include "sys.h"
 
 /*

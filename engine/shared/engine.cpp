@@ -9,11 +9,6 @@
 
 #include "../../thirdparty/tracy/Tracy.hpp"
 
-#ifdef Q_USE_STEAM
-#include "steam/steam_api.h"
-#include "steam/isteamuserstats.h"
-#endif
-
 extern void SCR_EndLoadingPlaque();
 extern void Key_Init();
 extern void Key_Shutdown();
@@ -46,35 +41,6 @@ int		time_after_ref;
 static thread_local bool	isMainThread;
 
 static mutex_t				s_printMutex;		// Mutex for Com_Print
-
-/*
-===================================================================================================
-
-	Steam Integration
-
-===================================================================================================
-*/
-
-#ifdef Q_USE_STEAM
-
-class SteamGameManager
-{
-	STEAM_CALLBACK( SteamGameManager, OnGameOverlayActivated, GameOverlayActivated_t );
-};
-
-static SteamGameManager g_steamGameManager;
-
-void SteamGameManager::OnGameOverlayActivated( GameOverlayActivated_t *pCallback )
-{
-	Assert( Com_IsMainThread() );
-
-	Com_Printf( "%s the Steam overlay\n", pCallback->m_bActive ? "Opening" : "Closing" );
-
-	extern void CL_Pause_f();
-	CL_Pause_f();
-}
-
-#endif
 
 /*
 ===================================================================================================
@@ -647,6 +613,10 @@ void Com_Init( int argc, char **argv )
 
 	Mem_Init();
 
+	// lowest level stuff besides memory:
+
+	Steam::Init();
+
 	// prepare enough of the subsystems to handle
 	// cvar and command buffer management
 
@@ -796,6 +766,8 @@ void Com_Frame( int frameTime )
 		c_pointcontents = 0;
 	}
 
+	Steam::Frame();
+
 	// Add input from the dedicated server console
 	do
 	{
@@ -859,6 +831,7 @@ void Com_Shutdown()
 	Key_Shutdown();
 	Cvar_Shutdown();
 	Cmd_Shutdown();
+	Steam::Shutdown();
 
 	Mem_Shutdown();
 
@@ -879,11 +852,10 @@ bool Com_IsMainThread()
 
 CON_COMMAND( steam_givetestachievement, "Gives you the test achievement.", 0 )
 {
-	SteamUserStats()->RequestCurrentStats();
-
-	if ( SteamUserStats()->SetAchievement( "ACH_TEST_SIMPLE" ) )
+	if ( Steam::SetAchievement( "ACH_TEST_SIMPLE" ) )
 	{
 		Com_Print( "Gave you the loam achievement\n" );
+		Steam::StoreStats();
 	}
 	else
 	{
