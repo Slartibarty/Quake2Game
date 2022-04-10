@@ -1080,4 +1080,3 @@ void SV_Shutdown( const char *finalmsg, bool reconnect )
 	}
 	memset( &svs, 0, sizeof( svs ) );
 }
-

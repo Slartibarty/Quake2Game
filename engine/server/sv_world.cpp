@@ -510,13 +510,11 @@ testing object's origin to get a point to use with the returned hull.
 */
 static int SV_HullForEntity( edict_t *ent )
 {
-	cmodel_t	*model;
-
 	// decide which clipping hull to use, based on the size
 	if ( ent->solid == SOLID_BSP )
 	{
 		// explicit hulls in the BSP model
-		model = sv.models[ent->s.modelindex];
+		cmodel_t *model = sv.models[ent->s.modelindex];
 
 		if ( !model ) {
 			Com_FatalError( "MOVETYPE_PUSH with a non bsp model\n" );
@@ -537,33 +535,34 @@ SV_PointContents
 */
 int SV_PointContents( vec3_t p )
 {
-	edict_t		*touch[MAX_EDICTS], *hit;
-	int			i, num;
-	int			contents, c2;
-	int			headnode;
-	float		*angles;
+	edict_t *touch[MAX_EDICTS];
 
 	// get base contents from world
-	contents = CM_PointContents( p, sv.models[1]->headnode );
+	int contents = CM_PointContents( p, sv.models[1]->headnode );
 
 	// or in contents from all the other entities
-	num = SV_AreaEntities( p, p, touch, MAX_EDICTS, AREA_SOLID );
+	const int numEntities = SV_AreaEntities( p, p, touch, MAX_EDICTS, AREA_SOLID );
 
-	for ( i = 0; i < num; i++ )
+	for ( int i = 0; i < numEntities; ++i )
 	{
-		hit = touch[i];
+		edict_t *hit = touch[i];
 
-		// might intersect, so do an exact clip
-		headnode = SV_HullForEntity( hit );
-		angles = hit->s.angles;
-		if ( hit->solid != SOLID_BSP ) {
-			// boxes don't rotate
-			angles = vec3_origin;
+		if ( hit->solid == SOLID_PHYSICS )
+		{
+			// SlartTodo
 		}
+		else
+		{
+			// might intersect, so do an exact clip
+			int headnode = SV_HullForEntity( hit );
+			float *angles = hit->s.angles;
+			if ( hit->solid != SOLID_BSP ) {
+				// boxes don't rotate
+				angles = vec3_origin;
+			}
 
-		c2 = CM_TransformedPointContents( p, headnode, hit->s.origin, hit->s.angles );
-
-		contents |= c2;
+			contents |= CM_TransformedPointContents( p, headnode, hit->s.origin, angles );
+		}
 	}
 
 	return contents;

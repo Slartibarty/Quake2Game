@@ -8,6 +8,8 @@ Code for drawing sky and water polygons
 
 #include "gl_local.h"
 
+static StaticCvar r_drawsky( "r_drawsky", "1", CVAR_NONE );
+
 struct skyVertex_t
 {
 	float x, y, z;
@@ -532,6 +534,10 @@ void R_DrawSkyBox()
 {
 	int i;
 
+	if ( !r_drawsky.GetBool() ) {
+		return;
+	}
+
 	if ( skyrotate ) {
 		// check for no sky at all
 		for ( i = 0; i < 6; ++i ) {
@@ -572,25 +578,6 @@ void R_DrawSkyBox()
 
 		++numSides;
 	}
-
-#if 0
-	using namespace DirectX;
-	vec3_t &viewOrg = tr.refdef.vieworg;
-	vec3_t &viewAng = tr.refdef.viewangles;
-
-	vec3_t forward;
-
-	AngleVectors( viewAng, forward, nullptr, nullptr );
-
-	XMVECTOR translate = XMVectorSet( viewOrg[0], viewOrg[1], viewOrg[2], 0.0f );
-	XMVECTOR rotate = XMVectorSet(  )
-	XMVECTOR focusPoint = XMVectorSet( viewOrg[0] + forward[0], viewOrg[1] + forward[1], viewOrg[2] + forward[2], 0.0f );
-	XMVECTOR upAxis = XMVectorSet( 0.0f, 0.0f, 1.0f, 0.0f );
-
-	XMMATRIX workMatrix = XMMatrixLookAtRH( eyePosition, focusPoint, upAxis );
-	XMFLOAT4X4A viewMatrix;
-	XMStoreFloat4x4A( &viewMatrix, workMatrix );
-#endif
 
 	GL_UseProgram( glProgs.skyProg );
 

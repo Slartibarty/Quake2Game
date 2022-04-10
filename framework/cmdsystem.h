@@ -79,6 +79,7 @@ typedef void ( *xcommand_t )( void );
 
 enum cmdFlags_t : uint32
 {
+	CMD_NONE	= 0,		// no flags
 	CMD_STATIC	= BIT(0),	// this cmd is static (do not free)
 	CMD_CHEAT	= BIT(1),	// this cmd is a cheat
 };

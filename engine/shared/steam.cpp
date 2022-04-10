@@ -3,6 +3,9 @@
 
 	Steam Integration
 
+	Would be better to create split implementations for the client and server
+	I.E. SteamGameManager_Client and SteamGameManager_Server
+
 ===================================================================================================
 */
 
